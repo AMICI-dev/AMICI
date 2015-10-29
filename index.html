@@ -1,43 +1,57 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en-us">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta charset="UTF-8">
     <title>AMICI by FFroehlich</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-light.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>AMICI</h1>
-        <p>A Matlab Interface to CVODES and IDAS</p>
+    <section class="page-header">
+      <h1 class="project-name">AMICI</h1>
+      <h2 class="project-tagline">A Matlab Interface to CVODES and IDAS</h2>
+      <a href="https://github.com/FFroehlich/AMICI" class="btn">View on GitHub</a>
+      <a href="https://github.com/FFroehlich/AMICI/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/FFroehlich/AMICI/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-        <p class="view"><a href="https://github.com/FFroehlich/AMICI">View the Project on GitHub <small>FFroehlich/AMICI</small></a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/FFroehlich/AMICI/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/FFroehlich/AMICI/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/FFroehlich/AMICI">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <p>AMICI is a MATLAB interface for the <a href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a> solvers <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvodes">CVODES</a> (for ordinary differential equations) and <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_idas">IDAS</a> (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_stb">SUNDIALSTB</a> interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation. Beyond forward integration, the compiled simulation file also allows for forward sensitivity analysis, steady state sensitivity analysis and adjoint sensitivity analysis for likelihood based output functions.</p>
+    <section class="main-content">
+      <p>AMICI is a MATLAB interface for the <a href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a> solvers <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvodes">CVODES</a> (for ordinary differential equations) and <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_idas">IDAS</a> (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_stb">SUNDIALSTB</a> interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation.</p>
 
 <p>The interface was designed to provide routines for efficient gradient computation in parameter estimation of biochemical reaction models but is also applicable to a wider range of differential equation constrained optimization problems.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/FFroehlich">FFroehlich</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>Generation of Model specific native C code</li>
+<li>Forward Sensitivity Analysis</li>
+<li>Adjoint Sensitivity Analysis</li>
+<li>Steady State Sensitivity Analysis</li>
+<li>Event Sensitivities</li>
+</ul>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<p>AMICI is a software package for MATLAB. It requires the Symbolic Math Toolbox and a configure C Compiler.</p>
+
+<h2>
+<a id="support" class="anchor" href="#support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support</h2>
+
+<p>Fabian Froehlich - <a href="mailto:fabian.froehlich@helmholtz-muenchen.de">fabian.froehlich@helmholtz-muenchen.de</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/FFroehlich/AMICI">AMICI</a> is maintained by <a href="https://github.com/FFroehlich">FFroehlich</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
       </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
+
+    </section>
+
+  
   </body>
 </html>
