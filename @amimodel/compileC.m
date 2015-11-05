@@ -1,8 +1,6 @@
 function this = compileC(this)
     % compileC compiles the mex simulation file
     %
-    % Parameters:
-    %
     % Return values:
     %  this: model definition object @type amimodel
     

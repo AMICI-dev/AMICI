@@ -1166,7 +1166,7 @@ LATEX_OUTPUT           = latex
 # generating bitmaps for formulas in the HTML output, but not in the
 # Makefile that is written to the output directory.
 
-LATEX_CMD_NAME         = pdflatex
+LATEX_CMD_NAME         = latex
 
 # The MAKEINDEX_CMD_NAME tag can be used to specify the command name to
 # generate index for LaTeX. If left blank `makeindex' will be used as the
