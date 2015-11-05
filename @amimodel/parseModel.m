@@ -111,6 +111,7 @@ function this = parseModel(this)
     sx = cell(nx,np);
     sdx = cell(nx,np);
     xBs = cell(nx,1);
+    dxBs = cell(nx,1);
     
     for j=1:nx
         xs{j} = sprintf('x[%i]',j-1);
@@ -132,6 +133,7 @@ function this = parseModel(this)
     
     for j = 1:nx
         xBs{j} = sprintf('xB[%i]', j-1);
+        dxBs{j} = sprintf('dxB[%i]', j-1);
     end
     
     % transform into syms
@@ -143,6 +145,7 @@ function this = parseModel(this)
     this.strsym.sx = sym(sx);
     this.strsym.sdx = sym(sdx);
     this.strsym.xBs = sym(xBs);
+    this.strsym.dxBs = sym(dxBs);
     
     % replace states by short strings
     
