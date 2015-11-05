@@ -9,8 +9,6 @@ var searchData=
   ['dam_5fmax',['Dam_max',['../symbolic__functions_8c.html#ab737f3f75aad0dffa94e572bf095773e',1,'symbolic_functions.c']]],
   ['dam_5fmin',['Dam_min',['../symbolic__functions_8c.html#a4b372245882cfe08b809c82a1487efec',1,'symbolic_functions.c']]],
   ['dam_5for',['Dam_or',['../symbolic__functions_8c.html#a66366768996cc70768580811dfca7c86',1,'symbolic_functions.c']]],
-  ['datahash',['DataHash',['../_data_hash_8m.html#a4c7237b24544ef3ff686d60f76ff1dd7',1,'DataHash.m']]],
-  ['datahash_2em',['DataHash.m',['../_data_hash_8m.html',1,'']]],
   ['ddirac',['Ddirac',['../symbolic__functions_8c.html#ad8ed2c7868f7fee34f1eecc02233f552',1,'symbolic_functions.c']]],
   ['debug',['debug',['../classamimodel.html#a0514aabed091ee5e2f35766eb01eced6',1,'amimodel']]],
   ['deriv',['deriv',['../spline_8c.html#a7fc66f543b0c296fa694a90c03edb6ca',1,'spline.c']]],

@@ -90,7 +90,6 @@ var searchData=
   ['am_5fsdx_5ftmp',['am_sdx_tmp',['../struct_temp_data.html#a6882e67247f0ba606bea7beb58e06a2a',1,'TempData']]],
   ['am_5fsensi',['am_sensi',['../struct_user_data.html#a3bd631d595b8a864de83f25a1756ce3d',1,'UserData']]],
   ['am_5fsensi_5fmeth',['am_sensi_meth',['../struct_user_data.html#a83bc6716ecf3decb3d963929361fcd6d',1,'UserData']]],
-  ['am_5fsetdefault_2em',['am_setdefault.m',['../am__setdefault_8m.html',1,'']]],
   ['am_5fsigma_5ft',['am_sigma_t',['../struct_temp_data.html#a6b326ec16453b4518b549856f913acbf',1,'TempData']]],
   ['am_5fsigma_5fy',['am_sigma_y',['../struct_temp_data.html#aed7f1b33daffb581c6be404c0c5d12ac',1,'TempData']]],
   ['am_5fstldet',['am_stldet',['../struct_user_data.html#a7d39c238c319f0164a15744950bfd021',1,'UserData']]],
