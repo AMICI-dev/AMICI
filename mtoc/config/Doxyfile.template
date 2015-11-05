@@ -574,7 +574,7 @@ SHOW_USED_FILES        = NO
 # This will remove the Files entry from the Quick Index and from the
 # Folder Tree View (if specified). The default is YES.
 
-SHOW_FILES             = TRUE
+SHOW_FILES             = YES
 
 # Set the SHOW_NAMESPACES tag to NO to disable the generation of the
 # Namespaces page.
@@ -669,7 +669,7 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = "/Users/F.Froehlich/Documents/MATLAB/AMICI/sundials-2.6.2" "/Users/F.Froehlich/Documents/MATLAB/AMICI/SuiteSparse" "/Users/F.Froehlich/Documents/MATLAB/AMICI/models" "/Users/F.Froehlich/Documents/MATLAB/AMICI/examples" "/Users/F.Froehlich/Documents/MATLAB/AMICI/mtoc" "/Users/F.Froehlich/Documents/MATLAB/AMICI/symbolic" "/Users/F.Froehlich/Documents/MATLAB/AMICI/aux"
+EXCLUDE                = "/Users/F.Froehlich/Documents/MATLAB/AMICI/sundials-2.6.2" "/Users/F.Froehlich/Documents/MATLAB/AMICI/SuiteSparse" "/Users/F.Froehlich/Documents/MATLAB/AMICI/models" "/Users/F.Froehlich/Documents/MATLAB/AMICI/examples" "/Users/F.Froehlich/Documents/MATLAB/AMICI/mtoc" "/Users/F.Froehlich/Documents/MATLAB/AMICI/symbolic" "/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary"
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -1166,7 +1166,7 @@ LATEX_OUTPUT           = latex
 # generating bitmaps for formulas in the HTML output, but not in the
 # Makefile that is written to the output directory.
 
-LATEX_CMD_NAME         = pdflatex
+LATEX_CMD_NAME         = latex
 
 # The MAKEINDEX_CMD_NAME tag can be used to specify the command name to
 # generate index for LaTeX. If left blank `makeindex' will be used as the

@@ -443,7 +443,7 @@ classdef MatlabDocMaker
             % Call doxygen
             fprintf('running doxygen with mtoc++ filter...');
             [~,warn] = system(sprintf('%sdoxygen "%s" 1>%s',ldpath, doxyfile, strs.null));
-             
+            
             % Postprocess
             fprintf('running mtoc++ postprocessor...');
             [~,postwarn] = system(sprintf('%smtocpp_post "%s" 1>%s',ldpath,...
@@ -461,6 +461,35 @@ classdef MatlabDocMaker
                     if exist(fullfile(latexdir,'refman.tex'),'file') == 2
                         fprintf('compiling LaTeX output...');
                         cd(latexdir);
+                        
+                        [wrap_path,~,~] = fileparts(which('amiwrap.m'));
+                        
+                        fid = fopen(fullfile(wrap_path,'doc','latex','refman.tex'),'r');
+                        i = 1;
+                        tline = fgetl(fid);
+                        A{i} = tline;
+                        while ischar(tline)
+                            i = i+1;
+                            tline = fgetl(fid);
+                            A{i} = tline;
+                        end
+                        fclose(fid);
+                        
+                        % throw out file index
+                        A = A(sum([cellfun(@isempty,cellfun(@(x) strfind(x,'File Index'),A,'UniformOutput',false));cellfun(@isempty,cellfun(@(x) strfind(x,'files'),A,'UniformOutput',false))])==2);
+                        
+                        % write changed file
+                        fid = fopen(fullfile(wrap_path,'doc','latex','refman.tex'), 'w');
+                        for i = 1:numel(A)
+                            if A{i+1} == -1
+                                fprintf(fid,'%s', A{i});
+                                break
+                            else
+                                fprintf(fid,'%s\n', A{i});
+                            end
+                        end
+                        fclose(fid);
+                        
                         [s, latexmsg] = system('make');
                         if s ~= 0
                             warn = [warn sprintf('LaTeX compiler output:\n') latexmsg];
