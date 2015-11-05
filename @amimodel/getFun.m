@@ -244,7 +244,7 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'dtdx'
-                this.sym.dtdx = sym(zeros(0,nx));
+                this.sym.dtdx = sym(zeros(nr,nx));
                 if(nr>0)
                     for ir = 1:nr
                         this.sym.dtdx(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootdx(ir,:));
