@@ -1,0 +1,1 @@
+amiwrap('model_example_7','example_model_7_syms')
