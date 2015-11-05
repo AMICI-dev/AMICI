@@ -16,14 +16,14 @@
 
 /** @brief struct that carries all information about experimental data */
 typedef struct {
-    //! observed data
+    /** observed data */
     double *am_my; 
-    //! standard deviation of observed data
+    /** standard deviation of observed data */
     double *am_ysigma; 
     
-    //! observed events
+    /** observed events */
     double *am_mt; 
-    //! standard deviation of observed events
+    /** standard deviation of observed events */
     double *am_tsigma; 
     
 	} *ExpData;
