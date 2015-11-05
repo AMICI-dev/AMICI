@@ -1,0 +1,447 @@
+\hypertarget{amici_8c}{}\subsection{src/amici.c File Reference}
+\label{amici_8c}\index{src/amici.\+c@{src/amici.\+c}}
+
+
+core routines for integration  
+
+
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=162pt]{amici_8c__dep__incl}
+\end{center}
+\end{figure}
+\subsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{amici_8c_ac6122ebe2083e778af689c6d3ba64aaf}{}\#define \hyperlink{amici_8c_ac6122ebe2083e778af689c6d3ba64aaf}{amici\+\_\+c}\label{amici_8c_ac6122ebe2083e778af689c6d3ba64aaf}
+
+\begin{DoxyCompactList}\small\item\em include guard \end{DoxyCompactList}\item 
+\hypertarget{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}{}\#define \hyperlink{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}~0\label{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}
+
+\begin{DoxyCompactList}\small\item\em return value indicating successful execution \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{struct_user_data}{User\+Data} \hyperlink{amici_8c_aaa3b0319b9104865ac61df2ea87b8a13}{setup\+User\+Data} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]})
+\item 
+void $\ast$ \hyperlink{amici_8c_a1f59a60d757981b9a2196bc6b3491027}{setup\+A\+M\+I} (int $\ast$status, void $\ast$user\+\_\+data, void $\ast$temp\+\_\+data)
+\item 
+void \hyperlink{amici_8c_a3899f1dc888ee4e27c36d139dd938fc0}{setup\+A\+M\+I\+B} (int $\ast$status, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$temp\+\_\+data)
+\item 
+\hyperlink{struct_return_data}{Return\+Data} \hyperlink{amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1}{setup\+Return\+Data} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]}, void $\ast$user\+\_\+data)
+\item 
+\hyperlink{struct_exp_data}{Exp\+Data} \hyperlink{amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca}{setup\+Exp\+Data} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]}, void $\ast$user\+\_\+data)
+\item 
+void \hyperlink{amici_8c_a85cdb132d0e8a2682f83f4c9603369a0}{get\+Root\+Data\+F\+S\+A} (int $\ast$status, int $\ast$nroots, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$temp\+\_\+data)
+\item 
+void \hyperlink{amici_8c_a3c17fa40a52b536834ef24655e1bee21}{get\+Root\+Data\+A\+S\+A} (int $\ast$status, int $\ast$nroots, int $\ast$idisc, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$exp\+\_\+data, void $\ast$temp\+\_\+data)
+\item 
+void \hyperlink{amici_8c_a13d94826e6a875f0e06ec633a88dd551}{get\+Diagnosis} (int $\ast$status, int it, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data)
+\item 
+void \hyperlink{amici_8c_a90da28fbc4745516101db3c8d6be9305}{get\+Diagnosis\+B} (int $\ast$status, int it, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$temp\+\_\+data)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{amici_8c_aaa3b0319b9104865ac61df2ea87b8a13}{}\index{amici.\+c@{amici.\+c}!setup\+User\+Data@{setup\+User\+Data}}
+\index{setup\+User\+Data@{setup\+User\+Data}!amici.\+c@{amici.\+c}}
+\paragraph[{setup\+User\+Data(const mx\+Array $\ast$prhs[])}]{\setlength{\rightskip}{0pt plus 5cm}{\bf User\+Data} setup\+User\+Data (
+\begin{DoxyParamCaption}
+\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)}\label{amici_8c_aaa3b0319b9104865ac61df2ea87b8a13}
+setup\+User\+Data extracts information from the matlab call and returns the corresponding \hyperlink{struct_user_data}{User\+Data} struct 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em prhs} & pointer to the array of input arguments ~\newline
+{\bfseries Type}\+: mx\+Array \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+udata\+: struct containing all provided user data
+\end{DoxyReturn}
+
+
+Definition at line 10 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=272pt]{amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a1f59a60d757981b9a2196bc6b3491027}{}\index{amici.\+c@{amici.\+c}!setup\+A\+M\+I@{setup\+A\+M\+I}}
+\index{setup\+A\+M\+I@{setup\+A\+M\+I}!amici.\+c@{amici.\+c}}
+\paragraph[{setup\+A\+M\+I(int $\ast$status, void $\ast$user\+\_\+data, void $\ast$temp\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ setup\+A\+M\+I (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{temp\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a1f59a60d757981b9a2196bc6b3491027}
+setup\+A\+M\+Is initialises the ami memory object 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt in}  & {\em temp\+\_\+data} & pointer to the temporary data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_temp_data}{Temp\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 149 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=247pt]{amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a3899f1dc888ee4e27c36d139dd938fc0}{}\index{amici.\+c@{amici.\+c}!setup\+A\+M\+I\+B@{setup\+A\+M\+I\+B}}
+\index{setup\+A\+M\+I\+B@{setup\+A\+M\+I\+B}!amici.\+c@{amici.\+c}}
+\paragraph[{setup\+A\+M\+I\+B(int $\ast$status, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$temp\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void setup\+A\+M\+I\+B (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{void $\ast$}]{ami\+\_\+mem, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{temp\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a3899f1dc888ee4e27c36d139dd938fc0}
+setup\+A\+M\+I\+B initialises the A\+M\+I memory object for the backwards problem 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt in}  & {\em ami\+\_\+mem} & pointer to the solver memory object of the forward problem \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt in}  & {\em temp\+\_\+data} & pointer to the temporary data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_temp_data}{Temp\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 434 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=254pt]{amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1}{}\index{amici.\+c@{amici.\+c}!setup\+Return\+Data@{setup\+Return\+Data}}
+\index{setup\+Return\+Data@{setup\+Return\+Data}!amici.\+c@{amici.\+c}}
+\paragraph[{setup\+Return\+Data(const mx\+Array $\ast$prhs[], void $\ast$user\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Return\+Data} setup\+Return\+Data (
+\begin{DoxyParamCaption}
+\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]}, }
+\item[{void $\ast$}]{user\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1}
+setup\+Return\+Data initialises the return data struct 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em prhs} & user input ~\newline
+{\bfseries Type}\+: $\ast$mx\+Array \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+rdata\+: return data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_return_data}{Return\+Data}
+\end{DoxyReturn}
+user udata 
+
+Definition at line 625 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca}{}\index{amici.\+c@{amici.\+c}!setup\+Exp\+Data@{setup\+Exp\+Data}}
+\index{setup\+Exp\+Data@{setup\+Exp\+Data}!amici.\+c@{amici.\+c}}
+\paragraph[{setup\+Exp\+Data(const mx\+Array $\ast$prhs[], void $\ast$user\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Exp\+Data} setup\+Exp\+Data (
+\begin{DoxyParamCaption}
+\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]}, }
+\item[{void $\ast$}]{user\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca}
+setup\+Exp\+Data initialises the experimental data struct 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em prhs} & user input ~\newline
+{\bfseries Type}\+: $\ast$mx\+Array \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+edata\+: experimental data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_exp_data}{Exp\+Data}
+\end{DoxyReturn}
+user udata 
+
+Definition at line 690 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=268pt]{amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a85cdb132d0e8a2682f83f4c9603369a0}{}\index{amici.\+c@{amici.\+c}!get\+Root\+Data\+F\+S\+A@{get\+Root\+Data\+F\+S\+A}}
+\index{get\+Root\+Data\+F\+S\+A@{get\+Root\+Data\+F\+S\+A}!amici.\+c@{amici.\+c}}
+\paragraph[{get\+Root\+Data\+F\+S\+A(int $\ast$status, int $\ast$nroots, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$temp\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void get\+Root\+Data\+F\+S\+A (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{int $\ast$}]{nroots, }
+\item[{void $\ast$}]{ami\+\_\+mem, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{return\+\_\+data, }
+\item[{void $\ast$}]{temp\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a85cdb132d0e8a2682f83f4c9603369a0}
+get\+Root\+Data\+F\+S\+A extracts root information for forward sensitivity analysis
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt out}  & {\em nroots} & counter for the number of found roots ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em ami\+\_\+mem} & pointer to the solver memory block ~\newline
+{\bfseries Type}\+: void \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt out}  & {\em return\+\_\+data} & pointer to the return data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_return_data}{Return\+Data} \\
+\hline
+\mbox{\tt out}  & {\em temp\+\_\+data} & pointer to the temporary data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_temp_data}{Temp\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 789 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a3c17fa40a52b536834ef24655e1bee21}{}\index{amici.\+c@{amici.\+c}!get\+Root\+Data\+A\+S\+A@{get\+Root\+Data\+A\+S\+A}}
+\index{get\+Root\+Data\+A\+S\+A@{get\+Root\+Data\+A\+S\+A}!amici.\+c@{amici.\+c}}
+\paragraph[{get\+Root\+Data\+A\+S\+A(int $\ast$status, int $\ast$nroots, int $\ast$idisc, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$exp\+\_\+data, void $\ast$temp\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void get\+Root\+Data\+A\+S\+A (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{int $\ast$}]{nroots, }
+\item[{int $\ast$}]{idisc, }
+\item[{void $\ast$}]{ami\+\_\+mem, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{return\+\_\+data, }
+\item[{void $\ast$}]{exp\+\_\+data, }
+\item[{void $\ast$}]{temp\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a3c17fa40a52b536834ef24655e1bee21}
+get\+Root\+Data\+A\+S\+A extracts root information for adjoint sensitivity analysis
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt out}  & {\em nroots} & counter for the number of found roots ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt out}  & {\em idisc} & counter for the number of found discontinuities ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt in}  & {\em ami\+\_\+mem} & pointer to the solver memory block ~\newline
+{\bfseries Type}\+: $\ast$void \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt out}  & {\em return\+\_\+data} & pointer to the return data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_return_data}{Return\+Data} \\
+\hline
+\mbox{\tt in}  & {\em exp\+\_\+data} & pointer to the experimental data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_exp_data}{Exp\+Data} \\
+\hline
+\mbox{\tt out}  & {\em temp\+\_\+data} & pointer to the temporary data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_temp_data}{Temp\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 873 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a13d94826e6a875f0e06ec633a88dd551}{}\index{amici.\+c@{amici.\+c}!get\+Diagnosis@{get\+Diagnosis}}
+\index{get\+Diagnosis@{get\+Diagnosis}!amici.\+c@{amici.\+c}}
+\paragraph[{get\+Diagnosis(int $\ast$status, int it, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void get\+Diagnosis (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{int}]{it, }
+\item[{void $\ast$}]{ami\+\_\+mem, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{return\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a13d94826e6a875f0e06ec633a88dd551}
+get\+Diagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt in}  & {\em it} & time-\/point index ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em ami\+\_\+mem} & pointer to the solver memory block ~\newline
+{\bfseries Type}\+: $\ast$void \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt out}  & {\em return\+\_\+data} & pointer to the return data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_return_data}{Return\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 981 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=263pt]{amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{amici_8c_a90da28fbc4745516101db3c8d6be9305}{}\index{amici.\+c@{amici.\+c}!get\+Diagnosis\+B@{get\+Diagnosis\+B}}
+\index{get\+Diagnosis\+B@{get\+Diagnosis\+B}!amici.\+c@{amici.\+c}}
+\paragraph[{get\+Diagnosis\+B(int $\ast$status, int it, void $\ast$ami\+\_\+mem, void $\ast$user\+\_\+data, void $\ast$return\+\_\+data, void $\ast$temp\+\_\+data)}]{\setlength{\rightskip}{0pt plus 5cm}void get\+Diagnosis\+B (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{status, }
+\item[{int}]{it, }
+\item[{void $\ast$}]{ami\+\_\+mem, }
+\item[{void $\ast$}]{user\+\_\+data, }
+\item[{void $\ast$}]{return\+\_\+data, }
+\item[{void $\ast$}]{temp\+\_\+data}
+\end{DoxyParamCaption}
+)}\label{amici_8c_a90da28fbc4745516101db3c8d6be9305}
+get\+Diagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em status} & flag indicating success of execution ~\newline
+{\bfseries Type}\+: $\ast$int \\
+\hline
+\mbox{\tt in}  & {\em it} & time-\/point index ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em ami\+\_\+mem} & pointer to the solver memory block ~\newline
+{\bfseries Type}\+: $\ast$void \\
+\hline
+\mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt out}  & {\em return\+\_\+data} & pointer to the return data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_return_data}{Return\+Data} \\
+\hline
+\mbox{\tt out}  & {\em temp\+\_\+data} & pointer to the temporary data struct ~\newline
+{\bfseries Type}\+: \hyperlink{struct_temp_data}{Temp\+Data} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+
+
+Definition at line 1015 of file amici.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph}
+\end{center}
+\end{figure}
+
+

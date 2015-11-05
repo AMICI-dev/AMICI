@@ -1,0 +1,165 @@
+\hypertarget{struct_temp_data}{}\subsection{Temp\+Data Struct Reference}
+\label{struct_temp_data}\index{Temp\+Data@{Temp\+Data}}
+
+
+struct that provides temporary storage for different variables  
+
+
+
+
+{\ttfamily \#include $<$tdata.\+h$>$}
+
+\subsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{struct_temp_data_ae0484650df254ad9cd8883e2ba028892}{}realtype \hyperlink{struct_temp_data_ae0484650df254ad9cd8883e2ba028892}{am\+\_\+t}\label{struct_temp_data_ae0484650df254ad9cd8883e2ba028892}
+
+\begin{DoxyCompactList}\small\item\em current time \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a4527d9abde45ba3982c35d2c12969d36}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_a4527d9abde45ba3982c35d2c12969d36}{am\+\_\+x}\label{struct_temp_data_a4527d9abde45ba3982c35d2c12969d36}
+
+\begin{DoxyCompactList}\small\item\em state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_ac10ec733609d33c557d48c1cc4c9f6f1}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_ac10ec733609d33c557d48c1cc4c9f6f1}{am\+\_\+dx}\label{struct_temp_data_ac10ec733609d33c557d48c1cc4c9f6f1}
+
+\begin{DoxyCompactList}\small\item\em differential state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_abad4a9e3cc9cd42b3fe4e2fe28a915c1}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_abad4a9e3cc9cd42b3fe4e2fe28a915c1}{am\+\_\+xdot}\label{struct_temp_data_abad4a9e3cc9cd42b3fe4e2fe28a915c1}
+
+\begin{DoxyCompactList}\small\item\em time derivative state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a318f0b9b1f4b33326184a350912c6fb1}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_a318f0b9b1f4b33326184a350912c6fb1}{am\+\_\+x\+B}\label{struct_temp_data_a318f0b9b1f4b33326184a350912c6fb1}
+
+\begin{DoxyCompactList}\small\item\em adjoint state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a6dc87d123304fe3c6a20899fca777501}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_a6dc87d123304fe3c6a20899fca777501}{am\+\_\+dx\+B}\label{struct_temp_data_a6dc87d123304fe3c6a20899fca777501}
+
+\begin{DoxyCompactList}\small\item\em differential adjoint state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_ac4099b4f6bf1f15d7d07b88993515da7}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_ac4099b4f6bf1f15d7d07b88993515da7}{am\+\_\+x\+Q\+B}\label{struct_temp_data_ac4099b4f6bf1f15d7d07b88993515da7}
+
+\begin{DoxyCompactList}\small\item\em quadrature state vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a5253085927038bdeb7c327aa14470722}{}N\+\_\+\+Vector $\ast$ \hyperlink{struct_temp_data_a5253085927038bdeb7c327aa14470722}{am\+\_\+sx}\label{struct_temp_data_a5253085927038bdeb7c327aa14470722}
+
+\begin{DoxyCompactList}\small\item\em sensitivity state vector array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a2457438c1ae3ea571031bc3c2e440da2}{}N\+\_\+\+Vector $\ast$ \hyperlink{struct_temp_data_a2457438c1ae3ea571031bc3c2e440da2}{am\+\_\+sdx}\label{struct_temp_data_a2457438c1ae3ea571031bc3c2e440da2}
+
+\begin{DoxyCompactList}\small\item\em differential sensitivity state vector array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_ad918917fdce710fbd6fe9774e35bfcfb}{}N\+\_\+\+Vector \hyperlink{struct_temp_data_ad918917fdce710fbd6fe9774e35bfcfb}{am\+\_\+id}\label{struct_temp_data_ad918917fdce710fbd6fe9774e35bfcfb}
+
+\begin{DoxyCompactList}\small\item\em index indicating D\+A\+E equations vector \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_aa850cd4b6b24d0b98b4aac8f42a057a1}{}Dls\+Mat \hyperlink{struct_temp_data_aa850cd4b6b24d0b98b4aac8f42a057a1}{am\+\_\+\+Jtmp}\label{struct_temp_data_aa850cd4b6b24d0b98b4aac8f42a057a1}
+
+\begin{DoxyCompactList}\small\item\em Jacobian. \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a542f10e5df61799d1c7c7d7e6ff18663}{}double $\ast$ \hyperlink{struct_temp_data_a542f10e5df61799d1c7c7d7e6ff18663}{am\+\_\+llh\+S0}\label{struct_temp_data_a542f10e5df61799d1c7c7d7e6ff18663}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of likelihood array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_ae80bd7f1abedcaafe56c6a78384b5542}{}double \hyperlink{struct_temp_data_ae80bd7f1abedcaafe56c6a78384b5542}{am\+\_\+g}\label{struct_temp_data_ae80bd7f1abedcaafe56c6a78384b5542}
+
+\begin{DoxyCompactList}\small\item\em data likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a946de8c8ec9eaf3bae2c3cb5229e5608}{}double $\ast$ \hyperlink{struct_temp_data_a946de8c8ec9eaf3bae2c3cb5229e5608}{am\+\_\+dgdp}\label{struct_temp_data_a946de8c8ec9eaf3bae2c3cb5229e5608}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of data likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a48ffc7d550f3a08efce20d54ebac8d6a}{}double $\ast$ \hyperlink{struct_temp_data_a48ffc7d550f3a08efce20d54ebac8d6a}{am\+\_\+dgdx}\label{struct_temp_data_a48ffc7d550f3a08efce20d54ebac8d6a}
+
+\begin{DoxyCompactList}\small\item\em state derivative of data likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a7a652bd44d3d6f8ffa106a5295f5e2a1}{}double \hyperlink{struct_temp_data_a7a652bd44d3d6f8ffa106a5295f5e2a1}{am\+\_\+r}\label{struct_temp_data_a7a652bd44d3d6f8ffa106a5295f5e2a1}
+
+\begin{DoxyCompactList}\small\item\em event likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_af40e5e8e0a65436934e4f2888340e458}{}double $\ast$ \hyperlink{struct_temp_data_af40e5e8e0a65436934e4f2888340e458}{am\+\_\+drdp}\label{struct_temp_data_af40e5e8e0a65436934e4f2888340e458}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of event likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a0fb069ba24e8e90df621dd29ec4c84f7}{}double $\ast$ \hyperlink{struct_temp_data_a0fb069ba24e8e90df621dd29ec4c84f7}{am\+\_\+drdx}\label{struct_temp_data_a0fb069ba24e8e90df621dd29ec4c84f7}
+
+\begin{DoxyCompactList}\small\item\em state derivative of event likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a64ffad68a060a30c8a0c665c65784dfc}{}double \hyperlink{struct_temp_data_a64ffad68a060a30c8a0c665c65784dfc}{am\+\_\+rval}\label{struct_temp_data_a64ffad68a060a30c8a0c665c65784dfc}
+
+\begin{DoxyCompactList}\small\item\em root function likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_aeb64dd8f56bebc4a6228eec5c4131aad}{}double $\ast$ \hyperlink{struct_temp_data_aeb64dd8f56bebc4a6228eec5c4131aad}{am\+\_\+drvaldp}\label{struct_temp_data_aeb64dd8f56bebc4a6228eec5c4131aad}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of root function likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_acdc5967fa5a5aab617a1e41269f57935}{}double $\ast$ \hyperlink{struct_temp_data_acdc5967fa5a5aab617a1e41269f57935}{am\+\_\+drvaldx}\label{struct_temp_data_acdc5967fa5a5aab617a1e41269f57935}
+
+\begin{DoxyCompactList}\small\item\em state derivative of root function likelihood \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a5fea9eb6e03adbeb2e5c613f00078200}{}double $\ast$ \hyperlink{struct_temp_data_a5fea9eb6e03adbeb2e5c613f00078200}{am\+\_\+dtdx}\label{struct_temp_data_a5fea9eb6e03adbeb2e5c613f00078200}
+
+\begin{DoxyCompactList}\small\item\em state derivative of event \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a270f8db43a6d39783954403593bdd584}{}double $\ast$ \hyperlink{struct_temp_data_a270f8db43a6d39783954403593bdd584}{am\+\_\+dtdp}\label{struct_temp_data_a270f8db43a6d39783954403593bdd584}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of event \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a444afdf86ee9a2fa21a406665b8e680a}{}double $\ast$ \hyperlink{struct_temp_data_a444afdf86ee9a2fa21a406665b8e680a}{am\+\_\+dydp}\label{struct_temp_data_a444afdf86ee9a2fa21a406665b8e680a}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of observable \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a6ae1bc06c2372a7de4fc2195a7562fa6}{}double $\ast$ \hyperlink{struct_temp_data_a6ae1bc06c2372a7de4fc2195a7562fa6}{am\+\_\+dydx}\label{struct_temp_data_a6ae1bc06c2372a7de4fc2195a7562fa6}
+
+\begin{DoxyCompactList}\small\item\em state derivative of observable \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a3ddc8a88947f557500d6df4aeb09b18a}{}double $\ast$ \hyperlink{struct_temp_data_a3ddc8a88947f557500d6df4aeb09b18a}{am\+\_\+y\+S0}\label{struct_temp_data_a3ddc8a88947f557500d6df4aeb09b18a}
+
+\begin{DoxyCompactList}\small\item\em initial sensitivity of observable \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_aed7f1b33daffb581c6be404c0c5d12ac}{}double $\ast$ \hyperlink{struct_temp_data_aed7f1b33daffb581c6be404c0c5d12ac}{am\+\_\+sigma\+\_\+y}\label{struct_temp_data_aed7f1b33daffb581c6be404c0c5d12ac}
+
+\begin{DoxyCompactList}\small\item\em data standard deviation \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a8ffa0cf50a6827ba6f5964625d049a30}{}double $\ast$ \hyperlink{struct_temp_data_a8ffa0cf50a6827ba6f5964625d049a30}{am\+\_\+dsigma\+\_\+ydp}\label{struct_temp_data_a8ffa0cf50a6827ba6f5964625d049a30}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of data standard deviation \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a6b326ec16453b4518b549856f913acbf}{}double $\ast$ \hyperlink{struct_temp_data_a6b326ec16453b4518b549856f913acbf}{am\+\_\+sigma\+\_\+t}\label{struct_temp_data_a6b326ec16453b4518b549856f913acbf}
+
+\begin{DoxyCompactList}\small\item\em event standard deviation \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a70d1dd9123f113a231825d6d58c92550}{}double $\ast$ \hyperlink{struct_temp_data_a70d1dd9123f113a231825d6d58c92550}{am\+\_\+dsigma\+\_\+tdp}\label{struct_temp_data_a70d1dd9123f113a231825d6d58c92550}
+
+\begin{DoxyCompactList}\small\item\em parameter derivative of event standard deviation \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_ab741ac82e5272750a751572dff03daf9}{}double $\ast$ \hyperlink{struct_temp_data_ab741ac82e5272750a751572dff03daf9}{am\+\_\+x\+\_\+tmp}\label{struct_temp_data_ab741ac82e5272750a751572dff03daf9}
+
+\begin{DoxyCompactList}\small\item\em state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a36291523c0547b6a1086910461d13569}{}double $\ast$ \hyperlink{struct_temp_data_a36291523c0547b6a1086910461d13569}{am\+\_\+sx\+\_\+tmp}\label{struct_temp_data_a36291523c0547b6a1086910461d13569}
+
+\begin{DoxyCompactList}\small\item\em sensitivity state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a9bf7d112aa52d056192983f55fff2eaf}{}double $\ast$ \hyperlink{struct_temp_data_a9bf7d112aa52d056192983f55fff2eaf}{am\+\_\+dx\+\_\+tmp}\label{struct_temp_data_a9bf7d112aa52d056192983f55fff2eaf}
+
+\begin{DoxyCompactList}\small\item\em differential state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a6882e67247f0ba606bea7beb58e06a2a}{}double $\ast$ \hyperlink{struct_temp_data_a6882e67247f0ba606bea7beb58e06a2a}{am\+\_\+sdx\+\_\+tmp}\label{struct_temp_data_a6882e67247f0ba606bea7beb58e06a2a}
+
+\begin{DoxyCompactList}\small\item\em differential sensitivity state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_afb2731c31bf77c871d0900fb39e8ab16}{}double $\ast$ \hyperlink{struct_temp_data_afb2731c31bf77c871d0900fb39e8ab16}{am\+\_\+xdot\+\_\+tmp}\label{struct_temp_data_afb2731c31bf77c871d0900fb39e8ab16}
+
+\begin{DoxyCompactList}\small\item\em time derivative state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_adbc8603c1bf4ed31b70d605383186bc1}{}double $\ast$ \hyperlink{struct_temp_data_adbc8603c1bf4ed31b70d605383186bc1}{am\+\_\+x\+B\+\_\+tmp}\label{struct_temp_data_adbc8603c1bf4ed31b70d605383186bc1}
+
+\begin{DoxyCompactList}\small\item\em differential adjoint state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a6dd23f804ac266653883f23ef4ac7686}{}double $\ast$ \hyperlink{struct_temp_data_a6dd23f804ac266653883f23ef4ac7686}{am\+\_\+x\+Q\+B\+\_\+tmp}\label{struct_temp_data_a6dd23f804ac266653883f23ef4ac7686}
+
+\begin{DoxyCompactList}\small\item\em quadrature state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a24382a26672aa3895d846a86981f36fd}{}double $\ast$ \hyperlink{struct_temp_data_a24382a26672aa3895d846a86981f36fd}{am\+\_\+dx\+B\+\_\+tmp}\label{struct_temp_data_a24382a26672aa3895d846a86981f36fd}
+
+\begin{DoxyCompactList}\small\item\em differential adjoint state array \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a3ae8375babdd7bfd0b0b05a158f36b1a}{}double $\ast$ \hyperlink{struct_temp_data_a3ae8375babdd7bfd0b0b05a158f36b1a}{am\+\_\+id\+\_\+tmp}\label{struct_temp_data_a3ae8375babdd7bfd0b0b05a158f36b1a}
+
+\begin{DoxyCompactList}\small\item\em index indicating D\+A\+E equations array \end{DoxyCompactList}\item 
+int $\ast$ \hyperlink{struct_temp_data_a7aead84117fd84087a23d968ea56b542}{am\+\_\+rootsfound}
+\begin{DoxyCompactList}\small\item\em array of flags indicating which root has beend found \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_aa6a5cd387c4d5257f9f8de9b04af666b}{}double $\ast$ \hyperlink{struct_temp_data_aa6a5cd387c4d5257f9f8de9b04af666b}{am\+\_\+rootvaltmp}\label{struct_temp_data_aa6a5cd387c4d5257f9f8de9b04af666b}
+
+\begin{DoxyCompactList}\small\item\em array of values of the root function \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a360ea220e712750c92bd3fc8b56230e2}{}int $\ast$ \hyperlink{struct_temp_data_a360ea220e712750c92bd3fc8b56230e2}{am\+\_\+rootidx}\label{struct_temp_data_a360ea220e712750c92bd3fc8b56230e2}
+
+\begin{DoxyCompactList}\small\item\em array of index which root has been found \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a961819e25ceef7e842c469cbedccb19f}{}int \hyperlink{struct_temp_data_a961819e25ceef7e842c469cbedccb19f}{am\+\_\+which}\label{struct_temp_data_a961819e25ceef7e842c469cbedccb19f}
+
+\begin{DoxyCompactList}\small\item\em integer for indexing of backwards problems \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_a236419c9694ba93addaee96e347e84b9}{}double $\ast$ \hyperlink{struct_temp_data_a236419c9694ba93addaee96e347e84b9}{am\+\_\+discs}\label{struct_temp_data_a236419c9694ba93addaee96e347e84b9}
+
+\begin{DoxyCompactList}\small\item\em array containing the time-\/points of discontinuities \end{DoxyCompactList}\item 
+\hypertarget{struct_temp_data_acc5701e8db7a06ab4614f4008da870fe}{}double $\ast$ \hyperlink{struct_temp_data_acc5701e8db7a06ab4614f4008da870fe}{am\+\_\+irdiscs}\label{struct_temp_data_acc5701e8db7a06ab4614f4008da870fe}
+
+\begin{DoxyCompactList}\small\item\em array containing the index of discontinuities \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+
+
+Definition at line 64 of file tdata.\+h.
+
+
+
+\subsubsection{Member Data Documentation}
+\hypertarget{struct_temp_data_a7aead84117fd84087a23d968ea56b542}{}\index{Temp\+Data@{Temp\+Data}!am\+\_\+rootsfound@{am\+\_\+rootsfound}}
+\index{am\+\_\+rootsfound@{am\+\_\+rootsfound}!Temp\+Data@{Temp\+Data}}
+\paragraph[{am\+\_\+rootsfound}]{\setlength{\rightskip}{0pt plus 5cm}int$\ast$ am\+\_\+rootsfound}\label{struct_temp_data_a7aead84117fd84087a23d968ea56b542}
+array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound\mbox{[}i\mbox{]}?= 0 if gi has a root, and = 0 if not. 
+
+Definition at line 151 of file tdata.\+h.
+

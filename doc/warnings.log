@@ -1,0 +1,25 @@
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/am_setdefault.m:32: warning: class for member `mlhsInnerSubst<::struct' cannot be found.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/datahash/DataHash.m:545: warning: Found unknown command `\sin'
+/Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.m:17: warning: return type of member amiwrap is not documented
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/am_setdefault.m:1: warning: Member am_setdefault(::struct obj,::struct dobj) (function) of file am_setdefault.m is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/datahash/DataHash.m:545: warning: Found unknown command `\sin'
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/datahash/DataHash.m:1: warning: Member mtoc_subst_DataHash_m_tsbus_cotm_Error_L(matlabtypesubstitute ID, matlabtypesubstitute varargin) (function) of file DataHash.m is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/datahash/DataHash.m:17: warning: parameters of member DataHash are not (all) documented
+/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary/datahash/DataHash.m:17: warning: return type of member DataHash is not documented
+warning: Caller graph for 'spline' not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES.
+warning: Caller graph for 'seval' not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amimodel/amimodel.m:17: warning: Member compileC() (function) of class amimodel is not documented.
+error: Problems running latex. Check your installation or look for typos in _formulas.tex and check _formulas.log!
+dvips: DVI file can't be opened: _formulas.dvi: No such file or directory
+error: Problems running dvips. Check your installation!
+LaTeX compiler output:
+rm -f *.ps *.dvi *.aux *.toc *.idx *.ind *.ilg *.log *.out *.brf *.blg *.bbl refman.pdf
+pdflatex refman
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./refman.tex
+LaTeX2e <2015/01/01>
+Babel <3.9l> and hyphenation patterns for 79 languages loaded.
+
+make: *** [refman.pdf] Error 1

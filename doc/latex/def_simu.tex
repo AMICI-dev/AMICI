@@ -1,0 +1,408 @@
+In the following we will give a detailed overview how to specify models in A\+M\+I\+W\+R\+A\+P and how to call the generated simulation files.\hypertarget{def_simu_definition}{}\subsection{Model Definition}\label{def_simu_definition}
+This guide will guide the user on how to specify models in M\+A\+T\+L\+A\+B. For example implementations see the examples in the example directory.\hypertarget{def_simu_header}{}\subsubsection{Header}\label{def_simu_header}
+The model definition needs to be defined as a function which returns a struct with all symbolic definitions and options.
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{function} [model] = example\_model\_syms() 
+\end{DoxyCode}
+\hypertarget{def_simu_options}{}\subsubsection{Options}\label{def_simu_options}
+Set the options by specifying the respective field of the modelstruct
+
+
+\begin{DoxyCode}
+model.(fieldname) = (value) 
+\end{DoxyCode}
+
+
+The options specify default options for simulation, parametrisation and compilation. All of these options are optional.
+
+\begin{TabularC}{3}
+\hline
+\rowcolor{lightgray}{\bf field }&{\bf description }&{\bf default  }\\\cline{1-3}
+.atol &absolute integration tolerance &1e-\/8 \\\cline{1-3}
+.rtol &relative integration tolerance &1e-\/8 \\\cline{1-3}
+.maxsteps &maximal number integration steps &1e-\/8 \\\cline{1-3}
+.param &parametrisation \textquotesingle{}log\textquotesingle{}/\textquotesingle{}log10\textquotesingle{}/\textquotesingle{}lin\textquotesingle{} &\textquotesingle{}lin\textquotesingle{} \\\cline{1-3}
+.debug &flag to compile with debug symbols &false \\\cline{1-3}
+.forward &flag to activate forward sensitivities &true \\\cline{1-3}
+.adjoint &flag to activate adjoint sensitivities &true \\\cline{1-3}
+\end{TabularC}
+When set to true, the fields \textquotesingle{}noforward\textquotesingle{} and \textquotesingle{}noadjoint\textquotesingle{} will speed up the time required to compile the model but also disable the respective sensitivity computation.\hypertarget{def_simu_states}{}\subsubsection{States}\label{def_simu_states}
+Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily.
+
+
+\begin{DoxyCode}
+syms state1 state2 state3 
+\end{DoxyCode}
+
+
+Create the state vector containing all states\+:
+
+
+\begin{DoxyCode}
+x = [ state1 state2 state3 ]; 
+\end{DoxyCode}
+\hypertarget{def_simu_parameters}{}\subsubsection{Parameters}\label{def_simu_parameters}
+Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily. Sensitivities {\bfseries will be derived} for all paramaters.
+
+
+\begin{DoxyCode}
+syms param1 param2 param3 param4 param5 param6 
+\end{DoxyCode}
+
+
+Create the parameters vector
+
+
+\begin{DoxyCode}
+p = [ param1 param2 param3 param4 param5 param6 ]; 
+\end{DoxyCode}
+\hypertarget{def_simu_constants}{}\subsubsection{Constants}\label{def_simu_constants}
+Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily. Sensitivities with respect to constants {\bfseries will not be derived}.
+
+
+\begin{DoxyCode}
+syms const1 const2 
+\end{DoxyCode}
+
+
+Create the parameters vector
+
+
+\begin{DoxyCode}
+k = [ const1 const2 ]; 
+\end{DoxyCode}
+\hypertarget{def_simu_rhs}{}\subsubsection{Differential Equation}\label{def_simu_rhs}
+For time-\/dependent differential equations you can specify a symbolic variable for time. This {\bfseries needs} to be denoted by t.
+
+
+\begin{DoxyCode}
+syms t 
+\end{DoxyCode}
+
+
+Specify the right hand side of the differential equation f or xdot
+
+
+\begin{DoxyCode}
+xdot(1) = [ const1 - param1*state1 ];
+xdot(2) = [ +param2*x(1) + \hyperlink{symbolic__functions_8c_a30a33546875b9dd1a63c29312b316f7e}{dirac}(t-param3) - const2*x(2) ];
+xdot(3) = [ param4*x(2) ];
+\end{DoxyCode}
+
+
+or
+
+
+\begin{DoxyCode}
+f(1) = [ const1 - param1*state1 ];
+f(2) = [ +param2*x(1) + \hyperlink{symbolic__functions_8c_a30a33546875b9dd1a63c29312b316f7e}{dirac}(t-param3) - const2*x(2) ];
+f(3) = [ 2*x(2) ];
+\end{DoxyCode}
+
+
+The specification of f or xdot may depend on \hyperlink{def_simu_states}{States}, \hyperlink{def_simu_parameters}{Parameters} and \hyperlink{def_simu_constants}{Constants}.
+
+For D\+A\+Es also specify the mass matrix.
+
+
+\begin{DoxyCode}
+M = [1, 0, 0;...
+0, 1, 0;...
+0, 0, 0];
+\end{DoxyCode}
+
+
+The specification of M may depend on parameters and constants.
+
+For O\+D\+Es the integrator will solve the equation $ \dot{x} = f $ and for D\+A\+Es the equations $ M \cdot \dot{x} = f $. A\+M\+I\+C\+I will decide whether to use C\+V\+O\+D\+E\+S (for O\+D\+Es) or I\+D\+A\+S (for D\+A\+Es) based on whether the mass matrix is defined or not.
+
+In the definition of the differential equation you can use certain symbolic functions. For a full list of available functions see \hyperlink{symbolic__functions_8c}{symbolic\+\_\+functions.\+c}.
+
+Dirac functions can be used to cause a jump in the respective states at the specified time-\/point. This is typically used to model injections, or other external stimuli. Spline functions can be used to model time/state dependent response with unkown time/state dependence.\hypertarget{def_simu_init}{}\subsubsection{Initial Conditions}\label{def_simu_init}
+Specify the initial conditions. These may depend on \hyperlink{def_simu_parameters}{Parameters} on \hyperlink{def_simu_constants}{Constants} and must have the same size as x.
+
+
+\begin{DoxyCode}
+x0 = [ param4, 0, 0 ]; 
+\end{DoxyCode}
+\hypertarget{def_simu_observables}{}\subsubsection{Observables}\label{def_simu_observables}
+Specify the observables. These may depend on \hyperlink{def_simu_parameters}{Parameters} and \hyperlink{def_simu_constants}{Constants}.
+
+
+\begin{DoxyCode}
+y(1) = state1 + state2;
+y(2) = state3 - state2;
+\end{DoxyCode}
+
+
+In the definition of the observable you can use certain symbolic functions. For a full list of available functions see \hyperlink{symbolic__functions_8c}{symbolic\+\_\+functions.\+c}. Dirac functions in observables will have no effect.\hypertarget{def_simu_events}{}\subsubsection{Events}\label{def_simu_events}
+Specifying events is optional. Events are specified in terms of a root function. Events are defined to happen at the roots of the root function.
+
+
+\begin{DoxyCode}
+root(1) = state1 - state2; 
+\end{DoxyCode}
+
+
+Events may depend on \hyperlink{def_simu_states}{States}, \hyperlink{def_simu_parameters}{Parameters} and \hyperlink{def_simu_constants}{Constants} but {\bfseries not} on \hyperlink{def_simu_observables}{Observables}\hypertarget{def_simu_std}{}\subsubsection{Standard Deviation}\label{def_simu_std}
+Specifying of standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for \hyperlink{def_simu_observables}{Observables} and \hyperlink{def_simu_events}{Events}.
+
+Standard deviaton for observable data is denoted by sigma\+\_\+y
+
+
+\begin{DoxyCode}
+sigma\_y(1) = param5; 
+\end{DoxyCode}
+
+
+Standard deviaton for event data is denoted by sigma\+\_\+y
+
+
+\begin{DoxyCode}
+sigma\_t(1) = param6; 
+\end{DoxyCode}
+
+
+Both sigma\+\_\+y and sigma\+\_\+t can either be a scalar or of the same dimension as the \hyperlink{def_simu_observables}{Observables} / \hyperlink{def_simu_events}{Events} function. They can depend on time and \hyperlink{def_simu_parameters}{Parameters} but must not depend on the \hyperlink{def_simu_states}{States} or \hyperlink{def_simu_observables}{Observables}. The values provided in sigma\+\_\+y and sigma\+\_\+t will only be used if the value in Sigma\+\_\+\+Y or Sigma\+\_\+\+T in the user-\/provided data struct is Na\+N. See \hyperlink{def_simu_simulation}{Model Simulation} for details.\hypertarget{def_simu_attach}{}\subsubsection{Attach to Model Struct}\label{def_simu_attach}
+Eventually all symbolic expressions need to be attached to the model struct.
+
+
+\begin{DoxyCode}
+model.sym.x = x;
+model.sym.k = k;
+model.sym.root = root;
+model.sym.xdot = xdot;
+% or
+model.sym.f = f;
+model.sym.M = M; %only \textcolor{keywordflow}{for} DAEs
+model.sym.p = p;
+model.sym.x0 = x0;
+model.sym.y = y;
+model.sym.sigma\_y = sigma\_y;
+model.sym.sigma\_t = sigma\_t;
+\end{DoxyCode}
+\hypertarget{def_simu_compilation}{}\subsection{Model Compilation}\label{def_simu_compilation}
+The model can then be compiled by calling amiwrap\+:
+
+
+\begin{DoxyCode}
+\hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap}(modelname,\textcolor{stringliteral}{'example\_model\_syms'},dir,o2flag)
+\end{DoxyCode}
+
+
+Here modelname should be a string defining the modelname, dir should be a string containing the path to the directory in which simulation files should be placed and o2flag is a flag indicating whether second order sensitivities should also be compiled. The user should make sure that the previously defined function \textquotesingle{}example\+\_\+model\+\_\+syms\textquotesingle{} is in the user path. Alternatively, the user can also call the function \textquotesingle{}example\+\_\+model\+\_\+syms\textquotesingle{}
+
+
+\begin{DoxyCode}
+[model] = example\_model\_syms() 
+\end{DoxyCode}
+
+
+and subsequently provide the generated struct to \hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap()}, instead of providing the symbolic function\+:
+
+
+\begin{DoxyCode}
+\hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap}(modelname,model,dir,o2flag)
+\end{DoxyCode}
+
+
+In a similar fashion, the user could also generate multiple model and pass them directly to \hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap()} without generating respective model definition scripts.
+
+\begin{DoxySeeAlso}{See also}
+\hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap()}
+\end{DoxySeeAlso}
+\hypertarget{def_simu_simulation}{}\subsection{Model Simulation}\label{def_simu_simulation}
+After the call to \hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap()} two files will be placed in the specified directory. One is a am\+\_\+{\itshape modelname}.mex and the other is simulate\+\_\+{\itshape modelname}.m. The mex file should never be called directly. Instead the M\+A\+T\+L\+A\+B script, which acts as a wrapper around the .mex simulation file should be used.
+
+The simulate\+\_\+{\itshape modelname}.m itself carries extensive documentation on how to call the function, what it returns and what additional options can be specified. In the following we will give a short overview of possible function calls.\hypertarget{def_simu_integration}{}\subsubsection{Integration}\label{def_simu_integration}
+Define a time vector\+:
+
+
+\begin{DoxyCode}
+t = linspace(0,10,100)
+\end{DoxyCode}
+
+
+Generate a parameter vector\+:
+
+
+\begin{DoxyCode}
+theta = ones(6,1);
+\end{DoxyCode}
+
+
+Generate a constants vector\+:
+
+
+\begin{DoxyCode}
+kappa = ones(2,1);
+\end{DoxyCode}
+
+
+Integrate\+:
+
+
+\begin{DoxyCode}
+sol = simulate\_modelname(t,theta,kappa,[],options)
+\end{DoxyCode}
+
+
+The integration status will be indicated by the sol.\+status flag. Negative values indicated failed integration. The states will then be available as sol.\+x. The observables will then be available as sol.\+y. The events will then be available as sol.\+root. If no event occured there will be an event at the end of the considered interval with the final value of the root function stored in sol.\+rval.
+
+Alternatively the integration call also be called via
+
+
+\begin{DoxyCode}
+[status,t,x,y] = simulate\_modelname(t,theta,kappa,[],options)
+\end{DoxyCode}
+
+
+The integration status will be indicated by the status flag. Negative values indicated failed integration. The states will then be available as x. The observables will then be available as y. No event output will be given.\hypertarget{def_simu_forward}{}\subsubsection{Forward Sensitivities}\label{def_simu_forward}
+Define a time vector\+:
+
+
+\begin{DoxyCode}
+t = linspace(0,10,100)
+\end{DoxyCode}
+
+
+Generate a parameter vector\+:
+
+
+\begin{DoxyCode}
+theta = ones(6,1);
+\end{DoxyCode}
+
+
+Generate a constants vector\+:
+
+
+\begin{DoxyCode}
+kappa = ones(2,1);
+\end{DoxyCode}
+
+
+Set the sensitivity computation to forward sensitivities and Integrate\+:
+
+
+\begin{DoxyCode}
+options.sensi = 1;
+options.forward = \textcolor{keyword}{true};
+sol = simulate\_modelname(t,theta,kappa,[],options)
+\end{DoxyCode}
+
+
+The integration status will be indicated by the sol.\+status flag. Negative values indicated failed integration. The states will then be available as sol.\+x, with the derivative with respect to the parameters in sol.\+sx. The observables will then be available as sol.\+y, with the derivative with respect to the parameters in sol.\+sy. The events will then be available as sol.\+root, with the derivative with respect to the parameters in sol.\+sroot. If no event occured there will be an event at the end of the considered interval with the final value of the root function stored in sol.\+rootval, with the derivative with respect to the parameters in sol.\+srootval
+
+Alternatively the integration call also be called via
+
+
+\begin{DoxyCode}
+[status,t,x,y,sx,sy] = simulate\_modelname(t,theta,kappa,[],options)
+\end{DoxyCode}
+
+
+The integration status will be indicated by the status flag. Negative values indicated failed integration. The states will then be available as x, with derivative with respect to the parameters in sx. The observables will then be available as y, with derivative with respect to the parameters in sy. No event output will be given.\hypertarget{def_simu_adjoint}{}\subsubsection{Adjoint Sensitivities}\label{def_simu_adjoint}
+Define a time vector\+:
+
+
+\begin{DoxyCode}
+t = linspace(0,10,100)
+\end{DoxyCode}
+
+
+Generate a parameter vector\+:
+
+
+\begin{DoxyCode}
+theta = ones(6,1);
+\end{DoxyCode}
+
+
+Set the sensitivity computation to adjoint sensitivities\+:
+
+
+\begin{DoxyCode}
+options.sensi = 1;
+options.adjoint = \textcolor{keyword}{true};
+\end{DoxyCode}
+
+
+Define Experimental Data\+:
+
+
+\begin{DoxyCode}
+D.Y = [NaN(1,2)],ones(length(t)-1,2)];
+D.Sigma\_Y = [0.1*ones(length(t)-1,2),NaN(1,2)];
+D.T = ones(1,1);
+D.Sigma\_T = NaN;
+\end{DoxyCode}
+
+
+The Na\+N values in Sigma\+\_\+\+Y and Sigma\+\_\+\+T will be replaced by the specification in \hyperlink{def_simu_std}{Standard Deviation}. Data points with Na\+N value will be completely ignored.
+
+Generate a constants vector\+:
+
+
+\begin{DoxyCode}
+kappa = ones(2,1);
+\end{DoxyCode}
+
+
+Integrate\+:
+
+
+\begin{DoxyCode}
+sol = simulate\_modelname(t,theta,kappa,D,options)
+\end{DoxyCode}
+
+
+The integration status will be indicated by the sol.\+status flag. Negative values indicated failed integration. The log-\/likelihood will then be available as sol.\+llh and the derivative with respect to the parameters in sol.\+sllh. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.\hypertarget{def_simu_steadystate}{}\subsubsection{Steady State Sensitivities}\label{def_simu_steadystate}
+This will compute state sensitivities according to the formula $$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
+
+In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.
+
+Define a final timepoint t\+:
+
+
+\begin{DoxyCode}
+t = 100
+\end{DoxyCode}
+
+
+Generate a parameter vector\+:
+
+
+\begin{DoxyCode}
+theta = ones(6,1);
+\end{DoxyCode}
+
+
+Generate a constants vector\+:
+
+
+\begin{DoxyCode}
+kappa = ones(2,1);
+\end{DoxyCode}
+
+
+Set the sensitivity computation to steady state sensitivities\+:
+
+
+\begin{DoxyCode}
+options.sensi = 1;
+options.ss = 1;
+\end{DoxyCode}
+
+
+Integrate\+:
+
+
+\begin{DoxyCode}
+sol = simulate\_modelname(t,theta,kappa,D,options)
+\end{DoxyCode}
+
+
+The states will then be available as sol.\+x, with the derivative with respect to the parameters in sol.\+sx. The observables will then be available as sol.\+y, with the derivative with respect to the parameters in sol.\+sy. Notice that for steady state sensitivities no event sensitivities will be available. For the accuracy of the computed derivatives it is essential that the system is sufficiently close to a steady state. This can be checked by examining the right hand side of the system at the final time-\/point via sol.\+xdot. 

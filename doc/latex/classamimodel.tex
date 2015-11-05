@@ -1,0 +1,750 @@
+\hypertarget{classamimodel}{}\subsection{amimodel Class Reference}
+\label{classamimodel}\index{amimodel@{amimodel}}
+
+
+amimodel is the object in which all model definitions are stored  
+
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classamimodel_a05d52506788717b3d482845748446a60}{amimodel} (\+::string symfun,\+::string \hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname})
+\begin{DoxyCompactList}\small\item\em constructor of the amimodel class. this function initializes the model object based on the provided symfun and modelname \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a68efdc6ed5d618672bea1556209e5568}{parse\+Model} ()
+\begin{DoxyCompactList}\small\item\em parse\+Model parses the this and computes all necessary symbolic expressions. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb}{generate\+C} ()
+\begin{DoxyCompactList}\small\item\em generate\+C generates the c files which will be used in the compilation. \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_ad1339463ebc3a2e6c6aeda6f63f1b4ed}{}mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ {\bfseries compile\+C} ()\label{classamimodel_ad1339463ebc3a2e6c6aeda6f63f1b4ed}
+
+\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a65b30e6d951ff694d40d45b0625742c7}{write\+Ccode\+\_\+sensi} (\+::symbolic svar,\+::fileid fid)
+\begin{DoxyCompactList}\small\item\em write\+Ccode\+\_\+sensi is a wrapper for write\+Ccode which loops over parameters and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a874862825ea3346f977f518072dec051}{write\+Ccode} (\+::string funstr,\+::fileid fid, matlabtypesubstitute ip, matlabtypesubstitute jp)
+\begin{DoxyCompactList}\small\item\em write\+Ccode is a wrapper for this.\+gccode which initialises data and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2}{gccode} (\+::symbolic csym,\+::string funstr,\+::string cvar,\+::fileid fid)
+\begin{DoxyCompactList}\small\item\em gccode transforms symbolic expressions into c code and writes the respective expression into a specified file \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a1b75344ed773e2c5c1b76b8a97861234}{generate\+M} (\+::\hyperlink{classamimodel}{amimodel} amimodelo2)
+\begin{DoxyCompactList}\small\item\em generate\+M generates the matlab wrapper for the compiled C files. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a73f1b1b08350475e8d854d1a7f1944e1}{get\+Fun} (\+::struct \hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table},\+::string funstr)
+\begin{DoxyCompactList}\small\item\em get\+Fun generates symbolic expressions for the requested function. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e}{get\+Fun\+Deps} (\+::string funstr)
+\begin{DoxyCompactList}\small\item\em get\+Deps returns the dependencies for the requested function/expression. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a47ece64d988c9c183782a94bd7de3e6b}{get\+Fun\+Args} (\+::string funstr)
+\begin{DoxyCompactList}\small\item\em getfunargs returns a string which contains all input arguments for the function fun. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a12e6324d6137b28d7f4363aaf309c140}{get\+Fun\+C\+Var} (\+::string funstr)
+\begin{DoxyCompactList}\small\item\em get\+Deps returns the c variable for the requested function. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a08bca7058280eace2b47d57ea04068ef}{get\+Fun\+S\+Var} (\+::string funstr)
+\begin{DoxyCompactList}\small\item\em get\+Deps returns the symbolic variable for the requested function. \end{DoxyCompactList}\item 
+mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$,mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ $>$ \hyperlink{classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03}{check\+Deps} (\+::struct \hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table},\+::cell deps)
+\begin{DoxyCompactList}\small\item\em check\+Deps checks the dependencies of functions and populates sym fields if necessary \end{DoxyCompactList}\item 
+mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$,mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ $>$ \hyperlink{classamimodel_ab21f46296b0ee0a141c38143a79ad396}{load\+Old\+Hashes} ()
+\begin{DoxyCompactList}\small\item\em load\+Old\+Hashes loads information from a previous compilation of the model. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a2c41ab7adc2f815030ba175132e648c5}{augmento2} ()
+\begin{DoxyCompactList}\small\item\em augmento2 augments the system equation to also include equations for sensitivity equation. This will enable us to compute second order sensitivities in a forward-\/adjoint or forward-\/forward apporach later on. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classamimodel_a3c48fff3d28406486a4f1b5e18da7ca6}{}\+::struct \hyperlink{classamimodel_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}\label{classamimodel_a3c48fff3d28406486a4f1b5e18da7ca6}
+
+\begin{DoxyCompactList}\small\item\em symbolic definition struct \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a743fa290dbc0a67a3843d5ab0426e9b4}{}\+::struct \hyperlink{classamimodel_a743fa290dbc0a67a3843d5ab0426e9b4}{fun}\label{classamimodel_a743fa290dbc0a67a3843d5ab0426e9b4}
+
+\begin{DoxyCompactList}\small\item\em struct which stores information for which functions c code needs to be generated \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a4814315a739f43461b003c1c1ef6f550}{}\+::struct \hyperlink{classamimodel_a4814315a739f43461b003c1c1ef6f550}{strsym}\label{classamimodel_a4814315a739f43461b003c1c1ef6f550}
+
+\begin{DoxyCompactList}\small\item\em short names for symbolic variables \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{}\+::string \hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname}\label{classamimodel_a71bca9c21a6de42d8079ade31cb61044}
+
+\begin{DoxyCompactList}\small\item\em name of the model \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_aafe6335df413dd688a2f44efba012cf1}{}\+::struct \hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table}\label{classamimodel_aafe6335df413dd688a2f44efba012cf1}
+
+\begin{DoxyCompactList}\small\item\em struct that contains hash values for the symbolic model definitions \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamimodel_a0c5f3dcf809a17b895fe12fc91272349}{atol} = 1e-\/8
+\begin{DoxyCompactList}\small\item\em default absolute tolerance \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamimodel_a7978e9a4674f869e6b2950e2f6262ca5}{rtol} = 1e-\/8
+\begin{DoxyCompactList}\small\item\em default relative tolerance \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamimodel_ac37622882dacee1f11688d4941ccb45e}{maxsteps} = 1e4
+\begin{DoxyCompactList}\small\item\em default maximal number of integration steps \end{DoxyCompactList}\item 
+\+::bool \hyperlink{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{debug} = false
+\begin{DoxyCompactList}\small\item\em flag indicating whether debugging symbols should be compiled \end{DoxyCompactList}\item 
+\+::bool \hyperlink{classamimodel_ab6d500b41cf50693452415caca31d32e}{adjoint} = true
+\begin{DoxyCompactList}\small\item\em flag indicating whether adjoint sensitivities should be enabled \end{DoxyCompactList}\item 
+\+::bool \hyperlink{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}{forward} = true
+\begin{DoxyCompactList}\small\item\em flag indicating whether forward sensitivities should be enabled \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamimodel_abdb5a42ffee3ca622484b53a322f1004}{t0} = 0
+\begin{DoxyCompactList}\small\item\em default initial time \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}{}\+::string \hyperlink{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}{wtype}\label{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}
+
+\begin{DoxyCompactList}\small\item\em type of wrapper (cvodes/idas) \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a84e4236f07668a770c27567f1f9615ff}{}\+::int \hyperlink{classamimodel_a84e4236f07668a770c27567f1f9615ff}{nx}\label{classamimodel_a84e4236f07668a770c27567f1f9615ff}
+
+\begin{DoxyCompactList}\small\item\em number of states \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamimodel_a49c476de14a021114feb8c95da04952a}{nxtrue} = 0
+\begin{DoxyCompactList}\small\item\em number of original states for second order sensitivities \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a289ca425eb368f1d582b6be2be0d3dfc}{}\+::int \hyperlink{classamimodel_a289ca425eb368f1d582b6be2be0d3dfc}{ny}\label{classamimodel_a289ca425eb368f1d582b6be2be0d3dfc}
+
+\begin{DoxyCompactList}\small\item\em number of observables \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamimodel_ac91d7b36031ec122abc9f739692b02e8}{nytrue} = 0
+\begin{DoxyCompactList}\small\item\em number of original observables for second order sensitivities \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a70c1a5f25e12e70da97faf350ec11f8b}{}\+::int \hyperlink{classamimodel_a70c1a5f25e12e70da97faf350ec11f8b}{nr}\label{classamimodel_a70c1a5f25e12e70da97faf350ec11f8b}
+
+\begin{DoxyCompactList}\small\item\em number of events \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a2a7bdf803572325913e90e19189051d4}{}\+::int \hyperlink{classamimodel_a2a7bdf803572325913e90e19189051d4}{ndisc}\label{classamimodel_a2a7bdf803572325913e90e19189051d4}
+
+\begin{DoxyCompactList}\small\item\em number of discontinuities \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a6f6e2fe71b05c4c2f2d967ce9ca02dfd}{}\+::int \hyperlink{classamimodel_a6f6e2fe71b05c4c2f2d967ce9ca02dfd}{np}\label{classamimodel_a6f6e2fe71b05c4c2f2d967ce9ca02dfd}
+
+\begin{DoxyCompactList}\small\item\em number of parameters \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_afd6bea572754e0c3c320664bdccf0200}{}\+::int \hyperlink{classamimodel_afd6bea572754e0c3c320664bdccf0200}{nk}\label{classamimodel_afd6bea572754e0c3c320664bdccf0200}
+
+\begin{DoxyCompactList}\small\item\em number of constants \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_acf2488b95c97e0378c9bf49de3b50f28}{}\+::$\ast$int \hyperlink{classamimodel_acf2488b95c97e0378c9bf49de3b50f28}{id}\label{classamimodel_acf2488b95c97e0378c9bf49de3b50f28}
+
+\begin{DoxyCompactList}\small\item\em flag for D\+A\+Es \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a955c9d10635afed4ebc04c60010e5d40}{}\+::int \hyperlink{classamimodel_a955c9d10635afed4ebc04c60010e5d40}{ubw}\label{classamimodel_a955c9d10635afed4ebc04c60010e5d40}
+
+\begin{DoxyCompactList}\small\item\em upper Jacobian bandwidth \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a784f5fb2b8eda576179be087c2a09a39}{}\+::int \hyperlink{classamimodel_a784f5fb2b8eda576179be087c2a09a39}{lbw}\label{classamimodel_a784f5fb2b8eda576179be087c2a09a39}
+
+\begin{DoxyCompactList}\small\item\em lower Jacobian bandwidth \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a825ec588729c090ff51ea3473dcbc6b9}{}\+::int \hyperlink{classamimodel_a825ec588729c090ff51ea3473dcbc6b9}{nnz}\label{classamimodel_a825ec588729c090ff51ea3473dcbc6b9}
+
+\begin{DoxyCompactList}\small\item\em number of nonzero entries in Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a6ffb112eda9ff756e17104210981b30b}{}\+::$\ast$int \hyperlink{classamimodel_a6ffb112eda9ff756e17104210981b30b}{sparseidx}\label{classamimodel_a6ffb112eda9ff756e17104210981b30b}
+
+\begin{DoxyCompactList}\small\item\em dataindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_aa0abea3560da3f409a28567f42d52872}{}\+::$\ast$int \hyperlink{classamimodel_aa0abea3560da3f409a28567f42d52872}{rowvals}\label{classamimodel_aa0abea3560da3f409a28567f42d52872}
+
+\begin{DoxyCompactList}\small\item\em rowindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a887e8a11654afa197d040d8bb10cbb38}{}\+::$\ast$int \hyperlink{classamimodel_a887e8a11654afa197d040d8bb10cbb38}{colptrs}\label{classamimodel_a887e8a11654afa197d040d8bb10cbb38}
+
+\begin{DoxyCompactList}\small\item\em columnindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_adcfae93a688a66f1954d0832f51e4cc0}{}\+::$\ast$int \hyperlink{classamimodel_adcfae93a688a66f1954d0832f51e4cc0}{sparseidx\+B}\label{classamimodel_adcfae93a688a66f1954d0832f51e4cc0}
+
+\begin{DoxyCompactList}\small\item\em dataindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a1ba81ee0e28fe7c7576911973c82be70}{}\+::$\ast$int \hyperlink{classamimodel_a1ba81ee0e28fe7c7576911973c82be70}{rowvals\+B}\label{classamimodel_a1ba81ee0e28fe7c7576911973c82be70}
+
+\begin{DoxyCompactList}\small\item\em rowindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_a3a4891c5565b544dd7d4362dbbfaadf7}{}\+::$\ast$int \hyperlink{classamimodel_a3a4891c5565b544dd7d4362dbbfaadf7}{colptrs\+B}\label{classamimodel_a3a4891c5565b544dd7d4362dbbfaadf7}
+
+\begin{DoxyCompactList}\small\item\em columnindexes of sparse Jacobian \end{DoxyCompactList}\item 
+\hypertarget{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}{}\+::$\ast$cell \hyperlink{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}{funs}\label{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}
+
+\begin{DoxyCompactList}\small\item\em cell array of functions to be compiled \end{DoxyCompactList}\item 
+\+::string \hyperlink{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}{coptim} = \char`\"{}-\/O3\char`\"{}
+\begin{DoxyCompactList}\small\item\em optimisation flag for compilation \end{DoxyCompactList}\item 
+\+::string \hyperlink{classamimodel_a51f20d6b1b54a2eee3be0e8adc96a0ae}{param} = \char`\"{}lin\char`\"{}
+\begin{DoxyCompactList}\small\item\em default parametrisation \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+
+
+Definition at line 17 of file amimodel.\+m.
+
+
+
+\subsubsection{Constructor \& Destructor Documentation}
+\hypertarget{classamimodel_a05d52506788717b3d482845748446a60}{}\index{amimodel@{amimodel}!amimodel@{amimodel}}
+\index{amimodel@{amimodel}!amimodel@{amimodel}}
+\paragraph[{amimodel(\+::string symfun,\+::string modelname)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf amimodel} (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{symfun, }
+\item[{\+::string}]{modelname}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a05d52506788717b3d482845748446a60}
+
+\begin{DoxyParams}{Parameters}
+{\em symfun} & this is the string to the function which generates the modelstruct. You can also directly pass the struct here \\
+\hline
+{\em modelname} & name of the model \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 279 of file amimodel.\+m.
+
+
+
+\subsubsection{Member Function Documentation}
+\hypertarget{classamimodel_a68efdc6ed5d618672bea1556209e5568}{}\index{amimodel@{amimodel}!parse\+Model@{parse\+Model}}
+\index{parse\+Model@{parse\+Model}!amimodel@{amimodel}}
+\paragraph[{parse\+Model()}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ parse\+Model (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a68efdc6ed5d618672bea1556209e5568}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file parse\+Model.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb}{}\index{amimodel@{amimodel}!generate\+C@{generate\+C}}
+\index{generate\+C@{generate\+C}!amimodel@{amimodel}}
+\paragraph[{generate\+C()}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ generate\+C (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file generate\+C.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a65b30e6d951ff694d40d45b0625742c7}{}\index{amimodel@{amimodel}!write\+Ccode\+\_\+sensi@{write\+Ccode\+\_\+sensi}}
+\index{write\+Ccode\+\_\+sensi@{write\+Ccode\+\_\+sensi}!amimodel@{amimodel}}
+\paragraph[{write\+Ccode\+\_\+sensi(\+::symbolic svar,\+::fileid fid)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ write\+Ccode\+\_\+sensi (
+\begin{DoxyParamCaption}
+\item[{\+::symbolic}]{svar, }
+\item[{\+::fileid}]{fid}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a65b30e6d951ff694d40d45b0625742c7}
+
+\begin{DoxyParams}{Parameters}
+{\em svar} & symbolic variable which is later on passed to ggode \\
+\hline
+{\em fid} & file id in which the final expression is written\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+Ccode\+\_\+sensi.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a874862825ea3346f977f518072dec051}{}\index{amimodel@{amimodel}!write\+Ccode@{write\+Ccode}}
+\index{write\+Ccode@{write\+Ccode}!amimodel@{amimodel}}
+\paragraph[{write\+Ccode(\+::string funstr,\+::fileid fid, matlabtypesubstitute ip, matlabtypesubstitute jp)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ write\+Ccode (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{funstr, }
+\item[{\+::fileid}]{fid, }
+\item[{matlabtypesubstitute}]{ip, }
+\item[{matlabtypesubstitute}]{jp}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a874862825ea3346f977f518072dec051}
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & function for which C code is to be generated \\
+\hline
+{\em fid} & file id in which the final expression is written \\
+\hline
+{\em ip} & index for symbolic variable, if applicable svar(\+:,ip) will be passed to ggcode \\
+\hline
+{\em jp} & index for symbolic variable, if applicable svar(\+:,ip,jp) will be passed to ggcode\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+Ccode.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a874862825ea3346f977f518072dec051_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a874862825ea3346f977f518072dec051_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2}{}\index{amimodel@{amimodel}!gccode@{gccode}}
+\index{gccode@{gccode}!amimodel@{amimodel}}
+\paragraph[{gccode(\+::symbolic csym,\+::string funstr,\+::string cvar,\+::fileid fid)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ gccode (
+\begin{DoxyParamCaption}
+\item[{\+::symbolic}]{csym, }
+\item[{\+::string}]{funstr, }
+\item[{\+::string}]{cvar, }
+\item[{\+::fileid}]{fid}
+\end{DoxyParamCaption}
+)}\label{classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2}
+
+\begin{DoxyParams}{Parameters}
+{\em csym} & symbolic expression to be transform \\
+\hline
+{\em funstr} & function for which C code is to be generated \\
+\hline
+{\em cvar} & name of the assigned variable in C \\
+\hline
+{\em fid} & file id in which the expression should be written\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file gccode.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=232pt]{classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a1b75344ed773e2c5c1b76b8a97861234}{}\index{amimodel@{amimodel}!generate\+M@{generate\+M}}
+\index{generate\+M@{generate\+M}!amimodel@{amimodel}}
+\paragraph[{generate\+M(\+::amimodel amimodelo2)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ generate\+M (
+\begin{DoxyParamCaption}
+\item[{\+::{\bf amimodel}}]{amimodelo2}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a1b75344ed773e2c5c1b76b8a97861234}
+
+\begin{DoxyParams}{Parameters}
+{\em amimodelo2} & this struct must contain all necessary symbolic definitions for second order sensivities\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file generate\+M.\+m.
+
+\hypertarget{classamimodel_a73f1b1b08350475e8d854d1a7f1944e1}{}\index{amimodel@{amimodel}!get\+Fun@{get\+Fun}}
+\index{get\+Fun@{get\+Fun}!amimodel@{amimodel}}
+\paragraph[{get\+Fun(\+::struct H\+Table,\+::string funstr)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ get\+Fun (
+\begin{DoxyParamCaption}
+\item[{\+::struct}]{H\+Table, }
+\item[{\+::string}]{funstr}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a73f1b1b08350475e8d854d1a7f1944e1}
+
+\begin{DoxyParams}{Parameters}
+{\em H\+Table} & struct with hashes of symbolic definition from the previous compilation \\
+\hline
+{\em funstr} & function for which symbolic expressions should be computed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Fun.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=335pt]{classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=231pt]{classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e}{}\index{amimodel@{amimodel}!get\+Fun\+Deps@{get\+Fun\+Deps}}
+\index{get\+Fun\+Deps@{get\+Fun\+Deps}!amimodel@{amimodel}}
+\paragraph[{get\+Fun\+Deps(\+::string funstr)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::cell $>$ get\+Fun\+Deps (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{funstr}
+\end{DoxyParamCaption}
+)}\label{classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e}
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & function or expression for which the dependencies should be returned\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em deps} & cell array of dependencies \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Fun\+Deps.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a47ece64d988c9c183782a94bd7de3e6b}{}\index{amimodel@{amimodel}!get\+Fun\+Args@{get\+Fun\+Args}}
+\index{get\+Fun\+Args@{get\+Fun\+Args}!amimodel@{amimodel}}
+\paragraph[{get\+Fun\+Args(\+::string funstr)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ get\+Fun\+Args (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{funstr}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a47ece64d988c9c183782a94bd7de3e6b}
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & function name\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em str} & string containing function arguments \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Fun\+Args.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a12e6324d6137b28d7f4363aaf309c140}{}\index{amimodel@{amimodel}!get\+Fun\+C\+Var@{get\+Fun\+C\+Var}}
+\index{get\+Fun\+C\+Var@{get\+Fun\+C\+Var}!amimodel@{amimodel}}
+\paragraph[{get\+Fun\+C\+Var(\+::string funstr)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::string $>$ get\+Fun\+C\+Var (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{funstr}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a12e6324d6137b28d7f4363aaf309c140}
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & function or expression for which the dependencies should be returned\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em cvar} & cell array of dependencies \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Fun\+C\+Var.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a08bca7058280eace2b47d57ea04068ef}{}\index{amimodel@{amimodel}!get\+Fun\+S\+Var@{get\+Fun\+S\+Var}}
+\index{get\+Fun\+S\+Var@{get\+Fun\+S\+Var}!amimodel@{amimodel}}
+\paragraph[{get\+Fun\+S\+Var(\+::string funstr)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ get\+Fun\+S\+Var (
+\begin{DoxyParamCaption}
+\item[{\+::string}]{funstr}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a08bca7058280eace2b47d57ea04068ef}
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & function or expression for which the dependencies should be returned\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em cvar} & cell array of dependencies \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Fun\+S\+Var.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamimodel_a08bca7058280eace2b47d57ea04068ef_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03}{}\index{amimodel@{amimodel}!check\+Deps@{check\+Deps}}
+\index{check\+Deps@{check\+Deps}!amimodel@{amimodel}}
+\paragraph[{check\+Deps(\+::struct H\+Table,\+::cell deps)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$,mlhs\+Inner\+Subst$<$\+::{\bf H\+Table} $>$ $>$ check\+Deps (
+\begin{DoxyParamCaption}
+\item[{\+::struct}]{H\+Table, }
+\item[{\+::cell}]{deps}
+\end{DoxyParamCaption}
+)}\label{classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03}
+
+\begin{DoxyParams}{Parameters}
+{\em H\+Table} & struct with reference hashes of functions in its fields\\
+\hline
+{\em deps} & cell array with containing a list of dependencies\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em cflag} & boolean indicating whether any of the dependencies have\\
+\hline
+\end{DoxyRetVals}
+changed with respect to the hashes stored in H\+Table 
+
+Definition at line 18 of file check\+Deps.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=335pt]{classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_ab21f46296b0ee0a141c38143a79ad396}{}\index{amimodel@{amimodel}!load\+Old\+Hashes@{load\+Old\+Hashes}}
+\index{load\+Old\+Hashes@{load\+Old\+Hashes}!amimodel@{amimodel}}
+\paragraph[{load\+Old\+Hashes()}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$,mlhs\+Inner\+Subst$<$\+::struct $>$ $>$ load\+Old\+Hashes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classamimodel_ab21f46296b0ee0a141c38143a79ad396}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated model definition object \\
+\hline
+{\em H\+Table} & struct with hashes of symbolic definition from the previous compilation \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file load\+Old\+Hashes.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=269pt]{classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{classamimodel_a2c41ab7adc2f815030ba175132e648c5}{}\index{amimodel@{amimodel}!augmento2@{augmento2}}
+\index{augmento2@{augmento2}!amimodel@{amimodel}}
+\paragraph[{augmento2()}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amimodel} $>$ augmento2 (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classamimodel_a2c41ab7adc2f815030ba175132e648c5}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & augmented system which contains symbolic definition of the original system and its sensitivities \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file augmento2.\+m.
+
+
+
+\subsubsection{Member Data Documentation}
+\hypertarget{classamimodel_a0c5f3dcf809a17b895fe12fc91272349}{}\index{amimodel@{amimodel}!atol@{atol}}
+\index{atol@{atol}!amimodel@{amimodel}}
+\paragraph[{atol}]{\setlength{\rightskip}{0pt plus 5cm}atol = 1e-\/8}\label{classamimodel_a0c5f3dcf809a17b895fe12fc91272349}
+~\newline
+{\bfseries Default\+:} 1e-\/8 
+
+Definition at line 61 of file amimodel.\+m.
+
+\hypertarget{classamimodel_a7978e9a4674f869e6b2950e2f6262ca5}{}\index{amimodel@{amimodel}!rtol@{rtol}}
+\index{rtol@{rtol}!amimodel@{amimodel}}
+\paragraph[{rtol}]{\setlength{\rightskip}{0pt plus 5cm}rtol = 1e-\/8}\label{classamimodel_a7978e9a4674f869e6b2950e2f6262ca5}
+~\newline
+{\bfseries Default\+:} 1e-\/8 
+
+Definition at line 69 of file amimodel.\+m.
+
+\hypertarget{classamimodel_ac37622882dacee1f11688d4941ccb45e}{}\index{amimodel@{amimodel}!maxsteps@{maxsteps}}
+\index{maxsteps@{maxsteps}!amimodel@{amimodel}}
+\paragraph[{maxsteps}]{\setlength{\rightskip}{0pt plus 5cm}maxsteps = 1e4}\label{classamimodel_ac37622882dacee1f11688d4941ccb45e}
+~\newline
+{\bfseries Default\+:} 1e4 
+
+Definition at line 77 of file amimodel.\+m.
+
+\hypertarget{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{}\index{amimodel@{amimodel}!debug@{debug}}
+\index{debug@{debug}!amimodel@{amimodel}}
+\paragraph[{debug}]{\setlength{\rightskip}{0pt plus 5cm}debug = false}\label{classamimodel_a0514aabed091ee5e2f35766eb01eced6}
+~\newline
+{\bfseries Default\+:} false 
+
+Definition at line 85 of file amimodel.\+m.
+
+\hypertarget{classamimodel_ab6d500b41cf50693452415caca31d32e}{}\index{amimodel@{amimodel}!adjoint@{adjoint}}
+\index{adjoint@{adjoint}!amimodel@{amimodel}}
+\paragraph[{adjoint}]{\setlength{\rightskip}{0pt plus 5cm}adjoint = true}\label{classamimodel_ab6d500b41cf50693452415caca31d32e}
+~\newline
+{\bfseries Default\+:} true 
+
+Definition at line 93 of file amimodel.\+m.
+
+\hypertarget{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}{}\index{amimodel@{amimodel}!forward@{forward}}
+\index{forward@{forward}!amimodel@{amimodel}}
+\paragraph[{forward}]{\setlength{\rightskip}{0pt plus 5cm}forward = true}\label{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}
+~\newline
+{\bfseries Default\+:} true 
+
+Definition at line 101 of file amimodel.\+m.
+
+\hypertarget{classamimodel_abdb5a42ffee3ca622484b53a322f1004}{}\index{amimodel@{amimodel}!t0@{t0}}
+\index{t0@{t0}!amimodel@{amimodel}}
+\paragraph[{t0}]{\setlength{\rightskip}{0pt plus 5cm}t0 = 0}\label{classamimodel_abdb5a42ffee3ca622484b53a322f1004}
+~\newline
+{\bfseries Default\+:} 0 
+
+Definition at line 109 of file amimodel.\+m.
+
+\hypertarget{classamimodel_a49c476de14a021114feb8c95da04952a}{}\index{amimodel@{amimodel}!nxtrue@{nxtrue}}
+\index{nxtrue@{nxtrue}!amimodel@{amimodel}}
+\paragraph[{nxtrue}]{\setlength{\rightskip}{0pt plus 5cm}nxtrue = 0}\label{classamimodel_a49c476de14a021114feb8c95da04952a}
+~\newline
+{\bfseries Default\+:} 0 
+
+Definition at line 131 of file amimodel.\+m.
+
+\hypertarget{classamimodel_ac91d7b36031ec122abc9f739692b02e8}{}\index{amimodel@{amimodel}!nytrue@{nytrue}}
+\index{nytrue@{nytrue}!amimodel@{amimodel}}
+\paragraph[{nytrue}]{\setlength{\rightskip}{0pt plus 5cm}nytrue = 0}\label{classamimodel_ac91d7b36031ec122abc9f739692b02e8}
+~\newline
+{\bfseries Default\+:} 0 
+
+Definition at line 146 of file amimodel.\+m.
+
+\hypertarget{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}{}\index{amimodel@{amimodel}!coptim@{coptim}}
+\index{coptim@{coptim}!amimodel@{amimodel}}
+\paragraph[{coptim}]{\setlength{\rightskip}{0pt plus 5cm}coptim = \char`\"{}-\/O3\char`\"{}}\label{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}
+~\newline
+{\bfseries Default\+:} \char`\"{}-\/\+O3\char`\"{} 
+
+Definition at line 259 of file amimodel.\+m.
+
+\hypertarget{classamimodel_a51f20d6b1b54a2eee3be0e8adc96a0ae}{}\index{amimodel@{amimodel}!param@{param}}
+\index{param@{param}!amimodel@{amimodel}}
+\paragraph[{param}]{\setlength{\rightskip}{0pt plus 5cm}param = \char`\"{}lin\char`\"{}}\label{classamimodel_a51f20d6b1b54a2eee3be0e8adc96a0ae}
+~\newline
+{\bfseries Default\+:} \char`\"{}lin\char`\"{} 
+
+Definition at line 267 of file amimodel.\+m.
+

@@ -1,0 +1,41 @@
+\hypertarget{amiwrap_8m}{}\subsection{amiwrap.\+m File Reference}
+\label{amiwrap_8m}\index{amiwrap.\+m@{amiwrap.\+m}}
+
+
+A\+M\+I\+W\+R\+A\+P generates c mex files for the simulation of systems of differential equations via C\+V\+O\+D\+E\+S and I\+D\+A\+S.  
+
+
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+noret\+::substitute \hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap} (matlabtypesubstitute varargin)
+\begin{DoxyCompactList}\small\item\em A\+M\+I\+W\+R\+A\+P generates c mex files for the simulation of systems of differential equations via C\+V\+O\+D\+E\+S and I\+D\+A\+S. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{}\index{amiwrap.\+m@{amiwrap.\+m}!amiwrap@{amiwrap}}
+\index{amiwrap@{amiwrap}!amiwrap.\+m@{amiwrap.\+m}}
+\paragraph[{amiwrap(matlabtypesubstitute varargin)}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute amiwrap (
+\begin{DoxyParamCaption}
+\item[{matlabtypesubstitute}]{varargin}
+\end{DoxyParamCaption}
+)}\label{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}
+
+\begin{DoxyParams}{Parameters}
+{\em varargin} & 
+\begin{DoxyCode}
+1 amiwrap ( modelname, symfun, tdir, o2flag ) 
+\end{DoxyCode}
+ {\itshape Required Parameters for varargin\+:}
+\begin{DoxyItemize}
+\item  modelname specifies the name of the model which will be later used for the naming of the simualation file
+\item  symfun specifies a function which executes model defition see \hyperlink{def_simu_definition}{Model Definition} for details
+\item  tdir target directory where the simulation file should be placed {\bfseries Default\+:} \$\+A\+M\+I\+C\+I\+D\+I\+R/models/modelname
+\item  o2flag boolean whether second order sensitivities should be enabled {\bfseries Default\+:} false
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 17 of file amiwrap.\+m.
+

@@ -1,0 +1,4 @@
+<map id="writeCcode" name="writeCcode">
+<area shape="rect" id="node2" href="$classamimodel.html#af2ce5001c2320c95471ecb8c3d73bdbb" title="generateC generates the c files which will be used in the compilation. " alt="" coords="316,5,400,33"/>
+<area shape="rect" id="node3" href="$classamimodel.html#a65b30e6d951ff694d40d45b0625742c7" title="writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces overhead by chec..." alt="" coords="141,31,268,58"/>
+</map>

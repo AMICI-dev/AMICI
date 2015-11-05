@@ -1,0 +1,14 @@
+
+models/*
+
+debug_amici/*
+
+examples/*
+
+src/*
+
+SuiteSparse/*
+
+*.o
+
+*.md5
