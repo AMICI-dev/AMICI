@@ -16,9 +16,9 @@ UserData setupUserData(const mxArray *prhs[]) {
      * @return udata: struct containing all provided user data
      */
     
-    UserData udata; // returned udata struct
-    realtype *plistdata; // input for plist
-    realtype stldetdata; // input for stldet
+    UserData udata; /* returned udata struct */
+    realtype *plistdata; /* input for plist */
+    realtype stldetdata; /* input for stldet */
     
     int ip;
     
@@ -156,12 +156,12 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
      * @param[in] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    void *ami_mem; // pointer to ami memory block
+    void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
     int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; // user udata
-    TempData tdata; // user udata
+    UserData udata; /* user udata */
+    TempData tdata; /* user udata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     int ip;
@@ -175,7 +175,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         
         /* write initial conditions */
         x = N_VNew_Serial(nx);
-        dx = N_VNew_Serial(nx); // only needed for idas
+        dx = N_VNew_Serial(nx); /* only needed for idas */
         xdot = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
         
@@ -192,7 +192,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         
         if (x == NULL) return(NULL);
         fx0(x, udata);
-        fdx0(x, dx, udata); // only needed for idas
+        fdx0(x, dx, udata); /* only needed for idas */
         
         
         if (ami_mem == NULL) return(NULL);
@@ -445,8 +445,8 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     bool error_corr = TRUE;
     int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; // user udata
-    TempData tdata; // temp tdata
+    UserData udata; /* user udata */
+    TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     
@@ -631,7 +631,7 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
      * @param[in] user_data pointer to the user data struct @type UserData
      * @return rdata: return data struct @type ReturnData
      */
-    ReturnData rdata; // returned rdata struct
+    ReturnData rdata; /* returned rdata struct */
     UserData udata; /** user udata */
     
     /* this casting is necessary to ensure availability of accessor macros */
@@ -700,7 +700,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     int nmyt, nmyy, nysigmat, nysigmay; /* integers with problem dimensionality */
     int nmtt, nmty, ntsigmat, ntsigmay; /* integers with problem dimensionality */
     
-    ExpData edata; // returned rdata struct
+    ExpData edata; /* returned rdata struct */
     UserData udata; /** user udata */
     
     udata = (UserData) user_data;
@@ -806,9 +806,9 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
     int ir;
     
     /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; // user udata
-    ReturnData rdata; // return rdata
-    TempData tdata; // temp data
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    TempData tdata; /* temp data */
     udata = (UserData) user_data;
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
@@ -890,10 +890,10 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
     int ir;
     int ix;
     
-    UserData udata; // user udata
-    ReturnData rdata; // return rdata
-    ExpData edata; // exp edata
-    TempData tdata; // temp tdata
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
     rdata = (ReturnData) return_data;
     edata = (ExpData) exp_data;
@@ -995,8 +995,8 @@ void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *ret
     long int numrhsevals;
     int order;
 
-    UserData udata; // user udata
-    ReturnData rdata; // return rdata
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
     udata = (UserData) user_data;
     rdata = (ReturnData) return_data;
     
@@ -1031,9 +1031,9 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
     
     void *ami_memB;
     
-    UserData udata; // user udata
-    ReturnData rdata; // return rdata
-    TempData tdata; // temp tdata
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
