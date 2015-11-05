@@ -211,9 +211,8 @@ int AMIKLUSetOrdering(void *mem, int ordering) {
     return IDAKLUSetOrdering(mem, ordering);
 };
 
-int AMIKLUSetOrderingB(void *mem, int ordering) {
-//    return IDAKLUSetOrderingB(mem, ordering);
-    return(0);
+int AMIKLUSetOrderingB(void *mem, int which, int ordering) {
+    return IDAKLUSetOrderingB(mem, which, ordering);
 };
 
 int AMIKLUB(void *mem, int which, int nx, int nnz) {

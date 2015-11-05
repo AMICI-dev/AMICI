@@ -41,57 +41,57 @@
 /** @brief struct that stores all data which is later returned by the mex function */
 typedef struct {
 
-    //! timepoints
+    /** timepoints */
     double *am_tsdata; 
-    //! time derivative
+    /** time derivative */
     double *am_xdotdata; 
-    //! parameter derivative of time derivative
+    /** parameter derivative of time derivative */
     double *am_dxdotdpdata; 
-    //! state derivative of observables
+    /** state derivative of observables */
     double *am_dydxdata; 
-    //! parameter derivative of observables
+    /** parameter derivative of observables */
     double *am_dydpdata; 
-    //! Jacobian of differential equation right hand side
+    /** Jacobian of differential equation right hand side */
     double *am_Jdata; 
-    //! events
+    /** events */
     double *am_rootdata;
-    //! parameter derivative of events
+    /** parameter derivative of events */
     double *am_rootSdata;
-    //! second order parameter derivative of events
+    /** second order parameter derivative of events */
     double *am_rootS2data; 
-    //! value of event function
+    /** value of event function */
     double *am_rootvaldata;
-    //! parameter derivative of event function
+    /** parameter derivative of event function */
     double *am_rootvalSdata;
-    //! second order parameter derivative of event function
-    double *am_rootvalS2data; //! returned vector
-    //! state
+    /** second order parameter derivative of event function */
+    double *am_rootvalS2data; /** returned vector */
+    /** state */
     double *am_xdata;
-    //! parameter derivative of state
+    /** parameter derivative of state */
     double *am_xSdata; 
-    //! observable
+    /** observable */
     double *am_ydata;
-    //! parameter derivative of observable
+    /** parameter derivative of observable */
     double *am_ySdata;
     
-    //! number of integration steps forward problem
+    /** number of integration steps forward problem */
     double *am_numstepsdata;
-    //! number of integration steps backward problem
+    /** number of integration steps backward problem */
     double *am_numstepsSdata; 
-    //! number of right hand side evaluations forward problem
+    /** number of right hand side evaluations forward problem */
     double *am_numrhsevalsdata;
-    //! number of right hand side evaluations backwad problem
+    /** number of right hand side evaluations backwad problem */
     double *am_numrhsevalsSdata; 
-    //! employed order forward problem
+    /** employed order forward problem */
     double *am_orderdata;
     
-    //! likelihood value
+    /** likelihood value */
     double *am_llhdata;
-    //! chi2 value
+    /** chi2 value */
     double *am_chi2data;
-    //! parameter derivative of likelihood
+    /** parameter derivative of likelihood */
     double *am_llhSdata;
-    //! second order parameter derivative of likelihood
+    /** second order parameter derivative of likelihood */
     double *am_llhS2data; 
     
 	} *ReturnData;
