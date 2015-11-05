@@ -24,19 +24,19 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
-    int ip, ix, jx, iy, it, ir; // integers for indexing in loops
-    int jp; // integers for indexing in loops
-    int ncheck; // the number of (internal) checkpoints stored so far
-    int nroots; // number of found roots
-    int idisc; // number of found roots
+    int ip, ix, jx, iy, it, ir; /* integers for indexing in loops */
+    int jp; /* integers for indexing in loops */
+    int ncheck; /* the number of (internal) checkpoints stored so far */
+    int nroots; /* number of found roots */
+    int idisc; /* number of found roots */
     
-    void *ami_mem; // pointer to cvodes memory block
-    UserData udata; // user data
-    ReturnData rdata; // return data
-    ExpData edata; // experimental data
-    TempData tdata; // temporary data
-    int *status; // general status flag
-    int cv_status; // status flag returned by integration method
+    void *ami_mem; /* pointer to cvodes memory block */
+    UserData udata; /* user data */
+    ReturnData rdata; /* return data */
+    ExpData edata; /* experimental data */
+    TempData tdata; /* temporary data */
+    int *status; /* general status flag */
+    int cv_status; /* status flag returned by integration method */
 
     long int numsteps;
     long int numrhsevals;
@@ -158,8 +158,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 xdata[it+nt*ix] = x_tmp[ix];
             }
             
-//            if (it == nt-1) {
-//                if( ss > 0) {
+/*            if (it == nt-1) {
+                  if( ss > 0) {*/
                     fxdot(t,x,dx,xdot,udata);
                     xdot_tmp = NV_DATA_S(xdot);
                     fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
@@ -173,8 +173,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     fdxdotdp(t,x,dxdotdpdata,udata);
                     fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
                     fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
-//                }
-//            }
+/*                }
+              }*/
             
             if(ts[it] > tstart) {
                 getDiagnosis(status, it, ami_mem, udata, rdata);
@@ -333,33 +333,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             for (ip=0; ip<np; ip++) {
                                 if(event_model == LW_NORMAL) {
                                                                     drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( dtdp[ip*nr+ir]* ( t - mt[ir*nmaxroot+ nroots] ) )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow( ( t - mt[ir*nmaxroot+ nroots] ),2)/pow( sigma_t[ir] , 3);                                }
-//                                if(event_model  == LW_LOGNORMAL) {
-//                                    drdp[ip] += 1/(2*pi)*dtdp[ip*nr+ir]/t + ( dtdp[ip*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
-//                                }
+/*                                if(event_model  == LW_LOGNORMAL) {
+                                      drdp[ip] += 1/(2*pi)*dtdp[ip*nr+ir]/t + ( dtdp[ip*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
+                                  }*/
                             }
                             for (ix=0; ix<nx; ix++) {
                                 if(event_model  == LW_NORMAL) {
                                     drdx[nroots+ix*nmaxroot] += ( dtdx[ix*nr+ir] * ( t - mt[ir*nmaxroot+nroots] ) )/pow( sigma_t[ir] , 2);
                                 }
-//                                if(event_model  == LW_LOGNORMAL) {
-//                                    drdx[nroots+ix*nmaxroot] += 1/(2*pi)*dtdx[ix*nr+ir]/t + ( dtdx[ix*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
-//                                }
+/*                                if(event_model  == LW_LOGNORMAL) {
+                                      drdx[nroots+ix*nmaxroot] += 1/(2*pi)*dtdx[ix*nr+ir]/t + ( dtdx[ix*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
+                                  }*/
                             }
                             for (ip=0; ip<np; ip++) {
                                 if(event_model  == LW_NORMAL) {
                                      drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( drvaldp[ip*nr+ir]*rootvaltmp[ir] )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow(rootvaltmp[ir],2)/pow( sigma_t[ir] , 3);
                                 }
-//                                if(event_model  == LW_LOGNORMAL) {
-//                                    drdp[ip] += 1/(2*pi)*drvaldp[ip*nr+ir]/rootvaltmp[ir] + ( drvaldp[ip*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
-//                                }
+/*                                if(event_model  == LW_LOGNORMAL) {
+                                      drdp[ip] += 1/(2*pi)*drvaldp[ip*nr+ir]/rootvaltmp[ir] + ( drvaldp[ip*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
+                                  }*/
                             }
                             for (ix=0; ix<nx; ix++) {
                                 if(event_model  == LW_NORMAL) {
                                     drdx[nroots+ix*nmaxroot] += ( drvaldx[ix*nr+ir] * ( rootvaltmp[ir] ) )/pow( sigma_t[ir] , 2);
                                 }
-//                                if(event_model  == LW_LOGNORMAL) {
-//                                    drdx[nroots+ix*nmaxroot] += 1/(2*pi)*drvaldx[ix*nr+ir]/rootvaltmp[ir] + ( drvaldx[ix*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
-//                                }
+/*                                if(event_model  == LW_LOGNORMAL) {
+                                      drdx[nroots+ix*nmaxroot] += 1/(2*pi)*drvaldx[ix*nr+ir]/rootvaltmp[ir] + ( drvaldx[ix*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
+                                  }*/
                             }
                         }
                     }
