@@ -598,7 +598,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             *status = wrap_SetSparseJacFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
             
-            *status = AMIKLUSetOrderingB(ami_mem, ordering);
+            *status = AMIKLUSetOrderingB(ami_mem, which, ordering);
             if (*status != AMI_SUCCESS) return;
             
             break;
