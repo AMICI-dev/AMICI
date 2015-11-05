@@ -317,7 +317,7 @@
  
  @subsection steadystate Steady State Sensitivities
  
- This will compute state sensitivities according to the formula \f$$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} \f$
+ This will compute state sensitivities according to the formula \f$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} \f$
  
  In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.
  

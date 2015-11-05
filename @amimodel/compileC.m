@@ -1,8 +1,6 @@
 function this = compileC(this)
     % compileC compiles the mex simulation file
     %
-    % Parameters:
-    %
     % Return values:
     %  this: model definition object @type amimodel
     
@@ -430,6 +428,3 @@ function hash = getFileHash(file)
     %  hash: md5 hash of the provided file @type string
     Opt.Input = 'file';
     hash = DataHash(file,Opt);
-%     [~,msg] = system(['md5 ' file]);
-%     hstart = strfind(msg,'=')+2;
-%     hash = msg(hstart:end);

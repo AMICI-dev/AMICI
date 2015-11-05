@@ -1,3 +1,7 @@
+%
+% @file amimodel
+% @brief definition of amimodel class
+%
 classdef amimodel
     % amimodel is the object in which all model definitions are stored 
     
