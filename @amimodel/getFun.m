@@ -237,14 +237,18 @@ function this = getFun(this,HTable,funstr)
                 
             case 'dtdp'
                 this.sym.dtdp = sym(zeros(nr,np));
-                for ir = 1:nr
-                    this.sym.dtdp(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootpdp(ir,:));
+                if(nr>0)
+                    for ir = 1:nr
+                        this.sym.dtdp(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootpdp(ir,:));
+                    end
                 end
                 
             case 'dtdx'
                 this.sym.dtdx = sym(zeros(0,nx));
-                for ir = 1:nr
-                    this.sym.dtdx(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootdx(ir,:));
+                if(nr>0)
+                    for ir = 1:nr
+                        this.sym.dtdx(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootdx(ir,:));
+                    end
                 end
                 
             case 'Jv'
