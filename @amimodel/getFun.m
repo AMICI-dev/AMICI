@@ -102,7 +102,7 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'sroot'
-                this.sym.sroot = sym.zeros(0,np);
+                this.sym.sroot = sym.zeros(nr,np);
                 if(this.nr>0)
                     for ir = 1:this.nr
                         this.sym.sroot(ir,:) = -(this.sym.drootdt(ir,:))\(this.sym.drootdp(ir,:));
