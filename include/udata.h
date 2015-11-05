@@ -60,108 +60,108 @@
 /** @brief struct that stores all user provided data */
 typedef struct {
     
-    //! parameter reordering
+    /** parameter reordering */
     int    *am_plist;
-    //! number of parameters
+    /** number of parameters */
     int    am_np;
-    //! number of observables
+    /** number of observables */
     int    am_ny;
-    //! number of states
+    /** number of states */
     int    am_nx;
-    //! number of roots
+    /** number of roots */
     int    am_nr;
-    //! number of timepoints
+    /** number of timepoints */
     int    am_nt;
-    //! number of discontinuities
+    /** number of discontinuities */
     int    am_ndisc;
-    //! number of nonzero entries in jacobian
+    /** number of nonzero entries in jacobian */
     int    am_nnz;
-    //! maximal number of roots to collect
+    /** maximal number of roots to collect */
     int    am_nmaxroot;
-    //! maximal number of discontinuities to track
+    /** maximal number of discontinuities to track */
     int    am_nmaxdisc;
     
-    //! parameter array
+    /** parameter array */
     double *am_p;
-    //! constants array
+    /** constants array */
     double *am_k;
     
-    //! starting time
+    /** starting time */
     double am_tstart;
-    //! timepoints
+    /** timepoints */
     double *am_ts;
     
-    //! scaling of parameters
+    /** scaling of parameters */
     double *am_pbar;
-    //! scaling of states
+    /** scaling of states */
     double *am_xbar;
     
-    //! flag array for DAE equations
+    /** flag array for DAE equations */
     double *am_idlist;
     
-    //! flag indicating whether sensitivities are supposed to be computed
+    /** flag indicating whether sensitivities are supposed to be computed */
     int am_sensi;
-    //! absolute tolerances for integration
+    /** absolute tolerances for integration */
     double am_atol;
-    //! relative tolerances for integration
+    /** relative tolerances for integration */
     double am_rtol;
-    //! maximum number of allowed integration steps
+    /** maximum number of allowed integration steps */
     int am_maxsteps;
     
-    //! internal sensitivity method
+    /** internal sensitivity method */
     /*!
      * a flag used to select the sensitivity solution method. Its value can be CV SIMULTANEOUS or CV STAGGERED. Only applies for Forward Sensitivities.
      */
     int am_ism;
     
-    //! method for sensitivity computation
+    /** method for sensitivity computation */
     /*!
      * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
      */
     int am_sensi_meth;
-    //! linear solver specification
+    /** linear solver specification */
     int am_linsol;
-    //! interpolation type
+    /** interpolation type */
     /*!
      * specifies the interpolation type for the forward problem solution which is then used for the backwards problem. can be either CV_POLYNOMIAL or CV_HERMITE
      */
     int am_interpType;
     
-    //! linear multistep method
+    /** linear multistep method */
     /*!
      * specifies the linear multistep method and may be one of two possible values: CV ADAMS or CV BDF.
      */
     int am_lmm;
     
-    //! nonlinear solver
+    /** nonlinear solver */
     /*!
      * specifies the type of nonlinear solver iteration and may be either CV NEWTON or CV FUNCTIONAL.
      */
     int am_iter;
     
-    //! flag controlling stability limit detection
+    /** flag controlling stability limit detection */
     booleantype am_stldet;
     
-    //! upper bandwith of the jacobian
+    /** upper bandwith of the jacobian */
     int am_ubw;
-    //! lower bandwith of the jacobian
+    /** lower bandwith of the jacobian */
     int am_lbw;
     
-    //! flag for sensitivity initialisation
+    /** flag for sensitivity initialisation */
     /*!
      * flag which determines whether analytic sensitivities initialisation or provided initialisation should be used
      */
     booleantype am_bsx0;
     
-    //! sensitivity initialisation
+    /** sensitivity initialisation */
     double *am_sx0data;
     
-    //! error model for events
+    /** error model for events */
     int am_event_model;
-    //! error model for udata
+    /** error model for udata */
     int am_data_model;
     
-    //! state ordering
+    /** state ordering */
     int am_ordering;
     
 } *UserData;

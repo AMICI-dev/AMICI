@@ -6,7 +6,8 @@
  */
 
 #ifndef amici_symbolic_functions_c
-#define amici_symbolic_functions_c //!< include guard
+/** include guard */
+#define amici_symbolic_functions_c
 #include <math.h>
 #include <src/spline.c>
 #undef ts

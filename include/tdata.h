@@ -62,105 +62,105 @@
 
 /** @brief struct that provides temporary storage for different variables */
 typedef struct {
-    //! current time
+    /** current time */
     realtype am_t; 
     
-    //! state vector
+    /** state vector */
     N_Vector am_x; 
-    //! differential state vector
+    /** differential state vector */
     N_Vector am_dx; 
-    //! time derivative state vector
+    /** time derivative state vector */
     N_Vector am_xdot; 
-    //! adjoint state vector
+    /** adjoint state vector */
     N_Vector am_xB; 
-    //! differential adjoint state vector
+    /** differential adjoint state vector */
     N_Vector am_dxB; 
-    //! quadrature state vector
+    /** quadrature state vector */
     N_Vector am_xQB; 
-    //! sensitivity state vector array
+    /** sensitivity state vector array */
     N_Vector *am_sx; 
-    //! differential sensitivity state vector array
+    /** differential sensitivity state vector array */
     N_Vector *am_sdx; 
-    //! index indicating DAE equations vector
+    /** index indicating DAE equations vector */
     N_Vector am_id;
-    //! Jacobian
+    /** Jacobian */
     DlsMat am_Jtmp;
     
-    //! parameter derivative of likelihood array
+    /** parameter derivative of likelihood array */
     double *am_llhS0;
-    //! data likelihood
+    /** data likelihood */
     double am_g;
-    //! parameter derivative of data likelihood
+    /** parameter derivative of data likelihood */
     double *am_dgdp;
-    //! state derivative of data likelihood
+    /** state derivative of data likelihood */
     double *am_dgdx;
-    //! event likelihood
+    /** event likelihood */
     double am_r;
-    //! parameter derivative of event likelihood
+    /** parameter derivative of event likelihood */
     double *am_drdp;
-    //! state derivative of event likelihood
+    /** state derivative of event likelihood */
     double *am_drdx;
-    //! root function likelihood
+    /** root function likelihood */
     double am_rval; 
-    //! parameter derivative of root function likelihood
+    /** parameter derivative of root function likelihood */
     double *am_drvaldp;
-    //! state derivative of root function likelihood
+    /** state derivative of root function likelihood */
     double *am_drvaldx;
-    //! state derivative of event
+    /** state derivative of event */
     double *am_dtdx;
-    //! parameter derivative of event
+    /** parameter derivative of event */
     double *am_dtdp;
-    //! parameter derivative of observable
+    /** parameter derivative of observable */
     double *am_dydp;
-    //! state derivative of observable
+    /** state derivative of observable */
     double *am_dydx;
-    //! initial sensitivity of observable
+    /** initial sensitivity of observable */
     double *am_yS0;
-    //! data standard deviation
+    /** data standard deviation */
     double *am_sigma_y;
-    //! parameter derivative of data standard deviation
+    /** parameter derivative of data standard deviation */
     double *am_dsigma_ydp;
-    //! event standard deviation
+    /** event standard deviation */
     double *am_sigma_t;
-    //! parameter derivative of event standard deviation
+    /** parameter derivative of event standard deviation */
     double *am_dsigma_tdp;
     
-    //! state array
+    /** state array */
     double *am_x_tmp;
-    //! sensitivity state array
+    /** sensitivity state array */
     double *am_sx_tmp;
-    //! differential state array
+    /** differential state array */
     double *am_dx_tmp;
-    //! differential sensitivity state array
+    /** differential sensitivity state array */
     double *am_sdx_tmp;
-    //! time derivative state array
+    /** time derivative state array */
     double *am_xdot_tmp;
-    //! differential adjoint state array
+    /** differential adjoint state array */
     double *am_xB_tmp;
-    //! quadrature state array
+    /** quadrature state array */
     double *am_xQB_tmp;
-    //! differential adjoint state array
+    /** differential adjoint state array */
     double *am_dxB_tmp;
-    //! index indicating DAE equations array
+    /** index indicating DAE equations array */
     double *am_id_tmp;
     
-    //! array of flags indicating which root has beend found
+    /** array of flags indicating which root has beend found */
     /*!
     array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound[i]?= 0 if gi has a root, and = 0 if not.
     */
     int *am_rootsfound;
-    //! array of values of the root function
+    /** array of values of the root function */
     double *am_rootvaltmp; 
-    //! array of index which root has been found
+    /** array of index which root has been found */
     int *am_rootidx;
  
     
-    //! integer for indexing of backwards problems
+    /** integer for indexing of backwards problems */
     int am_which;
     
-    //! array containing the time-points of discontinuities
+    /** array containing the time */-points of discontinuities
     double *am_discs; 
-    //! array containing the index of discontinuities
+    /** array containing the index of discontinuities */
     double *am_irdiscs; 
 
 	} *TempData;

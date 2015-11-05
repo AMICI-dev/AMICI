@@ -4,8 +4,10 @@
  */
 
 #ifndef amici_c
-#define amici_c //!< include guard
-#define AMI_SUCCESS               0 //!< return value indicating successful execution
+/** include guard */
+#define amici_c
+/** return value indicating successful execution */
+#define AMI_SUCCESS               0
 
 UserData setupUserData(const mxArray *prhs[]) {
     /**
@@ -630,7 +632,7 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
      * @return rdata: return data struct @type ReturnData
      */
     ReturnData rdata; // returned rdata struct
-    UserData udata; //! user udata
+    UserData udata; /** user udata */
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -699,7 +701,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     int nmtt, nmty, ntsigmat, ntsigmay; /* integers with problem dimensionality */
     
     ExpData edata; // returned rdata struct
-    UserData udata; //! user udata
+    UserData udata; /** user udata */
     
     udata = (UserData) user_data;
     

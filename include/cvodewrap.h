@@ -212,8 +212,7 @@ int AMIKLUSetOrdering(void *mem, int ordering) {
 };
 
 int AMIKLUSetOrderingB(void *mem, int ordering) {
-//    return CVodeKLUSetOrderingB(mem, ordering);
-    return(0);
+    return CVodeKLUSetOrderingB(mem, ordering);
 };
 
 int AMIKLUB(void *mem, int which, int nx, int nnz) {
