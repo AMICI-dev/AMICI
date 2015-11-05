@@ -158,7 +158,7 @@ typedef struct {
     /** integer for indexing of backwards problems */
     int am_which;
     
-    /** array containing the time */-points of discontinuities
+    /** array containing the time-points of discontinuities*/
     double *am_discs; 
     /** array containing the index of discontinuities */
     double *am_irdiscs; 
