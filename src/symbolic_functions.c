@@ -11,9 +11,9 @@
 #include <src/spline.c>
 #undef ts
 
-//! bool return value true
+/*! bool return value true */
 #define TRUE 1
-//! bool return value false
+/*! bool return value false */
 #define FALSE 0
 
 /**
