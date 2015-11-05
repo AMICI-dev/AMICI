@@ -277,7 +277,7 @@ Adjoint Sensitivities</h2>
 </div><!-- fragment --><p>The integration status will be indicated by the sol.status flag. Negative values indicated failed integration. The log-likelihood will then be available as sol.llh and the derivative with respect to the parameters in sol.sllh. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.</p>
 <h2><a class="anchor" id="steadystate"></a>
 Steady State Sensitivities</h2>
-<p>This will compute state sensitivities according to the formula <img class="formulaInl" alt="$$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $" src="form_2.png"/></p>
+<p>This will compute state sensitivities according to the formula <img class="formulaInl" alt="$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $" src="form_2.png"/></p>
 <p>In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.</p>
 <p>Define a final timepoint t:</p>
 <div class="fragment"><div class="line">t = 100</div>
@@ -296,7 +296,7 @@ Steady State Sensitivities</h2>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Nov 5 2015 13:54:56 for AMICI by
+    <li class="footer">Generated on Thu Nov 5 2015 15:47:12 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

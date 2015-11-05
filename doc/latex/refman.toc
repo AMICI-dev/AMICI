@@ -1,147 +1,150 @@
 \contentsline {section}{\numberline {1}AMICI 0.1 General Documentation}{1}{section.1}
 \contentsline {subsection}{\numberline {1.1}Introduction}{1}{subsection.1.1}
-\contentsline {subsection}{\numberline {1.2}Availability}{1}{subsection.1.2}
-\contentsline {subsubsection}{\numberline {1.2.1}Obtaining AMICI via the GIT versioning system}{1}{subsubsection.1.2.1}
-\contentsline {subsubsection}{\numberline {1.2.2}License Conditions}{1}{subsubsection.1.2.2}
+\contentsline {subsection}{\numberline {1.2}Availability}{2}{subsection.1.2}
+\contentsline {subsubsection}{\numberline {1.2.1}Obtaining AMICI via the GIT versioning system}{2}{subsubsection.1.2.1}
+\contentsline {subsubsection}{\numberline {1.2.2}License Conditions}{2}{subsubsection.1.2.2}
 \contentsline {subsection}{\numberline {1.3}Installation}{2}{subsection.1.3}
-\contentsline {section}{\numberline {2}Model Definition \& Simulation}{2}{section.2}
+\contentsline {section}{\numberline {2}Model Definition \& Simulation}{3}{section.2}
 \contentsline {subsection}{\numberline {2.1}Model Definition}{3}{subsection.2.1}
 \contentsline {subsubsection}{\numberline {2.1.1}Header}{3}{subsubsection.2.1.1}
 \contentsline {subsubsection}{\numberline {2.1.2}Options}{3}{subsubsection.2.1.2}
-\contentsline {subsubsection}{\numberline {2.1.3}States}{3}{subsubsection.2.1.3}
-\contentsline {subsubsection}{\numberline {2.1.4}Parameters}{3}{subsubsection.2.1.4}
+\contentsline {subsubsection}{\numberline {2.1.3}States}{4}{subsubsection.2.1.3}
+\contentsline {subsubsection}{\numberline {2.1.4}Parameters}{4}{subsubsection.2.1.4}
 \contentsline {subsubsection}{\numberline {2.1.5}Constants}{4}{subsubsection.2.1.5}
 \contentsline {subsubsection}{\numberline {2.1.6}Differential Equation}{4}{subsubsection.2.1.6}
-\contentsline {subsubsection}{\numberline {2.1.7}Initial Conditions}{4}{subsubsection.2.1.7}
-\contentsline {subsubsection}{\numberline {2.1.8}Observables}{4}{subsubsection.2.1.8}
+\contentsline {subsubsection}{\numberline {2.1.7}Initial Conditions}{5}{subsubsection.2.1.7}
+\contentsline {subsubsection}{\numberline {2.1.8}Observables}{5}{subsubsection.2.1.8}
 \contentsline {subsubsection}{\numberline {2.1.9}Events}{5}{subsubsection.2.1.9}
 \contentsline {subsubsection}{\numberline {2.1.10}Standard Deviation}{5}{subsubsection.2.1.10}
-\contentsline {subsubsection}{\numberline {2.1.11}Attach to Model Struct}{5}{subsubsection.2.1.11}
-\contentsline {subsection}{\numberline {2.2}Model Compilation}{5}{subsection.2.2}
+\contentsline {subsubsection}{\numberline {2.1.11}Attach to Model Struct}{6}{subsubsection.2.1.11}
+\contentsline {subsection}{\numberline {2.2}Model Compilation}{6}{subsection.2.2}
 \contentsline {subsection}{\numberline {2.3}Model Simulation}{6}{subsection.2.3}
-\contentsline {subsubsection}{\numberline {2.3.1}Integration}{6}{subsubsection.2.3.1}
-\contentsline {subsubsection}{\numberline {2.3.2}Forward Sensitivities}{6}{subsubsection.2.3.2}
-\contentsline {subsubsection}{\numberline {2.3.3}Adjoint Sensitivities}{7}{subsubsection.2.3.3}
+\contentsline {subsubsection}{\numberline {2.3.1}Integration}{7}{subsubsection.2.3.1}
+\contentsline {subsubsection}{\numberline {2.3.2}Forward Sensitivities}{7}{subsubsection.2.3.2}
+\contentsline {subsubsection}{\numberline {2.3.3}Adjoint Sensitivities}{8}{subsubsection.2.3.3}
 \contentsline {subsubsection}{\numberline {2.3.4}Steady State Sensitivities}{8}{subsubsection.2.3.4}
-\contentsline {section}{\numberline {3}Code Organization}{8}{section.3}
+\contentsline {section}{\numberline {3}Code Organization}{9}{section.3}
 \contentsline {section}{\numberline {4}Class Index}{9}{section.4}
 \contentsline {subsection}{\numberline {4.1}Class List}{9}{subsection.4.1}
-\contentsline {section}{\numberline {5}File Index}{9}{section.5}
-\contentsline {subsection}{\numberline {5.1}File List}{9}{subsection.5.1}
-\contentsline {section}{\numberline {6}Class Documentation}{10}{section.6}
-\contentsline {subsection}{\numberline {6.1}amimodel Class Reference}{10}{subsection.6.1}
-\contentsline {subsubsection}{\numberline {6.1.1}Detailed Description}{13}{subsubsection.6.1.1}
-\contentsline {subsubsection}{\numberline {6.1.2}Constructor \& Destructor Documentation}{13}{subsubsection.6.1.2}
-\contentsline {paragraph}{\numberline {6.1.2.1}amimodel(::string symfun,::string modelname)}{13}{paragraph.6.1.2.1}
-\contentsline {subsubsection}{\numberline {6.1.3}Member Function Documentation}{13}{subsubsection.6.1.3}
-\contentsline {paragraph}{\numberline {6.1.3.1}parseModel()}{13}{paragraph.6.1.3.1}
-\contentsline {paragraph}{\numberline {6.1.3.2}generateC()}{13}{paragraph.6.1.3.2}
-\contentsline {paragraph}{\numberline {6.1.3.3}writeCcode\_sensi(::symbolic svar,::fileid fid)}{14}{paragraph.6.1.3.3}
-\contentsline {paragraph}{\numberline {6.1.3.4}writeCcode(::string funstr,::fileid fid, matlabtypesubstitute ip, matlabtypesubstitute jp)}{14}{paragraph.6.1.3.4}
-\contentsline {paragraph}{\numberline {6.1.3.5}gccode(::symbolic csym,::string funstr,::string cvar,::fileid fid)}{15}{paragraph.6.1.3.5}
-\contentsline {paragraph}{\numberline {6.1.3.6}generateM(::amimodel amimodelo2)}{16}{paragraph.6.1.3.6}
-\contentsline {paragraph}{\numberline {6.1.3.7}getFun(::struct HTable,::string funstr)}{16}{paragraph.6.1.3.7}
-\contentsline {paragraph}{\numberline {6.1.3.8}getFunDeps(::string funstr)}{17}{paragraph.6.1.3.8}
-\contentsline {paragraph}{\numberline {6.1.3.9}getFunArgs(::string funstr)}{17}{paragraph.6.1.3.9}
-\contentsline {paragraph}{\numberline {6.1.3.10}getFunCVar(::string funstr)}{18}{paragraph.6.1.3.10}
-\contentsline {paragraph}{\numberline {6.1.3.11}getFunSVar(::string funstr)}{18}{paragraph.6.1.3.11}
-\contentsline {paragraph}{\numberline {6.1.3.12}checkDeps(::struct HTable,::cell deps)}{19}{paragraph.6.1.3.12}
-\contentsline {paragraph}{\numberline {6.1.3.13}loadOldHashes()}{19}{paragraph.6.1.3.13}
-\contentsline {paragraph}{\numberline {6.1.3.14}augmento2()}{20}{paragraph.6.1.3.14}
-\contentsline {subsubsection}{\numberline {6.1.4}Member Data Documentation}{20}{subsubsection.6.1.4}
-\contentsline {paragraph}{\numberline {6.1.4.1}atol}{20}{paragraph.6.1.4.1}
-\contentsline {paragraph}{\numberline {6.1.4.2}rtol}{20}{paragraph.6.1.4.2}
-\contentsline {paragraph}{\numberline {6.1.4.3}maxsteps}{20}{paragraph.6.1.4.3}
-\contentsline {paragraph}{\numberline {6.1.4.4}debug}{20}{paragraph.6.1.4.4}
-\contentsline {paragraph}{\numberline {6.1.4.5}adjoint}{20}{paragraph.6.1.4.5}
-\contentsline {paragraph}{\numberline {6.1.4.6}forward}{21}{paragraph.6.1.4.6}
-\contentsline {paragraph}{\numberline {6.1.4.7}t0}{21}{paragraph.6.1.4.7}
-\contentsline {paragraph}{\numberline {6.1.4.8}nxtrue}{21}{paragraph.6.1.4.8}
-\contentsline {paragraph}{\numberline {6.1.4.9}nytrue}{21}{paragraph.6.1.4.9}
-\contentsline {paragraph}{\numberline {6.1.4.10}coptim}{21}{paragraph.6.1.4.10}
-\contentsline {paragraph}{\numberline {6.1.4.11}param}{21}{paragraph.6.1.4.11}
-\contentsline {subsection}{\numberline {6.2}ExpData Struct Reference}{21}{subsection.6.2}
-\contentsline {subsubsection}{\numberline {6.2.1}Detailed Description}{22}{subsubsection.6.2.1}
-\contentsline {subsection}{\numberline {6.3}ReturnData Struct Reference}{22}{subsection.6.3}
-\contentsline {subsubsection}{\numberline {6.3.1}Detailed Description}{23}{subsubsection.6.3.1}
-\contentsline {subsubsection}{\numberline {6.3.2}Member Data Documentation}{23}{subsubsection.6.3.2}
-\contentsline {paragraph}{\numberline {6.3.2.1}am\_xdata}{23}{paragraph.6.3.2.1}
-\contentsline {subsection}{\numberline {6.4}TempData Struct Reference}{23}{subsection.6.4}
-\contentsline {subsubsection}{\numberline {6.4.1}Detailed Description}{25}{subsubsection.6.4.1}
-\contentsline {subsubsection}{\numberline {6.4.2}Member Data Documentation}{25}{subsubsection.6.4.2}
-\contentsline {paragraph}{\numberline {6.4.2.1}am\_rootsfound}{25}{paragraph.6.4.2.1}
-\contentsline {subsection}{\numberline {6.5}UserData Struct Reference}{25}{subsection.6.5}
-\contentsline {subsubsection}{\numberline {6.5.1}Detailed Description}{27}{subsubsection.6.5.1}
-\contentsline {subsubsection}{\numberline {6.5.2}Member Data Documentation}{27}{subsubsection.6.5.2}
-\contentsline {paragraph}{\numberline {6.5.2.1}am\_ism}{27}{paragraph.6.5.2.1}
-\contentsline {paragraph}{\numberline {6.5.2.2}am\_sensi\_meth}{27}{paragraph.6.5.2.2}
-\contentsline {paragraph}{\numberline {6.5.2.3}am\_interpType}{27}{paragraph.6.5.2.3}
-\contentsline {paragraph}{\numberline {6.5.2.4}am\_lmm}{27}{paragraph.6.5.2.4}
-\contentsline {paragraph}{\numberline {6.5.2.5}am\_iter}{27}{paragraph.6.5.2.5}
-\contentsline {paragraph}{\numberline {6.5.2.6}am\_bsx0}{27}{paragraph.6.5.2.6}
-\contentsline {section}{\numberline {7}File Documentation}{27}{section.7}
-\contentsline {subsection}{\numberline {7.1}amiwrap.c File Reference}{27}{subsection.7.1}
-\contentsline {subsubsection}{\numberline {7.1.1}Detailed Description}{28}{subsubsection.7.1.1}
-\contentsline {subsubsection}{\numberline {7.1.2}Function Documentation}{28}{subsubsection.7.1.2}
-\contentsline {paragraph}{\numberline {7.1.2.1}mexFunction(int nlhs, mxArray $\ast $plhs[], int nrhs, const mxArray $\ast $prhs[])}{28}{paragraph.7.1.2.1}
-\contentsline {subsection}{\numberline {7.2}amiwrap.m File Reference}{29}{subsection.7.2}
-\contentsline {subsubsection}{\numberline {7.2.1}Function Documentation}{30}{subsubsection.7.2.1}
-\contentsline {paragraph}{\numberline {7.2.1.1}amiwrap(matlabtypesubstitute varargin)}{30}{paragraph.7.2.1.1}
-\contentsline {subsection}{\numberline {7.3}src/amici.c File Reference}{30}{subsection.7.3}
-\contentsline {subsubsection}{\numberline {7.3.1}Function Documentation}{31}{subsubsection.7.3.1}
-\contentsline {paragraph}{\numberline {7.3.1.1}setupUserData(const mxArray $\ast $prhs[])}{31}{paragraph.7.3.1.1}
-\contentsline {paragraph}{\numberline {7.3.1.2}setupAMI(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{31}{paragraph.7.3.1.2}
-\contentsline {paragraph}{\numberline {7.3.1.3}setupAMIB(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{32}{paragraph.7.3.1.3}
-\contentsline {paragraph}{\numberline {7.3.1.4}setupReturnData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{33}{paragraph.7.3.1.4}
-\contentsline {paragraph}{\numberline {7.3.1.5}setupExpData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{34}{paragraph.7.3.1.5}
-\contentsline {paragraph}{\numberline {7.3.1.6}getRootDataFSA(int $\ast $status, int $\ast $nroots, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{35}{paragraph.7.3.1.6}
-\contentsline {paragraph}{\numberline {7.3.1.7}getRootDataASA(int $\ast $status, int $\ast $nroots, int $\ast $idisc, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{36}{paragraph.7.3.1.7}
-\contentsline {paragraph}{\numberline {7.3.1.8}getDiagnosis(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data)}{37}{paragraph.7.3.1.8}
-\contentsline {paragraph}{\numberline {7.3.1.9}getDiagnosisB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{37}{paragraph.7.3.1.9}
-\contentsline {subsection}{\numberline {7.4}src/spline.c File Reference}{38}{subsection.7.4}
-\contentsline {subsubsection}{\numberline {7.4.1}Detailed Description}{39}{subsubsection.7.4.1}
-\contentsline {subsubsection}{\numberline {7.4.2}Function Documentation}{39}{subsubsection.7.4.2}
-\contentsline {paragraph}{\numberline {7.4.2.1}spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}{39}{paragraph.7.4.2.1}
-\contentsline {paragraph}{\numberline {7.4.2.2}seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}{40}{paragraph.7.4.2.2}
-\contentsline {paragraph}{\numberline {7.4.2.3}deriv(int n, double u, double x[], double b[], double c[], double d[])}{40}{paragraph.7.4.2.3}
-\contentsline {paragraph}{\numberline {7.4.2.4}sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}{40}{paragraph.7.4.2.4}
-\contentsline {subsection}{\numberline {7.5}src/symbolic\_functions.c File Reference}{41}{subsection.7.5}
-\contentsline {subsubsection}{\numberline {7.5.1}Detailed Description}{43}{subsubsection.7.5.1}
-\contentsline {subsubsection}{\numberline {7.5.2}Function Documentation}{43}{subsubsection.7.5.2}
-\contentsline {paragraph}{\numberline {7.5.2.1}am\_ge(double a, double b)}{43}{paragraph.7.5.2.1}
-\contentsline {paragraph}{\numberline {7.5.2.2}Dam\_ge(int id, double a, double b)}{43}{paragraph.7.5.2.2}
-\contentsline {paragraph}{\numberline {7.5.2.3}am\_gt(double a, double b)}{43}{paragraph.7.5.2.3}
-\contentsline {paragraph}{\numberline {7.5.2.4}Dam\_gt(int id, double a, double b)}{44}{paragraph.7.5.2.4}
-\contentsline {paragraph}{\numberline {7.5.2.5}am\_le(double a, double b)}{45}{paragraph.7.5.2.5}
-\contentsline {paragraph}{\numberline {7.5.2.6}Dam\_le(int id, double a, double b)}{45}{paragraph.7.5.2.6}
-\contentsline {paragraph}{\numberline {7.5.2.7}am\_lt(double a, double b)}{45}{paragraph.7.5.2.7}
-\contentsline {paragraph}{\numberline {7.5.2.8}Dam\_lt(int id, double a, double b)}{46}{paragraph.7.5.2.8}
-\contentsline {paragraph}{\numberline {7.5.2.9}am\_if(int condition, double truepart, double falsepart)}{46}{paragraph.7.5.2.9}
-\contentsline {paragraph}{\numberline {7.5.2.10}Dam\_if(int id, int condition, double truepart, double falsepart)}{46}{paragraph.7.5.2.10}
-\contentsline {paragraph}{\numberline {7.5.2.11}am\_and(int a, int b)}{47}{paragraph.7.5.2.11}
-\contentsline {paragraph}{\numberline {7.5.2.12}Dam\_and(int id, int a, int b)}{47}{paragraph.7.5.2.12}
-\contentsline {paragraph}{\numberline {7.5.2.13}am\_or(int a, int b)}{47}{paragraph.7.5.2.13}
-\contentsline {paragraph}{\numberline {7.5.2.14}Dam\_or(int id, int a, int b)}{48}{paragraph.7.5.2.14}
-\contentsline {paragraph}{\numberline {7.5.2.15}am\_min(double a, double b)}{48}{paragraph.7.5.2.15}
-\contentsline {paragraph}{\numberline {7.5.2.16}Dam\_min(int id, double a, double b)}{48}{paragraph.7.5.2.16}
-\contentsline {paragraph}{\numberline {7.5.2.17}am\_max(double a, double b)}{49}{paragraph.7.5.2.17}
-\contentsline {paragraph}{\numberline {7.5.2.18}Dam\_max(int id, double a, double b)}{49}{paragraph.7.5.2.18}
-\contentsline {paragraph}{\numberline {7.5.2.19}heaviside(double x)}{49}{paragraph.7.5.2.19}
-\contentsline {paragraph}{\numberline {7.5.2.20}dirac(double x)}{50}{paragraph.7.5.2.20}
-\contentsline {paragraph}{\numberline {7.5.2.21}Ddirac(int id, double x)}{50}{paragraph.7.5.2.21}
-\contentsline {paragraph}{\numberline {7.5.2.22}spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{50}{paragraph.7.5.2.22}
-\contentsline {paragraph}{\numberline {7.5.2.23}spline\_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{51}{paragraph.7.5.2.23}
-\contentsline {paragraph}{\numberline {7.5.2.24}spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{52}{paragraph.7.5.2.24}
-\contentsline {paragraph}{\numberline {7.5.2.25}spline\_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{52}{paragraph.7.5.2.25}
-\contentsline {paragraph}{\numberline {7.5.2.26}spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{53}{paragraph.7.5.2.26}
-\contentsline {paragraph}{\numberline {7.5.2.27}spline\_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{54}{paragraph.7.5.2.27}
-\contentsline {paragraph}{\numberline {7.5.2.28}spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{55}{paragraph.7.5.2.28}
-\contentsline {paragraph}{\numberline {7.5.2.29}spline\_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{56}{paragraph.7.5.2.29}
-\contentsline {paragraph}{\numberline {7.5.2.30}Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{57}{paragraph.7.5.2.30}
-\contentsline {paragraph}{\numberline {7.5.2.31}Dspline\_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{58}{paragraph.7.5.2.31}
-\contentsline {paragraph}{\numberline {7.5.2.32}Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{59}{paragraph.7.5.2.32}
-\contentsline {paragraph}{\numberline {7.5.2.33}Dspline\_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{60}{paragraph.7.5.2.33}
-\contentsline {paragraph}{\numberline {7.5.2.34}Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{61}{paragraph.7.5.2.34}
-\contentsline {paragraph}{\numberline {7.5.2.35}Dspline\_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{62}{paragraph.7.5.2.35}
-\contentsline {paragraph}{\numberline {7.5.2.36}Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{63}{paragraph.7.5.2.36}
-\contentsline {paragraph}{\numberline {7.5.2.37}Dspline\_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{64}{paragraph.7.5.2.37}
+\contentsline {section}{\numberline {5}Class Documentation}{10}{section.5}
+\contentsline {subsection}{\numberline {5.1}amimodel Class Reference}{10}{subsection.5.1}
+\contentsline {subsubsection}{\numberline {5.1.1}Detailed Description}{12}{subsubsection.5.1.1}
+\contentsline {subsubsection}{\numberline {5.1.2}Constructor \& Destructor Documentation}{12}{subsubsection.5.1.2}
+\contentsline {paragraph}{\numberline {5.1.2.1}amimodel(::string symfun,::string modelname)}{12}{paragraph.5.1.2.1}
+\contentsline {subsubsection}{\numberline {5.1.3}Member Function Documentation}{12}{subsubsection.5.1.3}
+\contentsline {paragraph}{\numberline {5.1.3.1}parseModel()}{12}{paragraph.5.1.3.1}
+\contentsline {paragraph}{\numberline {5.1.3.2}generateC()}{13}{paragraph.5.1.3.2}
+\contentsline {paragraph}{\numberline {5.1.3.3}compileC()}{13}{paragraph.5.1.3.3}
+\contentsline {paragraph}{\numberline {5.1.3.4}writeCcode\_sensi(::symbolic svar,::fileid fid)}{13}{paragraph.5.1.3.4}
+\contentsline {paragraph}{\numberline {5.1.3.5}writeCcode(::string funstr,::fileid fid, matlabtypesubstitute ip, matlabtypesubstitute jp)}{14}{paragraph.5.1.3.5}
+\contentsline {paragraph}{\numberline {5.1.3.6}gccode(::symbolic csym,::string funstr,::string cvar,::fileid fid)}{15}{paragraph.5.1.3.6}
+\contentsline {paragraph}{\numberline {5.1.3.7}generateM(::amimodel amimodelo2)}{16}{paragraph.5.1.3.7}
+\contentsline {paragraph}{\numberline {5.1.3.8}getFun(::struct HTable,::string funstr)}{16}{paragraph.5.1.3.8}
+\contentsline {paragraph}{\numberline {5.1.3.9}getFunDeps(::string funstr)}{17}{paragraph.5.1.3.9}
+\contentsline {paragraph}{\numberline {5.1.3.10}getFunArgs(::string funstr)}{17}{paragraph.5.1.3.10}
+\contentsline {paragraph}{\numberline {5.1.3.11}getFunCVar(::string funstr)}{18}{paragraph.5.1.3.11}
+\contentsline {paragraph}{\numberline {5.1.3.12}getFunSVar(::string funstr)}{18}{paragraph.5.1.3.12}
+\contentsline {paragraph}{\numberline {5.1.3.13}checkDeps(::struct HTable,::cell deps)}{18}{paragraph.5.1.3.13}
+\contentsline {paragraph}{\numberline {5.1.3.14}loadOldHashes()}{19}{paragraph.5.1.3.14}
+\contentsline {paragraph}{\numberline {5.1.3.15}augmento2()}{20}{paragraph.5.1.3.15}
+\contentsline {subsubsection}{\numberline {5.1.4}Member Data Documentation}{21}{subsubsection.5.1.4}
+\contentsline {paragraph}{\numberline {5.1.4.1}atol}{21}{paragraph.5.1.4.1}
+\contentsline {paragraph}{\numberline {5.1.4.2}rtol}{21}{paragraph.5.1.4.2}
+\contentsline {paragraph}{\numberline {5.1.4.3}maxsteps}{21}{paragraph.5.1.4.3}
+\contentsline {paragraph}{\numberline {5.1.4.4}debug}{21}{paragraph.5.1.4.4}
+\contentsline {paragraph}{\numberline {5.1.4.5}adjoint}{21}{paragraph.5.1.4.5}
+\contentsline {paragraph}{\numberline {5.1.4.6}forward}{21}{paragraph.5.1.4.6}
+\contentsline {paragraph}{\numberline {5.1.4.7}t0}{21}{paragraph.5.1.4.7}
+\contentsline {paragraph}{\numberline {5.1.4.8}nxtrue}{21}{paragraph.5.1.4.8}
+\contentsline {paragraph}{\numberline {5.1.4.9}nytrue}{22}{paragraph.5.1.4.9}
+\contentsline {paragraph}{\numberline {5.1.4.10}coptim}{22}{paragraph.5.1.4.10}
+\contentsline {paragraph}{\numberline {5.1.4.11}param}{22}{paragraph.5.1.4.11}
+\contentsline {subsection}{\numberline {5.2}ExpData Struct Reference}{22}{subsection.5.2}
+\contentsline {subsubsection}{\numberline {5.2.1}Detailed Description}{22}{subsubsection.5.2.1}
+\contentsline {subsection}{\numberline {5.3}ReturnData Struct Reference}{22}{subsection.5.3}
+\contentsline {subsubsection}{\numberline {5.3.1}Detailed Description}{23}{subsubsection.5.3.1}
+\contentsline {subsubsection}{\numberline {5.3.2}Member Data Documentation}{24}{subsubsection.5.3.2}
+\contentsline {paragraph}{\numberline {5.3.2.1}am\_xdata}{24}{paragraph.5.3.2.1}
+\contentsline {subsection}{\numberline {5.4}TempData Struct Reference}{24}{subsection.5.4}
+\contentsline {subsubsection}{\numberline {5.4.1}Detailed Description}{26}{subsubsection.5.4.1}
+\contentsline {subsubsection}{\numberline {5.4.2}Member Data Documentation}{26}{subsubsection.5.4.2}
+\contentsline {paragraph}{\numberline {5.4.2.1}am\_rootsfound}{26}{paragraph.5.4.2.1}
+\contentsline {subsection}{\numberline {5.5}UserData Struct Reference}{26}{subsection.5.5}
+\contentsline {subsubsection}{\numberline {5.5.1}Detailed Description}{27}{subsubsection.5.5.1}
+\contentsline {subsubsection}{\numberline {5.5.2}Member Data Documentation}{27}{subsubsection.5.5.2}
+\contentsline {paragraph}{\numberline {5.5.2.1}am\_ism}{27}{paragraph.5.5.2.1}
+\contentsline {paragraph}{\numberline {5.5.2.2}am\_sensi\_meth}{28}{paragraph.5.5.2.2}
+\contentsline {paragraph}{\numberline {5.5.2.3}am\_interpType}{28}{paragraph.5.5.2.3}
+\contentsline {paragraph}{\numberline {5.5.2.4}am\_lmm}{28}{paragraph.5.5.2.4}
+\contentsline {paragraph}{\numberline {5.5.2.5}am\_iter}{28}{paragraph.5.5.2.5}
+\contentsline {paragraph}{\numberline {5.5.2.6}am\_bsx0}{28}{paragraph.5.5.2.6}
+\contentsline {section}{\numberline {6}File Documentation}{28}{section.6}
+\contentsline {subsection}{\numberline {6.1}amiwrap.c File Reference}{28}{subsection.6.1}
+\contentsline {subsubsection}{\numberline {6.1.1}Detailed Description}{29}{subsubsection.6.1.1}
+\contentsline {subsubsection}{\numberline {6.1.2}Function Documentation}{29}{subsubsection.6.1.2}
+\contentsline {paragraph}{\numberline {6.1.2.1}mexFunction(int nlhs, mxArray $\ast $plhs[], int nrhs, const mxArray $\ast $prhs[])}{29}{paragraph.6.1.2.1}
+\contentsline {subsection}{\numberline {6.2}amiwrap.m File Reference}{30}{subsection.6.2}
+\contentsline {subsubsection}{\numberline {6.2.1}Function Documentation}{30}{subsubsection.6.2.1}
+\contentsline {paragraph}{\numberline {6.2.1.1}amiwrap(matlabtypesubstitute varargin)}{30}{paragraph.6.2.1.1}
+\contentsline {subsection}{\numberline {6.3}src/amici.c File Reference}{31}{subsection.6.3}
+\contentsline {subsubsection}{\numberline {6.3.1}Function Documentation}{32}{subsubsection.6.3.1}
+\contentsline {paragraph}{\numberline {6.3.1.1}setupUserData(const mxArray $\ast $prhs[])}{32}{paragraph.6.3.1.1}
+\contentsline {paragraph}{\numberline {6.3.1.2}setupAMI(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{32}{paragraph.6.3.1.2}
+\contentsline {paragraph}{\numberline {6.3.1.3}setupAMIB(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{33}{paragraph.6.3.1.3}
+\contentsline {paragraph}{\numberline {6.3.1.4}setupReturnData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{33}{paragraph.6.3.1.4}
+\contentsline {paragraph}{\numberline {6.3.1.5}setupExpData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{34}{paragraph.6.3.1.5}
+\contentsline {paragraph}{\numberline {6.3.1.6}getRootDataFSA(int $\ast $status, int $\ast $nroots, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{35}{paragraph.6.3.1.6}
+\contentsline {paragraph}{\numberline {6.3.1.7}getRootDataASA(int $\ast $status, int $\ast $nroots, int $\ast $idisc, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{36}{paragraph.6.3.1.7}
+\contentsline {paragraph}{\numberline {6.3.1.8}getDiagnosis(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data)}{37}{paragraph.6.3.1.8}
+\contentsline {paragraph}{\numberline {6.3.1.9}getDiagnosisB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{37}{paragraph.6.3.1.9}
+\contentsline {subsection}{\numberline {6.4}src/spline.c File Reference}{38}{subsection.6.4}
+\contentsline {subsubsection}{\numberline {6.4.1}Detailed Description}{39}{subsubsection.6.4.1}
+\contentsline {subsubsection}{\numberline {6.4.2}Function Documentation}{39}{subsubsection.6.4.2}
+\contentsline {paragraph}{\numberline {6.4.2.1}spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}{39}{paragraph.6.4.2.1}
+\contentsline {paragraph}{\numberline {6.4.2.2}seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}{40}{paragraph.6.4.2.2}
+\contentsline {paragraph}{\numberline {6.4.2.3}deriv(int n, double u, double x[], double b[], double c[], double d[])}{40}{paragraph.6.4.2.3}
+\contentsline {paragraph}{\numberline {6.4.2.4}sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}{40}{paragraph.6.4.2.4}
+\contentsline {subsection}{\numberline {6.5}src/symbolic\_functions.c File Reference}{41}{subsection.6.5}
+\contentsline {subsubsection}{\numberline {6.5.1}Detailed Description}{43}{subsubsection.6.5.1}
+\contentsline {subsubsection}{\numberline {6.5.2}Macro Definition Documentation}{43}{subsubsection.6.5.2}
+\contentsline {paragraph}{\numberline {6.5.2.1}TRUE}{43}{paragraph.6.5.2.1}
+\contentsline {paragraph}{\numberline {6.5.2.2}FALSE}{43}{paragraph.6.5.2.2}
+\contentsline {subsubsection}{\numberline {6.5.3}Function Documentation}{43}{subsubsection.6.5.3}
+\contentsline {paragraph}{\numberline {6.5.3.1}am\_ge(double a, double b)}{43}{paragraph.6.5.3.1}
+\contentsline {paragraph}{\numberline {6.5.3.2}Dam\_ge(int id, double a, double b)}{43}{paragraph.6.5.3.2}
+\contentsline {paragraph}{\numberline {6.5.3.3}am\_gt(double a, double b)}{43}{paragraph.6.5.3.3}
+\contentsline {paragraph}{\numberline {6.5.3.4}Dam\_gt(int id, double a, double b)}{44}{paragraph.6.5.3.4}
+\contentsline {paragraph}{\numberline {6.5.3.5}am\_le(double a, double b)}{44}{paragraph.6.5.3.5}
+\contentsline {paragraph}{\numberline {6.5.3.6}Dam\_le(int id, double a, double b)}{44}{paragraph.6.5.3.6}
+\contentsline {paragraph}{\numberline {6.5.3.7}am\_lt(double a, double b)}{45}{paragraph.6.5.3.7}
+\contentsline {paragraph}{\numberline {6.5.3.8}Dam\_lt(int id, double a, double b)}{45}{paragraph.6.5.3.8}
+\contentsline {paragraph}{\numberline {6.5.3.9}am\_if(int condition, double truepart, double falsepart)}{45}{paragraph.6.5.3.9}
+\contentsline {paragraph}{\numberline {6.5.3.10}Dam\_if(int id, int condition, double truepart, double falsepart)}{46}{paragraph.6.5.3.10}
+\contentsline {paragraph}{\numberline {6.5.3.11}am\_and(int a, int b)}{46}{paragraph.6.5.3.11}
+\contentsline {paragraph}{\numberline {6.5.3.12}Dam\_and(int id, int a, int b)}{46}{paragraph.6.5.3.12}
+\contentsline {paragraph}{\numberline {6.5.3.13}am\_or(int a, int b)}{47}{paragraph.6.5.3.13}
+\contentsline {paragraph}{\numberline {6.5.3.14}Dam\_or(int id, int a, int b)}{47}{paragraph.6.5.3.14}
+\contentsline {paragraph}{\numberline {6.5.3.15}am\_min(double a, double b)}{47}{paragraph.6.5.3.15}
+\contentsline {paragraph}{\numberline {6.5.3.16}Dam\_min(int id, double a, double b)}{48}{paragraph.6.5.3.16}
+\contentsline {paragraph}{\numberline {6.5.3.17}am\_max(double a, double b)}{48}{paragraph.6.5.3.17}
+\contentsline {paragraph}{\numberline {6.5.3.18}Dam\_max(int id, double a, double b)}{48}{paragraph.6.5.3.18}
+\contentsline {paragraph}{\numberline {6.5.3.19}heaviside(double x)}{49}{paragraph.6.5.3.19}
+\contentsline {paragraph}{\numberline {6.5.3.20}dirac(double x)}{49}{paragraph.6.5.3.20}
+\contentsline {paragraph}{\numberline {6.5.3.21}Ddirac(int id, double x)}{49}{paragraph.6.5.3.21}
+\contentsline {paragraph}{\numberline {6.5.3.22}spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{49}{paragraph.6.5.3.22}
+\contentsline {paragraph}{\numberline {6.5.3.23}spline\_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{50}{paragraph.6.5.3.23}
+\contentsline {paragraph}{\numberline {6.5.3.24}spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{51}{paragraph.6.5.3.24}
+\contentsline {paragraph}{\numberline {6.5.3.25}spline\_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{52}{paragraph.6.5.3.25}
+\contentsline {paragraph}{\numberline {6.5.3.26}spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{53}{paragraph.6.5.3.26}
+\contentsline {paragraph}{\numberline {6.5.3.27}spline\_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{53}{paragraph.6.5.3.27}
+\contentsline {paragraph}{\numberline {6.5.3.28}spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{54}{paragraph.6.5.3.28}
+\contentsline {paragraph}{\numberline {6.5.3.29}spline\_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{55}{paragraph.6.5.3.29}
+\contentsline {paragraph}{\numberline {6.5.3.30}Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{57}{paragraph.6.5.3.30}
+\contentsline {paragraph}{\numberline {6.5.3.31}Dspline\_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{57}{paragraph.6.5.3.31}
+\contentsline {paragraph}{\numberline {6.5.3.32}Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{58}{paragraph.6.5.3.32}
+\contentsline {paragraph}{\numberline {6.5.3.33}Dspline\_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{59}{paragraph.6.5.3.33}
+\contentsline {paragraph}{\numberline {6.5.3.34}Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{60}{paragraph.6.5.3.34}
+\contentsline {paragraph}{\numberline {6.5.3.35}Dspline\_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{61}{paragraph.6.5.3.35}
+\contentsline {paragraph}{\numberline {6.5.3.36}Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{62}{paragraph.6.5.3.36}
+\contentsline {paragraph}{\numberline {6.5.3.37}Dspline\_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{63}{paragraph.6.5.3.37}
+\contentsline {section}{Index}{65}{section*.16}

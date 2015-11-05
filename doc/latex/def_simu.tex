@@ -360,7 +360,7 @@ sol = simulate\_modelname(t,theta,kappa,D,options)
 
 
 The integration status will be indicated by the sol.\+status flag. Negative values indicated failed integration. The log-\/likelihood will then be available as sol.\+llh and the derivative with respect to the parameters in sol.\+sllh. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.\hypertarget{def_simu_steadystate}{}\subsubsection{Steady State Sensitivities}\label{def_simu_steadystate}
-This will compute state sensitivities according to the formula $$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
+This will compute state sensitivities according to the formula $ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
 
 In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.
 

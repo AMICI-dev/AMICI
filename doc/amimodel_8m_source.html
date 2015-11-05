@@ -203,7 +203,7 @@ $(document).ready(function(){initNavTree('amimodel_8m_source.html','');});
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        function  = <a class="code" href="classamimodel.html#af2ce5001c2320c95471ecb8c3d73bdbb">generateC</a>();</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        function  = compileC();</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        function  = <a class="code" href="classamimodel.html#ad1339463ebc3a2e6c6aeda6f63f1b4ed">compileC</a>();</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        function  = <a class="code" href="classamimodel.html#a65b30e6d951ff694d40d45b0625742c7">writeCcode_sensi</a>(symbolic svar,fileid fid);</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;</div>
@@ -244,6 +244,7 @@ $(document).ready(function(){initNavTree('amimodel_8m_source.html','');});
 <div class="ttc" id="classamimodel_html_ab2be9a8b5a1467cc7c4a5bcd651c209e"><div class="ttname"><a href="classamimodel.html#ab2be9a8b5a1467cc7c4a5bcd651c209e">amimodel.getFunDeps</a></div><div class="ttdeci">function   = getFunDeps(string funstr)</div><div class="ttdoc">getDeps returns the dependencies for the requested function/expression. </div><div class="ttdef"><b>Definition:</b> <a href="get_fun_deps_8m_source.html#l00018">getFunDeps.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_a71bca9c21a6de42d8079ade31cb61044"><div class="ttname"><a href="classamimodel.html#a71bca9c21a6de42d8079ade31cb61044">amimodel.modelname</a></div><div class="ttdeci">string modelname</div><div class="ttdoc">name of the model </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00047">amimodel.m:47</a></div></div>
 <div class="ttc" id="classamimodel_html_aa04dcfc1d2188cae948a75ebd46a6e03"><div class="ttname"><a href="classamimodel.html#aa04dcfc1d2188cae948a75ebd46a6e03">amimodel.checkDeps</a></div><div class="ttdeci">function [  ,   ] = checkDeps(struct HTable,cell deps)</div><div class="ttdoc">checkDeps checks the dependencies of functions and populates sym fields if necessary ...</div><div class="ttdef"><b>Definition:</b> <a href="check_deps_8m_source.html#l00018">checkDeps.m:18</a></div></div>
+<div class="ttc" id="classamimodel_html_ad1339463ebc3a2e6c6aeda6f63f1b4ed"><div class="ttname"><a href="classamimodel.html#ad1339463ebc3a2e6c6aeda6f63f1b4ed">amimodel.compileC</a></div><div class="ttdeci">function   = compileC()</div><div class="ttdoc">compileC compiles the mex simulation file </div><div class="ttdef"><b>Definition:</b> <a href="compile_c_8m_source.html#l00018">compileC.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_a874862825ea3346f977f518072dec051"><div class="ttname"><a href="classamimodel.html#a874862825ea3346f977f518072dec051">amimodel.writeCcode</a></div><div class="ttdeci">function   = writeCcode(string funstr,fileid fid, ip, jp)</div><div class="ttdoc">writeCcode is a wrapper for this.gccode which initialises data and reduces overhead by check nonzero ...</div><div class="ttdef"><b>Definition:</b> <a href="write_ccode_8m_source.html#l00018">writeCcode.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_a1b75344ed773e2c5c1b76b8a97861234"><div class="ttname"><a href="classamimodel.html#a1b75344ed773e2c5c1b76b8a97861234">amimodel.generateM</a></div><div class="ttdeci">function   = generateM(amimodel amimodelo2)</div><div class="ttdoc">generateM generates the matlab wrapper for the compiled C files. </div><div class="ttdef"><b>Definition:</b> <a href="generate_m_8m_source.html#l00018">generateM.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_a1ba81ee0e28fe7c7576911973c82be70"><div class="ttname"><a href="classamimodel.html#a1ba81ee0e28fe7c7576911973c82be70">amimodel.rowvalsB</a></div><div class="ttdeci">*int rowvalsB</div><div class="ttdoc">rowindexes of sparse Jacobian </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00238">amimodel.m:238</a></div></div>
@@ -290,7 +291,7 @@ $(document).ready(function(){initNavTree('amimodel_8m_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_714d08c2e8b2f86fd226dae60958336c.html">@amimodel</a></li><li class="navelem"><b>amimodel.m</b></li>
-    <li class="footer">Generated on Thu Nov 5 2015 13:54:56 for AMICI by
+    <li class="footer">Generated on Thu Nov 5 2015 15:47:11 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>
