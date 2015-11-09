@@ -5,7 +5,6 @@ function this = generateC(this)
     %  this: model definition object @type amimodel
 
     % set path and create folder
-    
     [wrap_path,~,~]=fileparts(which('amiwrap.m'));
     
     if(~exist(fullfile(wrap_path,'models'),'dir'))
