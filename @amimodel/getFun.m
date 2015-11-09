@@ -11,6 +11,8 @@ function this = getFun(this,HTable,funstr)
 
     deps = this.getFunDeps(funstr);
     
+    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
+    
     % check whether the corresponding c file exists, if not we have to
     % force recompilation by passing an empty HTable
     if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))

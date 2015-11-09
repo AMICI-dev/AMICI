@@ -484,29 +484,6 @@ function this = generateC(this)
     
     fprintf('\r')
     
-    % save hashtable
-    
-    
-    HTable = this.HTable;
-    nxtrue = this.nxtrue;
-    nytrue = this.nytrue;
-    nx = this.nx;
-    ny = this.ny;
-    np = this.np;
-    nk = this.nk;
-    ndisc = this.ndisc;
-    nr = this.nr;
-    nnonzeros = this.nnz;
-    id = this.id;
-    ubw = this.ubw;
-    lbw = this.lbw;
-    colptrs = this.colptrs;
-    rowvals = this.rowvals;
-    sparseidx = this.sparseidx;
-    colptrsB = this.colptrsB;
-    rowvalsB = this.rowvalsB;
-    sparseidxB = this.sparseidxB;
-    
 end
 
 function printlocalvars(fun,struct,fid)
