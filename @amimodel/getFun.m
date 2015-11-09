@@ -11,15 +11,19 @@ function this = getFun(this,HTable,funstr)
 
     deps = this.getFunDeps(funstr);
     
-    [this,cflag] = this.checkDeps(HTable,deps);
+    % check whether the corresponding c file exists, if not we have to
+    % force recompilation by passing an empty HTable
+    if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
+        [this,cflag] = this.checkDeps([],deps);
+    else
+        [this,cflag] = this.checkDeps(HTable,deps);
+    end
     
     nx = this.nx;
     nr = this.nr;
-    ny = this.ny;
     ndisc = this.ndisc;
     np = this.np;
     
-    hflag = 1;
     if(cflag)
         fprintf([funstr ' | '])
         switch(funstr)
