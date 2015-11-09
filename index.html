@@ -31,20 +31,21 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p>AMICI is a MATLAB interface for the <a href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a> solvers <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvodes">CVODES</a> (for ordinary differential equations) and <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_idas">IDAS</a> (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_stb">SUNDIALSTB</a> interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation.</p>
+        <p>AMICI (<b>A</b>dvanced <b>M</b>ATLAB <b>I</b>nterface for <b>C</b>VODES and <b>I</b>DAS) is a MATLAB interface for the <a href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a> solvers <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvodes">CVODES</a> (for ordinary differential equations) and <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_idas">IDAS</a> (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_stb">SUNDIALSTB</a> interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation. </p>
 
-<p>The interface was designed to provide routines for efficient gradient computation in parameter estimation of biochemical reaction models but is also applicable to a wider range of differential equation constrained optimization problems.</p>
+<p>The compiled .mex simulation files support various sensitivity methods thereby provides routines for efficient gradient computation taylored for parameter estimation of biochemical reaction models. Yet, AMICI is also applicable to a wider range of differential equation constrained optimization problems.</p>
 
 <h2>
 <a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
 
 <ul>
-<li>generation of model specific native C code</li>
-<li>first and second order forward sensitivity analysis</li>
-<li>adjoint sensitivity analysis</li>
-<li>steady state sensitivity analysis</li>
-<li>time-to-event sensitivities</li>
-<li>parameter dependent discontinuities</li>
+<li>Automated generation of model specific native C code</li>
+<li>Modular structure for efficient compilation of systems with thousands of states and parameters</li>
+<li>First and second order forward sensitivity analysis</li>
+<li>Adjoint sensitivity analysis</li>
+<li>Steady state sensitivity analysis</li>
+<li>Time-to-event sensitivities</li>
+<li>Parameter dependent bolus injections</li>
 </ul>
 
 <h2>
