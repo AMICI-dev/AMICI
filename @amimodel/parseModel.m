@@ -199,6 +199,8 @@ function this = parseModel(this)
     this.HTable.sigma_y = DataHash(char(this.sym.sigma_y));
     this.HTable.sigma_t = DataHash(char(this.sym.sigma_t));
     
+    save(fullfile(wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
+    
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies

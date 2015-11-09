@@ -508,8 +508,6 @@ function this = generateC(this)
     rowvalsB = this.rowvalsB;
     sparseidxB = this.sparseidxB;
     
-    save(fullfile(wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
-    
 end
 
 function printlocalvars(fun,struct,fid)
