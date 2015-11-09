@@ -8,3 +8,5 @@ examples/*
 *.o
 
 *.md5
+
+mtoc/config/Doxyfile
