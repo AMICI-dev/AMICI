@@ -4,6 +4,9 @@ function this = parseModel(this)
     % Return values:
     %  this: updated model definition object @type amimodel
     
+    % set path and create folder
+    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
+    
     % check whether sym is properly defined
     if(~isfield(this.sym,'x'))
         error('Model this is missing the definition of the state vector x (.sym.x)!')
