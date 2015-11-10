@@ -131,7 +131,7 @@ classdef amimodel
                 mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
             else
                 if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
-                    mkdir(fullfile(wrap_path,'models',this.modelname))
+                    mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
                 end
             end
         end
