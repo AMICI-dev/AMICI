@@ -74,7 +74,8 @@ classdef amimodel
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
-        
+        % path to wrapper
+        wrap_path;
     end
     
     methods
@@ -123,6 +124,16 @@ classdef amimodel
                 AM.adjoint = model.adjoint;
             end
             AM.modelname = modelname;
+            % set path and create folder
+            AM.wrap_path=fileparts(which('amiwrap.m'));
+            if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
+                mkdir(fullfile(AM.wrap_path,'models'));
+                mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
+            else
+                if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
+                    mkdir(fullfile(wrap_path,'models',this.modelname))
+                end
+            end
         end
         
         this = parseModel(this)

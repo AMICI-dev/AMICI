@@ -8,8 +8,6 @@ function this = generateM(this, amimodelo2)
     % Return values:
     %  this: model definition object @type amimodel
     
-    [odewrap_path,~,~]=fileparts(which('amiwrap.m'));
-    
     nx = this.nx;
     ny = this.ny;
     np = this.np;
@@ -25,7 +23,7 @@ function this = generateM(this, amimodelo2)
         nytrue = amimodelo2.nytrue;
     end
     
-    fid = fopen(fullfile(odewrap_path,'models',this.modelname,['simulate_',this.modelname,'.m']),'w');
+    fid = fopen(fullfile(this.wrap_path,'models',this.modelname,['simulate_',this.modelname,'.m']),'w');
     fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cvodes mex\n'...
         '%%   which simulates the ordinary differential equation and respective\n'...
         '%%   sensitivities according to user specifications.\n'...
@@ -263,14 +261,14 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['end\n']);
     if(~this.forward)
         fprintf(fid,['if(options_ami.sensi>0)\n']);
-        fprintf(fid,['    if(options_ami.forward)\n']);
+        fprintf(fid,['    if(options_ami.sensi_meth == 1)\n']);
         fprintf(fid,['        error(''forward sensitivities are disabled as necessary routines were not compiled'');\n']);
         fprintf(fid,['    end\n']);
         fprintf(fid,['end\n']);
     end
     if(~this.adjoint)
         fprintf(fid,['if(options_ami.sensi>0)\n']);
-        fprintf(fid,['    if(options_ami.adjoint)\n']);
+        fprintf(fid,['    if(options_ami.sensi_meth == 2)\n']);
         fprintf(fid,['        error(''adjoint sensitivities are disabled as necessary routines were not compiled'');\n']);
         fprintf(fid,['    end\n']);
         fprintf(fid,['end\n']);

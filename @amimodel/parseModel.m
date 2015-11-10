@@ -4,9 +4,6 @@ function this = parseModel(this)
     % Return values:
     %  this: updated model definition object @type amimodel
     
-    % set path and create folder
-    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
-    
     % check whether sym is properly defined
     if(~isfield(this.sym,'x'))
         error('Model this is missing the definition of the state vector x (.sym.x)!')
@@ -225,7 +222,7 @@ function this = parseModel(this)
     rowvalsB = this.rowvalsB;
     sparseidxB = this.sparseidxB;
     
-    save(fullfile(wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
     
     % compute functions
     
