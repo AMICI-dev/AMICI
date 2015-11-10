@@ -13,9 +13,11 @@ models/*
 
 *.md5
 
-examples/example_2/simulate_model_example_2.m
+examples/example_1/simulate_model_example_1.m
 
 examples/example_2/simulate_model_example_2.m
+
+examples/example_3/simulate_model_example_3.m
 
 examples/example_4/simulate_model_example_4.m
 
@@ -23,8 +25,28 @@ examples/example_5/simulate_model_example_5.m
 
 examples/example_6/simulate_model_example_6.m
 
-examples/example_1/simulate_model_example_1.m
+examples/example_1/html/*
 
-examples/example_3/simulate_model_example_3.m
+examples/example_2/html/*
+
+examples/example_3/html/*
+
+examples/example_4/html/*
+
+examples/example_5/html/*
+
+examples/example_6/html/*
 
 @amimodel/simulate_tf_norm.m
+
+*.mat
+
+mtoc/makeExampleDoc.m
+
+mtoc/makeDocumentation.m
+
+examples/example_5/example_model_5_paper.m
+
+mtoc/makeDocumentation.m
+
+mtoc/makeDocumentation.m

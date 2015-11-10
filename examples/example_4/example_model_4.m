@@ -37,9 +37,9 @@ sol = simulate_model_example_4(t,xi,kappa,D,options);
 figure
 for iy = 1:3
     subplot(2,2,iy)
-    plot(t,D.Y(:,iy),'rx','LineWidth',1.5)
+    plot(t,D.Y(:,iy),'rx')
     hold on
-    plot(t,sol.y(:,iy),'.-','LineWidth',1.5)
+    plot(t,sol.y(:,iy),'.-')
     xlim([0,60])
     xlabel('t')
     switch(iy)
@@ -51,9 +51,8 @@ for iy = 1:3
             ylabel('pEpoR')
     end
     ylim([0,1.2])
-    set(gca,'FontSize',15)
-    set(gca,'LineWidth',1.5)
 end
+set(gcf,'Position',[100 300 1200 500])
 
 % generate new
 xi_rand = xi + 0.1;
@@ -78,12 +77,12 @@ set(gca,'YScale','log')
 xlim([1e-2,1e2])
 ylim([1e-2,1e2])
 box on
-set(gca,'FontSize',15)
-set(gca,'LineWidth',1.5)
 hold on
+axis square
 plot([1e-2,1e2],[1e-2,1e2],'k:')
-ylabel('absolute value FD gradient entries')
-xlabel('absolute value AS gradient entries')
+xlabel('adjoint sensitivity absolute value of gradient element')
+ylabel('finite difference absolute value of gradient element')
+set(gcf,'Position',[100 300 1200 500])
 
 
 
