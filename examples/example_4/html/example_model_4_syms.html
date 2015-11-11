@@ -1,0 +1,231 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>example_model_4_syms</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-10"><meta name="DC.source" content="example_model_4_syms.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> [model] = example_model_4_syms()
+
+<span class="comment">% CVODES OPTIONS</span>
+
+model.atol = 1e-12;
+model.rtol = 1e-8;
+model.maxsteps = 1e4;
+model.param = <span class="string">'log10'</span>;
+model.debug = true;
+
+<span class="comment">% STATES</span>
+
+syms <span class="string">STAT</span> <span class="string">pSTAT</span> <span class="string">pSTAT_pSTAT</span> <span class="string">npSTAT_npSTAT</span> <span class="string">nSTAT1</span> <span class="string">nSTAT2</span> <span class="string">nSTAT3</span> <span class="string">nSTAT4</span> <span class="string">nSTAT5</span>
+
+x = [
+STAT, pSTAT, pSTAT_pSTAT, npSTAT_npSTAT, nSTAT1, nSTAT2, nSTAT3, nSTAT4, nSTAT5 <span class="keyword">...</span>
+];
+
+<span class="comment">% PARAMETERS</span>
+
+syms <span class="string">p1</span> <span class="string">p2</span> <span class="string">p3</span> <span class="string">p4</span> <span class="string">init_STAT</span> <span class="string">Omega_cyt</span> <span class="string">Omega_nuc</span> <span class="string">sp1</span> <span class="string">sp2</span> <span class="string">sp3</span> <span class="string">sp4</span> <span class="string">sp5</span> <span class="string">offset_tSTAT</span> <span class="string">offset_pSTAT</span> <span class="string">scale_tSTAT</span> <span class="string">scale_pSTAT</span> <span class="string">sigma_pSTAT</span> <span class="string">sigma_tSTAT</span> <span class="string">sigma_pEpoR</span>
+
+p = [p1,p2,p3,p4,init_STAT,sp1,sp2,sp3,sp4,sp5,offset_tSTAT,offset_pSTAT,scale_tSTAT,scale_pSTAT,sigma_pSTAT,sigma_tSTAT,sigma_pEpoR];
+
+k = [Omega_cyt,Omega_nuc];
+
+<span class="comment">% INPUT</span>
+syms <span class="string">t</span>
+u(1) = spline_pos5(t, 0.0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0.0);
+
+<span class="comment">% SYSTEM EQUATIONS</span>
+
+xdot = sym(zeros(size(x)));
+
+xdot(1) = (Omega_nuc*p4*nSTAT5 - Omega_cyt*STAT*p1*u(1))/Omega_cyt;
+xdot(2) = STAT*p1*u(1) - 2*p2*pSTAT^2;
+xdot(3) = p2*pSTAT^2 - p3*pSTAT_pSTAT;
+xdot(4) = -(Omega_nuc*p4*npSTAT_npSTAT - Omega_cyt*p3*pSTAT_pSTAT)/Omega_nuc;
+xdot(5) = -p4*(nSTAT1 - 2*npSTAT_npSTAT);
+xdot(6) = p4*(nSTAT1 - nSTAT2);
+xdot(7) = p4*(nSTAT2 - nSTAT3);
+xdot(8) = p4*(nSTAT3 - nSTAT4);
+xdot(9) = p4*(nSTAT4 - nSTAT5);
+<span class="comment">% INITIAL CONDITIONS</span>
+
+x0 = sym(zeros(size(x)));
+
+x0(1) = init_STAT;
+
+<span class="comment">% OBSERVABLES</span>
+
+y = sym(zeros(3,1));
+
+y(1) = offset_pSTAT + scale_pSTAT/init_STAT*(pSTAT + 2*pSTAT_pSTAT);
+y(2) = offset_tSTAT + scale_tSTAT/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT));
+y(3) = u(1);
+
+<span class="comment">% SIGMA</span>
+
+sigma_y = sym(size(y));
+
+sigma_y(1) = sigma_pSTAT;
+sigma_y(2) = sigma_tSTAT;
+sigma_y(3) = sigma_pEpoR;
+
+<span class="comment">% SYSTEM STRUCT</span>
+
+model.sym.x = x;
+model.sym.u = u;
+model.sym.xdot = xdot;
+model.sym.p = p;
+model.sym.k = k;
+model.sym.x0 = x0;
+model.sym.y = y;
+model.sym.sigma_y = sigma_y;
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">ans = 
+        atol: 1e-12
+        rtol: 1e-08
+    maxsteps: 10000
+       param: 'log10'
+       debug: 1
+         sym: [1x1 struct]
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [model] = example_model_4_syms()
+
+% CVODES OPTIONS
+
+model.atol = 1e-12;
+model.rtol = 1e-8;
+model.maxsteps = 1e4;
+model.param = 'log10';
+model.debug = true;
+
+% STATES
+
+syms STAT pSTAT pSTAT_pSTAT npSTAT_npSTAT nSTAT1 nSTAT2 nSTAT3 nSTAT4 nSTAT5
+
+x = [
+STAT, pSTAT, pSTAT_pSTAT, npSTAT_npSTAT, nSTAT1, nSTAT2, nSTAT3, nSTAT4, nSTAT5 ...
+];
+
+% PARAMETERS
+
+syms p1 p2 p3 p4 init_STAT Omega_cyt Omega_nuc sp1 sp2 sp3 sp4 sp5 offset_tSTAT offset_pSTAT scale_tSTAT scale_pSTAT sigma_pSTAT sigma_tSTAT sigma_pEpoR
+
+p = [p1,p2,p3,p4,init_STAT,sp1,sp2,sp3,sp4,sp5,offset_tSTAT,offset_pSTAT,scale_tSTAT,scale_pSTAT,sigma_pSTAT,sigma_tSTAT,sigma_pEpoR];
+
+k = [Omega_cyt,Omega_nuc];
+
+% INPUT 
+syms t
+u(1) = spline_pos5(t, 0.0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0.0);
+
+% SYSTEM EQUATIONS
+
+xdot = sym(zeros(size(x)));
+
+xdot(1) = (Omega_nuc*p4*nSTAT5 - Omega_cyt*STAT*p1*u(1))/Omega_cyt;
+xdot(2) = STAT*p1*u(1) - 2*p2*pSTAT^2;
+xdot(3) = p2*pSTAT^2 - p3*pSTAT_pSTAT;
+xdot(4) = -(Omega_nuc*p4*npSTAT_npSTAT - Omega_cyt*p3*pSTAT_pSTAT)/Omega_nuc;
+xdot(5) = -p4*(nSTAT1 - 2*npSTAT_npSTAT);
+xdot(6) = p4*(nSTAT1 - nSTAT2);
+xdot(7) = p4*(nSTAT2 - nSTAT3);
+xdot(8) = p4*(nSTAT3 - nSTAT4);
+xdot(9) = p4*(nSTAT4 - nSTAT5);
+% INITIAL CONDITIONS
+
+x0 = sym(zeros(size(x)));
+
+x0(1) = init_STAT;
+
+% OBSERVABLES
+
+y = sym(zeros(3,1));
+
+y(1) = offset_pSTAT + scale_pSTAT/init_STAT*(pSTAT + 2*pSTAT_pSTAT);
+y(2) = offset_tSTAT + scale_tSTAT/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT));
+y(3) = u(1);
+
+% SIGMA
+
+sigma_y = sym(size(y));
+
+sigma_y(1) = sigma_pSTAT;
+sigma_y(2) = sigma_tSTAT;
+sigma_y(3) = sigma_pEpoR;
+
+% SYSTEM STRUCT
+
+model.sym.x = x;
+model.sym.u = u;
+model.sym.xdot = xdot;
+model.sym.p = p;
+model.sym.k = k;
+model.sym.x0 = x0;
+model.sym.y = y;
+model.sym.sigma_y = sigma_y;
+end
+##### SOURCE END #####
+--></body></html>

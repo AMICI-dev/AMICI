@@ -1,0 +1,129 @@
+
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and republish this document.
+
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{color}
+
+\sloppy
+\definecolor{lightgray}{gray}{0.5}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+    
+    
+\subsection*{Contents}
+
+\begin{itemize}
+\setlength{\itemsep}{-1ex}
+   \item CVODES OPTIONS
+   \item STATES
+   \item PARAMETERS ( for these sensitivities will be computed )
+   \item SYSTEM EQUATIONS
+   \item INITIAL CONDITIONS
+   \item OBSERVALES
+   \item SYSTEM STRUCT
+\end{itemize}
+\begin{verbatim}
+function [model] = example_model_2_syms()
+\end{verbatim}
+
+
+\subsection*{CVODES OPTIONS}
+
+\begin{verbatim}
+% set the default absolute tolerance
+model.atol = 1e-8;
+% set the default relative tolerance
+model.rtol = 1e-8;
+% set the default maximum number of integration steps
+model.maxsteps = 1e4;
+% set the parametrisation of the problem options are 'log', 'log10' and
+% 'lin' (default).
+model.param = 'log10';
+\end{verbatim}
+
+
+\subsection*{STATES}
+
+\begin{verbatim}
+% create state syms
+syms x1 x2
+
+% create state vector
+x = [ x1 x2 ];
+\end{verbatim}
+
+
+\subsection*{PARAMETERS ( for these sensitivities will be computed )}
+
+\begin{verbatim}
+% create parameter syms
+syms p1 p2 p3 p4
+
+% create parameter vector
+p = [p1,p2,p3,p4];
+\end{verbatim}
+
+
+\subsection*{SYSTEM EQUATIONS}
+
+\begin{verbatim}
+% create symbolic variable for time
+syms t
+
+xdot = sym(zeros(size(x)));
+
+% piecewise defined function
+xdot(1) = -p1*x1 + dirac(t-p2);
+% inhomogeneous
+xdot(2) = p3*x1 - p4*x2 ;
+\end{verbatim}
+
+
+\subsection*{INITIAL CONDITIONS}
+
+\begin{verbatim}
+x0 = sym(zeros(size(x)));
+
+x0(1) = 0;
+x0(2) = 0;
+\end{verbatim}
+
+
+\subsection*{OBSERVALES}
+
+\begin{verbatim}
+y = sym(zeros(1,1));
+
+y(1) = x2;
+\end{verbatim}
+
+
+\subsection*{SYSTEM STRUCT}
+
+\begin{verbatim}
+model.sym.x = x;
+model.sym.xdot = xdot;
+model.sym.p = p;
+model.sym.x0 = x0;
+model.sym.y = y;
+\end{verbatim}
+\begin{verbatim}
+end
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}ans = 
+        atol: 1e-08
+        rtol: 1e-08
+    maxsteps: 10000
+       param: 'log10'
+         sym: [1x1 struct]
+\end{verbatim} \color{black}
+    
+
+
+\end{document}
+    

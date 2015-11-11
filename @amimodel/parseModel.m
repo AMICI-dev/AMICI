@@ -4,9 +4,6 @@ function this = parseModel(this)
     % Return values:
     %  this: updated model definition object @type amimodel
     
-    % set path and create folder
-    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
-    
     % check whether sym is properly defined
     if(~isfield(this.sym,'x'))
         error('Model this is missing the definition of the state vector x (.sym.x)!')
@@ -202,7 +199,30 @@ function this = parseModel(this)
     this.HTable.sigma_y = DataHash(char(this.sym.sigma_y));
     this.HTable.sigma_t = DataHash(char(this.sym.sigma_t));
     
-    save(fullfile(wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
+    
+    % save hashtable
+
+    HTable = this.HTable;
+    nxtrue = this.nxtrue;
+    nytrue = this.nytrue;
+    nx = this.nx;
+    ny = this.ny;
+    np = this.np;
+    nk = this.nk;
+    ndisc = this.ndisc;
+    nr = this.nr;
+    nnonzeros = this.nnz;
+    id = this.id;
+    ubw = this.ubw;
+    lbw = this.lbw;
+    colptrs = this.colptrs;
+    rowvals = this.rowvals;
+    sparseidx = this.sparseidx;
+    colptrsB = this.colptrsB;
+    rowvalsB = this.rowvalsB;
+    sparseidxB = this.sparseidxB;
+    
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
     
     % compute functions
     

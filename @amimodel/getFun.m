@@ -11,6 +11,8 @@ function this = getFun(this,HTable,funstr)
 
     deps = this.getFunDeps(funstr);
     
+    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
+    
     % check whether the corresponding c file exists, if not we have to
     % force recompilation by passing an empty HTable
     if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
@@ -264,7 +266,7 @@ function this = getFun(this,HTable,funstr)
             case 'xBdot'
                 if(strcmp(this.wtype,'iw'))
                     syms t
-                    this.sym.xBdot = diff(transpose(this.sym.M),t)*this.strsym.xBs + transpose(this.sym.M)*this.strsym.dxBs - transpose(this.sym.J)*this.strsym.xBs;
+                    this.sym.xBdot = diff(transpose(this.sym.M),t)*this.strsym.xBs + transpose(this.sym.M)*this.strsym.dxBs - transpose(this.sym.dfdx)*this.strsym.xBs;
                 else
                     this.sym.xBdot = -transpose(this.sym.J)*this.strsym.xBs;
                 end
