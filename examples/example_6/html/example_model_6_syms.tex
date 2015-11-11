@@ -2,38 +2,24 @@
 % This LaTeX was auto-generated from MATLAB code.
 % To make changes, update the MATLAB code and republish this document.
 
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{color}
 
-\sloppy
-\definecolor{lightgray}{gray}{0.5}
-\setlength{\parindent}{0pt}
 
-\begin{document}
+
+
+
+
+
+
+
 
     
-    
-\subsection*{Contents}
-
-\begin{itemize}
-\setlength{\itemsep}{-1ex}
-   \item CVODES OPTIONS
-   \item STATES
-   \item PARAMETERS ( for these sensitivities will be computed )
-   \item SYSTEM EQUATIONS
-   \item INITIAL CONDITIONS
-   \item OBSERVALES
-   \item SYSTEM STRUCT
-\end{itemize}
-\begin{verbatim}
+    \begin{DoxyCode}
 function [model] = example_model_6_syms()
-\end{verbatim}
-
-
-\subsection*{CVODES OPTIONS}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+CVODES OPTIONS
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % set the default absolute tolerance
 model.atol = 1e-8;
 % set the default relative tolerance
@@ -43,35 +29,31 @@ model.maxsteps = 1e4;
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10';
-model.debug = true;
-\end{verbatim}
-
-
-\subsection*{STATES}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+STATES
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % create state syms
 syms x1
 
 % create state vector
 x = [ x1];
-\end{verbatim}
-
-
-\subsection*{PARAMETERS ( for these sensitivities will be computed )}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+PARAMETERS ( for these sensitivities will be computed )
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % create parameter syms
 syms p1 p2 p3
 
 % create parameter vector
 p = [p1 p2 p3];
-\end{verbatim}
-
-
-\subsection*{SYSTEM EQUATIONS}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+SYSTEM EQUATIONS
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % create symbolic variable for time
 syms t
 
@@ -79,50 +61,46 @@ xdot = sym(zeros(size(x)));
 
 % piecewise defined function
 xdot(1) = -p1*x1*heaviside(t-2) + p2;
-\end{verbatim}
-
-
-\subsection*{INITIAL CONDITIONS}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+INITIAL CONDITIONS
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 x0 = sym(zeros(size(x)));
 
 x0(1) = p3;
-\end{verbatim}
-
-
-\subsection*{OBSERVALES}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+OBSERVALES
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 y = sym(zeros(1,1));
 
 y(1) = x1;
-\end{verbatim}
-
-
-\subsection*{SYSTEM STRUCT}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+SYSTEM STRUCT
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 model.sym.x = x;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
 model.sym.y = y;
-\end{verbatim}
-\begin{verbatim}
+\end{DoxyCode}
+\begin{DoxyCode}
 end
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}ans = 
+         \begin{DoxyCode}ans = 
         atol: 1e-08
         rtol: 1e-08
     maxsteps: 10000
        param: 'log10'
-       debug: 1
          sym: [1x1 struct]
-\end{verbatim} \color{black}
+\end{DoxyCode} 
     
 
 
-\end{document}
+
     

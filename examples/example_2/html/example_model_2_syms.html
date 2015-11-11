@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example_model_2_syms</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-10"><meta name="DC.source" content="example_model_2_syms.m"><style type="text/css">
+      --><title>example_model_2_syms</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-11"><meta name="DC.source" content="example_model_2_syms.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,8 +66,8 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">CVODES OPTIONS</a></li><li><a href="#3">STATES</a></li><li><a href="#4">PARAMETERS ( for these sensitivities will be computed )</a></li><li><a href="#5">SYSTEM EQUATIONS</a></li><li><a href="#6">INITIAL CONDITIONS</a></li><li><a href="#7">OBSERVALES</a></li><li><a href="#8">SYSTEM STRUCT</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [model] = example_model_2_syms()
-</pre><h2>CVODES OPTIONS<a name="2"></a></h2><pre class="codeinput"><span class="comment">% set the default absolute tolerance</span>
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> [model] = example_model_2_syms()
+</pre><p>CVODES OPTIONS</p><pre class="codeinput"><span class="comment">% set the default absolute tolerance</span>
 model.atol = 1e-8;
 <span class="comment">% set the default relative tolerance</span>
 model.rtol = 1e-8;
@@ -76,17 +76,17 @@ model.maxsteps = 1e4;
 <span class="comment">% set the parametrisation of the problem options are 'log', 'log10' and</span>
 <span class="comment">% 'lin' (default).</span>
 model.param = <span class="string">'log10'</span>;
-</pre><h2>STATES<a name="3"></a></h2><pre class="codeinput"><span class="comment">% create state syms</span>
+</pre><p>STATES</p><pre class="codeinput"><span class="comment">% create state syms</span>
 syms <span class="string">x1</span> <span class="string">x2</span>
 
 <span class="comment">% create state vector</span>
 x = [ x1 x2 ];
-</pre><h2>PARAMETERS ( for these sensitivities will be computed )<a name="4"></a></h2><pre class="codeinput"><span class="comment">% create parameter syms</span>
+</pre><p>PARAMETERS ( for these sensitivities will be computed )</p><pre class="codeinput"><span class="comment">% create parameter syms</span>
 syms <span class="string">p1</span> <span class="string">p2</span> <span class="string">p3</span> <span class="string">p4</span>
 
 <span class="comment">% create parameter vector</span>
 p = [p1,p2,p3,p4];
-</pre><h2>SYSTEM EQUATIONS<a name="5"></a></h2><pre class="codeinput"><span class="comment">% create symbolic variable for time</span>
+</pre><p>SYSTEM EQUATIONS</p><pre class="codeinput"><span class="comment">% create symbolic variable for time</span>
 syms <span class="string">t</span>
 
 xdot = sym(zeros(size(x)));
@@ -95,14 +95,14 @@ xdot = sym(zeros(size(x)));
 xdot(1) = -p1*x1 + dirac(t-p2);
 <span class="comment">% inhomogeneous</span>
 xdot(2) = p3*x1 - p4*x2 ;
-</pre><h2>INITIAL CONDITIONS<a name="6"></a></h2><pre class="codeinput">x0 = sym(zeros(size(x)));
+</pre><p>INITIAL CONDITIONS</p><pre class="codeinput">x0 = sym(zeros(size(x)));
 
 x0(1) = 0;
 x0(2) = 0;
-</pre><h2>OBSERVALES<a name="7"></a></h2><pre class="codeinput">y = sym(zeros(1,1));
+</pre><p>OBSERVALES</p><pre class="codeinput">y = sym(zeros(1,1));
 
 y(1) = x2;
-</pre><h2>SYSTEM STRUCT<a name="8"></a></h2><pre class="codeinput">model.sym.x = x;
+</pre><p>SYSTEM STRUCT</p><pre class="codeinput">model.sym.x = x;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
@@ -118,7 +118,8 @@ model.sym.y = y;
 ##### SOURCE BEGIN #####
 function [model] = example_model_2_syms()
 
-%% CVODES OPTIONS
+%%
+% CVODES OPTIONS
 
 % set the default absolute tolerance
 model.atol = 1e-8; 
@@ -130,7 +131,8 @@ model.maxsteps = 1e4;
 % 'lin' (default).
 model.param = 'log10'; 
 
-%% STATES
+%%
+% STATES
 
 % create state syms
 syms x1 x2
@@ -138,7 +140,8 @@ syms x1 x2
 % create state vector
 x = [ x1 x2 ];
 
-%% PARAMETERS ( for these sensitivities will be computed )
+%%
+% PARAMETERS ( for these sensitivities will be computed )
 
 % create parameter syms
 syms p1 p2 p3 p4
@@ -146,7 +149,8 @@ syms p1 p2 p3 p4
 % create parameter vector 
 p = [p1,p2,p3,p4];
 
-%% SYSTEM EQUATIONS
+%%
+% SYSTEM EQUATIONS
 
 % create symbolic variable for time
 syms t
@@ -158,20 +162,23 @@ xdot(1) = -p1*x1 + dirac(t-p2);
 % inhomogeneous
 xdot(2) = p3*x1 - p4*x2 ;
 
-%% INITIAL CONDITIONS
+%%
+% INITIAL CONDITIONS
 
 x0 = sym(zeros(size(x)));
 
 x0(1) = 0;
 x0(2) = 0;
 
-%% OBSERVALES
+%%
+% OBSERVALES
 
 y = sym(zeros(1,1));
 
 y(1) = x2;
 
-%% SYSTEM STRUCT
+%%
+% SYSTEM STRUCT
 
 model.sym.x = x;
 model.sym.xdot = xdot;

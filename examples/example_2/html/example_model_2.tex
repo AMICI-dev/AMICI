@@ -2,55 +2,41 @@
 % This LaTeX was auto-generated from MATLAB code.
 % To make changes, update the MATLAB code and republish this document.
 
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{color}
 
-\sloppy
-\definecolor{lightgray}{gray}{0.5}
-\setlength{\parindent}{0pt}
 
-\begin{document}
+
+
+
+
+
+
+
 
     
-    
-\subsection*{Contents}
-
-\begin{itemize}
-\setlength{\itemsep}{-1ex}
-   \item COMPILATION
-   \item SIMULATION
-   \item ODE15S
-   \item PLOTTING
-   \item FORWARD SENSITIVITY ANALYSIS
-   \item FINITE DIFFERENCES
-   \item PLOTTING
-\end{itemize}
-\begin{verbatim}
+    \begin{DoxyCode}
 clear
-\end{verbatim}
-
-
-\subsection*{COMPILATION}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+COMPILATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 [exdir,~,~]=fileparts(which('example_model_2.m'));
 % compile the model
 amiwrap('model_example_2','example_model_2_syms',exdir)
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Generating model struct ...
+         \begin{DoxyCode}Generating model struct ...
 Parsing model struct ...
-Generating C code ...
-headers | wrapfunctions | Compiling mex file ...
+Generating C code ...
+headers | wrapfunctions | 
+Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-\end{verbatim} \color{black}
-    
-
-\subsection*{SIMULATION}
-
-\begin{verbatim}
+\end{DoxyCode} 
+    \begin{par}
+SIMULATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % time vector
 t = linspace(0,3,1001);
 p = [1;0.5;2;3];
@@ -65,15 +51,14 @@ sol = simulate_model_example_2(t,log10(p),k,[],options);
 tic
 sol = simulate_model_example_2(t,log10(p),k,[],options);
 disp(['Time elapsed with amiwrap: ' num2str(toc) ])
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Time elapsed with amiwrap: 0.0029045
-\end{verbatim} \color{black}
-    
-
-\subsection*{ODE15S}
-
-\begin{verbatim}
+         \begin{DoxyCode}Time elapsed with amiwrap: 0.0019205
+\end{DoxyCode} 
+    \begin{par}
+ODE15S
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 sig = 1e-2;
 delta_num = @(tau) exp(-1/2*(tau/sig).^2)/(sqrt(2*pi)*sig);
 
@@ -85,15 +70,14 @@ options_ode45 = odeset('RelTol',1e-8,'AbsTol',1e-8,'MaxStep',1e4);
 tic
 [~, X_ode45] = ode45(@(t,x) ode_system(t,x,p,k),t,[0;0],options_ode45);
 disp(['Time elapsed with ode45: ' num2str(toc) ])
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Time elapsed with ode45: 0.065563
-\end{verbatim} \color{black}
-    
-
-\subsection*{PLOTTING}
-
-\begin{verbatim}
+         \begin{DoxyCode}Time elapsed with ode45: 0.042852
+\end{DoxyCode} 
+    \begin{par}
+PLOTTING
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 figure
 c_x = get(gca,'ColorOrder');
 subplot(2,2,1)
@@ -135,23 +119,21 @@ xlabel('time t')
 ylabel('y')
 box on
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_2_01.png}
-
-
-\subsection*{FORWARD SENSITIVITY ANALYSIS}
-
-\begin{verbatim}
+\includegraphics [width=4in]{../../examples/example_2/html/example_model_2_01.png}
+\begin{par}
+FORWARD SENSITIVITY ANALYSIS
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 options.sensi = 1;
 
 sol = simulate_model_example_2(t,log10(p),k,[],options);
-\end{verbatim}
-
-
-\subsection*{FINITE DIFFERENCES}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+FINITE DIFFERENCES
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 eps = 1e-4;
 xi = log10(p);
 for ip = 1:4;
@@ -161,12 +143,11 @@ for ip = 1:4;
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 end
-\end{verbatim}
-
-
-\subsection*{PLOTTING}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+PLOTTING
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)
@@ -224,13 +205,13 @@ for ip = 1:4
     box on
 end
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_2_02.png}
+\includegraphics [width=4in]{../../examples/example_2/html/example_model_2_02.png}
 
-\includegraphics [width=4in]{example_model_2_03.png}
+\includegraphics [width=4in]{../../examples/example_2/html/example_model_2_03.png}
 
 
 
-\end{document}
+
     

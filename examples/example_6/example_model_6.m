@@ -1,39 +1,18 @@
 clear
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_6.m'));
 % compile the model
 amiwrap('model_example_6','example_model_6_syms',exdir)
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = [linspace(0,4,5)];
 p = [1.1,0.3,1];
 k = [];
-
-% D.Y = [     1.0171
-%     1.1761
-%     1.1680
-%     1.1359
-%     1.1778
-%     1.3423
-%     1.3079
-%     1.2784
-%     1.4976
-%     1.5903
-%     1.6585
-%     1.4688
-%     1.0999
-%     1.0128
-%     0.7198
-%     0.9814
-%     0.6755
-%     0.5091
-%     0.4471
-%     0.5249
-%     0.3288];
-
 
 D.Y = [     1.0171
     1.3423
@@ -53,7 +32,8 @@ options.cvode_atol = 1e-12;
 [msg] = which('simulate_model_example_6'); % fix for inaccessability problems
 sol = simulate_model_example_6(t,log10(p),k,D,options);
 
-%% Plot
+%%
+% Plot
 
 figure
 subplot(3,1,1)
@@ -106,7 +86,8 @@ grad(3,1) = -mu(1)*p(3)*log(10);
 
 plot(zeros(3,1),grad,'ko')
 
-%% FD
+%%
+% FD
 
 eps = 1e-5;
 xi = log10(p);

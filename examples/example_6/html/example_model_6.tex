@@ -2,52 +2,41 @@
 % This LaTeX was auto-generated from MATLAB code.
 % To make changes, update the MATLAB code and republish this document.
 
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{color}
 
-\sloppy
-\definecolor{lightgray}{gray}{0.5}
-\setlength{\parindent}{0pt}
 
-\begin{document}
+
+
+
+
+
+
+
 
     
-    
-\subsection*{Contents}
-
-\begin{itemize}
-\setlength{\itemsep}{-1ex}
-   \item COMPILATION
-   \item SIMULATION
-   \item Plot
-   \item FD
-\end{itemize}
-\begin{verbatim}
+    \begin{DoxyCode}
 clear
-\end{verbatim}
-
-
-\subsection*{COMPILATION}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+COMPILATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 [exdir,~,~]=fileparts(which('example_model_6.m'));
 % compile the model
 amiwrap('model_example_6','example_model_6_syms',exdir)
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Generating model struct ...
+         \begin{DoxyCode}Generating model struct ...
 Parsing model struct ...
-Generating C code ...
-headers | wrapfunctions | Compiling mex file ...
+Generating C code ...
+headers | wrapfunctions | 
+Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-\end{verbatim} \color{black}
-    
-
-\subsection*{SIMULATION}
-
-\begin{verbatim}
+\end{DoxyCode} 
+    \begin{par}
+SIMULATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % time vector
 t = [linspace(0,4,5)];
 p = [1.1,0.3,1];
@@ -93,12 +82,11 @@ options.cvode_atol = 1e-12;
 % load mex into memory
 [msg] = which('simulate_model_example_6'); % fix for inaccessability problems
 sol = simulate_model_example_6(t,log10(p),k,D,options);
-\end{verbatim}
-
-
-\subsection*{Plot}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+Plot
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 figure
 subplot(3,1,1)
 errorbar(t,D.Y,D.Sigma_Y)
@@ -149,14 +137,13 @@ grad(2,1) = -trapz(tfine,mu)*p(2)*log(10);
 grad(3,1) = -mu(1)*p(3)*log(10);
 
 plot(zeros(3,1),grad,'ko')
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_6_01.png}
-
-
-\subsection*{FD}
-
-\begin{verbatim}
+\includegraphics [width=4in]{../../examples/example_6/html/example_model_6_01.png}
+\begin{par}
+FD
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 eps = 1e-5;
 xi = log10(p);
 grad_fd_f = NaN(3,1);
@@ -187,11 +174,11 @@ legend('forward FD','backward FD','central FD','adjoint sensintivity analysis','
 xlabel('analytic absolute value of gradient element')
 ylabel('computed absolute value of gradient element')
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_6_02.png}
+\includegraphics [width=4in]{../../examples/example_6/html/example_model_6_02.png}
 
 
 
-\end{document}
+
     

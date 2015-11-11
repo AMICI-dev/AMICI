@@ -2,18 +2,18 @@
 % This LaTeX was auto-generated from MATLAB code.
 % To make changes, update the MATLAB code and republish this document.
 
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{color}
 
-\sloppy
-\definecolor{lightgray}{gray}{0.5}
-\setlength{\parindent}{0pt}
 
-\begin{document}
+
+
+
+
+
+
+
 
     
-    \begin{verbatim}
+    \begin{DoxyCode}
 clear
 % compile the model
 [exdir,~,~]=fileparts(which('example_model_4.m'));
@@ -99,21 +99,22 @@ plot([1e-2,1e2],[1e-2,1e2],'k:')
 xlabel('adjoint sensitivity absolute value of gradient element')
 ylabel('finite difference absolute value of gradient element')
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Generating model struct ...
+         \begin{DoxyCode}Generating model struct ...
 Parsing model struct ...
-Generating C code ...
-headers | wrapfunctions | Compiling mex file ...
+Generating C code ...
+headers | wrapfunctions | 
+Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-\end{verbatim} \color{black}
+\end{DoxyCode} 
     
-\includegraphics [width=4in]{example_model_4_01.png}
+\includegraphics [width=4in]{../../examples/example_4/html/example_model_4_01.png}
 
-\includegraphics [width=4in]{example_model_4_02.png}
+\includegraphics [width=4in]{../../examples/example_4/html/example_model_4_02.png}
 
 
 
-\end{document}
+
     

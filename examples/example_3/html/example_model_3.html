@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example_model_3</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-10"><meta name="DC.source" content="example_model_3.m"><style type="text/css">
+      --><title>example_model_3</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-11"><meta name="DC.source" content="example_model_3.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,8 +66,8 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">COMPILATION</a></li><li><a href="#3">SIMULATION</a></li><li><a href="#4">ODE15S</a></li><li><a href="#5">PLOTTING</a></li><li><a href="#6">FORWARD SENSITIVITY ANALYSIS</a></li><li><a href="#7">FINITE DIFFERENCES</a></li><li><a href="#8">PLOTTING</a></li><li><a href="#9">STEADY STATE SENSITIVITY</a></li><li><a href="#10">PLOTTING</a></li></ul></div><pre class="codeinput">clear
-</pre><h2>COMPILATION<a name="2"></a></h2><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_3.m'</span>));
+  </style></head><body><div class="content"><pre class="codeinput">clear
+</pre><p>COMPILATION</p><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_3.m'</span>));
 <span class="comment">% compile the model</span>
 amiwrap(<span class="string">'model_example_3'</span>,<span class="string">'example_model_3_syms'</span>,exdir)
 <span class="comment">% add the model to the path</span>
@@ -78,7 +78,7 @@ Generating C code ...
 headers | wrapfunctions | Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-</pre><h2>SIMULATION<a name="3"></a></h2><pre class="codeinput"><span class="comment">% time vector</span>
+</pre><p>SIMULATION</p><pre class="codeinput"><span class="comment">% time vector</span>
 t = linspace(0,300,20);
 p = [1;0.5;0.4;2;0.1];
 k = [0.1,0.4,0.7,1];
@@ -91,8 +91,8 @@ sol = simulate_model_example_3(t,log10(p),k,[],options);
 tic
 sol = simulate_model_example_3(t,log10(p),k,[],options);
 disp([<span class="string">'Time elapsed with cvodes: '</span> num2str(toc) ])
-</pre><pre class="codeoutput">Time elapsed with cvodes: 0.0031095
-</pre><h2>ODE15S<a name="4"></a></h2><pre class="codeinput">ode_system = @(t,x,p,k) [-2*p(1)*x(1)^2 - p(2)*x(1)*x(2) + 2*p(3)*x(2) + p(4)*x(3) + p(5);
+</pre><pre class="codeoutput">Time elapsed with cvodes: 0.0016004
+</pre><p>ODE15S</p><pre class="codeinput">ode_system = @(t,x,p,k) [-2*p(1)*x(1)^2 - p(2)*x(1)*x(2) + 2*p(3)*x(2) + p(4)*x(3) + p(5);
     + p(1)*x(1)^2 - p(2)*x(1)*x(2) - p(3)*x(2) + p(4)*x(3);
     + p(2)*x(1)*x(2) - p(4)*x(3) - k(4)*x(3)];
 options_ode15s = odeset(<span class="string">'RelTol'</span>,1e-8,<span class="string">'AbsTol'</span>,1e-8,<span class="string">'MaxStep'</span>,1e4);
@@ -100,8 +100,8 @@ options_ode15s = odeset(<span class="string">'RelTol'</span>,1e-8,<span class="s
 tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp([<span class="string">'Time elapsed with ode15s: '</span> num2str(toc) ])
-</pre><pre class="codeoutput">Time elapsed with ode15s: 0.24951
-</pre><h2>PLOTTING<a name="5"></a></h2><pre class="codeinput">figure
+</pre><pre class="codeoutput">Time elapsed with ode15s: 0.25682
+</pre><p>PLOTTING</p><pre class="codeinput">figure
 c_x = get(gca,<span class="string">'ColorOrder'</span>);
 subplot(2,2,1)
 <span class="keyword">for</span> ix = 1:size(sol.x,2)
@@ -120,11 +120,11 @@ set(gca,<span class="string">'YScale'</span>,<span class="string">'log'</span>)
 legend(<span class="string">'error x1'</span>,<span class="string">'error x2'</span>,<span class="string">'error x3'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEastOutside'</span>)
 legend <span class="string">boxoff</span>
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_3_01.png" alt=""> <h2>FORWARD SENSITIVITY ANALYSIS<a name="6"></a></h2><pre class="codeinput">options.sensi = 1;
+</pre><img vspace="5" hspace="5" src="../examples/example_3/html/example_model_3_01.png" alt=""> <p>FORWARD SENSITIVITY ANALYSIS</p><pre class="codeinput">options.sensi = 1;
 options.sens_ind = [3,1,2,4];
 
 sol = simulate_model_example_3(t,log10(p),k,[],options);
-</pre><h2>FINITE DIFFERENCES<a name="7"></a></h2><pre class="codeinput">eps = 1e-3;
+</pre><p>FINITE DIFFERENCES</p><pre class="codeinput">eps = 1e-3;
 
 xi = log10(p);
 <span class="keyword">for</span> ip = 1:4;
@@ -134,7 +134,7 @@ xi = log10(p);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 <span class="keyword">end</span>
-</pre><h2>PLOTTING<a name="8"></a></h2><pre class="codeinput">figure
+</pre><p>PLOTTING</p><pre class="codeinput">figure
 <span class="keyword">for</span> ip = 1:4
     subplot(4,2,ip*2-1)
     hold <span class="string">on</span>
@@ -160,7 +160,7 @@ xi = log10(p);
     box <span class="string">on</span>
 <span class="keyword">end</span>
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_3_02.png" alt=""> <h2>STEADY STATE SENSITIVITY<a name="9"></a></h2><pre class="codeinput">sssens = NaN(size(sol.sx));
+</pre><img vspace="5" hspace="5" src="../examples/example_3/html/example_model_3_02.png" alt=""> <p>STEADY STATE SENSITIVITY</p><pre class="codeinput">sssens = NaN(size(sol.sx));
 <span class="keyword">for</span> it = 2:length(t)
     tt = [0,t(it)];
     options.sensi_meth = <span class="string">'ss'</span>;
@@ -168,7 +168,7 @@ set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
     sssens(it,:,:) = solss.sx;
     ssxdot(it,:) = solss.xdot;
 <span class="keyword">end</span>
-</pre><h2>PLOTTING<a name="10"></a></h2><pre class="codeinput">figure
+</pre><p>PLOTTING</p><pre class="codeinput">figure
 <span class="keyword">for</span> ip = 1:4
     subplot(4,2,ip*2-1)
     hold <span class="string">on</span>
@@ -202,15 +202,17 @@ plot([1e-15,1e5],[1e-15,1e5],<span class="string">'k:'</span>)
 set(gca,<span class="string">'YScale'</span>,<span class="string">'log'</span>)
 set(gca,<span class="string">'XScale'</span>,<span class="string">'log'</span>)
 box <span class="string">on</span>
+axis <span class="string">square</span>
 xlabel(<span class="string">'||dxdt/x||_2'</span>)
 ylabel(<span class="string">'error steady state approximation'</span>)
 set(gca,<span class="string">'FontSize'</span>,15)
 set(gca,<span class="string">'LineWidth'</span>,1.5)
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_3_03.png" alt=""> <img vspace="5" hspace="5" src="example_model_3_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="../examples/example_3/html/example_model_3_03.png" alt=""> <img vspace="5" hspace="5" src="../examples/example_3/html/example_model_3_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 clear
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_3.m'));
 % compile the model
@@ -218,7 +220,8 @@ amiwrap('model_example_3','example_model_3_syms',exdir)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_3']))
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = linspace(0,300,20);
@@ -234,7 +237,8 @@ tic
 sol = simulate_model_example_3(t,log10(p),k,[],options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
-%% ODE15S
+%%
+% ODE15S
 
 ode_system = @(t,x,p,k) [-2*p(1)*x(1)^2 - p(2)*x(1)*x(2) + 2*p(3)*x(2) + p(4)*x(3) + p(5);
     + p(1)*x(1)^2 - p(2)*x(1)*x(2) - p(3)*x(2) + p(4)*x(3);
@@ -245,7 +249,8 @@ tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp(['Time elapsed with ode15s: ' num2str(toc) ])
 
-%% PLOTTING
+%%
+% PLOTTING
 
 figure
 c_x = get(gca,'ColorOrder');
@@ -267,14 +272,16 @@ legend('error x1','error x2','error x3','Location','NorthEastOutside')
 legend boxoff
 set(gcf,'Position',[100 300 1200 500])
 
-%% FORWARD SENSITIVITY ANALYSIS
+%%
+% FORWARD SENSITIVITY ANALYSIS
 
 options.sensi = 1;
 options.sens_ind = [3,1,2,4];
 
 sol = simulate_model_example_3(t,log10(p),k,[],options);
 
-%% FINITE DIFFERENCES
+%%
+% FINITE DIFFERENCES
 
 eps = 1e-3;
 
@@ -287,7 +294,8 @@ for ip = 1:4;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 end
 
-%% PLOTTING
+%%
+% PLOTTING
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)
@@ -316,7 +324,8 @@ end
 set(gcf,'Position',[100 300 1200 500])
 
 
-%% STEADY STATE SENSITIVITY
+%%
+% STEADY STATE SENSITIVITY
 
 sssens = NaN(size(sol.sx));
 for it = 2:length(t)
@@ -327,7 +336,8 @@ for it = 2:length(t)
     ssxdot(it,:) = solss.xdot;
 end
 
-%% PLOTTING
+%%
+% PLOTTING
 
 figure
 for ip = 1:4
@@ -363,6 +373,7 @@ plot([1e-15,1e5],[1e-15,1e5],'k:')
 set(gca,'YScale','log')
 set(gca,'XScale','log')
 box on
+axis square
 xlabel('||dxdt/x||_2')
 ylabel('error steady state approximation')
 set(gca,'FontSize',15)

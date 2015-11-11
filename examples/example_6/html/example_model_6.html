@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example_model_6</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-10"><meta name="DC.source" content="example_model_6.m"><style type="text/css">
+      --><title>example_model_6</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-11"><meta name="DC.source" content="example_model_6.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,8 +66,8 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">COMPILATION</a></li><li><a href="#3">SIMULATION</a></li><li><a href="#4">Plot</a></li><li><a href="#5">FD</a></li></ul></div><pre class="codeinput">clear
-</pre><h2>COMPILATION<a name="2"></a></h2><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_6.m'</span>));
+  </style></head><body><div class="content"><pre class="codeinput">clear
+</pre><p>COMPILATION</p><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_6.m'</span>));
 <span class="comment">% compile the model</span>
 amiwrap(<span class="string">'model_example_6'</span>,<span class="string">'example_model_6_syms'</span>,exdir)
 </pre><pre class="codeoutput">Generating model struct ...
@@ -76,7 +76,7 @@ Generating C code ...
 headers | wrapfunctions | Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-</pre><h2>SIMULATION<a name="3"></a></h2><pre class="codeinput"><span class="comment">% time vector</span>
+</pre><p>SIMULATION</p><pre class="codeinput"><span class="comment">% time vector</span>
 t = [linspace(0,4,5)];
 p = [1.1,0.3,1];
 k = [];
@@ -121,7 +121,7 @@ options.cvode_atol = 1e-12;
 <span class="comment">% load mex into memory</span>
 [msg] = which(<span class="string">'simulate_model_example_6'</span>); <span class="comment">% fix for inaccessability problems</span>
 sol = simulate_model_example_6(t,log10(p),k,D,options);
-</pre><h2>Plot<a name="4"></a></h2><pre class="codeinput">figure
+</pre><p>Plot</p><pre class="codeinput">figure
 subplot(3,1,1)
 errorbar(t,D.Y,D.Sigma_Y)
 hold <span class="string">on</span>
@@ -171,7 +171,7 @@ grad(2,1) = -trapz(tfine,mu)*p(2)*log(10);
 grad(3,1) = -mu(1)*p(3)*log(10);
 
 plot(zeros(3,1),grad,<span class="string">'ko'</span>)
-</pre><img vspace="5" hspace="5" src="example_model_6_01.png" alt=""> <h2>FD<a name="5"></a></h2><pre class="codeinput">eps = 1e-5;
+</pre><img vspace="5" hspace="5" src="../examples/example_6/html/example_model_6_01.png" alt=""> <p>FD</p><pre class="codeinput">eps = 1e-5;
 xi = log10(p);
 grad_fd_f = NaN(3,1);
 grad_fd_b = NaN(3,1);
@@ -201,16 +201,18 @@ legend(<span class="string">'forward FD'</span>,<span class="string">'backward F
 xlabel(<span class="string">'analytic absolute value of gradient element'</span>)
 ylabel(<span class="string">'computed absolute value of gradient element'</span>)
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_6_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="../examples/example_6/html/example_model_6_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 clear
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_6.m'));
 % compile the model
 amiwrap('model_example_6','example_model_6_syms',exdir)
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = [linspace(0,4,5)];
@@ -258,7 +260,8 @@ options.cvode_atol = 1e-12;
 [msg] = which('simulate_model_example_6'); % fix for inaccessability problems
 sol = simulate_model_example_6(t,log10(p),k,D,options);
 
-%% Plot
+%%
+% Plot
 
 figure
 subplot(3,1,1)
@@ -311,7 +314,8 @@ grad(3,1) = -mu(1)*p(3)*log(10);
 
 plot(zeros(3,1),grad,'ko')
 
-%% FD
+%%
+% FD
 
 eps = 1e-5;
 xi = log10(p);

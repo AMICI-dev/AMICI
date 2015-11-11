@@ -31,6 +31,7 @@ var NAVTREE =
         [ "Steady State Sensitivities", "def_simu.html#steadystate", null ]
       ] ]
     ] ],
+    [ "Examples", "examples.html", "examples" ],
     [ "Code Organization", "code.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -54,7 +55,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "amici_8c.html",
-"symbolic__functions_8c.html#a03efbb1edaad1fe57c6908db1737429b"
+"struct_user_data.html#a2c6b0a170bd534f68ab5b216629055a8"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

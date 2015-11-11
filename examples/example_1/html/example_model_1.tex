@@ -2,59 +2,45 @@
 % This LaTeX was auto-generated from MATLAB code.
 % To make changes, update the MATLAB code and republish this document.
 
-\documentclass{article}
-\usepackage{graphicx}
-\usepackage{color}
 
-\sloppy
-\definecolor{lightgray}{gray}{0.5}
-\setlength{\parindent}{0pt}
 
-\begin{document}
+
+
+
+
+
+
+
 
     
-    
-\subsection*{Contents}
-
-\begin{itemize}
-\setlength{\itemsep}{-1ex}
-   \item COMPILATION
-   \item SIMULATION
-   \item ODE15S
-   \item PLOTTING
-   \item FORWARD SENSITIVITY ANALYSIS
-   \item FINITE DIFFERENCES
-   \item PLOTTING
-\end{itemize}
-\begin{verbatim}
+    \begin{DoxyCode}
 clear
 close all
 clc
-\end{verbatim}
-
-
-\subsection*{COMPILATION}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+COMPILATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 [exdir,~,~]=fileparts(which('example_model_1.m'));
 % compile the model
 amiwrap('model_example_1','example_model_1_syms',exdir)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Generating model struct ...
+         \begin{DoxyCode}Generating model struct ...
 Parsing model struct ...
-Generating C code ...
-headers | wrapfunctions | Compiling mex file ...
+Generating C code ...
+headers | wrapfunctions | 
+Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-\end{verbatim} \color{black}
-    
-
-\subsection*{SIMULATION}
-
-\begin{verbatim}
+\end{DoxyCode} 
+    \begin{par}
+SIMULATION
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 % time vector
 t = linspace(0,10,20);
 p = [0.5;2;0.5;0.5];
@@ -68,15 +54,14 @@ sol = simulate_model_example_1(t,log10(p),k,[],options);
 tic
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Time elapsed with cvodes: 0.0023875
-\end{verbatim} \color{black}
-    
-
-\subsection*{ODE15S}
-
-\begin{verbatim}
+         \begin{DoxyCode}Time elapsed with cvodes: 0.00195
+\end{DoxyCode} 
+    \begin{par}
+ODE15S
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
     +p(2)*x(1)*exp(-0.1*t)-p(3)*x(2);
     -1.5*x(3)];
@@ -88,15 +73,14 @@ options_ode15s = odeset('RelTol',1e-8,'AbsTol',1e-8,'MaxStep',1e4);
 tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp(['Time elapsed with ode15s: ' num2str(toc) ])
-\end{verbatim}
+\end{DoxyCode}
 
-        \color{lightgray} \begin{verbatim}Time elapsed with ode15s: 0.25847
-\end{verbatim} \color{black}
-    
-
-\subsection*{PLOTTING}
-
-\begin{verbatim}
+         \begin{DoxyCode}Time elapsed with ode15s: 0.19678
+\end{DoxyCode} 
+    \begin{par}
+PLOTTING
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 figure
 c_x = get(gca,'ColorOrder');
 subplot(2,2,1)
@@ -138,23 +122,21 @@ ylabel('y')
 box on
 
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_1_01.png}
-
-
-\subsection*{FORWARD SENSITIVITY ANALYSIS}
-
-\begin{verbatim}
+\includegraphics[width=\textwidth]{../../examples/example_1/html/example_model_1_01.png}
+\begin{par}
+FORWARD SENSITIVITY ANALYSIS
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 options.sensi = 1;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
-\end{verbatim}
-
-
-\subsection*{FINITE DIFFERENCES}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+FINITE DIFFERENCES
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 eps = 1e-4;
 xi = log10(p);
 for ip = 1:4;
@@ -165,12 +147,11 @@ for ip = 1:4;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
     sroot_fd(:,:,ip) = (solp.root - sol.root)/eps;
 end
-\end{verbatim}
-
-
-\subsection*{PLOTTING}
-
-\begin{verbatim}
+\end{DoxyCode}
+\begin{par}
+PLOTTING
+\end{par} \vspace{1em}
+\begin{DoxyCode}
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)
@@ -248,15 +229,15 @@ ylabel('y')
 box on
 end
 set(gcf,'Position',[100 300 1200 500])
-\end{verbatim}
+\end{DoxyCode}
 
-\includegraphics [width=4in]{example_model_1_02.png}
+\includegraphics[width=\textwidth]{../../examples/example_1/html/example_model_1_02.png}
 
-\includegraphics [width=4in]{example_model_1_03.png}
+\includegraphics[width=\textwidth]{../../examples/example_1/html/example_model_1_03.png}
 
-\includegraphics [width=4in]{example_model_1_04.png}
+\includegraphics[width=\textwidth]{../../examples/example_1/html/example_model_1_04.png}
 
 
 
-\end{document}
+
     

@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example_model_1</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-10"><meta name="DC.source" content="example_model_1.m"><style type="text/css">
+      --><title>example_model_1</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-11"><meta name="DC.source" content="example_model_1.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,10 +66,10 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">COMPILATION</a></li><li><a href="#3">SIMULATION</a></li><li><a href="#4">ODE15S</a></li><li><a href="#5">PLOTTING</a></li><li><a href="#6">FORWARD SENSITIVITY ANALYSIS</a></li><li><a href="#7">FINITE DIFFERENCES</a></li><li><a href="#8">PLOTTING</a></li></ul></div><pre class="codeinput">clear
+  </style></head><body><div class="content"><pre class="codeinput">clear
 close <span class="string">all</span>
 clc
-</pre><h2>COMPILATION<a name="2"></a></h2><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_1.m'</span>));
+</pre><p>COMPILATION</p><pre class="codeinput">[exdir,~,~]=fileparts(which(<span class="string">'example_model_1.m'</span>));
 <span class="comment">% compile the model</span>
 amiwrap(<span class="string">'model_example_1'</span>,<span class="string">'example_model_1_syms'</span>,exdir)
 <span class="comment">% add the model to the path</span>
@@ -80,7 +80,7 @@ Generating C code ...
 headers | wrapfunctions | Compiling mex file ...
 Building with 'Xcode with Clang'.
 MEX completed successfully.
-</pre><h2>SIMULATION<a name="3"></a></h2><pre class="codeinput"><span class="comment">% time vector</span>
+</pre><p>SIMULATION</p><pre class="codeinput"><span class="comment">% time vector</span>
 t = linspace(0,10,20);
 p = [0.5;2;0.5;0.5];
 k = [4,8,10,4];
@@ -93,8 +93,8 @@ sol = simulate_model_example_1(t,log10(p),k,[],options);
 tic
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 disp([<span class="string">'Time elapsed with cvodes: '</span> num2str(toc) ])
-</pre><pre class="codeoutput">Time elapsed with cvodes: 0.0039517
-</pre><h2>ODE15S<a name="4"></a></h2><pre class="codeinput">ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
+</pre><pre class="codeoutput">Time elapsed with cvodes: 0.0018198
+</pre><p>ODE15S</p><pre class="codeinput">ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
     +p(2)*x(1)*exp(-0.1*t)-p(3)*x(2);
     -1.5*x(3)];
 <span class="comment">% event_fn = @(t,x) [x(3) - x(2);</span>
@@ -105,8 +105,8 @@ options_ode15s = odeset(<span class="string">'RelTol'</span>,1e-8,<span class="s
 tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp([<span class="string">'Time elapsed with ode15s: '</span> num2str(toc) ])
-</pre><pre class="codeoutput">Time elapsed with ode15s: 0.2829
-</pre><h2>PLOTTING<a name="5"></a></h2><pre class="codeinput">figure
+</pre><pre class="codeoutput">Time elapsed with ode15s: 0.21592
+</pre><p>PLOTTING</p><pre class="codeinput">figure
 c_x = get(gca,<span class="string">'ColorOrder'</span>);
 subplot(2,2,1)
 <span class="keyword">for</span> ix = 1:size(sol.x,2)
@@ -147,10 +147,10 @@ ylabel(<span class="string">'y'</span>)
 box <span class="string">on</span>
 
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_1_01.png" alt=""> <h2>FORWARD SENSITIVITY ANALYSIS<a name="6"></a></h2><pre class="codeinput">options.sensi = 1;
+</pre><img vspace="5" hspace="5" src="../examples/example_1/html/example_model_1_01.png" alt=""> <p>FORWARD SENSITIVITY ANALYSIS</p><pre class="codeinput">options.sensi = 1;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
-</pre><h2>FINITE DIFFERENCES<a name="7"></a></h2><pre class="codeinput">eps = 1e-4;
+</pre><p>FINITE DIFFERENCES</p><pre class="codeinput">eps = 1e-4;
 xi = log10(p);
 <span class="keyword">for</span> ip = 1:4;
     xip = xi;
@@ -160,7 +160,7 @@ xi = log10(p);
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
     sroot_fd(:,:,ip) = (solp.root - sol.root)/eps;
 <span class="keyword">end</span>
-</pre><h2>PLOTTING<a name="8"></a></h2><pre class="codeinput">figure
+</pre><p>PLOTTING</p><pre class="codeinput">figure
 <span class="keyword">for</span> ip = 1:4
     subplot(4,2,ip*2-1)
     hold <span class="string">on</span>
@@ -237,12 +237,13 @@ ylabel(<span class="string">'y'</span>)
 box <span class="string">on</span>
 <span class="keyword">end</span>
 set(gcf,<span class="string">'Position'</span>,[100 300 1200 500])
-</pre><img vspace="5" hspace="5" src="example_model_1_02.png" alt=""> <img vspace="5" hspace="5" src="example_model_1_03.png" alt=""> <img vspace="5" hspace="5" src="example_model_1_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="../examples/example_1/html/example_model_1_02.png" alt=""> <img vspace="5" hspace="5" src="../examples/example_1/html/example_model_1_03.png" alt=""> <img vspace="5" hspace="5" src="../examples/example_1/html/example_model_1_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 clear
 close all
 clc
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_1.m'));
 % compile the model
@@ -250,7 +251,8 @@ amiwrap('model_example_1','example_model_1_syms',exdir)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = linspace(0,10,20);
@@ -266,7 +268,8 @@ tic
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
-%% ODE15S
+%%
+% ODE15S
 
 ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
     +p(2)*x(1)*exp(-0.1*t)-p(3)*x(2);
@@ -280,7 +283,8 @@ tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp(['Time elapsed with ode15s: ' num2str(toc) ])
 
-%% PLOTTING
+%%
+% PLOTTING
 
 figure
 c_x = get(gca,'ColorOrder');
@@ -325,13 +329,15 @@ box on
 set(gcf,'Position',[100 300 1200 500])
 
 
-%% FORWARD SENSITIVITY ANALYSIS
+%%
+% FORWARD SENSITIVITY ANALYSIS
 
 options.sensi = 1;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 
-%% FINITE DIFFERENCES
+%%
+% FINITE DIFFERENCES
 
 eps = 1e-4;
 xi = log10(p);
@@ -344,7 +350,8 @@ for ip = 1:4;
     sroot_fd(:,:,ip) = (solp.root - sol.root)/eps;
 end
 
-%% PLOTTING
+%%
+% PLOTTING
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)
