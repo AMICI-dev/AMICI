@@ -51,29 +51,37 @@ for ix = 1:size(sol.x,2)
 end
 stem(sol.root(:,1),sol.root(:,1)*0+10,'r')
 stem(sol.root(:,2),sol.root(:,2)*0+10,'k')
-legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','x3==x2','x3==x1')
+legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','x3==x2','x3==x1','Location','NorthEastOutside')
+legend boxoff
 xlabel('time t')
 ylabel('x')
 box on
 subplot(2,2,2)
-plot(t,sol.x-X_ode15s,'r--')
-legend('error x1','error x2','error x3')
+plot(t,abs(sol.x-X_ode15s),'--')
+set(gca,'YScale','log')
+legend('error x1','error x2','error x3','Location','NorthEastOutside')
+legend boxoff
 
 subplot(2,2,3)
 plot(t,sol.y,'.-','Color',c_x(1,:))
 hold on
 plot(t,p(4)*sum(X_ode15s,2),'d','Color',c_x(1,:))
-legend('y1','y1_{ode15s}')
+legend('y1','y1_{ode15s}','Location','NorthEastOutside')
+legend boxoff
 xlabel('time t')
 ylabel('y')
 box on
 
 subplot(2,2,4)
-plot(t,sol.y-p(4)*sum(X_ode15s,2),'r--')
-legend('error y1')
+plot(t,sol.y-p(4)*sum(X_ode15s,2),'--')
+set(gca,'YScale','log')
+legend('error y1','Location','NorthEastOutside')
+legend boxoff
 xlabel('time t')
 ylabel('y')
 box on
+
+set(gcf,'Position',[100 300 1200 500])
 
 
 %% FORWARD SENSITIVITY ANALYSIS
@@ -95,9 +103,6 @@ for ip = 1:4;
     sroot_fd(:,:,ip) = (solp.root - sol.root)/eps;
 end
 
-
-
-
 %% PLOTTING
 figure
 for ip = 1:4
@@ -107,21 +112,24 @@ for ip = 1:4
         plot(t,sol.sx(:,ix,ip),'.-','Color',c_x(ix,:))
         plot(t,sx_fd(:,ix,ip),'d','Color',c_x(ix,:))
     end
-    legend('x1','x1_{fd}','x2','x2_{fd}','x3','x3_{fd}')
+    legend('x1','x1_{fd}','x2','x2_{fd}','x3','x3_{fd}','Location','NorthEastOutside')
+    legend boxoff
     title(['state sensitivity for p' num2str(ip)])
     xlabel('time t')
     ylabel('x')
     box on
     
     subplot(4,2,ip*2)
-    plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'r--')
-    legend('error x1','error x2','error x3')
+    plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'--')
+    legend('error x1','error x2','error x3','Location','NorthEastOutside')
+    legend boxoff
     title(['state sensitivity for p' num2str(ip)])
     xlabel('time t')
     ylabel('error')
     set(gca,'YScale','log')
     box on
 end
+set(gcf,'Position',[100 300 1200 500])
 
 figure
 for ip = 1:4
@@ -131,21 +139,24 @@ for ip = 1:4
         plot(t,sol.sy(:,iy,ip),'.-','Color',c_x(iy,:))
         plot(t,sy_fd(:,iy,ip),'d','Color',c_x(iy,:))
     end
-    legend('y1','y1_fd')
+    legend('y1','y1_fd','Location','NorthEastOutside')
+    legend boxoff
     title(['observable sensitivity for p' num2str(ip)])
     xlabel('time t')
     ylabel('y')
     box on
     
     subplot(4,2,ip*2)
-    plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'r--')
-    legend('error y1')
+    plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'--')
+    legend('error y1','Location','NorthEastOutside')
+    legend boxoff
     title(['error observable sensitivity for p' num2str(ip)])
     xlabel('time t')
     ylabel('error')
     set(gca,'YScale','log')
     box on
 end
+set(gcf,'Position',[100 300 1200 500])
 
 figure
 for ip = 1:4
@@ -153,7 +164,8 @@ subplot(4,2,2*ip-1)
 bar(1:6,sol.sroot(1:6,:,ip),0.8)
 hold on
 bar(1:6,sroot_fd(1:6,:,ip),0.4)
-legend('x3==x2','x3==x1','x3==x2 fd','x3==x1 fd')
+legend('x3==x2','x3==x1','x3==x2 fd','x3==x1 fd','Location','NorthEastOutside')
+legend boxoff
 title(['event sensitivity for p' num2str(ip)])
 xlabel('event #')
 ylabel('y')
@@ -161,12 +173,14 @@ box on
 
 subplot(4,2,2*ip)
 bar(1:6,sol.sroot(1:6,:,ip)-sroot_fd(1:6,:,ip),0.8)
-legend('error x3==x2','error x3==x1')
+legend('error x3==x2','error x3==x1','Location','NorthEastOutside')
+legend boxoff
 title(['error event sensitivity for p' num2str(ip)])
 xlabel('event #')
 ylabel('y')
 box on
 end
+set(gcf,'Position',[100 300 1200 500])
 
 
 

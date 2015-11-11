@@ -106,7 +106,6 @@ grad(3,1) = -mu(1)*p(3)*log(10);
 
 plot(zeros(3,1),grad,'ko')
 
-
 %% FD
 
 eps = 1e-5;
@@ -134,18 +133,10 @@ plot(abs(grad),abs(sol.sllh),'o')
 plot([1e1,1e2],[1e1,1e2],'k:')
 set(gca,'XScale','log')
 set(gca,'YScale','log')
-legend('FD_f','FD_b','FD_c','asa')
-xlabel('reference absolute gradient value')
-ylabel('computed absolute gradient value')
-
-% tic
-% for k=1:1000
-% options.sensi = 0;
-% sol = simulate_model_example_6(t,log10(p),k,D,options);
-% end
-% toc;
-% 
-
-
+axis square
+legend('forward FD','backward FD','central FD','adjoint sensintivity analysis','Location','SouthEast')
+xlabel('analytic absolute value of gradient element')
+ylabel('computed absolute value of gradient element')
+set(gcf,'Position',[100 300 1200 500])
 
 

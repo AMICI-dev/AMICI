@@ -4,18 +4,6 @@ function this = generateC(this)
     % Return values:
     %  this: model definition object @type amimodel
 
-    % set path and create folder
-    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
-    
-    if(~exist(fullfile(wrap_path,'models'),'dir'))
-        mkdir(fullfile(wrap_path,'models'));
-        mkdir(fullfile(wrap_path,'models',this.modelname));
-    else
-        if(~exist(fullfile(wrap_path,'models',this.modelname),'dir'))
-            mkdir(fullfile(wrap_path,'models',this.modelname))
-        end
-    end
-    
     if(strcmp(this.wtype,'iw'))
         xvec = 'x,';
         dxvec = 'dx,';
@@ -36,7 +24,7 @@ function this = generateC(this)
     for ifuns = 1:length(this.funs)
         if(this.fun.(this.funs{ifuns}))
             fprintf([this.funs{ifuns} ' | ']);
-            fid = fopen(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{ifuns} '.c']),'w');
+            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{ifuns} '.c']),'w');
             fprintf(fid,'\n');
             fprintf(fid,'#include <include/symbolic_functions.h>\n');
             fprintf(fid,'#include <string.h>\n');
@@ -114,7 +102,7 @@ function this = generateC(this)
     %
     
     fprintf('headers | ');
-    fid = fopen(fullfile(wrap_path,'models',this.modelname,[this.modelname '.h']),'w');
+    fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '.h']),'w');
     fprintf(fid,['#ifndef _am_' this.modelname '_h\n']);
     fprintf(fid,['#define _am_' this.modelname '_h\n']);
     fprintf(fid,'\n');
@@ -138,7 +126,7 @@ function this = generateC(this)
     %
     
     for ifuns = 1:length(this.funs)
-        fid = fopen(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{ifuns} '.h']),'w');
+        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{ifuns} '.h']),'w');
         fprintf(fid,['#ifndef _am_' this.modelname '_' this.funs{ifuns} '_h\n']);
         fprintf(fid,['#define _am_' this.modelname '_' this.funs{ifuns} '_h\n']);
         fprintf(fid,'\n');
@@ -189,7 +177,7 @@ function this = generateC(this)
     
     
     fprintf('wrapfunctions | ');
-    fid = fopen(fullfile(wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
+    fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
     fprintf(fid,'                \n');
     fprintf(fid,'                \n');
     fprintf(fid,['                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n']);
@@ -419,7 +407,7 @@ function this = generateC(this)
     %----------------------------------------------------------------
     %
     
-    fid = fopen(fullfile(wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
+    fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
     fprintf(fid,'#ifndef _am_wrapfunctions_h\n');
     fprintf(fid,'#define _am_wrapfunctions_h\n');
     fprintf(fid,'#include <math.h>\n');
@@ -483,29 +471,6 @@ function this = generateC(this)
     fclose(fid);
     
     fprintf('\r')
-    
-    % save hashtable
-    
-    
-    HTable = this.HTable;
-    nxtrue = this.nxtrue;
-    nytrue = this.nytrue;
-    nx = this.nx;
-    ny = this.ny;
-    np = this.np;
-    nk = this.nk;
-    ndisc = this.ndisc;
-    nr = this.nr;
-    nnonzeros = this.nnz;
-    id = this.id;
-    ubw = this.ubw;
-    lbw = this.lbw;
-    colptrs = this.colptrs;
-    rowvals = this.rowvals;
-    sparseidx = this.sparseidx;
-    colptrsB = this.colptrsB;
-    rowvalsB = this.rowvalsB;
-    sparseidxB = this.sparseidxB;
     
 end
 

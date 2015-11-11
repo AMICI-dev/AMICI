@@ -4,22 +4,20 @@ function this = compileC(this)
     % Return values:
     %  this: model definition object @type amimodel
     
-    [wrap_path,~,~] = fileparts(which('amiwrap.m'));
-    
-    sundials_path = fullfile(wrap_path,'sundials-2.6.2');
+    sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
     sundials_ver = '2.6.2';
     
-    ssparse_path = fullfile(wrap_path,'SuiteSparse');
+    ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
     ssparse_ver = '4.4.4';
     
-    lapack_path = fullfile(wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
+    lapack_path = fullfile(this.wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
     
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'models', this.modelname ), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'models', this.modelname ), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'KLU','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'AMD','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'COLAMD','Include'), '"');
@@ -27,23 +25,23 @@ function this = compileC(this)
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'SuiteSparse_config'), '"');
     
     % compile directory
-    if(~exist(fullfile(wrap_path,'models',mexext), 'dir'))
-        mkdir(fullfile(wrap_path,'models',mexext))
+    if(~exist(fullfile(this.wrap_path,'models',mexext), 'dir'))
+        mkdir(fullfile(this.wrap_path,'models',mexext))
     end
     
     % read version number from versions.txt and decide whether object have to
     % be regenerated
-    if(~exist(fullfile(wrap_path,'models',mexext,'versions.txt'),'file'))
+    if(~exist(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'file'))
         del_sundials = true;
         del_ssparse = true;
         del_lapack = true;
-        fid = fopen(fullfile(wrap_path,'models',mexext,'versions.txt'),'w');
+        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
         fprintf(fid,[sundials_ver '\r']);
         fprintf(fid,[ssparse_ver '\r']);
         fprintf(fid,[lapack_ver '\r']);
         fclose(fid);
     else
-        fid = fopen(fullfile(wrap_path,'models',mexext,'versions.txt'),'r');
+        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'r');
         sundials_objver = fgetl(fid);
         ssparse_objver = fgetl(fid);
         lapack_objver = fgetl(fid);
@@ -60,7 +58,7 @@ function this = compileC(this)
         if(del_lapack)
             display('Newer version of Lapack! Recompiling ...')
         end
-        fid = fopen(fullfile(wrap_path,'models',mexext,'versions.txt'),'w');
+        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
         fprintf(fid,[sundials_ver '\r']);
         fprintf(fid,[ssparse_ver '\r']);
         fprintf(fid,[lapack_ver '\r']);
@@ -162,7 +160,7 @@ function this = compileC(this)
     
     sourcesstr_funs = '';
     for j=1:length(this.funs)
-        sourcesstr_funs = strcat(sourcesstr_funs,' "', fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']),'"');
+        sourcesstr_funs = strcat(sourcesstr_funs,' "', fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']),'"');
     end
     
     % objects
@@ -259,11 +257,11 @@ function this = compileC(this)
     
     objectsstr = '';
     for j=1:length(objects_sundials)
-        objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',mexext,objects_sundials{j}),'"');
+        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,objects_sundials{j}),'"');
     end
     
     for j=1:length(objects_ssparse)
-        objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',mexext,objects_ssparse{j}),'"');
+        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,objects_ssparse{j}),'"');
     end
     
     for j=1:length(this.funs)
@@ -272,35 +270,35 @@ function this = compileC(this)
         else
             o_suffix = '.o';
         end
-        objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
+        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
     end
     
-    objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'"');
+    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'"');
     
     for j=1:length(sources_sundials)
-        if(~exist(fullfile(wrap_path,'models',mexext,objects_sundials{j}), 'file') || del_sundials)
-            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' fullfile(wrap_path,'models',mexext) includesstr ' ' fullfile(sundials_path,sources_sundials{j})]);
+        if(~exist(fullfile(this.wrap_path,'models',mexext,objects_sundials{j}), 'file') || del_sundials)
+            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' fullfile(this.wrap_path,'models',mexext) includesstr ' ' fullfile(sundials_path,sources_sundials{j})]);
         end
     end
     
     for j=1:length(sources_ssparse)
-        if(~exist(fullfile(wrap_path,'models',mexext,objects_ssparse{j}), 'file') || del_ssparse)
-            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' fullfile(wrap_path,'models',mexext) includesstr ' ' fullfile(ssparse_path,sources_ssparse{j})]);
+        if(~exist(fullfile(this.wrap_path,'models',mexext,objects_ssparse{j}), 'file') || del_ssparse)
+            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' fullfile(this.wrap_path,'models',mexext) includesstr ' ' fullfile(ssparse_path,sources_ssparse{j})]);
         end
     end
       
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'''];
     
-    if(~exist(fullfile(wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'file'))
+    if(~exist(fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'file'))
         recompile = 1;
-        hash = getFileHash(fullfile(wrap_path,'src','symbolic_functions.c'));
+        hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
     else
-        if(~exist(fullfile(wrap_path,'models',mexext,'symbolic_functions.md5'), 'file'))
+        if(~exist(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'), 'file'))
             recompile = 1;
-            hash = getFileHash(fullfile(wrap_path,'src','symbolic_functions.c'));
+            hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
         else
-            hash = getFileHash(fullfile(wrap_path,'src','symbolic_functions.c'));
-            fid = fopen(fullfile(wrap_path,'models',mexext,'symbolic_functions.md5'));
+            hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
+            fid = fopen(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'));
             tline = fgetl(fid);
             fclose(fid);
             if(~strcmp(tline,hash(1:end)))
@@ -313,23 +311,23 @@ function this = compileC(this)
     end
     if(recompile)
         fprintf('symbolic_functions | ');
-        eval(['mex ' COPT ' -c -outdir ' fullfile(wrap_path,'models',mexext) includesstr ' ' fullfile(wrap_path,'src','symbolic_functions.c')]);
-        fid = fopen(fullfile(wrap_path,'models',mexext,'symbolic_functions.md5'),'w');
+        eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',mexext) includesstr ' ' fullfile(this.wrap_path,'src','symbolic_functions.c')]);
+        fid = fopen(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'),'w');
         fprintf(fid,hash);
         fclose(fid);
     end
     
     for j=1:length(this.funs)
-        if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'file'))
+        if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'file'))
             recompile = 1;
-            hash = getFileHash(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
+            hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
         else
-            if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']), 'file'))
+            if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']), 'file'))
                 recompile = 1;
-                hash = getFileHash(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
+                hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             else
-                hash = getFileHash(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
-                fid = fopen(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']));
+                hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
+                fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']));
                 tline = fgetl(fid);
                 fclose(fid);
                 if(~strcmp(tline,hash))
@@ -342,8 +340,8 @@ function this = compileC(this)
         end
         if(recompile)
             fprintf([this.funs{j} ' | ']);
-            eval(['mex ' COPT ' -c -outdir ' fullfile(wrap_path,'models',this.modelname) includesstr ' ' fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
-            fid = fopen(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']),'w');
+            eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
+            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']),'w');
             fprintf(fid,hash);
             fclose(fid);
         end
@@ -369,16 +367,16 @@ function this = compileC(this)
     
     try
         if(this.debug)
-            eval(['mex -g ' CLIBS ' -output ' fullfile(wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(wrap_path,cstr)  includesstr objectsstr ])
+            eval(['mex -g ' CLIBS ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(this.wrap_path,cstr)  includesstr objectsstr ])
         else
-            eval(['mex ' COPT ' ' CLIBS ' -output ' fullfile(wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(wrap_path,cstr)  includesstr objectsstr ])
+            eval(['mex ' COPT ' ' CLIBS ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(this.wrap_path,cstr)  includesstr objectsstr ])
         end
     catch
         CLIBS = []; % some systems need lrt libraries, some don't. I do not know how to check for this from matlab, so we'll just try both and see what works.
         if(this.debug)
-            eval(['mex -g ' CLIBS ' -output ' fullfile(wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(wrap_path,cstr)  includesstr objectsstr ])
+            eval(['mex -g ' CLIBS ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(this.wrap_path,cstr)  includesstr objectsstr ])
         else
-            eval(['mex ' COPT ' ' CLIBS ' -output ' fullfile(wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(wrap_path,cstr)  includesstr objectsstr ])
+            eval(['mex ' COPT ' ' CLIBS ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ' ' fullfile(this.wrap_path,cstr)  includesstr objectsstr ])
         end
     end
     

@@ -194,9 +194,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         fx0(x, udata);
         fdx0(x, dx, udata); /* only needed for idas */
         
-        
-        if (ami_mem == NULL) return(NULL);
-        
     }
     
     /* Create AMIS object */
