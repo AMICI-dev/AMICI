@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
@@ -81,7 +82,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     edata = setupExpData(prhs, udata);
 
-    cv_status = 0.0;
+    cv_status = 0;
     
     /* FORWARD PROBLEM */
     
@@ -107,12 +108,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                         /* we are stuck in a root => turn off rootfinding */
                                         /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
                                         AMIRootInit(ami_mem, 0, NULL);
-                                        cv_status = 0.0;
+                                        cv_status = 0;
                                     }
                                     tlastroot = t;
                                     getRootDataASA(status, &nroots, &idisc, ami_mem, udata, rdata, edata, tdata);
                                     if (t==ts[it]) {
-                                        cv_status = 0.0;
+                                        cv_status = 0;
                                     }
                                 }
                             } else {
@@ -122,18 +123,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                         /* we are stuck in a root => turn off rootfinding */
                                         /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
                                         AMIRootInit(ami_mem, 0, NULL);
-                                        cv_status = 0.0;
+                                        cv_status = 0;
                                     }
                                     tlastroot = t;
                                     getRootDataFSA(status, &nroots, ami_mem, udata, rdata, tdata);
                                     if (t==ts[it]) {
-                                        cv_status = 0.0;
+                                        cv_status = 0;
                                     }
                                 }
                                 if (cv_status == -22) {
                                     /* clustering of roots => turn off rootfinding */
                                     AMIRootInit(ami_mem, 0, NULL);
-                                    cv_status = 0.0;
+                                    cv_status = 0;
                                 }
                             }
                         } else {
@@ -163,13 +164,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     fxdot(t,x,dx,xdot,udata);
                     xdot_tmp = NV_DATA_S(xdot);
                     fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-                    for(ix=0; ix < nx; ix++) {
-                        xdotdata[ix] = xdot_tmp[ix];
-                        for(jx=0; jx < nx;jx++){
-                            Jdata[ix+nx*jx] = Jtmp->data[ix+nx*jx];
-                        }
-                        /* set negative values to zeros */
-                    }
+                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
                     fdxdotdp(t,x,dxdotdpdata,udata);
                     fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
                     fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
@@ -184,13 +180,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = 0.0;
         }
         
-        if(cv_status == 0.0) {
+        if(cv_status == 0) {
             fy(ts[it],it,ydata,xdata,udata);
             for (iy=0; iy<ny; iy++) {
-                if (mxIsNaN(ysigma[iy*nt+it])) {
-                    fsigma_y(t,sigma_y,udata);
-                } else {
-                    sigma_y[iy] = ysigma[iy*nt+it];
+                
+                if(data_model != LW_ONEOUTPUT) {
+                    if (mxIsNaN(ysigma[iy*nt+it])) {
+                        fsigma_y(t,sigma_y,udata);
+                    } else {
+                        sigma_y[iy] = ysigma[iy*nt+it];
+                    }
                 }
                 
                 if (data_model == LW_NORMAL) {
@@ -372,7 +371,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (sensi >= 1) {
         /* only set output sensitivities if no errors occured */
         if(sensi_meth == CW_ASA) {
-            if(cv_status == 0.0) {
+            if(cv_status == 0) {
                 
                 setupAMIB(status, ami_mem, udata, tdata);
                 
@@ -413,8 +412,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                                 if (*status != AMI_SUCCESS) return;
 
-                                ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
-                                bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                *status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
+                                if (*status != AMI_SUCCESS) return;
+                                *status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                if (*status != AMI_SUCCESS) return;
                                 
                                 *status = AMIReInitB(ami_mem, which, t, xB, dxB);
                                 if (*status != AMI_SUCCESS) return;
@@ -433,8 +434,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                                 if (*status != AMI_SUCCESS) return;
                                 
-                                ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
-                                bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                *status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
+                                if (*status != AMI_SUCCESS) return;
+                                *status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                if (*status != AMI_SUCCESS) return;
                                 
                                 if (t == ts[it-1]) {
                                     for (ix=0; ix<nx; ix++) {
@@ -479,7 +482,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             nroots--;
                         }
                     }
-                    if(cv_status == 0.0) {
+                    if(cv_status == 0) {
                         if (nx>0) {
                             /* solve for backward problems */
                             if (ts[it-1] < t) {
@@ -538,7 +541,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 if (t>tstart) {
-                    if(cv_status == 0.0) {
+                    if(cv_status == 0) {
                         if (nx>0) {
                             /* solve for backward problems */
                             cv_status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
@@ -558,7 +561,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 fdx0(x,dx,udata);
                 fsx0(sx, x, dx, udata);
                 
-                if(cv_status == 0.0) {
+                if(cv_status == 0) {
 
                     xB_tmp = NV_DATA_S(xB);
                     

@@ -104,7 +104,7 @@ int AMIRootInit(void *mem, int nrtfn, void *ptr) {
 };
 
 void AMIFree(void **mem) {
-    return CVodeFree(mem);
+    CVodeFree(mem);
 };
 
 int AMIAdjInit(void *mem, long int steps, int interp) {

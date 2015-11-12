@@ -199,31 +199,6 @@ function this = parseModel(this)
     this.HTable.sigma_y = DataHash(char(this.sym.sigma_y));
     this.HTable.sigma_t = DataHash(char(this.sym.sigma_t));
     
-    
-    % save hashtable
-
-    HTable = this.HTable;
-    nxtrue = this.nxtrue;
-    nytrue = this.nytrue;
-    nx = this.nx;
-    ny = this.ny;
-    np = this.np;
-    nk = this.nk;
-    ndisc = this.ndisc;
-    nr = this.nr;
-    nnonzeros = this.nnz;
-    id = this.id;
-    ubw = this.ubw;
-    lbw = this.lbw;
-    colptrs = this.colptrs;
-    rowvals = this.rowvals;
-    sparseidx = this.sparseidx;
-    colptrsB = this.colptrsB;
-    rowvalsB = this.rowvalsB;
-    sparseidxB = this.sparseidxB;
-    
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
-    
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
@@ -283,9 +258,33 @@ function this = parseModel(this)
             end
         end
     end
-    
+
+    % save hashtable
+
+    HTable = this.HTable;
+    nxtrue = this.nxtrue;
+    nytrue = this.nytrue;
+    nx = this.nx;
+    ny = this.ny;
+    np = this.np;
+    nk = this.nk;
+    ndisc = this.ndisc;
+    nr = this.nr;
+    nnonzeros = this.nnz;
+    id = this.id;
+    ubw = this.ubw;
+    lbw = this.lbw;
+    colptrs = this.colptrs;
+    rowvals = this.rowvals;
+    sparseidx = this.sparseidx;
+    colptrsB = this.colptrsB;
+    rowvalsB = this.rowvalsB;
+    sparseidxB = this.sparseidxB;
+
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
+
     fprintf('\r')
-    
+
 end
 
 function out = mysubs(in, old, new)
