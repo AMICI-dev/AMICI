@@ -10,6 +10,9 @@
 #include <string.h>
 #define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
+#ifndef M_PI /* define PI if we still have no definition */
+#define M_PI 3.14159265358979323846
+#endif
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
@@ -76,12 +79,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (tdata == NULL) return;
     
     ami_mem = setupAMI(status, udata, tdata);
+    if (ami_mem == NULL) return;
     
     rdata = setupReturnData(prhs, udata);
     if (rdata == NULL) return;
     
     edata = setupExpData(prhs, udata);
-
+    if (edata == NULL) return;
+    
     cv_status = 0;
     
     /* FORWARD PROBLEM */
@@ -161,14 +166,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             
 /*            if (it == nt-1) {
                   if( ss > 0) {*/
-                    fxdot(t,x,dx,xdot,udata);
-                    xdot_tmp = NV_DATA_S(xdot);
-                    fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
-                    fdxdotdp(t,x,dxdotdpdata,udata);
-                    fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
-                    fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
+            *status = fxdot(t,x,dx,xdot,udata);
+            if (*status != AMI_SUCCESS) return;
+            
+            xdot_tmp = NV_DATA_S(xdot);
+            
+            *status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+            if (*status != AMI_SUCCESS) return;
+            
+            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+            
+            *status = fdxdotdp(t,x,dxdotdpdata,udata);
+            if (*status != AMI_SUCCESS) return;
+            *status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
+            if (*status != AMI_SUCCESS) return;
+            *status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
+            if (*status != AMI_SUCCESS) return;
 /*                }
               }*/
             
@@ -181,12 +195,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
         
         if(cv_status == 0) {
-            fy(ts[it],it,ydata,xdata,udata);
+            *status = fy(ts[it],it,ydata,xdata,udata);
+            if (*status != AMI_SUCCESS) return;
+            
             for (iy=0; iy<ny; iy++) {
                 
                 if(data_model != LW_ONEOUTPUT) {
                     if (mxIsNaN(ysigma[iy*nt+it])) {
-                        fsigma_y(t,sigma_y,udata);
+                        *status =fsigma_y(t,sigma_y,udata);
+                        if (*status != AMI_SUCCESS) return;
+                        
                     } else {
                         sigma_y[iy] = ysigma[iy*nt+it];
                     }
@@ -226,13 +244,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     fsy(ts[it],it,ySdata,xdata,xSdata,udata);
                 }
                 if (sensi_meth == CW_ASA) {
-                    fdydx(ts[it],it,dydx,ydata,xdata,udata);
-                    fdydp(ts[it],it,dydp,ydata,xdata,udata);
+                    *status = fdydx(ts[it],it,dydx,ydata,xdata,udata);
+                    if (*status != AMI_SUCCESS) return;
+                    *status = fdydp(ts[it],it,dydp,ydata,xdata,udata);
+                    if (*status != AMI_SUCCESS) return;
                     for (iy=0; iy<ny; iy++) {
                         if(data_model != LW_ONEOUTPUT) {
                             if (mxIsNaN(ysigma[iy*nt+it])) {
-                                fsigma_y(t,sigma_y,udata);
-                                fdsigma_ydp(t,dsigma_ydp,udata);
+                                *status = fsigma_y(t,sigma_y,udata);
+                                if (*status != AMI_SUCCESS) return;
+                                *status = fdsigma_ydp(t,dsigma_ydp,udata);
+                                if (*status != AMI_SUCCESS) return;
                             } else {
                                 for (ip=0; ip<np; ip++) {
                                     dsigma_ydp[ip*ny+iy] = 0;
@@ -281,7 +303,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if (nroots==0) {
             for (ir=0; ir<nr; ir++){
                 rootdata[nroots + nmaxroot*ir] = t;
-                froot(t, x, dx, rootvaltmp, udata);
+                *status = froot(t, x, dx, rootvaltmp, udata);
+                if (*status != AMI_SUCCESS) return;
                 rootvaldata[nroots + nmaxroot*ir] = rootvaltmp[ir];
                 /* extract sensitivity information */
                 rootidx[nroots] = ir;
@@ -289,9 +312,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if(sensi_meth == CW_FSA) {
                         *status = AMIGetSens(ami_mem, &t, sx);
                         if (*status != AMI_SUCCESS) return;
-                        fsrootval(t,nroots,rootvalSdata,x,sx,udata);
+                        *status = fsrootval(t,nroots,rootvalSdata,x,sx,udata);
+                        if (*status != AMI_SUCCESS) return;
                         if (sensi >= 2) {
-                            fs2rootval(t,nroots,rootvalS2data,x,sx,udata);
+                            *status = fs2rootval(t,nroots,rootvalS2data,x,sx,udata);
+                            if (*status != AMI_SUCCESS) return;
                         }
                         for (ip=0; ip<np; ip++) {
                             rootSdata[nroots + nmaxroot*(ip*nr + ir)] = 0;
@@ -316,13 +341,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if (sensi>=1) {
                         if(sensi_meth == CW_ASA) {
                             x_tmp = NV_DATA_S(x);
-                            fdtdp(t,dtdp,x_tmp,udata);
-                            fdtdx(t,dtdx,x_tmp,udata);
-                            fdrvaldp(t,drvaldp,x_tmp,udata);
-                            fdrvaldx(t,drvaldx,x_tmp,udata);
+                            *status = fdtdp(t,dtdp,x_tmp,udata);
+                            if (*status != AMI_SUCCESS) return;
+                            *status = fdtdx(t,dtdx,x_tmp,udata);
+                            if (*status != AMI_SUCCESS) return;
+                            *status = fdrvaldp(t,drvaldp,x_tmp,udata);
+                            if (*status != AMI_SUCCESS) return;
+                            *status = fdrvaldx(t,drvaldx,x_tmp,udata);
+                            if (*status != AMI_SUCCESS) return;
                             if (mxIsNaN(tsigma[ir*nmaxroot + nroots])) {
-                                fsigma_t(t,sigma_t,udata);
-                                fdsigma_tdp(t,dsigma_tdp,udata);
+                                *status = fsigma_t(t,sigma_t,udata);
+                                if (*status != AMI_SUCCESS) return;
+                                *status = fdsigma_tdp(t,dsigma_tdp,udata);
+                                if (*status != AMI_SUCCESS) return;
                             } else {
                                 for (ip=0; ip<np; ip++) {
                                     dsigma_ydp[ip*nr+ir] = 0;
@@ -557,10 +588,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 /* evaluate initial values */
                 sx = N_VCloneVectorArray_Serial(np,x);
                 if (sx == NULL) return;
-                fx0(x,udata);
-                fdx0(x,dx,udata);
-                fsx0(sx, x, dx, udata);
                 
+                *status = fx0(x,udata);
+                if (*status != AMI_SUCCESS) return;
+                *status = fdx0(x,dx,udata);
+                if (*status != AMI_SUCCESS) return;
+                *status = fsx0(sx, x, dx, udata);
+                if (*status != AMI_SUCCESS) return;
+
                 if(cv_status == 0) {
 
                     xB_tmp = NV_DATA_S(xB);

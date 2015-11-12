@@ -18,7 +18,11 @@ function this = getFun(this,HTable,funstr)
     if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
         [this,cflag] = this.checkDeps([],deps);
     else
-        [this,cflag] = this.checkDeps(HTable,deps);
+        if(this.recompile)
+            [this,cflag] = this.checkDeps([],deps);
+        else
+            [this,cflag] = this.checkDeps(HTable,deps);
+        end
     end
     
     nx = this.nx;
@@ -48,9 +52,25 @@ function this = getFun(this,HTable,funstr)
             case 'J'
                 if(strcmp(this.wtype,'iw'))
                     syms cj
-                    this.sym.J = this.sym.dfdx - cj*this.sym.M;
+                    this.sym.J = this.sym.dfdx - cj*this.sym.M; 
+                    
+                    idx = find(double(this.sym.J~=0));
+                    Js = cell(length(idx),1);
+                    for iJ = 1:length(idx)
+                        Js{iJ} = sprintf('tmp_J[%i]',iJ);
+                    end
+                    this.strsym.Js = sym(zeros(nx,nx));
+                    this.strsym.Js(idx) = sym(Js);
                 else
                     this.sym.J = jacobian(this.sym.xdot,this.strsym.xs);
+
+                    idx = find(double(this.sym.J~=0));
+                    Js = cell(length(idx),1);
+                    for iJ = 1:length(idx)
+                        Js{iJ} = sprintf('tmp_J->data[%i]',iJ-1);
+                    end
+                    this.strsym.J = sym(zeros(nx,nx));
+                    this.strsym.J(idx) = sym(Js);
                 end
                 
             case 'JB'
@@ -69,7 +89,7 @@ function this = getFun(this,HTable,funstr)
                 if(strcmp(this.wtype,'iw'))
                     this.sym.sxdot=this.sym.dfdx*this.strsym.sx-this.sym.M*this.strsym.sdx+this.sym.dxdotdp;
                 else
-                    this.sym.sxdot=this.sym.J*this.strsym.sx+this.sym.dxdotdp;
+                    this.sym.sxdot=this.strsym.J*this.strsym.sx+this.sym.dxdotdp;
                 end
                 
             case 'dydx'

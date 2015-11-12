@@ -20,7 +20,7 @@ function amiwrap( varargin )
         error(' second argument must be a string')
     end
     if(exist(symfun,'file') ~= 2)
-        error('"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.')
+        error(['"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
     end
     if nargin > 2
         tdir = varargin{3};

@@ -54,6 +54,8 @@
 
 #define ordering udata->am_ordering
 
+#define tmp_J udata->am_J
+
 #ifndef _MY_UDATA
 #define _MY_UDATA
 
@@ -163,6 +165,9 @@ typedef struct {
     
     /** state ordering */
     int am_ordering;
+    
+    /** tempory storage of Jacobian data across functions */
+    SlsMat am_J;
     
 } *UserData;
 #endif /* _MY_UDATA */
