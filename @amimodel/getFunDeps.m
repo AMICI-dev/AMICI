@@ -10,9 +10,9 @@ function [ deps ] = getFunDeps(this, funstr )
     switch(funstr)
         case 'xdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'M','rhs'};
+                deps = {'M','rhs','p','x','k'};
             else
-                deps = {'xdot'};
+                deps = {'p','x','k'};
             end
             
         case 'dfdx'
@@ -20,7 +20,7 @@ function [ deps ] = getFunDeps(this, funstr )
             
         case 'J'
             if(strcmp(this.wtype,'iw'))
-                deps = {'dfdx','M'};
+                deps = {'dfdx','M','x','xdot'};
             else
                 deps = {'xdot','x'};
             end
@@ -54,19 +54,19 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'dydp','dydx'};
             
         case 'drootdx'
-            deps = {'root','x'};
+            deps = {'rfun','x'};
             
         case 'drootdt'
-            deps = {'root','drootdx','xdot'};
+            deps = {'rfun','drootdx','xdot'};
             
         case 'drootpdp'
-            deps = {'root','p'};
+            deps = {'rfun','p'};
             
         case 'drootdp'
             if(this.nxtrue > 0)
-                deps = {'drootpdp','drootdx','dxdp'};
+                deps = {'drootpdp','drootdx','dxdp','sx'};
             else
-                deps = {'drootpdp','drootdx'};
+                deps = {'drootpdp','drootdx','sx'};
             end
             
         case 'sroot'
@@ -85,7 +85,7 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'x'};
             
         case 'ddrootdxdx'
-            deps = {'root','x'};
+            deps = {'rfun','x'};
             
         case 'ddrootdxdt'
             deps = {'drootdx','xdot','x','ddrootdxdx'};
@@ -128,9 +128,9 @@ function [ deps ] = getFunDeps(this, funstr )
             
         case 'xBdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'J','M'}; %% TBD
+                deps = {'J','M','xB'};
             else
-                deps = {'J'};
+                deps = {'J','xB'};
             end
             
         case 'qBdot'
@@ -158,7 +158,7 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'deltadisc','rdisc','xdot','sxdot','x'};
             
         case 'x0'
-            deps = {'x0'};
+            deps = {'p','k'};
             
         case 'JBand'
             deps = {'J'};
@@ -173,7 +173,7 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'JB'};
             
         case 'y'
-            deps = {'y'};
+            deps = {'x','p','k'};
             
         case 'rootval'
             deps = {'rfun'};
@@ -188,19 +188,47 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'rfun','rdisc'};
             
         case 'sigma_y'
-            deps = {'sigma_y'};
+            deps = {'p','k'};
         
         case 'sigma_t'
-            deps = {'sigma_t'};
+            deps = {'p','k'};
             
         case 'rhs'
             deps = {'xdot'};
             
         case 'dx0'
-            deps = {'dx0'};
+            deps = {'dx0','x','p','k'};
             
         case 'rfun'
-            deps = {'rfun'};
+            deps = {'p','k','x'};
+            
+        case 'M'
+            deps = {'M','x','p','k'};
+            
+        case 'x'
+            deps = {'x'};
+            
+        case 'dx'
+            deps = {'dx'};
+            
+        case 'xB'
+            deps = {'xB'};
+            
+        case 'dxB'
+            deps = {'dxB'};
+            
+        case 'k'
+            deps = {'k'};
+            
+        case 'p'
+            deps = {'p'};
+            
+        case 'sx'
+            deps = {'sx'};
+            
+        case 'sdx'
+            deps = {'sdx'};
+            
             
         otherwise
             error(['unknown function string: ' funstr ])

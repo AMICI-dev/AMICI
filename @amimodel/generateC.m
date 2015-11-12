@@ -36,6 +36,9 @@ function this = generateC(this)
                 fprintf(fid,['#include "' this.modelname '_JB.h"\n']);
             elseif(strcmp(this.funs{ifuns},'sxdot'))
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
+                fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+            elseif(strcmp(this.funs{ifuns},'qBdot'))
+                fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
             end
             fprintf(fid,'\n');
             % function definition
@@ -52,8 +55,7 @@ function this = generateC(this)
                     writeCcode_sensi(this, this.funs{ifuns}, fid);
                     fprintf(fid,'}\n');
                 elseif( strcmp(this.funs{ifuns},'sxdot') )
-                    fprintf(fid,'int status;\n');
-                    fprintf(fid,['status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'NULL,tmp_J,user_data,NULL,NULL,NULL);\n']);
+
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
@@ -66,11 +68,21 @@ function this = generateC(this)
                         fprintf(fid,'}\n');
                         fprintf(fid,'}\n');
                     else
-                        fprintf(fid,'switch (plist[ip]) {\n');
-                        writeCcode_sensi(this, this.funs{ifuns}, fid);
+                        fprintf(fid,'int status;\n');
+                        fprintf(fid,'if(ip == 0) {\n');
+                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'NULL,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,tmp_dxdotdp,user_data);\n']);
                         fprintf(fid,'}\n');
+                        writeCcode(this, this.funs{ifuns}, fid);
                     end
-                elseif(strcmp(this.funs{ifuns},'qBdot')         || strcmp(this.funs{ifuns},'dydp')     || strcmp(this.funs{ifuns},'sy')         || ...
+                elseif( strcmp(this.funs{ifuns},'qBdot') )
+                    fprintf(fid,'int status;\n');
+                    fprintf(fid,'int ip;\n');
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,x,tmp_dxdotdp,user_data);\n']);
+                    fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                    writeCcode(this, this.funs{ifuns}, fid);
+                    fprintf(fid,'}\n');
+                elseif( strcmp(this.funs{ifuns},'dydp')     || strcmp(this.funs{ifuns},'sy')         || ...
                         strcmp(this.funs{ifuns},'dtdp')       || strcmp(this.funs{ifuns},'drvaldp')  || strcmp(this.funs{ifuns},'sdeltadisc') || ...
                         strcmp(this.funs{ifuns},'dxdotdp')    || strcmp(this.funs{ifuns},'sroot')    || strcmp(this.funs{ifuns},'s2rootval')  || ...
                         strcmp(this.funs{ifuns},'s2root')     || strcmp(this.funs{ifuns},'srootval') || strcmp(this.funs{ifuns},'ideltadisc') || ...
@@ -729,6 +741,7 @@ function printlocalvars(fun,struct,fid)
             fprintf(fid,['sdeltadisc = mxMalloc(sizeof(realtype)*' num2str(nx) '*np);\n']);
             fprintf(fid,['memset(sdeltadisc,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'dxdotdp'
+            fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
             fprintf(fid,'realtype *x_tmp = N_VGetArrayPointer(x);\n');
         case 'sigma_y'
             fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);

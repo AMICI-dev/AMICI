@@ -148,6 +148,10 @@ UserData setupUserData(const mxArray *prhs[]) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
     }
+    if (sensi>0) {
+        /* initialise temporary jacobian storage */
+        tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+    }
     
     return(udata);
 }
