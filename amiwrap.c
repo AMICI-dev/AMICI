@@ -163,13 +163,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     fxdot(t,x,dx,xdot,udata);
                     xdot_tmp = NV_DATA_S(xdot);
                     fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-                    for(ix=0; ix < nx; ix++) {
-                        xdotdata[ix] = xdot_tmp[ix];
-                        for(jx=0; jx < nx;jx++){
-                            Jdata[ix+nx*jx] = Jtmp->data[ix+nx*jx];
-                        }
-                        /* set negative values to zeros */
-                    }
+                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
                     fdxdotdp(t,x,dxdotdpdata,udata);
                     fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
                     fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
