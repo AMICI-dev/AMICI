@@ -1,4 +1,4 @@
-amipath = fileparts('installAMICI.m');
+amipath = fileparts(mfilename('fullpath'));
 addpath(amipath)
 addpath(fullfile(amipath,'auxiliary'))
 addpath(fullfile(amipath,'auxiliary','datahash'))

@@ -33,7 +33,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
     ts = mxGetPr(prhs[1]);
     
-    nt = mxGetM(prhs[1]) * mxGetN(prhs[1]);
+    nt = (int) mxGetM(prhs[1]) * mxGetN(prhs[1]);
     
     /* parameters */
     
@@ -707,7 +707,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     if (edata == NULL) return(NULL);
     
     if (data_model == LW_ONEOUTPUT) {
-        if ( ny>1 | nt>1 ) {
+        if ( (ny>1) | (nt>1) ) {
             mexErrMsgTxt("Data model LW_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
         }
     } else {
@@ -717,31 +717,31 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         if (mxGetField(prhs[8], 0 ,"Y")) {
             my = mxGetPr(mxGetField(prhs[8], 0 ,"Y"));
-            nmyy = mxGetN(mxGetField(prhs[8], 0 ,"Y"));
-            nmyt = mxGetM(mxGetField(prhs[8], 0 ,"Y"));
+            nmyy = (int) mxGetN(mxGetField(prhs[8], 0 ,"Y"));
+            nmyt = (int) mxGetM(mxGetField(prhs[8], 0 ,"Y"));
         } else {
             mexErrMsgTxt("Field Y not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_Y")) {
             ysigma = mxGetPr(mxGetField(prhs[8], 0 ,"Sigma_Y"));
-            nysigmay = mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Y"));
-            nysigmat = mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Y"));
+            nysigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Y"));
+            nysigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Y"));
         } else {
             mexErrMsgTxt("Field Sigma_Y not specified as field in data struct!");
         }
         if (mxGetField(prhs[8], 0 ,"T")) {
             mt = mxGetPr(mxGetField(prhs[8], 0 ,"T"));
-            nmty = mxGetN(mxGetField(prhs[8], 0 ,"T"));
-            nmtt = mxGetM(mxGetField(prhs[8], 0 ,"T"));
+            nmty = (int) mxGetN(mxGetField(prhs[8], 0 ,"T"));
+            nmtt = (int) mxGetM(mxGetField(prhs[8], 0 ,"T"));
         } else {
             mexErrMsgTxt("Field T not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_T")) {
             tsigma = mxGetPr(mxGetField(prhs[8], 0 ,"Sigma_T"));
-            ntsigmay = mxGetN(mxGetField(prhs[8], 0 ,"Sigma_T"));
-            ntsigmat = mxGetM(mxGetField(prhs[8], 0 ,"Sigma_T"));
+            ntsigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_T"));
+            ntsigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_T"));
         } else {
             mexErrMsgTxt("Field Sigma_T not specified as field in data struct!");
         }
