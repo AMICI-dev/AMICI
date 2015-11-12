@@ -182,10 +182,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if(cv_status == 0.0) {
             fy(ts[it],it,ydata,xdata,udata);
             for (iy=0; iy<ny; iy++) {
-                if (mxIsNaN(ysigma[iy*nt+it])) {
-                    fsigma_y(t,sigma_y,udata);
-                } else {
-                    sigma_y[iy] = ysigma[iy*nt+it];
+                
+                if(data_model != LW_ONEOUTPUT) {
+                    if (mxIsNaN(ysigma[iy*nt+it])) {
+                        fsigma_y(t,sigma_y,udata);
+                    } else {
+                        sigma_y[iy] = ysigma[iy*nt+it];
+                    }
                 }
                 
                 if (data_model == LW_NORMAL) {
