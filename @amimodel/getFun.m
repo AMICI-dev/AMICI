@@ -921,85 +921,89 @@ function this = getFun(this,HTable,funstr)
                 
                 if(ndisc>0)
                     for ix = 1:nx
-                        for ip = 1:np
-                            tmp_str_d = char(this.sym.esxdot(ix,ip));
-                            idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                            summand_ignore = [];
-                            
-                            if(~isempty(idx_start_d))
-                                for iocc_d = 1:length(idx_start_d)
-                                    brl = 1; % init bracket level
-                                    str_idx_d = idx_start_d(iocc_d); % init string index
-                                    % this code should be improved at some point
-                                    while brl >= 1 % break as soon as initial bracket is closed
-                                        str_idx_d = str_idx_d + 1;
-                                        if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                            brl = brl + 1;
-                                        end
-                                        if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                            brl = brl - 1;
-                                        end
-                                    end
-                                    idx_end_d = str_idx_d;
-                                    arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                    if(strfind(arg_d,',')) % higher order derivatives
-                                        if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                            arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                        elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                            arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                        end
-                                    end
-                                    str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
-                                    % find the corresponding discontinuity
-                                    % xdot_i = f_i(x,t) + v_i*delta(t-t0) +
-                                    % w_i*delta(1)(t-t0) + z_i*delta(t-t0);
-                                    for idisc = 1:ndisc;
-                                        if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                            if(length(children(this.sym.esxdot(ix,ip)+foo))==2) % if the term is not a sum
-                                                summands = this.sym.esxdot(ix,ip);
-                                            else
-                                                summands = children(this.sym.esxdot(ix,ip));
+                        tmp_str_d = char(this.sym.xdot(ix));% do some preliminary filtering
+                        idx_start_d = [strfind(tmp_str_d,'heaviside') + 9,strfind(tmp_str_d,'dirac') + 5];
+                        if(~isempty(idx_start_d))
+                            for ip = 1:np
+                                tmp_str_d = char(this.sym.esxdot(ix,ip));
+                                idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
+                                summand_ignore = [];
+                                
+                                if(~isempty(idx_start_d))
+                                    for iocc_d = 1:length(idx_start_d)
+                                        brl = 1; % init bracket level
+                                        str_idx_d = idx_start_d(iocc_d); % init string index
+                                        % this code should be improved at some point
+                                        while brl >= 1 % break as soon as initial bracket is closed
+                                            str_idx_d = str_idx_d + 1;
+                                            if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
+                                                brl = brl + 1;
                                             end
-                                            for is = 1:length(summands)
-                                                if(isempty(find(is==summand_ignore,1))) % check if we already added that term
-                                                    str_summand = char(summands(is));
-                                                    if(strfind(str_summand,str_arg_d)) % v_i
-                                                        this.sym.sv(ix,ip,idisc) = this.sym.sv(ix,ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                        this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                        this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                        this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                        this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    else % f
-                                                        this.sym.sf(ix,ip,idisc) = this.sym.sf(ix,ip,idisc) + summands(is);
-                                                        summand_ignore = [summand_ignore is];
+                                            if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
+                                                brl = brl - 1;
+                                            end
+                                        end
+                                        idx_end_d = str_idx_d;
+                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
+                                        if(strfind(arg_d,',')) % higher order derivatives
+                                            if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
+                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
+                                            elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
+                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
+                                            end
+                                        end
+                                        str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
+                                        % find the corresponding discontinuity
+                                        % xdot_i = f_i(x,t) + v_i*delta(t-t0) +
+                                        % w_i*delta(1)(t-t0) + z_i*delta(t-t0);
+                                        for idisc = 1:ndisc;
+                                            if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
+                                                if(length(children(this.sym.esxdot(ix,ip)+foo))==2) % if the term is not a sum
+                                                    summands = this.sym.esxdot(ix,ip);
+                                                else
+                                                    summands = children(this.sym.esxdot(ix,ip));
+                                                end
+                                                for is = 1:length(summands)
+                                                    if(isempty(find(is==summand_ignore,1))) % check if we already added that term
+                                                        str_summand = char(summands(is));
+                                                        if(strfind(str_summand,str_arg_d)) % v_i
+                                                            this.sym.sv(ix,ip,idisc) = this.sym.sv(ix,ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_d1)) % w_i
+                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_1d)) % w_i
+                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_d2)) % z_i
+                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_2d)) % z_i
+                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        else % f
+                                                            this.sym.sf(ix,ip,idisc) = this.sym.sf(ix,ip,idisc) + summands(is);
+                                                            summand_ignore = [summand_ignore is];
+                                                        end
                                                     end
                                                 end
+                                            else
+                                                this.sym.sf(ix,ip,idisc) = this.sym.esxdot(ix,ip);
                                             end
-                                        else
-                                            this.sym.sf(ix,ip,idisc) = this.sym.esxdot(ix,ip);
                                         end
                                     end
+                                else
+                                    this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
                                 end
-                            else
-                                this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
                             end
                         end
                     end
