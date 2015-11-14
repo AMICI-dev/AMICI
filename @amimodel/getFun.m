@@ -1010,6 +1010,8 @@ function this = getFun(this,HTable,funstr)
                                     this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
                                 end
                             end
+                        else
+                            this.sym.sf(ix,:,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
                         end
                     end
                     % compute sdeltadisc
