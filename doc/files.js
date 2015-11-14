@@ -6,5 +6,5 @@ var files =
     [ "amiwrap.c", "amiwrap_8c.html", "amiwrap_8c" ],
     [ "amiwrap.m", "amiwrap_8m.html", "amiwrap_8m" ],
     [ "amiwrapo2.c", "amiwrapo2_8c_source.html", null ],
-    [ "installToolbox.m", "install_toolbox_8m_source.html", null ]
+    [ "installAMICI.m", "install_a_m_i_c_i_8m_source.html", null ]
 ];

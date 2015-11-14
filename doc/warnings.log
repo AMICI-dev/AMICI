@@ -1,3 +1,5 @@
+/Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.c:1: warning: Member _USE_MATH_DEFINES (macro definition) of file amiwrap.c is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.c:1: warning: Member M_PI (macro definition) of file amiwrap.c is not documented.
 /Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.m:17: warning: return type of member amiwrap is not documented
 warning: Caller graph for 'spline' not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES.
 warning: Caller graph for 'seval' not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES.

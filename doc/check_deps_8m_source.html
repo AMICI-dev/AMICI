@@ -148,26 +148,33 @@ $(document).ready(function(){initNavTree('check_deps_8m_source.html','');});
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">         * all symbolic definitions are generated. this is forced by passing</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">         * an empty HTable to getFun */</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <span class="keywordflow">for</span> <span class="keywordtype">id</span> = 1:length(deps)</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordflow">if</span>(~isfield(this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>,deps[<span class="keywordtype">id</span>]))</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                <span class="keyword">this</span> = this.<a class="code" href="classamimodel.html#a73f1b1b08350475e8d854d1a7f1944e1">getFun</a>([],deps[<span class="keywordtype">id</span>]);</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            end</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        end</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    end</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;end</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;}</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordflow">if</span>(any(strcmp(deps[<span class="keywordtype">id</span>],[<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; dx &quot;</span>,<span class="stringliteral">&quot; k &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>,<span class="stringliteral">&quot; sx &quot;</span>,<span class="stringliteral">&quot; sdx &quot;</span>,<span class="stringliteral">&quot; xB &quot;</span>,<span class="stringliteral">&quot; dxB &quot;</span>,<span class="stringliteral">&quot; y &quot;</span>,<span class="stringliteral">&quot; x0 &quot;</span>,<span class="stringliteral">&quot; dx0 &quot;</span>,<span class="stringliteral">&quot; sigma_y &quot;</span>,<span class="stringliteral">&quot; sigma_t &quot;</span>,<span class="stringliteral">&quot; M &quot;</span>,<span class="stringliteral">&quot; rfun &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>])))</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                <span class="keywordflow">if</span>(~isfield(this.<a class="code" href="classamimodel.html#a4814315a739f43461b003c1c1ef6f550">strsym</a>,[deps[<span class="keywordtype">id</span>] <span class="stringliteral">&quot; s &quot;</span>]))</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                    <span class="keyword">this</span> = this.<a class="code" href="classamimodel.html#a73f1b1b08350475e8d854d1a7f1944e1">getFun</a>([],deps[<span class="keywordtype">id</span>]);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                end</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;            <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                <span class="keywordflow">if</span>(~isfield(this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>,deps[<span class="keywordtype">id</span>]))</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                    <span class="keyword">this</span> = this.<a class="code" href="classamimodel.html#a73f1b1b08350475e8d854d1a7f1944e1">getFun</a>([],deps[<span class="keywordtype">id</span>]);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                end</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            end</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        end</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    end</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;end</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;}</div>
 <div class="ttc" id="classamimodel_html_acf2488b95c97e0378c9bf49de3b50f28"><div class="ttname"><a href="classamimodel.html#acf2488b95c97e0378c9bf49de3b50f28">amimodel.id</a></div><div class="ttdeci">*int id</div><div class="ttdoc">flag for DAEs </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00182">amimodel.m:182</a></div></div>
 <div class="ttc" id="classamimodel_html_a3c48fff3d28406486a4f1b5e18da7ca6"><div class="ttname"><a href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">amimodel.sym</a></div><div class="ttdeci">struct sym</div><div class="ttdoc">symbolic definition struct </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00026">amimodel.m:26</a></div></div>
 <div class="ttc" id="classamimodel_html_ab2be9a8b5a1467cc7c4a5bcd651c209e"><div class="ttname"><a href="classamimodel.html#ab2be9a8b5a1467cc7c4a5bcd651c209e">amimodel.getFunDeps</a></div><div class="ttdeci">function   = getFunDeps(string funstr)</div><div class="ttdoc">getDeps returns the dependencies for the requested function/expression. </div><div class="ttdef"><b>Definition:</b> <a href="get_fun_deps_8m_source.html#l00018">getFunDeps.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_aa04dcfc1d2188cae948a75ebd46a6e03"><div class="ttname"><a href="classamimodel.html#aa04dcfc1d2188cae948a75ebd46a6e03">amimodel.checkDeps</a></div><div class="ttdeci">function [  ,   ] = checkDeps(struct HTable,cell deps)</div><div class="ttdoc">checkDeps checks the dependencies of functions and populates sym fields if necessary ...</div><div class="ttdef"><b>Definition:</b> <a href="check_deps_8m_source.html#l00018">checkDeps.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_a73f1b1b08350475e8d854d1a7f1944e1"><div class="ttname"><a href="classamimodel.html#a73f1b1b08350475e8d854d1a7f1944e1">amimodel.getFun</a></div><div class="ttdeci">function   = getFun(struct HTable,string funstr)</div><div class="ttdoc">getFun generates symbolic expressions for the requested function. </div><div class="ttdef"><b>Definition:</b> <a href="get_fun_8m_source.html#l00018">getFun.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html_aafe6335df413dd688a2f44efba012cf1"><div class="ttname"><a href="classamimodel.html#aafe6335df413dd688a2f44efba012cf1">amimodel.HTable</a></div><div class="ttdeci">struct HTable</div><div class="ttdoc">struct that contains hash values for the symbolic model definitions </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00054">amimodel.m:54</a></div></div>
+<div class="ttc" id="classamimodel_html_a4814315a739f43461b003c1c1ef6f550"><div class="ttname"><a href="classamimodel.html#a4814315a739f43461b003c1c1ef6f550">amimodel.strsym</a></div><div class="ttdeci">struct strsym</div><div class="ttdoc">short names for symbolic variables </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00040">amimodel.m:40</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_714d08c2e8b2f86fd226dae60958336c.html">@amimodel</a></li><li class="navelem"><b>checkDeps.m</b></li>
-    <li class="footer">Generated on Wed Nov 11 2015 13:21:53 for AMICI by
+    <li class="footer">Generated on Sat Nov 14 2015 10:37:13 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

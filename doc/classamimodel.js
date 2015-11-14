@@ -50,5 +50,6 @@ var classamimodel =
     [ "funs", "classamimodel.html#af80b2560853c3df2b09fef2a198cf5b8", null ],
     [ "coptim", "classamimodel.html#ad99abcd270ac97546c46292ebc6c2e0a", null ],
     [ "param", "classamimodel.html#a51f20d6b1b54a2eee3be0e8adc96a0ae", null ],
-    [ "wrap_path", "classamimodel.html#a0b316a20054ba282555674d939a82406", null ]
+    [ "wrap_path", "classamimodel.html#a0b316a20054ba282555674d939a82406", null ],
+    [ "recompile", "classamimodel.html#a8d2e824e03e32034b634a7c48f2a26c6", null ]
 ];

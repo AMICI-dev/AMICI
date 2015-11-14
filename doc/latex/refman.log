@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.9.28)  11 NOV 2015 13:22
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.9.28)  14 NOV 2015 10:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1258,186 +1258,186 @@ LaTeX Font Info:    Font shape `T1/phv/m/sl' will be
 (Font)              scaled to size 8.09995pt on input line 12.
 [34] [35]
 LaTeX Font Info:    Font shape `T1/phv/bc/it' in size <10> not available
-(Font)              Font shape `T1/phv/bc/sl' tried instead on input line 157.
+(Font)              Font shape `T1/phv/bc/sl' tried instead on input line 159.
 LaTeX Font Info:    Font shape `T1/phv/bc/sl' will be
-(Font)              scaled to size 8.99994pt on input line 157.
+(Font)              scaled to size 8.99994pt on input line 159.
 
-<classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph.pdf, id=615, 478.78876p
+<classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph.pdf, id=616, 478.78876p
 t x 176.66pt>
 File: classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph.pdf>
 Package pdftex.def Info: classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph
-.pdf used on input line 194.
+.pdf used on input line 196.
 (pdftex.def)             Requested size: 350.0pt x 129.14133pt.
 [36]
-<classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph.pdf, id=637, 587.19376p
+<classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph.pdf, id=639, 587.19376p
 t x 196.735pt>
 File: classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph.pdf>
 Package pdftex.def Info: classamimodel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph
-.pdf used on input line 221.
+.pdf used on input line 223.
 (pdftex.def)             Requested size: 350.0pt x 117.26439pt.
 
-<classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph.pdf, id=638, 487.8225pt
+<classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph.pdf, id=640, 487.8225pt
  x 176.66pt>
 File: classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph.pdf>
 Package pdftex.def Info: classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph
-.pdf used on input line 272.
+.pdf used on input line 274.
 (pdftex.def)             Requested size: 350.0pt x 126.75032pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [37 <./classamimodel_a68efdc6ed5d618672bea1556209e5568_cgraph.pdf> <./classamim
 odel_af2ce5001c2320c95471ecb8c3d73bdbb_cgraph.pdf>]
-<classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgraph.pdf, id=671, 275.0275p
+<classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgraph.pdf, id=673, 275.0275p
 t x 100.375pt>
 File: classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a65b30e6d951ff694d40d45b0625742c7_icgrap
-h.pdf used on input line 283.
+h.pdf used on input line 285.
 (pdftex.def)             Requested size: 274.0pt x 100.00868pt.
 
-<classamimodel_a874862825ea3346f977f518072dec051_cgraph.pdf, id=672, 356.33125p
+<classamimodel_a874862825ea3346f977f518072dec051_cgraph.pdf, id=674, 356.33125p
 t x 176.66pt>
 File: classamimodel_a874862825ea3346f977f518072dec051_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_a874862825ea3346f977f518072dec051_cgraph.pdf>
 Package pdftex.def Info: classamimodel_a874862825ea3346f977f518072dec051_cgraph
-.pdf used on input line 324.
+.pdf used on input line 326.
 (pdftex.def)             Requested size: 350.0pt x 173.52725pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [38 <./classamimodel_a65b30e6d951ff694d40d45b0625742c7_cgraph.pdf> <./classamim
 odel_a65b30e6d951ff694d40d45b0625742c7_icgraph.pdf>]
-<classamimodel_a874862825ea3346f977f518072dec051_icgraph.pdf, id=702, 377.41pt 
+<classamimodel_a874862825ea3346f977f518072dec051_icgraph.pdf, id=704, 377.41pt 
 x 119.44624pt>
 File: classamimodel_a874862825ea3346f977f518072dec051_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a874862825ea3346f977f518072dec051_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a874862825ea3346f977f518072dec051_icgrap
-h.pdf used on input line 335.
+h.pdf used on input line 337.
 (pdftex.def)             Requested size: 350.0pt x 110.77036pt.
 
-<classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph.pdf, id=703, 232.87pt x
+<classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph.pdf, id=705, 232.87pt x
  100.375pt>
 File: classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph.pdf>
 Package pdftex.def Info: classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_cgraph
-.pdf used on input line 376.
+.pdf used on input line 378.
 (pdftex.def)             Requested size: 232.0pt x 100.00409pt.
 
-<classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph.pdf, id=704, 461.725pt
+<classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph.pdf, id=706, 461.725pt
  x 119.44624pt>
 File: classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph.pdf>
 Package pdftex.def Info: classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgrap
-h.pdf used on input line 387.
+h.pdf used on input line 389.
 (pdftex.def)             Requested size: 350.0pt x 90.54314pt.
 [39 <./classamimodel_a874862825ea3346f977f518072dec051_cgraph.pdf> <./classamim
 odel_a874862825ea3346f977f518072dec051_icgraph.pdf> <./classamimodel_aca8ccaf52
 2a4aadb4ce12b7b636570b2_cgraph.pdf>]
-<classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph.pdf, id=746, 336.25626p
+<classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph.pdf, id=748, 336.25626p
 t x 119.44624pt>
 File: classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph.pdf>
 Package pdftex.def Info: classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_cgraph
-.pdf used on input line 443.
+.pdf used on input line 445.
 (pdftex.def)             Requested size: 335.0pt x 119.00122pt.
 
-<classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph.pdf, id=747, 231.86626
+<classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph.pdf, id=749, 231.86626
 pt x 138.5175pt>
 File: classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgrap
-h.pdf used on input line 454.
+h.pdf used on input line 456.
 (pdftex.def)             Requested size: 231.0pt x 138.00354pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [40 <./classamimodel_aca8ccaf522a4aadb4ce12b7b636570b2_icgraph.pdf> <./classami
 model_a73f1b1b08350475e8d854d1a7f1944e1_cgraph.pdf>]
-<classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph.pdf, id=778, 440.64626
+<classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph.pdf, id=780, 440.64626
 pt x 119.44624pt>
 File: classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph.pdf>
 Package pdftex.def Info: classamimodel_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgrap
-h.pdf used on input line 486.
+h.pdf used on input line 488.
 (pdftex.def)             Requested size: 350.0pt x 94.87727pt.
 
-<classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph.pdf, id=779, 566.115pt
+<classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph.pdf, id=781, 566.115pt
  x 133.49875pt>
 File: classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgrap
-h.pdf used on input line 518.
+h.pdf used on input line 520.
 (pdftex.def)             Requested size: 350.0pt x 82.53816pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [41 <./classamimodel_a73f1b1b08350475e8d854d1a7f1944e1_icgraph.pdf> <./classami
 model_ab2be9a8b5a1467cc7c4a5bcd651c209e_icgraph.pdf>]
-<classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgraph.pdf, id=811, 482.80376
+<classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgraph.pdf, id=813, 482.80376
 pt x 119.44624pt>
 File: classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a12e6324d6137b28d7f4363aaf309c140_icgrap
-h.pdf used on input line 550.
+h.pdf used on input line 552.
 (pdftex.def)             Requested size: 350.0pt x 86.59355pt.
 
-<classamimodel_a08bca7058280eace2b47d57ea04068ef_icgraph.pdf, id=812, 481.8pt x
+<classamimodel_a08bca7058280eace2b47d57ea04068ef_icgraph.pdf, id=814, 481.8pt x
  119.44624pt>
 File: classamimodel_a08bca7058280eace2b47d57ea04068ef_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_a08bca7058280eace2b47d57ea04068ef_icgraph.pdf>
 Package pdftex.def Info: classamimodel_a08bca7058280eace2b47d57ea04068ef_icgrap
-h.pdf used on input line 582.
+h.pdf used on input line 584.
 (pdftex.def)             Requested size: 350.0pt x 86.77217pt.
 [42 <./classamimodel_a47ece64d988c9c183782a94bd7de3e6b_icgraph.pdf> <./classami
 model_a12e6324d6137b28d7f4363aaf309c140_icgraph.pdf> <./classamimodel_a08bca705
 8280eace2b47d57ea04068ef_icgraph.pdf>]
-<classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph.pdf, id=857, 336.25626p
+<classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph.pdf, id=859, 336.25626p
 t x 119.44624pt>
 File: classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph.pdf Graphic file (
 type pdf)
 <use classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph.pdf>
 Package pdftex.def Info: classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph
-.pdf used on input line 617.
+.pdf used on input line 619.
 (pdftex.def)             Requested size: 335.0pt x 119.00122pt.
 
-<classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph.pdf, id=858, 334.24875
+<classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph.pdf, id=860, 334.24875
 pt x 100.375pt>
 File: classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph.pdf>
 Package pdftex.def Info: classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_icgrap
-h.pdf used on input line 628.
+h.pdf used on input line 630.
 (pdftex.def)             Requested size: 333.0pt x 100.00868pt.
 
-<classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgraph.pdf, id=859, 270.00874
+<classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgraph.pdf, id=861, 270.00874
 pt x 100.375pt>
 File: classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgraph.pdf Graphic file 
 (type pdf)
 <use classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgraph.pdf>
 Package pdftex.def Info: classamimodel_ab21f46296b0ee0a141c38143a79ad396_icgrap
-h.pdf used on input line 657.
+h.pdf used on input line 659.
 (pdftex.def)             Requested size: 269.0pt x 100.00255pt.
 [43 <./classamimodel_aa04dcfc1d2188cae948a75ebd46a6e03_cgraph.pdf> <./classamim
 odel_aa04dcfc1d2188cae948a75ebd46a6e03_icgraph.pdf> <./classamimodel_ab21f46296
-b0ee0a141c38143a79ad396_icgraph.pdf>] [44] [45]) (./struct_exp_data.tex) (./str
-uct_return_data.tex [46] [47]
+b0ee0a141c38143a79ad396_icgraph.pdf>] [44] [45]) (./struct_exp_data.tex [46]) (
+./struct_return_data.tex [47]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [48]
@@ -1458,48 +1458,47 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [57]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[58]) (./amiwrap_8c.tex <amiwrap_8c__incl.pdf, id=1315, 641.39626pt x 213.79875
-pt>
+[58]) (./amiwrap_8c.tex
+Underfull \vbox (badness 5490) has occurred while \output is active []
+
+[59] <amiwrap_8c__incl.pdf, id=1333, 641.39626pt x 213.79875pt>
 File: amiwrap_8c__incl.pdf Graphic file (type pdf)
 <use amiwrap_8c__incl.pdf>
 Package pdftex.def Info: amiwrap_8c__incl.pdf used on input line 19.
 (pdftex.def)             Requested size: 350.0pt x 116.6697pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-[59] <amiwrap_8c__dep__incl.pdf, id=1325, 153.57375pt x 157.58875pt>
+<amiwrap_8c__dep__incl.pdf, id=1334, 153.57375pt x 157.58875pt>
 File: amiwrap_8c__dep__incl.pdf Graphic file (type pdf)
 <use amiwrap_8c__dep__incl.pdf>
 Package pdftex.def Info: amiwrap_8c__dep__incl.pdf used on input line 26.
 (pdftex.def)             Requested size: 153.0pt x 157.00883pt.
-[60 <./amiwrap_8c__incl.pdf> <./amiwrap_8c__dep__incl.pdf>]
-Underfull \hbox (badness 10000) detected at line 67
-[][][]
- []
-
-
-<amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf, id=1361, 282.05376pt 
-x 405.515pt>
-File: amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf Graphic file (typ
-e pdf)
-<use amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf>
-Package pdftex.def Info: amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pd
-f used on input line 80.
-(pdftex.def)             Requested size: 281.0pt x 404.02895pt.
-) (./amiwrap_8m.tex [61 <./amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.
-pdf>]) (./amici_8c.tex <amici_8c__dep__incl.pdf, id=1382, 162.6075pt x 271.0125
-pt>
-File: amici_8c__dep__incl.pdf Graphic file (type pdf)
-<use amici_8c__dep__incl.pdf>
-Package pdftex.def Info: amici_8c__dep__incl.pdf used on input line 12.
-(pdftex.def)             Requested size: 162.0pt x 270.01935pt.
-[62 <./amici_8c__dep__incl.pdf>]
+[60 <./amiwrap_8c__incl.pdf> <./amiwrap_8c__dep__incl.pdf>] [61]
 Underfull \hbox (badness 10000) detected at line 76
 [][][]
  []
 
 
-<amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf, id=1419, 273.02pt x 10
+<amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf, id=1377, 282.05376pt 
+x 405.515pt>
+File: amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf Graphic file (typ
+e pdf)
+<use amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pdf>
+Package pdftex.def Info: amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.pd
+f used on input line 89.
+(pdftex.def)             Requested size: 281.0pt x 404.02895pt.
+) (./amiwrap_8m.tex [62 <./amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph.
+pdf>]) (./amici_8c.tex <amici_8c__dep__incl.pdf, id=1397, 162.6075pt x 271.0125
+pt>
+File: amici_8c__dep__incl.pdf Graphic file (type pdf)
+<use amici_8c__dep__incl.pdf>
+Package pdftex.def Info: amici_8c__dep__incl.pdf used on input line 12.
+(pdftex.def)             Requested size: 162.0pt x 270.01935pt.
+[63 <./amici_8c__dep__incl.pdf>]
+Underfull \hbox (badness 10000) detected at line 76
+[][][]
+ []
+
+
+<amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf, id=1432, 273.02pt x 10
 0.375pt>
 File: amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf Graphic file (type
  pdf)
@@ -1507,13 +1506,13 @@ File: amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf
  used on input line 89.
 (pdftex.def)             Requested size: 272.0pt x 100.00562pt.
-[63 <./amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf>] [64]
+[64]
 Underfull \hbox (badness 10000) detected at line 115
 [][][]
  []
 
 
-<amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf, id=1459, 247.92625pt x
+<amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf, id=1458, 247.92625pt x
  100.375pt>
 File: amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf Graphic file (type
  pdf)
@@ -1521,13 +1520,14 @@ File: amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf
  used on input line 128.
 (pdftex.def)             Requested size: 247.0pt x 100.00102pt.
-
+[65 <./amici_8c_aaa3b0319b9104865ac61df2ea87b8a13_icgraph.pdf> <./amici_8c_a1f5
+9a60d757981b9a2196bc6b3491027_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 157
 [][][]
  []
 
 
-<amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf, id=1462, 254.9525pt x 
+<amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf, id=1491, 254.9525pt x 
 100.375pt>
 File: amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf Graphic file (type
  pdf)
@@ -1535,14 +1535,13 @@ File: amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf
  used on input line 170.
 (pdftex.def)             Requested size: 254.0pt x 100.00409pt.
-[65 <./amici_8c_a1f59a60d757981b9a2196bc6b3491027_icgraph.pdf> <./amici_8c_a389
-9f1dc888ee4e27c36d139dd938fc0_icgraph.pdf>] [66]
+
 Underfull \hbox (badness 10000) detected at line 192
 [][][]
  []
 
 
-<amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf, id=1500, 282.05376pt x
+<amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf, id=1494, 282.05376pt x
  100.375pt>
 File: amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf Graphic file (type
  pdf)
@@ -1550,13 +1549,14 @@ File: amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf
  used on input line 206.
 (pdftex.def)             Requested size: 281.0pt x 100.00716pt.
-
+[66 <./amici_8c_a3899f1dc888ee4e27c36d139dd938fc0_icgraph.pdf> <./amici_8c_af60
+e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf>] [67]
 Underfull \hbox (badness 10000) detected at line 228
 [][][]
  []
 
 
-<amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf, id=1503, 269.005pt x 1
+<amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf, id=1532, 269.005pt x 1
 00.375pt>
 File: amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf Graphic file (type
  pdf)
@@ -1564,14 +1564,13 @@ File: amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf
  used on input line 242.
 (pdftex.def)             Requested size: 268.0pt x 100.00102pt.
-[67 <./amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.pdf> <./amici_8c_a3c8
-f6481c1efc210fe8d82c618ddfcca_icgraph.pdf>] [68]
+
 Underfull \hbox (badness 10000) detected at line 282
 [][][]
  []
 
 
-<amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf, id=1541, 282.05376pt x
+<amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf, id=1536, 282.05376pt x
  100.375pt>
 File: amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf Graphic file (type
  pdf)
@@ -1579,13 +1578,16 @@ File: amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf
  used on input line 295.
 (pdftex.def)             Requested size: 281.0pt x 100.00716pt.
-[69 <./amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf>]
+
+Underfull \vbox (badness 1460) has occurred while \output is active []
+
+[68 <./amici_8c_a3c8f6481c1efc210fe8d82c618ddfcca_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 343
 [][][]
  []
 
 
-<amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf, id=1564, 282.05376pt x
+<amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf, id=1559, 282.05376pt x
  100.375pt>
 File: amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf Graphic file (type
  pdf)
@@ -1593,13 +1595,14 @@ File: amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf
  used on input line 356.
 (pdftex.def)             Requested size: 281.0pt x 100.00716pt.
-
+[69 <./amici_8c_a85cdb132d0e8a2682f83f4c9603369a0_icgraph.pdf> <./amici_8c_a3c1
+7fa40a52b536834ef24655e1bee21_icgraph.pdf>] [70]
 Underfull \hbox (badness 10000) detected at line 392
 [][][]
  []
 
 
-<amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf, id=1567, 263.98625pt x
+<amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf, id=1596, 263.98625pt x
  100.375pt>
 File: amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf Graphic file (type
  pdf)
@@ -1607,14 +1610,13 @@ File: amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf
  used on input line 405.
 (pdftex.def)             Requested size: 263.0pt x 100.00562pt.
-[70 <./amici_8c_a3c17fa40a52b536834ef24655e1bee21_icgraph.pdf> <./amici_8c_a13d
-94826e6a875f0e06ec633a88dd551_icgraph.pdf>]
+
 Underfull \hbox (badness 10000) detected at line 445
 [][][]
  []
 
 
-<amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf, id=1601, 271.0125pt x 
+<amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf, id=1600, 271.0125pt x 
 100.375pt>
 File: amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf Graphic file (type
  pdf)
@@ -1622,18 +1624,19 @@ File: amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf Graphic file (type
 Package pdftex.def Info: amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf
  used on input line 458.
 (pdftex.def)             Requested size: 270.0pt x 100.00409pt.
-) (./spline_8c.tex <spline_8c__dep__incl.pdf, id=1602, 204.765pt x 157.58875pt>
+[71 <./amici_8c_a13d94826e6a875f0e06ec633a88dd551_icgraph.pdf>]) (./spline_8c.t
+ex <spline_8c__dep__incl.pdf, id=1618, 204.765pt x 157.58875pt>
 File: spline_8c__dep__incl.pdf Graphic file (type pdf)
 <use spline_8c__dep__incl.pdf>
 Package pdftex.def Info: spline_8c__dep__incl.pdf used on input line 12.
 (pdftex.def)             Requested size: 204.0pt x 157.00883pt.
-[71 <./amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf> <./spline_8c__de
-p__incl.pdf>]
+
 Underfull \hbox (badness 10000) detected at line 29
 [][][]
  []
 
-[72]
+[72 <./amici_8c_a90da28fbc4745516101db3c8d6be9305_icgraph.pdf> <./spline_8c__de
+p__incl.pdf>] [73]
 Underfull \hbox (badness 10000) detected at line 136
 [][][]
  []
@@ -1643,19 +1646,19 @@ Underfull \hbox (badness 10000) detected at line 177
 [][][]
  []
 
-[73]
+[74]
 Underfull \hbox (badness 10000) detected at line 225
 [][][]
  []
 
-) (./symbolic__functions_8c.tex <symbolic__functions_8c__incl.pdf, id=1668, 212
+) (./symbolic__functions_8c.tex <symbolic__functions_8c__incl.pdf, id=1684, 212
 .795pt x 157.58875pt>
 File: symbolic__functions_8c__incl.pdf Graphic file (type pdf)
 <use symbolic__functions_8c__incl.pdf>
 Package pdftex.def Info: symbolic__functions_8c__incl.pdf used on input line 14
 .
 (pdftex.def)             Requested size: 212.0pt x 157.00883pt.
-[74 <./symbolic__functions_8c__incl.pdf>] [75]
+[75 <./symbolic__functions_8c__incl.pdf>] [76]
 Underfull \hbox (badness 10000) detected at line 152
 [][][]
  []
@@ -1665,7 +1668,7 @@ Underfull \hbox (badness 10000) detected at line 182
 [][][]
  []
 
-[76]
+[77]
 Underfull \hbox (badness 10000) detected at line 208
 [][][]
  []
@@ -1680,7 +1683,7 @@ Underfull \hbox (badness 10000) detected at line 264
 [][][]
  []
 
-[77]
+[78]
 Underfull \hbox (badness 10000) detected at line 294
 [][][]
  []
@@ -1695,7 +1698,7 @@ Underfull \hbox (badness 10000) detected at line 350
 [][][]
  []
 
-[78]
+[79]
 Underfull \hbox (badness 10000) detected at line 379
 [][][]
  []
@@ -1710,7 +1713,7 @@ Underfull \hbox (badness 10000) detected at line 445
 [][][]
  []
 
-[79]
+[80]
 Underfull \hbox (badness 10000) detected at line 475
 [][][]
  []
@@ -1725,7 +1728,7 @@ Underfull \hbox (badness 10000) detected at line 532
 [][][]
  []
 
-[80]
+[81]
 Underfull \hbox (badness 10000) detected at line 559
 [][][]
  []
@@ -1740,7 +1743,7 @@ Underfull \hbox (badness 10000) detected at line 619
 [][][]
  []
 
-[81]
+[82]
 Underfull \hbox (badness 10000) detected at line 649
 [][][]
  []
@@ -1760,13 +1763,13 @@ Underfull \hbox (badness 10000) detected at line 719
 [][][]
  []
 
-[82]
+[83]
 Underfull \hbox (badness 10000) detected at line 765
 [][][]
  []
 
 
-<symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.pdf, id=1828, 
+<symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.pdf, id=1844, 
 206.7725pt x 138.5175pt>
 File: symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.pdf Graph
 ic file (type pdf)
@@ -1780,7 +1783,7 @@ Underfull \hbox (badness 10000) detected at line 821
  []
 
 
-<symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.pdf, id=1829, 
+<symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.pdf, id=1845, 
 228.855pt x 138.5175pt>
 File: symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.pdf Graph
 ic file (type pdf)
@@ -1788,8 +1791,8 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e3
 0f_cgraph.pdf used on input line 834.
 (pdftex.def)             Requested size: 228.0pt x 138.00565pt.
-[83 <./symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.pdf>]
-<symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph.pdf, id=1847,
+[84 <./symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.pdf>]
+<symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph.pdf, id=1864,
  262.9825pt x 100.375pt>
 File: symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph.pdf Grap
 hic file (type pdf)
@@ -1803,7 +1806,7 @@ Underfull \hbox (badness 10000) detected at line 894
  []
 
 
-<symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.pdf, id=1848, 
+<symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.pdf, id=1865, 
 206.7725pt x 138.5175pt>
 File: symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.pdf Graph
 ic file (type pdf)
@@ -1811,14 +1814,14 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feee
 b1_cgraph.pdf used on input line 907.
 (pdftex.def)             Requested size: 206.0pt x 138.00354pt.
-[84 <./symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.pdf> <./
+[85 <./symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.pdf> <./
 symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 956
 [][][]
  []
 
 
-<symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph.pdf, id=1879, 
+<symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph.pdf, id=1895, 
 228.855pt x 138.5175pt>
 File: symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph.pdf Graph
 ic file (type pdf)
@@ -1827,7 +1830,7 @@ Package pdftex.def Info: symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae
 93_cgraph.pdf used on input line 969.
 (pdftex.def)             Requested size: 228.0pt x 138.00565pt.
 
-<symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.pdf, id=1880,
+<symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.pdf, id=1896,
  262.9825pt x 100.375pt>
 File: symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.pdf Grap
 hic file (type pdf)
@@ -1838,14 +1841,14 @@ Package pdftex.def Info: symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae
 
 Underfull \vbox (badness 4569) has occurred while \output is active []
 
-[85 <./symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.pdf> <./
+[86 <./symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.pdf> <./
 symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1035
 [][][]
  []
 
 
-<symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph.pdf, id=1911, 
+<symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph.pdf, id=1927, 
 206.7725pt x 138.5175pt>
 File: symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph.pdf Graph
 ic file (type pdf)
@@ -1853,14 +1856,14 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e
 73_cgraph.pdf used on input line 1048.
 (pdftex.def)             Requested size: 206.0pt x 138.00354pt.
-[86 <./symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.pdf> <.
+[87 <./symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.pdf> <.
 /symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1103
 [][][]
  []
 
 
-<symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.pdf, id=1942, 
+<symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.pdf, id=1958, 
 228.855pt x 138.5175pt>
 File: symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.pdf Graph
 ic file (type pdf)
@@ -1869,7 +1872,7 @@ Package pdftex.def Info: symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f9
 8b_cgraph.pdf used on input line 1116.
 (pdftex.def)             Requested size: 228.0pt x 138.00565pt.
 
-<symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph.pdf, id=1943,
+<symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph.pdf, id=1959,
  262.9825pt x 100.375pt>
 File: symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph.pdf Grap
 hic file (type pdf)
@@ -1877,14 +1880,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f9
 8b_icgraph.pdf used on input line 1127.
 (pdftex.def)             Requested size: 262.0pt x 100.00409pt.
-[87 <./symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.pdf> <./
+[88 <./symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.pdf> <./
 symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1212
 [][][]
  []
 
 
-<symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.pdf, id=1973, 
+<symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.pdf, id=1989, 
 211.79124pt x 138.5175pt>
 File: symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.pdf Graph
 ic file (type pdf)
@@ -1892,13 +1895,13 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a6f89e150cf66077936f0a5b041a165
 5e_cgraph.pdf used on input line 1225.
 (pdftex.def)             Requested size: 211.0pt x 138.00565pt.
-[88 <./symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.pdf>]
+[89 <./symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1310
 [][][]
  []
 
 
-<symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.pdf, id=1991, 
+<symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.pdf, id=2007, 
 233.87375pt x 138.5175pt>
 File: symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.pdf Graph
 ic file (type pdf)
@@ -1907,7 +1910,7 @@ Package pdftex.def Info: symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ce
 af_cgraph.pdf used on input line 1323.
 (pdftex.def)             Requested size: 233.0pt x 138.00777pt.
 
-<symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph.pdf, id=1992,
+<symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph.pdf, id=2008,
  274.02374pt x 100.375pt>
 File: symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph.pdf Grap
 hic file (type pdf)
@@ -1915,14 +1918,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ce
 af_icgraph.pdf used on input line 1334.
 (pdftex.def)             Requested size: 273.0pt x 100.00716pt.
-[89 <./symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.pdf> <./
+[90 <./symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.pdf> <./
 symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1380
 [][][]
  []
 
 
-<symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.pdf, id=2021, 
+<symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.pdf, id=2039, 
 213.79875pt x 138.5175pt>
 File: symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.pdf Graph
 ic file (type pdf)
@@ -1931,7 +1934,7 @@ Package pdftex.def Info: symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b
 7e_cgraph.pdf used on input line 1393.
 (pdftex.def)             Requested size: 213.0pt x 137.99931pt.
 
-<symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph.pdf, id=2022,
+<symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph.pdf, id=2040,
  248.93pt x 100.375pt>
 File: symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph.pdf Grap
 hic file (type pdf)
@@ -1939,14 +1942,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b
 7e_icgraph.pdf used on input line 1404.
 (pdftex.def)             Requested size: 248.0pt x 100.00255pt.
-[90 <./symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.pdf> <./
+[91 <./symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.pdf> <./
 symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1450
 [][][]
  []
 
 
-<symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.pdf, id=2055, 
+<symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.pdf, id=2071, 
 341.275pt x 138.5175pt>
 File: symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.pdf Graph
 ic file (type pdf)
@@ -1954,13 +1957,13 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a
 61_cgraph.pdf used on input line 1463.
 (pdftex.def)             Requested size: 340.0pt x 138.00777pt.
-[91 <./symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.pdf>]
+[92 <./symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1515
 [][][]
  []
 
 
-<symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.pdf, id=2073, 
+<symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.pdf, id=2089, 
 213.79875pt x 138.5175pt>
 File: symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.pdf Graph
 ic file (type pdf)
@@ -1969,7 +1972,7 @@ Package pdftex.def Info: symbolic__functions_8c_a7161e35213ed166ccc1804395d697f
 3d_cgraph.pdf used on input line 1528.
 (pdftex.def)             Requested size: 213.0pt x 137.99931pt.
 
-<symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph.pdf, id=2074,
+<symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph.pdf, id=2090,
  248.93pt x 100.375pt>
 File: symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph.pdf Grap
 hic file (type pdf)
@@ -1977,14 +1980,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a7161e35213ed166ccc1804395d697f
 3d_icgraph.pdf used on input line 1539.
 (pdftex.def)             Requested size: 248.0pt x 100.00255pt.
-[92 <./symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.pdf> <./
+[93 <./symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.pdf> <./
 symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1591
 [][][]
  []
 
 
-<symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.pdf, id=2104, 
+<symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.pdf, id=2120, 
 341.275pt x 138.5175pt>
 File: symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.pdf Graph
 ic file (type pdf)
@@ -1998,7 +2001,7 @@ Underfull \hbox (badness 10000) detected at line 1662
  []
 
 
-<symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.pdf, id=2105, 
+<symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.pdf, id=2121, 
 213.79875pt x 138.5175pt>
 File: symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.pdf Graph
 ic file (type pdf)
@@ -2009,8 +2012,8 @@ Package pdftex.def Info: symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d
 
 Underfull \vbox (badness 1248) has occurred while \output is active []
 
-[93 <./symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.pdf>]
-<symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph.pdf, id=2123,
+[94 <./symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.pdf>]
+<symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph.pdf, id=2139,
  248.93pt x 100.375pt>
 File: symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph.pdf Grap
 hic file (type pdf)
@@ -2018,14 +2021,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d
 29_icgraph.pdf used on input line 1686.
 (pdftex.def)             Requested size: 248.0pt x 100.00255pt.
-[94 <./symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.pdf> <./
+[95 <./symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.pdf> <./
 symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1744
 [][][]
  []
 
 
-<symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.pdf, id=2153, 
+<symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.pdf, id=2170, 
 341.275pt x 138.5175pt>
 File: symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.pdf Graph
 ic file (type pdf)
@@ -2033,13 +2036,13 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d9
 34_cgraph.pdf used on input line 1757.
 (pdftex.def)             Requested size: 340.0pt x 138.00777pt.
-[95 <./symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.pdf>]
+[96 <./symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1845
 [][][]
  []
 
 
-<symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.pdf, id=2172, 
+<symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.pdf, id=2189, 
 219.82124pt x 138.5175pt>
 File: symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.pdf Graph
 ic file (type pdf)
@@ -2048,7 +2051,7 @@ Package pdftex.def Info: symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e
 85_cgraph.pdf used on input line 1858.
 (pdftex.def)             Requested size: 219.0pt x 138.00354pt.
 
-<symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph.pdf, id=2173,
+<symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph.pdf, id=2190,
  259.97125pt x 100.375pt>
 File: symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph.pdf Grap
 hic file (type pdf)
@@ -2056,14 +2059,14 @@ hic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e
 85_icgraph.pdf used on input line 1869.
 (pdftex.def)             Requested size: 259.0pt x 99.9995pt.
-[96 <./symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.pdf> <./
+[97 <./symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.pdf> <./
 symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph.pdf>]
 Underfull \hbox (badness 10000) detected at line 1957
 [][][]
  []
 
 
-<symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.pdf, id=2204, 
+<symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.pdf, id=2220, 
 352.31625pt x 138.5175pt>
 File: symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.pdf Graph
 ic file (type pdf)
@@ -2071,10 +2074,9 @@ ic file (type pdf)
 Package pdftex.def Info: symbolic__functions_8c_afae48263cbf04b2399bdc684727b66
 09_cgraph.pdf used on input line 1970.
 (pdftex.def)             Requested size: 350.0pt x 137.60619pt.
-) [97 <./symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.pdf>] 
-[98
+) [98 <./symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.pdf>] 
+(./refman.ind [99
 
-] (./refman.ind [99
 
 ] [100] [101] [102] [103] [104
 
@@ -2085,14 +2087,14 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 177.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 177.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 177.
 Package rerunfilecheck Info: File `refman.out' has not changed.
-(rerunfilecheck)             Checksum: 32B47F6809D82422F6BC5763FA12540C;5185.
+(rerunfilecheck)             Checksum: F76124E0681AD8CD0D84E564DBED91C3;5185.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 177.
  ) 
 Here is how much of TeX's memory you used:
- 14932 strings out of 493089
- 239412 string characters out of 6134842
- 302463 words of memory out of 5000000
- 17387 multiletter control sequences out of 15000+600000
+ 14946 strings out of 493089
+ 239957 string characters out of 6134842
+ 301677 words of memory out of 5000000
+ 17392 multiletter control sequences out of 15000+600000
  47402 words of font info for 58 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  48i,12n,43p,1964b,533s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -2117,10 +2119,10 @@ pe1/urw/helvetic/uhvb8ac.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/ur
 w/helvetic/uhvbo8ac.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/hel
 vetic/uhvr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/u
 hvro8a.pfb>
-Output written on refman.pdf (105 pages, 1680145 bytes).
+Output written on refman.pdf (105 pages, 1681204 bytes).
 PDF statistics:
- 2840 PDF objects out of 2984 (max. 8388607)
- 2508 compressed objects within 26 object streams
- 670 named destinations out of 1000 (max. 500000)
+ 2860 PDF objects out of 2984 (max. 8388607)
+ 2528 compressed objects within 26 object streams
+ 679 named destinations out of 1000 (max. 500000)
  614 words of extra memory for PDF output out of 10000 (max. 10000000)
 

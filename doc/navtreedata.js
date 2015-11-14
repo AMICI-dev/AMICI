@@ -55,7 +55,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "amici_8c.html",
-"struct_user_data.html#a2c6b0a170bd534f68ab5b216629055a8"
+"struct_user_data.html#a230439d483e6fde07a6fe687219060c2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

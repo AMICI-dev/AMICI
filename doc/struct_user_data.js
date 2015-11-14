@@ -34,5 +34,7 @@ var struct_user_data =
     [ "am_sx0data", "struct_user_data.html#a7ac27602345668b3a2bcabac4c7af733", null ],
     [ "am_event_model", "struct_user_data.html#ace3cae0f78a3365a5fac7d7daa9928ff", null ],
     [ "am_data_model", "struct_user_data.html#a83373144a2adb9f97cdfca2dfc79ce80", null ],
-    [ "am_ordering", "struct_user_data.html#a260a14e35469f1516b194f4f065a9794", null ]
+    [ "am_ordering", "struct_user_data.html#a260a14e35469f1516b194f4f065a9794", null ],
+    [ "am_J", "struct_user_data.html#a822be7d2872832008aa0b7c0282b04f6", null ],
+    [ "am_dxdotdp", "struct_user_data.html#a04716137a064f7c6d85c04aeb235b4f0", null ]
 ];
