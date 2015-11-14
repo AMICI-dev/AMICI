@@ -34,6 +34,11 @@ function this = generateC(this)
                 fprintf(fid,['#include "' this.modelname '_J.h"\n']);
             elseif(strcmp(this.funs{ifuns},'JBandB'))
                 fprintf(fid,['#include "' this.modelname '_JB.h"\n']);
+            elseif(strcmp(this.funs{ifuns},'sxdot'))
+                fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
+                fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+            elseif(strcmp(this.funs{ifuns},'qBdot'))
+                fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
             end
             fprintf(fid,'\n');
             % function definition
@@ -50,6 +55,7 @@ function this = generateC(this)
                     writeCcode_sensi(this, this.funs{ifuns}, fid);
                     fprintf(fid,'}\n');
                 elseif( strcmp(this.funs{ifuns},'sxdot') )
+
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
@@ -62,11 +68,21 @@ function this = generateC(this)
                         fprintf(fid,'}\n');
                         fprintf(fid,'}\n');
                     else
-                        fprintf(fid,'switch (plist[ip]) {\n');
-                        writeCcode_sensi(this, this.funs{ifuns}, fid);
+                        fprintf(fid,'int status;\n');
+                        fprintf(fid,'if(ip == 0) {\n');
+                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'NULL,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,tmp_dxdotdp,user_data);\n']);
                         fprintf(fid,'}\n');
+                        writeCcode(this, this.funs{ifuns}, fid);
                     end
-                elseif(strcmp(this.funs{ifuns},'qBdot')         || strcmp(this.funs{ifuns},'dydp')     || strcmp(this.funs{ifuns},'sy')         || ...
+                elseif( strcmp(this.funs{ifuns},'qBdot') )
+                    fprintf(fid,'int status;\n');
+                    fprintf(fid,'int ip;\n');
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,x,tmp_dxdotdp,user_data);\n']);
+                    fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                    writeCcode(this, this.funs{ifuns}, fid);
+                    fprintf(fid,'}\n');
+                elseif( strcmp(this.funs{ifuns},'dydp')     || strcmp(this.funs{ifuns},'sy')         || ...
                         strcmp(this.funs{ifuns},'dtdp')       || strcmp(this.funs{ifuns},'drvaldp')  || strcmp(this.funs{ifuns},'sdeltadisc') || ...
                         strcmp(this.funs{ifuns},'dxdotdp')    || strcmp(this.funs{ifuns},'sroot')    || strcmp(this.funs{ifuns},'s2rootval')  || ...
                         strcmp(this.funs{ifuns},'s2root')     || strcmp(this.funs{ifuns},'srootval') || strcmp(this.funs{ifuns},'ideltadisc') || ...
@@ -180,21 +196,21 @@ function this = generateC(this)
     fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
     fprintf(fid,'                \n');
     fprintf(fid,'                \n');
-    fprintf(fid,['                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n']);
+    fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
     fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){\n');
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
     else
-        fprintf(fid,['                    return(-1);']);
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
     else
-        fprintf(fid,['                    return(-1);']);
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
@@ -202,7 +218,7 @@ function this = generateC(this)
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
         fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
     else
-        fprintf(fid,['                    return(-1);']);
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
@@ -211,14 +227,16 @@ function this = generateC(this)
     fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, nr+ndisc, root_' this.modelname ');\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
-    fprintf(fid,'                void fx0(N_Vector x0, void *user_data){\n');
+    fprintf(fid,'                int fx0(N_Vector x0, void *user_data){\n');
     fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
-    fprintf(fid,['                    x0_' this.modelname '(x0, udata);\n']);
+    fprintf(fid,['                    return x0_' this.modelname '(x0, udata);\n']);
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdx0(N_Vector x0, N_Vector dx0, void *user_data){\n');
+    fprintf(fid,'                int fdx0(N_Vector x0, N_Vector dx0, void *user_data){\n');
     if(strcmp(this.wtype,'iw'))
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
-        fprintf(fid,['                    dx0_' this.modelname '(x0, dx0, udata);\n']);
+        fprintf(fid,['                    return dx0_' this.modelname '(x0, dx0, udata);\n']);
+    else
+        fprintf(fid,'                    return(0);');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem){\n');
@@ -234,166 +252,209 @@ function this = generateC(this)
     fprintf(fid,['                    return ' prefix 'SpilsSetJacTimesVecFn(cvode_mem, Jv_' this.modelname ');\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetDenseJacFnB(void *cvode_mem,int which){\n');
-    if(this.adjoint')
+    if(this.adjoint)
         fprintf(fid,['                    return ' prefix 'DlsSetDenseJacFnB(cvode_mem, which, JB_' this.modelname ');\n']);
     else
-        fprintf(fid,['                    return(-1);\n']);
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which){\n');
-    if(this.adjoint')
+    if(this.adjoint)
         fprintf(fid,['                    return ' prefix 'SlsSetSparseJacFnB(cvode_mem, which, JSparseB_' this.modelname ');\n']);
     else
-        fprintf(fid,['                    return(-1);\n']);
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which){\n');
-    if(this.adjoint')
+    if(this.adjoint)
         fprintf(fid,['                    return ' prefix 'DlsSetBandJacFnB(cvode_mem, which, JBandB_' this.modelname ');\n']);
     else
-        fprintf(fid,['                    return(-1);\n']);
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){\n');
-    if(this.adjoint')
+    if(this.adjoint)
         fprintf(fid,['                    return ' prefix 'SpilsSetJacTimesVecFnB(cvode_mem, which, JvB_' this.modelname ');\n']);
     else
-        fprintf(fid,['                    return(-1);\n']);
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,['                int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){\n']);
+    fprintf(fid,'                int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){\n');
     fprintf(fid,['                    return J_' this.modelname '(N,t' cj ',x' dx ',fx,J,user_data,tmp1,tmp2,tmp3);\n']);
     fprintf(fid,'                }\n');
-    fprintf(fid,['                int fJB(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){\n']);
-    if(this.adjoint')
+    fprintf(fid,'                int fJB(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){\n');
+    if(this.adjoint)
         fprintf(fid,['                    return JB_' this.modelname '(N,t' cj ',x' dx ',xB' dxB ',fx,J,user_data,tmp1,tmp2,tmp3);\n']);
     else
-        fprintf(fid,['                    return(-1);\n']);
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,['                void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data){\n']);
+    fprintf(fid,'                int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data){\n');
     fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
     fprintf(fid,'                    int ip;\n');
     fprintf(fid,'                    for (ip=0; ip<np; ip++) {\n');
     fprintf(fid,['                       sx0_' this.modelname '(plist[ip], sx0[ip]' x dx ', udata);\n']);
     fprintf(fid,'                    }\n');
+    fprintf(fid,'                    return(0);\n');
     fprintf(fid,'                }\n');
-    fprintf(fid,['                void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data){\n']);
+    fprintf(fid,'                int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data){\n');
     if(strcmp(this.wtype,'iw'))
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
         fprintf(fid,'                    int ip;\n');
         fprintf(fid,'                    for (ip=0; ip<np; ip++) {\n');
         fprintf(fid,['                       sdx0_' this.modelname '(plist[ip], sdx0[ip]' x dx ', udata);\n']);
         fprintf(fid,'                    }\n');
+        fprintf(fid,'                    return(0);\n');
+    else
+        fprintf(fid,'                    return(0);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,['                void froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){\n']);
-    fprintf(fid,['                    root_' this.modelname '(t, x' dx ', root, user_data);\n']);
+    fprintf(fid,'                int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){\n');
+    fprintf(fid,['                    return root_' this.modelname '(t, x' dx ', root, user_data);\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
-    fprintf(fid,'                void fy(realtype t, int it, realtype *y, realtype *x, void *user_data){\n');
-    fprintf(fid,['                    y_' this.modelname '(t, it, y, x, user_data);\n']);
+    fprintf(fid,'                int fy(realtype t, int it, realtype *y, realtype *x, void *user_data){\n');
+    fprintf(fid,['                    return y_' this.modelname '(t, it, y, x, user_data);\n']);
     fprintf(fid,'                }\n');
-    fprintf(fid,['                void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){\n']);
-    fprintf(fid,['                    xdot_' this.modelname '(t,x' dx ',xdot,user_data);\n']);
+    fprintf(fid,'               int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){\n');
+    fprintf(fid,['                    return xdot_' this.modelname '(t,x' dx ',xdot,user_data);\n']);
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdxdotdp(realtype t, N_Vector x, realtype *dxdotdp, void *user_data){\n');
+    fprintf(fid,'                int fdxdotdp(realtype t, N_Vector x, realtype *dxdotdp, void *user_data){\n');
     if(~strcmp(this.wtype,'iw'))
-        fprintf(fid,['                    dxdotdp_' this.modelname '(t, x, dxdotdp, user_data);\n']);
+        fprintf(fid,['                    return dxdotdp_' this.modelname '(t, x, dxdotdp, user_data);\n']);
+    else
+        fprintf(fid,'                    return(0);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdydp(realtype t, int it, realtype *dydp, realtype *y, realtype *x, void *user_data){\n');
-    fprintf(fid,['                    dydp_' this.modelname '(t, it, dydp, y, x, user_data);\n']);
+    fprintf(fid,'                int fdydp(realtype t, int it, realtype *dydp, realtype *y, realtype *x, void *user_data){\n');
+    fprintf(fid,['                    return dydp_' this.modelname '(t, it, dydp, y, x, user_data);\n']);
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdydx(realtype t, int it, realtype *dydx, realtype *y, realtype *x, void *user_data){\n');
+    fprintf(fid,'                int fdydx(realtype t, int it, realtype *dydx, realtype *y, realtype *x, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    dydx_' this.modelname '(t, it, dydx, y, x, user_data);\n']);
+        fprintf(fid,['                    return dydx_' this.modelname '(t, it, dydx, y, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdtdp(realtype t, realtype *dtdp, realtype *x, void *user_data){\n');
+    fprintf(fid,'                int fdtdp(realtype t, realtype *dtdp, realtype *x, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    dtdp_' this.modelname '(t, dtdp, x, user_data);\n']);
+        fprintf(fid,['                    return dtdp_' this.modelname '(t, dtdp, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdtdx(realtype t, realtype *dtdx, realtype *x, void *user_data){\n');
+    fprintf(fid,'                int fdtdx(realtype t, realtype *dtdx, realtype *x, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    dtdx_' this.modelname '(t, dtdx, x, user_data);\n']);
+        fprintf(fid,['                    return dtdx_' this.modelname '(t, dtdx, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdrvaldp(realtype t,realtype *drvaldp, realtype *x, void *user_data){\n');
+    fprintf(fid,'                int fdrvaldp(realtype t,realtype *drvaldp, realtype *x, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    drvaldp_' this.modelname '(t, drvaldp, x, user_data);\n']);
+        fprintf(fid,['                    return drvaldp_' this.modelname '(t, drvaldp, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdrvaldx(realtype t,realtype *drvaldx, realtype *x, void *user_data){\n');
+    fprintf(fid,'                int fdrvaldx(realtype t,realtype *drvaldx, realtype *x, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    drvaldx_' this.modelname '(t, drvaldx, x, user_data);\n']);
+        fprintf(fid,['                    return drvaldx_' this.modelname '(t, drvaldx, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fsy(realtype t, int it, realtype *sy, realtype *x, realtype *sx, void *user_data){\n');
+    fprintf(fid,'                int fsy(realtype t, int it, realtype *sy, realtype *x, realtype *sx, void *user_data){\n');
     if(this.forward)
-        fprintf(fid,['                    sy_' this.modelname '(t, it, sy, x, sx, user_data);\n']);
+        fprintf(fid,['                    return sy_' this.modelname '(t, it, sy, x, sx, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fsroot(realtype t, int nroots, realtype *drvaldp, N_Vector x, N_Vector *sx, void *user_data){\n');
+    fprintf(fid,'                int fsroot(realtype t, int nroots, realtype *drvaldp, N_Vector x, N_Vector *sx, void *user_data){\n');
     if(this.forward)
-        fprintf(fid,['                    sroot_' this.modelname '(t, nroots, drvaldp, x, sx, user_data);\n']);
+        fprintf(fid,['                    return sroot_' this.modelname '(t, nroots, drvaldp, x, sx, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fsrootval(realtype t, int nroots, realtype *drootvaldp, N_Vector x, N_Vector *sx, void *user_data){\n');
+    fprintf(fid,'                int fsrootval(realtype t, int nroots, realtype *drootvaldp, N_Vector x, N_Vector *sx, void *user_data){\n');
     if(this.forward)
-        fprintf(fid,['                    srootval_' this.modelname '(t, nroots, drootvaldp, x, sx, user_data);\n']);
+        fprintf(fid,['                    return srootval_' this.modelname '(t, nroots, drootvaldp, x, sx, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fs2root(realtype t, int nroots, realtype *ddrvaldpdp, N_Vector x, N_Vector *sx, void *user_data){\n');
+    fprintf(fid,'                int fs2root(realtype t, int nroots, realtype *ddrvaldpdp, N_Vector x, N_Vector *sx, void *user_data){\n');
     if(this.forward)
-        fprintf(fid,['                    s2root_' this.modelname '(t, nroots, ddrvaldpdp, x, sx, user_data);\n']);
+        fprintf(fid,['                    return s2root_' this.modelname '(t, nroots, ddrvaldpdp, x, sx, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fs2rootval(realtype t, int nroots, realtype *ddrootvaldpdp, N_Vector x, N_Vector *sx, void *user_data){\n');
+    fprintf(fid,'                int fs2rootval(realtype t, int nroots, realtype *ddrootvaldpdp, N_Vector x, N_Vector *sx, void *user_data){\n');
     if(this.forward)
-        fprintf(fid,['                    s2rootval_' this.modelname '(t, nroots, ddrootvaldpdp, x, sx, user_data);\n']);
+        fprintf(fid,['                    return s2rootval_' this.modelname '(t, nroots, ddrootvaldpdp, x, sx, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void deltadisc(realtype t, int idisc, N_Vector x, void *user_data){\n');
+    fprintf(fid,'                int deltadisc(realtype t, int idisc, N_Vector x, void *user_data){\n');
     if(~strcmp(this.wtype,'iw'))
-        fprintf(fid,['                       deltadisc_' this.modelname '(t, idisc, x, user_data);\n']);
+        fprintf(fid,['                       return deltadisc_' this.modelname '(t, idisc, x, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
+    
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void bdeltadisc(realtype t, int idisc, N_Vector xB, void *user_data){\n');
+    fprintf(fid,'                int bdeltadisc(realtype t, int idisc, N_Vector xB, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                       bdeltadisc_' this.modelname '(t, idisc, xB, user_data);\n']);
+        fprintf(fid,['                       return bdeltadisc_' this.modelname '(t, idisc, xB, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void ideltadisc(realtype t, int idisc, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data){\n');
+    fprintf(fid,'                int ideltadisc(realtype t, int idisc, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                       ideltadisc_' this.modelname '(t, idisc, x, xB, qBdot, user_data);\n']);
+        fprintf(fid,['                       return ideltadisc_' this.modelname '(t, idisc, x, xB, qBdot, user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void sdeltadisc(realtype t, int idisc, N_Vector x, N_Vector *sx, void *user_data){\n');
+    fprintf(fid,'                int sdeltadisc(realtype t, int idisc, N_Vector x, N_Vector *sx, void *user_data){\n');
     if(this.forward)
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
-        fprintf(fid,['                    sdeltadisc_' this.modelname '(t, idisc, x, sx, udata);\n']);
+        fprintf(fid,['                   return sdeltadisc_' this.modelname '(t, idisc, x, sx, udata);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fsigma_y(realtype t, realtype *sigma, void *user_data){\n');
+    fprintf(fid,'                int fsigma_y(realtype t, realtype *sigma, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    sigma_y_' this.modelname '(t, sigma,user_data);\n']);
+        fprintf(fid,['                    return sigma_y_' this.modelname '(t, sigma,user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdsigma_ydp(realtype t, realtype *dsigmadp, void *user_data){\n');
+    fprintf(fid,'                int fdsigma_ydp(realtype t, realtype *dsigmadp, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    dsigma_ydp_' this.modelname '(t, dsigmadp,user_data);\n']);
+        fprintf(fid,['                    return dsigma_ydp_' this.modelname '(t, dsigmadp,user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fsigma_t(realtype t, realtype *sigma, void *user_data){\n');
+    fprintf(fid,'                int fsigma_t(realtype t, realtype *sigma, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    sigma_t_' this.modelname '(t, sigma,user_data);\n']);
+        fprintf(fid,['                    return sigma_t_' this.modelname '(t, sigma,user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
-    fprintf(fid,'                void fdsigma_tdp(realtype t, realtype *dsigmadp, void *user_data){\n');
+    fprintf(fid,'                int fdsigma_tdp(realtype t, realtype *dsigmadp, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                    dsigma_tdp_' this.modelname '(t, dsigmadp,user_data);\n']);
+        fprintf(fid,['                    return dsigma_tdp_' this.modelname '(t, dsigmadp,user_data);\n']);
+    else
+        fprintf(fid,'                    return(-1);');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
@@ -424,12 +485,12 @@ function this = generateC(this)
     fprintf(fid,'#include <include/udata.h>\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');
-    fprintf(fid,['#define pi M_PI\n']);
+    fprintf(fid,'#define pi M_PI\n');
     fprintf(fid,'\n');
-    fprintf(fid,['#include <wrapfunctions.c>\n']);
+    fprintf(fid,'#include <wrapfunctions.c>\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');
-    fprintf(fid,['                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n']);
+    fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
     if(this.adjoint)
         fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
         fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
@@ -437,8 +498,8 @@ function this = generateC(this)
     if(this.forward)
         fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data);\n');
     end
-    fprintf(fid,'                void fx0(N_Vector x0, void *user_data);\n');
-    fprintf(fid,'                void fdx0(N_Vector x0, N_Vector dx0, void *user_data);\n');
+    fprintf(fid,'                int fx0(N_Vector x0, void *user_data);\n');
+    fprintf(fid,'                int fdx0(N_Vector x0, N_Vector dx0, void *user_data);\n');
     fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem);\n');
     fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem);\n');
     fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem);\n');
@@ -447,26 +508,26 @@ function this = generateC(this)
     fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
     fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
     fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
-    fprintf(fid,['                int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);\n']);
-    fprintf(fid,['                int fJB(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);\n']);
-    fprintf(fid,['                void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);\n']);
-    fprintf(fid,['                void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);\n']);
-    fprintf(fid,['                void froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);\n']);
-    fprintf(fid,'                void fy(realtype t, int it, realtype *y, realtype *x, void *user_data);\n');
-    fprintf(fid,['                void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);\n']);
-    fprintf(fid,'                void fdxdotdp(realtype t, N_Vector x, realtype *dxdotdp, void *user_data);\n');
-    fprintf(fid,'                void fdydp(realtype t, int it, realtype *dydp, realtype *y, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);\n');
+    fprintf(fid,'                int fJB(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector fx, DlsMat J, void *user_data,N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);\n');
+    fprintf(fid,'                int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);\n');
+    fprintf(fid,'                int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);\n');
+    fprintf(fid,'                int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);\n');
+    fprintf(fid,'                int fy(realtype t, int it, realtype *y, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);\n');
+    fprintf(fid,'                int fdxdotdp(realtype t, N_Vector x, realtype *dxdotdp, void *user_data);\n');
+    fprintf(fid,'                int fdydp(realtype t, int it, realtype *dydp, realtype *y, realtype *x, void *user_data);\n');
     if(this.adjoint)
-        fprintf(fid,'                void fdydx(realtype t, int it, realtype *dydx, realtype *y, realtype *x, void *user_data);\n');
+        fprintf(fid,'                int fdydx(realtype t, int it, realtype *dydx, realtype *y, realtype *x, void *user_data);\n');
     end
-    fprintf(fid,'                void fdtdp(realtype t, realtype *dtdp, realtype *x, void *user_data);\n');
-    fprintf(fid,'                void fdtdx(realtype t, realtype *drvaldp, realtype *x, void *user_data);\n');
-    fprintf(fid,'                void fdrvaldp(realtype t, realtype *drvaldp, realtype *x, void *user_data);\n');
-    fprintf(fid,'                void fdrvaldx(realtype t, realtype *drvaldx, realtype *x, void *user_data);\n');
-    fprintf(fid,'                void fsigma_y(realtype t, realtype *sigma_y, void *user_data);\n');
-    fprintf(fid,'                void fdsigma_ydp(realtype t, realtype *dsigma_ydp, void *user_data);\n');
-    fprintf(fid,'                void fsigma_t(realtype t, realtype *sigma_t, void *user_data);\n');
-    fprintf(fid,'                void fdsigma_tdp(realtype t, realtype *dsigma_tdp, void *user_data);\n');
+    fprintf(fid,'                int fdtdp(realtype t, realtype *dtdp, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fdtdx(realtype t, realtype *drvaldp, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fdrvaldp(realtype t, realtype *drvaldp, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fdrvaldx(realtype t, realtype *drvaldx, realtype *x, void *user_data);\n');
+    fprintf(fid,'                int fsigma_y(realtype t, realtype *sigma_y, void *user_data);\n');
+    fprintf(fid,'                int fdsigma_ydp(realtype t, realtype *dsigma_ydp, void *user_data);\n');
+    fprintf(fid,'                int fsigma_t(realtype t, realtype *sigma_t, void *user_data);\n');
+    fprintf(fid,'                int fdsigma_tdp(realtype t, realtype *dsigma_tdp, void *user_data);\n');
     fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
     fclose(fid);
     
@@ -668,18 +729,19 @@ function printlocalvars(fun,struct,fid)
             fprintf(fid,'realtype *x_tmp = N_VGetArrayPointer(x);\n');
             fprintf(fid,'realtype *xB_tmp = N_VGetArrayPointer(xB);\n');
             fprintf(fid,'realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);\n');
-            fprintf(fid,['realtype *ideltadisc;\n']);
-            fprintf(fid,['ideltadisc = mxMalloc(sizeof(realtype)*np);\n']);
-            fprintf(fid,['memset(ideltadisc,0,sizeof(realtype)*np);\n']);
+            fprintf(fid,'realtype *ideltadisc;\n');
+            fprintf(fid,'ideltadisc = mxMalloc(sizeof(realtype)*np);\n');
+            fprintf(fid,'memset(ideltadisc,0,sizeof(realtype)*np);\n');
         case 'sdeltadisc'
             fprintf(fid,'realtype *x_tmp = N_VGetArrayPointer(x);\n');
             fprintf(fid,'realtype *sx_tmp;\n');
             fprintf(fid,['realtype deltadisc[' num2str(nx) '];\n']);
-            fprintf(fid,['realtype *sdeltadisc;\n']);
+            fprintf(fid,'realtype *sdeltadisc;\n');
             fprintf(fid,['memset(deltadisc,0,sizeof(realtype)*' num2str(nx) ');\n']);
             fprintf(fid,['sdeltadisc = mxMalloc(sizeof(realtype)*' num2str(nx) '*np);\n']);
             fprintf(fid,['memset(sdeltadisc,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'dxdotdp'
+            fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
             fprintf(fid,'realtype *x_tmp = N_VGetArrayPointer(x);\n');
         case 'sigma_y'
             fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);
@@ -707,8 +769,7 @@ function printpostprocess(fun,struct,fid)
     %  Nothing
     
     nx = length(struct.sym.x);
-    ny = length(struct.sym.y);
-    
+
     switch(fun)
         case 'xdot'
             %         ivar = 'ix';
@@ -816,23 +877,23 @@ function printpostprocess(fun,struct,fid)
         case 's2rootval'
             %
         case 'deltadisc'
-            fprintf(fid,['int ix;\n']);
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['for(ix = 0; ix<' num2str(nx) ';ix++){;\n']);
             fprintf(fid,'  x_tmp[ix] += deltadisc[ix];\n');
             fprintf(fid,'};\n');
         case 'bdeltadisc'
-            fprintf(fid,['int ix;\n']);
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['for(ix = 0; ix<' num2str(nx) ';ix++){;\n']);
             fprintf(fid,'  xB_tmp[ix] += bdeltadisc[ix];\n');
             fprintf(fid,'};\n');
         case 'ideltadisc'
-            fprintf(fid,['for(ip = 0; ip<np;ip++){;\n']);
+            fprintf(fid,'for(ip = 0; ip<np;ip++){;\n');
             fprintf(fid,'  qBdot_tmp[plist[ip]] += ideltadisc[plist[ip]];\n');
             fprintf(fid,'};\n');
             fprintf(fid,'mxFree(ideltadisc);\n');
         case 'sdeltadisc'
-            fprintf(fid,['int ix;\n']);
-            fprintf(fid,['for(ip = 0; ip<np;ip++){\n']);
+            fprintf(fid,'int ix;\n');
+            fprintf(fid,'for(ip = 0; ip<np;ip++){\n');
             fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
             fprintf(fid,['  for(ix = 0; ix<' num2str(nx) ';ix++){\n']);
             fprintf(fid,'    sx_tmp[ix] += sdeltadisc[plist[ip]+np*ix];\n');
@@ -856,11 +917,11 @@ function printpostprocess(fun,struct,fid)
             error(['unkown function: ' fun])
     end
     
-    function printpp
-        fprintf(fid,['int ' ivar ';\n']);
-        fprintf(fid,['for (' ivar '=0; ' ivar '<' nvar '; ' ivar '++) {\n']);
-        fprintf(fid,['  if(mxIsNaN(' cvar '[' ivar '])) ' cvar '[' ivar '] = 0.0;\n']);
-        fprintf(fid,'}\n');
-    end
+%     function printpp
+%         fprintf(fid,['int ' ivar ';\n']);
+%         fprintf(fid,['for (' ivar '=0; ' ivar '<' nvar '; ' ivar '++) {\n']);
+%         fprintf(fid,['  if(mxIsNaN(' cvar '[' ivar '])) ' cvar '[' ivar '] = 0.0;\n']);
+%         fprintf(fid,'}\n');
+%     end
     
 end

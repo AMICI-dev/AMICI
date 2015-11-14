@@ -102,83 +102,6 @@ function this = parseModel(this)
     this.np = np;
     this.nk = nk;
     
-    % short strings
-    xs = cell(nx,1);
-    dxs = cell(nx,1);
-    vs = cell(nx,1);
-    ps = cell(np,1);
-    ks = cell(nk,1);
-    sx = cell(nx,np);
-    sdx = cell(nx,np);
-    xBs = cell(nx,1);
-    dxBs = cell(nx,1);
-    
-    for j=1:nx
-        xs{j} = sprintf('x[%i]',j-1);
-        vs{j} = sprintf('v[%i]',j-1);
-        dxs{j} = sprintf('dx[%i]',j);
-    end
-    for j=1:np
-        ps{j} = sprintf('p[%i]',j-1);
-    end
-    for j=1:nk
-        ks{j} = sprintf('k[%i]',j-1);
-    end
-    for j = 1:nx
-        for i = 1:np
-            sx{j,i} = sprintf('sx[%i]', j-1);
-            sdx{j,i} = sprintf('sdx[%i]', j-1);
-        end
-    end
-    
-    for j = 1:nx
-        xBs{j} = sprintf('xB[%i]', j-1);
-        dxBs{j} = sprintf('dxB[%i]', j-1);
-    end
-    
-    % transform into syms
-    this.strsym.xs = sym(xs);
-    this.strsym.dxs = sym(dxs);
-    this.strsym.vs = sym(vs);
-    this.strsym.ps = sym(ps);
-    this.strsym.ks = sym(ks);
-    this.strsym.sx = sym(sx);
-    this.strsym.sdx = sym(sdx);
-    this.strsym.xBs = sym(xBs);
-    this.strsym.dxBs = sym(dxBs);
-    
-    % replace states by short strings
-    
-    
-    this.sym.xdot = mysubs(this.sym.xdot,this.sym.x,this.strsym.xs);
-    this.sym.y = mysubs(this.sym.y,this.sym.x,this.strsym.xs);
-    this.sym.root = mysubs(this.sym.root,this.sym.x,this.strsym.xs);
-    if(strcmp(this.wtype,'iw'))
-        this.sym.M = mysubs(this.sym.M,this.sym.x,this.strsym.xs);
-        this.sym.dx0 = mysubs(this.sym.dx0,this.sym.x,this.strsym.xs);
-    end
-    
-    
-    this.sym.xdot = mysubs(this.sym.xdot,this.sym.p,this.strsym.ps);
-    this.sym.y = mysubs(this.sym.y,this.sym.p,this.strsym.ps);
-    this.sym.x0 = mysubs(this.sym.x0,this.sym.p,this.strsym.ps);
-    this.sym.root = mysubs(this.sym.root,this.sym.p,this.strsym.ps);
-    this.sym.sigma_y = mysubs(this.sym.sigma_y,this.sym.p,this.strsym.ps);
-    this.sym.sigma_t = mysubs(this.sym.sigma_t,this.sym.p,this.strsym.ps);
-    if(strcmp(this.wtype,'iw'))
-        this.sym.dx0 = mysubs(this.sym.dx0,this.sym.p,this.strsym.ps);
-        this.sym.M = mysubs(this.sym.M,this.sym.p,this.strsym.ps);
-    end
-    
-    this.sym.xdot = mysubs(this.sym.xdot,this.sym.k,this.strsym.ks);
-    this.sym.y = mysubs(this.sym.y,this.sym.k,this.strsym.ks);
-    this.sym.x0 = mysubs(this.sym.x0,this.sym.k,this.strsym.ks);
-    this.sym.root = mysubs(this.sym.root,this.sym.k,this.strsym.ks);
-    if(strcmp(this.wtype,'iw'))
-        this.sym.dx0 = mysubs(this.sym.dx0,this.sym.k,this.strsym.ks);
-        this.sym.M = mysubs(this.sym.M,this.sym.k,this.strsym.ks);
-    end
-    
     this.sym.rfun = this.sym.root;
     
     % initial hashes
@@ -285,28 +208,6 @@ function this = parseModel(this)
 
     fprintf('\r')
 
-end
-
-function out = mysubs(in, old, new)
-    % mysubs is a wrapper for ther subs matlab function
-    %
-    % Parameters:
-    %  in: symbolic expression in which to replace @type symbolic
-    %  old: expression to be replaced @type symbolic
-    %  new: replacement expression @type symbolic
-    %
-    % Return values:
-    %  out: symbolic expression with replacement @type symbolic
-    if(~isnumeric(in) && ~isempty(old) && ~isempty(symvar(in)))
-        matVer = ver('MATLAB');
-        if(str2double(matVer.Version)>=8.1)
-            out = subs(in, old(:), new(:));
-        else
-            out = subs(in, old(:), new(:), 0);
-        end
-    else
-        out = in;
-    end
 end
 
 function [ubw,lbw] = ami_bandwidth(M)

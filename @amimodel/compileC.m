@@ -289,23 +289,28 @@ function this = compileC(this)
       
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'''];
     
-    if(~exist(fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'file'))
+    if(this.recompile)
         recompile = 1;
         hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
     else
-        if(~exist(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'), 'file'))
+        if(~exist(fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'file'))
             recompile = 1;
             hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
         else
-            hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
-            fid = fopen(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'));
-            tline = fgetl(fid);
-            fclose(fid);
-            if(~strcmp(tline,hash(1:end)))
-                % file was updated, we need to recompile
+            if(~exist(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'), 'file'))
                 recompile = 1;
+                hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
             else
-                recompile = 0;
+                hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
+                fid = fopen(fullfile(this.wrap_path,'models',mexext,'symbolic_functions.md5'));
+                tline = fgetl(fid);
+                fclose(fid);
+                if(~strcmp(tline,hash(1:end)))
+                    % file was updated, we need to recompile
+                    recompile = 1;
+                else
+                    recompile = 0;
+                end
             end
         end
     end
@@ -318,23 +323,28 @@ function this = compileC(this)
     end
     
     for j=1:length(this.funs)
-        if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'file'))
+        if(this.recompile)
             recompile = 1;
             hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
         else
-            if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']), 'file'))
+            if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'file'))
                 recompile = 1;
                 hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             else
-                hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
-                fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']));
-                tline = fgetl(fid);
-                fclose(fid);
-                if(~strcmp(tline,hash))
-                    % file was updated, we need to recompile
+                if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']), 'file'))
                     recompile = 1;
+                    hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
                 else
-                    recompile = 0;
+                    hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
+                    fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']));
+                    tline = fgetl(fid);
+                    fclose(fid);
+                    if(~strcmp(tline,hash))
+                        % file was updated, we need to recompile
+                        recompile = 1;
+                    else
+                        recompile = 0;
+                    end
                 end
             end
         end
