@@ -76,6 +76,8 @@ classdef amimodel
         param = 'lin';
         % path to wrapper
         wrap_path;
+        % flag to enforce recompilation of the model
+        recompile = false;
     end
     
     methods
@@ -97,32 +99,23 @@ classdef amimodel
             else
                 error('invalid input symfun')
             end
+            
             if(isfield(model,'sym'))
                 AM.sym = model.sym;
             else
                 error('symbolic definitions missing in struct returned by symfun')
             end
-            if(isfield(model,'atol'))
-                AM.atol = model.atol;
+            
+            props = properties(AM);
+            
+            for j = 1:length(props)
+                if(~strcmp(props{j},'sym')) % we already checked for the sym field
+                    if(isfield(model,props{j}))
+                       AM.(props{j}) = model.(props{j});
+                    end
+                end
             end
-            if(isfield(model,'rtol'))
-                AM.rtol = model.rtol;
-            end
-            if(isfield(model,'maxsteps'))
-                AM.maxsteps = model.maxsteps;
-            end
-            if(isfield(model,'param'))
-                AM.param = model.param;
-            end
-            if(isfield(model,'debug'))
-                AM.debug = model.debug;
-            end
-            if(isfield(model,'forward'))
-                AM.forward = model.forward;
-            end
-            if(isfield(model,'adjoint'))
-                AM.adjoint = model.adjoint;
-            end
+
             AM.modelname = modelname;
             % set path and create folder
             AM.wrap_path=fileparts(which('amiwrap.m'));

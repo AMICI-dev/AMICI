@@ -33,7 +33,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
     ts = mxGetPr(prhs[1]);
     
-    nt = mxGetM(prhs[1]) * mxGetN(prhs[1]);
+    nt = (int) mxGetM(prhs[1]) * mxGetN(prhs[1]);
     
     /* parameters */
     
@@ -144,6 +144,15 @@ UserData setupUserData(const mxArray *prhs[]) {
     
     xbar = mxGetPr(prhs[7]);
     
+    if (nx>0) {
+        /* initialise temporary jacobian storage */
+        tmp_J = NewSparseMat(nx,nx,nnz);
+    }
+    if (sensi>0) {
+        /* initialise temporary jacobian storage */
+        tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+    }
+    
     return(udata);
 }
 
@@ -185,15 +194,16 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ndisc>0) discs = mxMalloc(nmaxdisc*sizeof(realtype));
         if(ndisc>0) irdiscs = mxMalloc(nmaxdisc*sizeof(realtype));
         
-        sigma_y = mxMalloc(ny*sizeof(realtype));
-        memset(sigma_y,0,ny*sizeof(realtype));
+        if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
+        if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
         if(nr>0) sigma_t = mxMalloc(nr*sizeof(realtype));
         if(nr>0) memset(sigma_t,0,nr*sizeof(realtype));
         
         if (x == NULL) return(NULL);
-        fx0(x, udata);
-        fdx0(x, dx, udata); /* only needed for idas */
-        
+        *status = fx0(x, udata);
+        if (*status != AMI_SUCCESS) return(NULL);
+        *status = fdx0(x, dx, udata); /* only needed for idas */
+        if (*status != AMI_SUCCESS) return(NULL);
     }
     
     /* Create AMIS object */
@@ -342,7 +352,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 if (sdx == NULL) return(NULL);
                 
                 if(!b_sx0) {
-                    fsx0(sx, x, dx, udata);
+                    *status = fsx0(sx, x, dx, udata);
+                    if (*status != AMI_SUCCESS) return(NULL);
                 } else {
                     for (ip=0; ip<np; ip++) {
                         sx_tmp = NV_DATA_S(sx[plist[ip]]);
@@ -351,8 +362,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                         }
                     }
                 }
-                fsdx0(sdx, x, dx, udata);
-                
+                *status = fsdx0(sdx, x, dx, udata);
+                if (*status != AMI_SUCCESS) return(NULL);
                 
                 /* Activate sensitivity calculations */
                 
@@ -707,7 +718,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     if (edata == NULL) return(NULL);
     
     if (data_model == LW_ONEOUTPUT) {
-        if ( ny>1 | nt>1 ) {
+        if ( (ny>1) | (nt>1) ) {
             mexErrMsgTxt("Data model LW_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
         }
     } else {
@@ -717,31 +728,31 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         if (mxGetField(prhs[8], 0 ,"Y")) {
             my = mxGetPr(mxGetField(prhs[8], 0 ,"Y"));
-            nmyy = mxGetN(mxGetField(prhs[8], 0 ,"Y"));
-            nmyt = mxGetM(mxGetField(prhs[8], 0 ,"Y"));
+            nmyy = (int) mxGetN(mxGetField(prhs[8], 0 ,"Y"));
+            nmyt = (int) mxGetM(mxGetField(prhs[8], 0 ,"Y"));
         } else {
             mexErrMsgTxt("Field Y not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_Y")) {
             ysigma = mxGetPr(mxGetField(prhs[8], 0 ,"Sigma_Y"));
-            nysigmay = mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Y"));
-            nysigmat = mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Y"));
+            nysigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Y"));
+            nysigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Y"));
         } else {
             mexErrMsgTxt("Field Sigma_Y not specified as field in data struct!");
         }
         if (mxGetField(prhs[8], 0 ,"T")) {
             mt = mxGetPr(mxGetField(prhs[8], 0 ,"T"));
-            nmty = mxGetN(mxGetField(prhs[8], 0 ,"T"));
-            nmtt = mxGetM(mxGetField(prhs[8], 0 ,"T"));
+            nmty = (int) mxGetN(mxGetField(prhs[8], 0 ,"T"));
+            nmtt = (int) mxGetM(mxGetField(prhs[8], 0 ,"T"));
         } else {
             mexErrMsgTxt("Field T not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_T")) {
             tsigma = mxGetPr(mxGetField(prhs[8], 0 ,"Sigma_T"));
-            ntsigmay = mxGetN(mxGetField(prhs[8], 0 ,"Sigma_T"));
-            ntsigmat = mxGetM(mxGetField(prhs[8], 0 ,"Sigma_T"));
+            ntsigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_T"));
+            ntsigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_T"));
         } else {
             mexErrMsgTxt("Field Sigma_T not specified as field in data struct!");
         }
@@ -823,7 +834,8 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
                     if(sensi_meth == CW_FSA) {
                         *status = AMIGetSens(ami_mem, &t, sx);
                         if (*status != AMI_SUCCESS) return;
-                        fsroot(t,*nroots,rootSdata,x,sx,udata);
+                        *status = fsroot(t,*nroots,rootSdata,x,sx,udata);
+                        if (*status != AMI_SUCCESS) return;
                         if (sensi >= 2) {
                             fs2root(t,*nroots,rootS2data,x,sx,udata);
                         }
@@ -850,13 +862,17 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
                 if(sensi_meth == CW_FSA) {
                     *status = AMIGetSens(ami_mem, &t, sx);
                     if (*status != AMI_SUCCESS) return;
-                    sdeltadisc(t,ir-nr,x,sx,udata);
-                    AMISensReInit(ami_mem, ism, sx, sdx);
+                    *status = sdeltadisc(t,ir-nr,x,sx,udata);
+                    if (*status != AMI_SUCCESS) return;
+                    *status = AMISensReInit(ami_mem, ism, sx, sdx);
+                    if (*status != AMI_SUCCESS) return;
                 } else {
-                    deltadisc(t,ir-nr,x,udata);
+                    *status = deltadisc(t,ir-nr,x,udata);
+                    if (*status != AMI_SUCCESS) return;
                 }
             } else {
-                deltadisc(t,ir-nr,x,udata);
+                *status = deltadisc(t,ir-nr,x,udata);
+                if (*status != AMI_SUCCESS) return;
             }
             /* reinitialize */
             *status = AMIReInit(ami_mem,t,x,dx);
@@ -918,13 +934,19 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
                     }
                     if (sensi>=1) {
                         x_tmp = NV_DATA_S(x);
-                        fdtdp(t,dtdp,x_tmp,udata);
-                        fdtdx(t,dtdx,x_tmp,udata);
-                        fdrvaldp(t,drvaldp,x_tmp,udata);
-                        fdrvaldx(t,drvaldx,x_tmp,udata);
+                        *status = fdtdp(t,dtdp,x_tmp,udata);
+                        if (*status != AMI_SUCCESS) return;
+                        *status = fdtdx(t,dtdx,x_tmp,udata);
+                        if (*status != AMI_SUCCESS) return;
+                        *status = fdrvaldp(t,drvaldp,x_tmp,udata);
+                        if (*status != AMI_SUCCESS) return;
+                        *status = fdrvaldx(t,drvaldx,x_tmp,udata);
+                        if (*status != AMI_SUCCESS) return;
                         if (mxIsNaN(tsigma[ir*nmaxroot + *nroots])) {
-                            fsigma_t(t,sigma_t,udata);
-                            fdsigma_tdp(t,dsigma_tdp,udata);
+                            *status = fsigma_t(t,sigma_t,udata);
+                            if (*status != AMI_SUCCESS) return;
+                            *status = fdsigma_tdp(t,dsigma_tdp,udata);
+                            if (*status != AMI_SUCCESS) return;
                         } else {
                             for (ip=0; ip<np; ip++) {
                                 dsigma_ydp[ip*nr+ir] = 0;
@@ -961,7 +983,8 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
     /* ROOTS FOR DISCONTINUITIES */
     for (ir=nr; ir<(nr+ndisc); ir++) {
         if(rootsfound[ir] != 0) {
-            deltadisc(t,ir-nr,x,udata);
+            *status = deltadisc(t,ir-nr,x,udata);
+            if (*status != AMI_SUCCESS) return;
             *status = AMIReInit(ami_mem,t,x,dx);
             if (*status != AMI_SUCCESS) return;
             

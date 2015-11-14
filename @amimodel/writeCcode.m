@@ -13,10 +13,7 @@ function this = writeCcode(this, funstr, fid, ip, jp)
 %
 
 ndisc = this.ndisc;
-if(strcmp(funstr,'qBdot'))
-    cvar =  'qBdot';
-    this.gccode(this.sym.qBdot(ip),funstr,cvar,fid);
-elseif(strcmp(funstr,'JSparse'))
+if(strcmp(funstr,'JSparse'))
     cvar =  'Jdata';
     this.gccode(this.sym.J(this.sparseidx),funstr,cvar,fid);
 elseif(strcmp(funstr,'JSparseB'))

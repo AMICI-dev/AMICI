@@ -15,21 +15,136 @@ function this = getFun(this,HTable,funstr)
     
     % check whether the corresponding c file exists, if not we have to
     % force recompilation by passing an empty HTable
-    if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
-        [this,cflag] = this.checkDeps([],deps);
+    if(~all(strcmp(deps,funstr))) % prevent infinite loops
+        if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
+            [this,cflag] = this.checkDeps([],deps);
+        else
+            if(this.recompile)
+                [this,cflag] = this.checkDeps([],deps);
+            else
+                [this,cflag] = this.checkDeps(HTable,deps);
+            end
+        end
     else
-        [this,cflag] = this.checkDeps(HTable,deps);
+        if(~isempty(deps))
+            if(~isfield(this.strsym,[deps{1} 's']))
+                cflag = 1;
+            else
+                cflag = 0;
+            end
+        else
+            cflag = 1;
+        end
     end
     
     nx = this.nx;
     nr = this.nr;
     ndisc = this.ndisc;
     np = this.np;
+    nk = this.nk;
     
     if(cflag)
         fprintf([funstr ' | '])
         switch(funstr)
+            case 'x'
+                xs = cell(nx,1);
+                for j=1:nx
+                    xs{j} = sprintf('x[%i]',j-1);
+                end
+                this.strsym.xs = sym(xs);
+                
+            case 'dx'
+                dxs = cell(nx,1);
+                for j=1:nx
+                    dxs{j} = sprintf('dx[%i]',j-1);
+                end
+                this.strsym.dxs = sym(dxs);
+                
+            case 'p'
+                ps = cell(np,1);
+                for j=1:np
+                    ps{j} = sprintf('p[%i]',j-1);
+                end
+                this.strsym.ps = sym(ps);
+                
+            case 'k'
+                ks = cell(nk,1);
+                for j=1:nk
+                    ks{j} = sprintf('k[%i]',j-1);
+                end
+                this.strsym.ks = sym(ks);
+                
+            case 'sx'
+                sx = cell(nx,np);
+                for j = 1:nx
+                    for i = 1:np
+                        sx{j,i} = sprintf('sx[%i]', j-1);
+                    end
+                end
+                this.strsym.sx = sym(sx);
+                
+            case 'sdx'
+                sdx = cell(nx,np);
+                for j = 1:nx
+                    for i = 1:np
+                        sdx{j,i} = sprintf('sdx[%i]', j-1);
+                    end
+                end
+                this.strsym.sdx = sym(sdx);
+                
+            case 'xB'
+                xBs = cell(nx,1);
+                for j = 1:nx
+                    xBs{j} = sprintf('xB[%i]', j-1);
+                end
+                this.strsym.xBs = sym(xBs);
+                
+            case 'dxB'
+                dxBs = cell(nx,1);
+                for j = 1:nx
+                    dxBs{j} = sprintf('dxB[%i]', j-1);
+                end
+                this.strsym.dxBs = sym(dxBs);
+                
+            case 'y'
+                this.sym.y = mysubs(this.sym.y,this.sym.x,this.strsym.xs);
+                this.sym.y = mysubs(this.sym.y,this.sym.p,this.strsym.ps);
+                this.sym.y = mysubs(this.sym.y,this.sym.k,this.strsym.ks);
+                this.strsym.ys = 1;
+                
+            case 'x0'
+                this.sym.x0 = mysubs(this.sym.x0,this.sym.k,this.strsym.ks);
+                this.sym.x0 = mysubs(this.sym.x0,this.sym.p,this.strsym.ps);
+                this.strsym.x0s = 1;
+                
+            case 'dx0'
+                this.sym.dx0 = mysubs(this.sym.dx0,this.sym.x,this.strsym.xs);
+                this.sym.dx0 = mysubs(this.sym.dx0,this.sym.p,this.strsym.ps);
+                this.sym.dx0 = mysubs(this.sym.dx0,this.sym.k,this.strsym.ks);
+                this.strsym.dx0s = 1;
+                
+            case 'sigma_y'
+                this.sym.sigma_y = mysubs(this.sym.sigma_y,this.sym.p,this.strsym.ps);
+                this.sym.sigma_y = mysubs(this.sym.sigma_t,this.sym.k,this.strsym.ks);
+                this.strsym.sigma_ys = 1;
+                
+            case 'sigma_t'
+                this.sym.sigma_t = mysubs(this.sym.sigma_y,this.sym.p,this.strsym.ps);
+                this.sym.sigma_t = mysubs(this.sym.sigma_t,this.sym.k,this.strsym.ks);
+                this.strsym.sigma_ts = 1;
+                
+            case 'M'
+                this.sym.M = mysubs(this.sym.M,this.sym.x,this.strsym.xs);
+                this.sym.M = mysubs(this.sym.M,this.sym.p,this.strsym.ps);
+                this.sym.M = mysubs(this.sym.M,this.sym.k,this.strsym.ks);
+                this.strsym.Ms = 1;
+
             case 'xdot'
+                this.sym.xdot = mysubs(this.sym.xdot,this.sym.x,this.strsym.xs);
+                this.sym.xdot = mysubs(this.sym.xdot,this.sym.p,this.strsym.ps);
+                this.sym.xdot = mysubs(this.sym.xdot,this.sym.k,this.strsym.ks);
+                this.strsym.xdots = 1;
+                
                 if(strcmp(this.wtype,'iw'))
                     if(size(this.sym.xdot,2)>size(this.sym.xdot,1))
                         this.sym.xdot = -transpose(this.sym.M*this.strsym.dxs)+this.sym.xdot;
@@ -48,9 +163,25 @@ function this = getFun(this,HTable,funstr)
             case 'J'
                 if(strcmp(this.wtype,'iw'))
                     syms cj
-                    this.sym.J = this.sym.dfdx - cj*this.sym.M;
+                    this.sym.J = this.sym.dfdx - cj*this.sym.M; 
+                    
+                    idx = find(double(this.sym.J~=0));
+                    Js = cell(length(idx),1);
+                    for iJ = 1:length(idx)
+                        Js{iJ} = sprintf('tmp_J[%i]',iJ);
+                    end
+                    this.strsym.Js = sym(zeros(nx,nx));
+                    this.strsym.Js(idx) = sym(Js);
                 else
                     this.sym.J = jacobian(this.sym.xdot,this.strsym.xs);
+
+                    idx = find(double(this.sym.J~=0));
+                    Js = cell(length(idx),1);
+                    for iJ = 1:length(idx)
+                        Js{iJ} = sprintf('tmp_J->data[%i]',iJ-1);
+                    end
+                    this.strsym.J = sym(zeros(nx,nx));
+                    this.strsym.J(idx) = sym(Js);
                 end
                 
             case 'JB'
@@ -58,6 +189,11 @@ function this = getFun(this,HTable,funstr)
                 
             case 'dxdotdp'
                 this.sym.dxdotdp=jacobian(this.sym.xdot,this.strsym.ps);
+                dxdotdps = cell(nx,1);
+                for ix = 1:nx
+                        dxdotdps{ix} = sprintf('tmp_dxdotdp[%i+ip*nx]',ix-1);
+                end
+                this.strsym.dxdotdp = sym(dxdotdps);
                 
             case 'sx0'
                 this.sym.sx0=jacobian(this.sym.x0,this.strsym.ps);
@@ -69,7 +205,8 @@ function this = getFun(this,HTable,funstr)
                 if(strcmp(this.wtype,'iw'))
                     this.sym.sxdot=this.sym.dfdx*this.strsym.sx-this.sym.M*this.strsym.sdx+this.sym.dxdotdp;
                 else
-                    this.sym.sxdot=this.sym.J*this.strsym.sx+this.sym.dxdotdp;
+                    this.sym.sxdot=this.strsym.J*this.strsym.sx(:,1)+this.strsym.dxdotdp;
+                    this.sym.esxdot=this.sym.J*this.strsym.sx+this.sym.dxdotdp; % explicit version for discontinuities
                 end
                 
             case 'dydx'
@@ -84,21 +221,21 @@ function this = getFun(this,HTable,funstr)
                 % events
             case 'drootdx'
                 if(this.nxtrue > 0)
-                    this.sym.drootdx = jacobian(this.sym.root,this.strsym.xs(1:this.nxtrue));
+                    this.sym.drootdx = jacobian(this.sym.rfun,this.strsym.xs(1:this.nxtrue));
                 else
-                    this.sym.drootdx=jacobian(this.sym.root,this.strsym.xs);
+                    this.sym.drootdx=jacobian(this.sym.rfun,this.strsym.xs);
                 end
                 
             case 'drootdt'
                 if(this.nxtrue > 0)
-                    this.sym.drootdt = diff(this.sym.root,sym('t')) ...
+                    this.sym.drootdt = diff(this.sym.rfun,sym('t')) ...
                         + this.sym.drootdx*this.sym.xdot(1:this.nxtrue);
                 else
-                    this.sym.drootdt = diff(this.sym.root,sym('t')) + this.sym.drootdx*this.sym.xdot;
+                    this.sym.drootdt = diff(this.sym.rfun,sym('t')) + this.sym.drootdx*this.sym.xdot;
                 end
                 
             case 'drootpdp'
-                this.sym.drootpdp = jacobian(this.sym.root,this.strsym.ps);
+                this.sym.drootpdp = jacobian(this.sym.rfun,this.strsym.ps);
                 
             case 'drootdp'
                 if(this.nxtrue > 0)
@@ -153,7 +290,7 @@ function this = getFun(this,HTable,funstr)
                 this.sym.ddrootdxdx = sym(zeros(nr,this.nxtrue,this.nxtrue));
                 if(this.nxtrue>0)
                     for ir = 1:nr
-                        this.sym.ddrootdxdx(ir,:,:) = hessian(this.sym.root(ir),this.strsym.xs(1:this.nxtrue));
+                        this.sym.ddrootdxdx(ir,:,:) = hessian(this.sym.rfun(ir),this.strsym.xs(1:this.nxtrue));
                     end
                 end
                 
@@ -174,7 +311,7 @@ function this = getFun(this,HTable,funstr)
                     this.sym.ddrootdtdt = diff(this.sym.drootdt,sym('t')) ...
                         + this.sym.ddrootdxdt*this.sym.xdot(1:this.nxtrue);
                 else
-                    this.sym.ddrootdtdt = sym(zeros(size(this.sym.root)));
+                    this.sym.ddrootdtdt = sym(zeros(size(this.sym.rfun)));
                 end
                 
             case 'ddxdtdp'
@@ -258,9 +395,21 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'Jv'
+                vs = cell(nx,1);
+                for j=1:nx
+                    
+                    vs{j} = sprintf('v[%i]',j-1);
+                end
+                this.strsym.vs = sym(vs);
                 this.sym.Jv = this.sym.J*this.strsym.vs;
                 
             case 'JvB'
+                vs = cell(nx,1);
+                for j=1:nx
+                    
+                    vs{j} = sprintf('v[%i]',j-1);
+                end
+                this.strsym.vs = sym(vs);
                 this.sym.JvB = -transpose(this.sym.J)*this.strsym.vs;
                 
             case 'xBdot'
@@ -272,7 +421,8 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'qBdot'
-                this.sym.qBdot = -transpose(this.strsym.xBs)*this.sym.dxdotdp;
+                this.sym.qBdot = -transpose(this.strsym.xBs)*this.strsym.dxdotdp;
+                this.sym.eqBdot = -transpose(this.strsym.xBs)*this.sym.dxdotdp;
                 
             case 'dsigma_ydp'
                 this.sym.dsigma_ydp = jacobian(this.sym.sigma_y,this.strsym.ps);
@@ -478,7 +628,7 @@ function this = getFun(this,HTable,funstr)
                 if(ndisc>0)
                     for ip = 1:np
                         summand_ignore = [];
-                        tmp_str_d = char(this.sym.qBdot(ip));
+                        tmp_str_d = char(this.sym.eqBdot(ip));
                         idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
                         if(~isempty(idx_start_d))
                             for iocc_d = 1:length(idx_start_d)
@@ -512,10 +662,10 @@ function this = getFun(this,HTable,funstr)
                                 % find the corresponding discontinuity
                                 for idisc = 1:ndisc;
                                     if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                        if(length(children(this.sym.qBdot(ip)+foo))==2) % if the term is not a sum
-                                            summands = this.sym.qBdot(ip);
+                                        if(length(children(this.sym.eqBdot(ip)+foo))==2) % if the term is not a sum
+                                            summands = this.sym.eqBdot(ip);
                                         else
-                                            summands = children(this.sym.qBdot(ip));
+                                            summands = children(this.sym.eqBdot(ip));
                                         end
                                         for is = 1:length(summands)
                                             if(isempty(find(is==summand_ignore,1))) % check if we already added that term
@@ -546,12 +696,12 @@ function this = getFun(this,HTable,funstr)
                                             end
                                         end
                                     else
-                                        this.sym.if(ip,idisc) = this.sym.qBdot(ip);
+                                        this.sym.if(ip,idisc) = this.sym.eqBdot(ip);
                                     end
                                 end
                             end
                         else
-                            this.sym.if(ip,:) = repmat(this.sym.qBdot(ip),[1,ndisc]);
+                            this.sym.if(ip,:) = repmat(this.sym.eqBdot(ip),[1,ndisc]);
                         end
                     end
                     % compute ideltadisc
@@ -776,86 +926,92 @@ function this = getFun(this,HTable,funstr)
                 
                 if(ndisc>0)
                     for ix = 1:nx
-                        for ip = 1:np
-                            tmp_str_d = char(this.sym.sxdot(ix,ip));
-                            idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                            summand_ignore = [];
-                            
-                            if(~isempty(idx_start_d))
-                                for iocc_d = 1:length(idx_start_d)
-                                    brl = 1; % init bracket level
-                                    str_idx_d = idx_start_d(iocc_d); % init string index
-                                    % this code should be improved at some point
-                                    while brl >= 1 % break as soon as initial bracket is closed
-                                        str_idx_d = str_idx_d + 1;
-                                        if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                            brl = brl + 1;
-                                        end
-                                        if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                            brl = brl - 1;
-                                        end
-                                    end
-                                    idx_end_d = str_idx_d;
-                                    arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                    if(strfind(arg_d,',')) % higher order derivatives
-                                        if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                            arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                        elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                            arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                        end
-                                    end
-                                    str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                    dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
-                                    % find the corresponding discontinuity
-                                    % xdot_i = f_i(x,t) + v_i*delta(t-t0) +
-                                    % w_i*delta(1)(t-t0) + z_i*delta(t-t0);
-                                    for idisc = 1:ndisc;
-                                        if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                            if(length(children(this.sym.sxdot(ix,ip)+foo))==2) % if the term is not a sum
-                                                summands = this.sym.sxdot(ix,ip);
-                                            else
-                                                summands = children(this.sym.sxdot(ix,ip));
+                        tmp_str_d = char(this.sym.xdot(ix));% do some preliminary filtering
+                        idx_start_d = [strfind(tmp_str_d,'heaviside') + 9,strfind(tmp_str_d,'dirac') + 5];
+                        if(~isempty(idx_start_d))
+                            for ip = 1:np
+                                tmp_str_d = char(this.sym.esxdot(ix,ip));
+                                idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
+                                summand_ignore = [];
+                                
+                                if(~isempty(idx_start_d))
+                                    for iocc_d = 1:length(idx_start_d)
+                                        brl = 1; % init bracket level
+                                        str_idx_d = idx_start_d(iocc_d); % init string index
+                                        % this code should be improved at some point
+                                        while brl >= 1 % break as soon as initial bracket is closed
+                                            str_idx_d = str_idx_d + 1;
+                                            if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
+                                                brl = brl + 1;
                                             end
-                                            for is = 1:length(summands)
-                                                if(isempty(find(is==summand_ignore,1))) % check if we already added that term
-                                                    str_summand = char(summands(is));
-                                                    if(strfind(str_summand,str_arg_d)) % v_i
-                                                        this.sym.sv(ix,ip,idisc) = this.sym.sv(ix,ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                        this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                        this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                        this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                        this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                            + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                        summand_ignore = [summand_ignore is];
-                                                    else % f
-                                                        this.sym.sf(ix,ip,idisc) = this.sym.sf(ix,ip,idisc) + summands(is);
-                                                        summand_ignore = [summand_ignore is];
+                                            if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
+                                                brl = brl - 1;
+                                            end
+                                        end
+                                        idx_end_d = str_idx_d;
+                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
+                                        if(strfind(arg_d,',')) % higher order derivatives
+                                            if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
+                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
+                                            elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
+                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
+                                            end
+                                        end
+                                        str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
+                                        dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
+                                        % find the corresponding discontinuity
+                                        % xdot_i = f_i(x,t) + v_i*delta(t-t0) +
+                                        % w_i*delta(1)(t-t0) + z_i*delta(t-t0);
+                                        for idisc = 1:ndisc;
+                                            if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
+                                                if(length(children(this.sym.esxdot(ix,ip)+foo))==2) % if the term is not a sum
+                                                    summands = this.sym.esxdot(ix,ip);
+                                                else
+                                                    summands = children(this.sym.esxdot(ix,ip));
+                                                end
+                                                for is = 1:length(summands)
+                                                    if(isempty(find(is==summand_ignore,1))) % check if we already added that term
+                                                        str_summand = char(summands(is));
+                                                        if(strfind(str_summand,str_arg_d)) % v_i
+                                                            this.sym.sv(ix,ip,idisc) = this.sym.sv(ix,ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_d1)) % w_i
+                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_1d)) % w_i
+                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_d2)) % z_i
+                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        elseif(strfind(str_summand,str_arg_2d)) % z_i
+                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
+                                                                + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
+                                                            summand_ignore = [summand_ignore is];
+                                                        else % f
+                                                            this.sym.sf(ix,ip,idisc) = this.sym.sf(ix,ip,idisc) + summands(is);
+                                                            summand_ignore = [summand_ignore is];
+                                                        end
                                                     end
                                                 end
+                                            else
+                                                this.sym.sf(ix,ip,idisc) = this.sym.esxdot(ix,ip);
                                             end
-                                        else
-                                            this.sym.sf(ix,ip,idisc) = this.sym.sxdot(ix,ip);
                                         end
                                     end
+                                else
+                                    this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
                                 end
-                            else
-                                this.sym.sf(ix,ip,:) = repmat(this.sym.sxdot(ix,ip),[1,1,ndisc]);
                             end
+                        else
+                            this.sym.sf(ix,:,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
                         end
                     end
                     % compute sdeltadisc
@@ -877,7 +1033,7 @@ function this = getFun(this,HTable,funstr)
                                         + jacobian(this.sym.sf(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sz(:,ip,idisc) ...
                                         + this.sym.sw(:,ip,idisc) ...
                                         - diff(this.sym.sz(:,ip,idisc),'t') - jacobian(this.sym.sz(:,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sxdot(:,ip);
+                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
                                 else
                                     N = jacobian(this.sym.sf(:,ip,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
                                         + this.sym.sw(:,ip,idisc);
@@ -887,7 +1043,7 @@ function this = getFun(this,HTable,funstr)
                                     N = + jacobian(this.sym.sf(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sz(:,ip,idisc) ...
                                         + this.sym.sw(:,ip,idisc) ...
                                         - diff(this.sym.sz(:,ip,idisc),'t') - jacobian(this.sym.sz(:,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sxdot(:,ip);
+                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
                                 else
                                     N = this.sym.sw(:,ip,idisc);
                                 end
@@ -905,11 +1061,11 @@ function this = getFun(this,HTable,funstr)
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
                                         + diff(this.sym.sz(ix,ip,idisc),'t',2) ...
                                         + diff(dszdx*this.sym.xdot,'t') ...
-                                        + diff(dszdsxdot*this.sym.sxdot(:,ip),'t') ...
+                                        + diff(dszdsxdot*this.sym.esxdot(:,ip),'t') ...
                                         + jacobian(dszdx*this.sym.xdot,this.strsym.xs)*this.sym.xdot ...
-                                        + jacobian(dszdx*this.sym.xdot,this.strsym.sx(:,ip))*this.sym.sxdot(:,ip) ...
-                                        + jacobian(dszdsxdot*this.sym.sxdot(:,ip),this.strsym.xs)*this.sym.xdot ...
-                                        + jacobian(dszdsxdot*this.sym.sxdot(:,ip),this.strsym.sx(:,ip))*this.sym.sxdot(:,ip);
+                                        + jacobian(dszdx*this.sym.xdot,this.strsym.sx(:,ip))*this.sym.esxdot(:,ip) ...
+                                        + jacobian(dszdsxdot*this.sym.esxdot(:,ip),this.strsym.xs)*this.sym.xdot ...
+                                        + jacobian(dszdsxdot*this.sym.esxdot(:,ip),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
                                 end
                                 
                                 if(this.sym.sv(ix,ip,idisc)~=0)
@@ -920,7 +1076,7 @@ function this = getFun(this,HTable,funstr)
                                 if(this.sym.sw(ix,ip,idisc)~=0)
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
                                         - diff(this.sym.sw(ix,ip,idisc),'t') - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.sxdot(:,ip);
+                                        - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
                                     
                                 end
                                 
@@ -948,9 +1104,16 @@ function this = getFun(this,HTable,funstr)
                     if(isempty(this.sym.root));
                         this.sym.root = this.sym.rdisc;
                     else
-                        this.sym.root = [this.sym.root;this.sym.rdisc];
+                        this.sym.root = [this.sym.rfun;this.sym.rdisc];
                     end
                 end
+                
+            case 'rfun'
+                this.sym.rfun = mysubs(this.sym.rfun,this.sym.p,this.strsym.ps);
+                this.sym.rfun = mysubs(this.sym.rfun,this.sym.k,this.strsym.ks);
+                this.sym.rfun = mysubs(this.sym.rfun,this.sym.x,this.strsym.xs);
+                this.strsym.rfuns = 1;
+                
             otherwise
         end
         this.fun.(funstr) = 1;
@@ -958,4 +1121,26 @@ function this = getFun(this,HTable,funstr)
         this.fun.(funstr) = 0;
     end
     
+end
+
+function out = mysubs(in, old, new)
+    % mysubs is a wrapper for ther subs matlab function
+    %
+    % Parameters:
+    %  in: symbolic expression in which to replace @type symbolic
+    %  old: expression to be replaced @type symbolic
+    %  new: replacement expression @type symbolic
+    %
+    % Return values:
+    %  out: symbolic expression with replacement @type symbolic
+    if(~isnumeric(in) && ~isempty(old) && ~isempty(symvar(in)))
+        matVer = ver('MATLAB');
+        if(str2double(matVer.Version)>=8.1)
+            out = subs(in, old(:), new(:));
+        else
+            out = subs(in, old(:), new(:), 0);
+        end
+    else
+        out = in;
+    end
 end
