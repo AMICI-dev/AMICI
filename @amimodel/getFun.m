@@ -26,10 +26,14 @@ function this = getFun(this,HTable,funstr)
             end
         end
     else
-        if(~isfield(this.strsym,[deps{1} 's']))
-            cflag = 1;
+        if(~isempty(deps))
+            if(~isfield(this.strsym,[deps{1} 's']))
+                cflag = 1;
+            else
+                cflag = 0;
+            end
         else
-            cflag = 0;
+            cflag = 1;
         end
     end
     
@@ -139,6 +143,7 @@ function this = getFun(this,HTable,funstr)
                 this.sym.xdot = mysubs(this.sym.xdot,this.sym.x,this.strsym.xs);
                 this.sym.xdot = mysubs(this.sym.xdot,this.sym.p,this.strsym.ps);
                 this.sym.xdot = mysubs(this.sym.xdot,this.sym.k,this.strsym.ks);
+                this.strsym.xdots = 1;
                 
                 if(strcmp(this.wtype,'iw'))
                     if(size(this.sym.xdot,2)>size(this.sym.xdot,1))
@@ -1005,6 +1010,8 @@ function this = getFun(this,HTable,funstr)
                                     this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
                                 end
                             end
+                        else
+                            this.sym.sf(ix,:,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
                         end
                     end
                     % compute sdeltadisc
