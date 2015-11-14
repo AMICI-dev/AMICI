@@ -206,28 +206,28 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'M','x','p','k'};
             
         case 'x'
-            deps = {'x'};
+            deps = {};
             
         case 'dx'
-            deps = {'dx'};
+            deps = {};
             
         case 'xB'
-            deps = {'xB'};
+            deps = {};
             
         case 'dxB'
-            deps = {'dxB'};
+            deps = {};
             
         case 'k'
-            deps = {'k'};
+            deps = {};
             
         case 'p'
-            deps = {'p'};
+            deps = {};
             
         case 'sx'
-            deps = {'sx'};
+            deps = {};
             
         case 'sdx'
-            deps = {'sdx'};
+            deps = {};
             
             
         otherwise
