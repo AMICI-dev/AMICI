@@ -182,21 +182,21 @@ function this = compileC(this)
         'cvodes_spgmr.o';
         'cvodes_sptfqmr.o';
         'cvodes_klu.o';
-        'idas.o'
-        'idas_sptfqmr.o'
-        'idas_spils.o'
-        'idas_spgmr.o'
-        'idas_spbcgs.o'
-        'idas_sparse.o'
-        'idas_klu.o'
-        'idas_io.o'
-        'idas_ic.o'
-        'idas_direct.o'
-        'idas_dense.o'
-        'idas_bbdpre.o'
-        'idas_band.o'
-        'idaa.o'
-        'idaa_io.o'
+        'idas.o';
+        'idas_sptfqmr.o';
+        'idas_spils.o';
+        'idas_spgmr.o';
+        'idas_spbcgs.o';
+        'idas_sparse.o';
+        'idas_klu.o';
+        'idas_io.o';
+        'idas_ic.o';
+        'idas_direct.o';
+        'idas_dense.o';
+        'idas_bbdpre.o';
+        'idas_band.o';
+        'idaa.o';
+        'idaa_io.o';
         'sundials_band.o';
         'sundials_dense.o';
         'sundials_sparse.o';
@@ -248,7 +248,7 @@ function this = compileC(this)
         'colamd.o';
         'btf_maxtrans.o';
         'btf_order.o';
-        'btf_strongcomp.o'
+        'btf_strongcomp.o';
         'SuiteSparse_config.o';
         };
     if(ispc)
@@ -350,7 +350,7 @@ function this = compileC(this)
         end
         if(recompile)
             fprintf([this.funs{j} ' | ']);
-            eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
+            eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' "' fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]) '" ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']),'w');
             fprintf(fid,hash);
             fclose(fid);

@@ -63,7 +63,7 @@
        c[n-1] and d[n-1] are set to continue the last segment
        past x[n-1].
 */
-int spline (int n, int end1, int end2,
+static int spline (int n, int end1, int end2,
             double slope1, double slope2,
             double x[], double y[],
             double b[], double c[], double d[])  
@@ -205,7 +205,7 @@ return 0;
 
 */
 
-double seval (int n, double u,
+static double seval (int n, double u,
               double x[], double y[],
               double b[], double c[], double d[])
 
@@ -261,7 +261,7 @@ return (w);
 
 */
 
-double deriv (int n, double u,
+static double deriv (int n, double u,
               double x[],
               double b[], double c[], double d[])
 {  /* begin function deriv() */
@@ -321,7 +321,7 @@ return (w);
 
 */
 
-double sinteg (int n, double u,
+static double sinteg (int n, double u,
               double x[], double y[],
               double b[], double c[], double d[])
 {  /* begin function sinteg() */

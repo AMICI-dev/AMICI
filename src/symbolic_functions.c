@@ -5,11 +5,9 @@
  * This file contains definitions of various symbolic functions which
  */
 
-#ifndef amici_symbolic_functions_c
-/** include guard */
-#define amici_symbolic_functions_c
 #include <math.h>
-#include <src/spline.c>
+#include <include/spline.h>
+
 #undef ts
 
 /*! bool return value true */
@@ -25,7 +23,7 @@
  * @return if(a >= 0) then 1 else 0 @type int
  *
  */
-int am_ge(double a, double b) {
+static int am_ge(double a, double b) {
     if (a >= b) {
         return(TRUE);
     } else {
@@ -42,7 +40,7 @@ int am_ge(double a, double b) {
  * @return 0
  *
  */
-int Dam_ge(int id, double a, double b) {
+static int Dam_ge(int id, double a, double b) {
     return(FALSE);
 }
 
@@ -54,7 +52,7 @@ int Dam_ge(int id, double a, double b) {
  * @return if(a > 0) then 1 else 0 @type int
  *
  */
-int am_gt(double a, double b) {
+static int am_gt(double a, double b) {
     if (a > b) {
         return(TRUE);
     } else {
@@ -71,7 +69,7 @@ int am_gt(double a, double b) {
  * @return 0
  *
  */
-int Dam_gt(int id, double a, double b) {
+static int Dam_gt(int id, double a, double b) {
     return(FALSE);
 }
 
@@ -83,7 +81,7 @@ int Dam_gt(int id, double a, double b) {
  * @return if(a <= 0) then 1 else 0 @type int
  *
  */
-int am_le(double a, double b) {
+static int am_le(double a, double b) {
     if (a <= b) {
         return(TRUE);
     } else {
@@ -100,7 +98,7 @@ int am_le(double a, double b) {
  * @return 0
  *
  */
-int Dam_le(int id, double a, double b) {
+static int Dam_le(int id, double a, double b) {
     return(FALSE);
 }
 
@@ -112,7 +110,7 @@ int Dam_le(int id, double a, double b) {
  * @return if(a < 0) then 1 else 0 @type int
  *
  */
-int am_lt(double a, double b) {
+static int am_lt(double a, double b) {
     if (a < b) {
         return(TRUE);
     } else {
@@ -129,7 +127,7 @@ int am_lt(double a, double b) {
  * @return 0
  *
  */
-int Dam_lt(int id, double a, double b) {
+static int Dam_lt(int id, double a, double b) {
     return(FALSE);
 }
 
@@ -142,7 +140,7 @@ int Dam_lt(int id, double a, double b) {
  * @return if(condition) then truepart else falsepart @type int
  *
  */
-double am_if(int condition, double truepart, double falsepart) {
+static double am_if(int condition, double truepart, double falsepart) {
     if(condition){
         return(truepart);
     }else{
@@ -163,7 +161,7 @@ double am_if(int condition, double truepart, double falsepart) {
  * @return id==3:  if(condition) then 0 else 1 @type double
  *
  */
-double Dam_if(int id, int condition, double truepart, double falsepart) {
+static double Dam_if(int id, int condition, double truepart, double falsepart) {
     switch (id) {
         case 1:
             return(0);
@@ -197,7 +195,7 @@ double Dam_if(int id, int condition, double truepart, double falsepart) {
  * @return if(a & b) then 1 else 0 @type int
  *
  */
-int am_and(int a, int b) {
+static int am_and(int a, int b) {
     if (a & b) {
         return(TRUE);
     } else {
@@ -214,7 +212,7 @@ int am_and(int a, int b) {
  * @return 0 @type double
  *
  */
-double Dam_and(int id,int a, int b) {
+static double Dam_and(int id,int a, int b) {
     return(0);
 }
 
@@ -226,7 +224,7 @@ double Dam_and(int id,int a, int b) {
  * @return if(a | b) then 1 else 0 @type int
  *
  */
-int am_or(int a, int b) {
+static int am_or(int a, int b) {
     if (a | b) {
         return(TRUE);
     } else {
@@ -243,7 +241,7 @@ int am_or(int a, int b) {
  * @return 0 @type double
  *
  */
-double Dam_or(int id,int a, int b) {
+static double Dam_or(int id,int a, int b) {
     return(0);
 }
 
@@ -255,7 +253,7 @@ double Dam_or(int id,int a, int b) {
  * @return if(a < b) then a else b @type double
  *
  */
-double am_min(double a, double b) {
+static double am_min(double a, double b) {
     if (a < b) {
         return(a);
     } else {
@@ -273,7 +271,7 @@ double am_min(double a, double b) {
  * @return id == 2:  if(a < b) then 0 else 1 @type double
  *
  */
-double Dam_min(int id,double a, double b) {
+static double Dam_min(int id,double a, double b) {
     if (id == 1) {
         if (a < b) {
             return(1);
@@ -297,7 +295,7 @@ double Dam_min(int id,double a, double b) {
  * @return if(a > b) then a else b @type double
  *
  */
-double am_max(double a, double b) {
+static double am_max(double a, double b) {
     if (a > b) {
         return(a);
     } else {
@@ -315,7 +313,7 @@ double am_max(double a, double b) {
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
  */
-double Dam_max(int id,double a, double b) {
+static double Dam_max(int id,double a, double b) {
     if (id == 1) {
         if (a > b) {
             return(1);
@@ -338,7 +336,7 @@ double Dam_max(int id,double a, double b) {
  * @return if(x>0) then 1 else 0
  *
  */
-double heaviside(double x) {
+static double heaviside(double x) {
     if (x <= 0) {
         return(0);
     } else {
@@ -353,7 +351,7 @@ double heaviside(double x) {
  * @return if(x==0) then 1 else 0
  *
  */
-double dirac(double x) {
+static double dirac(double x) {
     if (x == 0) {
         return(1);
     } else {
@@ -369,7 +367,7 @@ double dirac(double x) {
  * @return 0 @type double
  *
  */
-double Ddirac(int id, double x) {
+static double Ddirac(int id, double x) {
     if (x == 0) {
         return(0);
     } else {
@@ -393,7 +391,7 @@ double Ddirac(int id, double x) {
  * @return spline(t)
  *
  */
-double spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
+static double spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
     double uout;
     
     double ts[3];
@@ -434,7 +432,7 @@ double spline3(double t, double t1, double p1, double t2, double p2, double t3, 
  * @return spline(t)
  *
  */
-double spline_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
+static double spline_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
     int is;
     double uout;
     
@@ -482,7 +480,7 @@ double spline_pos3(double t, double t1, double p1, double t2, double p2, double 
  * @return spline(t)
  *
  */
-double spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
+static double spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
     double uout;
     
     double ts[4];
@@ -526,7 +524,7 @@ double spline4(double t, double t1, double p1, double t2, double p2, double t3, 
  * @return spline(t)
  *
  */
-double spline_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
+static double spline_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
     int is;
     double uout;
     
@@ -578,7 +576,7 @@ double spline_pos4(double t, double t1, double p1, double t2, double p2, double 
  * @return spline(t)
  *
  */
-double spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
+static double spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
     double uout;
     
     double ts[5];
@@ -626,7 +624,7 @@ double spline5(double t, double t1, double p1, double t2, double p2, double t3, 
  * @return spline(t)
  *
  */
-double spline_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
+static double spline_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
     int is;
     double uout;
     
@@ -690,7 +688,7 @@ double spline_pos5(double t, double t1, double p1, double t2, double p2, double 
  * @return spline(t)
  *
  */
-double spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
+static double spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
     double uout;
     
     double ts[10];
@@ -758,7 +756,7 @@ double spline10(double t, double t1, double p1, double t2, double p2, double t3,
  * @return spline(t)
  *
  */
-double spline_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
+static double spline_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
     int is;
     double uout;
     
@@ -819,7 +817,7 @@ double spline_pos10(double t, double t1, double p1, double t2, double p2, double
  * @return dspline(t)dp(id)
  *
  */
-double Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
+static double Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
     double uout;
     
     double ts[3];
@@ -864,7 +862,7 @@ double Dspline3(int id, double t, double t1, double p1, double t2, double p2, do
  * @return dspline(t)dp(id)
  *
  */
-double Dspline_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
+static double Dspline_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt) {
     
     double uout;
     double uspline_pos3;
@@ -907,7 +905,7 @@ double Dspline_pos3(int id, double t, double t1, double p1, double t2, double p2
  * @return dspline(t)dp(id)
  *
  */
-double Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
+static double Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
     double uout;
     
     double ts[4];
@@ -956,7 +954,7 @@ double Dspline4(int id, double t, double t1, double p1, double t2, double p2, do
  * @return dspline(t)dp(id)
  *
  */
-double Dspline_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
+static double Dspline_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt) {
     
     double uout;
     double uspline_pos4;
@@ -1001,7 +999,7 @@ double Dspline_pos4(int id, double t, double t1, double p1, double t2, double p2
  * @return dspline(t)dp(id)
  *
  */
-double Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
+static double Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
     double uout;
     
     double ts[5];
@@ -1054,7 +1052,7 @@ double Dspline5(int id, double t, double t1, double p1, double t2, double p2, do
  * @return dspline(t)dp(id)
  *
  */
-double Dspline_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
+static double Dspline_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt) {
     
     double uout;
     double uspline_pos5;
@@ -1110,7 +1108,7 @@ double Dspline_pos5(int id, double t, double t1, double p1, double t2, double p2
  * @return dspline(t)dp(id)
  *
  */
-double Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
+static double Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
     double uout;
     
     double ts[10];
@@ -1183,7 +1181,7 @@ double Dspline10(int id, double t, double t1, double p1, double t2, double p2, d
  * @return dspline(t)dp(id)
  *
  */
-double Dspline_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
+static double Dspline_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt) {
     
     double uout;
     double uspline_pos10;
@@ -1212,4 +1210,3 @@ double Dspline_pos10(int id, double t, double t1, double p1, double t2, double p
     
     return(uout);
 }
-#endif /* amici_symbolic_functions_c */
