@@ -1,6 +1,8 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
 #include <math.h>
+#include <include/spline.h>
+#include <src/symbolic_functions.c>
 
 /* ge */
 
