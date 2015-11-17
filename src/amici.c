@@ -3,9 +3,6 @@
  * @brief  core routines for integration
  */
 
-#ifndef amici_c
-/** include guard */
-#define amici_c
 /** return value indicating successful execution */
 #define AMI_SUCCESS               0
 
@@ -1069,4 +1066,3 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
     numrhsevalsSdata[it] = (realtype)numrhsevals;
     
 }
-#endif /* amici_c */
