@@ -75,16 +75,16 @@
  
  @code
  xdot(1) = [ const1 - param1*state1 ];
- xdot(2) = [ +param2*x(1) + dirac(t-param3) - const2*x(2) ];
- xdot(3) = [ param4*x(2) ];
+ xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ xdot(3) = [ param4*state2 ];
  @endcode
  
  or
  
  @code
  f(1) = [ const1 - param1*state1 ];
- f(2) = [ +param2*x(1) + dirac(t-param3) - const2*x(2) ];
- f(3) = [ 2*x(2) ];
+ f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ f(3) = [ param4*state2 ];
  @endcode
  
  The specification of f or xdot may depend on @ref states, @ref parameters and @ref constants.
