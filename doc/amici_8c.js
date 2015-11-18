@@ -1,6 +1,5 @@
 var amici_8c =
 [
-    [ "amici_c", "amici_8c.html#ac6122ebe2083e778af689c6d3ba64aaf", null ],
     [ "AMI_SUCCESS", "amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545", null ],
     [ "setupUserData", "amici_8c.html#aaa3b0319b9104865ac61df2ea87b8a13", null ],
     [ "setupAMI", "amici_8c.html#a1f59a60d757981b9a2196bc6b3491027", null ],

@@ -115,13 +115,22 @@ $(document).ready(function(){initNavTree('symbolic__functions_8c.html','');});
 <p>definition of symbolic functions  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;math.h&gt;</code><br />
-<code>#include &lt;<a class="el" href="spline_8c_source.html">src/spline.c</a>&gt;</code><br />
+<code>#include &lt;include/spline.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for symbolic_functions.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="symbolic__functions_8c__incl.png" border="0" usemap="#src_2symbolic__functions_8c" alt=""/></div>
 <map name="src_2symbolic__functions_8c" id="src_2symbolic__functions_8c">
-<area shape="rect" id="node3" href="spline_8c.html" title="definition of spline functions " alt="" coords="94,81,182,108"/>
+<area shape="rect" id="node3" href="spline_8h_source.html" title="include/spline.h" alt="" coords="78,81,192,108"/>
+<area shape="rect" id="node4" href="spline_8c.html" title="definition of spline functions " alt="" coords="96,156,184,183"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><img src="symbolic__functions_8c__dep__incl.png" border="0" usemap="#src_2symbolic__functions_8cdep" alt=""/></div>
+<map name="src_2symbolic__functions_8cdep" id="src_2symbolic__functions_8cdep">
+<area shape="rect" id="node2" href="symbolic__functions_8h_source.html" title="include/symbolic_functions.h" alt="" coords="5,81,196,108"/>
 </map>
 </div>
 </div>
@@ -129,8 +138,6 @@ Include dependency graph for symbolic_functions.c:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a2002b0c47eeb3ce5718c79f15f694948"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a2002b0c47eeb3ce5718c79f15f694948">amici_symbolic_functions_c</a></td></tr>
-<tr class="separator:a2002b0c47eeb3ce5718c79f15f694948"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8cecfc5c5c054d2875c03e77b7be15d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aa8cecfc5c5c054d2875c03e77b7be15d">TRUE</a>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:aa8cecfc5c5c054d2875c03e77b7be15d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa93f0eb578d23995850d61f7d61c55c1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aa93f0eb578d23995850d61f7d61c55c1">FALSE</a>&#160;&#160;&#160;0</td></tr>
@@ -138,101 +145,86 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a86daaa02a6262e74d6ebd252e9ebcd08"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a86daaa02a6262e74d6ebd252e9ebcd08">am_ge</a> (double a, double b)</td></tr>
-<tr class="separator:a86daaa02a6262e74d6ebd252e9ebcd08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3eef5e2f915069da5e1c683371bb74db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a3eef5e2f915069da5e1c683371bb74db">Dam_ge</a> (int id, double a, double b)</td></tr>
-<tr class="separator:a3eef5e2f915069da5e1c683371bb74db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d7cdbf88da36d94dbb4c649b932eb20"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a1d7cdbf88da36d94dbb4c649b932eb20">am_gt</a> (double a, double b)</td></tr>
-<tr class="separator:a1d7cdbf88da36d94dbb4c649b932eb20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abafad4cc1fe4141f465d6d75d082fa2b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#abafad4cc1fe4141f465d6d75d082fa2b">Dam_gt</a> (int id, double a, double b)</td></tr>
-<tr class="separator:abafad4cc1fe4141f465d6d75d082fa2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa1871c2b651b7561002162939b4b4be"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aaa1871c2b651b7561002162939b4b4be">am_le</a> (double a, double b)</td></tr>
-<tr class="separator:aaa1871c2b651b7561002162939b4b4be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aedd2dccb7516c078ba3c0c5296a45588"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aedd2dccb7516c078ba3c0c5296a45588">Dam_le</a> (int id, double a, double b)</td></tr>
-<tr class="separator:aedd2dccb7516c078ba3c0c5296a45588"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa06d5784e2f4cc04cb790fdc229f8655"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aa06d5784e2f4cc04cb790fdc229f8655">am_lt</a> (double a, double b)</td></tr>
-<tr class="separator:aa06d5784e2f4cc04cb790fdc229f8655"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a154cb26411e2359b3faeb7aebba35118"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a154cb26411e2359b3faeb7aebba35118">Dam_lt</a> (int id, double a, double b)</td></tr>
-<tr class="separator:a154cb26411e2359b3faeb7aebba35118"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5ec2128d9d72cdfef2211d4598122d5"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#af5ec2128d9d72cdfef2211d4598122d5">am_if</a> (int condition, double truepart, double falsepart)</td></tr>
-<tr class="separator:af5ec2128d9d72cdfef2211d4598122d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03efbb1edaad1fe57c6908db1737429b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a03efbb1edaad1fe57c6908db1737429b">Dam_if</a> (int id, int condition, double truepart, double falsepart)</td></tr>
-<tr class="separator:a03efbb1edaad1fe57c6908db1737429b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae10cfe036ec9d581d7d78dd5d47e53ff"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ae10cfe036ec9d581d7d78dd5d47e53ff">am_and</a> (int a, int b)</td></tr>
-<tr class="separator:ae10cfe036ec9d581d7d78dd5d47e53ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed1e207eb2478534210004f3fd877ecb"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aed1e207eb2478534210004f3fd877ecb">Dam_and</a> (int id, int a, int b)</td></tr>
-<tr class="separator:aed1e207eb2478534210004f3fd877ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accfa1cc8f7519ff56bb00335c4a2589a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#accfa1cc8f7519ff56bb00335c4a2589a">am_or</a> (int a, int b)</td></tr>
-<tr class="separator:accfa1cc8f7519ff56bb00335c4a2589a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66366768996cc70768580811dfca7c86"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a66366768996cc70768580811dfca7c86">Dam_or</a> (int id, int a, int b)</td></tr>
-<tr class="separator:a66366768996cc70768580811dfca7c86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78aac4f87c32224176d7d063046c270f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a78aac4f87c32224176d7d063046c270f">am_min</a> (double a, double b)</td></tr>
-<tr class="separator:a78aac4f87c32224176d7d063046c270f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b372245882cfe08b809c82a1487efec"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a4b372245882cfe08b809c82a1487efec">Dam_min</a> (int id, double a, double b)</td></tr>
-<tr class="separator:a4b372245882cfe08b809c82a1487efec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7c1bd232d6c32537fd72481926c6d16"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#af7c1bd232d6c32537fd72481926c6d16">am_max</a> (double a, double b)</td></tr>
-<tr class="separator:af7c1bd232d6c32537fd72481926c6d16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab737f3f75aad0dffa94e572bf095773e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ab737f3f75aad0dffa94e572bf095773e">Dam_max</a> (int id, double a, double b)</td></tr>
-<tr class="separator:ab737f3f75aad0dffa94e572bf095773e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a609b523b00064e82442c1f1519f40bdb"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a609b523b00064e82442c1f1519f40bdb">heaviside</a> (double x)</td></tr>
-<tr class="separator:a609b523b00064e82442c1f1519f40bdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30a33546875b9dd1a63c29312b316f7e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a30a33546875b9dd1a63c29312b316f7e">dirac</a> (double x)</td></tr>
-<tr class="separator:a30a33546875b9dd1a63c29312b316f7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8ed2c7868f7fee34f1eecc02233f552"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ad8ed2c7868f7fee34f1eecc02233f552">Ddirac</a> (int id, double x)</td></tr>
-<tr class="separator:ad8ed2c7868f7fee34f1eecc02233f552"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6e6e221b6ed1a5b42c3625516ae62fa"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aa6e6e221b6ed1a5b42c3625516ae62fa">spline3</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
-<tr class="separator:aa6e6e221b6ed1a5b42c3625516ae62fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34a7ee564e91dab79ce4fe87ef81e30f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a34a7ee564e91dab79ce4fe87ef81e30f">spline_pos3</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
-<tr class="separator:a34a7ee564e91dab79ce4fe87ef81e30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95ad6634f570763a8eddc88bb2feeeb1"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a95ad6634f570763a8eddc88bb2feeeb1">spline4</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
-<tr class="separator:a95ad6634f570763a8eddc88bb2feeeb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a866f6967f6b464c701096b7b3b83ae93"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a866f6967f6b464c701096b7b3b83ae93">spline_pos4</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
-<tr class="separator:a866f6967f6b464c701096b7b3b83ae93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa04c18aa6bdc6d770a935a86b4b0e73"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#afa04c18aa6bdc6d770a935a86b4b0e73">spline5</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
-<tr class="separator:afa04c18aa6bdc6d770a935a86b4b0e73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41ebd58374fbdc9376a55d227807f98b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a41ebd58374fbdc9376a55d227807f98b">spline_pos5</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
-<tr class="separator:a41ebd58374fbdc9376a55d227807f98b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f89e150cf66077936f0a5b041a1655e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a6f89e150cf66077936f0a5b041a1655e">spline10</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
-<tr class="separator:a6f89e150cf66077936f0a5b041a1655e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bac14600e5a7b75bc4ca0ff1a64ceaf"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a7bac14600e5a7b75bc4ca0ff1a64ceaf">spline_pos10</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
-<tr class="separator:a7bac14600e5a7b75bc4ca0ff1a64ceaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a883efcebfcb7e66a6e1f76da7aed4b7e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a883efcebfcb7e66a6e1f76da7aed4b7e">Dspline3</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
-<tr class="separator:a883efcebfcb7e66a6e1f76da7aed4b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e6d82835b091ee76ea447f0b0fd8a61"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a6e6d82835b091ee76ea447f0b0fd8a61">Dspline_pos3</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
-<tr class="separator:a6e6d82835b091ee76ea447f0b0fd8a61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7161e35213ed166ccc1804395d697f3d"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a7161e35213ed166ccc1804395d697f3d">Dspline4</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
-<tr class="separator:a7161e35213ed166ccc1804395d697f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fe37906f0c082b37c3d23ea18dbc37a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a1fe37906f0c082b37c3d23ea18dbc37a">Dspline_pos4</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
-<tr class="separator:a1fe37906f0c082b37c3d23ea18dbc37a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95befe1853ab7bf8ce801c5eee3d9d29"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a95befe1853ab7bf8ce801c5eee3d9d29">Dspline5</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
-<tr class="separator:a95befe1853ab7bf8ce801c5eee3d9d29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0710e8c25f3d878c56d03404d51d934"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aa0710e8c25f3d878c56d03404d51d934">Dspline_pos5</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
-<tr class="separator:aa0710e8c25f3d878c56d03404d51d934"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6a35d8f267a9c9dbbf5c6afc7705e85"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ac6a35d8f267a9c9dbbf5c6afc7705e85">Dspline10</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
-<tr class="separator:ac6a35d8f267a9c9dbbf5c6afc7705e85"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afae48263cbf04b2399bdc684727b6609"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#afae48263cbf04b2399bdc684727b6609">Dspline_pos10</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
-<tr class="separator:afae48263cbf04b2399bdc684727b6609"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a416970620771a36bed91a7010d7c354a"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a416970620771a36bed91a7010d7c354a">am_ge</a> (double a, double b)</td></tr>
+<tr class="separator:a416970620771a36bed91a7010d7c354a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76889cd2e1fe3a6005ed553a1608e289"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a76889cd2e1fe3a6005ed553a1608e289">Dam_ge</a> (int id, double a, double b)</td></tr>
+<tr class="separator:a76889cd2e1fe3a6005ed553a1608e289"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b6c469661d55fb8e0eaa582c79d8fee"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a2b6c469661d55fb8e0eaa582c79d8fee">am_gt</a> (double a, double b)</td></tr>
+<tr class="separator:a2b6c469661d55fb8e0eaa582c79d8fee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d989d003a1d9a9fa31e9dd9d3dccdf6"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a7d989d003a1d9a9fa31e9dd9d3dccdf6">Dam_gt</a> (int id, double a, double b)</td></tr>
+<tr class="separator:a7d989d003a1d9a9fa31e9dd9d3dccdf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44c61e895621ce85295d5c343e57bad8"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a44c61e895621ce85295d5c343e57bad8">am_le</a> (double a, double b)</td></tr>
+<tr class="separator:a44c61e895621ce85295d5c343e57bad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39ac4ffd072b6dcd21c52273d1d50af4"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a39ac4ffd072b6dcd21c52273d1d50af4">Dam_le</a> (int id, double a, double b)</td></tr>
+<tr class="separator:a39ac4ffd072b6dcd21c52273d1d50af4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9f1433f4d234e1b6bc9d45a33e07ea3"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ac9f1433f4d234e1b6bc9d45a33e07ea3">am_lt</a> (double a, double b)</td></tr>
+<tr class="separator:ac9f1433f4d234e1b6bc9d45a33e07ea3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4744c81e4b2cf2ccd624784dccfa1e60"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a4744c81e4b2cf2ccd624784dccfa1e60">Dam_lt</a> (int id, double a, double b)</td></tr>
+<tr class="separator:a4744c81e4b2cf2ccd624784dccfa1e60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba184e5c7e2c8afb0df0a03cba9d7d10"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aba184e5c7e2c8afb0df0a03cba9d7d10">am_if</a> (int condition, double truepart, double falsepart)</td></tr>
+<tr class="separator:aba184e5c7e2c8afb0df0a03cba9d7d10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaa0ba7aeaeeb254e5b347024cf58ec3"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#aeaa0ba7aeaeeb254e5b347024cf58ec3">Dam_if</a> (int id, int condition, double truepart, double falsepart)</td></tr>
+<tr class="separator:aeaa0ba7aeaeeb254e5b347024cf58ec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd84c9d657c25603d2b4483c52fff27d"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#abd84c9d657c25603d2b4483c52fff27d">am_and</a> (int a, int b)</td></tr>
+<tr class="separator:abd84c9d657c25603d2b4483c52fff27d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e57d2256dc064c22df97238ebfaf8dd"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a2e57d2256dc064c22df97238ebfaf8dd">Dam_and</a> (int id, int a, int b)</td></tr>
+<tr class="separator:a2e57d2256dc064c22df97238ebfaf8dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9504cc85fdd150b973feeee8bb702513"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a9504cc85fdd150b973feeee8bb702513">am_or</a> (int a, int b)</td></tr>
+<tr class="separator:a9504cc85fdd150b973feeee8bb702513"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d6b6e6facde6d147d36e583947292bd"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a6d6b6e6facde6d147d36e583947292bd">Dam_or</a> (int id, int a, int b)</td></tr>
+<tr class="separator:a6d6b6e6facde6d147d36e583947292bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3b9dc0b0e71095d2f5981de04b7c885"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ae3b9dc0b0e71095d2f5981de04b7c885">am_min</a> (double a, double b)</td></tr>
+<tr class="separator:ae3b9dc0b0e71095d2f5981de04b7c885"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0fc17e87d0f8593f2f98a0d7bb795e9"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ac0fc17e87d0f8593f2f98a0d7bb795e9">Dam_min</a> (int id, double a, double b)</td></tr>
+<tr class="separator:ac0fc17e87d0f8593f2f98a0d7bb795e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace1bc6a7a6979ae44dee3b7778a773cb"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ace1bc6a7a6979ae44dee3b7778a773cb">am_max</a> (double a, double b)</td></tr>
+<tr class="separator:ace1bc6a7a6979ae44dee3b7778a773cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a33e3a0a034cdd86eb780ddb80ce3cb"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a0a33e3a0a034cdd86eb780ddb80ce3cb">Dam_max</a> (int id, double a, double b)</td></tr>
+<tr class="separator:a0a33e3a0a034cdd86eb780ddb80ce3cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2588f876f0b91cb5f301c20724390799"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a2588f876f0b91cb5f301c20724390799">heaviside</a> (double x)</td></tr>
+<tr class="separator:a2588f876f0b91cb5f301c20724390799"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f096cac6ced6b3a2ec6c32f4f3651bd"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a9f096cac6ced6b3a2ec6c32f4f3651bd">dirac</a> (double x)</td></tr>
+<tr class="separator:a9f096cac6ced6b3a2ec6c32f4f3651bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6199dbaeed0d47ab67ba8da9e9ffc570"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a6199dbaeed0d47ab67ba8da9e9ffc570">Ddirac</a> (int id, double x)</td></tr>
+<tr class="separator:a6199dbaeed0d47ab67ba8da9e9ffc570"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af979880b391183ffe4f954d4f8b72229"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#af979880b391183ffe4f954d4f8b72229">spline3</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
+<tr class="separator:af979880b391183ffe4f954d4f8b72229"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada526b79025616265c040c133b1526d2"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ada526b79025616265c040c133b1526d2">spline_pos3</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
+<tr class="separator:ada526b79025616265c040c133b1526d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7067d60ae8ced98cdb98da954c0af41"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#ad7067d60ae8ced98cdb98da954c0af41">spline4</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
+<tr class="separator:ad7067d60ae8ced98cdb98da954c0af41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e7905bf54d6a32212bae5dc2b8c15e1"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a6e7905bf54d6a32212bae5dc2b8c15e1">spline_pos4</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
+<tr class="separator:a6e7905bf54d6a32212bae5dc2b8c15e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cd044210c329dd88bb7ff69bad3d024"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a9cd044210c329dd88bb7ff69bad3d024">spline5</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
+<tr class="separator:a9cd044210c329dd88bb7ff69bad3d024"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8758b5809518fc3c34c5564fb693a47"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#af8758b5809518fc3c34c5564fb693a47">spline_pos5</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
+<tr class="separator:af8758b5809518fc3c34c5564fb693a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1934626be4166d13e4d027f07f440b06"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a1934626be4166d13e4d027f07f440b06">spline10</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
+<tr class="separator:a1934626be4166d13e4d027f07f440b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76f58ea224a1a2d2aa742d9418a05fbc"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a76f58ea224a1a2d2aa742d9418a05fbc">spline_pos10</a> (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
+<tr class="separator:a76f58ea224a1a2d2aa742d9418a05fbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2399f365706b74fa78fd9ff7906ff909"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a2399f365706b74fa78fd9ff7906ff909">Dspline3</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
+<tr class="separator:a2399f365706b74fa78fd9ff7906ff909"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a381f25e4c7a60c643c8df1c132c483"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a8a381f25e4c7a60c643c8df1c132c483">Dspline_pos3</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)</td></tr>
+<tr class="separator:a8a381f25e4c7a60c643c8df1c132c483"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a504a06d04401217f51af719fae8662e3"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a504a06d04401217f51af719fae8662e3">Dspline4</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
+<tr class="separator:a504a06d04401217f51af719fae8662e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8440b8a58c3b7a45193dffaed0dc3043"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a8440b8a58c3b7a45193dffaed0dc3043">Dspline_pos4</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)</td></tr>
+<tr class="separator:a8440b8a58c3b7a45193dffaed0dc3043"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b1ac13ae08a38d7f716671779f9c35a"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a8b1ac13ae08a38d7f716671779f9c35a">Dspline5</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
+<tr class="separator:a8b1ac13ae08a38d7f716671779f9c35a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a031e8ddd09bad7e95e1d2bbdd2015412"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a031e8ddd09bad7e95e1d2bbdd2015412">Dspline_pos5</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)</td></tr>
+<tr class="separator:a031e8ddd09bad7e95e1d2bbdd2015412"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a6a923e481880d64aaf1c2b5e204945"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a4a6a923e481880d64aaf1c2b5e204945">Dspline10</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
+<tr class="separator:a4a6a923e481880d64aaf1c2b5e204945"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18144547f7fd385767fa61b0ccca0c9f"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="symbolic__functions_8c.html#a18144547f7fd385767fa61b0ccca0c9f">Dspline_pos10</a> (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)</td></tr>
+<tr class="separator:a18144547f7fd385767fa61b0ccca0c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file contains definitions of various symbolic functions which </p>
 
 <p>Definition in file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a2002b0c47eeb3ce5718c79f15f694948"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define amici_symbolic_functions_c</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>include guard </p>
-
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00010">10</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="aa8cecfc5c5c054d2875c03e77b7be15d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -244,7 +236,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>bool return value true </p>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00016">16</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00014">14</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
@@ -259,17 +251,20 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>bool return value false </p>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00018">18</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00016">16</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a86daaa02a6262e74d6ebd252e9ebcd08"></a>
+<a class="anchor" id="a416970620771a36bed91a7010d7c354a"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_ge </td>
+          <td class="memname">static int am_ge </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -286,6 +281,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function ge</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -300,16 +300,19 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>if(a &gt;= 0) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00028">28</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00026">26</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a3eef5e2f915069da5e1c683371bb74db"></a>
+<a class="anchor" id="a76889cd2e1fe3a6005ed553a1608e289"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int Dam_ge </td>
+          <td class="memname">static int Dam_ge </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -332,6 +335,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function ge</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -346,16 +354,19 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00045">45</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00043">43</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a1d7cdbf88da36d94dbb4c649b932eb20"></a>
+<a class="anchor" id="a2b6c469661d55fb8e0eaa582c79d8fee"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_gt </td>
+          <td class="memname">static int am_gt </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -372,6 +383,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function gt</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -386,16 +402,19 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>if(a &gt; 0) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00057">57</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00055">55</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="abafad4cc1fe4141f465d6d75d082fa2b"></a>
+<a class="anchor" id="a7d989d003a1d9a9fa31e9dd9d3dccdf6"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int Dam_gt </td>
+          <td class="memname">static int Dam_gt </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -418,6 +437,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function gt</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -432,16 +456,19 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00074">74</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00072">72</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aaa1871c2b651b7561002162939b4b4be"></a>
+<a class="anchor" id="a44c61e895621ce85295d5c343e57bad8"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_le </td>
+          <td class="memname">static int am_le </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -458,6 +485,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function le</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -472,16 +504,19 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>if(a &lt;= 0) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00086">86</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00084">84</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aedd2dccb7516c078ba3c0c5296a45588"></a>
+<a class="anchor" id="a39ac4ffd072b6dcd21c52273d1d50af4"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int Dam_le </td>
+          <td class="memname">static int Dam_le </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -504,6 +539,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function le</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -518,16 +558,19 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00103">103</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00101">101</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aa06d5784e2f4cc04cb790fdc229f8655"></a>
+<a class="anchor" id="ac9f1433f4d234e1b6bc9d45a33e07ea3"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_lt </td>
+          <td class="memname">static int am_lt </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -544,6 +587,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function lt</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -558,16 +606,19 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>if(a &lt; 0) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00115">115</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00113">113</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a154cb26411e2359b3faeb7aebba35118"></a>
+<a class="anchor" id="a4744c81e4b2cf2ccd624784dccfa1e60"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int Dam_lt </td>
+          <td class="memname">static int Dam_lt </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -590,6 +641,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function lt</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -604,16 +660,19 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00132">132</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00130">130</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="af5ec2128d9d72cdfef2211d4598122d5"></a>
+<a class="anchor" id="aba184e5c7e2c8afb0df0a03cba9d7d10"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double am_if </td>
+          <td class="memname">static double am_if </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>condition</em>, </td>
@@ -636,6 +695,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of if function</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -651,16 +715,19 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>if(condition) then truepart else falsepart <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00145">145</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00143">143</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a03efbb1edaad1fe57c6908db1737429b"></a>
+<a class="anchor" id="aeaa0ba7aeaeeb254e5b347024cf58ec3"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dam_if </td>
+          <td class="memname">static double Dam_if </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -689,6 +756,11 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of if function</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -711,16 +783,19 @@ id==2: if(condition) then 1 else 0 <br />
 id==3: if(condition) then 0 else 1 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00166">166</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00164">164</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ae10cfe036ec9d581d7d78dd5d47e53ff"></a>
+<a class="anchor" id="abd84c9d657c25603d2b4483c52fff27d"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_and </td>
+          <td class="memname">static int am_and </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -737,6 +812,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function and</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -751,16 +831,19 @@ id==3: if(condition) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>if(a &amp; b) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00200">200</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00198">198</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aed1e207eb2478534210004f3fd877ecb"></a>
+<a class="anchor" id="a2e57d2256dc064c22df97238ebfaf8dd"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dam_and </td>
+          <td class="memname">static double Dam_and </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -783,6 +866,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function and</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -798,16 +886,19 @@ id==3: if(condition) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>0 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00217">217</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00215">215</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="accfa1cc8f7519ff56bb00335c4a2589a"></a>
+<a class="anchor" id="a9504cc85fdd150b973feeee8bb702513"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int am_or </td>
+          <td class="memname">static int am_or </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -824,6 +915,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function or</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -838,16 +934,19 @@ id==3: if(condition) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>if(a | b) then 1 else 0 <br />
 <b>Type</b>: int </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00229">229</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00227">227</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a66366768996cc70768580811dfca7c86"></a>
+<a class="anchor" id="a6d6b6e6facde6d147d36e583947292bd"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dam_or </td>
+          <td class="memname">static double Dam_or </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -870,6 +969,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function or</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -885,16 +989,19 @@ id==3: if(condition) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>0 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00246">246</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00244">244</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a78aac4f87c32224176d7d063046c270f"></a>
+<a class="anchor" id="ae3b9dc0b0e71095d2f5981de04b7c885"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double am_min </td>
+          <td class="memname">static double am_min </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -911,6 +1018,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function min</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -925,16 +1037,19 @@ id==3: if(condition) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>if(a &lt; b) then a else b <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00258">258</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00256">256</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a4b372245882cfe08b809c82a1487efec"></a>
+<a class="anchor" id="ac0fc17e87d0f8593f2f98a0d7bb795e9"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dam_min </td>
+          <td class="memname">static double Dam_min </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -957,6 +1072,11 @@ id==3: if(condition) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function min</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -975,16 +1095,19 @@ id==3: if(condition) then 0 else 1 <br />
 id == 2: if(a &lt; b) then 0 else 1 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00276">276</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00274">274</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="af7c1bd232d6c32537fd72481926c6d16"></a>
+<a class="anchor" id="ace1bc6a7a6979ae44dee3b7778a773cb"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double am_max </td>
+          <td class="memname">static double am_max </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>a</em>, </td>
@@ -1001,6 +1124,11 @@ id == 2: if(a &lt; b) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function min</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1015,16 +1143,19 @@ id == 2: if(a &lt; b) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>if(a &gt; b) then a else b <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00300">300</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00298">298</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ab737f3f75aad0dffa94e572bf095773e"></a>
+<a class="anchor" id="a0a33e3a0a034cdd86eb780ddb80ce3cb"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dam_max </td>
+          <td class="memname">static double Dam_max </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -1047,6 +1178,11 @@ id == 2: if(a &lt; b) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of c implementation of matlab function min</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1065,22 +1201,30 @@ id == 2: if(a &lt; b) then 0 else 1 <br />
 id == 2: if(a &gt; b) then 0 else 1 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00318">318</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00316">316</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a609b523b00064e82442c1f1519f40bdb"></a>
+<a class="anchor" id="a2588f876f0b91cb5f301c20724390799"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double heaviside </td>
+          <td class="memname">static double heaviside </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function heaviside</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1091,22 +1235,30 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>if(x&gt;0) then 1 else 0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00341">341</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00339">339</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a30a33546875b9dd1a63c29312b316f7e"></a>
+<a class="anchor" id="a9f096cac6ced6b3a2ec6c32f4f3651bd"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double dirac </td>
+          <td class="memname">static double dirac </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>c implementation of matlab function dirac</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1117,16 +1269,19 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>if(x==0) then 1 else 0 </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00356">356</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00354">354</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ad8ed2c7868f7fee34f1eecc02233f552"></a>
+<a class="anchor" id="a6199dbaeed0d47ab67ba8da9e9ffc570"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Ddirac </td>
+          <td class="memname">static double Ddirac </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -1143,6 +1298,11 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>derivatives of the c implementation of matlab function dirac</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1155,16 +1315,19 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
 <dl class="section return"><dt>Returns</dt><dd>0 <br />
 <b>Type</b>: double </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00372">372</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00370">370</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aa6e6e221b6ed1a5b42c3625516ae62fa"></a>
+<a class="anchor" id="af979880b391183ffe4f954d4f8b72229"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline3 </td>
+          <td class="memname">static double spline3 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1223,6 +1386,11 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>spline function with 3 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1241,27 +1409,30 @@ id == 2: if(a &gt; b) then 0 else 1 <br />
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00396">396</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00394">394</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph.png" border="0" usemap="#symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph" id="symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="117,5,173,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="119,56,171,83"/>
+<div class="center"><img src="symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229_cgraph.png" border="0" usemap="#symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229_cgraph" id="symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="117,5,173,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="119,56,171,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a34a7ee564e91dab79ce4fe87ef81e30f"></a>
+<a class="anchor" id="ada526b79025616265c040c133b1526d2"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline_pos3 </td>
+          <td class="memname">static double spline_pos3 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1320,6 +1491,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>positive spline function with 3 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1338,15 +1514,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00437">437</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00435">435</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph.png" border="0" usemap="#symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph" id="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="146,5,202,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="148,56,200,83"/>
+<div class="center"><img src="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_cgraph.png" border="0" usemap="#symbolic__functions_8c_ada526b79025616265c040c133b1526d2_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_cgraph" id="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="146,5,202,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="148,56,200,83"/>
 </map>
 </div>
 </p>
@@ -1354,21 +1530,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph.png" border="0" usemap="#symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph" id="symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a6e6d82835b091ee76ea447f0b0fd8a61" title="Dspline_pos3" alt="" coords="146,5,248,33"/>
+<div class="center"><img src="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_icgraph.png" border="0" usemap="#symbolic__functions_8c_ada526b79025616265c040c133b1526d2_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_icgraph" id="symbolic__functions_8c_ada526b79025616265c040c133b1526d2_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a8a381f25e4c7a60c643c8df1c132c483" title="Dspline_pos3" alt="" coords="146,5,248,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a95ad6634f570763a8eddc88bb2feeeb1"></a>
+<a class="anchor" id="ad7067d60ae8ced98cdb98da954c0af41"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline4 </td>
+          <td class="memname">static double spline4 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1439,6 +1618,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>spline function with 4 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1459,27 +1643,30 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00485">485</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00483">483</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph.png" border="0" usemap="#symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph" id="symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="117,5,173,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="119,56,171,83"/>
+<div class="center"><img src="symbolic__functions_8c_ad7067d60ae8ced98cdb98da954c0af41_cgraph.png" border="0" usemap="#symbolic__functions_8c_ad7067d60ae8ced98cdb98da954c0af41_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_ad7067d60ae8ced98cdb98da954c0af41_cgraph" id="symbolic__functions_8c_ad7067d60ae8ced98cdb98da954c0af41_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="117,5,173,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="119,56,171,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a866f6967f6b464c701096b7b3b83ae93"></a>
+<a class="anchor" id="a6e7905bf54d6a32212bae5dc2b8c15e1"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline_pos4 </td>
+          <td class="memname">static double spline_pos4 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1550,6 +1737,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>positive spline function with 4 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1570,15 +1762,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00529">529</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00527">527</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph.png" border="0" usemap="#symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph" id="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="146,5,202,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="148,56,200,83"/>
+<div class="center"><img src="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_cgraph.png" border="0" usemap="#symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_cgraph" id="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="146,5,202,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="148,56,200,83"/>
 </map>
 </div>
 </p>
@@ -1586,21 +1778,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph.png" border="0" usemap="#symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph" id="symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a1fe37906f0c082b37c3d23ea18dbc37a" title="Dspline_pos4" alt="" coords="146,5,248,33"/>
+<div class="center"><img src="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_icgraph.png" border="0" usemap="#symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_icgraph" id="symbolic__functions_8c_a6e7905bf54d6a32212bae5dc2b8c15e1_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a8440b8a58c3b7a45193dffaed0dc3043" title="Dspline_pos4" alt="" coords="146,5,248,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="afa04c18aa6bdc6d770a935a86b4b0e73"></a>
+<a class="anchor" id="a9cd044210c329dd88bb7ff69bad3d024"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline5 </td>
+          <td class="memname">static double spline5 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1683,6 +1878,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>spline function with 5 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1705,27 +1905,30 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00581">581</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00579">579</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph.png" border="0" usemap="#symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph" id="symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="117,5,173,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="119,56,171,83"/>
+<div class="center"><img src="symbolic__functions_8c_a9cd044210c329dd88bb7ff69bad3d024_cgraph.png" border="0" usemap="#symbolic__functions_8c_a9cd044210c329dd88bb7ff69bad3d024_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a9cd044210c329dd88bb7ff69bad3d024_cgraph" id="symbolic__functions_8c_a9cd044210c329dd88bb7ff69bad3d024_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="117,5,173,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="119,56,171,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a41ebd58374fbdc9376a55d227807f98b"></a>
+<a class="anchor" id="af8758b5809518fc3c34c5564fb693a47"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline_pos5 </td>
+          <td class="memname">static double spline_pos5 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -1808,6 +2011,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>positive spline function with 5 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -1830,15 +2038,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00629">629</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00627">627</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph.png" border="0" usemap="#symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph" id="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="146,5,202,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="148,56,200,83"/>
+<div class="center"><img src="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_cgraph.png" border="0" usemap="#symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_cgraph" id="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="146,5,202,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="148,56,200,83"/>
 </map>
 </div>
 </p>
@@ -1846,21 +2054,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph.png" border="0" usemap="#symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph" id="symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#aa0710e8c25f3d878c56d03404d51d934" title="Dspline_pos5" alt="" coords="146,5,248,33"/>
+<div class="center"><img src="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_icgraph.png" border="0" usemap="#symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_icgraph" id="symbolic__functions_8c_af8758b5809518fc3c34c5564fb693a47_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a031e8ddd09bad7e95e1d2bbdd2015412" title="Dspline_pos5" alt="" coords="146,5,248,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a6f89e150cf66077936f0a5b041a1655e"></a>
+<a class="anchor" id="a1934626be4166d13e4d027f07f440b06"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline10 </td>
+          <td class="memname">static double spline10 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -2003,6 +2214,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>spline function with 10 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2035,27 +2251,30 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00693">693</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00691">691</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph.png" border="0" usemap="#symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph" id="symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="124,5,181,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="126,56,179,83"/>
+<div class="center"><img src="symbolic__functions_8c_a1934626be4166d13e4d027f07f440b06_cgraph.png" border="0" usemap="#symbolic__functions_8c_a1934626be4166d13e4d027f07f440b06_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a1934626be4166d13e4d027f07f440b06_cgraph" id="symbolic__functions_8c_a1934626be4166d13e4d027f07f440b06_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="124,5,181,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="126,56,179,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a7bac14600e5a7b75bc4ca0ff1a64ceaf"></a>
+<a class="anchor" id="a76f58ea224a1a2d2aa742d9418a05fbc"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double spline_pos10 </td>
+          <td class="memname">static double spline_pos10 </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>t</em>, </td>
@@ -2198,6 +2417,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>positive spline function with 10 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2230,15 +2454,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>spline(t) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00761">761</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00759">759</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph.png" border="0" usemap="#symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph" id="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="153,5,209,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="155,56,208,83"/>
+<div class="center"><img src="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_cgraph.png" border="0" usemap="#symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_cgraph" id="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="153,5,209,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="155,56,208,83"/>
 </map>
 </div>
 </p>
@@ -2246,21 +2470,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph.png" border="0" usemap="#symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph" id="symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#afae48263cbf04b2399bdc684727b6609" title="Dspline_pos10" alt="" coords="153,5,263,33"/>
+<div class="center"><img src="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_icgraph.png" border="0" usemap="#symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_icgraph" id="symbolic__functions_8c_a76f58ea224a1a2d2aa742d9418a05fbc_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a18144547f7fd385767fa61b0ccca0c9f" title="Dspline_pos10" alt="" coords="153,5,263,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a883efcebfcb7e66a6e1f76da7aed4b7e"></a>
+<a class="anchor" id="a2399f365706b74fa78fd9ff7906ff909"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline3 </td>
+          <td class="memname">static double Dspline3 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2325,6 +2552,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of spline function with 3 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2344,15 +2576,15 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00822">822</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00820">820</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph.png" border="0" usemap="#symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph" id="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="127,5,183,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="128,56,181,83"/>
+<div class="center"><img src="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_cgraph.png" border="0" usemap="#symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_cgraph" id="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="127,5,183,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="128,56,181,83"/>
 </map>
 </div>
 </p>
@@ -2360,21 +2592,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph.png" border="0" usemap="#symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph" id="symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a6e6d82835b091ee76ea447f0b0fd8a61" title="Dspline_pos3" alt="" coords="127,5,229,33"/>
+<div class="center"><img src="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_icgraph.png" border="0" usemap="#symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_icgraph" id="symbolic__functions_8c_a2399f365706b74fa78fd9ff7906ff909_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a8a381f25e4c7a60c643c8df1c132c483" title="Dspline_pos3" alt="" coords="127,5,229,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a6e6d82835b091ee76ea447f0b0fd8a61"></a>
+<a class="anchor" id="a8a381f25e4c7a60c643c8df1c132c483"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline_pos3 </td>
+          <td class="memname">static double Dspline_pos3 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2439,6 +2674,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of positive spline function with 3 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2458,29 +2698,32 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00867">867</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00865">865</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph.png" border="0" usemap="#symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph" id="symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a34a7ee564e91dab79ce4fe87ef81e30f" title="spline_pos3" alt="" coords="155,5,248,33"/>
-<area shape="rect" id="node5" href="symbolic__functions_8c.html#a883efcebfcb7e66a6e1f76da7aed4b7e" title="Dspline3" alt="" coords="165,56,238,83"/>
-<area shape="rect" id="node3" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="296,5,352,33"/>
-<area shape="rect" id="node4" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="298,56,350,83"/>
+<div class="center"><img src="symbolic__functions_8c_a8a381f25e4c7a60c643c8df1c132c483_cgraph.png" border="0" usemap="#symbolic__functions_8c_a8a381f25e4c7a60c643c8df1c132c483_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a8a381f25e4c7a60c643c8df1c132c483_cgraph" id="symbolic__functions_8c_a8a381f25e4c7a60c643c8df1c132c483_cgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#ada526b79025616265c040c133b1526d2" title="spline_pos3" alt="" coords="155,5,248,33"/>
+<area shape="rect" id="node5" href="symbolic__functions_8c.html#a2399f365706b74fa78fd9ff7906ff909" title="Dspline3" alt="" coords="165,56,238,83"/>
+<area shape="rect" id="node3" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="296,5,352,33"/>
+<area shape="rect" id="node4" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="298,56,350,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a7161e35213ed166ccc1804395d697f3d"></a>
+<a class="anchor" id="a504a06d04401217f51af719fae8662e3"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline4 </td>
+          <td class="memname">static double Dspline4 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2557,6 +2800,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of spline function with 4 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2578,15 +2826,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00910">910</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00908">908</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph.png" border="0" usemap="#symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph" id="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="127,5,183,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="128,56,181,83"/>
+<div class="center"><img src="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_cgraph.png" border="0" usemap="#symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_cgraph" id="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="127,5,183,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="128,56,181,83"/>
 </map>
 </div>
 </p>
@@ -2594,21 +2842,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph.png" border="0" usemap="#symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph" id="symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a1fe37906f0c082b37c3d23ea18dbc37a" title="Dspline_pos4" alt="" coords="127,5,229,33"/>
+<div class="center"><img src="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_icgraph.png" border="0" usemap="#symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_icgraph" id="symbolic__functions_8c_a504a06d04401217f51af719fae8662e3_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a8440b8a58c3b7a45193dffaed0dc3043" title="Dspline_pos4" alt="" coords="127,5,229,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a1fe37906f0c082b37c3d23ea18dbc37a"></a>
+<a class="anchor" id="a8440b8a58c3b7a45193dffaed0dc3043"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline_pos4 </td>
+          <td class="memname">static double Dspline_pos4 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2685,6 +2936,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of positive spline function with 4 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2706,29 +2962,32 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00959">959</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l00957">957</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph.png" border="0" usemap="#symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph" id="symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a866f6967f6b464c701096b7b3b83ae93" title="spline_pos4" alt="" coords="155,5,248,33"/>
-<area shape="rect" id="node5" href="symbolic__functions_8c.html#a7161e35213ed166ccc1804395d697f3d" title="Dspline4" alt="" coords="165,56,238,83"/>
-<area shape="rect" id="node3" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="296,5,352,33"/>
-<area shape="rect" id="node4" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="298,56,350,83"/>
+<div class="center"><img src="symbolic__functions_8c_a8440b8a58c3b7a45193dffaed0dc3043_cgraph.png" border="0" usemap="#symbolic__functions_8c_a8440b8a58c3b7a45193dffaed0dc3043_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a8440b8a58c3b7a45193dffaed0dc3043_cgraph" id="symbolic__functions_8c_a8440b8a58c3b7a45193dffaed0dc3043_cgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a6e7905bf54d6a32212bae5dc2b8c15e1" title="spline_pos4" alt="" coords="155,5,248,33"/>
+<area shape="rect" id="node5" href="symbolic__functions_8c.html#a504a06d04401217f51af719fae8662e3" title="Dspline4" alt="" coords="165,56,238,83"/>
+<area shape="rect" id="node3" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="296,5,352,33"/>
+<area shape="rect" id="node4" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="298,56,350,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="a95befe1853ab7bf8ce801c5eee3d9d29"></a>
+<a class="anchor" id="a8b1ac13ae08a38d7f716671779f9c35a"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline5 </td>
+          <td class="memname">static double Dspline5 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2817,6 +3076,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of spline function with 5 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2840,15 +3104,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01004">1004</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01002">1002</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph.png" border="0" usemap="#symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph" id="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="127,5,183,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="128,56,181,83"/>
+<div class="center"><img src="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_cgraph.png" border="0" usemap="#symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_cgraph" id="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="127,5,183,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="128,56,181,83"/>
 </map>
 </div>
 </p>
@@ -2856,21 +3120,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph.png" border="0" usemap="#symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph" id="symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#aa0710e8c25f3d878c56d03404d51d934" title="Dspline_pos5" alt="" coords="127,5,229,33"/>
+<div class="center"><img src="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_icgraph.png" border="0" usemap="#symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_icgraph" id="symbolic__functions_8c_a8b1ac13ae08a38d7f716671779f9c35a_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a031e8ddd09bad7e95e1d2bbdd2015412" title="Dspline_pos5" alt="" coords="127,5,229,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="aa0710e8c25f3d878c56d03404d51d934"></a>
+<a class="anchor" id="a031e8ddd09bad7e95e1d2bbdd2015412"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline_pos5 </td>
+          <td class="memname">static double Dspline_pos5 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -2959,6 +3226,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of positive spline function with 5 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2982,29 +3254,32 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01057">1057</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01055">1055</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph.png" border="0" usemap="#symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph" id="symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a41ebd58374fbdc9376a55d227807f98b" title="spline_pos5" alt="" coords="155,5,248,33"/>
-<area shape="rect" id="node5" href="symbolic__functions_8c.html#a95befe1853ab7bf8ce801c5eee3d9d29" title="Dspline5" alt="" coords="165,56,238,83"/>
-<area shape="rect" id="node3" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="296,5,352,33"/>
-<area shape="rect" id="node4" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="298,56,350,83"/>
+<div class="center"><img src="symbolic__functions_8c_a031e8ddd09bad7e95e1d2bbdd2015412_cgraph.png" border="0" usemap="#symbolic__functions_8c_a031e8ddd09bad7e95e1d2bbdd2015412_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a031e8ddd09bad7e95e1d2bbdd2015412_cgraph" id="symbolic__functions_8c_a031e8ddd09bad7e95e1d2bbdd2015412_cgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#af8758b5809518fc3c34c5564fb693a47" title="spline_pos5" alt="" coords="155,5,248,33"/>
+<area shape="rect" id="node5" href="symbolic__functions_8c.html#a8b1ac13ae08a38d7f716671779f9c35a" title="Dspline5" alt="" coords="165,56,238,83"/>
+<area shape="rect" id="node3" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="296,5,352,33"/>
+<area shape="rect" id="node4" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="298,56,350,83"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ac6a35d8f267a9c9dbbf5c6afc7705e85"></a>
+<a class="anchor" id="a4a6a923e481880d64aaf1c2b5e204945"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline10 </td>
+          <td class="memname">static double Dspline10 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -3153,6 +3428,11 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of spline function with 10 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -3186,15 +3466,15 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01113">1113</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01111">1111</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph.png" border="0" usemap="#symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph" id="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph">
-<area shape="rect" id="node2" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="134,5,190,33"/>
-<area shape="rect" id="node3" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="136,56,188,83"/>
+<div class="center"><img src="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_cgraph.png" border="0" usemap="#symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_cgraph" id="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_cgraph">
+<area shape="rect" id="node2" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="134,5,190,33"/>
+<area shape="rect" id="node3" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="136,56,188,83"/>
 </map>
 </div>
 </p>
@@ -3202,21 +3482,24 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph.png" border="0" usemap="#symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph" alt=""/></div>
-<map name="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph" id="symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#afae48263cbf04b2399bdc684727b6609" title="Dspline_pos10" alt="" coords="134,5,244,33"/>
+<div class="center"><img src="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_icgraph.png" border="0" usemap="#symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_icgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_icgraph" id="symbolic__functions_8c_a4a6a923e481880d64aaf1c2b5e204945_icgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a18144547f7fd385767fa61b0ccca0c9f" title="Dspline_pos10" alt="" coords="134,5,244,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="afae48263cbf04b2399bdc684727b6609"></a>
+<a class="anchor" id="a18144547f7fd385767fa61b0ccca0c9f"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double Dspline_pos10 </td>
+          <td class="memname">static double Dspline_pos10 </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
@@ -3365,6 +3648,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>parameter derivative of positive spline function with 10 nodes</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -3398,17 +3686,17 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>dspline(t)dp(id) </dd></dl>
 
-<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01186">1186</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
+<p>Definition at line <a class="el" href="symbolic__functions_8c_source.html#l01184">1184</a> of file <a class="el" href="symbolic__functions_8c_source.html">symbolic_functions.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph.png" border="0" usemap="#symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph" alt=""/></div>
-<map name="symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph" id="symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph">
-<area shape="rect" id="node2" href="symbolic__functions_8c.html#a7bac14600e5a7b75bc4ca0ff1a64ceaf" title="spline_pos10" alt="" coords="163,5,263,33"/>
-<area shape="rect" id="node5" href="symbolic__functions_8c.html#ac6a35d8f267a9c9dbbf5c6afc7705e85" title="Dspline10" alt="" coords="173,56,253,83"/>
-<area shape="rect" id="node3" href="spline_8c.html#aa6801bbdb0c7625719c019ac287be29e" title="spline" alt="" coords="311,5,367,33"/>
-<area shape="rect" id="node4" href="spline_8c.html#a20c8c27889853621fba3e0eacd333723" title="seval" alt="" coords="313,56,365,83"/>
+<div class="center"><img src="symbolic__functions_8c_a18144547f7fd385767fa61b0ccca0c9f_cgraph.png" border="0" usemap="#symbolic__functions_8c_a18144547f7fd385767fa61b0ccca0c9f_cgraph" alt=""/></div>
+<map name="symbolic__functions_8c_a18144547f7fd385767fa61b0ccca0c9f_cgraph" id="symbolic__functions_8c_a18144547f7fd385767fa61b0ccca0c9f_cgraph">
+<area shape="rect" id="node2" href="symbolic__functions_8c.html#a76f58ea224a1a2d2aa742d9418a05fbc" title="spline_pos10" alt="" coords="163,5,263,33"/>
+<area shape="rect" id="node5" href="symbolic__functions_8c.html#a4a6a923e481880d64aaf1c2b5e204945" title="Dspline10" alt="" coords="173,56,253,83"/>
+<area shape="rect" id="node3" href="spline_8c.html#a46804aa218bd46034f2da928e5602a08" title="spline" alt="" coords="311,5,367,33"/>
+<area shape="rect" id="node4" href="spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a" title="seval" alt="" coords="313,56,365,83"/>
 </map>
 </div>
 </p>
@@ -3421,7 +3709,7 @@ Here is the call graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="symbolic__functions_8c.html">symbolic_functions.c</a></li>
-    <li class="footer">Generated on Sat Nov 14 2015 10:37:13 for AMICI by
+    <li class="footer">Generated on Wed Nov 18 2015 10:51:36 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

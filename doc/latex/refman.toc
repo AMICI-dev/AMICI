@@ -212,31 +212,29 @@
 \contentsline {paragraph}{\numberline {7.2.1.1}amiwrap(matlabtypesubstitute varargin)}{63}{paragraph.7.2.1.1}
 \contentsline {subsection}{\numberline {7.3}src/amici.c File Reference}{63}{subsection.7.3}
 \contentsline {subsubsection}{\numberline {7.3.1}Macro Definition Documentation}{64}{subsubsection.7.3.1}
-\contentsline {paragraph}{\numberline {7.3.1.1}amici\_c}{64}{paragraph.7.3.1.1}
-\contentsline {paragraph}{\numberline {7.3.1.2}AMI\_SUCCESS}{64}{paragraph.7.3.1.2}
+\contentsline {paragraph}{\numberline {7.3.1.1}AMI\_SUCCESS}{64}{paragraph.7.3.1.1}
 \contentsline {subsubsection}{\numberline {7.3.2}Function Documentation}{64}{subsubsection.7.3.2}
 \contentsline {paragraph}{\numberline {7.3.2.1}setupUserData(const mxArray $\ast $prhs[])}{64}{paragraph.7.3.2.1}
-\contentsline {paragraph}{\numberline {7.3.2.2}setupAMI(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{65}{paragraph.7.3.2.2}
+\contentsline {paragraph}{\numberline {7.3.2.2}setupAMI(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{64}{paragraph.7.3.2.2}
 \contentsline {paragraph}{\numberline {7.3.2.3}setupAMIB(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{65}{paragraph.7.3.2.3}
 \contentsline {paragraph}{\numberline {7.3.2.4}setupReturnData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{66}{paragraph.7.3.2.4}
 \contentsline {paragraph}{\numberline {7.3.2.5}setupExpData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{67}{paragraph.7.3.2.5}
 \contentsline {paragraph}{\numberline {7.3.2.6}getRootDataFSA(int $\ast $status, int $\ast $nroots, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{68}{paragraph.7.3.2.6}
 \contentsline {paragraph}{\numberline {7.3.2.7}getRootDataASA(int $\ast $status, int $\ast $nroots, int $\ast $idisc, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{69}{paragraph.7.3.2.7}
 \contentsline {paragraph}{\numberline {7.3.2.8}getDiagnosis(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data)}{70}{paragraph.7.3.2.8}
-\contentsline {paragraph}{\numberline {7.3.2.9}getDiagnosisB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{71}{paragraph.7.3.2.9}
-\contentsline {subsection}{\numberline {7.4}src/spline.c File Reference}{72}{subsection.7.4}
+\contentsline {paragraph}{\numberline {7.3.2.9}getDiagnosisB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{70}{paragraph.7.3.2.9}
+\contentsline {subsection}{\numberline {7.4}src/spline.c File Reference}{71}{subsection.7.4}
 \contentsline {subsubsection}{\numberline {7.4.1}Detailed Description}{72}{subsubsection.7.4.1}
 \contentsline {subsubsection}{\numberline {7.4.2}Function Documentation}{72}{subsubsection.7.4.2}
-\contentsline {paragraph}{\numberline {7.4.2.1}spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}{73}{paragraph.7.4.2.1}
+\contentsline {paragraph}{\numberline {7.4.2.1}spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}{72}{paragraph.7.4.2.1}
 \contentsline {paragraph}{\numberline {7.4.2.2}seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}{73}{paragraph.7.4.2.2}
 \contentsline {paragraph}{\numberline {7.4.2.3}deriv(int n, double u, double x[], double b[], double c[], double d[])}{74}{paragraph.7.4.2.3}
 \contentsline {paragraph}{\numberline {7.4.2.4}sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}{74}{paragraph.7.4.2.4}
-\contentsline {subsection}{\numberline {7.5}src/symbolic\_functions.c File Reference}{75}{subsection.7.5}
+\contentsline {subsection}{\numberline {7.5}src/symbolic\_functions.c File Reference}{74}{subsection.7.5}
 \contentsline {subsubsection}{\numberline {7.5.1}Detailed Description}{76}{subsubsection.7.5.1}
 \contentsline {subsubsection}{\numberline {7.5.2}Macro Definition Documentation}{77}{subsubsection.7.5.2}
-\contentsline {paragraph}{\numberline {7.5.2.1}amici\_symbolic\_functions\_c}{77}{paragraph.7.5.2.1}
-\contentsline {paragraph}{\numberline {7.5.2.2}TRUE}{77}{paragraph.7.5.2.2}
-\contentsline {paragraph}{\numberline {7.5.2.3}FALSE}{77}{paragraph.7.5.2.3}
+\contentsline {paragraph}{\numberline {7.5.2.1}TRUE}{77}{paragraph.7.5.2.1}
+\contentsline {paragraph}{\numberline {7.5.2.2}FALSE}{77}{paragraph.7.5.2.2}
 \contentsline {subsubsection}{\numberline {7.5.3}Function Documentation}{77}{subsubsection.7.5.3}
 \contentsline {paragraph}{\numberline {7.5.3.1}am\_ge(double a, double b)}{77}{paragraph.7.5.3.1}
 \contentsline {paragraph}{\numberline {7.5.3.2}Dam\_ge(int id, double a, double b)}{77}{paragraph.7.5.3.2}
@@ -248,31 +246,31 @@
 \contentsline {paragraph}{\numberline {7.5.3.8}Dam\_lt(int id, double a, double b)}{79}{paragraph.7.5.3.8}
 \contentsline {paragraph}{\numberline {7.5.3.9}am\_if(int condition, double truepart, double falsepart)}{79}{paragraph.7.5.3.9}
 \contentsline {paragraph}{\numberline {7.5.3.10}Dam\_if(int id, int condition, double truepart, double falsepart)}{80}{paragraph.7.5.3.10}
-\contentsline {paragraph}{\numberline {7.5.3.11}am\_and(int a, int b)}{80}{paragraph.7.5.3.11}
-\contentsline {paragraph}{\numberline {7.5.3.12}Dam\_and(int id, int a, int b)}{80}{paragraph.7.5.3.12}
+\contentsline {paragraph}{\numberline {7.5.3.11}am\_and(int a, int b)}{81}{paragraph.7.5.3.11}
+\contentsline {paragraph}{\numberline {7.5.3.12}Dam\_and(int id, int a, int b)}{81}{paragraph.7.5.3.12}
 \contentsline {paragraph}{\numberline {7.5.3.13}am\_or(int a, int b)}{81}{paragraph.7.5.3.13}
-\contentsline {paragraph}{\numberline {7.5.3.14}Dam\_or(int id, int a, int b)}{81}{paragraph.7.5.3.14}
-\contentsline {paragraph}{\numberline {7.5.3.15}am\_min(double a, double b)}{81}{paragraph.7.5.3.15}
+\contentsline {paragraph}{\numberline {7.5.3.14}Dam\_or(int id, int a, int b)}{82}{paragraph.7.5.3.14}
+\contentsline {paragraph}{\numberline {7.5.3.15}am\_min(double a, double b)}{82}{paragraph.7.5.3.15}
 \contentsline {paragraph}{\numberline {7.5.3.16}Dam\_min(int id, double a, double b)}{82}{paragraph.7.5.3.16}
-\contentsline {paragraph}{\numberline {7.5.3.17}am\_max(double a, double b)}{82}{paragraph.7.5.3.17}
-\contentsline {paragraph}{\numberline {7.5.3.18}Dam\_max(int id, double a, double b)}{82}{paragraph.7.5.3.18}
+\contentsline {paragraph}{\numberline {7.5.3.17}am\_max(double a, double b)}{83}{paragraph.7.5.3.17}
+\contentsline {paragraph}{\numberline {7.5.3.18}Dam\_max(int id, double a, double b)}{83}{paragraph.7.5.3.18}
 \contentsline {paragraph}{\numberline {7.5.3.19}heaviside(double x)}{83}{paragraph.7.5.3.19}
-\contentsline {paragraph}{\numberline {7.5.3.20}dirac(double x)}{83}{paragraph.7.5.3.20}
-\contentsline {paragraph}{\numberline {7.5.3.21}Ddirac(int id, double x)}{83}{paragraph.7.5.3.21}
-\contentsline {paragraph}{\numberline {7.5.3.22}spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{83}{paragraph.7.5.3.22}
-\contentsline {paragraph}{\numberline {7.5.3.23}spline\_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{84}{paragraph.7.5.3.23}
-\contentsline {paragraph}{\numberline {7.5.3.24}spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{85}{paragraph.7.5.3.24}
+\contentsline {paragraph}{\numberline {7.5.3.20}dirac(double x)}{84}{paragraph.7.5.3.20}
+\contentsline {paragraph}{\numberline {7.5.3.21}Ddirac(int id, double x)}{84}{paragraph.7.5.3.21}
+\contentsline {paragraph}{\numberline {7.5.3.22}spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{84}{paragraph.7.5.3.22}
+\contentsline {paragraph}{\numberline {7.5.3.23}spline\_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{85}{paragraph.7.5.3.23}
+\contentsline {paragraph}{\numberline {7.5.3.24}spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{86}{paragraph.7.5.3.24}
 \contentsline {paragraph}{\numberline {7.5.3.25}spline\_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{86}{paragraph.7.5.3.25}
 \contentsline {paragraph}{\numberline {7.5.3.26}spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{87}{paragraph.7.5.3.26}
-\contentsline {paragraph}{\numberline {7.5.3.27}spline\_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{87}{paragraph.7.5.3.27}
-\contentsline {paragraph}{\numberline {7.5.3.28}spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{88}{paragraph.7.5.3.28}
-\contentsline {paragraph}{\numberline {7.5.3.29}spline\_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{89}{paragraph.7.5.3.29}
+\contentsline {paragraph}{\numberline {7.5.3.27}spline\_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{88}{paragraph.7.5.3.27}
+\contentsline {paragraph}{\numberline {7.5.3.28}spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{89}{paragraph.7.5.3.28}
+\contentsline {paragraph}{\numberline {7.5.3.29}spline\_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{90}{paragraph.7.5.3.29}
 \contentsline {paragraph}{\numberline {7.5.3.30}Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{91}{paragraph.7.5.3.30}
-\contentsline {paragraph}{\numberline {7.5.3.31}Dspline\_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{91}{paragraph.7.5.3.31}
-\contentsline {paragraph}{\numberline {7.5.3.32}Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{92}{paragraph.7.5.3.32}
-\contentsline {paragraph}{\numberline {7.5.3.33}Dspline\_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{93}{paragraph.7.5.3.33}
-\contentsline {paragraph}{\numberline {7.5.3.34}Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{94}{paragraph.7.5.3.34}
-\contentsline {paragraph}{\numberline {7.5.3.35}Dspline\_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{95}{paragraph.7.5.3.35}
-\contentsline {paragraph}{\numberline {7.5.3.36}Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{96}{paragraph.7.5.3.36}
-\contentsline {paragraph}{\numberline {7.5.3.37}Dspline\_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{97}{paragraph.7.5.3.37}
-\contentsline {section}{Index}{99}{section*.17}
+\contentsline {paragraph}{\numberline {7.5.3.31}Dspline\_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{92}{paragraph.7.5.3.31}
+\contentsline {paragraph}{\numberline {7.5.3.32}Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{93}{paragraph.7.5.3.32}
+\contentsline {paragraph}{\numberline {7.5.3.33}Dspline\_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{94}{paragraph.7.5.3.33}
+\contentsline {paragraph}{\numberline {7.5.3.34}Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{95}{paragraph.7.5.3.34}
+\contentsline {paragraph}{\numberline {7.5.3.35}Dspline\_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{96}{paragraph.7.5.3.35}
+\contentsline {paragraph}{\numberline {7.5.3.36}Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{97}{paragraph.7.5.3.36}
+\contentsline {paragraph}{\numberline {7.5.3.37}Dspline\_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{98}{paragraph.7.5.3.37}
+\contentsline {section}{Index}{101}{section*.17}

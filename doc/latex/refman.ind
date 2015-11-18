@@ -11,7 +11,7 @@
   \item {am\+\_\+\+Jtmp}
     \subitem {Temp\+Data}, \hyperpage{52}
   \item {am\+\_\+and}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{80}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
   \item {am\+\_\+atol}
     \subitem {User\+Data}, \hyperpage{57}
   \item {am\+\_\+bsx0}
@@ -107,11 +107,11 @@
   \item {am\+\_\+lt}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
   \item {am\+\_\+max}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
   \item {am\+\_\+maxsteps}
     \subitem {User\+Data}, \hyperpage{58}
   \item {am\+\_\+min}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
   \item {am\+\_\+mt}
     \subitem {Exp\+Data}, \hyperpage{46}
   \item {am\+\_\+my}
@@ -246,20 +246,15 @@
     \subitem {Exp\+Data}, \hyperpage{46}
   \item {amici.\+c}
     \subitem {A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}, \hyperpage{64}
-    \subitem {amici\+\_\+c}, \hyperpage{64}
-    \subitem {get\+Diagnosis}, \hyperpage{69}
-    \subitem {get\+Diagnosis\+B}, \hyperpage{71}
+    \subitem {get\+Diagnosis}, \hyperpage{70}
+    \subitem {get\+Diagnosis\+B}, \hyperpage{70}
     \subitem {get\+Root\+Data\+A\+S\+A}, \hyperpage{69}
-    \subitem {get\+Root\+Data\+F\+S\+A}, \hyperpage{68}
-    \subitem {setup\+A\+M\+I}, \hyperpage{65}
+    \subitem {get\+Root\+Data\+F\+S\+A}, \hyperpage{67}
+    \subitem {setup\+A\+M\+I}, \hyperpage{64}
     \subitem {setup\+A\+M\+I\+B}, \hyperpage{65}
-    \subitem {setup\+Exp\+Data}, \hyperpage{66}
-    \subitem {setup\+Return\+Data}, \hyperpage{66}
+    \subitem {setup\+Exp\+Data}, \hyperpage{67}
+    \subitem {setup\+Return\+Data}, \hyperpage{65}
     \subitem {setup\+User\+Data}, \hyperpage{64}
-  \item {amici\+\_\+c}
-    \subitem {amici.\+c}, \hyperpage{64}
-  \item {amici\+\_\+symbolic\+\_\+functions\+\_\+c}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
   \item {amimodel}, \hyperpage{34}
     \subitem {adjoint}, \hyperpage{45}
     \subitem {amimodel}, \hyperpage{36}
@@ -312,47 +307,47 @@
   \indexspace
 
   \item {Dam\+\_\+and}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{80}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
   \item {Dam\+\_\+ge}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
   \item {Dam\+\_\+gt}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{78}
   \item {Dam\+\_\+if}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{80}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
   \item {Dam\+\_\+le}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{78}
   \item {Dam\+\_\+lt}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
   \item {Dam\+\_\+max}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
   \item {Dam\+\_\+min}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
   \item {Dam\+\_\+or}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
   \item {Ddirac}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
   \item {debug}
     \subitem {amimodel}, \hyperpage{45}
   \item {deriv}
-    \subitem {spline.\+c}, \hyperpage{74}
+    \subitem {spline.\+c}, \hyperpage{73}
   \item {dirac}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
   \item {Dspline10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{97}
   \item {Dspline3}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{91}
   \item {Dspline4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{92}
-  \item {Dspline5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{94}
-  \item {Dspline\+\_\+pos10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{97}
-  \item {Dspline\+\_\+pos3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{91}
-  \item {Dspline\+\_\+pos4}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{93}
-  \item {Dspline\+\_\+pos5}
+  \item {Dspline5}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{95}
+  \item {Dspline\+\_\+pos10}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{98}
+  \item {Dspline\+\_\+pos3}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{92}
+  \item {Dspline\+\_\+pos4}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{94}
+  \item {Dspline\+\_\+pos5}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
 
   \indexspace
 
@@ -378,9 +373,9 @@
   \item {generate\+M}
     \subitem {amimodel}, \hyperpage{40}
   \item {get\+Diagnosis}
-    \subitem {amici.\+c}, \hyperpage{69}
+    \subitem {amici.\+c}, \hyperpage{70}
   \item {get\+Diagnosis\+B}
-    \subitem {amici.\+c}, \hyperpage{71}
+    \subitem {amici.\+c}, \hyperpage{70}
   \item {get\+Fun}
     \subitem {amimodel}, \hyperpage{40}
   \item {get\+Fun\+Args}
@@ -394,7 +389,7 @@
   \item {get\+Root\+Data\+A\+S\+A}
     \subitem {amici.\+c}, \hyperpage{69}
   \item {get\+Root\+Data\+F\+S\+A}
-    \subitem {amici.\+c}, \hyperpage{68}
+    \subitem {amici.\+c}, \hyperpage{67}
 
   \indexspace
 
@@ -463,13 +458,13 @@
   \indexspace
 
   \item {setup\+A\+M\+I}
-    \subitem {amici.\+c}, \hyperpage{65}
+    \subitem {amici.\+c}, \hyperpage{64}
   \item {setup\+A\+M\+I\+B}
     \subitem {amici.\+c}, \hyperpage{65}
   \item {setup\+Exp\+Data}
-    \subitem {amici.\+c}, \hyperpage{66}
+    \subitem {amici.\+c}, \hyperpage{67}
   \item {setup\+Return\+Data}
-    \subitem {amici.\+c}, \hyperpage{66}
+    \subitem {amici.\+c}, \hyperpage{65}
   \item {setup\+User\+Data}
     \subitem {amici.\+c}, \hyperpage{64}
   \item {seval}
@@ -479,70 +474,68 @@
   \item {spline}
     \subitem {spline.\+c}, \hyperpage{72}
   \item {spline.\+c}
-    \subitem {deriv}, \hyperpage{74}
+    \subitem {deriv}, \hyperpage{73}
     \subitem {seval}, \hyperpage{73}
     \subitem {sinteg}, \hyperpage{74}
     \subitem {spline}, \hyperpage{72}
   \item {spline10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{88}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{89}
   \item {spline3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
   \item {spline4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{85}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{86}
   \item {spline5}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{87}
   \item {spline\+\_\+pos10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{89}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{90}
   \item {spline\+\_\+pos3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{85}
   \item {spline\+\_\+pos4}
     \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{86}
   \item {spline\+\_\+pos5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{87}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{88}
   \item {src/amici.\+c}, \hyperpage{63}
-  \item {src/spline.\+c}, \hyperpage{72}
-  \item {src/symbolic\+\_\+functions.\+c}, \hyperpage{75}
+  \item {src/spline.\+c}, \hyperpage{71}
+  \item {src/symbolic\+\_\+functions.\+c}, \hyperpage{74}
   \item {symbolic\+\_\+functions.\+c}
-    \subitem {am\+\_\+and}, \hyperpage{80}
+    \subitem {am\+\_\+and}, \hyperpage{81}
     \subitem {am\+\_\+ge}, \hyperpage{77}
     \subitem {am\+\_\+gt}, \hyperpage{77}
     \subitem {am\+\_\+if}, \hyperpage{79}
     \subitem {am\+\_\+le}, \hyperpage{78}
     \subitem {am\+\_\+lt}, \hyperpage{79}
-    \subitem {am\+\_\+max}, \hyperpage{82}
-    \subitem {am\+\_\+min}, \hyperpage{81}
+    \subitem {am\+\_\+max}, \hyperpage{83}
+    \subitem {am\+\_\+min}, \hyperpage{82}
     \subitem {am\+\_\+or}, \hyperpage{81}
-    \subitem {amici\+\_\+symbolic\+\_\+functions\+\_\+c}, 
-		\hyperpage{77}
-    \subitem {Dam\+\_\+and}, \hyperpage{80}
+    \subitem {Dam\+\_\+and}, \hyperpage{81}
     \subitem {Dam\+\_\+ge}, \hyperpage{77}
     \subitem {Dam\+\_\+gt}, \hyperpage{78}
-    \subitem {Dam\+\_\+if}, \hyperpage{80}
+    \subitem {Dam\+\_\+if}, \hyperpage{79}
     \subitem {Dam\+\_\+le}, \hyperpage{78}
     \subitem {Dam\+\_\+lt}, \hyperpage{79}
-    \subitem {Dam\+\_\+max}, \hyperpage{82}
+    \subitem {Dam\+\_\+max}, \hyperpage{83}
     \subitem {Dam\+\_\+min}, \hyperpage{82}
-    \subitem {Dam\+\_\+or}, \hyperpage{81}
-    \subitem {Ddirac}, \hyperpage{83}
-    \subitem {dirac}, \hyperpage{83}
-    \subitem {Dspline10}, \hyperpage{96}
+    \subitem {Dam\+\_\+or}, \hyperpage{82}
+    \subitem {Ddirac}, \hyperpage{84}
+    \subitem {dirac}, \hyperpage{84}
+    \subitem {Dspline10}, \hyperpage{97}
     \subitem {Dspline3}, \hyperpage{91}
-    \subitem {Dspline4}, \hyperpage{92}
-    \subitem {Dspline5}, \hyperpage{94}
-    \subitem {Dspline\+\_\+pos10}, \hyperpage{97}
-    \subitem {Dspline\+\_\+pos3}, \hyperpage{91}
-    \subitem {Dspline\+\_\+pos4}, \hyperpage{93}
-    \subitem {Dspline\+\_\+pos5}, \hyperpage{95}
+    \subitem {Dspline4}, \hyperpage{93}
+    \subitem {Dspline5}, \hyperpage{95}
+    \subitem {Dspline\+\_\+pos10}, \hyperpage{98}
+    \subitem {Dspline\+\_\+pos3}, \hyperpage{92}
+    \subitem {Dspline\+\_\+pos4}, \hyperpage{94}
+    \subitem {Dspline\+\_\+pos5}, \hyperpage{96}
     \subitem {F\+A\+L\+S\+E}, \hyperpage{77}
     \subitem {heaviside}, \hyperpage{83}
-    \subitem {spline10}, \hyperpage{88}
-    \subitem {spline3}, \hyperpage{83}
-    \subitem {spline4}, \hyperpage{85}
+    \subitem {spline10}, \hyperpage{89}
+    \subitem {spline3}, \hyperpage{84}
+    \subitem {spline4}, \hyperpage{86}
     \subitem {spline5}, \hyperpage{87}
-    \subitem {spline\+\_\+pos10}, \hyperpage{89}
-    \subitem {spline\+\_\+pos3}, \hyperpage{84}
+    \subitem {spline\+\_\+pos10}, \hyperpage{90}
+    \subitem {spline\+\_\+pos3}, \hyperpage{85}
     \subitem {spline\+\_\+pos4}, \hyperpage{86}
-    \subitem {spline\+\_\+pos5}, \hyperpage{87}
+    \subitem {spline\+\_\+pos5}, \hyperpage{88}
     \subitem {T\+R\+U\+E}, \hyperpage{77}
 
   \indexspace

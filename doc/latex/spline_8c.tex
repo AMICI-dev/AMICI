@@ -5,23 +5,24 @@
 definition of spline functions  
 
 
-This graph shows which files directly or indirectly include this file\+:\nopagebreak
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=204pt]{spline_8c__dep__incl}
+\includegraphics[width=259pt]{spline_8c__dep__incl}
 \end{center}
 \end{figure}
 \subsubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline} (int n, int end1, int end2, double slope1, double slope2, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+static int \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline} (int n, int end1, int end2, double slope1, double slope2, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
 \item 
-double \hyperlink{spline_8c_a20c8c27889853621fba3e0eacd333723}{seval} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+static double \hyperlink{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{seval} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
 \item 
-double \hyperlink{spline_8c_a7fc66f543b0c296fa694a90c03edb6ca}{deriv} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+static double \hyperlink{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}{deriv} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
 \item 
-double \hyperlink{spline_8c_a158da90aec69a4796fb6f350ac6b71ab}{sinteg} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+static double \hyperlink{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}{sinteg} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
 \end{DoxyCompactItemize}
 
 
@@ -32,9 +33,9 @@ Peter \& Nigel, Design Software, 42 Gubberley St, Kenmore, 4069, Australia.
 
 
 \subsubsection{Function Documentation}
-\hypertarget{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{}\index{spline.\+c@{spline.\+c}!spline@{spline}}
+\hypertarget{spline_8c_a46804aa218bd46034f2da928e5602a08}{}\index{spline.\+c@{spline.\+c}!spline@{spline}}
 \index{spline@{spline}!spline.\+c@{spline.\+c}}
-\paragraph[{spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}int spline (
+\paragraph[{spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static int spline (
 \begin{DoxyParamCaption}
 \item[{int}]{n, }
 \item[{int}]{end1, }
@@ -47,7 +48,7 @@ Peter \& Nigel, Design Software, 42 Gubberley St, Kenmore, 4069, Australia.
 \item[{double}]{c\mbox{[}$\,$\mbox{]}, }
 \item[{double}]{d\mbox{[}$\,$\mbox{]}}
 \end{DoxyParamCaption}
-)}\label{spline_8c_aa6801bbdb0c7625719c019ac287be29e}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a46804aa218bd46034f2da928e5602a08}
 Evaluate the coefficients b\mbox{[}i\mbox{]}, c\mbox{[}i\mbox{]}, d\mbox{[}i\mbox{]}, i = 0, 1, .. n-\/1 for a cubic interpolating spline
 
 S(xx) = Y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = xx -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= xx $<$= x\mbox{[}i+1\mbox{]}
@@ -90,7 +91,7 @@ The n supplied data points are x\mbox{[}i\mbox{]}, y\mbox{[}i\mbox{]}, i = 0 ...
 
 
 \begin{DoxyItemize}
-\item The accompanying function \hyperlink{spline_8c_a20c8c27889853621fba3e0eacd333723}{seval()} may be used to evaluate the spline while deriv will provide the first derivative.
+\item The accompanying function \hyperlink{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{seval()} may be used to evaluate the spline while deriv will provide the first derivative.
 \item Using p to denote differentiation y\mbox{[}i\mbox{]} = S(\+X\mbox{[}i\mbox{]}) b\mbox{[}i\mbox{]} = Sp(\+X\mbox{[}i\mbox{]}) c\mbox{[}i\mbox{]} = Spp(\+X\mbox{[}i\mbox{]})/2 d\mbox{[}i\mbox{]} = Sppp(\+X\mbox{[}i\mbox{]})/6 ( Derivative from the right )
 \item Since the zero elements of the arrays A\+R\+E N\+O\+W used here, all arrays to be passed from the main program should be dimensioned at least \mbox{[}n\mbox{]}. These routines will use elements \mbox{[}0 .. n-\/1\mbox{]}.
 \item Adapted from the text Forsythe, G.\+E., Malcolm, M.\+A. and Moler, C.\+B. (1977) \char`\"{}\+Computer Methods for Mathematical Computations\char`\"{} Prentice Hall
@@ -99,9 +100,9 @@ The n supplied data points are x\mbox{[}i\mbox{]}, y\mbox{[}i\mbox{]}, i = 0 ...
 
 Definition at line 66 of file spline.\+c.
 
-\hypertarget{spline_8c_a20c8c27889853621fba3e0eacd333723}{}\index{spline.\+c@{spline.\+c}!seval@{seval}}
+\hypertarget{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{}\index{spline.\+c@{spline.\+c}!seval@{seval}}
 \index{seval@{seval}!spline.\+c@{spline.\+c}}
-\paragraph[{seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}double seval (
+\paragraph[{seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double seval (
 \begin{DoxyParamCaption}
 \item[{int}]{n, }
 \item[{double}]{u, }
@@ -111,7 +112,7 @@ Definition at line 66 of file spline.\+c.
 \item[{double}]{c\mbox{[}$\,$\mbox{]}, }
 \item[{double}]{d\mbox{[}$\,$\mbox{]}}
 \end{DoxyParamCaption}
-)}\label{spline_8c_a20c8c27889853621fba3e0eacd333723}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}
 Evaluate the cubic spline function
 
 S(xx) = y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = u -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= u $<$= x\mbox{[}i+1\mbox{]} Note that Horner\textquotesingle{}s rule is used. If u $<$ x\mbox{[}0\mbox{]} then i = 0 is used. If u $>$ x\mbox{[}n-\/1\mbox{]} then i = n-\/1 is used.
@@ -126,11 +127,11 @@ S(xx) = y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\
 \hline
 \mbox{\tt in}  & {\em y\mbox{[}$\,$\mbox{]}} & the ordinates of the knots \\
 \hline
-\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}. \\
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
 \hline
-\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}. \\
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
 \hline
-\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}.\\
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}.\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -143,9 +144,9 @@ Notes
 
 Definition at line 208 of file spline.\+c.
 
-\hypertarget{spline_8c_a7fc66f543b0c296fa694a90c03edb6ca}{}\index{spline.\+c@{spline.\+c}!deriv@{deriv}}
+\hypertarget{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}{}\index{spline.\+c@{spline.\+c}!deriv@{deriv}}
 \index{deriv@{deriv}!spline.\+c@{spline.\+c}}
-\paragraph[{deriv(int n, double u, double x[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}double deriv (
+\paragraph[{deriv(int n, double u, double x[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double deriv (
 \begin{DoxyParamCaption}
 \item[{int}]{n, }
 \item[{double}]{u, }
@@ -154,7 +155,7 @@ Definition at line 208 of file spline.\+c.
 \item[{double}]{c\mbox{[}$\,$\mbox{]}, }
 \item[{double}]{d\mbox{[}$\,$\mbox{]}}
 \end{DoxyParamCaption}
-)}\label{spline_8c_a7fc66f543b0c296fa694a90c03edb6ca}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}
 Evaluate the derivative of the cubic spline function
 
 S(x) = B\mbox{[}i\mbox{]} + 2.\+0 $\ast$ C\mbox{[}i\mbox{]} $\ast$ w + 3.\+0 $\ast$ D\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 where w = u -\/ X\mbox{[}i\mbox{]} and X\mbox{[}i\mbox{]} $<$= u $<$= X\mbox{[}i+1\mbox{]} Note that Horner\textquotesingle{}s rule is used. If U $<$ X\mbox{[}0\mbox{]} then i = 0 is used. If U $>$ X\mbox{[}n-\/1\mbox{]} then i = n-\/1 is used.
@@ -167,11 +168,11 @@ S(x) = B\mbox{[}i\mbox{]} + 2.\+0 $\ast$ C\mbox{[}i\mbox{]} $\ast$ w + 3.\+0 $\a
 \hline
 \mbox{\tt in}  & {\em x} & the abscissas of the knots in strictly increasing order \\
 \hline
-\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()} \\
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()} \\
 \hline
-\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()} \\
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()} \\
 \hline
-\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}\\
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -184,9 +185,9 @@ Notes
 
 Definition at line 264 of file spline.\+c.
 
-\hypertarget{spline_8c_a158da90aec69a4796fb6f350ac6b71ab}{}\index{spline.\+c@{spline.\+c}!sinteg@{sinteg}}
+\hypertarget{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}{}\index{spline.\+c@{spline.\+c}!sinteg@{sinteg}}
 \index{sinteg@{sinteg}!spline.\+c@{spline.\+c}}
-\paragraph[{sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}double sinteg (
+\paragraph[{sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double sinteg (
 \begin{DoxyParamCaption}
 \item[{int}]{n, }
 \item[{double}]{u, }
@@ -196,7 +197,7 @@ Definition at line 264 of file spline.\+c.
 \item[{double}]{c\mbox{[}$\,$\mbox{]}, }
 \item[{double}]{d\mbox{[}$\,$\mbox{]}}
 \end{DoxyParamCaption}
-)}\label{spline_8c_a158da90aec69a4796fb6f350ac6b71ab}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}
 Integrate the cubic spline function
 
 S(xx) = y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = u -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= u $<$= x\mbox{[}i+1\mbox{]}
@@ -215,11 +216,11 @@ If u $<$ x\mbox{[}0\mbox{]} then i = 0 segment is extrapolated. If u $>$ x\mbox{
 \hline
 \mbox{\tt in}  & {\em y\mbox{[}$\,$\mbox{]}} & the ordinates of the knots \\
 \hline
-\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}. \\
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
 \hline
-\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}. \\
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
 \hline
-\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_aa6801bbdb0c7625719c019ac287be29e}{spline()}.\\
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}.\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}

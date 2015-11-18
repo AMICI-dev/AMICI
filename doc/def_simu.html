@@ -158,11 +158,11 @@ Differential Equation</h2>
 <div class="fragment"><div class="line">syms t </div>
 </div><!-- fragment --><p>Specify the right hand side of the differential equation f or xdot</p>
 <div class="fragment"><div class="line">xdot(1) = [ const1 - param1*state1 ];</div>
-<div class="line">xdot(2) = [ +param2*x(1) + <a class="code" href="symbolic__functions_8c.html#a30a33546875b9dd1a63c29312b316f7e">dirac</a>(t-param3) - const2*x(2) ];</div>
+<div class="line">xdot(2) = [ +param2*x(1) + <a class="code" href="symbolic__functions_8c.html#a9f096cac6ced6b3a2ec6c32f4f3651bd">dirac</a>(t-param3) - const2*x(2) ];</div>
 <div class="line">xdot(3) = [ param4*x(2) ];</div>
 </div><!-- fragment --><p>or</p>
 <div class="fragment"><div class="line">f(1) = [ const1 - param1*state1 ];</div>
-<div class="line">f(2) = [ +param2*x(1) + <a class="code" href="symbolic__functions_8c.html#a30a33546875b9dd1a63c29312b316f7e">dirac</a>(t-param3) - const2*x(2) ];</div>
+<div class="line">f(2) = [ +param2*x(1) + <a class="code" href="symbolic__functions_8c.html#a9f096cac6ced6b3a2ec6c32f4f3651bd">dirac</a>(t-param3) - const2*x(2) ];</div>
 <div class="line">f(3) = [ 2*x(2) ];</div>
 </div><!-- fragment --><p>The specification of f or xdot may depend on <a class="el" href="def_simu.html#states">States</a>, <a class="el" href="def_simu.html#parameters">Parameters</a> and <a class="el" href="def_simu.html#constants">Constants</a>.</p>
 <p>For DAEs also specify the mass matrix.</p>
@@ -296,7 +296,7 @@ Steady State Sensitivities</h2>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Nov 14 2015 10:37:13 for AMICI by
+    <li class="footer">Generated on Wed Nov 18 2015 10:51:36 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>
