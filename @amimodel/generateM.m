@@ -31,7 +31,7 @@ function this = generateM(this, amimodelo2)
         '%% USAGE:\n'...
         '%% ======\n'...
         '%% [...] = simulate_' this.modelname '(tout,theta)\n'...
-        '%% [...] = simulate_' this.modelname '(tout,theta,kappa,options)\n'...
+        '%% [...] = simulate_' this.modelname '(tout,theta,kappa,data,options)\n'...
         '%% [status,tout,x,y,sx,sy] = simulate_' this.modelname '(...)\n'...
         '%%\n'...
         '%% INPUTS:\n'...
@@ -141,28 +141,6 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['else\n']);
     fprintf(fid,['    kappa=[];\n']);
     fprintf(fid,['end\n']);
-    
-    
-    if(o2flag)
-        fprintf(fid,['if(nargout>1)\n']);
-        fprintf(fid,['    if(nargout>6)\n']);
-        fprintf(fid,['        options_ami.sensi = 2;\n']);
-        fprintf(fid,['    elseif(nargout>4)\n']);
-        fprintf(fid,['        options_ami.sensi = 1;\n']);
-        fprintf(fid,['    else\n']);
-        fprintf(fid,['        options_ami.sensi = 0;\n']);
-        fprintf(fid,['    end\n']);
-        fprintf(fid,['end\n']);
-    else
-        fprintf(fid,['if(nargout>1)\n']);
-        fprintf(fid,['    if(nargout>4)\n']);
-        fprintf(fid,['        options_ami.sensi = 1;\n']);
-        fprintf(fid,['    else\n']);
-        fprintf(fid,['        options_ami.sensi = 0;\n']);
-        fprintf(fid,['    end\n']);
-        fprintf(fid,['end\n']);
-    end
-    
     switch(this.param)
         case 'log'
             fprintf(fid,'theta = exp(phi(:));\n\n');
@@ -239,6 +217,28 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['end\n']);
+    if(o2flag)
+        fprintf(fid,['if(nargout>1)\n']);
+        fprintf(fid,['    if(nargout>6)\n']);
+        fprintf(fid,['        options_ami.sensi = 2;\n']);
+        fprintf(fid,['        options_ami.sensi_meth = ''forward'';\n']);
+        fprintf(fid,['    elseif(nargout>4)\n']);
+        fprintf(fid,['        options_ami.sensi = 1;\n']);
+        fprintf(fid,['        options_ami.sensi_meth = ''forward'';\n']);
+        fprintf(fid,['    else\n']);
+        fprintf(fid,['        options_ami.sensi = 0;\n']);
+        fprintf(fid,['    end\n']);
+        fprintf(fid,['end\n']);
+    else
+        fprintf(fid,['if(nargout>1)\n']);
+        fprintf(fid,['    if(nargout>4)\n']);
+        fprintf(fid,['        options_ami.sensi = 1;\n']);
+        fprintf(fid,['        options_ami.sensi_meth = ''forward'';\n']);
+        fprintf(fid,['    else\n']);
+        fprintf(fid,['        options_ami.sensi = 0;\n']);
+        fprintf(fid,['    end\n']);
+        fprintf(fid,['end\n']);
+    end
     fprintf(fid,['if(ischar(options_ami.sensi_meth))\n']);
     fprintf(fid,['    if(strcmp(options_ami.sensi_meth,''forward''))\n']);
     fprintf(fid,['        options_ami.sensi_meth = 1;\n']);
