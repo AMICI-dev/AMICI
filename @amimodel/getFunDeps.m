@@ -51,7 +51,7 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'y','p'};
           
         case 'sy'
-            deps = {'dydp','dydx'};
+            deps = {'dydp','dydx','sx'};
             
         case 'drootdx'
             deps = {'rfun','x'};
@@ -134,7 +134,7 @@ function [ deps ] = getFunDeps(this, funstr )
             end
             
         case 'qBdot'
-            deps = {'dxdotdp'};
+            deps = {'dxdotdp','xB'};
             
         case 'dsigma_ydp'
             deps = {'sigma_y','p'};
