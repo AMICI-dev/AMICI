@@ -105,7 +105,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     while (t<ts[it]) {
                         if (nr+ndisc>0) {
                             /* we have to find roots */
-                            if(sensi_meth == CW_ASA && sensi >= 1) {
+                            if(sensi_meth == AMI_ASA && sensi >= 1) {
                                 cv_status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                                 if (cv_status==AMI_ROOT_RETURN) {
                                     if (t == tlastroot) {
@@ -143,7 +143,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             }
                         } else {
                             /* solve for forward problem and store checkpoints */
-                            if(sensi_meth == CW_ASA && sensi >= 1) {
+                            if(sensi_meth == AMI_ASA && sensi >= 1) {
                                 cv_status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                             } else {
                                 cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
@@ -163,27 +163,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 xdata[it+nt*ix] = x_tmp[ix];
             }
             
-/*            if (it == nt-1) {
-                  if( ss > 0) {*/
-            status = fxdot(t,x,dx,xdot,udata);
-            if (status != AMI_SUCCESS) goto freturn;
-            
-            xdot_tmp = NV_DATA_S(xdot);
-            
-            status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            if (status != AMI_SUCCESS) goto freturn;
-            
-            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
-            
-            status = fdxdotdp(t,x,dxdotdpdata,udata);
-            if (status != AMI_SUCCESS) goto freturn;
-            status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
-            if (status != AMI_SUCCESS) goto freturn;
-            status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
-            if (status != AMI_SUCCESS) goto freturn;
-/*                }
-              }*/
+            if (it == nt-1) {
+                if( sensi_meth == AMI_SS) {
+                    status = fxdot(t,x,dx,xdot,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    
+                    xdot_tmp = NV_DATA_S(xdot);
+                    
+                    status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    
+                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+                    
+                    status = fdxdotdp(t,x,dxdotdpdata,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                }
+            }
             
             if(ts[it] > tstart) {
                 getDiagnosis(&status, it, ami_mem, udata, rdata);
@@ -199,7 +199,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             
             for (iy=0; iy<ny; iy++) {
                 
-                if(data_model != LW_ONEOUTPUT) {
+                if(data_model != AMI_ONEOUTPUT) {
                     if (mxIsNaN(ysigma[iy*nt+it])) {
                         status =fsigma_y(t,sigma_y,udata);
                         if (status != AMI_SUCCESS) goto freturn;
@@ -209,24 +209,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                 }
                 
-                if (data_model == LW_NORMAL) {
+                if (data_model == AMI_NORMAL) {
                     if(!mxIsNaN(my[iy*nt+it])){
                         g += 0.5*log(2*pi*pow(sigma_y[iy],2)) + 0.5*pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
                         *chi2data += pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
                     }
                 }
-                if (data_model == LW_LOGNORMAL) {
+                if (data_model == AMI_LOGNORMAL) {
                     if(!mxIsNaN(my[iy*nt+it])){
                         g += 0.5*log(2*pi*pow(sigma_y[iy]*ydata[iy*nt+it],2)) + 0.5*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
                         *chi2data += pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
                     }
                 }
-                if (data_model == LW_ONEOUTPUT) {
+                if (data_model == AMI_ONEOUTPUT) {
                     g += ydata[iy*nt+it];
                 }
             }
             if (sensi >= 1) {
-                if (sensi_meth == CW_FSA) {
+                if (sensi_meth == AMI_FSA) {
                     for(ip=0; ip < np; ip++) {
                         if(nx>0) {
                             if(ts[it] > tstart) {
@@ -242,13 +242,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     fsy(ts[it],it,ySdata,xdata,xSdata,udata);
                 }
-                if (sensi_meth == CW_ASA) {
+                if (sensi_meth == AMI_ASA) {
                     status = fdydx(ts[it],it,dydx,ydata,xdata,udata);
                     if (status != AMI_SUCCESS) goto freturn;
                     status = fdydp(ts[it],it,dydp,ydata,xdata,udata);
                     if (status != AMI_SUCCESS) goto freturn;
                     for (iy=0; iy<ny; iy++) {
-                        if(data_model != LW_ONEOUTPUT) {
+                        if(data_model != AMI_ONEOUTPUT) {
                             if (mxIsNaN(ysigma[iy*nt+it])) {
                                 status = fsigma_y(t,sigma_y,udata);
                                 if (status != AMI_SUCCESS) goto freturn;
@@ -262,32 +262,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             }
                         }
                         for (ip=0; ip<np; ip++) {
-                            if(data_model == LW_NORMAL) {
+                            if(data_model == AMI_NORMAL) {
                                 if(!mxIsNaN(my[iy*nt+it])){
                                     dgdp[ip] += dsigma_ydp[ip*ny+iy]/sigma_y[iy] + ( dydp[ip*ny+iy]* ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2) - dsigma_ydp[ip*ny+iy]*pow( ( ydata[iy*nt+it] - my[iy*nt+it] ),2)/pow( sigma_y[iy] , 3);
                                 }
                             }
-                            if(data_model == LW_LOGNORMAL) {
+                            if(data_model == AMI_LOGNORMAL) {
                                 if(!mxIsNaN(my[iy*nt+it])){
                                     dgdp[ip] += (sigma_y[iy]*dydp[ip*ny+iy] + ydata[iy*nt+it]*dsigma_ydp[ip*ny+iy])/(sigma_y[iy]*ydata[iy*nt+it]) + ( dydp[ip*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2) -  dsigma_ydp[ip*ny+iy]*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ),2)/pow(sigma_y[iy] , 3);
                                 }
                             }
-                            if(data_model == LW_ONEOUTPUT) {
+                            if(data_model == AMI_ONEOUTPUT) {
                                 dgdp[ip] += dydp[ip*ny+iy];
                             }
                         }
                         for (ix=0; ix<nx; ix++) {
-                            if(data_model == LW_NORMAL) {
+                            if(data_model == AMI_NORMAL) {
                                 if(!mxIsNaN(my[iy*nt+it])){
                                     dgdx[it+ix*nt] += ( dydx[ix*ny+iy] * ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2);
                                 }
                             }
-                            if(data_model == LW_LOGNORMAL) {
+                            if(data_model == AMI_LOGNORMAL) {
                                 if(!mxIsNaN(my[iy*nt+it])){
                                     dgdx[it+ix*nt] += 1/(2*pi)*dydx[ix*ny+iy]/ydata[iy*nt+it] + ( dydx[ix*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2);
                                 }
                             }
-                            if(data_model == LW_ONEOUTPUT) {
+                            if(data_model == AMI_ONEOUTPUT) {
                                 dgdx[it+ix*nt] += dydx[ix*ny+iy];
                             }
                         }
@@ -308,7 +308,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 /* extract sensitivity information */
                 rootidx[nroots] = ir;
                 if(sensi >= 1) {
-                    if(sensi_meth == CW_FSA) {
+                    if(sensi_meth == AMI_FSA) {
                         status = AMIGetSens(ami_mem, &t, sx);
                         if (status != AMI_SUCCESS) goto freturn;
                         status = fsrootval(t,nroots,rootvalSdata,x,sx,udata);
@@ -328,17 +328,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                 }
                 if(!mxIsNaN(mt[ir*nmaxroot+nroots])) {
-                    if (event_model == LW_NORMAL) {
+                    if (event_model == AMI_NORMAL) {
                         r += 0.5*log(2*pi*pow(tsigma[ir*nmaxroot+nroots],2)) + 0.5*pow( ( t - mt[ir*nmaxroot+nroots] )/tsigma[ir*nmaxroot+nroots] , 2);
                         *chi2data += pow( ( t - mt[ir*nmaxroot+nroots] )/tsigma[ir*nmaxroot+nroots] , 2);
                     }
                     
-                    if (event_model == LW_NORMAL) {
+                    if (event_model == AMI_NORMAL) {
                         r += 0.5*log(2*pi*pow(tsigma[ir*nmaxroot+nroots],2)) + 0.5*pow( ( rootvaltmp[ir] )/tsigma[ir*nmaxroot+nroots] , 2);
                         *chi2data += pow( ( rootvaltmp[ir] )/tsigma[ir*nmaxroot+nroots] , 2);
                     }
                     if (sensi>=1) {
-                        if(sensi_meth == CW_ASA) {
+                        if(sensi_meth == AMI_ASA) {
                             x_tmp = NV_DATA_S(x);
                             status = fdtdp(t,dtdp,x_tmp,udata);
                             if (status != AMI_SUCCESS) goto freturn;
@@ -360,33 +360,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 sigma_t[ir] = tsigma[ir*nmaxroot + nroots];
                             }
                             for (ip=0; ip<np; ip++) {
-                                if(event_model == LW_NORMAL) {
+                                if(event_model == AMI_NORMAL) {
                                                                     drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( dtdp[ip*nr+ir]* ( t - mt[ir*nmaxroot+ nroots] ) )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow( ( t - mt[ir*nmaxroot+ nroots] ),2)/pow( sigma_t[ir] , 3);                                }
-/*                                if(event_model  == LW_LOGNORMAL) {
+/*                                if(event_model  == AMI_LOGNORMAL) {
                                       drdp[ip] += 1/(2*pi)*dtdp[ip*nr+ir]/t + ( dtdp[ip*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
                                   }*/
                             }
                             for (ix=0; ix<nx; ix++) {
-                                if(event_model  == LW_NORMAL) {
+                                if(event_model  == AMI_NORMAL) {
                                     drdx[nroots+ix*nmaxroot] += ( dtdx[ix*nr+ir] * ( t - mt[ir*nmaxroot+nroots] ) )/pow( sigma_t[ir] , 2);
                                 }
-/*                                if(event_model  == LW_LOGNORMAL) {
+/*                                if(event_model  == AMI_LOGNORMAL) {
                                       drdx[nroots+ix*nmaxroot] += 1/(2*pi)*dtdx[ix*nr+ir]/t + ( dtdx[ix*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
                                   }*/
                             }
                             for (ip=0; ip<np; ip++) {
-                                if(event_model  == LW_NORMAL) {
+                                if(event_model  == AMI_NORMAL) {
                                      drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( drvaldp[ip*nr+ir]*rootvaltmp[ir] )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow(rootvaltmp[ir],2)/pow( sigma_t[ir] , 3);
                                 }
-/*                                if(event_model  == LW_LOGNORMAL) {
+/*                                if(event_model  == AMI_LOGNORMAL) {
                                       drdp[ip] += 1/(2*pi)*drvaldp[ip*nr+ir]/rootvaltmp[ir] + ( drvaldp[ip*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
                                   }*/
                             }
                             for (ix=0; ix<nx; ix++) {
-                                if(event_model  == LW_NORMAL) {
+                                if(event_model  == AMI_NORMAL) {
                                     drdx[nroots+ix*nmaxroot] += ( drvaldx[ix*nr+ir] * ( rootvaltmp[ir] ) )/pow( sigma_t[ir] , 2);
                                 }
-/*                                if(event_model  == LW_LOGNORMAL) {
+/*                                if(event_model  == AMI_LOGNORMAL) {
                                       drdx[nroots+ix*nmaxroot] += 1/(2*pi)*drvaldx[ix*nr+ir]/rootvaltmp[ir] + ( drvaldx[ix*nr+ir]/rootvaltmp[ir] * ( log(rootvaltmp[ir]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
                                   }*/
                             }
@@ -400,7 +400,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     if (sensi >= 1) {
         /* only set output sensitivities if no errors occured */
-        if(sensi_meth == CW_ASA) {
+        if(sensi_meth == AMI_ASA) {
             if(cv_status == 0) {
                 
                 setupAMIB(&status, ami_mem, udata, tdata);
@@ -658,10 +658,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if(sigma_y)    mxFree(sigma_y);
         if (sensi >= 1) {
             N_VDestroyVectorArray_Serial(sx,np);
-            if (sensi_meth == CW_FSA) {
+            if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
-            if (sensi_meth == CW_ASA) {
+            if (sensi_meth == AMI_ASA) {
                 if(dydx)    mxFree(dydx);
                 if(dydp)    mxFree(dydp);
                 if(llhS0)     mxFree(llhS0);

@@ -101,7 +101,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetField(prhs[4], 0 ,"sensi_meth")) { sensi_meth = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"sensi_meth")); } else { mexErrMsgTxt("Parameter sensi_meth not specified as field in options struct!"); }
     
     if (sensi > 0) {
-        if (sensi_meth != CW_ASA && sensi_meth != CW_FSA) {
+        if (sensi_meth != AMI_ASA && sensi_meth != AMI_FSA) {
             mexErrMsgTxt("Invalid sensi_meth specified as field in options struct!");
         }
     }
@@ -244,7 +244,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             /* DIRECT SOLVERS */
             
-        case CW_DENSE:
+        case AMI_DENSE:
             *status = AMIDense(ami_mem, nx);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -253,7 +253,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_BAND:
+        case AMI_BAND:
             *status = AMIBand(ami_mem, nx, ubw, lbw);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -262,7 +262,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_LAPACKDENSE:
+        case AMI_LAPACKDENSE:
             mexErrMsgTxt("Solver currently not supported!");
             /* *status = CVLapackDense(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
@@ -272,7 +272,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
              
              break;*/
             
-        case CW_LAPACKBAND:
+        case AMI_LAPACKBAND:
             
             mexErrMsgTxt("Solver currently not supported!");
             /* *status = CVLapackBand(ami_mem, nx);
@@ -283,7 +283,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
              
              break;*/
             
-        case CW_DIAG:
+        case AMI_DIAG:
             *status = AMIDiag(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -291,7 +291,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             /* ITERATIVE SOLVERS */
             
-        case CW_SPGMR:
+        case AMI_SPGMR:
             *status = AMISpgmr(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -300,7 +300,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
 
             break;
             
-        case CW_SPBCG:
+        case AMI_SPBCG:
             *status = AMISpbcg(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -309,7 +309,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_SPTFQMR:
+        case AMI_SPTFQMR:
             *status = AMISptfqmr(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -318,7 +318,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_KLU:
+        case AMI_KLU:
             *status = AMIKLU(ami_mem, nx, nnz);
             if (*status != AMI_SUCCESS) return(NULL);
             
@@ -337,7 +337,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     if ( sensi >= 1) {
         
-        if (sensi_meth == CW_FSA) {
+        if (sensi_meth == AMI_FSA) {
             
             if(nx>0) {
                 
@@ -379,7 +379,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             }
         }
         
-        if (sensi_meth == CW_ASA) {
+        if (sensi_meth == AMI_ASA) {
             
             if(nx>0) {
                 /* Allocate space for the adjoint computation */
@@ -512,7 +512,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             /* DIRECT SOLVERS */
             
-        case CW_DENSE:
+        case AMI_DENSE:
             *status = AMIDenseB(ami_mem, which, nx);
             if (*status != AMI_SUCCESS) return;
             
@@ -521,7 +521,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_BAND:
+        case AMI_BAND:
             *status = AMIBandB(ami_mem, which, nx, ubw, lbw);
             if (*status != AMI_SUCCESS) return;
             
@@ -530,7 +530,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_LAPACKDENSE:
+        case AMI_LAPACKDENSE:
             
             /* #if SUNDIALS_BLAS_LAPACK
              *status = CVLapackDenseB(ami_mem, which, nx);
@@ -543,7 +543,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             /* #endif*/
             break;
             
-        case CW_LAPACKBAND:
+        case AMI_LAPACKBAND:
             
             
             /* #if SUNDIALS_BLAS_LAPACK
@@ -558,7 +558,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             break;
             break;
             
-        case CW_DIAG:
+        case AMI_DIAG:
             *status = AMIDiagB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
             
@@ -569,7 +569,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             /* ITERATIVE SOLVERS */
             
-        case CW_SPGMR:
+        case AMI_SPGMR:
             *status = AMISpgmrB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
             
@@ -578,7 +578,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_SPBCG:
+        case AMI_SPBCG:
             *status = AMISpbcgB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
             
@@ -587,7 +587,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_SPTFQMR:
+        case AMI_SPTFQMR:
             *status = AMISptfqmrB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
             
@@ -596,7 +596,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             
             break;
             
-        case CW_KLU:
+        case AMI_KLU:
             *status = AMIKLUB(ami_mem, which, nx, nnz);
             if (*status != AMI_SUCCESS) return;
             
@@ -668,7 +668,7 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     if(mxGetField(prhs[0], 0 ,"numrhsevalsS")) { numrhsevalsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevalsS")); } else { mexErrMsgTxt("numrhsevalsS not specified as field in solution struct!"); }
     
     if (sensi >= 1) {
-        if (sensi_meth == CW_FSA) {
+        if (sensi_meth == AMI_FSA) {
             if(mxGetField(prhs[0], 0 ,"yS")) { ySdata = mxGetPr(mxGetField(prhs[0], 0 ,"yS")); } else { mexErrMsgTxt("yS not specified as field in solution struct!"); }
             if (nr>0) {
                 if(mxGetField(prhs[0], 0 ,"rootS")) { rootSdata = mxGetPr(mxGetField(prhs[0], 0 ,"rootS")); } else { mexErrMsgTxt("rootS not specified as field in solution struct!"); }
@@ -680,7 +680,7 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
             }
             if(mxGetField(prhs[0], 0 ,"xS")) { xSdata = mxGetPr(mxGetField(prhs[0], 0 ,"xS")); } else { mexErrMsgTxt("xS not specified as field in solution struct!"); }
         }
-        if (sensi_meth == CW_ASA) {
+        if (sensi_meth == AMI_ASA) {
             if(mxGetField(prhs[0], 0 ,"llhS")) { llhSdata = mxGetPr(mxGetField(prhs[0], 0 ,"llhS")); } else { mexErrMsgTxt("llhS not specified as field in solution struct!"); }
             if (sensi >= 2) {
                 if(mxGetField(prhs[0], 0 ,"llhS2")) { llhS2data = mxGetPr(mxGetField(prhs[0], 0 ,"llhS2")); } else { mexErrMsgTxt("llhS not specified as field in solution struct!"); }
@@ -714,9 +714,9 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     edata = (ExpData) mxMalloc(sizeof *edata);
     if (edata == NULL) return(NULL);
     
-    if (data_model == LW_ONEOUTPUT) {
+    if (data_model == AMI_ONEOUTPUT) {
         if ( (ny>1) | (nt>1) ) {
-            mexErrMsgTxt("Data model LW_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
+            mexErrMsgTxt("Data model AMI_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
         }
     } else {
         
@@ -828,7 +828,7 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
                 rootvaldata[*nroots + nmaxroot*ir] = 0;
                 /* extract sensitivity information */
                 if(sensi >= 1) {
-                    if(sensi_meth == CW_FSA) {
+                    if(sensi_meth == AMI_FSA) {
                         *status = AMIGetSens(ami_mem, &t, sx);
                         if (*status != AMI_SUCCESS) return;
                         *status = fsroot(t,*nroots,rootSdata,x,sx,udata);
@@ -856,7 +856,7 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
             /* take care of deltas */
             /* sdeltadisc updates both x and sx, this needs to be done in combination for second order sensitivities */
             if(sensi >= 1) {
-                if(sensi_meth == CW_FSA) {
+                if(sensi_meth == AMI_FSA) {
                     *status = AMIGetSens(ami_mem, &t, sx);
                     if (*status != AMI_SUCCESS) return;
                     *status = sdeltadisc(t,ir-nr,x,sx,udata);
@@ -922,11 +922,11 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
                 x_tmp = NV_DATA_S(x);
                 /* extract sensitivity information */
                 if(!mxIsNaN(mt[ir*nmaxroot+*nroots])) {
-                    if (event_model == LW_NORMAL) {
+                    if (event_model == AMI_NORMAL) {
                         r += 0.5*log(2*pi*pow(tsigma[ir*nmaxroot+*nroots],2)) + 0.5*pow( ( t - mt[ir*nmaxroot+*nroots] )/tsigma[ir*nmaxroot+*nroots] , 2);
                         *chi2data += pow( ( t - mt[ir*nmaxroot+*nroots] )/tsigma[ir*nmaxroot+*nroots] , 2);
                     }
-                    if (event_model == LW_NORMAL) {
+                    if (event_model == AMI_NORMAL) {
                         r += 0.5*log(2*pi*pow(tsigma[ir*nmaxroot+*nroots],2)) + 0.5*pow( ( rootvaltmp[ir] )/tsigma[ir*nmaxroot+*nroots] , 2);
                     }
                     if (sensi>=1) {
@@ -952,22 +952,22 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
                         }
                         
                         for (ip=0; ip<np; ip++) {
-                            if(event_model == LW_NORMAL) {
+                            if(event_model == AMI_NORMAL) {
                                 drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( dtdp[ip*nr+ir]* ( t - mt[ir*nmaxroot+*nroots] ) )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow( ( t - mt[ir*nmaxroot+*nroots] ),2)/pow( sigma_t[ir] , 3);
                             }
                         }
                         for (ix=0; ix<nx; ix++) {
-                            if(event_model  == LW_NORMAL) {
+                            if(event_model  == AMI_NORMAL) {
                                 drdx[*nroots+ix*nmaxroot] += ( dtdx[ix*nr+ir] * ( t - mt[ir*nmaxroot+*nroots] ) )/pow( sigma_t[ir] , 2);
                             }
                         }
                         for (ip=0; ip<np; ip++) {
-                            if(event_model  == LW_NORMAL) {
+                            if(event_model  == AMI_NORMAL) {
                                 drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( drvaldp[ip*nr+ir]* rootvaltmp[ir] )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow(rootvaltmp[ir],2)/pow( sigma_t[ir] , 3);
                             }
                         }
                         for (ix=0; ix<nx; ix++) {
-                            if(event_model  == LW_NORMAL) {
+                            if(event_model  == AMI_NORMAL) {
                                 drdx[*nroots+ix*nmaxroot] += ( drvaldx[ix*nr+ir] * rootvaltmp[ir] )/pow( sigma_t[ir] , 2);
                             }
                         }

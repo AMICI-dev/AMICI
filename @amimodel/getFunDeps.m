@@ -10,7 +10,7 @@ function [ deps ] = getFunDeps(this, funstr )
     switch(funstr)
         case 'xdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'M','rhs','p','x','k'};
+                deps = {'M','p','x','k','dx'};
             else
                 deps = {'p','x','k'};
             end
@@ -39,7 +39,7 @@ function [ deps ] = getFunDeps(this, funstr )
             
         case 'sxdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'dfdx','M','dxdotdp'};
+                deps = {'dfdx','M','dxdotdp','sdx'};
             else
                 deps = {'J','dxdotdp'};
             end
@@ -128,7 +128,7 @@ function [ deps ] = getFunDeps(this, funstr )
             
         case 'xBdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'J','M','xB'};
+                deps = {'J','M','xB','dxB'};
             else
                 deps = {'J','xB'};
             end
@@ -197,13 +197,13 @@ function [ deps ] = getFunDeps(this, funstr )
             deps = {'xdot'};
             
         case 'dx0'
-            deps = {'dx0','x','p','k'};
+            deps = {'x','p','k'};
             
         case 'rfun'
             deps = {'p','k','x'};
             
         case 'M'
-            deps = {'M','x','p','k'};
+            deps = {'x','p','k'};
             
         case 'x'
             deps = {};
