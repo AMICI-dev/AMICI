@@ -39,7 +39,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     ReturnData rdata; /* return data */
     ExpData edata; /* experimental data */
     TempData tdata; /* temporary data */
-    int *status; /* general status flag */
+    int status; /* general status flag */
+    double *pstatus; /* return status flag */
     int cv_status; /* status flag returned by integration method */
 
     long int numsteps;
@@ -68,8 +69,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgTxt("No solution struct provided!");
     }
     
-    if(mxGetField(prhs[0], 0 ,"status")) { status = (int *) mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgTxt("Parameter status not specified as field in solution struct!"); }
-    
     /* options */
     if (!prhs[4]) {
         mexErrMsgTxt("No options provided!");
@@ -78,7 +77,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tdata = (TempData) mxMalloc(sizeof *tdata);
     if (tdata == NULL) goto freturn;
     
-    ami_mem = setupAMI(status, udata, tdata);
+    ami_mem = setupAMI(&status, udata, tdata);
     if (ami_mem == NULL) goto freturn;
     
     rdata = setupReturnData(prhs, udata);
@@ -116,7 +115,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                         cv_status = 0;
                                     }
                                     tlastroot = t;
-                                    getRootDataASA(status, &nroots, &idisc, ami_mem, udata, rdata, edata, tdata);
+                                    getRootDataASA(&status, &nroots, &idisc, ami_mem, udata, rdata, edata, tdata);
                                     if (t==ts[it]) {
                                         cv_status = 0;
                                     }
@@ -131,7 +130,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                         cv_status = 0;
                                     }
                                     tlastroot = t;
-                                    getRootDataFSA(status, &nroots, ami_mem, udata, rdata, tdata);
+                                    getRootDataFSA(&status, &nroots, ami_mem, udata, rdata, tdata);
                                     if (t==ts[it]) {
                                         cv_status = 0;
                                     }
@@ -151,8 +150,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             }
                         }
                         if (cv_status < 0) {
-                            *status = cv_status;
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = cv_status;
+                            if (status != AMI_SUCCESS) goto freturn;
                         }
                     }
                 }
@@ -166,44 +165,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             
 /*            if (it == nt-1) {
                   if( ss > 0) {*/
-            *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) goto freturn;
+            status = fxdot(t,x,dx,xdot,udata);
+            if (status != AMI_SUCCESS) goto freturn;
             
             xdot_tmp = NV_DATA_S(xdot);
             
-            *status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            if (*status != AMI_SUCCESS) goto freturn;
+            status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+            if (status != AMI_SUCCESS) goto freturn;
             
             memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
             memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
             
-            *status = fdxdotdp(t,x,dxdotdpdata,udata);
-            if (*status != AMI_SUCCESS) goto freturn;
-            *status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
-            if (*status != AMI_SUCCESS) goto freturn;
-            *status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
-            if (*status != AMI_SUCCESS) goto freturn;
+            status = fdxdotdp(t,x,dxdotdpdata,udata);
+            if (status != AMI_SUCCESS) goto freturn;
+            status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
+            if (status != AMI_SUCCESS) goto freturn;
+            status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
+            if (status != AMI_SUCCESS) goto freturn;
 /*                }
               }*/
             
             if(ts[it] > tstart) {
-                getDiagnosis(status, it, ami_mem, udata, rdata);
+                getDiagnosis(&status, it, ami_mem, udata, rdata);
             }
             
         } else {
-            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = 0.0;
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
         }
         
         if(cv_status == 0) {
-            *status = fy(ts[it],it,ydata,xdata,udata);
-            if (*status != AMI_SUCCESS) goto freturn;
+            status = fy(ts[it],it,ydata,xdata,udata);
+            if (status != AMI_SUCCESS) goto freturn;
             
             for (iy=0; iy<ny; iy++) {
                 
                 if(data_model != LW_ONEOUTPUT) {
                     if (mxIsNaN(ysigma[iy*nt+it])) {
-                        *status =fsigma_y(t,sigma_y,udata);
-                        if (*status != AMI_SUCCESS) goto freturn;
+                        status =fsigma_y(t,sigma_y,udata);
+                        if (status != AMI_SUCCESS) goto freturn;
                         
                     } else {
                         sigma_y[iy] = ysigma[iy*nt+it];
@@ -231,8 +230,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     for(ip=0; ip < np; ip++) {
                         if(nx>0) {
                             if(ts[it] > tstart) {
-                                *status = AMIGetSens(ami_mem, &t, sx);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetSens(ami_mem, &t, sx);
+                                if (status != AMI_SUCCESS) goto freturn;
                             }
                             
                             sx_tmp = NV_DATA_S(sx[ip]);
@@ -244,17 +243,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     fsy(ts[it],it,ySdata,xdata,xSdata,udata);
                 }
                 if (sensi_meth == CW_ASA) {
-                    *status = fdydx(ts[it],it,dydx,ydata,xdata,udata);
-                    if (*status != AMI_SUCCESS) goto freturn;
-                    *status = fdydp(ts[it],it,dydp,ydata,xdata,udata);
-                    if (*status != AMI_SUCCESS) goto freturn;
+                    status = fdydx(ts[it],it,dydx,ydata,xdata,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fdydp(ts[it],it,dydp,ydata,xdata,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
                     for (iy=0; iy<ny; iy++) {
                         if(data_model != LW_ONEOUTPUT) {
                             if (mxIsNaN(ysigma[iy*nt+it])) {
-                                *status = fsigma_y(t,sigma_y,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = fdsigma_ydp(t,dsigma_ydp,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = fsigma_y(t,sigma_y,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = fdsigma_ydp(t,dsigma_ydp,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
                             } else {
                                 for (ip=0; ip<np; ip++) {
                                     dsigma_ydp[ip*ny+iy] = 0;
@@ -303,20 +302,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if (nroots==0) {
             for (ir=0; ir<nr; ir++){
                 rootdata[nroots + nmaxroot*ir] = t;
-                *status = froot(t, x, dx, rootvaltmp, udata);
-                if (*status != AMI_SUCCESS) goto freturn;
+                status = froot(t, x, dx, rootvaltmp, udata);
+                if (status != AMI_SUCCESS) goto freturn;
                 rootvaldata[nroots + nmaxroot*ir] = rootvaltmp[ir];
                 /* extract sensitivity information */
                 rootidx[nroots] = ir;
                 if(sensi >= 1) {
                     if(sensi_meth == CW_FSA) {
-                        *status = AMIGetSens(ami_mem, &t, sx);
-                        if (*status != AMI_SUCCESS) goto freturn;
-                        *status = fsrootval(t,nroots,rootvalSdata,x,sx,udata);
-                        if (*status != AMI_SUCCESS) goto freturn;
+                        status = AMIGetSens(ami_mem, &t, sx);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        status = fsrootval(t,nroots,rootvalSdata,x,sx,udata);
+                        if (status != AMI_SUCCESS) goto freturn;
                         if (sensi >= 2) {
-                            *status = fs2rootval(t,nroots,rootvalS2data,x,sx,udata);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = fs2rootval(t,nroots,rootvalS2data,x,sx,udata);
+                            if (status != AMI_SUCCESS) goto freturn;
                         }
                         for (ip=0; ip<np; ip++) {
                             rootSdata[nroots + nmaxroot*(ip*nr + ir)] = 0;
@@ -341,19 +340,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if (sensi>=1) {
                         if(sensi_meth == CW_ASA) {
                             x_tmp = NV_DATA_S(x);
-                            *status = fdtdp(t,dtdp,x_tmp,udata);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = fdtdx(t,dtdx,x_tmp,udata);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = fdrvaldp(t,drvaldp,x_tmp,udata);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = fdrvaldx(t,drvaldx,x_tmp,udata);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = fdtdp(t,dtdp,x_tmp,udata);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = fdtdx(t,dtdx,x_tmp,udata);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = fdrvaldp(t,drvaldp,x_tmp,udata);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = fdrvaldx(t,drvaldx,x_tmp,udata);
+                            if (status != AMI_SUCCESS) goto freturn;
                             if (mxIsNaN(tsigma[ir*nmaxroot + nroots])) {
-                                *status = fsigma_t(t,sigma_t,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = fdsigma_tdp(t,dsigma_tdp,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = fsigma_t(t,sigma_t,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = fdsigma_tdp(t,dsigma_tdp,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
                             } else {
                                 for (ip=0; ip<np; ip++) {
                                     dsigma_ydp[ip*nr+ir] = 0;
@@ -404,7 +403,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if(sensi_meth == CW_ASA) {
             if(cv_status == 0) {
                 
-                setupAMIB(status, ami_mem, udata, tdata);
+                setupAMIB(&status, ami_mem, udata, tdata);
                 
                 nroots--;
                 idisc--;
@@ -438,52 +437,52 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         if (discflag) {
                             if (discs[idisc] == ts[it]) {
                                 
-                                *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
 
-                                *status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = bdeltadisc(t,irdiscs[idisc],xB,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
-                                *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIQuadReInitB(ami_mem, which, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIQuadReInitB(ami_mem, which, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
-                                *status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
 
                                 idisc--;
                             } else {
                                 cv_status = AMISolveB(ami_mem, discs[idisc], AMI_NORMAL);
 
-                                *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
-                                *status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = bdeltadisc(t,irdiscs[idisc],xB,udata);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
                                 if (t == ts[it-1]) {
                                     for (ix=0; ix<nx; ix++) {
                                         xB_tmp[ix] += dgdx[it-1+ix*nt];
                                     }
-                                    getDiagnosisB(status,it-1,ami_mem,udata,rdata,tdata);
+                                    getDiagnosisB(&status,it-1,ami_mem,udata,rdata,tdata);
                                 }
                                 
-                                *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIQuadReInitB(ami_mem, which, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIQuadReInitB(ami_mem, which, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
-                                *status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
                                 idisc--;
                             }
@@ -492,23 +491,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
                             cv_status = AMISolveB(ami_mem, rootdata[nroots + nmaxroot*rootidx[nroots]], AMI_NORMAL);
                             
-                            *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
                             
                             xB_tmp = NV_DATA_S(xB);
                             for (ix=0; ix<nx; ix++) {
                                 xB_tmp[ix] += drdx[nroots + ix*nmaxroot];
                             }
                             
-                            *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = AMIQuadReInitB(ami_mem, which, xQB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIQuadReInitB(ami_mem, which, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
                             
-                            *status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
 
                             nroots--;
                         }
@@ -519,25 +518,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             if (ts[it-1] < t) {
                                 cv_status = AMISolveB(ami_mem, RCONST(ts[it-1]), AMI_NORMAL);
                             
-                                *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
 
-                                getDiagnosisB(status,it-1,ami_mem,udata,rdata,tdata);
+                                getDiagnosisB(&status,it-1,ami_mem,udata,rdata,tdata);
                                 
                                 xB_tmp = NV_DATA_S(xB);
                                 for (ix=0; ix<nx; ix++) {
                                     xB_tmp[ix] += dgdx[it-1+ix*nt];
                                 }
                                 
-                                *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
-                                *status = AMIQuadReInitB(ami_mem, which, xQB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIQuadReInitB(ami_mem, which, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
                                 
-                                *status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
-                                if (*status != AMI_SUCCESS) goto freturn;
+                                status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
                             }
                         }
                     }
@@ -549,22 +548,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         if (rootdata[nroots + nmaxroot*ir]< t && rootdata[nroots + nmaxroot*ir]>ts[it-1]) {
                             cv_status = AMISolveB(ami_mem, rootdata[nroots + nmaxroot*ir], AMI_NORMAL);
                             
-                            *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
                             xB_tmp = NV_DATA_S(xB);
                             
                             for (ix=0; ix<nx; ix++) {
                                 xB_tmp[ix] += drdx[it+ix*nt];
                             }
 
-                            *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = AMIQuadReInitB(ami_mem, which, xQB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIQuadReInitB(ami_mem, which, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
                             
-                            *status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
                             
                             nroots--;
                         }
@@ -577,10 +576,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             /* solve for backward problems */
                             cv_status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
                             
-                            *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (*status != AMI_SUCCESS) goto freturn;
-                            *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (*status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
                         }
                     }
                 }
@@ -589,12 +588,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 sx = N_VCloneVectorArray_Serial(np,x);
                 if (sx == NULL) goto freturn;
                 
-                *status = fx0(x,udata);
-                if (*status != AMI_SUCCESS) goto freturn;
-                *status = fdx0(x,dx,udata);
-                if (*status != AMI_SUCCESS) goto freturn;
-                *status = fsx0(sx, x, dx, udata);
-                if (*status != AMI_SUCCESS) goto freturn;
+                status = fx0(x,udata);
+                if (status != AMI_SUCCESS) goto freturn;
+                status = fdx0(x,dx,udata);
+                if (status != AMI_SUCCESS) goto freturn;
+                status = fsx0(sx, x, dx, udata);
+                if (status != AMI_SUCCESS) goto freturn;
 
                 if(cv_status == 0) {
 
@@ -616,12 +615,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     
                 } else {
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = 0.0;
+                        llhSdata[ip] = mxGetNaN();
                     }
                 }
             } else {
                 for(ip=0; ip < np; ip++) {
-                    llhSdata[ip] = 0.0;
+                    llhSdata[ip] = mxGetNaN();
                 }
             }
         }
@@ -631,7 +630,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         
     *llhdata = - g - r;
     
-    *status = cv_status;
+    status = cv_status;
     
     goto freturn;
     
@@ -692,6 +691,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
+    
+    if(mxGetField(prhs[0], 0 ,"status")) { pstatus = mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgTxt("Parameter status not specified as field in solution struct!"); }
+    *pstatus = (double) status;
     
     return;
 }

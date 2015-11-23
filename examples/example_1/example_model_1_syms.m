@@ -11,8 +11,7 @@ model.maxsteps = 1e4;
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10'; 
-model.debug = false;
-
+model.debug = true;
 
 %% STATES
 
