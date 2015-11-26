@@ -6,23 +6,24 @@
 #include <include/tdata.h>
 
 /* sensitivity method */
-#define CW_FSA 1
-#define CW_ASA 2
+#define AMI_FSA 1
+#define AMI_ASA 2
+#define AMI_SS  3
 
 /* linear solvers */
-#define CW_DENSE       1
-#define CW_BAND        2
-#define CW_LAPACKDENSE 3
-#define CW_LAPACKBAND  4
-#define CW_DIAG        5
-#define CW_SPGMR       6
-#define CW_SPBCG       7
-#define CW_SPTFQMR     8
-#define CW_KLU         9
+#define AMI_DENSE       1
+#define AMI_BAND        2
+#define AMI_LAPACKDENSE 3
+#define AMI_LAPACKBAND  4
+#define AMI_DIAG        5
+#define AMI_SPGMR       6
+#define AMI_SPBCG       7
+#define AMI_SPTFQMR     8
+#define AMI_KLU         9
 
-#define LW_NORMAL      1
-#define LW_LOGNORMAL   2
-#define LW_ONEOUTPUT   5
+#define AMI_NORMAL      1
+#define AMI_LOGNORMAL   2
+#define AMI_ONEOUTPUT   5
 
 #define AMI_SUCCESS               0
 #define AMI_ROOT_RETURN           2

@@ -101,7 +101,7 @@ function argstr = getFunArgs(this,funstr)
         case 'deltadisc'
             argstr = '(realtype t, int idisc, N_Vector x, void *user_data)';
         case 'bdeltadisc'
-            argstr = '(realtype t, int idisc, N_Vector xB, void *user_data)';
+            argstr = '(realtype t, int idisc, N_Vector x, N_Vector xB, void *user_data)';
         case 'ideltadisc'
             argstr = '(realtype t, int idisc, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data)';
         case 'sdeltadisc'

@@ -78,6 +78,9 @@ classdef amimodel
         wrap_path;
         % flag to enforce recompilation of the model
         recompile = false;
+        % counter that allows enforcing of recompilation of models after
+        % code changes
+        compver = 1;
     end
     
     methods

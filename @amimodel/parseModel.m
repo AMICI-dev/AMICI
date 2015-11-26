@@ -203,8 +203,9 @@ function this = parseModel(this)
     colptrsB = this.colptrsB;
     rowvalsB = this.rowvalsB;
     sparseidxB = this.sparseidxB;
+    compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
 
     fprintf('\r')
 

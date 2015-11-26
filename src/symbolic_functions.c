@@ -376,6 +376,26 @@ static double Ddirac(int id, double x) {
 }
 
 /**
+ *  c implementation of matlab function sign
+ *
+ * @param id argument index for differentiation
+ * @param x argument
+ * @return 0 @type double
+ *
+ */
+static double sign(double x) {
+    if (x > 0) {
+        return(1);
+    } else {
+        if (x < 0 ) {
+            return(-1);
+        } else {
+            return(0);
+        }
+    }
+}
+
+/**
  * spline function with 3 nodes
  *
  * @param t point at which the spline should be evaluated

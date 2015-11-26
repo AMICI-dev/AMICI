@@ -30,6 +30,17 @@ function [this,HTable] = loadOldHashes(this)
             this.sparseidxB = sparseidxB;
         catch
         end
+        try
+            if(this.compver>compver)
+                disp('Code changes made recompilation of model necessary!')
+                this.recompile = true;
+                error('catchmeifyoucan');
+            end
+        catch
+            disp('Code changes made recompilation of model necessary!')
+            this.recompile = true;
+            error('catchmeifyoucan');
+        end
         
     catch
         HTable = struct();
