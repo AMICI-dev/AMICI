@@ -299,7 +299,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     /* add event if we did not have one yet */
     if (nr>0) {
-        if (nroots==0) {
+        while (nroots<nmaxroot) {
             for (ir=0; ir<nr; ir++){
                 rootdata[nroots + nmaxroot*ir] = t;
                 status = froot(t, x, dx, rootvaltmp, udata);
@@ -361,7 +361,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             }
                             for (ip=0; ip<np; ip++) {
                                 if(event_model == AMI_NORMAL) {
-                                                                    drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( dtdp[ip*nr+ir]* ( t - mt[ir*nmaxroot+ nroots] ) )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow( ( t - mt[ir*nmaxroot+ nroots] ),2)/pow( sigma_t[ir] , 3);                                }
+                                    drdp[ip] += dsigma_tdp[ip*nr+ir]/sigma_t[ir] + ( dtdp[ip*nr+ir]* ( t - mt[ir*nmaxroot+ nroots] ) )/pow( sigma_t[ir] , 2) - dsigma_tdp[ip*nr+ir]*pow( ( t - mt[ir*nmaxroot+ nroots] ),2)/pow( sigma_t[ir] , 3);                                }
 /*                                if(event_model  == AMI_LOGNORMAL) {
                                       drdp[ip] += 1/(2*pi)*dtdp[ip*nr+ir]/t + ( dtdp[ip*nr+ir]/t * ( log(t) - log(mt[ir*nmaxroot+nroots]) ) )/pow( tsigma[ir*nmaxroot+nroots] , 2);
                                   }*/
@@ -444,7 +444,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
                                 status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
                                 if (status != AMI_SUCCESS) goto freturn;
-                                status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                status = bdeltadisc(t,irdiscs[idisc],x,xB,udata);
                                 if (status != AMI_SUCCESS) goto freturn;
                                 
                                 status = AMIReInitB(ami_mem, which, t, xB, dxB);
@@ -466,7 +466,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 
                                 status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
                                 if (status != AMI_SUCCESS) goto freturn;
-                                status = bdeltadisc(t,irdiscs[idisc],xB,udata);
+                                status = bdeltadisc(t,irdiscs[idisc],x,xB,udata);
                                 if (status != AMI_SUCCESS) goto freturn;
                                 
                                 if (t == ts[it-1]) {

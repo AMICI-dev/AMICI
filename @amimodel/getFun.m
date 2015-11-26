@@ -8,7 +8,7 @@ function this = getFun(this,HTable,funstr)
     %
     % Return values:
     %  this: updated model definition object @type amimodel
-
+    
     deps = this.getFunDeps(funstr);
     
     [wrap_path,~,~]=fileparts(which('amiwrap.m'));
@@ -138,7 +138,7 @@ function this = getFun(this,HTable,funstr)
                 this.sym.M = mysubs(this.sym.M,this.sym.p,this.strsym.ps);
                 this.sym.M = mysubs(this.sym.M,this.sym.k,this.strsym.ks);
                 this.strsym.Ms = 1;
-
+                
             case 'xdot'
                 this.sym.xdot = mysubs(this.sym.xdot,this.sym.x,this.strsym.xs);
                 this.sym.xdot = mysubs(this.sym.xdot,this.sym.p,this.strsym.ps);
@@ -163,7 +163,7 @@ function this = getFun(this,HTable,funstr)
             case 'J'
                 if(strcmp(this.wtype,'iw'))
                     syms cj
-                    this.sym.J = this.sym.dfdx - cj*this.sym.M; 
+                    this.sym.J = this.sym.dfdx - cj*this.sym.M;
                     
                     idx = find(double(this.sym.J~=0));
                     Js = cell(length(idx),1);
@@ -174,7 +174,7 @@ function this = getFun(this,HTable,funstr)
                     this.strsym.Js(idx) = sym(Js);
                 else
                     this.sym.J = jacobian(this.sym.xdot,this.strsym.xs);
-
+                    
                     idx = find(double(this.sym.J~=0));
                     Js = cell(length(idx),1);
                     for iJ = 1:length(idx)
@@ -191,7 +191,7 @@ function this = getFun(this,HTable,funstr)
                 this.sym.dxdotdp=jacobian(this.sym.xdot,this.strsym.ps);
                 dxdotdps = cell(nx,1);
                 for ix = 1:nx
-                        dxdotdps{ix} = sprintf('tmp_dxdotdp[%i+ip*nx]',ix-1);
+                    dxdotdps{ix} = sprintf('tmp_dxdotdp[%i+ip*nx]',ix-1);
                 end
                 this.strsym.dxdotdp = sym(dxdotdps);
                 
@@ -432,7 +432,7 @@ function this = getFun(this,HTable,funstr)
                 
             case 'rdisc'
                 % bogus variable
-                syms foo
+                syms polydirac
                 % discontinuities
                 ndisc = 0;
                 for ix = 1:length(this.sym.xdot)
@@ -455,23 +455,19 @@ function this = getFun(this,HTable,funstr)
                             idx_end = str_idx;
                             arg = tmp_str((idx_start(iocc)+1):(idx_end-1));
                             if(ndisc>0)
-                                if(strcmp(tmp_str(max((idx_start(iocc)-9),1):(idx_start(iocc)-1)),'heaviside'))
-                                    if(~any(isequaln(abs(this.sym.rdisc),abs(sym(arg)))))
+                                ediscf = zeros(size(this.sym.rdisc));
+                                for id = 1:length(this.sym.rdisc)
+                                    ediscf(id) = isequaln(abs(this.sym.rdisc(id)),abs(sym(arg)));
+                                end
+                                if(~any(ediscf))
+                                    if(isempty(strfind(arg,','))) % no higher order derivatives
                                         ndisc = ndisc + 1;
                                         this.sym.rdisc(ndisc) = sym(arg);
-                                    else
                                     end
-                                elseif(strcmp(tmp_str(max((idx_start(iocc)-5),1):(idx_start(iocc)-1)),'dirac'))
-                                    if(~any(isequaln(abs(this.sym.rdisc),abs(sym(arg)))))
-                                        if(isempty(strfind(arg,','))) % no higher order derivatives
-                                            ndisc = ndisc + 1;
-                                            this.sym.rdisc(ndisc) = sym(arg);
-                                        end
-                                    else
-                                    end
+                                else
                                 end
                             else
-                                if(isempty(strfind(arg,',')))
+                                if(isempty(strfind(arg,','))) % no higher order derivatives
                                     ndisc = ndisc + 1;
                                     this.sym.rdisc(ndisc) = sym(arg);
                                 end
@@ -479,17 +475,42 @@ function this = getFun(this,HTable,funstr)
                         end
                     end
                 end
-                
+                this.sym.f = sym(zeros(nx,ndisc));
+                for ix = 1:nx
+                    symchar = char(this.sym.xdot(ix));
+                    if(strfind(symchar,'dirac'))
+                        for idisc = 1:length(this.sym.rdisc)
+                            discchar = char(this.sym.rdisc(idisc));
+                            str_arg_d = ['dirac(' discchar ')' ];
+                            str_arg_d1 = ['dirac(1, ' discchar ')' ];
+                            str_arg_1d = ['dirac(' discchar ', 1)' ];
+                            str_arg_d2 = ['dirac(2, ' discchar ')' ];
+                            str_arg_2d = ['dirac(' discchar ', 2)' ];
+                            % f
+                            symchar = strrep(symchar,str_arg_d,'polydirac');
+                            symchar = strrep(symchar,str_arg_d1,'polydirac');
+                            symchar = strrep(symchar,str_arg_1d,'polydirac');
+                            symchar = strrep(symchar,str_arg_d2,'polydirac');
+                            symchar = strrep(symchar,str_arg_2d,'polydirac');
+                        end
+                        cfp = coeffs(sym(symchar),polydirac);
+                        this.sym.f(ix) = cfp(1);
+                    else
+                        this.sym.f(ix) = this.sym.xdot(ix);
+                    end
+                end
+                for idisc = 1:length(this.sym.rdisc)
+                    this.sym.gdisc(ndisc) = diff(this.sym.rdisc(idisc),'t') + jacobian(this.sym.rdisc(idisc),this.strsym.xs)*transpose(this.sym.f);
+                end
                 this.ndisc = ndisc;
                 if(ndisc == 0)
                     this.sym.rdisc = [];
                 end
                 
             case 'deltadisc'
-                syms foo
+                syms polydirac
                 
                 this.sym.deltadisc = sym(zeros(nx,ndisc));
-                this.sym.f = sym(zeros(nx,ndisc));
                 this.sym.v = sym(zeros(nx,ndisc));
                 this.sym.w = sym(zeros(nx,ndisc));
                 this.sym.z = sym(zeros(nx,ndisc));
@@ -497,83 +518,51 @@ function this = getFun(this,HTable,funstr)
                 % convert deltas in xdot
                 if(ndisc>0)
                     for ix = 1:nx
-                        summand_ignore = [];
-                        tmp_str_d = char(this.sym.xdot(ix));
-                        idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                        if(~isempty(idx_start_d))
-                            for iocc_d = 1:length(idx_start_d)
-                                brl = 1; % init bracket level
-                                str_idx_d = idx_start_d(iocc_d); % init string index
-                                % this code should be improved at some point
-                                while brl >= 1 % break as soon as initial bracket is closed
-                                    str_idx_d = str_idx_d + 1;
-                                    if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                        brl = brl + 1;
-                                    end
-                                    if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                        brl = brl - 1;
-                                    end
-                                end
-                                idx_end_d = str_idx_d;
-                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                if(strfind(arg_d,',')) % higher order derivatives
-                                    if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                    elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                    end
-                                end
-                                str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
+                        symchar = char(this.sym.xdot(ix));
+                        if(strfind(symchar,'dirac'))
+                            for idisc = 1:ndisc
+                                discchar = char(this.sym.rdisc(idisc));
+                                str_arg_d = ['dirac(' discchar ')' ];
+                                str_arg_d1 = ['dirac(1, ' discchar ')' ];
+                                str_arg_1d = ['dirac(' discchar ', 1)' ];
+                                str_arg_d2 = ['dirac(2, ' discchar ')' ];
+                                str_arg_2d = ['dirac(' discchar ', 2)' ];
                                 % find the corresponding discontinuity
-                                for idisc = 1:ndisc;
-                                    if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                        if(length(children(this.sym.xdot(ix)+foo))==2) % if the term is not a sum
-                                            summands = this.sym.xdot(ix);
-                                        else
-                                            summands = children(this.sym.xdot(ix));
-                                        end
-                                        for is = 1:length(summands)
-                                            if(isempty(find(is==summand_ignore,1))) % check if we already added that term
-                                                str_summand = char(summands(is));
-                                                if(strfind(str_summand,str_arg_d)) % v_i
-                                                    this.sym.v(ix,idisc) = this.sym.v(ix,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                    this.sym.w(ix,idisc) = this.sym.w(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                    this.sym.w(ix,idisc) = this.sym.w(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                    this.sym.z(ix,idisc) = this.sym.z(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                    this.sym.z(ix,idisc) = this.sym.z(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                else % f
-                                                    this.sym.f(ix,idisc) = this.sym.xdot(ix,idisc) + summands(is);
-                                                    summand_ignore = [summand_ignore is];
-                                                end
-                                            end
-                                        end
-                                    else
-                                        this.sym.f(ix,idisc) = this.sym.xdot(ix);
-                                    end
+                                % xdot_i = f_i(x,t) + v_i*delta(gdisc) +
+                                % w_i*delta(1)(gdisc) + z_i*delta(2)(gdisc);
+                                % v
+                                tmpstr = char(this.sym.xdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.v(ix,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.v(ix,idisc) = 0;
+                                end
+                                % w
+                                tmpstr = char(this.sym.xdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d1,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_1d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.w(ix,idisc) = cfp(2)*this.sym.gdisc(idisc)/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.w(ix,idisc) = 0;
+                                end
+                                % z
+                                tmpstr = char(this.sym.xdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d2,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_2d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.z(ix,idisc) = cfp(2)*this.sym.gdisc(idisc)^2/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.z(ix,idisc) = 0;
                                 end
                             end
-                        else
-                            this.sym.f(ix,:) = repmat(this.sym.xdot(ix),[1,ndisc]);
                         end
                     end
+                    
                     % compute deltadisc
                     for idisc = 1:ndisc
                         nonzero_z = any(this.sym.z(:,idisc)~=0);
@@ -617,89 +606,66 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'ideltadisc'
-                syms foo
+                syms polydirac
                 this.sym.ideltadisc = sym(zeros(np,ndisc));
                 this.sym.if = sym(zeros(np,ndisc));
                 this.sym.iv = sym(zeros(np,ndisc));
                 this.sym.iw = sym(zeros(np,ndisc));
                 this.sym.iz = sym(zeros(np,ndisc));
                 
-                % convert deltas in int
+                % convert deltas in qBdot
                 if(ndisc>0)
                     for ip = 1:np
-                        summand_ignore = [];
-                        tmp_str_d = char(this.sym.eqBdot(ip));
-                        idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                        if(~isempty(idx_start_d))
-                            for iocc_d = 1:length(idx_start_d)
-                                brl = 1; % init bracket level
-                                str_idx_d = idx_start_d(iocc_d); % init string index
-                                % this code should be improved at some point
-                                while brl >= 1 % break as soon as initial bracket is closed
-                                    str_idx_d = str_idx_d + 1;
-                                    if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                        brl = brl + 1;
-                                    end
-                                    if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                        brl = brl - 1;
-                                    end
-                                end
-                                idx_end_d = str_idx_d;
-                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                if(strfind(arg_d,',')) % higher order derivatives
-                                    if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                    elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                    end
-                                end
-                                str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot + jacobian(sym(arg_d),this.strsym.xBs)*this.sym.xBdot;
+                        symchar = char(this.sym.eqBdot(ip));
+                        if(strfind(symchar,'dirac'))
+                            for idisc = 1:ndisc
+                                discchar = char(this.sym.rdisc(idisc));
+                                str_arg_d = ['dirac(' discchar ')' ];
+                                str_arg_d1 = ['dirac(1, ' discchar ')' ];
+                                str_arg_1d = ['dirac(' discchar ', 1)' ];
+                                str_arg_d2 = ['dirac(2, ' discchar ')' ];
+                                str_arg_2d = ['dirac(' discchar ', 2)' ];
                                 % find the corresponding discontinuity
-                                for idisc = 1:ndisc;
-                                    if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                        if(length(children(this.sym.eqBdot(ip)+foo))==2) % if the term is not a sum
-                                            summands = this.sym.eqBdot(ip);
-                                        else
-                                            summands = children(this.sym.eqBdot(ip));
-                                        end
-                                        for is = 1:length(summands)
-                                            if(isempty(find(is==summand_ignore,1))) % check if we already added that term
-                                                str_summand = char(summands(is));
-                                                if(strfind(str_summand,str_arg_d)) % v_i
-                                                    this.sym.iv(ip,idisc) = this.sym.iv(ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                    this.sym.iw(ip,idisc) = this.sym.iw(ip,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                    this.sym.iw(ip,idisc) = this.sym.iw(ip,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                    this.sym.iz(ip,idisc) = this.sym.iz(ip,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                    this.sym.iz(ip,idisc) = this.sym.iz(ip,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                else % f
-                                                    this.sym.if(ip,idisc) = this.sym.if(ip,idisc) + summands(is);
-                                                    summand_ignore = [summand_ignore is];
-                                                end
-                                            end
-                                        end
-                                    else
-                                        this.sym.if(ip,idisc) = this.sym.eqBdot(ip);
-                                    end
+                                % xdot_i = f_i(x,t) + h_i*heaviside(gdisc) + v_i*delta(gdisc) +
+                                % w_i*delta(1)(gdisc) + z_i*delta(2)(gdisc);
+                                % v
+                                tmpstr = char(this.sym.eqBdot(ip));
+                                tmpstr = strrep(tmpstr,str_arg_d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.iv(ip,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.iv(ip,idisc) = 0;
                                 end
+                                % w
+                                tmpstr = char(this.sym.eqBdot(ip));
+                                tmpstr = strrep(tmpstr,str_arg_d1,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_1d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.iw(ip,idisc) = cfp(2)*this.sym.gdisc(idisc)/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.iw(ip,idisc) = 0;
+                                end
+                                % z
+                                tmpstr = char(this.sym.eqBdot(ip));
+                                tmpstr = strrep(tmpstr,str_arg_d2,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_2d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.iz(ip,idisc) = cfp(2)*this.sym.gdisc(idisc)^2/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.iz(ip,idisc) = 0;
+                                end
+                                % f
+                                symchar = strrep(symchar,str_arg_d,'polydirac');
+                                symchar = strrep(symchar,str_arg_d1,'polydirac');
+                                symchar = strrep(symchar,str_arg_1d,'polydirac');
+                                symchar = strrep(symchar,str_arg_d2,'polydirac');
+                                symchar = strrep(symchar,str_arg_2d,'polydirac');
                             end
+                            cfp = coeffs(sym(symchar),polydirac);
+                            this.sym.if(ip) = cfp(1);
                         else
                             this.sym.if(ip,:) = repmat(this.sym.eqBdot(ip),[1,ndisc]);
                         end
@@ -751,7 +717,7 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'bdeltadisc'
-                syms foo
+                syms polydirac
                 this.sym.bdeltadisc = sym(zeros(nx,ndisc));
                 this.sym.bf = sym(zeros(nx,ndisc));
                 this.sym.bv = sym(zeros(nx,ndisc));
@@ -761,79 +727,56 @@ function this = getFun(this,HTable,funstr)
                 % convert deltas in xBdot
                 if(ndisc>0)
                     for ix = 1:nx
-                        summand_ignore = [];
-                        tmp_str_d = char(this.sym.xBdot(ix));
-                        idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                        if(~isempty(idx_start_d))
-                            for iocc_d = 1:length(idx_start_d)
-                                brl = 1; % init bracket level
-                                str_idx_d = idx_start_d(iocc_d); % init string index
-                                % this code should be improved at some point
-                                while brl >= 1 % break as soon as initial bracket is closed
-                                    str_idx_d = str_idx_d + 1;
-                                    if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                        brl = brl + 1;
-                                    end
-                                    if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                        brl = brl - 1;
-                                    end
-                                end
-                                idx_end_d = str_idx_d;
-                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                if(strfind(arg_d,',')) % higher order derbvatbves
-                                    if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                    elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                    end
-                                end
-                                str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot + jacobian(sym(arg_d),this.strsym.xBs)*this.sym.xBdot;
+                        symchar = char(this.sym.xBdot(ix));
+                        if(strfind(symchar,'dirac'))
+                            for idisc = 1:ndisc
+                                discchar = char(this.sym.rdisc(idisc));
+                                str_arg_d = ['dirac(' discchar ')' ];
+                                str_arg_d1 = ['dirac(1, ' discchar ')' ];
+                                str_arg_1d = ['dirac(' discchar ', 1)' ];
+                                str_arg_d2 = ['dirac(2, ' discchar ')' ];
+                                str_arg_2d = ['dirac(' discchar ', 2)' ];
                                 % find the corresponding discontinuity
-                                for idisc = 1:ndisc;
-                                    if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                        if(length(children(this.sym.xBdot(ix)+foo))==2) % if the term is not a sum
-                                            summands = this.sym.xBdot(ix);
-                                        else
-                                            summands = children(this.sym.xBdot(ix));
-                                        end
-                                        for is = 1:length(summands)
-                                            if(isempty(find(is==summand_ignore,1))) % check bf we already added that term
-                                                str_summand = char(summands(is));
-                                                if(strfind(str_summand,str_arg_d)) % v_i
-                                                    this.sym.bv(ix,idisc) = this.sym.bv(ix,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                    this.sym.bw(ix,idisc) = this.sym.bw(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                    this.sym.bw(ix,idisc) = this.sym.bw(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                    this.sym.bz(ix,idisc) = this.sym.bz(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                    this.sym.bz(ix,idisc) = this.sym.bz(ix,idisc) ...
-                                                        + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                    summand_ignore = [summand_ignore is];
-                                                else % f
-                                                    this.sym.bf(ix,idisc) = this.sym.bf(ix,idisc) + summands(is);
-                                                    summand_ignore = [summand_ignore is];
-                                                end
-                                            end
-                                        end
-                                    else
-                                        this.sym.bf(ix,idisc) = this.sym.xBdot(ix);
-                                    end
+                                % xdot_i = f_i(x,t) + h_i*heaviside(gdisc) + v_i*delta(gdisc) +
+                                % w_i*delta(1)(gdisc) + z_i*delta(2)(gdisc);
+                                % v
+                                tmpstr = char(this.sym.xBdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.bv(ix,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.bv(ix,idisc) = 0;
                                 end
+                                % w
+                                tmpstr = char(this.sym.xBdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d1,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_1d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.bw(ix,idisc) = cfp(2)*this.sym.gdisc(idisc)/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.bw(ix,idisc) = 0;
+                                end
+                                % z
+                                tmpstr = char(this.sym.xBdot(ix));
+                                tmpstr = strrep(tmpstr,str_arg_d2,'polydirac');
+                                tmpstr = strrep(tmpstr,str_arg_2d,'polydirac');
+                                cfp = coeffs(sym(tmpstr),polydirac);
+                                if(length(cfp)>1)
+                                    this.sym.bz(ix,idisc) = cfp(2)*this.sym.gdisc(idisc)^2/abs(this.sym.gdisc(idisc));
+                                else
+                                    this.sym.bz(ix,idisc) = 0;
+                                end
+                                % f
+                                symchar = strrep(symchar,str_arg_d,'polydirac');
+                                symchar = strrep(symchar,str_arg_d1,'polydirac');
+                                symchar = strrep(symchar,str_arg_1d,'polydirac');
+                                symchar = strrep(symchar,str_arg_d2,'polydirac');
+                                symchar = strrep(symchar,str_arg_2d,'polydirac');
                             end
+                            cfp = coeffs(sym(symchar),polydirac);
+                            this.sym.bf(ix) = cfp(1);
                         else
                             this.sym.bf(ix,:) = repmat(this.sym.xBdot(ix),[1,ndisc]);
                         end
@@ -909,14 +852,14 @@ function this = getFun(this,HTable,funstr)
                             end
                             if(nonzero_N)
                                 this.sym.bdeltadisc(ix,idisc) = this.sym.bdeltadisc(ix,idisc) ...
-                                    + jacobian(this.sym.bf(ix,idisc),this.strsym.xBs)*N(ix,:);
+                                    + jacobian(this.sym.bf(ix,idisc),this.strsym.xBs)*N;
                             end
                         end
                     end
                 end
                 
             case 'sdeltadisc'
-                syms foo
+                syms polydirac
                 
                 this.sym.sdeltadisc = sym(zeros(nx,np,ndisc));
                 this.sym.sf = sym(zeros(nx,np,ndisc));
@@ -926,92 +869,64 @@ function this = getFun(this,HTable,funstr)
                 
                 if(ndisc>0)
                     for ix = 1:nx
-                        tmp_str_d = char(this.sym.xdot(ix));% do some preliminary filtering
-                        idx_start_d = [strfind(tmp_str_d,'heaviside') + 9,strfind(tmp_str_d,'dirac') + 5];
-                        if(~isempty(idx_start_d))
+                        if(strfind(char(this.sym.xdot(ix)),'dirac'))
                             for ip = 1:np
-                                tmp_str_d = char(this.sym.esxdot(ix,ip));
-                                idx_start_d = strfind(tmp_str_d,'dirac' ) + 5 ;
-                                summand_ignore = [];
-                                
-                                if(~isempty(idx_start_d))
-                                    for iocc_d = 1:length(idx_start_d)
-                                        brl = 1; % init bracket level
-                                        str_idx_d = idx_start_d(iocc_d); % init string index
-                                        % this code should be improved at some point
-                                        while brl >= 1 % break as soon as initial bracket is closed
-                                            str_idx_d = str_idx_d + 1;
-                                            if(strcmp(tmp_str_d(str_idx_d),'(')) % increase bracket level
-                                                brl = brl + 1;
-                                            end
-                                            if(strcmp(tmp_str_d(str_idx_d),')')) % decrease bracket level
-                                                brl = brl - 1;
-                                            end
+                                symchar = char(this.sym.esxdot(ix,ip));
+                                if(strfind(char(this.sym.esxdot(ix,ip)),'dirac'))
+                                    for idisc = 1:ndisc
+                                        discchar = char(this.sym.rdisc(idisc));
+                                        str_arg_d = ['dirac(' discchar ')' ];
+                                        str_arg_d1 = ['dirac(1, ' discchar ')' ];
+                                        str_arg_1d = ['dirac(' discchar ', 1)' ];
+                                        str_arg_d2 = ['dirac(2, ' discchar ')' ];
+                                        str_arg_2d = ['dirac(' discchar ', 2)' ];
+                                        % find the corresponding terms
+                                        % sxdot_i = f_i(x,t) + v_i*delta(gdisc) +
+                                        % w_i*delta(1)(gdisc) + z_i*delta(2)(gdisc);
+                                        % v
+                                        tmpstr = char(this.sym.esxdot(ix,ip));
+                                        tmpstr = strrep(tmpstr,str_arg_d,'polydirac');
+                                        cfp = coeffs(sym(tmpstr),polydirac);
+                                        if(length(cfp)>1)
+                                            this.sym.sv(ix,ip,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
+                                        else
+                                            this.sym.sv(ix,ip,idisc) = 0;
                                         end
-                                        idx_end_d = str_idx_d;
-                                        arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-1));
-                                        if(strfind(arg_d,',')) % higher order derivatives
-                                            if(regexp(tmp_str_d((idx_start_d(iocc_d)):(idx_start_d(iocc_d)+2)),'\([1-2],'))
-                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+3):(idx_end_d-1));
-                                            elseif(regexp(tmp_str_d((idx_end_d-3):(idx_end_d)),', [1-2])'))
-                                                arg_d = tmp_str_d((idx_start_d(iocc_d)+1):(idx_end_d-4));
-                                            end
+                                        % w
+                                        tmpstr = char(this.sym.esxdot(ix,ip));
+                                        tmpstr = strrep(tmpstr,str_arg_d1,'polydirac');
+                                        tmpstr = strrep(tmpstr,str_arg_1d,'polydirac');
+                                        cfp = coeffs(sym(tmpstr),polydirac);
+                                        if(length(cfp)>1)
+                                            this.sym.sw(ix,ip,idisc) = cfp(2)*sign(this.sym.gdisc(idisc));
+                                        else
+                                            this.sym.sw(ix,ip,idisc) = 0;
                                         end
-                                        str_arg_d = ['dirac(' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                        str_arg_d1 = ['dirac(1, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                        str_arg_1d = ['dirac(' char(sym(arg_d)) ', 1)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                        str_arg_d2 = ['dirac(2, ' char(sym(arg_d)) ')' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                        str_arg_2d = ['dirac(' char(sym(arg_d)) ', 2)' ]; % the char(sym(...)) hopefully ensures consistent ordering of the argument
-                                        dotarg_d = diff(sym(arg_d),'t') + jacobian(sym(arg_d),this.strsym.xs)*this.sym.xdot;
-                                        % find the corresponding discontinuity
-                                        % xdot_i = f_i(x,t) + v_i*delta(t-t0) +
-                                        % w_i*delta(1)(t-t0) + z_i*delta(t-t0);
-                                        for idisc = 1:ndisc;
-                                            if(isequaln(abs(sym(arg_d)),abs(this.sym.rdisc(idisc))))
-                                                if(length(children(this.sym.esxdot(ix,ip)+foo))==2) % if the term is not a sum
-                                                    summands = this.sym.esxdot(ix,ip);
-                                                else
-                                                    summands = children(this.sym.esxdot(ix,ip));
-                                                end
-                                                for is = 1:length(summands)
-                                                    if(isempty(find(is==summand_ignore,1))) % check if we already added that term
-                                                        str_summand = char(summands(is));
-                                                        if(strfind(str_summand,str_arg_d)) % v_i
-                                                            this.sym.sv(ix,ip,idisc) = this.sym.sv(ix,ip,idisc) + sym(strrep(str_summand,str_arg_d,char(1/abs(dotarg_d))));
-                                                            summand_ignore = [summand_ignore is];
-                                                        elseif(strfind(str_summand,str_arg_d1)) % w_i
-                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                                + sym(strrep(str_summand,str_arg_d1,char(dotarg_d/abs(dotarg_d))));
-                                                            summand_ignore = [summand_ignore is];
-                                                        elseif(strfind(str_summand,str_arg_1d)) % w_i
-                                                            this.sym.sw(ix,ip,idisc) = this.sym.sw(ix,ip,idisc) ...
-                                                                + sym(strrep(str_summand,str_arg_1d,char(dotarg_d/abs(dotarg_d))));
-                                                            summand_ignore = [summand_ignore is];
-                                                        elseif(strfind(str_summand,str_arg_d2)) % z_i
-                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                                + sym(strrep(str_summand,str_arg_d2,char(dotarg_d^2/abs(dotarg_d))));
-                                                            summand_ignore = [summand_ignore is];
-                                                        elseif(strfind(str_summand,str_arg_2d)) % z_i
-                                                            this.sym.sz(ix,ip,idisc) = this.sym.sz(ix,ip,idisc) ...
-                                                                + sym(strrep(str_summand,str_arg_2d,char(dotarg_d^2/abs(dotarg_d))));
-                                                            summand_ignore = [summand_ignore is];
-                                                        else % f
-                                                            this.sym.sf(ix,ip,idisc) = this.sym.sf(ix,ip,idisc) + summands(is);
-                                                            summand_ignore = [summand_ignore is];
-                                                        end
-                                                    end
-                                                end
-                                            else
-                                                this.sym.sf(ix,ip,idisc) = this.sym.esxdot(ix,ip);
-                                            end
+                                        % z
+                                        tmpstr = char(this.sym.esxdot(ix,ip));
+                                        tmpstr = strrep(tmpstr,str_arg_d2,'polydirac');
+                                        tmpstr = strrep(tmpstr,str_arg_2d,'polydirac');
+                                        cfp = coeffs(sym(tmpstr),polydirac);
+                                        if(length(cfp)>1)
+                                            this.sym.sz(ix,ip,idisc) = cfp(2)*this.sym.gdisc(idisc)^2/abs(this.sym.gdisc(idisc));
+                                        else
+                                            this.sym.sz(ix,ip,idisc) = 0;
                                         end
+                                        % f
+                                        symchar = strrep(symchar,str_arg_d,'polydirac');
+                                        symchar = strrep(symchar,str_arg_d1,'polydirac');
+                                        symchar = strrep(symchar,str_arg_1d,'polydirac');
+                                        symchar = strrep(symchar,str_arg_d2,'polydirac');
+                                        symchar = strrep(symchar,str_arg_2d,'polydirac');
                                     end
+                                    cfp = coeffs(sym(symchar),polydirac);
+                                    this.sym.sf(ix,ip) = cfp(1);
                                 else
-                                    this.sym.sf(ix,ip,:) = repmat(this.sym.esxdot(ix,ip),[1,1,ndisc]);
+                                    this.sym.sf(ix,:) = this.sym.esxdot(ix,ip);
                                 end
                             end
                         else
-                            this.sym.sf(ix,:,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
+                            this.sym.sf(ix,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
                         end
                     end
                     % compute sdeltadisc
@@ -1076,18 +991,17 @@ function this = getFun(this,HTable,funstr)
                                 if(this.sym.sw(ix,ip,idisc)~=0)
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
                                         - diff(this.sym.sw(ix,ip,idisc),'t') - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
-                                    
+                                        - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);   
                                 end
                                 
                                 if(nonzero_M)
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
                                         + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.xs)*M;
                                 end
-                                if(nonzero_N)
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx(:,ip))*N;
-                                end
+%                                 if(nonzero_N)
+%                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
+%                                         + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx(:,ip))*N;
+%                                 end
                             end
                         end
                     end
@@ -1104,7 +1018,7 @@ function this = getFun(this,HTable,funstr)
                     if(isempty(this.sym.root));
                         this.sym.root = this.sym.rdisc;
                     else
-                        this.sym.root = [this.sym.rfun;this.sym.rdisc];
+                        this.sym.root = [this.sym.rfun(:);this.sym.rdisc(:)];
                     end
                 end
                 

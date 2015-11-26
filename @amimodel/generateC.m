@@ -407,9 +407,9 @@ function this = generateC(this)
     end
     
     fprintf(fid,'                }\n');
-    fprintf(fid,'                int bdeltadisc(realtype t, int idisc, N_Vector xB, void *user_data){\n');
+    fprintf(fid,'                int bdeltadisc(realtype t, int idisc, N_Vector x, N_Vector xB, void *user_data){\n');
     if(this.adjoint)
-        fprintf(fid,['                       return bdeltadisc_' this.modelname '(t, idisc, xB, user_data);\n']);
+        fprintf(fid,['                       return bdeltadisc_' this.modelname '(t, idisc, x, xB, user_data);\n']);
     else
         fprintf(fid,'                    return(-1);');
     end
@@ -723,6 +723,7 @@ function printlocalvars(fun,struct,fid)
             fprintf(fid,['memset(deltadisc,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'bdeltadisc'
             fprintf(fid,'realtype *xB_tmp = N_VGetArrayPointer(xB);\n');
+            fprintf(fid,'realtype *x_tmp = N_VGetArrayPointer(x);\n');
             fprintf(fid,['realtype bdeltadisc[' num2str(nx) '];\n']);
             fprintf(fid,['memset(bdeltadisc,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'ideltadisc'

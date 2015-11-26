@@ -77,13 +77,28 @@ elseif(strcmp(svar,'ideltadisc'))
             end
         end
     end
+elseif(strcmp(svar,'sdeltadisc'))
+    nonzero = this.sym.(svar) ~=0;
+    if(any(any(any(nonzero))))
+        for ip=1:np
+            if(any(any(any(nonzero(:,ip,:)))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                if(strcmp(svar,'sroot') || strcmp(svar,'srootval'))
+                    fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
+                end
+                this.writeCcode(svar, fid, ip);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
 else 
     nonzero = this.sym.(svar) ~=0;
     if(any(any(nonzero)))
         for ip=1:np
             if(any(nonzero(:,ip)))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                if(strcmp(svar,'sroot') || strcmp(svar,'srootval') || strcmp(svar,'sdeltadisc'))
+                if(strcmp(svar,'sroot') || strcmp(svar,'srootval'))
                     fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
                 this.writeCcode(svar, fid, ip);

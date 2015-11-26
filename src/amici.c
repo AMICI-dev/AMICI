@@ -185,9 +185,9 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         xdot = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
         
-        if(nr>0) rootvaltmp = mxMalloc(nr*sizeof(realtype));
+        if(nr>0) rootvaltmp = mxMalloc((nr+ndisc)*sizeof(realtype));
         if(nr+ndisc>0) rootsfound = mxMalloc((nr+ndisc)*sizeof(int));
-        if(nr>0) rootidx = mxMalloc(nr*sizeof(int));
+        if(nr>0) rootidx = mxMalloc(nmaxroot*sizeof(int));
         if(ndisc>0) discs = mxMalloc(nmaxdisc*sizeof(realtype));
         if(ndisc>0) irdiscs = mxMalloc(nmaxdisc*sizeof(realtype));
         

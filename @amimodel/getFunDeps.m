@@ -39,9 +39,9 @@ function [ deps ] = getFunDeps(this, funstr )
             
         case 'sxdot'
             if(strcmp(this.wtype,'iw'))
-                deps = {'dfdx','M','dxdotdp','sdx'};
+                deps = {'dfdx','M','dxdotdp','sdx','sx'};
             else
-                deps = {'J','dxdotdp'};
+                deps = {'J','dxdotdp','sx'};
             end
             
         case 'dydx'

@@ -201,8 +201,6 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['sol.llh = 0;\n']);
     fprintf(fid,['sol.chi2 = 0;\n']);
     fprintf(fid,['sol.t = tout;\n']);
-    fprintf(fid,['sol.root = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
-    fprintf(fid,['sol.rootval = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
     fprintf(fid,['sol.numsteps = zeros(length(tout),1);\n']);
     fprintf(fid,['sol.numrhsevals = zeros(length(tout),1);\n']);
     fprintf(fid,['sol.order = zeros(length(tout),1);\n']);
@@ -217,6 +215,8 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['end\n']);
+    fprintf(fid,['sol.root = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
+    fprintf(fid,['sol.rootval = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
     if(o2flag)
         fprintf(fid,['if(nargout>1)\n']);
         fprintf(fid,['    if(nargout>6)\n']);
