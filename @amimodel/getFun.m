@@ -500,7 +500,7 @@ function this = getFun(this,HTable,funstr)
                     end
                 end
                 for idisc = 1:length(this.sym.rdisc)
-                    this.sym.gdisc(ndisc) = diff(this.sym.rdisc(idisc),'t') + jacobian(this.sym.rdisc(idisc),this.strsym.xs)*transpose(this.sym.f);
+                    this.sym.gdisc(ndisc) = diff(this.sym.rdisc(idisc),'t') + jacobian(this.sym.rdisc(idisc),this.strsym.xs)*this.sym.f;
                 end
                 this.ndisc = ndisc;
                 if(ndisc == 0)
