@@ -50,6 +50,15 @@ function [this] = augmento2(this)
     
     this.modelname = [this.modelname '_o2'];
     
+    if(~exist(fullfile(this.wrap_path,'models'),'dir'))
+        mkdir(fullfile(this.wrap_path,'models'));
+        mkdir(fullfile(this.wrap_path,'models',this.modelname));
+    else
+        if(~exist(fullfile(this.wrap_path,'models',this.modelname),'dir'))
+            mkdir(fullfile(this.wrap_path,'models',this.modelname))
+        end
+    end
+    
 end
 
 

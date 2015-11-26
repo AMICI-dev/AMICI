@@ -92,6 +92,9 @@ function this = generateC(this)
                         writeCcode(this, 'deltadisc', fid);
                     end
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                    if(strcmp(this.funs{ifuns},'sdeltadisc'))
+                        fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
+                    end
                     fprintf(fid,'switch (plist[ip]) {\n');
                     writeCcode_sensi(this, this.funs{ifuns}, fid);
                     fprintf(fid,'}\n');

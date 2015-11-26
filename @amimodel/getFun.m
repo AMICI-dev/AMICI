@@ -989,6 +989,7 @@ function this = getFun(this,HTable,funstr)
                                 end
                                 
                                 if(this.sym.sw(ix,ip,idisc)~=0)
+                                    % dw/dt = pdw/pdt + pdw/pdx*dx/dt + pdw/pdsx*dsx/dt 
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
                                         - diff(this.sym.sw(ix,ip,idisc),'t') - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.xs)*this.sym.xdot ...
                                         - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);   
@@ -996,12 +997,12 @@ function this = getFun(this,HTable,funstr)
                                 
                                 if(nonzero_M)
                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.xs)*M;
+                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx)*M;
                                 end
-%                                 if(nonzero_N)
-%                                     this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-%                                         + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx(:,ip))*N;
-%                                 end
+                                if(nonzero_N)
+                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
+                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx(:,ip))*N;
+                                end
                             end
                         end
                     end
@@ -1032,7 +1033,10 @@ function this = getFun(this,HTable,funstr)
         end
         this.fun.(funstr) = 1;
     else
-        this.fun.(funstr) = 0;
+        % do not overwrite already set ones
+        if(~isfield(this.fun,funstr))
+            this.fun.(funstr) = 0;
+        end
     end
     
 end
