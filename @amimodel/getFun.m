@@ -536,6 +536,7 @@ function this = getFun(this,HTable,funstr)
                                 cfp = coeffs(sym(tmpstr),polydirac);
                                 if(length(cfp)>1)
                                     this.sym.v(ix,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
+                                    this.sym.vcoeff(ix,idisc) = cfp(2);
                                 else
                                     this.sym.v(ix,idisc) = 0;
                                 end
@@ -569,7 +570,7 @@ function this = getFun(this,HTable,funstr)
                         if(nonzero_z)
                             M = jacobian(this.sym.f(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
                                 + this.sym.w(:,idisc) ...
-                                - diff(this.sym.z(:,idisc),'t') - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.xdot;
+                                - diff(this.sym.z(:,idisc),'t') - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.f(:,idisc);
                         else
                             M = this.sym.w(:,idisc);
                         end
@@ -587,13 +588,13 @@ function this = getFun(this,HTable,funstr)
                             
                             if(this.sym.w(ix,idisc)~=0)
                                 this.sym.deltadisc(ix,idisc) = this.sym.deltadisc(ix,idisc) ...
-                                    - diff(this.sym.w(ix,idisc),'t') - jacobian(this.sym.w(ix,idisc),this.strsym.xs)*this.sym.xdot;
+                                    - diff(this.sym.w(ix,idisc),'t') - jacobian(this.sym.w(ix,idisc),this.strsym.xs)*this.sym.f(:,idisc);
                             end
                             
                             if(this.sym.z(ix,idisc)~=0)
                                 this.sym.deltadisc(ix,idisc) = this.sym.deltadisc(ix,idisc) ...
-                                    + diff(this.sym.z(ix,idisc),'t',2) + diff(jacobian(this.sym.z(ix,idisc),this.strsym.xs)*this.sym.xdot,'t') + ...
-                                    jacobian(jacobian(this.sym.z(ix,idisc),this.strsym.xs)*this.sym.xdot,this.strsym.xs)*this.sym.xdot;
+                                    + diff(this.sym.z(ix,idisc),'t',2) + diff(jacobian(this.sym.z(ix,idisc),this.strsym.xs)*this.sym.f(:,idisc),'t') + ...
+                                    jacobian(jacobian(this.sym.z(ix,idisc),this.strsym.xs)*this.sym.xdot,this.strsym.xs)*this.sym.f(:,idisc);
                             end
                             
                             if(nonzero_M)
@@ -675,7 +676,7 @@ function this = getFun(this,HTable,funstr)
                         M = (jacobian(this.sym.f(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
                             + this.sym.w(:,idisc) ...
                             - diff(this.sym.z(:,idisc),'t') ...
-                            - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.xdot);
+                            - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.f(:,idisc));
                         nonzero_M = any(M~=0);
                         for ip = 1:np
                             % delta_x_i =
@@ -688,11 +689,11 @@ function this = getFun(this,HTable,funstr)
                                 
                                 this.sym.ideltadisc(ip,idisc) = this.sym.ideltadisc(ip,idisc) ...
                                     + diff(this.sym.iz(ip,idisc),'t',2) ...
-                                    + diff(dizdx*this.sym.xdot,'t') ...
+                                    + diff(dizdx*this.sym.f(:,idisc),'t') ...
                                     + diff(dizdsxdot*this.sym.xBdot,'t') ...
-                                    + jacobian(dizdx*this.sym.xdot,this.strsym.xs)*this.sym.xdot ...
-                                    + jacobian(dizdx*this.sym.xdot,this.strsym.xBs)*this.sym.xBdot ...
-                                    + jacobian(dizdsxdot*this.sym.xBdot,this.strsym.xs)*this.sym.xdot ...
+                                    + jacobian(dizdx*this.sym.f(:,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
+                                    + jacobian(dizdx*this.sym.f(:,idisc),this.strsym.xBs)*this.sym.xBdot ...
+                                    + jacobian(dizdsxdot*this.sym.xBdot,this.strsym.xs)*this.sym.f(:,idisc) ...
                                     + jacobian(dizdsxdot*this.sym.xBdot,this.strsym.xBs)*this.sym.xBdot;
                             end
                             
@@ -703,7 +704,7 @@ function this = getFun(this,HTable,funstr)
                             
                             if(this.sym.iw(ip,idisc)~=0)
                                 this.sym.ideltadisc(ip,idisc) = this.sym.ideltadisc(ip,idisc) ...
-                                    - diff(this.sym.iw(ip,idisc),'t') - jacobian(this.sym.iw(ip,idisc),this.strsym.xs)*this.sym.xdot ...
+                                    - diff(this.sym.iw(ip,idisc),'t') - jacobian(this.sym.iw(ip,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
                                     - jacobian(this.sym.iw(ip,idisc),this.strsym.xBs)*this.sym.xBdot;
                                 
                             end
@@ -787,7 +788,7 @@ function this = getFun(this,HTable,funstr)
                         if(nonzero_z)
                             M = jacobian(this.sym.f(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
                                 + this.sym.w(:,idisc) ...
-                                - diff(this.sym.z(:,idisc),'t') - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.xdot;
+                                - diff(this.sym.z(:,idisc),'t') - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.f(:,idisc);
                         else
                             M = this.sym.w(:,idisc);
                         end
@@ -797,7 +798,7 @@ function this = getFun(this,HTable,funstr)
                                 N = jacobian(this.sym.bf(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
                                     + jacobian(this.sym.bf(:,idisc),this.strsym.xBs(:))*this.sym.bz(:,idisc) ...
                                     + this.sym.bw(:,idisc) ...
-                                    - diff(this.sym.bz(:,idisc),'t') - jacobian(this.sym.bz(:,idisc),this.strsym.xs)*this.sym.xdot ...
+                                    - diff(this.sym.bz(:,idisc),'t') - jacobian(this.sym.bz(:,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
                                     - jacobian(this.sym.bz(:,idisc),this.strsym.xBs)*this.sym.xBdot;
                             else
                                 N = jacobian(this.sym.bf(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
@@ -807,7 +808,7 @@ function this = getFun(this,HTable,funstr)
                             if(nonzero_bz)
                                 N = jacobian(this.sym.bf(:,idisc),this.strsym.xBs(:))*this.sym.bz(:,idisc) ...
                                     + this.sym.bw(:,idisc) ...
-                                    - diff(this.sym.bz(:,idisc),'t') - jacobian(this.sym.bz(:,idisc),this.strsym.xs)*this.sym.xdot ...
+                                    - diff(this.sym.bz(:,idisc),'t') - jacobian(this.sym.bz(:,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
                                     - jacobian(this.sym.bz(:,idisc),this.strsym.xBs)*this.sym.xBdot;
                             else
                                 N = this.sym.bw(:,idisc);
@@ -828,9 +829,9 @@ function this = getFun(this,HTable,funstr)
                                     + diff(this.sym.bz(ix,idisc),'t',2) ...
                                     + diff(dbzdx*this.sym.xdot,'t') ...
                                     + diff(dbzdsxdot*this.sym.xBdot,'t') ...
-                                    + jacobian(dbzdx*this.sym.xdot,this.strsym.xs)*this.sym.xdot ...
-                                    + jacobian(dbzdx*this.sym.xdot,this.strsym.xBs)*this.sym.xBdot ...
-                                    + jacobian(dbzdsxdot*this.sym.xBdot,this.strsym.xs)*this.sym.xdot ...
+                                    + jacobian(dbzdx*this.sym.f(:,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
+                                    + jacobian(dbzdx*this.sym.f(:,idisc),this.strsym.xBs)*this.sym.xBdot ...
+                                    + jacobian(dbzdsxdot*this.sym.xBdot,this.strsym.xs)*this.sym.f(:,idisc) ...
                                     + jacobian(dbzdsxdot*this.sym.xBdot,this.strsym.xBs)*this.sym.xBdot;
                             end
                             
@@ -841,14 +842,14 @@ function this = getFun(this,HTable,funstr)
                             
                             if(this.sym.bw(ix,idisc)~=0)
                                 this.sym.bdeltadisc(ix,idisc) = this.sym.bdeltadisc(ix,idisc) ...
-                                    - diff(this.sym.bw(ix,idisc),'t') - jacobian(this.sym.bw(ix,idisc),this.strsym.xs)*this.sym.xdot ...
+                                    - diff(this.sym.bw(ix,idisc),'t') - jacobian(this.sym.bw(ix,idisc),this.strsym.xs)*this.sym.f(:,idisc) ...
                                     - jacobian(this.sym.bw(ix,idisc),this.strsym.xBs)*this.sym.xBdot;
                                 
                             end
                             
                             if(nonzero_M)
                                 this.sym.bdeltadisc(ix,idisc) = this.sym.bdeltadisc(ix,idisc) ...
-                                    + jacobian(this.sym.bf(ix,idisc),this.strsym.xs)*M(ix,:);
+                                    + jacobian(this.sym.bf(ix,idisc),this.strsym.xs)*M;
                             end
                             if(nonzero_N)
                                 this.sym.bdeltadisc(ix,idisc) = this.sym.bdeltadisc(ix,idisc) ...
@@ -859,157 +860,34 @@ function this = getFun(this,HTable,funstr)
                 end
                 
             case 'sdeltadisc'
-                syms polydirac
-                
-                this.sym.sdeltadisc = sym(zeros(nx,np,ndisc));
-                this.sym.sf = sym(zeros(nx,np,ndisc));
-                this.sym.sv = sym(zeros(nx,np,ndisc));
-                this.sym.sw = sym(zeros(nx,np,ndisc));
-                this.sym.sz = sym(zeros(nx,np,ndisc));
                 
                 if(ndisc>0)
-                    for ix = 1:nx
-                        if(strfind(char(this.sym.xdot(ix)),'dirac'))
-                            for ip = 1:np
-                                symchar = char(this.sym.esxdot(ix,ip));
-                                if(strfind(char(this.sym.esxdot(ix,ip)),'dirac'))
-                                    for idisc = 1:ndisc
-                                        discchar = char(this.sym.rdisc(idisc));
-                                        str_arg_d = ['dirac(' discchar ')' ];
-                                        str_arg_d1 = ['dirac(1, ' discchar ')' ];
-                                        str_arg_1d = ['dirac(' discchar ', 1)' ];
-                                        str_arg_d2 = ['dirac(2, ' discchar ')' ];
-                                        str_arg_2d = ['dirac(' discchar ', 2)' ];
-                                        % find the corresponding terms
-                                        % sxdot_i = f_i(x,t) + v_i*delta(gdisc) +
-                                        % w_i*delta(1)(gdisc) + z_i*delta(2)(gdisc);
-                                        % v
-                                        tmpstr = char(this.sym.esxdot(ix,ip));
-                                        tmpstr = strrep(tmpstr,str_arg_d,'polydirac');
-                                        cfp = coeffs(sym(tmpstr),polydirac);
-                                        if(length(cfp)>1)
-                                            this.sym.sv(ix,ip,idisc) = cfp(2)*1/abs(this.sym.gdisc(idisc));
-                                        else
-                                            this.sym.sv(ix,ip,idisc) = 0;
-                                        end
-                                        % w
-                                        tmpstr = char(this.sym.esxdot(ix,ip));
-                                        tmpstr = strrep(tmpstr,str_arg_d1,'polydirac');
-                                        tmpstr = strrep(tmpstr,str_arg_1d,'polydirac');
-                                        cfp = coeffs(sym(tmpstr),polydirac);
-                                        if(length(cfp)>1)
-                                            this.sym.sw(ix,ip,idisc) = cfp(2)*sign(this.sym.gdisc(idisc));
-                                        else
-                                            this.sym.sw(ix,ip,idisc) = 0;
-                                        end
-                                        % z
-                                        tmpstr = char(this.sym.esxdot(ix,ip));
-                                        tmpstr = strrep(tmpstr,str_arg_d2,'polydirac');
-                                        tmpstr = strrep(tmpstr,str_arg_2d,'polydirac');
-                                        cfp = coeffs(sym(tmpstr),polydirac);
-                                        if(length(cfp)>1)
-                                            this.sym.sz(ix,ip,idisc) = cfp(2)*this.sym.gdisc(idisc)^2/abs(this.sym.gdisc(idisc));
-                                        else
-                                            this.sym.sz(ix,ip,idisc) = 0;
-                                        end
-                                        % f
-                                        symchar = strrep(symchar,str_arg_d,'polydirac');
-                                        symchar = strrep(symchar,str_arg_d1,'polydirac');
-                                        symchar = strrep(symchar,str_arg_1d,'polydirac');
-                                        symchar = strrep(symchar,str_arg_d2,'polydirac');
-                                        symchar = strrep(symchar,str_arg_2d,'polydirac');
-                                    end
-                                    cfp = coeffs(sym(symchar),polydirac);
-                                    this.sym.sf(ix,ip) = cfp(1);
-                                else
-                                    this.sym.sf(ix,:) = this.sym.esxdot(ix,ip);
-                                end
-                            end
-                        else
-                            this.sym.sf(ix,:) = repmat(this.sym.esxdot(ix,:),[1,1,ndisc]);
-                        end
-                    end
-                    % compute sdeltadisc
-                    for idisc = 1:ndisc
-                        nonzero_z = any(this.sym.z(:,idisc)~=0);
-                        if(nonzero_z)
-                            M = jacobian(this.sym.xdot(:,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
-                                + this.sym.w(:,idisc) ...
-                                - diff(this.sym.z(:,idisc),'t') - jacobian(this.sym.z(:,idisc),this.strsym.xs)*this.sym.xdot;
-                        else
-                            M = this.sym.w(:,idisc);
-                        end
-                        nonzero_M = any(M~=0);
-                        for ip = 1:np
-                            nonzero_sz = any(this.sym.sz(:,ip,idisc)~=0);
-                            if(nonzero_z)
-                                if(nonzero_sz)
-                                    N = jacobian(this.sym.sf(:,ip,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
-                                        + jacobian(this.sym.sf(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sz(:,ip,idisc) ...
-                                        + this.sym.sw(:,ip,idisc) ...
-                                        - diff(this.sym.sz(:,ip,idisc),'t') - jacobian(this.sym.sz(:,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
-                                else
-                                    N = jacobian(this.sym.sf(:,ip,idisc),this.strsym.xs)*this.sym.z(:,idisc) ...
-                                        + this.sym.sw(:,ip,idisc);
-                                end
-                            else
-                                if(nonzero_sz)
-                                    N = + jacobian(this.sym.sf(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.sz(:,ip,idisc) ...
-                                        + this.sym.sw(:,ip,idisc) ...
-                                        - diff(this.sym.sz(:,ip,idisc),'t') - jacobian(this.sym.sz(:,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sz(:,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
-                                else
-                                    N = this.sym.sw(:,ip,idisc);
-                                end
-                            end
-                            nonzero_N = any(N~=0);
-                            for ix = 1:nx
-                                % delta_x_i =
-                                % sum_j(df_idx_j*(sum_k(df_idx_k*z_k) +
-                                % w_j - dot{z}_j) + v_i - dot{w}_i +
-                                % ddot{z}_i
-                                if(this.sym.sz(ix,ip,idisc)~=0)
-                                    dszdx = jacobian(this.sym.sz(ix,ip,idisc),this.strsym.xs);
-                                    dszdsxdot = jacobian(this.sym.sz(ix,ip,idisc),this.strsym.sx(:,ip));
-                                    
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + diff(this.sym.sz(ix,ip,idisc),'t',2) ...
-                                        + diff(dszdx*this.sym.xdot,'t') ...
-                                        + diff(dszdsxdot*this.sym.esxdot(:,ip),'t') ...
-                                        + jacobian(dszdx*this.sym.xdot,this.strsym.xs)*this.sym.xdot ...
-                                        + jacobian(dszdx*this.sym.xdot,this.strsym.sx(:,ip))*this.sym.esxdot(:,ip) ...
-                                        + jacobian(dszdsxdot*this.sym.esxdot(:,ip),this.strsym.xs)*this.sym.xdot ...
-                                        + jacobian(dszdsxdot*this.sym.esxdot(:,ip),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);
-                                end
-                                
-                                if(this.sym.sv(ix,ip,idisc)~=0)
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + this.sym.sv(ix,ip,idisc);
-                                end
-                                
-                                if(this.sym.sw(ix,ip,idisc)~=0)
-                                    % dw/dt = pdw/pdt + pdw/pdx*dx/dt + pdw/pdsx*dsx/dt 
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        - diff(this.sym.sw(ix,ip,idisc),'t') - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.xs)*this.sym.xdot ...
-                                        - jacobian(this.sym.sw(ix,ip,idisc),this.strsym.sx(:,ip))*this.sym.esxdot(:,ip);   
-                                end
-                                
-                                if(nonzero_M)
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx)*M;
-                                end
-                                if(nonzero_N)
-                                    this.sym.sdeltadisc(ix,ip,idisc) = this.sym.sdeltadisc(ix,ip,idisc) ...
-                                        + jacobian(this.sym.sf(ix,ip,idisc),this.strsym.sx(:,ip))*N;
-                                end
-                            end
-                        end
-                    end
-                    if(isfield(this,'this.nxtrue'))
-                        for ip = 1:np
-                            this.sym.sdeltadisc(:,ip,:) = mysubs(this.sym.sdeltadisc(:,ip,:),this.strsym.sx(this.rt(1:this.nxtrue),ip),this.strsym.xs(this.rt((1:this.nxtrue)+this.nxtrue*ip)));
-                        end
+                    for idisc = 1:ndisc;
+                        % drdp  = pdrdisc/pdp + pdrdisc/pdx*pdx/pdp
+                        drdp = jacobian(this.sym.rdisc(idisc),this.strsym.ps) + jacobian(this.sym.rdisc(idisc),this.strsym.xs)*this.strsym.sx;
+                        % drdt  = pdrdisc/pdt + pdrdisc/pdx*pdx/pdt
+                        drdt = diff(this.sym.rdisc(idisc),'t') + jacobian(this.sym.rdisc(idisc),this.strsym.xs)*this.sym.f(:,idisc);
+                        
+                        % dtdp  = (1/drdt)*drdp
+                        dtdp = -1/drdt*drdp;
+                        
+                        % dxdp  = dx/dt*dt/dp + dx/dp
+                        dxdp = this.sym.f(:,idisc)*dtdp + this.strsym.sx;
+                        
+                        % ddelta/dp = pddelta/pdp
+                        ddeltadiscdp = jacobian(this.sym.deltadisc(:,idisc),this.strsym.ps);
+                        % ddelta/dt = pddelta/pdt
+                        ddeltadiscdt = diff(this.sym.deltadisc(:,idisc),'t');
+                        % ddelta/dx = pddelta/pdx
+                        ddeltadiscdx = jacobian(this.sym.deltadisc(:,idisc),this.strsym.xs);
+                        % 
+                        deltaxdot = mysubs(this.sym.f(:,idisc),this.strsym.xs,this.strsym.xs+this.sym.deltadisc(:,idisc))- this.sym.f(:,idisc);
+                        
+                        this.sym.sdeltadisc(:,:,idisc)= ...
+                            - deltaxdot*dtdp ...
+                            + ddeltadiscdx*dxdp ...
+                            + ddeltadiscdt*dtdp ...
+                            + ddeltadiscdp;
                     end
                 end
                 

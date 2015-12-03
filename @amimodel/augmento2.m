@@ -18,8 +18,8 @@ function [this] = augmento2(this)
     
     Sx = sym(zeros(length(this.sym.x),length(this.sym.p)));
     
-    for j = 1:this.nx
-        for k = 1:this.np
+    for j = 1:length(this.sym.x)
+        for k = 1:length(this.sym.p)
             eval(['syms S' num2str(j) '_' num2str(k)]);
             eval(['Sx(j,k) = S' num2str(j) '_' num2str(k) ';']);
         end
