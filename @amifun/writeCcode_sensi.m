@@ -1,4 +1,4 @@
-function this = writeCcode_sensi(this,svar,fid)
+function this = writeCcode_sensi(this,model,fid)
 % writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces
 % overhead by check nonzero values
 %
@@ -9,23 +9,27 @@ function this = writeCcode_sensi(this,svar,fid)
 % Return values:
 %  this: model definition object @type amimodel
       
-np = this.np;
+np = model.np;
+
+nonzero = this.sym~=0;
 
 if(strcmp(svar,'drvaldp'))
-    nonzero = this.sym.drootpdp~=0;
+    
     if(any(any(nonzero)))
+        tmpfun = this;
         for ip=1:np
             if(any(nonzero(:,ip)))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                this.writeCcode('drvaldp', fid, ip);
+                tmpfun.sym = this.sym(:,ip);
+                tmpfun.writeCcode(fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
             end
         end
     end
 elseif(strcmp(svar,'s2root'))
-    nonzero = this.sym.s2root~=0;
     if(any(any(any(nonzero))))
+        tmpfun = this;
         for ip=1:np
             if(any(any(nonzero(:,:,ip))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
@@ -34,7 +38,8 @@ elseif(strcmp(svar,'s2root'))
                 for jp=1:np
                     if(any(nonzero(:,jp,ip)))
                         fprintf(fid,['          case ' num2str(jp-1) ': {\n']);
-                        this.writeCcode('s2root', fid, ip, jp);
+                        tmpfun.sym = this.sym(:,ip,jp);
+                        tmpfun.writeCcode(fid);
                         fprintf(fid,'\n');
                         fprintf(fid,'          } break;\n\n');
                     end
@@ -45,7 +50,6 @@ elseif(strcmp(svar,'s2root'))
         end
     end
 elseif(strcmp(svar,'s2rootval'))
-    nonzero = this.sym.s2rootval~=0;
     if(any(any(any(nonzero))))
         for ip=1:np
             if(any(any(nonzero(:,:,ip))))
@@ -66,7 +70,6 @@ elseif(strcmp(svar,'s2rootval'))
         end
     end
 elseif(strcmp(svar,'ideltadisc'))
-    nonzero = this.sym.(svar) ~=0;
     if(any(nonzero))
         for ip=1:np
             if(nonzero(ip))
@@ -78,7 +81,6 @@ elseif(strcmp(svar,'ideltadisc'))
         end
     end
 elseif(strcmp(svar,'sdeltadisc'))
-    nonzero = this.sym.(svar) ~=0;
     if(any(any(any(nonzero))))
         for ip=1:np
             if(any(any(any(nonzero(:,ip,:)))))

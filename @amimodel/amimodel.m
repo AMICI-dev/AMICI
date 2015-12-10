@@ -137,26 +137,12 @@ classdef amimodel
         this = generateC(this)
         
         this = compileC(this)
-        
-        this = writeCcode_sensi(this,svar,fid)
-        
-        this = writeCcode(this, funstr, fid, ip, jp)
-        
-        this = gccode(this,csym,funstr,cvar,fid)
-        
+
         this = generateM(this,amimodelo2)
         
         this = getFun(this,HTable,funstr)
         
-        [ deps ] = getFunDeps(this, funstr )
-        
-        [ argstr ] = getFunArgs(this, funstr )
-        
-        [ cvar ] = getFunCVar(this, funstr )
-        
-        [ svar ] = getFunSVar(this, funstr )
-        
-        [this,cflag] = checkDeps(this,HTable,deps)
+        [this] = checkDeps(this,HTable)
         
         [this,HTable] = loadOldHashes(this) 
         

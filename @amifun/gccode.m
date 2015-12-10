@@ -1,50 +1,36 @@
-function this = gccode(this,csym,funstr,cvar,fid)
+function this = gccode(this,fid)
 % gccode transforms symbolic expressions into c code and writes the
 % respective expression into a specified file
 %
 % Parameters:
-%  funstr: function for which C code is to be generated @type string
-%  csym: symbolic expression to be transform @type symbolic 
-%  cvar: name of the assigned variable in C @type string
 %  fid: file id in which the expression should be written @type fileid
 %
 % Return values:
-%  this: model definition object @type amimodel
+%  this: function definition object @type amifun
 
-
-lcsym = length(csym);
-ff = find(csym~=0);
+ff = find(this.sym~=0);
 for j=transpose(ff(:));
     % temp = sprintf(mupadmex('generate::C', [cvar '[' num2str(j) '] =
-    % ' char(csym(j))], 0)); this is much too slow for large systems
-    if( lcsym == 1)
-        cstr = [cvar ' = ' char(vpa(csym)) ';'];
-%         tmp_str = ccode(csym(j));
-%         cstr = [ cvar tmp_str(5:end) ';'];
-    else
-        cstr = [cvar '[' num2str(j-1) '] = ' char(vpa(csym(j))) ';'];
-%         tmp_str = ccode(csym(j));
-%         cstr = [ cvar '[' num2str(j-1) '] ' tmp_str(5:end) ';'];
-    end
-
+    % ' char(csym(j))], 0)); this is much too slow for large systems so we
+    % built our own implementation here
     
+    %% 
+    % convert to strings
+    
+    % apply vpa to convert to fix point numbers, this prevents
+    % erroneous computations from bad casting.
+    % we always output vectors!
+    cstr = [this.cvar '[' num2str(j-1) '] = ' char(vpa(this.sym(j))) ';'];
+    
+    %%
     % parse pow(...,...)
+    
+    % find ^
     idx = strfind(cstr,'^');
+    % parse brackets
     if(~isempty(idx))
-        bro = regexp(cstr,'\(');%find bracket opening
-        brc = regexp(cstr,'\)');%find bracket closing
-        % compute nested bracket level of expression
-        brl = zeros(length(cstr),1);
-        l = 0;
-        for k = 1:length(cstr)
-            if(~isempty(find(k==bro,1)))
-                l = l+1;
-            end
-            brl(k) = l;
-            if(~isempty(find(k==brc,1)))
-                l = l-1;
-            end
-        end
+        % compute bracket levels add one for each (, remove 1 for each )
+        brl = cumsum(cstr == '(') - cumsum(cstr == ')');
     end
     while(~isempty(idx))
         samebrl = find(brl == brl(idx(1))); % find bracket level same as found level
@@ -75,48 +61,49 @@ for j=transpose(ff(:));
         idx = strfind(cstr,'^');
     end
     cstr = deblank(cstr);
-    cstr = regexprep(cstr,'D\(\[([0-9]*)\]\, ([\w]*)\)\(','D$2\($1,'); % fix derivatives
-    cstr = regexprep(cstr,'dirac\(([1-2]*),','Ddirac\($1,'); % fix derivatives
-    cstr = regexprep(cstr,'dirac\(([^,]*), ([1-2]*)\)','Ddirac\($2,$1\)'); % fix matlab <= R2014a
+%     cstr = regexprep(cstr,'D\(\[([0-9]*)\]\, ([\w]*)\)\(','D$2\($1,'); % fix derivatives
+%     cstr = regexprep(cstr,'dirac\(([1-2]*),','Ddirac\($1,'); % fix derivatives
+%     cstr = regexprep(cstr,'dirac\(([^,]*), ([1-2]*)\)','Ddirac\($2,$1\)'); % fix matlab <= R2014a
     cstr = regexprep(cstr,'abs\(','fabs\('); % fix abs->fabs
 
     if(~(length(cstr)==1 && isempty(cstr{1})))
         
-        cstr = strrep(cstr, [cvar ' ='],[cvar '[0] =']);
+        % fix various function specific variable names/indexes
         
-        if(strcmp(cvar,'qBdot'))
+        if(strcmp(this.cvar,'qBdot'))
             cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
-        elseif(strcmp(cvar,'y') || strcmp(cvar,'dydp'))
+        elseif(strcmp(this.cvar,'y') || strcmp(this.cvar,'dydp'))
             cstr = regexprep(cstr,'x\[([0-9]*)\]','x\[it+nt*$1\]');
             cstr = regexprep(cstr,'y\[([0-9]*)\]','y\[it+nt*$1\]');
-            if(strcmp(cvar,'dydp'))
+            if(strcmp(this.cvar,'dydp'))
                 cstr = regexprep(cstr,'dydp\[([0-9]*)\]','dydp\[$1+ip*ny\]');
             end
-        elseif(strcmp(cvar,'sy'))
+        elseif(strcmp(this.cvar,'sy'))
             cstr = regexprep(cstr,'sx\[([0-9]*)\]','sx\[it+nt*\($1+ip*nx\)\]');
             cstr = regexprep(cstr,'sy\[([0-9]*)\]','sy\[it+nt*\($1+ip*ny\)\]');
             % this needs to stay after the sx replacement, it cannot be put
-            % together with the replacements in y and dydp
+            % together with the replacements in y and dydp as x and y are
+            % contained in sx and sy!
             cstr = regexprep(cstr,'x\[([0-9]*)\]','x\[it+nt*$1\]');
             cstr = regexprep(cstr,'y\[([0-9]*)\]','y\[it+nt*$1\]');
-        elseif(strcmp(cvar,'dxdotdp'))
+        elseif(strcmp(this.cvar,'dxdotdp'))
             cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]', 'dxdotdp[\($1+ip*nx\)\]');
-        elseif(strcmp(cvar,'sdeltadisc'))
+        elseif(strcmp(this.cvar,'sdeltadisc'))
             cstr = regexprep(cstr,'sdeltadisc\[([0-9]*)\]','sdeltadisc\[plist[ip]+np*$1\]');
-        elseif(strcmp(cvar,'Jdata'))
+        elseif(strcmp(this.cvar,'Jdata'))
             cstr = strrep(cstr, 'Jdata[', 'J->data[');
-        elseif(strcmp(cvar,'JBdata'))
+        elseif(strcmp(this.cvar,'JBdata'))
             cstr = strrep(cstr, 'JBdata[', 'JB->data[');
-        elseif(strcmp(cvar,'Jv'))
+        elseif(strcmp(this.cvar,'Jv'))
             cstr = strrep(cstr, 'v[', 'v_tmp[');
-        elseif(strcmp(cvar,'JvB'))
+        elseif(strcmp(this.cvar,'JvB'))
             cstr = strrep(cstr, 'v[', 'vB_tmp[');
-        elseif(strcmp(cvar,'sroot') || strcmp(cvar,'srootval'))
-            cstr = regexprep(cstr, [cvar '\[([0-9]*)\] = '], [ cvar '[nroots + nmaxroot*(ip*nr + $1)] = ']);
-        elseif(strcmp(cvar,'dsigma_tdp')  || strcmp(cvar,'dtdp')|| strcmp(cvar,'drvaldp'))
-            cstr = regexprep(cstr, [cvar '\[([0-9]*)\] = '], [ cvar '[ip*nr + $1] = ']);
-        elseif(strcmp(cvar,'dsigma_ydp'))
-            cstr = regexprep(cstr, [cvar '\[([0-9]*)\] = '], [ cvar '[ip*ny + $1] = ']);
+        elseif(strcmp(this.cvar,'sroot') || strcmp(this.cvar,'srootval'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[nroots + nmaxroot*(ip*nr + $1)] = ']);
+        elseif(strcmp(this.cvar,'dsigma_tdp')  || strcmp(this.cvar,'dtdp')|| strcmp(this.cvar,'drvaldp'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nr + $1] = ']);
+        elseif(strcmp(this.cvar,'dsigma_ydp'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ny + $1] = ']);
         end
 
         if(strfind(this.getFunArgs(funstr),'N_Vector'))
@@ -127,6 +114,7 @@ for j=transpose(ff(:));
         end
         
     end
+    % print to file
     fprintf(fid,[cstr '\n']);
 end
 end
