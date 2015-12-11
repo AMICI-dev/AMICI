@@ -1,4 +1,4 @@
-function [ svar ] = getFunSVar(this, funstr )
+function [ this ] = getSVar(this)
     % getDeps returns the symbolic variable for the requested function.
     %
     % Parameters:
@@ -7,15 +7,15 @@ function [ svar ] = getFunSVar(this, funstr )
     % Return values:
     %  cvar: cell array of dependencies @type string
    
-    switch(funstr)
+    switch(this.funstr)
         case 'rootval'
-            svar =  'root';
+            this.svar =  'root';
         case 'drvaldp'
-            svar =  'drootpdp';
+            this.svar =  'drootpdp';
         case 'drvaldx'
-            svar =  'drootdx';
+            this.svar =  'drootdx';
         otherwise
-            svar = funstr;
+            this.svar = this.funstr;
     end
 end
 

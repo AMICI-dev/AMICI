@@ -1,5 +1,5 @@
 function this = parseModel(this)
-    % parseModel parses the this and computes all necessary symbolic expressions.
+    % parseModel parses the model definition and computes all necessary symbolic expressions.
     %
     % Return values:
     %  this: updated model definition object @type amimodel
@@ -181,9 +181,14 @@ function this = parseModel(this)
             end
         end
     end
+    
+    if(strcmp(this.wtype,'iw'))
+        this.id = sum(model.fun.M.sym,2)~=0;
+    else
+        this.id = zeros(nx,1);
+    end
 
     % save hashtable
-
     HTable = this.HTable;
     nxtrue = this.nxtrue;
     nytrue = this.nytrue;

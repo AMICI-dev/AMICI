@@ -1,233 +1,181 @@
-function [ deps ] = getFunDeps(this, funstr )
-    % getDeps returns the dependencies for the requested function/expression.
+function [ this ] = getDeps(this, model)
+    % getDeps writes the dependencies for the requested function
     %
     % Parameters:
-    %  funstr: function or expression for which the dependencies should be returned  @type string
+    %  model: model definition object @type amimodel
     %
     % Return values:
-    %  deps: cell array of dependencies @type cell
+    %  this: updated function definition object @type amifun
     
-    switch(funstr)
+    switch(this.funstr)
         case 'xdot'
-            if(strcmp(this.wtype,'iw'))
-                deps = {'M','p','x','k','dx'};
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'M','p','x','k','dx'};
             else
-                deps = {'p','x','k'};
+                this.deps = {'p','x','k'};
             end
             
         case 'dfdx'
-            deps = {'xdot','x'};
+            this.deps = {'xdot','x'};
             
         case 'J'
-            if(strcmp(this.wtype,'iw'))
-                deps = {'dfdx','M','x','xdot'};
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'dfdx','M','x','xdot'};
             else
-                deps = {'xdot','x'};
+                this.deps = {'xdot','x'};
             end
             
         case 'JB'
-            deps = {'J'};
+            this.deps = {'J'};
             
         case 'dxdotdp'
-            deps = {'xdot','p'};
+            this.deps = {'xdot','p'};
             
         case 'sx0'
-            deps = {'x0','p'};    
+            this.deps = {'x0','p'};    
             
         case 'sdx0'
-            deps = {'dx0','p'}; 
+            this.deps = {'dx0','p'}; 
             
         case 'sxdot'
-            if(strcmp(this.wtype,'iw'))
-                deps = {'dfdx','M','dxdotdp','sdx','sx'};
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'dfdx','M','dxdotdp','sdx','sx'};
             else
-                deps = {'J','dxdotdp','sx'};
+                this.deps = {'J','dxdotdp','sx'};
             end
             
         case 'dydx'
-            deps = {'y','x'};
+            this.deps = {'y','x'};
             
         case 'dydp'
-            deps = {'y','p'};
+            this.deps = {'y','p'};
           
         case 'sy'
-            deps = {'dydp','dydx','sx'};
-            
-        case 'drootdx'
-            deps = {'rfun','x'};
-            
-        case 'drootdt'
-            deps = {'rfun','drootdx','xdot'};
-            
-        case 'drootpdp'
-            deps = {'rfun','p'};
-            
-        case 'drootdp'
-            if(this.nxtrue > 0)
-                deps = {'drootpdp','drootdx','dxdp','sx'};
-            else
-                deps = {'drootpdp','drootdx','sx'};
-            end
-            
-        case 'sroot'
-            deps = {'drootdt','drootdp'};
-            
-        case 'srootval'
-            deps = {'drootdp'};
-            
-        case 's2root'
-            deps = {'drootdt','drootdp','sroot','ddrootdtdt','ddrootdtdp','s2rootval'};
-            
-        case 's2rootval'
-            deps = {'ddrootdpdp'};
-            
-        case 'dxdp'
-            deps = {'x'};
-            
-        case 'ddrootdxdx'
-            deps = {'rfun','x'};
-            
-        case 'ddrootdxdt'
-            deps = {'drootdx','xdot','x','ddrootdxdx'};
-           
-        case 'ddrootdtdt'
-            deps = {'drootdt','ddrootdxdt','xdot'};
-        
-        case 'ddxdtdp'
-            deps = {'dxdotdp','dxdotdx','dxdp'};
-            
-        case 'dxdotdx'
-            deps = {'xdot','x'};
-            
-        case 'ddrootdpdx'
-            deps = {'drootdp','x'};
-        
-        case 'ddrootdpdt'
-            deps = {'drootdp','ddrootdpdx','xdot',};
-            
-        case 'ddrootdtdp'
-            deps = {'drootdt','p','ddrootdxdt','dxdp'};
-            
-        case 'drootdx_ddxdpdp'
-            deps = {'drootdx','p'};
-            
-        case 'ddrootdpdp'
-            deps = {'drootdp','p','ddrootdpdx','dxdp','drootdx_ddxdpdp'};
-            
-        case 'dtdp'
-            deps = {'drootdt','drootpdp'};
-            
-        case 'dtdx'
-            deps = {'drootdt','drootdx'};
+            this.deps = {'dydp','dydx','sx'};
             
         case 'Jv'
-            deps = {'J'};
+            this.deps = {'J'};
             
         case 'JvB'
-            deps = {'J'};
+            this.deps = {'J'};
             
         case 'xBdot'
-            if(strcmp(this.wtype,'iw'))
-                deps = {'J','M','xB','dxB'};
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'J','M','xB','dxB'};
             else
-                deps = {'J','xB'};
+                this.deps = {'J','xB'};
             end
             
         case 'qBdot'
-            deps = {'dxdotdp','xB'};
+            this.deps = {'dxdotdp','xB'};
             
         case 'dsigma_ydp'
-            deps = {'sigma_y','p'};
+            this.deps = {'sigma_y','p'};
             
         case 'dsigma_tdp'
-            deps = {'sigma_t','p'};
-            
-        case 'rdisc'
-            deps = {'xdot','x'};
-            
-        case 'deltadisc'
-            deps = {'rdisc','xdot','x'};
-            
-        case 'ideltadisc'
-            deps = {'deltadisc','rdisc','xdot','qBdot','x'};
-            
-        case 'bdeltadisc'
-            deps = {'deltadisc','rdisc','xdot','xBdot','x'};
-            
-        case 'sdeltadisc'
-            deps = {'deltadisc','rdisc','xdot','sxdot','x'};
-            
-        case 'x0'
-            deps = {'p','k'};
-            
-        case 'JBand'
-            deps = {'J'};
-            
-        case 'JBandB'
-            deps = {'JB'};
-            
-        case 'JSparse'
-            deps = {'J'};
-            
-        case 'JSparseB'
-            deps = {'JB'};
-            
-        case 'y'
-            deps = {'x','p','k'};
-            
-        case 'rootval'
-            deps = {'rfun'};
-            
-        case 'drvaldx'
-            deps = {'drootdx'};
-            
-        case 'drvaldp'
-            deps = {'drootdp'};
+            this.deps = {'sigma_t','p'};
             
         case 'root'
-            deps = {'rfun','rdisc'};
+            this.deps = {'x','k','p'};
+            
+        case 'drootdp'
+            this.deps = {'root','p','drootdx','sx'};
+            
+        case 'drootdx'
+            this.deps = {'root','x'};
+            
+        case 'drootdt'
+            this.deps = {'root','drootdx','xdot'};
+            
+        case 'deltax'
+            this.deps = {'x','k','p'};
+            
+        case 'ddeltaxdp'
+            this.deps = {'deltax','p'};
+            
+        case 'ddeltaxdx'
+            this.deps = {'deltax','x'};
+            
+        case 'ddeltaxdt'
+            this.deps = {'deltax'};
+            
+        case 'deltasx'
+            this.deps = {'deltax','dtaudp','xdot','sx','deltaxdot'};
+        
+        case 'deltaqB'
+            this.deps = {'deltax','dtaudp','xdot','sx'};
+            
+        case 'deltaxB'
+            this.deps = {'deltax','dtaudp','xdot','sx'};
+            
+        case 'z'
+            this.deps = {'x','k','p'};
+            
+        case 'dzdp'
+            this.deps = {'z','p'};
+            
+        case 'dzdx'
+            this.deps = {'z','x'};
+            
+        case 'sz'
+            this.deps = {'dzdp','dzdx','sx','dtaudp'};
+            
+        case 'x0'
+            this.deps = {'p','k'};
+            
+        case 'JBand'
+            this.deps = {'J'};
+            
+        case 'JBandB'
+            this.deps = {'JB'};
+            
+        case 'JSparse'
+            this.deps = {'J'};
+            
+        case 'JSparseB'
+            this.deps = {'JB'};
+            
+        case 'y'
+            this.deps = {'x','p','k'};
             
         case 'sigma_y'
-            deps = {'p','k'};
+            this.deps = {'p','k'};
         
         case 'sigma_t'
-            deps = {'p','k'};
+            this.deps = {'p','k'};
             
         case 'rhs'
-            deps = {'xdot'};
+            this.deps = {'xdot'};
             
         case 'dx0'
-            deps = {'x','p','k'};
-            
-        case 'rfun'
-            deps = {'p','k','x'};
+            this.deps = {'x','p','k'};
             
         case 'M'
-            deps = {'x','p','k'};
+            this.deps = {'x','p','k'};
             
         case 'x'
-            deps = {};
+            this.deps = {};
             
         case 'dx'
-            deps = {};
+            this.deps = {};
             
         case 'xB'
-            deps = {};
+            this.deps = {};
             
         case 'dxB'
-            deps = {};
+            this.deps = {};
             
         case 'k'
-            deps = {};
+            this.deps = {};
             
         case 'p'
-            deps = {};
+            this.deps = {};
             
         case 'sx'
-            deps = {};
+            this.deps = {};
             
         case 'sdx'
-            deps = {};
+            this.deps = {};
             
             
         otherwise

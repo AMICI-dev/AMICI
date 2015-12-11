@@ -70,6 +70,13 @@ for j=transpose(ff(:));
         
         % fix various function specific variable names/indexes
         
+        cstr = regexprep(cstr,'x([0-9]*)','x\[$1\]');
+        cstr = regexprep(cstr,'p([0-9]*)','p\[$1\]');
+        cstr = regexprep(cstr,'k([0-9]*)','k\[$1\]');
+        cstr = regexprep(cstr,'xB([0-9]*)','xB\[$1\]');
+        cstr = regexprep(cstr,'J([0-9]*)','J\[$1\]');
+        cstr = regexprep(cstr,'xdotdp([0-9]*)','xdotdp\[$1 + ip*nx\]');
+        
         if(strcmp(this.cvar,'qBdot'))
             cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
         elseif(strcmp(this.cvar,'y') || strcmp(this.cvar,'dydp'))

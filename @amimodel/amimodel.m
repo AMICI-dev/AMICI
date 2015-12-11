@@ -10,8 +10,6 @@ classdef amimodel
         sym;
         % struct which stores information for which functions c code needs to be generated @type struct
         fun;
-        % short names for symbolic variables @type struct
-        strsym;
         % name of the model @type string
         modelname;
         % struct that contains hash values for the symbolic model definitions @type struct
@@ -130,6 +128,7 @@ classdef amimodel
                     mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
                 end
             end
+            AM = AM.makeEvents();
         end
         
         this = parseModel(this)
@@ -142,7 +141,9 @@ classdef amimodel
         
         this = getFun(this,HTable,funstr)
         
-        [this] = checkDeps(this,HTable)
+        this = makeEvents(this)
+        
+        [this,cflag] = checkDeps(this,HTable,deps)
         
         [this,HTable] = loadOldHashes(this) 
         
