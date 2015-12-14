@@ -8,21 +8,22 @@ classdef amifun
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
-        sym;
+        sym@sym;
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
-        strsym;
-        % flag which stores information for whether the symbolic defininition needs to be regenerated @type string
-        generate;
+        strsym@sym;
         % name of the model @type char
-        funstr;
-        % name of the symbolic variable @type char
-        svar;
+        funstr@char;
         % name of the c variable @type char
-        cvar;
+        cvar@char;
         % argument string @type char
-        argstr;
+        argstr@char;
         % dependencies on other functions @type cell
-        deps;
+        deps@cell;
+        % nvec dependencies
+        nvecs@cell;
+        % indicates whether the function is a sensitivity or derivative
+        % with respect to parameters
+        sensiflag@logical;
     end
     
     methods
@@ -30,13 +31,16 @@ classdef amifun
             AF.funstr = funstr;
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
+            AF = AF.getNVecs(model);
             AF = AF.getCVar();
-            AF = AF.getSVar();
+            AF = AF.getSensiFlag();
         end
 
+        printLocalVars(this,model,fid)
+        
         writeCcode_sensi(this,model,fid)
         
-        writeCcode(this,model,fid,ip,jp)
+        writeCcode(this,model,fid)
         
         gccode(this,fid)
         
@@ -44,12 +48,13 @@ classdef amifun
         
         [ this ] = getArgs(this,model)
         
+        [ this ] = getNVecs(this,model)
+        
         [ this ] = getCVar(this)
         
-        [ this ] = getSVar(this)
+        [ this ] = getSensiFlag(this)
         
         [ this ] = checkDeps(this)
-
     end
 end
 

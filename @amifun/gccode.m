@@ -70,29 +70,19 @@ for j=transpose(ff(:));
         
         % fix various function specific variable names/indexes
         
-        cstr = regexprep(cstr,'x([0-9]*)','x\[$1\]');
-        cstr = regexprep(cstr,'p([0-9]*)','p\[$1\]');
-        cstr = regexprep(cstr,'k([0-9]*)','k\[$1\]');
-        cstr = regexprep(cstr,'xB([0-9]*)','xB\[$1\]');
-        cstr = regexprep(cstr,'J([0-9]*)','J\[$1\]');
-        cstr = regexprep(cstr,'xdotdp([0-9]*)','xdotdp\[$1 + ip*nx\]');
+        cstr = regexprep(cstr,'x_([0-9]+)','x\[$1\]');
+        cstr = regexprep(cstr,'p_([0-9]+)','p\[$1\]');
+        cstr = regexprep(cstr,'k_([0-9]+)','k\[$1\]');
+        cstr = regexprep(cstr,'xB_([0-9]+)','xB\[$1\]');
+        cstr = regexprep(cstr,'J([0-9]+)','J\[$1\]');
+        cstr = regexprep(cstr,'xdotdp([0-9]+)','xdotdp\[$1 + ip*nx\]');
         
         if(strcmp(this.cvar,'qBdot'))
             cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
         elseif(strcmp(this.cvar,'y') || strcmp(this.cvar,'dydp'))
-            cstr = regexprep(cstr,'x\[([0-9]*)\]','x\[it+nt*$1\]');
-            cstr = regexprep(cstr,'y\[([0-9]*)\]','y\[it+nt*$1\]');
-            if(strcmp(this.cvar,'dydp'))
-                cstr = regexprep(cstr,'dydp\[([0-9]*)\]','dydp\[$1+ip*ny\]');
-            end
-        elseif(strcmp(this.cvar,'sy'))
-            cstr = regexprep(cstr,'sx\[([0-9]*)\]','sx\[it+nt*\($1+ip*nx\)\]');
-            cstr = regexprep(cstr,'sy\[([0-9]*)\]','sy\[it+nt*\($1+ip*ny\)\]');
-            % this needs to stay after the sx replacement, it cannot be put
-            % together with the replacements in y and dydp as x and y are
-            % contained in sx and sy!
-            cstr = regexprep(cstr,'x\[([0-9]*)\]','x\[it+nt*$1\]');
-            cstr = regexprep(cstr,'y\[([0-9]*)\]','y\[it+nt*$1\]');
+            cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*$1\]']);
+        elseif(strcmp(this.cvar,'sy') || strcmp(this.cvar,'dydp'))
+            cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*\($1+ip*ny\)\]']);
         elseif(strcmp(this.cvar,'dxdotdp'))
             cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]', 'dxdotdp[\($1+ip*nx\)\]');
         elseif(strcmp(this.cvar,'sdeltadisc'))
@@ -105,19 +95,22 @@ for j=transpose(ff(:));
             cstr = strrep(cstr, 'v[', 'v_tmp[');
         elseif(strcmp(this.cvar,'JvB'))
             cstr = strrep(cstr, 'v[', 'vB_tmp[');
+        elseif(strcmp(this.cvar,'sxdot'))
+            cstr = strrep(cstr,'tmp_J[','tmp_J->data[');
         elseif(strcmp(this.cvar,'sroot') || strcmp(this.cvar,'srootval'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[nroots + nmaxroot*(ip*nr + $1)] = ']);
-        elseif(strcmp(this.cvar,'dsigma_tdp')  || strcmp(this.cvar,'dtdp')|| strcmp(this.cvar,'drvaldp'))
-            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nr + $1] = ']);
+        elseif(strcmp(this.cvar,'dsigma_zdp')  || strcmp(this.cvar,'sz')|| strcmp(this.cvar,'dzdp'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ne + $1] = ']);
         elseif(strcmp(this.cvar,'dsigma_ydp'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ny + $1] = ']);
         end
 
-        if(strfind(this.getFunArgs(funstr),'N_Vector'))
-            cstr = strrep(cstr, 'dot[', 'dot_tmp[');
-            cstr = strrep(cstr, 'x[', 'x_tmp[');
-            cstr = strrep(cstr, 'B[', 'B_tmp[');
-            cstr = strrep(cstr, '0[', '0_tmp[');
+        
+        for nvec = this.nvecs
+            cstr = strrep(cstr, [nvec{1} '['],[nvec{1} '_tmp[']);
+        end
+        if(strcmp(this.funstr,'dydx'))
+            cstr = strrep(cstr,'dydx_tmp','dydx');
         end
         
     end

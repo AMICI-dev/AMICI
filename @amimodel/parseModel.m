@@ -52,7 +52,7 @@ function this = parseModel(this)
         this.sym.k = sym.empty(0,0);
     end
     if(~isfield(this.sym,'root'))
-        this.sym.root = sym.empty(0,1);
+        error('the definition of events via the root function is deprecated and no longer supported. Please update the model definition syntax!')
     end
     if(~isfield(this.sym,'sigma_y'))
         this.sym.sigma_y = sym.ones(size(this.sym.y));
@@ -60,11 +60,11 @@ function this = parseModel(this)
     if(numel(this.sym.sigma_y) == 1)
         this.sym.sigma_y = this.sym.sigma_y*sym.ones(size(this.sym.y));
     end
-    if(~isfield(this.sym,'sigma_t'))
-        this.sym.sigma_t = sym.ones(size(this.sym.y));
+    if(~isfield(this.sym,'sigma_z'))
+        this.sym.sigma_z = sym.ones(size(this.sym.y));
     end
-    if(numel(this.sym.sigma_t) == 1)
-        this.sym.sigma_t = this.sym.sigma_t*sym.ones(size(this.sym.y));
+    if(numel(this.sym.sigma_z) == 1)
+        this.sym.sigma_z = this.sym.sigma_z*sym.ones(size(this.sym.y));
     end
     
     if(any(ismember(this.sym.k,this.sym.p)))
@@ -85,53 +85,51 @@ function this = parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
-    %remove zero-roots
-    ir = 1;
-    while ir <= length(this.sym.root)
-        if(isequaln(this.sym.root(ir),0))
-            this.sym.root(ir) = [];
-        else
-            ir = ir + 1;
+    ne = length(this.event);
+    %check zero trigger events
+    for ievent = 1:ne
+        if(isequaln(this.event(ievent).trigger,sym(0)))
+            error('Trigger functions cannot be equal to zero. Please check your event definition!')
         end
     end
-    nr = length(this.sym.root);
     
     this.nx = nx;
     this.ny = ny;
-    this.nr = nr;
+    this.ne = ne;
     this.np = np;
     this.nk = nk;
     
-    this.sym.rfun = this.sym.root;
-    
     % initial hashes
-    
-    this.HTable.y = DataHash(char(this.sym.y));
-    this.HTable.x = DataHash(char(this.sym.x));
-    this.HTable.p = DataHash(char(this.sym.p));
-    this.HTable.k = DataHash(char(this.sym.k));
-    this.HTable.x0 = DataHash(char(this.sym.x0));
-    this.HTable.rfun = DataHash(char(this.sym.rfun));
-    if(strcmp(this.wtype,'iw'))
-        this.HTable.xdot = DataHash(char(this.sym.xdot));
-        this.HTable.dx0 = DataHash(char(this.sym.dx0));
-        this.HTable.M = DataHash(char(this.sym.M));
-    else
-        this.HTable.xdot = DataHash(char(this.sym.xdot));
+    this.HTable(1).y = DataHash(char(this.sym.y));
+    this.HTable(1).x = DataHash(char(this.sym.x));
+    this.HTable(1).p = DataHash(char(this.sym.p));
+    this.HTable(1).k = DataHash(char(this.sym.k));
+    this.HTable(1).x0 = DataHash(char(this.sym.x0));
+    if(ne>0)
+        this.HTable(1).trigger = DataHash(char([this.event.trigger]));
+        this.HTable(1).bolus = DataHash(char([this.event.bolus]));
+        this.HTable(1).z = DataHash(char([this.event.z]));
     end
-    this.HTable.sigma_y = DataHash(char(this.sym.sigma_y));
-    this.HTable.sigma_t = DataHash(char(this.sym.sigma_t));
+    if(strcmp(this.wtype,'iw'))
+        this.HTable(1).xdot = DataHash(char(this.sym.xdot));
+        this.HTable(1).dx0 = DataHash(char(this.sym.dx0));
+        this.HTable(1).M = DataHash(char(this.sym.M));
+    else
+        this.HTable(1).xdot = DataHash(char(this.sym.xdot));
+    end
+    this.HTable(1).sigma_y = DataHash(char(this.sym.sigma_y));
+    this.HTable(1).sigma_z = DataHash(char(this.sym.sigma_z));
     
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
-    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','dydp','root','rootval','deltadisc','dxdotdp'};
+    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp'};
     
     if(this.forward)
-        funs = {funs{:},'sxdot','sx0','sy','sroot','s2root','srootval','s2rootval','sdeltadisc'};
+        funs = {funs{:},'sxdot','sx0','sy','sz','deltasx','stau'};
     end
     if(this.adjoint)
-        funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dtdx','drvaldx','dtdp','drvaldp','bdeltadisc','ideltadisc','sigma_y','sigma_t','dsigma_ydp','dsigma_tdp','sx0'};
+        funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','sigma_y','sigma_z','dsigma_ydp','dsigma_zdp','sx0'};
     end
     
     if(strcmp(this.wtype,'iw'))
@@ -147,9 +145,9 @@ function this = parseModel(this)
         this = this.getFun(HTable,funs{ifun});
     end
     
-    if(this.fun.J)
+    if(isfield(this.fun,'J'))
         fprintf('sparse | ')
-        M = double(logical(this.sym.J~=sym(zeros(size(this.sym.J)))));
+        M = double(logical(this.fun.J.sym~=sym(zeros(size(this.fun.J.sym)))));
         this.sparseidx = find(M);
         
         [ubw,lbw] = ami_bandwidth(M);
@@ -167,7 +165,7 @@ function this = parseModel(this)
         this.colptrs(ix+1) = length(this.rowvals);
 
         if(this.adjoint)
-            if(this.fun.JB)
+            if(isfield(this.fun,'JB'))
                 fprintf('sparseB | ')
                 MB = transpose(M);
                 this.sparseidxB = find(MB);

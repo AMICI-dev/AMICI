@@ -8,24 +8,24 @@ function writeCcode(this,model, fid)
 %
 %
 
-ndisc = model.ndisc;
-if(strcmp(funstr,'JSparse'))
+ne = model.ne;
+if(strcmp(this.funstr,'JSparse'))
     tmpfun = this;
-    tmpfun.sym = this.sym(model.sparseidx);
+    tmpfun.sym = model.fun.J.sym(model.sparseidx);
     tmpfun.gccode(fid);
-elseif(strcmp(funstr,'JSparseB'))
+elseif(strcmp(this.funstr,'JSparseB'))
     tmpfun = this;
-    tmpfun.sym = this.sym(model.sparseidxB);
+    tmpfun.sym = model.fun.JB.sym(model.sparseidxB);
     tmpfun.gccode(fid);
-elseif(strcmp(funstr,'deltadisc') || strcmp(funstr,'sdeltadisc') || strcmp(funstr,'bdeltadisc') || strcmp(funstr,'ideltadisc'))
+elseif(strcmp(this.funstr,'deltadisc') || strcmp(this.funstr,'sdeltadisc') || strcmp(this.funstr,'bdeltadisc') || strcmp(this.funstr,'ideltadisc'))
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))
-        fprintf(fid,'              switch(idisc) { \n');
+        fprintf(fid,'              switch(ie) { \n');
         tmpfun = this;
-        for idisc=1:ndisc
-            if(any(nonzero(:,idisc)~=0))
-                fprintf(fid,['              case ' num2str(idisc-1) ': {\n']);
-                tmpfun.sym = this.sym(:,idisc);
+        for ie=1:ne
+            if(any(nonzero(:,ie)~=0))
+                fprintf(fid,['              case ' num2str(ie-1) ': {\n']);
+                tmpfun.sym = this.sym(:,ie);
                 tmpfun.gccode(fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'              } break;\n\n');
@@ -34,7 +34,7 @@ elseif(strcmp(funstr,'deltadisc') || strcmp(funstr,'sdeltadisc') || strcmp(funst
         fprintf(fid,'              } \n');
     end
 else
-    this.gccode(fid)
+    this.gccode(fid);
 end
 
 

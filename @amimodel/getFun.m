@@ -40,7 +40,7 @@ function this = getFun(this,HTable,funstr)
     if(cflag)
         fun = amifun(funstr,this);
         fun = fun.getSyms(this);
-        this.fun.(funstr) = fun;
+        this.fun(1).(funstr) = fun;
     end
     
 end

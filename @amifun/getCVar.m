@@ -18,10 +18,6 @@ function [ this ] = getCVar(this)
             this.cvar =  'JBdata';
         case 'JSparseB'
             this.cvar =  'JBdata';
-        case 'drvaldp'
-            this.cvar =  'drvaldp';
-        case 'drvaldx'
-            this.cvar =  'drvaldx';
         otherwise
             this.cvar = this.funstr;
     end

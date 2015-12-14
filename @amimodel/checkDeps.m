@@ -33,14 +33,9 @@ function [this,cflag] = checkDeps(this,HTable,deps)
         % all symbolic definitions are generated. this is forced by passing
         % an empty HTable to getFun
         for id = 1:length(deps)
-            if(~isfield(this.funs,deps{id}))
+            if(~isfield(this.fun,deps{id}))
                 this = this.getFun([],deps{id});
-            else
-                if(~isfield(this.funs.(deps{id}),'sym'))
-                    this = this.getFun([],deps{id});
-                end
             end
-            
         end
     end
 end

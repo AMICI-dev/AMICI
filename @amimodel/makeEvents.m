@@ -5,7 +5,11 @@ function [ this ] = makeEvents( this )
     % Return values:
     %  this: updated model definition object @type amimodel
     
-    nevent = length(this.event);
+    if(isfield(this,'event'))
+        nevent = length(this.event);
+    else
+        nevent = 0;
+    end
     
     % extract trigger and bolus
     for ievent = 1:nevent
@@ -26,8 +30,8 @@ function [ this ] = makeEvents( this )
             brl = cumsum(tmp_str == '(') - cumsum(tmp_str == ')');
             for iocc = 1:length(idx_start) % loop over occurances
                 % extract argument
-                idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc)),'first',1);
-                arg = tmp_str((idx_start(iocc)+1):(idx_end-1));
+                idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
+                arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
                 if(ievent>0)
                     %check whether we already had this trigger function
                     ediscf = zeros(size(trigger{ievent}));
@@ -83,7 +87,7 @@ function [ this ] = makeEvents( this )
         % multiply by the dtriggerdt factor, this should stay here as we
         % want the xdot to be cleaned of any dirac functions
         for ievent = 1:nevent
-            dtriggerdt = diff(trigger{ievent},'t') + jacobian(trigger{ievent},model.sym.x)*model.sym.xdot;
+            dtriggerdt = diff(trigger{ievent},'t') + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
             bolus{ievent} = bolus{ievent} + tmp_bolus{ievent}/abs(dtriggerdt);
         end 
         

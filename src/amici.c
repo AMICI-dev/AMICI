@@ -153,6 +153,9 @@ UserData setupUserData(const mxArray *prhs[]) {
     return(udata);
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 void *setupAMI(int *status, void *user_data, void *temp_data) {
     /**
@@ -438,6 +441,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     return(ami_mem);
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
 void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     /**
      * setupAMIB initialises the AMI memory object for the backwards problem
@@ -628,6 +635,9 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     /**
@@ -693,6 +703,10 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     
     return(rdata);
 }
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         /**
@@ -792,10 +806,14 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     return(edata);
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
 
-void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+
+void getEventDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
     /**
-     * getRootDataFSA extracts root information for forward sensitivity analysis
+     * getEventDataFSA extracts root information for forward sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type int
      * @param[out] nroots counter for the number of found roots @type int
@@ -882,9 +900,237 @@ void getRootDataFSA(int *status, int *nroots, void *ami_mem, void  *user_data, v
     /* if the root coincides with one of the output timepoints, we want to continue as if we reached that timepoint after accounting for the root */
 }
 
-void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
-     * getRootDataASA extracts root information for adjoint sensitivity analysis
+     * getDataOutput extracts output information for data-points
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    status = fy(ts[it],it,ydata,xdata,udata);
+    if (status != AMI_SUCCESS) goto freturn;
+    
+    for (iy=0; iy<ny; iy++) {
+        
+        if(data_model != AMI_ONEOUTPUT) {
+            if (mxIsNaN(ysigma[iy*nt+it])) {
+                status =fsigma_y(t,sigma_y,udata);
+                if (status != AMI_SUCCESS) goto freturn;
+                
+            } else {
+                sigma_y[iy] = ysigma[iy*nt+it];
+            }
+        }
+        
+        if (data_model == AMI_NORMAL) {
+            if(!mxIsNaN(my[iy*nt+it])){
+                g += 0.5*log(2*pi*pow(sigma_y[iy],2)) + 0.5*pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
+                *chi2data += pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
+            }
+        }
+        if (data_model == AMI_LOGNORMAL) {
+            if(!mxIsNaN(my[iy*nt+it])){
+                g += 0.5*log(2*pi*pow(sigma_y[iy]*ydata[iy*nt+it],2)) + 0.5*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
+                *chi2data += pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
+            }
+        }
+        if (data_model == AMI_ONEOUTPUT) {
+            g += ydata[iy*nt+it];
+        }
+    }
+    if (sensi >= 1) {
+        if (sensi_meth == AMI_FSA) {
+            getDataSensisFSA(&status, t, ami_mem, udata, rdata, edata, tdata);
+        }
+        if (sensi_meth == AMI_ASA) {
+            getDataSensisASA(&status, t, ami_mem, udata, rdata, edata, tdata);
+        }
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+int getEventOutput(int *status, realtype tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventOutput extracts output information for events
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    if (t == tlastroot) {
+        /* we are stuck in a root => turn off rootfinding */
+        /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
+        AMIRootInit(ami_mem, 0, NULL);
+        cv_status = 0;
+    }
+    tlastroot = t;
+    if (sensi >= 1) {
+        if(sensi_meth == AMI_ASA) {
+            getEventDataASA(&status, &nroots, &idisc, ami_mem, udata, rdata, edata, tdata);
+        } else {
+            getEventDataFSA(&status, &nroots, ami_mem, udata, rdata, tdata);
+        }
+    }
+    if (cv_status == -22) {
+        /* clustering of roots => turn off rootfinding */
+        AMIRootInit(ami_mem, 0, NULL);
+        cv_status = 0;
+    }
+    if (t==ts[it]) {
+        cv_status = 0;
+    }
+    return(cv_status);
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventOutput fills missing roots with last timepoint
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+
+    if (sensi >= 1) {
+        if(sensi_meth == AMI_ASA) {
+            getEventDataASA(&status, &nroots, &idisc, ami_mem, udata, rdata, edata, tdata);
+        } else {
+            getEventDataFSA(&status, &nroots, ami_mem, udata, rdata, tdata);
+        }
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getDataSensisFSA extracts data information for forward sensitivity analysis
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    for(ip=0; ip < np; ip++) {
+        if(nx>0) {
+            if(ts[it] > tstart) {
+                status = AMIGetSens(ami_mem, &t, sx);
+                if (status != AMI_SUCCESS) goto freturn;
+            }
+            
+            sx_tmp = NV_DATA_S(sx[ip]);
+            for(ix=0; ix < nx; ix++) {
+                xSdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
+            }
+        }
+    }
+    fsy(ts[it],it,ySdata,xdata,xSdata,udata);
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getDataSensisASA extracts data information for adjoint sensitivity analysis
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    status = fdydx(ts[it],it,dydx,ydata,xdata,udata);
+    if (status != AMI_SUCCESS) goto freturn;
+    status = fdydp(ts[it],it,dydp,ydata,xdata,udata);
+    if (status != AMI_SUCCESS) goto freturn;
+    for (iy=0; iy<ny; iy++) {
+        if(data_model != AMI_ONEOUTPUT) {
+            if (mxIsNaN(ysigma[iy*nt+it])) {
+                status = fsigma_y(t,sigma_y,udata);
+                if (status != AMI_SUCCESS) goto freturn;
+                status = fdsigma_ydp(t,dsigma_ydp,udata);
+                if (status != AMI_SUCCESS) goto freturn;
+            } else {
+                for (ip=0; ip<np; ip++) {
+                    dsigma_ydp[ip*ny+iy] = 0;
+                }
+                sigma_y[iy] = ysigma[iy*nt+it];
+            }
+        }
+        for (ip=0; ip<np; ip++) {
+            if(data_model == AMI_NORMAL) {
+                if(!mxIsNaN(my[iy*nt+it])){
+                    dgdp[ip] += dsigma_ydp[ip*ny+iy]/sigma_y[iy] + ( dydp[ip*ny+iy]* ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2) - dsigma_ydp[ip*ny+iy]*pow( ( ydata[iy*nt+it] - my[iy*nt+it] ),2)/pow( sigma_y[iy] , 3);
+                }
+            }
+            if(data_model == AMI_LOGNORMAL) {
+                if(!mxIsNaN(my[iy*nt+it])){
+                    dgdp[ip] += (sigma_y[iy]*dydp[ip*ny+iy] + ydata[iy*nt+it]*dsigma_ydp[ip*ny+iy])/(sigma_y[iy]*ydata[iy*nt+it]) + ( dydp[ip*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2) -  dsigma_ydp[ip*ny+iy]*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ),2)/pow(sigma_y[iy] , 3);
+                }
+            }
+            if(data_model == AMI_ONEOUTPUT) {
+                dgdp[ip] += dydp[ip*ny+iy];
+            }
+        }
+        for (ix=0; ix<nx; ix++) {
+            if(data_model == AMI_NORMAL) {
+                if(!mxIsNaN(my[iy*nt+it])){
+                    dgdx[it+ix*nt] += ( dydx[ix*ny+iy] * ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2);
+                }
+            }
+            if(data_model == AMI_LOGNORMAL) {
+                if(!mxIsNaN(my[iy*nt+it])){
+                    dgdx[it+ix*nt] += 1/(2*pi)*dydx[ix*ny+iy]/ydata[iy*nt+it] + ( dydx[ix*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2);
+                }
+            }
+            if(data_model == AMI_ONEOUTPUT) {
+                dgdx[it+ix*nt] += dydx[ix*ny+iy];
+            }
+        }
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void getEventDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventDataASA extracts root information for adjoint sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[out] nroots counter for the number of found roots @type *int
@@ -997,6 +1243,10 @@ void getRootDataASA(int *status, int *nroots, int *idisc, void *ami_mem, void  *
     }
 }
 
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data) {
     /**
      * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
@@ -1030,6 +1280,10 @@ void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *ret
     orderdata[it] = (realtype)order;
 
 }
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
 
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
     /**

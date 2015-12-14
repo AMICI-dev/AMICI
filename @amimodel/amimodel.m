@@ -5,15 +5,18 @@
 classdef amimodel
     % amimodel is the object in which all model definitions are stored 
     
-    properties ( GetAccess = 'public', SetAccess = 'public' )
+    properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
-        sym;
+        sym@struct;
         % struct which stores information for which functions c code needs to be generated @type struct
-        fun;
+        fun@struct;
+        % struct which stores information for which functions c code needs
+        % to be generated @type *amievent
+        event@amievent;
         % name of the model @type string
-        modelname;
+        modelname@char;
         % struct that contains hash values for the symbolic model definitions @type struct
-        HTable;
+        HTable@struct;
         % default absolute tolerance @type double
         atol = 1e-8;
         % default relative tolerance @type double
@@ -29,56 +32,58 @@ classdef amimodel
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string
-        wtype;
+        wtype@char;
         % number of states @type int
-        nx;
+        nx@double;
         % number of original states for second order sensitivities @type int
         nxtrue = 0;
         % number of observables @type int
-        ny;
+        ny@double;
         % number of original observables for second order sensitivities @type int
         nytrue = 0;
         % number of events @type int
-        nr;
+        nr@double;
         % number of discontinuities @type int
-        ndisc;
+        ndisc@double;
         % number of parameters @type int
-        np;
+        np@double;
         % number of constants @type int
-        nk;
+        nk@double;
+        % number of events @type int
+        ne@double;
         % flag for DAEs @type *int
-        id;
+        id@double;
         % upper Jacobian bandwidth @type int
-        ubw;
+        ubw@double;
         % lower Jacobian bandwidth @type int
-        lbw;
+        lbw@double;
         % number of nonzero entries in Jacobian @type int
-        nnz;
+        nnz@double;
         % dataindexes of sparse Jacobian @type *int
-        sparseidx;
+        sparseidx@double;
         % rowindexes of sparse Jacobian @type *int
-        rowvals;
+        rowvals@double;
         % columnindexes of sparse Jacobian @type *int
-        colptrs;
+        colptrs@double;
         % dataindexes of sparse Jacobian @type *int
-        sparseidxB;
+        sparseidxB@double;
         % rowindexes of sparse Jacobian @type *int
-        rowvalsB;
+        rowvalsB@double;
         % columnindexes of sparse Jacobian @type *int
-        colptrsB;
+        colptrsB@double;
         % cell array of functions to be compiled @type *cell
-        funs;
+        funs@cell;
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
         % path to wrapper
-        wrap_path;
+        wrap_path@char;
         % flag to enforce recompilation of the model
         recompile = false;
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 1;
+        compver = 2;
     end
     
     methods

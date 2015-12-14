@@ -13,80 +13,44 @@ np = model.np;
 
 nonzero = this.sym~=0;
 
-if(strcmp(svar,'drvaldp'))
-    
-    if(any(any(nonzero)))
-        tmpfun = this;
-        for ip=1:np
-            if(any(nonzero(:,ip)))
-                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                tmpfun.sym = this.sym(:,ip);
-                tmpfun.writeCcode(fid);
-                fprintf(fid,'\n');
-                fprintf(fid,'  } break;\n\n');
-            end
-        end
-    end
-elseif(strcmp(svar,'s2root') || strcmp(svar,'s2rootval'))
-    if(any(any(any(nonzero))))
-        tmpfun = this;
-        for ip=1:np
-            if(any(any(nonzero(:,:,ip))))
-                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                fprintf(fid,'    sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
-                fprintf(fid,['      switch(jp) {\n']);
-                for jp=1:np
-                    if(any(nonzero(:,jp,ip)))
-                        fprintf(fid,['          case ' num2str(jp-1) ': {\n']);
-                        tmpfun.sym = this.sym(:,ip,jp);
-                        tmpfun.writeCcode(fid);
-                        fprintf(fid,'\n');
-                        fprintf(fid,'          } break;\n\n');
-                    end
-                end
-                fprintf(fid,'\n      }\n');
-                fprintf(fid,'  } break;\n\n');
-            end
-        end
-    end
-elseif(strcmp(svar,'ideltadisc'))
+if(strcmp(this.funstr,'deltaqB'))
     if(any(nonzero))
         tmpfun = this;
         for ip=1:np
             if(nonzero(ip))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
                 tmpfun.sym = this.sym(ip,:);
-                tmpfun.writeCcode(fid);
+                tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
             end
         end
     end
-elseif(strcmp(svar,'sdeltadisc'))
+elseif(strcmp(this.funstr,'deltasx'))
     if(any(any(any(nonzero))))
         tmpfun = this;
         for ip=1:np
             if(any(any(any(nonzero(:,ip,:)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
                 tmpfun.sym = this.sym(:,ip,:);
-                tmpfun.writeCcode(fid);
+                tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
             end
         end
     end
 else 
-    nonzero = this.sym.(svar) ~=0;
+    nonzero = this.sym ~=0;
     if(any(any(nonzero)))
         tmpfun = this;
         for ip=1:np
             if(any(nonzero(:,ip)))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                if(strcmp(svar,'sroot') || strcmp(svar,'srootval'))
+                if(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'sz') || strcmp(this.funstr,'sy'))
                     fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
                 tmpfun.sym = this.sym(:,ip);
-                tmpfun.writeCcode(fid);
+                tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
             end

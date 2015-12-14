@@ -10,8 +10,7 @@ function this = getSyms(this,model)
     persistent x p sx
     
     nx = model.nx;
-    nr = model.nr;
-    ndisc = model.ndisc;
+    nevent = model.ne;
     np = model.np;
     nk = model.nk;
     
@@ -22,7 +21,7 @@ function this = getSyms(this,model)
             xs = cell(nx,1);
             % fill cell array
             for j=1:nx
-                xs{j} = sprintf('x%i',j-1);
+                xs{j} = sprintf('x_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(xs);
@@ -33,7 +32,7 @@ function this = getSyms(this,model)
             dxs = cell(nx,1);
             % fill cell array
             for j=1:nx
-                dxs{j} = sprintf('dx%i',j-1);
+                dxs{j} = sprintf('dx_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(dxs);
@@ -43,7 +42,7 @@ function this = getSyms(this,model)
             ps = cell(np,1);
             % fill cell array
             for j=1:np
-                ps{j} = sprintf('p%i',j-1);
+                ps{j} = sprintf('p_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(ps);
@@ -54,7 +53,7 @@ function this = getSyms(this,model)
             ks = cell(nk,1);
             % fill cell array
             for j=1:nk
-                ks{j} = sprintf('k%i',j-1);
+                ks{j} = sprintf('k_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(ks);
@@ -65,7 +64,7 @@ function this = getSyms(this,model)
             % fill cell array
             for j = 1:nx
                 for i = 1:np
-                    sxs{j,i} = sprintf('sx%i', j-1);
+                    sxs{j,i} = sprintf('sx_%i', j-1);
                 end
             end
             % transform into symbolic expression
@@ -78,7 +77,7 @@ function this = getSyms(this,model)
             % fill cell array
             for j = 1:nx
                 for i = 1:np
-                    sdx{j,i} = sprintf('sdx%i', j-1);
+                    sdx{j,i} = sprintf('sdx_%i', j-1);
                 end
             end
             % transform into symbolic expression
@@ -89,7 +88,7 @@ function this = getSyms(this,model)
             xBs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                xBs{j} = sprintf('xB%i', j-1);
+                xBs{j} = sprintf('xB_%i', j-1);
             end
             % transform into symbolic expression
             this.sym = sym(xBs);
@@ -99,7 +98,7 @@ function this = getSyms(this,model)
             dxBs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                dxBs{j} = sprintf('dxB%i', j-1);
+                dxBs{j} = sprintf('dxB_%i', j-1);
             end
             % transform into symbolic expression
             this.sym = sym(dxBs);
@@ -124,8 +123,8 @@ function this = getSyms(this,model)
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
-        case 'sigma_t'
-            this.sym = model.sym.sigma_t;
+        case 'sigma_z'
+            this.sym = model.sym.sigma_z;
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -208,7 +207,7 @@ function this = getSyms(this,model)
             if(strcmp(model.wtype,'iw'))
                 this.sym=model.fun.dfdx.sym*sx-model.fun.M.sym*model.fun.sdx.sym+model.fun.dxdotdp.sym;
             else
-                this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.sym;
+                this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
             end
             
         case 'dydx'
@@ -218,7 +217,7 @@ function this = getSyms(this,model)
             this.sym=jacobian(model.fun.y.sym,p);
             
         case 'sy'
-            this.sym=model.fun.dydp.sym + this.sym.dydx*this.strsym.sx ;
+            this.sym=model.fun.dydp.sym + model.fun.dydx.sym*model.fun.sx.sym ;
             
         case 'Jv'
             % create cell array of same size
@@ -249,17 +248,17 @@ function this = getSyms(this,model)
                 syms t
                 this.sym = diff(transpose(model.fun.M.syms),t)*model.fun.xB.syms + transpose(model.fun.M.syms)*model.fun.dxB.syms - transpose(model.fun.dfdx.syms)*model.fun.xB.syms;
             else
-                this.sym = -transpose(model.fun.J.syms)*model.fun.xB.syms;
+                this.sym = -transpose(model.fun.J.sym)*model.fun.xB.sym;
             end
             
         case 'qBdot'
-            this.sym = -transpose(model.fun.xB.syms)*model.fun.dxdotdp.strsyms;
+            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.strsym;
             
         case 'dsigma_ydp'
-            this.sym = jacobian(model.fun.sigma_y.syms,p);
+            this.sym = jacobian(model.fun.sigma_y.sym,p);
             
-        case 'dsigma_tdp'
-            this.sym = jacobian(model.fun.sigma_t.syms,p);
+        case 'dsigma_zdp'
+            this.sym = jacobian(model.fun.sigma_z.sym,p);
             
         case 'root'
             this.sym = [model.event.trigger];
@@ -308,7 +307,7 @@ function this = getSyms(this,model)
             
         case 'deltasx'
             
-            if(ndisc>0)
+            if(nevent>0)
                 for ievent = 1:nevent
                     
                     % dtdp  = (1/drdt)*drdp
@@ -318,7 +317,6 @@ function this = getSyms(this,model)
                     dxdp = model.fun.xdot.sym*dtdp + sx;
                     
                     this.sym(:,:,ievent)= ...
-                        - model.fun.deltaxdot.sym*dtdp ...
                         + model.fun.ddeltaxdx.sym*dxdp ...
                         + model.fun.ddeltaxdt.sym*dtdp ...
                         + model.fun.ddeltaxdp.sym;
@@ -367,8 +365,8 @@ function this = unifySyms(this,model)
     %
     % Parameters:
     %  model: model definition object @type amimodel
-    this.sym = mysubs(this.sym,model.sym.x,x);
-    this.sym = mysubs(this.sym,model.sym.p,p);
+    this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
+    this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
 end
 

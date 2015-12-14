@@ -1,5 +1,5 @@
 function [ this ] = getDeps(this, model)
-    % getDeps writes the dependencies for the requested function
+    % getDeps populates the sensiflag for the requested function
     %
     % Parameters:
     %  model: model definition object @type amimodel
@@ -72,8 +72,8 @@ function [ this ] = getDeps(this, model)
         case 'dsigma_ydp'
             this.deps = {'sigma_y','p'};
             
-        case 'dsigma_tdp'
-            this.deps = {'sigma_t','p'};
+        case 'dsigma_zdp'
+            this.deps = {'sigma_z','p'};
             
         case 'root'
             this.deps = {'x','k','p'};
@@ -100,13 +100,13 @@ function [ this ] = getDeps(this, model)
             this.deps = {'deltax'};
             
         case 'deltasx'
-            this.deps = {'deltax','dtaudp','xdot','sx','deltaxdot'};
+            this.deps = {'deltax','ddeltaxdx','ddeltaxdp','ddeltaxdt','dtaudp','xdot','sx','stau'};
         
         case 'deltaqB'
-            this.deps = {'deltax','dtaudp','xdot','sx'};
+            this.deps = {'ddeltaxdp','xB'};
             
         case 'deltaxB'
-            this.deps = {'deltax','dtaudp','xdot','sx'};
+            this.deps = {'deltax','dtaudp','xdot','xB'};
             
         case 'z'
             this.deps = {'x','k','p'};
@@ -117,9 +117,21 @@ function [ this ] = getDeps(this, model)
         case 'dzdx'
             this.deps = {'z','x'};
             
-        case 'sz'
-            this.deps = {'dzdp','dzdx','sx','dtaudp'};
+        case 'dzdt'
+            this.deps = {'z','x','xdot'};
             
+        case 'sz'
+            this.deps = {'dzdp','dzdx','dzdt','sx','dtaudp'};
+            
+        case 'dtaudp'
+            this.deps = {'drootdp','drootdt'};
+            
+        case 'stau'
+            this.deps = {'sroot','drootdt'};
+            
+        case 'sroot'
+            this.deps = {'drootdp','drootdx','sx'};
+ 
         case 'x0'
             this.deps = {'p','k'};
             
@@ -141,7 +153,7 @@ function [ this ] = getDeps(this, model)
         case 'sigma_y'
             this.deps = {'p','k'};
         
-        case 'sigma_t'
+        case 'sigma_z'
             this.deps = {'p','k'};
             
         case 'rhs'
@@ -176,10 +188,9 @@ function [ this ] = getDeps(this, model)
             
         case 'sdx'
             this.deps = {};
-            
-            
+
         otherwise
-            error(['unknown function string: ' funstr ])
+            error(['unknown function string: ' this.funstr ])
     end
 end
 
