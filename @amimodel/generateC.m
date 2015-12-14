@@ -117,7 +117,12 @@ function this = generateC(this)
     end
     fprintf(fid,'\n');
     for ifun = this.funs
-        fprintf(fid,['int ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ';\n']);
+        if(isfield(this.fun,ifun{1}))
+            fun = this.fun.(ifun{1});
+        else
+            fun = amifun(ifun{1},this);
+        end
+        fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
     end
     fprintf(fid,'\n');
     fprintf(fid,'\n');
@@ -132,11 +137,16 @@ function this = generateC(this)
     %
     
     for ifun = this.funs
+        if(isfield(this.fun,ifun{1}))
+            fun = this.fun.(ifun{1});
+        else
+            fun = amifun(ifun{1},this);
+        end
         fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.h']),'w');
         fprintf(fid,['#ifndef _am_' this.modelname '_' ifun{1} '_h\n']);
         fprintf(fid,['#define _am_' this.modelname '_' ifun{1} '_h\n']);
         fprintf(fid,'\n');
-        fprintf(fid,['int ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ';\n']);
+        fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
         fprintf(fid,'\n');
         fprintf(fid,'\n');
         fprintf(fid,['#endif /* _am_' this.modelname '_' ifun{1} '_h */\n']);
@@ -214,10 +224,9 @@ function this = generateC(this)
     fprintf(fid,'                \n');
     fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data){\n');
     fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
-    fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, nr+ndisc, root_' this.modelname ');\n']);
+    fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ne, root_' this.modelname ');\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
-    fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem){\n');
     fprintf(fid,['                    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
     fprintf(fid,'                }\n');
@@ -264,10 +273,16 @@ function this = generateC(this)
     for iffun = ffuns
         % check whether the function was generated, otherwise generate (but
         % whithout symbolic expressions)
-        if(isfield(this.fun,iffun{1}))
-            fun = this.fun.(iffun{1});
+        if(strcmp(iffun{1},'xdot'))
+            fun.argstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
+        elseif(strcmp(iffun{1},'J'))
+            fun.argstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
         else
-            fun = amifun(iffun{1},this);
+            if(isfield(this.fun,iffun{1}))
+                fun = this.fun.(iffun{1});
+            else
+                fun = amifun(iffun{1},this);
+            end
         end
         fprintf(fid,['                int f' iffun{1} fun.argstr '{\n']);
         % if the function was generated, we can return it, otherwise return
@@ -278,6 +293,7 @@ function this = generateC(this)
             fprintf(fid,'                    return(-1);\n');
         end
         fprintf(fid,'                }\n');
+        fprintf(fid,'                \n');
     end
     
     %
@@ -324,10 +340,16 @@ function this = generateC(this)
     for iffun = ffuns
         % check whether the function was generated, otherwise generate (but
         % whithout symbolic expressions)
-        if(isfield(this.fun,iffun{1}))
-            fun = this.fun.(iffun{1});
+        if(strcmp(iffun{1},'xdot'))
+            fun.argstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
+        elseif(strcmp(iffun{1},'J'))
+            fun.argstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
         else
-            fun = amifun(iffun{1},this);
+            if(isfield(this.fun,iffun{1}))
+                fun = this.fun.(iffun{1});
+            else
+                fun = amifun(iffun{1},this);
+            end
         end
         fprintf(fid,['                int f' iffun{1} fun.argstr ';\n']);
     end

@@ -54,8 +54,10 @@ function [this,HTable] = loadOldHashes(this)
     DHTable.y = '';
     DHTable.u = '';
     DHTable.sigma_y = '';
-    DHTable.sigma_t = '';
-    DHTable.rfun = '';
+    DHTable.sigma_z = '';
+    DHTable.z = '';
+    DHTable.trigger = '';
+    DHTable.bolus = '';
     if(strcmp(this.wtype,'iw'))
         DHTable.xdot = '';
         DHTable.dx0 = '';

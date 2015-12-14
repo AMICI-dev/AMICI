@@ -17,8 +17,9 @@ function [this,cflag] = checkDeps(this,HTable,deps)
         for id = 1:length(deps)
             if(~isfield(this.HTable,deps{id}))
                 % check subdependencies
-                subdeps = this.getFunDeps(deps{id});
-                [this,cflagdep] = this.checkDeps(HTable,subdeps);
+                fun = amifun(deps{id},this);
+                fun = fun.getDeps(this);
+                [this,cflagdep] = this.checkDeps(HTable,fun.deps);
                 cflags(id) = cflagdep;
             else
                 cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));

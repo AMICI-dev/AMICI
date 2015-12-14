@@ -36,13 +36,21 @@ UserData setupUserData(const mxArray *prhs[]);
 ReturnData setupReturnData(const mxArray *prhs[], void *user_data);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
 
-void *setupCVode(int *status, void *user_data, void *temp_data);
-void setupCVodeB(int *status, void *cvode_mem, void *user_data, void *temp_data);
+void *setupAMI(int *status, void *user_data, void *temp_data);
+void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data);
 
-void getRootDataFSA(int *status, int *nroots, void *cvode_mem, void  *user_data, void *return_data, void *temp_data);
-void getRootDataASA(int *status, int *nroots, int *idisc, void *cvode_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
-void getDiagnosis(int *status, int it, void *cvode_mem, void  *user_data, void *return_data);
+void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+
+void getEventSensisFSA(int *status, int *nroots, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
+void getEventSensisASA(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+
+void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
+void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
 
 
 #endif /* amici_symbolic_functions_h */

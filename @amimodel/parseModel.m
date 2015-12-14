@@ -123,7 +123,7 @@ function this = parseModel(this)
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
-    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp'};
+    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root'};
     
     if(this.forward)
         funs = {funs{:},'sxdot','sx0','sy','sz','deltasx','stau'};

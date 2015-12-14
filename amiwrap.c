@@ -31,8 +31,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int ip, ix, jx, iy, it, ir; /* integers for indexing in loops */
     int jp; /* integers for indexing in loops */
     int ncheck; /* the number of (internal) checkpoints stored so far */
-    int *nevent; /* number of found roots */
-    int *ievent; /* number of found roots */
     
     void *ami_mem; /* pointer to cvodes memory block */
     UserData udata; /* user data */
@@ -44,6 +42,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int cv_status; /* status flag returned by integration method */
     
     realtype tlastroot; /* storage for last found root */
+    int nroots;
+    int iroot;
     
     bool rootflag, discflag;
     
@@ -81,60 +81,65 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     t = tstart;
     
-    if(ne>0) nevent = mxMalloc(ne*sizeof(int));
-    if(ne>0) ievent = mxMalloc(ne*sizeof(int));
+    if(ne>0) nroots = mxMalloc(ne*sizeof(int));
+    if(ne>0) iroot = mxMalloc(ne*sizeof(int));
     
     tlastroot = 0;
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
-        /* only integrate if no errors occured */
-        if(ts[it] > tstart) {
-            while (t<ts[it]) {
-                if(sensi_meth == AMI_ASA && sensi >= 1) {
-                    cv_status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
-                } else {
-                    cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
-                }
-                if (cv_status==AMI_ROOT_RETURN) {
-                    cv_status = getEventOutput(&status, tlastroot, ami_mem, udata, rdata, edata, tdata);
+        if (cv_status == 0) {
+            /* only integrate if no errors occured */
+            if(ts[it] > tstart) {
+                while (t<ts[it]) {
+                    if(sensi_meth == AMI_ASA && sensi >= 1) {
+                        cv_status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                    } else {
+                        cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                    }
+                    if (cv_status==AMI_ROOT_RETURN) {
+                        cv_status = getEventOutput(&status, &tlastroot, &nroots, &iroot, ami_mem, udata, rdata, edata, tdata);
+                        if (t==ts[it]) {
+                            cv_status = 0;
+                        }
+                    }
                 }
             }
-        }
-        
-        tsdata[it] = ts[it];
-        x_tmp = NV_DATA_S(x);
-        for (ix=0; ix<nx; ix++) {
-            xdata[it+nt*ix] = x_tmp[ix];
-        }
-        
-        if (it == nt-1) {
-            if( sensi_meth == AMI_SS) {
-                status = fxdot(t,x,dx,xdot,udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                
-                xdot_tmp = NV_DATA_S(xdot);
-                
-                status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-                if (status != AMI_SUCCESS) goto freturn;
-                
-                memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-                memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
-                
-                status = fdxdotdp(t,x,dxdotdpdata,udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                status = fdydp(ts[it],it,dydpdata,ydata,xdata,udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                status = fdydx(ts[it],it,dydxdata,ydata,xdata,udata);
-                if (status != AMI_SUCCESS) goto freturn;
+            
+            tsdata[it] = ts[it];
+            x_tmp = NV_DATA_S(x);
+            for (ix=0; ix<nx; ix++) {
+                xdata[it+nt*ix] = x_tmp[ix];
             }
+            
+            if (it == nt-1) {
+                if( sensi_meth == AMI_SS) {
+                    status = fxdot(t,x,dx,xdot,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    
+                    xdot_tmp = NV_DATA_S(xdot);
+                    
+                    status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    
+                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+                    
+                    status = fdxdotdp(t,dxdotdpdata,x,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fdydp(ts[it],it,dydpdata,x,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fdydx(ts[it],it,dydxdata,x,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                }
+            }
+            
+            if(ts[it] > tstart) {
+                getDiagnosis(&status, it, ami_mem, udata, rdata);
+            }
+            
+        } else {
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
         }
-        
-        if(ts[it] > tstart) {
-            getDiagnosis(&status, it, ami_mem, udata, rdata);
-        }
-        
-    } else {
-        for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
     }
     
     if(cv_status == 0) {
@@ -143,7 +148,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     /* fill events */
     if (ne>0) {
-        fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
+        fillEventOutput(&status, &nroots, &iroot, ami_mem, udata, rdata, edata, tdata);
     }
     
     if (sensi >= 1) {
@@ -261,17 +266,12 @@ freturn:
         N_VDestroy_Serial(xdot);
         AMIFree(&ami_mem);
         DestroyMat(Jtmp);
-        if (nr+ndisc>0) {
+        if (ne>0) {
             if(rootsfound) mxFree(rootsfound);
         }
-        if (nr>0) {
-            if(rootvaltmp) mxFree(rootvaltmp);
+        if (ne>0) {
             if(rootidx) mxFree(rootidx);
-            if(sigma_t)    mxFree(sigma_t);
-        }
-        if (ndisc>0) {
-            if(discs) mxFree(discs);
-            if(irdiscs) mxFree(irdiscs);
+            if(sigma_z)    mxFree(sigma_z);
         }
         
         if(sigma_y)    mxFree(sigma_y);
@@ -283,20 +283,18 @@ freturn:
             if (sensi_meth == AMI_ASA) {
                 if(dydx)    mxFree(dydx);
                 if(dydp)    mxFree(dydp);
-                if(llhS0)     mxFree(llhS0);
                 if(dgdp)    mxFree(dgdp);
                 if(dgdx)    mxFree(dgdx);
-                if (nr>0) {
-                    if(dtdp)    mxFree(dtdp);
-                    if(dtdx)    mxFree(dtdx);
-                }
                 if(drdp)    mxFree(drdp);
                 if(drdx)    mxFree(drdx);
-                if(drvaldp)    mxFree(drvaldp);
-                if(drvaldx)    mxFree(drvaldx);
+                if (ne>0) {
+                    if(dzdp)    mxFree(dzdp);
+                    if(dzdx)    mxFree(dzdx);
+                }
+                if(llhS0)     mxFree(llhS0);
                 if(dsigma_ydp)    mxFree(dsigma_ydp);
-                if (nr>0) {
-                    if(dsigma_tdp)    mxFree(dsigma_tdp);
+                if (ne>0) {
+                    if(dsigma_zdp)    mxFree(dsigma_zdp);
                 }
                 if(dxB)      N_VDestroy_Serial(dxB);
                 if(xB)      N_VDestroy_Serial(xB);

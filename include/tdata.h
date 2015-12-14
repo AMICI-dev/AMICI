@@ -14,21 +14,19 @@
 #define llhS0 tdata->am_llhS0
 #define g tdata->am_g
 #define r tdata->am_r
-#define rval tdata->am_rval
-#define dtdp tdata->am_dtdp
-#define dtdx tdata->am_dtdx
+#define dzdp tdata->am_dzdp
+#define dzdx tdata->am_dzdx
 #define dgdp tdata->am_dgdp
 #define dgdx tdata->am_dgdx
 #define drdp tdata->am_drdp
 #define drdx tdata->am_drdx
-#define drvaldp tdata->am_drvaldp
 #define drvaldx tdata->am_drvaldx
 #define dydp tdata->am_dydp
 #define dydx tdata->am_dydx
 #define sigma_y tdata->am_sigma_y
 #define dsigma_ydp tdata->am_dsigma_ydp
-#define sigma_t tdata->am_sigma_t
-#define dsigma_tdp tdata->am_dsigma_tdp
+#define sigma_z tdata->am_sigma_z
+#define dsigma_zdp tdata->am_dsigma_zdp
 
 #define x_tmp tdata->am_x_tmp
 #define dx_tmp tdata->am_dx_tmp
@@ -63,7 +61,8 @@
 /** @brief struct that provides temporary storage for different variables */
 typedef struct {
     /** current time */
-    realtype am_t; 
+    realtype am_t;
+    
     
     /** state vector */
     N_Vector am_x; 
@@ -107,9 +106,9 @@ typedef struct {
     /** state derivative of root function likelihood */
     double *am_drvaldx;
     /** state derivative of event */
-    double *am_dtdx;
+    double *am_dzdx;
     /** parameter derivative of event */
-    double *am_dtdp;
+    double *am_dzdp;
     /** parameter derivative of observable */
     double *am_dydp;
     /** state derivative of observable */
@@ -121,9 +120,9 @@ typedef struct {
     /** parameter derivative of data standard deviation */
     double *am_dsigma_ydp;
     /** event standard deviation */
-    double *am_sigma_t;
+    double *am_sigma_z;
     /** parameter derivative of event standard deviation */
-    double *am_dsigma_tdp;
+    double *am_dsigma_zdp;
     
     /** state array */
     double *am_x_tmp;

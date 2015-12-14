@@ -12,7 +12,7 @@ model.maxsteps = 1e4;
 % 'lin' (default).
 model.param = 'log10'; 
 model.debug = true;
-model.recompile = true;
+model.recompile = false;
 
 %% STATES
 

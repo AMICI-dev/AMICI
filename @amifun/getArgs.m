@@ -68,9 +68,9 @@ function this = getArgs(this,model)
         case 'sxdot'
             this.argstr = ['(int Ns, realtype t, N_Vector x,' dxvec ' N_Vector xdot,' intip ' N_Vector ' s 'sx,' sdxvec ' N_Vector ' s 'sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2' tmp3vec ')'];
         case 'sx0'
-            this.argstr = ['(N_Vector sx0,' xvec dxvec ' void *user_data)'];
+            this.argstr = '(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data)';
         case 'sdx0'
-            this.argstr = ['(N_Vector sdx0,' xvec dxvec ' void *user_data)'];
+            this.argstr = '(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data)';
         case 'y'
             this.argstr = '(realtype t, int it, realtype *y, N_Vector x, void *user_data)';
         case 'sy'
@@ -107,6 +107,8 @@ function this = getArgs(this,model)
             this.argstr = '(realtype t, int ie, realtype *dsigma_zdp, void *user_data)';
         case 'stau'
             this.argstr = '(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data)';
+        case 'root'
+            this.argstr = '(realtype t, N_Vector x, realtype *root, void *user_data)';
         otherwise
             % do nothing
     end

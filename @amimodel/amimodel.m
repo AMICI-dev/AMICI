@@ -81,6 +81,9 @@ classdef amimodel
         wrap_path@char;
         % flag to enforce recompilation of the model
         recompile = false;
+        % storage for flags determining recompilation of individual
+        % functions
+        cfun@struct;
         % counter that allows enforcing of recompilation of models after
         % code changes
         compver = 2;
