@@ -12,8 +12,7 @@ function this = generateM(this, amimodelo2)
     ny = this.ny;
     np = this.np;
     nk = this.nk;
-    ndisc = this.ndisc;
-    ne = this.ne;
+    nevent = this.nevent;
     nnz = this.nnz;
     
     o2flag = ~isempty(amimodelo2);
@@ -171,8 +170,7 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['options_ami.maxsteps = ' num2str(this.maxsteps) ';\n']);
     fprintf(fid,['options_ami.sens_ind = 1:' num2str(np) ';\n']);
     fprintf(fid,['options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n\n']);
-    fprintf(fid,['options_ami.ne = ' num2str(ne) '; %% MUST NOT CHANGE THIS VALUE\n']);
-    fprintf(fid,['options_ami.ndisc = ' num2str(ndisc) '; %% MUST NOT CHANGE THIS VALUE\n']);
+    fprintf(fid,['options_ami.ne = ' num2str(nevent) '; %% MUST NOT CHANGE THIS VALUE\n']);
     
     fprintf(fid,['options_ami.tstart = ' num2str(this.t0) ';\n']);
     fprintf(fid,['options_ami.lmm = 2;\n']);
@@ -186,7 +184,7 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['options_ami.ism = 1;\n']);
     fprintf(fid,['options_ami.sensi_meth = ''forward'';\n\n']);
     fprintf(fid,['options_ami.sensi = 0;\n\n']);
-    fprintf(fid,['options_ami.nmaxroot = 10;\n']);
+    fprintf(fid,['options_ami.nmaxevent = 10;\n']);
     fprintf(fid,['options_ami.ubw = ' num2str(this.ubw) ';\n']);
     fprintf(fid,['options_ami.lbw = ' num2str(this.lbw)  ';\n\n']);
     fprintf(fid,['options_ami.data_model = 1;\n']);
@@ -214,8 +212,8 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['sol.root = NaN(options_ami.nmaxroot,' num2str(ne) ');\n']);
-    fprintf(fid,['sol.rootval = NaN(options_ami.nmaxroot,' num2str(ne) ');\n']);
+    fprintf(fid,['sol.root = NaN(options_ami.nmaxevent,' num2str(nevent) ');\n']);
+    fprintf(fid,['sol.rootval = NaN(options_ami.nmaxevent,' num2str(nevent) ');\n']);
     if(o2flag)
         fprintf(fid,['if(nargout>1)\n']);
         fprintf(fid,['    if(nargout>6)\n']);
@@ -329,10 +327,10 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    data.Sigma_Y= NaN(length(tout),options_ami.ny);\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,['if(isfield(data,''T''))\n']);
-    fprintf(fid,['    options_ami.nmaxroot = size(data.T,1);\n']);
+    fprintf(fid,['    options_ami.nmaxevent = size(data.T,1);\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    data.T = NaN(options_ami.nmaxroot,options_ami.ne);\n']);
-    fprintf(fid,['    data.Sigma_T = NaN(options_ami.nmaxroot,options_ami.ne);\n']);
+    fprintf(fid,['    data.T = NaN(options_ami.nmaxevent,options_ami.ne);\n']);
+    fprintf(fid,['    data.Sigma_T = NaN(options_ami.nmaxevent,options_ami.ne);\n']);
     fprintf(fid,['end\n']);
     
     
@@ -341,25 +339,25 @@ function this = generateM(this, amimodelo2)
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(amimodelo2.nx) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(amimodelo2.ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS2 =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS2 =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootS2 =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootvalS2 =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.ne) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
         fprintf(fid,'if(options_ami.sensi==1)\n');
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nxtrue) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(nytrue) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(ne) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(ne) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxevent,' num2str(nevent) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxevent,' num2str(nevent) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
     else
         fprintf(fid,'if(options_ami.sensi>0)\n');
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nx) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(ne) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(ne) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxevent,' num2str(nevent) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxevent,' num2str(nevent) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
     end
     

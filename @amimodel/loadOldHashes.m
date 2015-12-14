@@ -16,8 +16,7 @@ function [this,HTable] = loadOldHashes(this)
             this.ny = ny;
             this.np = np;
             this.nk = nk;
-            this.ndisc = ndisc;
-            this.nr = nr;
+            this.nevent = nevent;
             this.nnz = nnonzeros;
             this.id = id;
             this.ubw = ubw;
@@ -28,16 +27,16 @@ function [this,HTable] = loadOldHashes(this)
             this.colptrsB = colptrsB;
             this.rowvalsB = rowvalsB;
             this.sparseidxB = sparseidxB;
-        catch
+        catch err
         end
         try
             if(this.compver>compver)
-                disp('Code changes made recompilation of model necessary!')
+                disp('Code changes made recompilation of model neventcessary!')
                 this.recompile = true;
                 error('catchmeifyoucan');
             end
         catch
-            disp('Code changes made recompilation of model necessary!')
+            disp('Code changes made recompilation of model neventcessary!')
             this.recompile = true;
             error('catchmeifyoucan');
         end

@@ -8,7 +8,7 @@ function writeCcode(this,model, fid)
 %
 %
 
-ne = model.ne;
+nevent = model.nevent;
 if(strcmp(this.funstr,'JSparse'))
     tmpfun = this;
     tmpfun.sym = model.fun.J.sym(model.sparseidx);
@@ -22,7 +22,7 @@ elseif(strcmp(this.funstr,'deltadisc') || strcmp(this.funstr,'sdeltadisc') || st
     if(any(any(nonzero)))
         fprintf(fid,'              switch(ie) { \n');
         tmpfun = this;
-        for ie=1:ne
+        for ie=1:nevent
             if(any(nonzero(:,ie)~=0))
                 fprintf(fid,['              case ' num2str(ie-1) ': {\n']);
                 tmpfun.sym = this.sym(:,ie);

@@ -42,10 +42,17 @@
 #define rootvaltmp tdata->am_rootvaltmp
 #define rootidx tdata->am_rootidx
 
+#define deltax tdata->am_deltax
+#define deltasx tdata->am_deltasx
+#define deltaxB tdata->am_deltaxB
+#define deltaqB tdata->am_deltaqB
+
 #define which tdata->am_which
 
 #define discs tdata->am_discs
 #define irdiscs tdata->am_irdiscs
+
+
 
 
 #ifndef _MY_TDATA
@@ -152,6 +159,15 @@ typedef struct {
     double *am_rootvaltmp; 
     /** array of index which root has been found */
     int *am_rootidx;
+    
+    /** change in x */
+    double *am_deltax;
+    /** change in sx */
+    double *am_deltasx;
+    /** change in xB */
+    double *am_deltaxB;
+    /** change in qB */
+    double *am_deltaqB;
  
     
     /** integer for indexing of backwards problems */

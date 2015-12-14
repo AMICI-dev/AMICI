@@ -50,7 +50,7 @@ classdef amimodel
         % number of constants @type int
         nk@double;
         % number of events @type int
-        ne@double;
+        nevent@double;
         % flag for DAEs @type *int
         id@double;
         % upper Jacobian bandwidth @type int

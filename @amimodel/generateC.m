@@ -273,18 +273,12 @@ function this = generateC(this)
     for iffun = ffuns
         % check whether the function was generated, otherwise generate (but
         % whithout symbolic expressions)
-        if(strcmp(iffun{1},'xdot'))
-            fun.argstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
-        elseif(strcmp(iffun{1},'J'))
-            fun.argstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
+        if(isfield(this.fun,iffun{1}))
+            fun = this.fun.(iffun{1});
         else
-            if(isfield(this.fun,iffun{1}))
-                fun = this.fun.(iffun{1});
-            else
-                fun = amifun(iffun{1},this);
-            end
+            fun = amifun(iffun{1},this);
         end
-        fprintf(fid,['                int f' iffun{1} fun.argstr '{\n']);
+        fprintf(fid,['                int f' iffun{1} fun.fargstr '{\n']);
         % if the function was generated, we can return it, otherwise return
         % an error
         if(isfield(this.fun,iffun{1}))
@@ -340,18 +334,12 @@ function this = generateC(this)
     for iffun = ffuns
         % check whether the function was generated, otherwise generate (but
         % whithout symbolic expressions)
-        if(strcmp(iffun{1},'xdot'))
-            fun.argstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
-        elseif(strcmp(iffun{1},'J'))
-            fun.argstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
+        if(isfield(this.fun,iffun{1}))
+            fun = this.fun.(iffun{1});
         else
-            if(isfield(this.fun,iffun{1}))
-                fun = this.fun.(iffun{1});
-            else
-                fun = amifun(iffun{1},this);
-            end
+            fun = amifun(iffun{1},this);
         end
-        fprintf(fid,['                int f' iffun{1} fun.argstr ';\n']);
+        fprintf(fid,['                int f' iffun{1} fun.fargstr ';\n']);
     end
     fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
     fclose(fid);

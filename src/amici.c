@@ -355,6 +355,11 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) rootidx = mxMalloc(nmaxevent*sizeof(int));
         if(ne>0) discs = mxMalloc(nmaxevent*sizeof(realtype));
         
+        deltax = mxMalloc(nx*sizeof(realtype));
+        deltasx = mxMalloc(nx*np*sizeof(realtype));
+        deltaxB = mxMalloc(nx*sizeof(realtype));
+        deltaqB = mxMalloc(np*sizeof(realtype));
+        
         if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
         if(ne>0) sigma_z = mxMalloc(ne*sizeof(realtype));
@@ -796,163 +801,6 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
 /*******************************************************************************/
 /*******************************************************************************/
 
-void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
-    /**
-     * getDataOutput extracts output information for data-points
-     *
-     * @param[out] status flag indicating success of execution @type *int
-     * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    
-    int iy;
-    
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-    
-    *status = fy(ts[it],it,ydata,x,udata);
-    if (*status != AMI_SUCCESS) return;
-    
-    for (iy=0; iy<ny; iy++) {
-        
-        if(data_model != AMI_ONEOUTPUT) {
-            if (mxIsNaN(ysigma[iy*nt+it])) {
-                *status =fsigma_y(t,sigma_y,udata);
-                if (*status != AMI_SUCCESS) return;
-                
-            } else {
-                sigma_y[iy] = ysigma[iy*nt+it];
-            }
-        }
-        
-        if (data_model == AMI_NORMAL) {
-            if(!mxIsNaN(my[iy*nt+it])){
-                g += 0.5*log(2*pi*pow(sigma_y[iy],2)) + 0.5*pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
-                *chi2data += pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
-            }
-        }
-        if (data_model == AMI_LOGNORMAL) {
-            if(!mxIsNaN(my[iy*nt+it])){
-                g += 0.5*log(2*pi*pow(sigma_y[iy]*ydata[iy*nt+it],2)) + 0.5*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
-                *chi2data += pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
-            }
-        }
-        if (data_model == AMI_ONEOUTPUT) {
-            g += ydata[iy*nt+it];
-        }
-    }
-    if (sensi >= 1) {
-        if (sensi_meth == AMI_FSA) {
-            getDataSensisFSA(&status, it, ami_mem, udata, rdata, edata, tdata);
-        }
-        if (sensi_meth == AMI_ASA) {
-            getDataSensisASA(&status, it, ami_mem, udata, rdata, edata, tdata);
-        }
-    }
-}
-
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
-int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
-    /**
-     * getEventOutput extracts output information for events
-     *
-     * @param[out] status flag indicating success of execution @type *int
-     * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    
-    int cv_status;
-    
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-    
-    if (t == *tlastroot) {
-        /* we are stuck in a root => turn off rootfinding */
-        /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
-        AMIRootInit(ami_mem, 0, NULL);
-        cv_status = 0;
-    }
-    *tlastroot = t;
-    if (sensi >= 1) {
-        if(sensi_meth == AMI_ASA) {
-            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
-        } else {
-            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
-        }
-    }
-    if (cv_status == -22) {
-        /* clustering of roots => turn off rootfinding */
-        AMIRootInit(ami_mem, 0, NULL);
-        cv_status = 0;
-    }
-    return(cv_status);
-}
-
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
-void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
-    /**
-     * getEventOutput fills missing roots with last timepoint
-     *
-     * @param[out] status flag indicating success of execution @type *int
-     * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
-    if (sensi >= 1) {
-        if(sensi_meth == AMI_ASA) {
-            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
-        } else {
-            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
-        }
-    }
-}
-
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
 void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
@@ -1204,6 +1052,163 @@ void getEventSensisASA(int *status, int *nroots, int *iroot, void *ami_mem, void
                 }
                 (*nroots)++;
             }
+        }
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getDataOutput extracts output information for data-points
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    int iy;
+    
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    edata = (ExpData) exp_data;
+    tdata = (TempData) temp_data;
+    
+    *status = fy(ts[it],it,ydata,x,udata);
+    if (*status != AMI_SUCCESS) return;
+    
+    for (iy=0; iy<ny; iy++) {
+        
+        if(data_model != AMI_ONEOUTPUT) {
+            if (mxIsNaN(ysigma[iy*nt+it])) {
+                *status =fsigma_y(t,sigma_y,udata);
+                if (*status != AMI_SUCCESS) return;
+                
+            } else {
+                sigma_y[iy] = ysigma[iy*nt+it];
+            }
+        }
+        
+        if (data_model == AMI_NORMAL) {
+            if(!mxIsNaN(my[iy*nt+it])){
+                g += 0.5*log(2*pi*pow(sigma_y[iy],2)) + 0.5*pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
+                *chi2data += pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
+            }
+        }
+        if (data_model == AMI_LOGNORMAL) {
+            if(!mxIsNaN(my[iy*nt+it])){
+                g += 0.5*log(2*pi*pow(sigma_y[iy]*ydata[iy*nt+it],2)) + 0.5*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
+                *chi2data += pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
+            }
+        }
+        if (data_model == AMI_ONEOUTPUT) {
+            g += ydata[iy*nt+it];
+        }
+    }
+    if (sensi >= 1) {
+        if (sensi_meth == AMI_FSA) {
+            getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
+        }
+        if (sensi_meth == AMI_ASA) {
+            getDataSensisASA(status, it, ami_mem, udata, rdata, edata, tdata);
+        }
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventOutput extracts output information for events
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    int cv_status;
+    
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    edata = (ExpData) exp_data;
+    tdata = (TempData) temp_data;
+    
+    if (t == *tlastroot) {
+        /* we are stuck in a root => turn off rootfinding */
+        /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
+        AMIRootInit(ami_mem, 0, NULL);
+        cv_status = 0;
+    }
+    *tlastroot = t;
+    if (sensi >= 1) {
+        if(sensi_meth == AMI_ASA) {
+            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
+        } else {
+            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
+        }
+    }
+    if (cv_status == -22) {
+        /* clustering of roots => turn off rootfinding */
+        AMIRootInit(ami_mem, 0, NULL);
+        cv_status = 0;
+    }
+    return(cv_status);
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventOutput fills missing roots with last timepoint
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    edata = (ExpData) exp_data;
+    tdata = (TempData) temp_data;
+
+    if (sensi >= 1) {
+        if(sensi_meth == AMI_ASA) {
+            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
+        } else {
+            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
         }
     }
 }

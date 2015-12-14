@@ -85,9 +85,9 @@ function this = parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
-    ne = length(this.event);
+    nevent = length(this.event);
     %check zero trigger events
-    for ievent = 1:ne
+    for ievent = 1:nevent
         if(isequaln(this.event(ievent).trigger,sym(0)))
             error('Trigger functions cannot be equal to zero. Please check your event definition!')
         end
@@ -95,7 +95,7 @@ function this = parseModel(this)
     
     this.nx = nx;
     this.ny = ny;
-    this.ne = ne;
+    this.nevent = nevent;
     this.np = np;
     this.nk = nk;
     
@@ -105,7 +105,7 @@ function this = parseModel(this)
     this.HTable(1).p = DataHash(char(this.sym.p));
     this.HTable(1).k = DataHash(char(this.sym.k));
     this.HTable(1).x0 = DataHash(char(this.sym.x0));
-    if(ne>0)
+    if(nevent>0)
         this.HTable(1).trigger = DataHash(char([this.event.trigger]));
         this.HTable(1).bolus = DataHash(char([this.event.bolus]));
         this.HTable(1).z = DataHash(char([this.event.z]));
@@ -194,8 +194,7 @@ function this = parseModel(this)
     ny = this.ny;
     np = this.np;
     nk = this.nk;
-    ndisc = this.ndisc;
-    nr = this.nr;
+    nevent = this.nevent;
     nnonzeros = this.nnz;
     id = this.id;
     ubw = this.ubw;
@@ -208,7 +207,7 @@ function this = parseModel(this)
     sparseidxB = this.sparseidxB;
     compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','ndisc','nr','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
 
     fprintf('\r')
 

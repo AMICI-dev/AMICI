@@ -1,6 +1,8 @@
 function this = getArgs(this,model)
-    % getfunargs populates the argstr property with the argument string of
-    % the respective function (if applicable)
+    % getFArgs populates the fargstr property with the argument string of
+    % the respective model function (if applicable). model functions are not
+    % wrapped versions of functions which have a model specific name and
+    % for which the call is solver specific.
     %
     % Parameters:
     %  model: model definition object @type amimodel
@@ -33,6 +35,7 @@ function this = getArgs(this,model)
     switch(this.funstr)
         case 'xdot'
             this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xdot, void *user_data)'];
+            this.fargstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
         case 'xBdot'
             this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xB,' dxBvec ' N_Vector xBdot, void *user_data)'];
         case 'qBdot'
@@ -57,6 +60,7 @@ function this = getArgs(this,model)
             this.argstr = ['(long int N, long int mupper, long int mlower, realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
         case 'J'
             this.argstr = ['(long int N, realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
+            this.fargstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
         case 'JSparse'
             this.argstr = ['(realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
         case 'JBandB'

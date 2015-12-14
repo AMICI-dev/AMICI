@@ -10,7 +10,7 @@ function this = getSyms(this,model)
     persistent x p sx
     
     nx = model.nx;
-    nevent = model.ne;
+    nevent = model.nevent;
     np = model.np;
     nk = model.nk;
     

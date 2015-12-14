@@ -15,8 +15,10 @@ classdef amifun
         funstr@char;
         % name of the c variable @type char
         cvar@char;
-        % argument string @type char
+        % argument string (solver specific) @type char
         argstr@char;
+        % argument string (solver unspecific) @type char
+        fargstr@char;
         % dependencies on other functions @type cell
         deps@cell;
         % nvec dependencies
@@ -31,6 +33,7 @@ classdef amifun
             AF.funstr = funstr;
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
+            AF = AF.getFArgs();
             AF = AF.getNVecs(model);
             AF = AF.getCVar();
             AF = AF.getSensiFlag();

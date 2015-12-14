@@ -44,6 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     realtype tlastroot; /* storage for last found root */
     int nroots;
     int iroot;
+    double tnext;
     
     bool rootflag, discflag;
     
@@ -81,8 +82,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     t = tstart;
     
-    if(ne>0) nroots = mxMalloc(ne*sizeof(int));
-    if(ne>0) iroot = mxMalloc(ne*sizeof(int));
+    if(ne>0) nroots = 0;
+    if(ne>0) iroot = 0;
     
     tlastroot = 0;
     /* loop over timepoints */
@@ -162,7 +163,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 while (it>0 || iroot>0) {
                     /* enter while */
                     
-                    tnext = max(roots[iroot],ts[it])
+                    
+                    if (discs[iroot]>ts[it]) {
+                        tnext = discs[iroot];
+                    } else {
+                        tnext = ts[it];
+                    }
                     
                     cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
                     
@@ -171,15 +177,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     status = AMIGetQuadB(ami_mem, which, &t, xQB);
                     if (status != AMI_SUCCESS) goto freturn;
                     
-                    if (tnext == roots[iroot]) {
-                        status = ideltadisc(t,irdiscs[idisc],x,xB,xQB,udata);
+                    if (tnext == discs[iroot]) {
+                        status = fdeltaqB(t,deltaqB,x,xB,xQB,udata);
                         if (status != AMI_SUCCESS) goto freturn;
-                        status = bdeltadisc(t,irdiscs[idisc],x,xB,udata);
+                        status = fdeltaxB(t,deltaxB,x,xB,udata);
                         if (status != AMI_SUCCESS) goto freturn;
+                        
+                        xB_tmp = NV_DATA_S(xB);
+                        for (ix=0; ix<nx; ix++) {
+                            xB_tmp[ix] += deltaxB[ix];
+                        }
+                        
+                        xQB_tmp = NV_DATA_S(xQB);
+                        for (ip=0; ip<np; ip++) {
+                            xQB_tmp[ip] += deltaqB[ip];
+                        }
                         iroot--;
                     }
                     
                     if (tnext == ts[it]) {
+                        xB_tmp = NV_DATA_S(xB);
                         for (ix=0; ix<nx; ix++) {
                             xB_tmp[ix] += dgdx[it+ix*nt];
                         }
