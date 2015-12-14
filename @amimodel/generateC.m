@@ -281,10 +281,16 @@ function this = generateC(this)
         fprintf(fid,['                int f' iffun{1} fun.fargstr '{\n']);
         % if the function was generated, we can return it, otherwise return
         % an error
-        if(isfield(this.fun,iffun{1}))
+        if(ismember(iffun{1},this.funs))
             fprintf(fid,['                    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
         else
-            fprintf(fid,'                    return(-1);\n');
+            if(strcmp(iffun{1},'dx0') || strcmp(iffun{1},'dx0'))
+                % these two should always work, if they are not required
+                % they should act as placeholders
+                fprintf(fid,'                    return(0);\n');
+            else
+                fprintf(fid,'                    return(-1);\n');
+            end
         end
         fprintf(fid,'                }\n');
         fprintf(fid,'                \n');

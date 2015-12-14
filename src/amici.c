@@ -262,20 +262,20 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         } else {
             mexErrMsgTxt("Field Sigma_Y not specified as field in data struct!");
         }
-        if (mxGetField(prhs[8], 0 ,"T")) {
-            mz = mxGetPr(mxGetField(prhs[8], 0 ,"T"));
-            nmzy = (int) mxGetN(mxGetField(prhs[8], 0 ,"T"));
-            nmzt = (int) mxGetM(mxGetField(prhs[8], 0 ,"T"));
+        if (mxGetField(prhs[8], 0 ,"Z")) {
+            mz = mxGetPr(mxGetField(prhs[8], 0 ,"Z"));
+            nmzy = (int) mxGetN(mxGetField(prhs[8], 0 ,"Z"));
+            nmzt = (int) mxGetM(mxGetField(prhs[8], 0 ,"Z"));
         } else {
             mexErrMsgTxt("Field T not specified as field in data struct!");
         }
         
-        if (mxGetField(prhs[8], 0 ,"sigma_z")) {
-            zsigma = mxGetPr(mxGetField(prhs[8], 0 ,"sigma_z"));
-            nzsigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"sigma_z"));
-            nzsigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"sigma_z"));
+        if (mxGetField(prhs[8], 0 ,"Sigma_Z")) {
+            zsigma = mxGetPr(mxGetField(prhs[8], 0 ,"Sigma_Z"));
+            nzsigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Z"));
+            nzsigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Z"));
         } else {
-            mexErrMsgTxt("Field sigma_z not specified as field in data struct!");
+            mexErrMsgTxt("Field Sigma_Z not specified as field in data struct!");
         }
         
         if (nmyt != nt) {
