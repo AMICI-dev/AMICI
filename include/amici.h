@@ -42,14 +42,12 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data);
 void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
-void getEventSensisFSA(int *status, int *nroots, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
-void getEventSensisASA(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
+void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
 void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
-int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
-void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
-
-
+int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);

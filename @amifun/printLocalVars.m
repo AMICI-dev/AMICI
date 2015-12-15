@@ -16,6 +16,8 @@ function printLocalVars(this,model,fid)
     for nvec = this.nvecs
         if(strcmp(nvec{1},'*sx'))
             fprintf(fid,'realtype *sx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sx0'))
+            fprintf(fid,'realtype *sx0_tmp;\n');
         else
             fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
         end
@@ -65,7 +67,7 @@ function printLocalVars(this,model,fid)
                 fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
             end
         case 'sx0'
-            fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
+            % nothing
         case 'sdx0'
             fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'y'
@@ -104,9 +106,9 @@ function printLocalVars(this,model,fid)
         case 'dsigma_ydp'
             fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
         case 'sigma_z'
-            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*nz[ie]);\n']);
+            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*nz);\n']);
         case 'dsigma_zdp'
-            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*nz[ie]*np);\n']);
+            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*nz*np);\n']);
         otherwise
             error(['unkown function: ' fun])
     end

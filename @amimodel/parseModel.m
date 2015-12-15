@@ -51,8 +51,8 @@ function this = parseModel(this)
     if(~isfield(this.sym,'k'))
         this.sym.k = sym.empty(0,0);
     end
-    if(~isfield(this.sym,'root'))
-        error('the definition of events via the root function is deprecated and no longer supported. Please update the model definition syntax!')
+    if(isfield(this.sym,'root'))
+        error('The definition of events via a root function is deprecated and no longer supported. Please update the model definition syntax!')
     end
     if(~isfield(this.sym,'sigma_y'))
         this.sym.sigma_y = sym.ones(size(this.sym.y));
@@ -85,6 +85,7 @@ function this = parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
+    nz = length([this.event.z]);
     nevent = length(this.event);
     %check zero trigger events
     for ievent = 1:nevent
@@ -96,6 +97,7 @@ function this = parseModel(this)
     this.nx = nx;
     this.ny = ny;
     this.nevent = nevent;
+    this.nz = nz;
     this.np = np;
     this.nk = nk;
     
@@ -194,7 +196,9 @@ function this = parseModel(this)
     ny = this.ny;
     np = this.np;
     nk = this.nk;
+    nz = this.nz;
     nevent = this.nevent;
+    z2event = this.z2event;
     nnonzeros = this.nnz;
     id = this.id;
     ubw = this.ubw;
@@ -207,7 +211,7 @@ function this = parseModel(this)
     sparseidxB = this.sparseidxB;
     compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
 
     fprintf('\r')
 

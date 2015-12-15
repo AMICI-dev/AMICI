@@ -39,8 +39,8 @@
 #define id_tmp tdata->am_id_tmp
 
 #define rootsfound tdata->am_rootsfound
-#define rootvaltmp tdata->am_rootvaltmp
 #define rootidx tdata->am_rootidx
+#define nroots tdata->am_nroots
 
 #define deltax tdata->am_deltax
 #define deltasx tdata->am_deltasx
@@ -93,90 +93,91 @@ typedef struct {
     DlsMat am_Jtmp;
     
     /** parameter derivative of likelihood array */
-    double *am_llhS0;
+    realtype *am_llhS0;
     /** data likelihood */
-    double am_g;
+    realtype am_g;
     /** parameter derivative of data likelihood */
-    double *am_dgdp;
+    realtype *am_dgdp;
     /** state derivative of data likelihood */
-    double *am_dgdx;
+    realtype *am_dgdx;
     /** event likelihood */
-    double am_r;
+    realtype am_r;
     /** parameter derivative of event likelihood */
-    double *am_drdp;
+    realtype *am_drdp;
     /** state derivative of event likelihood */
-    double *am_drdx;
+    realtype *am_drdx;
     /** root function likelihood */
-    double am_rval; 
+    realtype am_rval; 
     /** parameter derivative of root function likelihood */
-    double *am_drvaldp;
+    realtype *am_drvaldp;
     /** state derivative of root function likelihood */
-    double *am_drvaldx;
+    realtype *am_drvaldx;
     /** state derivative of event */
-    double *am_dzdx;
+    realtype *am_dzdx;
     /** parameter derivative of event */
-    double *am_dzdp;
+    realtype *am_dzdp;
     /** parameter derivative of observable */
-    double *am_dydp;
+    realtype *am_dydp;
     /** state derivative of observable */
-    double *am_dydx;
+    realtype *am_dydx;
     /** initial sensitivity of observable */
-    double *am_yS0;
+    realtype *am_yS0;
     /** data standard deviation */
-    double *am_sigma_y;
+    realtype *am_sigma_y;
     /** parameter derivative of data standard deviation */
-    double *am_dsigma_ydp;
+    realtype *am_dsigma_ydp;
     /** event standard deviation */
-    double *am_sigma_z;
+    realtype *am_sigma_z;
     /** parameter derivative of event standard deviation */
-    double *am_dsigma_zdp;
+    realtype *am_dsigma_zdp;
     
     /** state array */
-    double *am_x_tmp;
+    realtype *am_x_tmp;
     /** sensitivity state array */
-    double *am_sx_tmp;
+    realtype *am_sx_tmp;
     /** differential state array */
-    double *am_dx_tmp;
+    realtype *am_dx_tmp;
     /** differential sensitivity state array */
-    double *am_sdx_tmp;
+    realtype *am_sdx_tmp;
     /** time derivative state array */
-    double *am_xdot_tmp;
+    realtype *am_xdot_tmp;
     /** differential adjoint state array */
-    double *am_xB_tmp;
+    realtype *am_xB_tmp;
     /** quadrature state array */
-    double *am_xQB_tmp;
+    realtype *am_xQB_tmp;
     /** differential adjoint state array */
-    double *am_dxB_tmp;
+    realtype *am_dxB_tmp;
     /** index indicating DAE equations array */
-    double *am_id_tmp;
+    realtype *am_id_tmp;
+
     
     /** array of flags indicating which root has beend found */
     /*!
     array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound[i]?= 0 if gi has a root, and = 0 if not.
     */
     int *am_rootsfound;
-    /** array of values of the root function */
-    double *am_rootvaltmp; 
     /** array of index which root has been found */
     int *am_rootidx;
+    /** array of number of found roots for a certain event type */
+    int *am_nroots;
     
     /** change in x */
-    double *am_deltax;
+    realtype *am_deltax;
     /** change in sx */
-    double *am_deltasx;
+    realtype *am_deltasx;
     /** change in xB */
-    double *am_deltaxB;
+    realtype *am_deltaxB;
     /** change in qB */
-    double *am_deltaqB;
+    realtype *am_deltaqB;
  
     
     /** integer for indexing of backwards problems */
     int am_which;
     
     /** array containing the time-points of discontinuities*/
-    double *am_discs; 
+    realtype *am_discs; 
     /** array containing the index of discontinuities */
-    double *am_irdiscs; 
+    realtype *am_irdiscs; 
 
 	} *TempData;
 #endif /* _MY_TDATA */

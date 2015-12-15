@@ -54,6 +54,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetField(prhs[4], 0 ,"ny")) { ny = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ny")); } else { mexErrMsgTxt("Parameter ny not specified as field in options struct!"); }
     if(mxGetField(prhs[4], 0 ,"np")) { np = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"np")); } else { mexErrMsgTxt("Parameter np not specified as field in options struct!"); }
     if(mxGetField(prhs[4], 0 ,"ne")) { ne = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ne")); } else { mexErrMsgTxt("Parameter ne not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"nz")) { nz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nz")); } else { mexErrMsgTxt("Parameter nz not specified as field in options struct!"); }
     if(mxGetField(prhs[4], 0 ,"nnz")) { nnz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nnz")); } else { mexErrMsgTxt("Parameter nnz not specified as field in options struct!"); }
     if(mxGetField(prhs[4], 0 ,"nmaxevent")) { nmaxevent = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nmaxevent")); } else { mexErrMsgTxt("Parameter nmaxevent not specified as field in options struct!"); }
     
@@ -93,6 +94,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
 
     if(mxGetField(prhs[4], 0 ,"id")) { idlist = mxGetData(mxGetField(prhs[4], 0, "id")); } else { mexErrMsgTxt("Parameter id not specified as field in options struct!"); }
+    
+    if(mxGetField(prhs[4], 0 ,"z2event")) { z2event = mxGetData(mxGetField(prhs[4], 0, "z2event")); } else { mexErrMsgTxt("Parameter z2event not specified as field in options struct!"); }
 
     if(mxGetField(prhs[4], 0 ,"sensi")) { sensi = (int) mxGetScalar(mxGetField(prhs[4], 0 ,"sensi")); } else { mexErrMsgTxt("Parameter sensi not specified as field in options struct!"); }
     if(mxGetField(prhs[4], 0 ,"ism")) { ism = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ism")); } else { mexErrMsgTxt("Parameter ism not specified as field in options struct!"); }
@@ -350,10 +353,11 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         xdot = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
         
-        if(ne>0) rootvaltmp = mxMalloc(ne*sizeof(realtype));
         if(ne>0) rootsfound = mxMalloc(ne*sizeof(int));
-        if(ne>0) rootidx = mxMalloc(nmaxevent*sizeof(int));
-        if(ne>0) discs = mxMalloc(nmaxevent*sizeof(realtype));
+        if(ne>0) rootidx = mxMalloc(nmaxevent*ne*sizeof(int));
+        if(ne>0) nroots = mxMalloc(ne*sizeof(int));
+        if(ne>0) memset(nroots,0,ne*sizeof(int));
+        if(ne>0) discs = mxMalloc(nmaxevent*ne*sizeof(realtype));
         
         deltax = mxMalloc(nx*sizeof(realtype));
         deltasx = mxMalloc(nx*np*sizeof(realtype));
@@ -362,8 +366,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         
         if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
-        if(ne>0) sigma_z = mxMalloc(ne*sizeof(realtype));
-        if(ne>0) memset(sigma_z,0,ne*sizeof(realtype));
+        if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
+        if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
         
         if (x == NULL) return(NULL);
         *status = fx0(x, udata);
@@ -411,7 +415,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     /* Attach linear solver module */
     switch (linsol) {
             
-            /* DieECT SOLVERS */
+            /* DIRECT SOLVERS */
             
         case AMI_DENSE:
             *status = AMIDense(ami_mem, nx);
@@ -569,19 +573,19 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 dgdx = mxMalloc(nx*nt*sizeof(realtype));
                 memset(dgdx,0,nx*nt*sizeof(realtype));
                 if (ne > 0) {
-                    dzdp = mxMalloc(ne*np*sizeof(realtype));
-                    memset(dzdp,0,ne*np*sizeof(realtype));
-                    dzdx = mxMalloc(ne*nx*sizeof(realtype));
-                    memset(dzdx,0,ne*nx*sizeof(realtype));
+                    dzdp = mxMalloc(nz*np*sizeof(realtype));
+                    memset(dzdp,0,nz*np*sizeof(realtype));
+                    dzdx = mxMalloc(nz*nx*sizeof(realtype));
+                    memset(dzdx,0,nz*nx*sizeof(realtype));
                 }
-                drdp = mxMalloc(np*sizeof(realtype));
-                memset(drdp,0,np*sizeof(realtype));
-                drdx = mxMalloc(nx*nmaxevent*sizeof(realtype));
-                memset(drdx,0,nx*nmaxevent*sizeof(realtype));
+                drdp = mxMalloc(np*nz*nmaxevent*sizeof(realtype));
+                memset(drdp,0,np*nz*nmaxevent*sizeof(realtype));
+                drdx = mxMalloc(nx*nz*nmaxevent*sizeof(realtype));
+                memset(drdx,0,nx*nz*nmaxevent*sizeof(realtype));
                 dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
                 memset(dsigma_ydp,0,ny*np*sizeof(realtype));
-                if(ne>0) dsigma_zdp = mxMalloc(ne*np*sizeof(realtype));
-                if(ne>0) memset(dsigma_zdp,0,ne*np*sizeof(realtype));
+                if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
+                if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
             }
         }
         
@@ -929,137 +933,6 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
 /*******************************************************************************/
 /*******************************************************************************/
 
-void getEventSensisFSA(int *status, int *nroots, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
-    /**
-     * getEventSensisFSA extracts root information for forward sensitivity analysis
-     *
-     * @param[out] status flag indicating success of execution @type int
-     * @param[out] nroots counter for the number of found roots @type int
-     * @param[in] ami_mem pointer to the solver memory block @type void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    
-    int ip;
-    int jp;
-    int ie;
-    
-    /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    TempData tdata; /* temp data */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    tdata = (TempData) temp_data;
-    
-    *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return;
-    /* ROOTS FOR ROOTFUNCTION */
-    if (*nroots<nmaxevent) {
-        for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-            if(rootsfound[ie] != 0) {
-                *status = fz(t,*nroots,zdata,x,udata);
-                /* extract sensitivity information */
-                if(sensi >= 1) {
-                    if(sensi_meth == AMI_FSA) {
-                        *status = AMIGetSens(ami_mem, &t, sx);
-                        if (*status != AMI_SUCCESS) return;
-                        *status = fsz(t,*nroots,zSdata,x,sx,udata);
-                        if (*status != AMI_SUCCESS) return;
-                    }
-                }
-                (*nroots)++;
-            }
-        }
-    }
-}
-
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
-void getEventSensisASA(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
-    /**
-     * getEventSensisASA extracts root information for adjoint sensitivity analysis
-     *
-     * @param[out] status flag indicating success of execution @type *int
-     * @param[out] nroots counter for the number of found roots @type *int
-     * @param[out] iroot counter for the number of found discontinuities @type *int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    int ip;
-    int ie;
-    int ix;
-    
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-    
-    
-    *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return;
-    /* EVENT ROOTS */
-    if (*nroots<nmaxevent) {
-        for (ie=0; ie<ne; ie++){
-            if(rootsfound[ie] == 1) {
-                *status = fz(t,*nroots,zdata,x,udata);
-                /* extract sensitivity information */
-                if(!mxIsNaN(mz[ie*nmaxevent+*nroots])) {
-                    if (event_model == AMI_NORMAL) {
-                        r += 0.5*log(2*pi*pow(zsigma[ie*nmaxevent+*nroots],2)) + 0.5*pow( ( zdata[ie] - mz[ie*nmaxevent+*nroots] )/zsigma[ie*nmaxevent+*nroots] , 2);
-                        *chi2data += pow( ( zdata[ie] - mz[ie*nmaxevent+*nroots] )/zsigma[ie*nmaxevent+*nroots] , 2);
-                    }
-                    if (sensi>=1) {
-                        *status = fdzdp(t,ie,dzdp,x,udata);
-                        if (*status != AMI_SUCCESS) return;
-                        *status = fdzdx(t,ie,dzdx,x,udata);
-                        if (*status != AMI_SUCCESS) return;
-                        if (mxIsNaN(zsigma[ie*nmaxevent + *nroots])) {
-                            *status = fsigma_z(t,ie,sigma_z,udata);
-                            if (*status != AMI_SUCCESS) return;
-                            *status = fdsigma_zdp(t,ie,dsigma_zdp,udata);
-                            if (*status != AMI_SUCCESS) return;
-                        } else {
-                            for (ip=0; ip<np; ip++) {
-                                dsigma_zdp[ip*ne+ie] = 0;
-                            }
-                            sigma_z[ie] = zsigma[ie*nmaxevent + *nroots];
-                        }
-                        
-                        for (ip=0; ip<np; ip++) {
-                            if(event_model == AMI_NORMAL) {
-                                drdp[ip] += dsigma_zdp[ip*ne+ie]/sigma_z[ie] + ( dzdp[ip*ne+ie]* ( zdata[ie] - mz[ie*nmaxevent+*nroots] ) )/pow( sigma_z[ie] , 2) - dsigma_zdp[ip*ne+ie]*pow( zdata[ie] - mz[ie*nmaxevent+*nroots] ,2)/pow( sigma_z[ie] , 3);
-                            }
-                        }
-                        for (ix=0; ix<nx; ix++) {
-                            if(event_model  == AMI_NORMAL) {
-                                drdx[*nroots+ix*nmaxevent] += ( dzdx[ix*ne+ie] * ( zdata[ie] - mz[ie*nmaxevent+*nroots] ) )/pow( sigma_z[ie] , 2);
-                            }
-                        }
-                    }
-                }
-                (*nroots)++;
-            }
-        }
-    }
-}
-
-/*******************************************************************************/
-/*******************************************************************************/
-/*******************************************************************************/
-
 void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getDataOutput extracts output information for data-points
@@ -1130,7 +1003,106 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
 /*******************************************************************************/
 /*******************************************************************************/
 
-int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+    /**
+     * getEventSensisFSA extracts root information for forward sensitivity analysis
+     *
+     * @param[out] status flag indicating success of execution @type int
+     * @param[in] ami_mem pointer to the solver memory block @type void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    int ip;
+    int jp;
+    int iz;
+    
+    /* this casting is necessary to ensure availability of accessor macros */
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    TempData tdata; /* temp data */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    tdata = (TempData) temp_data;
+
+    *status = AMIGetSens(ami_mem, &t, sx);
+    if (*status != AMI_SUCCESS) return;
+    *status = fsz(t,ie,nroots,zSdata,x,sx,udata);
+    if (*status != AMI_SUCCESS) return;
+
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * getEventSensisASA extracts root information for adjoint sensitivity analysis
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    int ip;
+    int ix;
+    int iz;
+    
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    edata = (ExpData) exp_data;
+    tdata = (TempData) temp_data;
+    
+    for (iz=0; iz<nz; iz++) {
+        if( z2event[iz] == ie ){
+            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
+                *status = fdzdp(t,ie,dzdp,x,udata);
+                if (*status != AMI_SUCCESS) return;
+                *status = fdzdx(t,ie,dzdx,x,udata);
+                if (*status != AMI_SUCCESS) return;
+                if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+                    *status = fsigma_z(t,ie,sigma_z,udata);
+                    if (*status != AMI_SUCCESS) return;
+                    *status = fdsigma_zdp(t,ie,dsigma_zdp,udata);
+                    if (*status != AMI_SUCCESS) return;
+                } else {
+                    for (ip=0; ip<np; ip++) {
+                        dsigma_zdp[ip +np*iz] = 0;
+                    }
+                    sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
+                }
+                
+                for (ip=0; ip<np; ip++) {
+                    if(event_model == AMI_NORMAL) {
+                        drdp[nroots[ie] + nmaxevent*(ip + np*iz)] += dsigma_zdp[ip*ne+ie]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[ie] , 2) - dsigma_zdp[ip*ne+ie]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
+                    }
+                }
+                for (ix=0; ix<nx; ix++) {
+                    if(event_model  == AMI_NORMAL) {
+                        drdx[nroots[ie] + nmaxevent*(ix + nx*iz)] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getEventOutput extracts output information for events
      *
@@ -1145,6 +1117,8 @@ int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, vo
      */
     
     int cv_status;
+    int iz;
+    int ie;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1162,18 +1136,53 @@ int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, vo
         cv_status = 0;
     }
     *tlastroot = t;
-    if (sensi >= 1) {
-        if(sensi_meth == AMI_ASA) {
-            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
-        } else {
-            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
-        }
-    }
+    
     if (cv_status == -22) {
         /* clustering of roots => turn off rootfinding */
         AMIRootInit(ami_mem, 0, NULL);
         cv_status = 0;
     }
+    
+    *status = AMIGetRootInfo(ami_mem, rootsfound);
+    if (*status != AMI_SUCCESS) return(*status);
+    
+    /* EVENT OUTPUT */
+    for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
+        if (nroots[ie]<nmaxevent) {
+            if(rootsfound[ie] != 0) {
+                *status = fz(t,ie,nroots,zdata,x,udata);
+                
+                for (iz=0; iz<nz; iz++) {
+                    if(z2event[iz] == ie) {
+                        if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+                            *status = fsigma_z(t,ie,sigma_z,udata);
+                            if (*status != AMI_SUCCESS) return(*status);
+                        } else {
+                            sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
+                        }
+                        
+                        if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
+                            if (event_model == AMI_NORMAL) {
+                                r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                                *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                            }
+                        }
+                    }
+                }
+                
+                if (sensi >= 1) {
+                    if(sensi_meth == AMI_ASA) {
+                        getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
+                    } else {
+                        getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
+                    }
+                }
+                
+                nroots[ie]++;
+            }
+        }
+    }
+
     return(cv_status);
 }
 
@@ -1181,7 +1190,7 @@ int getEventOutput(int *status, realtype *tlastroot, int *nroots, int *iroot, vo
 /*******************************************************************************/
 /*******************************************************************************/
 
-void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getEventOutput fills missing roots with last timepoint
      *
@@ -1195,6 +1204,9 @@ void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  
      * @return void
      */
     
+    int iz;
+    int ie;
+    
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
     ExpData edata; /* exp edata */
@@ -1203,12 +1215,39 @@ void fillEventOutput(int *status, int *nroots, int *iroot, void *ami_mem, void  
     rdata = (ReturnData) return_data;
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
-
-    if (sensi >= 1) {
-        if(sensi_meth == AMI_ASA) {
-            getEventSensisASA(status, nroots, iroot, ami_mem, udata, rdata, edata, tdata);
-        } else {
-            getEventSensisFSA(status, nroots, ami_mem, udata, rdata, tdata);
+    
+    /* EVENT OUTPUT */
+    for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
+        if (nroots[ie]<nmaxevent) {
+            *status = fz(t,ie,nroots,zdata,x,udata);
+            
+            for (iz=0; iz<nz; iz++) {
+                if(z2event[iz] == ie) {
+                    if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+                        *status = fsigma_z(t,ie,sigma_z,udata);
+                        if (*status != AMI_SUCCESS) return;
+                    } else {
+                        sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
+                    }
+                    
+                    if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
+                        if (event_model == AMI_NORMAL) {
+                            r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                            *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                        }
+                    }
+                }
+            }
+            
+            if (sensi >= 1) {
+                if(sensi_meth == AMI_ASA) {
+                    getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
+                } else {
+                    getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
+                }
+            }
+            
+            nroots[ie]++;
         }
     }
 }

@@ -19,19 +19,36 @@ classdef amievent
     methods
         function AE = amievent(trigger,bolus,z)
             if(~isa(trigger,'sym'))
-                error('trigger function must be a symbolic expression')
+                if(isa(trigger,'double'))
+                    AE.trigger = sym(trigger);
+                    warning('Constant trigger function will never trigger. Please check the event definition.')
+                else
+                    error('trigger function must be a symbolic expression')
+                end
             else
                 AE.trigger = trigger;
             end
+            if(numel(AE.trigger)>1)
+                error('The trigger function must be scalar.')
+            end
             
             if(~isa(bolus,'sym'))
-                error('bolus function must be a symbolic expression')
+                if(isa(bolus,'double'))
+                    AE.bolus = sym(bolus);
+                else
+                    error('bolus function must be a symbolic expression')
+                end
             else
                 AE.bolus = bolus;
             end
             
             if(~isa(z,'sym'))
-                error('bolus function must be a symbolic expression')
+                if(isa(z,'double'))
+                    AE.z = sym(z);
+                    warning('Constant outputs are not informative. Please check the event definition.')
+                else
+                    error('output function must be a symbolic expression')
+                end      
             else
                 AE.z = z;
             end

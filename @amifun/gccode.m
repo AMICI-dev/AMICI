@@ -83,6 +83,10 @@ for j=transpose(ff(:));
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*$1\]']);
         elseif(strcmp(this.cvar,'sy') || strcmp(this.cvar,'dydp'))
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*\($1+ip*ny\)\]']);
+        elseif(strcmp(this.cvar,'z'))
+            cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*$1\]']);
+        elseif(strcmp(this.cvar,'sz'))
+            cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*($1+ip*nz)\]']);
         elseif(strcmp(this.cvar,'dxdotdp'))
             cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]', 'dxdotdp[\($1+ip*nx\)\]');
         elseif(strcmp(this.cvar,'sdeltadisc'))

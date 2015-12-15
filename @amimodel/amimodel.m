@@ -41,16 +41,14 @@ classdef amimodel
         ny@double;
         % number of original observables for second order sensitivities @type int
         nytrue = 0;
-        % number of events @type int
-        nr@double;
-        % number of discontinuities @type int
-        ndisc@double;
         % number of parameters @type int
         np@double;
         % number of constants @type int
         nk@double;
         % number of events @type int
         nevent@double;
+        % number of event outputs @type int
+        nz@double;
         % flag for DAEs @type *int
         id@double;
         % upper Jacobian bandwidth @type int
@@ -87,6 +85,11 @@ classdef amimodel
         % counter that allows enforcing of recompilation of models after
         % code changes
         compver = 2;
+    end
+    
+    properties ( GetAccess = 'public', SetAccess = 'public' )
+        % vector that maps outputs to events
+        z2event@double;
     end
     
     methods

@@ -34,7 +34,7 @@ function this = getNVecs(this,model)
     qBdot = {'qBdot'};
     x0 = {'x0'};
     dx0 = {'dx0'};
-    sx0 = {'sx0'};
+    sx0 = {'*sx0'};
     sdx0 = {'sdx0'};
     v = {'v'};
     vB = {'vB'};
@@ -54,23 +54,23 @@ function this = getNVecs(this,model)
         case 'dx0'
             this.nvecs = [x0,dx0];
         case 'Jv'
-            this.nvecs = [x,xdot,v,Jv];
+            this.nvecs = [x,v,Jv];
         case 'JvB'
-            this.nvecs = [x,xB,xBdot,vB,JvB];
+            this.nvecs = [x,xB,vB,JvB];
         case 'JBand'
-            this.nvecs = [x,xdot];
+            this.nvecs = x;
         case 'J'
-            this.nvecs = [x,xdot];
+            this.nvecs = x;
         case 'JSparse'
-            this.nvecs = [x,xdot];
+            this.nvecs = x;
         case 'JBandB'
-            this.nvecs = [x,xB,xBdot];
+            this.nvecs = [x,xB];
         case 'JB'
-            this.nvecs = [x,xB,xBdot];
+            this.nvecs = [x,xB];
         case 'JSparseB'
-            this.nvecs = [x,xB,xBdot];
+            this.nvecs = [x,xB];
         case 'sxdot'
-            this.nvecs = [x,xdot,sx,sxdot];
+            this.nvecs = [x,sx,sxdot];
         case 'sx0'
             if(strcmp(model.wtype,'iw'))
                 this.nvecs = [sx0,x];
@@ -119,6 +119,8 @@ function this = getNVecs(this,model)
             this.nvecs = {};
         case 'stau'
             this.nvecs = [x(1),psx];
+        case 'root'
+            this.nvecs = [x(1)];
         otherwise
             % do nothing
     end

@@ -18,6 +18,7 @@ k = [4,8,10,4];
 
 options.sensi = 0;
 options.cvode_maxsteps = 1e6;
+options.nmaxevent = 2;
 % load mex into memory
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 
@@ -49,8 +50,8 @@ for ix = 1:size(sol.x,2)
     hold on
     plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:))
 end
-stem(sol.root(:,1),sol.root(:,1)*0+10,'r')
-stem(sol.root(:,2),sol.root(:,2)*0+10,'k')
+stem(sol.z(:,1),sol.z(:,1)*0+10,'r')
+stem(sol.z(:,2),sol.z(:,2)*0+10,'k')
 legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','x3==x2','x3==x1','Location','NorthEastOutside')
 legend boxoff
 xlabel('time t')
@@ -100,7 +101,7 @@ for ip = 1:4;
     solp = simulate_model_example_1(t,xip,k,[],options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
-    sroot_fd(:,:,ip) = (solp.root - sol.root)/eps;
+    sz_fd(:,:,ip) = (solp.z - sol.z)/eps;
 end
 
 %% PLOTTING
@@ -161,9 +162,9 @@ set(gcf,'Position',[100 300 1200 500])
 figure
 for ip = 1:4
 subplot(4,2,2*ip-1)
-bar(1:6,sol.sroot(1:6,:,ip),0.8)
+bar(1:options.nmaxevent,sol.sz(1:options.nmaxevent,:,ip),0.8)
 hold on
-bar(1:6,sroot_fd(1:6,:,ip),0.4)
+bar(1:options.nmaxevent,sz_fd(1:options.nmaxevent,:,ip),0.4)
 legend('x3==x2','x3==x1','x3==x2 fd','x3==x1 fd','Location','NorthEastOutside')
 legend boxoff
 title(['event sensitivity for p' num2str(ip)])
@@ -172,7 +173,7 @@ ylabel('y')
 box on
 
 subplot(4,2,2*ip)
-bar(1:6,sol.sroot(1:6,:,ip)-sroot_fd(1:6,:,ip),0.8)
+bar(1:options.nmaxevent,sol.sz(1:options.nmaxevent,:,ip)-sz_fd(1:options.nmaxevent,:,ip),0.8)
 legend('error x3==x2','error x3==x1','Location','NorthEastOutside')
 legend boxoff
 title(['error event sensitivity for p' num2str(ip)])

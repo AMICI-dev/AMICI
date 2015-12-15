@@ -42,7 +42,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int cv_status; /* status flag returned by integration method */
     
     realtype tlastroot; /* storage for last found root */
-    int nroots;
     int iroot;
     double tnext;
     
@@ -82,8 +81,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     t = tstart;
     
-    if(ne>0) nroots = 0;
-    if(ne>0) iroot = 0;
+    iroot = 0;
     
     tlastroot = 0;
     /* loop over timepoints */
@@ -98,7 +96,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                     }
                     if (cv_status==AMI_ROOT_RETURN) {
-                        cv_status = getEventOutput(&status, &tlastroot, &nroots, &iroot, ami_mem, udata, rdata, edata, tdata);
+                        discs[iroot] = t;
+                        iroot++;
+                        cv_status = getEventOutput(&status, &tlastroot, ami_mem, udata, rdata, edata, tdata);
                         if (t==ts[it]) {
                             cv_status = 0;
                         }
@@ -138,18 +138,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 getDiagnosis(&status, it, ami_mem, udata, rdata);
             }
             
+            if(cv_status == 0) {
+                getDataOutput(&status, it, ami_mem, udata, rdata, edata, tdata);
+            }
+            
         } else {
             for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
         }
     }
-    
-    if(cv_status == 0) {
-        getDataOutput(&status, it, ami_mem, udata, rdata, edata, tdata);
-    }
-    
+
     /* fill events */
     if (ne>0) {
-        fillEventOutput(&status, &nroots, &iroot, ami_mem, udata, rdata, edata, tdata);
+        fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
     }
     
     if (sensi >= 1) {
@@ -159,7 +159,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 setupAMIB(&status, ami_mem, udata, tdata);
                 
                 it = nt-2;
-                iroot = nroots-1;
                 while (it>0 || iroot>0) {
                     /* enter while */
                     
@@ -321,7 +320,8 @@ freturn:
         }
     }
     
-    N_VDestroy_Serial(id);
+    if(ami_mem)     N_VDestroy_Serial(id);
+
     
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);

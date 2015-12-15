@@ -83,6 +83,10 @@ function this = generateC(this)
                     if(ismember(this.fun.(ifun{1}).nvecs,'*sx'))
                         fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                     end
+                    if(ismember(this.fun.(ifun{1}).nvecs,'*sx0'))
+                        fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);\n');
+                        fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
+                    end
                     fprintf(fid,'switch (plist[ip]) {\n');
                     this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                     fprintf(fid,'}\n');
@@ -284,7 +288,7 @@ function this = generateC(this)
         if(ismember(iffun{1},this.funs))
             fprintf(fid,['                    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
         else
-            if(strcmp(iffun{1},'dx0') || strcmp(iffun{1},'dx0'))
+            if(strcmp(iffun{1},'dx0') || strcmp(iffun{1},'sdx0'))
                 % these two should always work, if they are not required
                 % they should act as placeholders
                 fprintf(fid,'                    return(0);\n');

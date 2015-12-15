@@ -5,16 +5,19 @@ function [ this ] = makeEvents( this )
     % Return values:
     %  this: updated model definition object @type amimodel
     
-    if(isfield(this,'event'))
-        nevent = length(this.event);
-    else
-        nevent = 0;
-    end
-    
-    % extract trigger and bolus
+    nevent = length(this.event);
+    nx = length(this.sym.x);
+
+    % extract trigger and bolus, also check dimensions here
     for ievent = 1:nevent
         trigger{ievent} = this.event(ievent).trigger;
-        bolus{ievent} = this.event(ievent).bolus;
+        if(length(this.event(ievent).bolus) == nx)
+            bolus{ievent} = this.event(ievent).bolus;
+        elseif(numel(this.event(ievent).bolus) == 1)
+            bolus{ievent} = this.event(ievent).bolus*ones(nx,1);
+        else
+            error(['Bolus of event ' num2str(ievent) ' is neither a scalar nor does it match the state dimension!']);
+        end
         z{ievent} = this.event(ievent).z;
     end
     

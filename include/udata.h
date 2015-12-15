@@ -56,6 +56,8 @@
 #define tmp_J udata->am_J
 #define tmp_dxdotdp udata->am_dxdotdp
 
+#define z2event udata->am_z2event
+
 #ifndef _MY_UDATA
 #define _MY_UDATA
 
@@ -71,13 +73,11 @@ typedef struct {
     /** number of states */
     int    am_nx;
     /** number of event outputs */
-    int    *am_nz;
+    int    am_nz;
     /** number of events */
     int    am_ne;
     /** number of timepoints */
     int    am_nt;
-    /** number of discontinuities */
-    int    am_ndisc;
     /** number of nonzero entries in jacobian */
     int    am_nnz;
     /** maximal number of events to track */
@@ -165,6 +165,9 @@ typedef struct {
     
     /** state ordering */
     int am_ordering;
+    
+    /** index indicating to which event an event output belongs */
+    double *am_z2event;
     
     /** tempory storage of Jacobian data across functions */
     SlsMat am_J;

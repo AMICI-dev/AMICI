@@ -1,8 +1,12 @@
-function this = getSyms(this,model)
+function [this,model] = getSyms(this,model)
     % getSyms computes the symbolic expression for the requested function
+    %
+    % Parameters:
+    %  model: model definition object @type amimodel
     %
     % Return values:
     %  this: updated function definition object @type amifun
+    %  model: updated model definition object @type amimodel
     
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
@@ -13,6 +17,7 @@ function this = getSyms(this,model)
     nevent = model.nevent;
     np = model.np;
     nk = model.nk;
+    nz = model.nz;
     
     fprintf([this.funstr ' | '])
     switch(this.funstr)
@@ -261,7 +266,7 @@ function this = getSyms(this,model)
             this.sym = jacobian(model.fun.sigma_z.sym,p);
             
         case 'root'
-            this.sym = [model.event.trigger];
+            this.sym = transpose([model.event.trigger]);
             this = unifySyms(this,model);
             
         case 'drootdp'
@@ -297,10 +302,16 @@ function this = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'ddeltaxdp'
-            this.sym = jacobian(model.fun.deltax.sym,p);
+            this.sym = sym(zeros(nx,nevent,np));
+            for ievent = 1:nevent
+                this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),p);
+            end
             
         case 'ddeltaxdx'
-            this.sym = jacobian(model.fun.deltax.sym,x);
+            this.sym = sym(zeros(nx,nevent,nx));
+            for ievent = 1:nevent
+                this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),x);
+            end
             
         case 'ddeltaxdt'
             this.sym = diff(model.fun.deltax.sym,'t');
@@ -317,21 +328,37 @@ function this = getSyms(this,model)
                     dxdp = model.fun.xdot.sym*dtdp + sx;
                     
                     this.sym(:,:,ievent)= ...
-                        + model.fun.ddeltaxdx.sym*dxdp ...
-                        + model.fun.ddeltaxdt.sym*dtdp ...
-                        + model.fun.ddeltaxdp.sym;
+                        + squeeze(model.fun.ddeltaxdx.sym(:,ievent,:))*dxdp ...
+                        + model.fun.ddeltaxdt.sym(:,ievent)*dtdp ...
+                        + squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
                 end
             end
             
         case 'deltaqB'
-            this.sym = transpose(model.fun.xB.sym)*model.fun.ddeltaxdp.sym;
+            this.sym = sym(zeros(np,nevent));
+            for ievent = 1:nevent
+                this.sym(:,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+            end
                     
         case 'deltaxB'
-            this.sym = model.fun.ddeltaxdx.sym*model.fun.xB.sym;
+            this.sym = sym(zeros(nx,nevent));
+            for ievent = 1:nevent
+                this.sym(:,ievent) = squeeze(model.fun.ddeltaxdx.sym(:,ievent,:))*model.fun.xB.sym;
+            end
             
         case 'z'
-            this.sym = [model.event.z];
+            this.sym = transpose([model.event.z]);
             this = unifySyms(this,model);
+            % construct the event identifyer, this is a vector which maps
+            % events to outputs z
+            model.z2event = zeros(nz,1);
+            iz = 0;
+            for ievent = 1:nevent
+                for jz = 1:length(model.event(ievent).z)
+                    iz = iz+1;
+                    model.z2event(iz) = ievent;
+                end
+            end
             
         case 'dzdp'
             this.sym = jacobian(model.fun.z.sym,p);
@@ -340,10 +367,15 @@ function this = getSyms(this,model)
             this.sym = jacobian(model.fun.z.sym,x);
             
         case 'dzdt'
-            this.sym = diff(model.fun.z.sym,'t');
+            this.sym = diag(diff(model.fun.z.sym,'t'));
             
         case 'sz'
-            this.sym = model.fun.dzdp.sym + model.fun.dzdx.sym*sx + model.fun.dzdt.sym*model.fun.stau.sym;
+            % the tau is event specific so mapping from z to events is
+            % necessary here.
+            this.sym = ...
+                + model.fun.dzdp.sym ...
+                + model.fun.dzdx.sym*sx ...
+                + model.fun.dzdt.sym*model.fun.stau.sym(model.z2event,:);
             
         case 'JBand'
             %do nothing
