@@ -91,6 +91,8 @@ function this = getNVecs(this,model)
             this.nvecs = x(1);
         case 'sz'
             this.nvecs = [x(1),psx];
+        case 'sz_tf'
+            this.nvecs = [x(1),psx];
         case 'dydp'
             this.nvecs = x(1);
         case 'dydx'
@@ -106,9 +108,9 @@ function this = getNVecs(this,model)
         case 'deltaqB'
             this.nvecs = [x(1),xB(1),qBdot];
         case 'deltasx'
-            this.nvecs = [x(1),psx];
+            this.nvecs = [x(1),psx,xdot,'xdot_old'];
         case 'dxdotdp'
-            this.nvecs = [x(1),psx];
+            this.nvecs = x(1);
         case 'sigma_y'
             this.nvecs = {};
         case 'dsigma_ydp'

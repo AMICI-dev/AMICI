@@ -61,19 +61,30 @@ for j=transpose(ff(:));
         idx = strfind(cstr,'^');
     end
     cstr = deblank(cstr);
-%     cstr = regexprep(cstr,'D\(\[([0-9]*)\]\, ([\w]*)\)\(','D$2\($1,'); % fix derivatives
-%     cstr = regexprep(cstr,'dirac\(([1-2]*),','Ddirac\($1,'); % fix derivatives
-%     cstr = regexprep(cstr,'dirac\(([^,]*), ([1-2]*)\)','Ddirac\($2,$1\)'); % fix matlab <= R2014a
     cstr = regexprep(cstr,'abs\(','fabs\('); % fix abs->fabs
 
+    %%
+    % fix symbolic expressions
+    
     if(~(length(cstr)==1 && isempty(cstr{1})))
         
         % fix various function specific variable names/indexes
         
-        cstr = regexprep(cstr,'x_([0-9]+)','x\[$1\]');
+        if(ismember('x',this.nvecs'))
+            cstr = regexprep(cstr,'x_([0-9]+)','x\[$1\]');
+        end
+        if(ismember('xdot',this.nvecs'))
+            cstr = regexprep(cstr,'xdot_([0-9]+)','xdot\[$1\]');
+        end
+        if(ismember('xdot_old',this.nvecs'))
+            cstr = regexprep(cstr,'xdot_old_([0-9]+)','xdot_old\[$1\]');
+        end
         cstr = regexprep(cstr,'p_([0-9]+)','p\[$1\]');
         cstr = regexprep(cstr,'k_([0-9]+)','k\[$1\]');
-        cstr = regexprep(cstr,'xB_([0-9]+)','xB\[$1\]');
+        cstr = regexprep(cstr,'h_([0-9]+)','h\[$1\]');
+        if(ismember('xB',this.nvecs'))
+            cstr = regexprep(cstr,'xB_([0-9]+)','xB\[$1\]');
+        end
         cstr = regexprep(cstr,'J([0-9]+)','J\[$1\]');
         cstr = regexprep(cstr,'xdotdp([0-9]+)','xdotdp\[$1 + ip*nx\]');
         
@@ -107,6 +118,8 @@ for j=transpose(ff(:));
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ne + $1] = ']);
         elseif(strcmp(this.cvar,'dsigma_ydp'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ny + $1] = ']);
+        elseif(strcmp(this.cvar,'deltasx'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nx + $1] = ']);
         end
 
         
@@ -116,8 +129,12 @@ for j=transpose(ff(:));
         if(strcmp(this.funstr,'dydx'))
             cstr = strrep(cstr,'dydx_tmp','dydx');
         end
-        
+        if(strcmp(this.funstr,'deltasx'))
+            cstr = strrep(cstr,'deltasx_tmp','deltasx');
+        end
     end
+    
+    %%
     % print to file
     fprintf(fid,[cstr '\n']);
 end

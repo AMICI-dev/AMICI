@@ -82,18 +82,20 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'sz'
             % nothing
+        case 'sz_tf'
+            % nothing
         case 'dzdp'
             % nothing
         case 'dzdx'
             % nothing
         case 'deltax'
-            % nothing
+            fprintf(fid,['memset(deltax,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaxB'
-            % nothing
+            fprintf(fid,['memset(deltaxB,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaqB'
-            % nothing
+            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*np);\n']);
         case 'deltasx'
-            % nothing
+            fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'
             % nothing
         case 'dxdotdp'

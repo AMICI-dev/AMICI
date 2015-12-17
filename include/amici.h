@@ -30,8 +30,6 @@
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
 
-#include <src/amici.c>
-
 UserData setupUserData(const mxArray *prhs[]);
 ReturnData setupReturnData(const mxArray *prhs[], void *user_data);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
@@ -45,12 +43,22 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
 void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
 void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
+void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+
 void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
+void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_data);
+void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void *temp_data);
+
+void initHeaviside(int *status, void  *user_data, void *temp_data);
+void updateHeaviside(int *status, void  *user_data, void *temp_data);
+
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
+
 
 
 #endif /* amici_symbolic_functions_h */

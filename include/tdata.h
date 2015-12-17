@@ -1,8 +1,11 @@
 #define t tdata->am_t
 
 #define x tdata->am_x
+#define x_old tdata->am_x_old
 #define dx tdata->am_dx
+#define dx_old tdata->am_dx_old
 #define xdot tdata->am_xdot
+#define xdot_old tdata->am_xdot_old
 #define xB tdata->am_xB
 #define dxB tdata->am_dxB
 #define xQB tdata->am_xQB
@@ -39,6 +42,7 @@
 #define id_tmp tdata->am_id_tmp
 
 #define rootsfound tdata->am_rootsfound
+#define rootvals tdata->am_rootvals
 #define rootidx tdata->am_rootidx
 #define nroots tdata->am_nroots
 
@@ -73,10 +77,16 @@ typedef struct {
     
     /** state vector */
     N_Vector am_x; 
+    /** old differential state vector */
+    N_Vector am_x_old;
     /** differential state vector */
-    N_Vector am_dx; 
+    N_Vector am_dx;
+    /** old differential state vector */
+    N_Vector am_dx_old;
     /** time derivative state vector */
-    N_Vector am_xdot; 
+    N_Vector am_xdot;
+    /** old time derivative state vector */
+    N_Vector am_xdot_old;
     /** adjoint state vector */
     N_Vector am_xB; 
     /** differential adjoint state vector */
@@ -160,6 +170,9 @@ typedef struct {
     int *am_rootidx;
     /** array of number of found roots for a certain event type */
     int *am_nroots;
+    /** array of values of the root function */
+    double *am_rootvals;
+    
     
     /** change in x */
     realtype *am_deltax;

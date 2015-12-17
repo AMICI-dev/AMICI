@@ -32,7 +32,7 @@ elseif(strcmp(this.funstr,'deltasx'))
         for ip=1:np
             if(any(any(any(nonzero(:,ip,:)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                tmpfun.sym = this.sym(:,ip,:);
+                tmpfun.sym = squeeze(this.sym(:,ip,:));
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');

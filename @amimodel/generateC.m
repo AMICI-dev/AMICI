@@ -80,10 +80,10 @@ function this = generateC(this)
                 elseif(this.fun.(ifun{1}).sensiflag)
                     fprintf(fid,'int ip;\n');
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                    if(ismember(this.fun.(ifun{1}).nvecs,'*sx'))
+                    if(ismember('*sx',this.fun.(ifun{1}).nvecs))
                         fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                     end
-                    if(ismember(this.fun.(ifun{1}).nvecs,'*sx0'))
+                    if(ismember('*sx0',this.fun.(ifun{1}).nvecs))
                         fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);\n');
                         fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                     end
@@ -272,7 +272,7 @@ function this = generateC(this)
     end
     fprintf(fid,'                }\n');
     
-    ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','y','sy','dydp','dydx','z','sz','dzdp','dzdx','xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB','sigma_y','dsigma_ydp','sigma_z','dsigma_zdp'};
+    ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','y','sy','dydp','dydx','z','sz','sz_tf','dzdp','dzdx','xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB','sigma_y','dsigma_ydp','sigma_z','dsigma_zdp'};
     
     for iffun = ffuns
         % check whether the function was generated, otherwise generate (but

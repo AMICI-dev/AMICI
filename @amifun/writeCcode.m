@@ -33,7 +33,7 @@ elseif(strcmp(this.funstr,'z') || strcmp(this.funstr,'sz'))
         end
         fprintf(fid,'    } \n');
     end
-elseif(strcmp(this.funstr,'deltadisc') || strcmp(this.funstr,'sdeltadisc') || strcmp(this.funstr,'bdeltadisc') || strcmp(this.funstr,'ideltadisc'))
+elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(this.funstr,'deltaxB') || strcmp(this.funstr,'deltaqB'))
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))
         fprintf(fid,'              switch(ie) { \n');

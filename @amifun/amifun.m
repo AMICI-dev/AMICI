@@ -11,6 +11,8 @@ classdef amifun
         sym@sym;
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
         strsym@sym;
+        % short symbolic string which can be used for the reuse of old values @type symbolic
+        strsym_old@sym;
         % name of the model @type char
         funstr@char;
         % name of the c variable @type char

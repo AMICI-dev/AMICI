@@ -83,9 +83,19 @@ function [ this ] = makeEvents( this )
                     % remove dirac
                     symchar = strrep(symchar,'polydirac',0);
                 end
-                % update xdot
-                this.sym.xdot(ix) = sym(symchar);
             end
+            if(strfind(symchar,'heaviside'))
+                for ievent = 1:nevent
+                    triggerchar = char(trigger{ievent});
+                    str_arg_h = ['heaviside(' triggerchar ')' ];
+                    symchar = strrep(symchar,str_arg_h,['h_' num2str(ievent-1)]);
+                    mtriggerchar = char(-trigger{ievent});
+                    str_arg_h = ['heaviside(' mtriggerchar ')' ];
+                    symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
+                end
+            end
+            % update xdot
+            this.sym.xdot(ix) = sym(symchar);
         end
         % multiply by the dtriggerdt factor, this should stay here as we
         % want the xdot to be cleaned of any dirac functions

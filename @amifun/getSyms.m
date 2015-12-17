@@ -151,6 +151,17 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
+            % create cell array of same size
+            xdots = cell(nx,1);
+            xdot_olds = cell(nx,1);
+            % fill cell array
+            for j=1:nx
+                xdots{j} = sprintf('xdot_%i',j-1);
+                xdot_olds{j} = sprintf('xdot_old_%i',j-1);
+            end
+            this.strsym = sym(xdots);
+            this.strsym_old = sym(xdot_olds);
+            
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x);
             
@@ -298,8 +309,7 @@ function [this,model] = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'deltaxdot'
-            this.sym = [model.event.deltaxdot];
-            this = unifySyms(this,model);
+            this.sym = model.fun.xdot.strsym-model.fun.xdot.strsym_old;
             
         case 'ddeltaxdp'
             this.sym = sym(zeros(nx,nevent,np));
@@ -328,6 +338,7 @@ function [this,model] = getSyms(this,model)
                     dxdp = model.fun.xdot.sym*dtdp + sx;
                     
                     this.sym(:,:,ievent)= ...
+                        - model.fun.deltaxdot.sym*dtdp ...
                         + squeeze(model.fun.ddeltaxdx.sym(:,ievent,:))*dxdp ...
                         + model.fun.ddeltaxdt.sym(:,ievent)*dtdp ...
                         + squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
@@ -376,6 +387,13 @@ function [this,model] = getSyms(this,model)
                 + model.fun.dzdp.sym ...
                 + model.fun.dzdx.sym*sx ...
                 + model.fun.dzdt.sym*model.fun.stau.sym(model.z2event,:);
+            
+        case 'sz_tf'
+            % the tau is event specific so mapping from z to events is
+            % necessary here.
+            this.sym = ...
+                + model.fun.dzdp.sym ...
+                + model.fun.dzdx.sym*sx;
             
         case 'JBand'
             %do nothing

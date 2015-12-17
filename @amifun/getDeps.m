@@ -100,7 +100,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'deltax'};
             
         case 'deltasx'
-            this.deps = {'deltax','ddeltaxdx','ddeltaxdp','ddeltaxdt','dtaudp','xdot','sx','stau'};
+            this.deps = {'deltax','deltaxdot','ddeltaxdx','ddeltaxdp','ddeltaxdt','dtaudp','xdot','sx','stau'};
         
         case 'deltaqB'
             this.deps = {'ddeltaxdp','xB'};
@@ -122,6 +122,9 @@ function [ this ] = getDeps(this, model)
             
         case 'sz'
             this.deps = {'dzdp','dzdx','dzdt','sx','dtaudp'};
+            
+        case 'sz_tf'
+            this.deps = {'dzdp','dzdx','sx'};
             
         case 'dtaudp'
             this.deps = {'drootdp','drootdt'};
@@ -188,6 +191,10 @@ function [ this ] = getDeps(this, model)
             
         case 'sdx'
             this.deps = {};
+        
+        case 'deltaxdot'
+            this.deps = {};
+
 
         otherwise
             error(['unknown function string: ' this.funstr ])

@@ -16,6 +16,7 @@
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
+#include <src/amici.c>
 
 /*!
  * mexFunction is the main function of the mex simulation file this function carries out all numerical integration and writes results into the sol struct.
@@ -79,8 +80,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     ncheck = 0; /* the number of (internal) checkpoints stored so far */
     
-    t = tstart;
-    
     iroot = 0;
     
     tlastroot = 0;
@@ -98,7 +97,63 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if (cv_status==AMI_ROOT_RETURN) {
                         discs[iroot] = t;
                         iroot++;
+                        
+                        if(sensi >= 1){
+                            if (sensi_meth == AMI_FSA) {
+                                status = AMIGetSens(ami_mem, &t, sx);
+                                if (status != AMI_SUCCESS) goto freturn;
+                            }
+                        }
+                        
                         cv_status = getEventOutput(&status, &tlastroot, ami_mem, udata, rdata, edata, tdata);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
+                        if(sensi >= 1){
+                            if (sensi_meth == AMI_FSA) {
+                                N_VScale(1.0,x,x_old);
+                                
+                                status = fxdot(t,x,dx,xdot,udata);
+                                N_VScale(1.0,xdot,xdot_old);
+                                N_VScale(1.0,dx,dx_old);
+                            }
+                        }
+
+                        applyEventBolus(&status, ami_mem, udata, tdata);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        updateHeaviside(&status, udata, tdata);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        status = AMIReInit(ami_mem, t, x, dx);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        /* make time derivative consistent */
+                        status = AMICalcIC(ami_mem, t);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        if(sensi >= 1){
+                            if (sensi_meth == AMI_FSA) {
+                                
+                                /* compute the new xdot  */
+                                status = fxdot(t,x,dx,xdot,udata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                
+                                applyEventSensiBolusFSA(&status, ami_mem, udata, tdata);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                
+                                if(sensi >= 1){
+                                    if (sensi_meth == AMI_FSA) {
+                                        status = AMISensReInit(ami_mem, ism, sx, sdx);
+                                        if (status != AMI_SUCCESS) goto freturn;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        
+                        
+
                         if (t==ts[it]) {
                             cv_status = 0;
                         }
@@ -177,10 +232,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if (status != AMI_SUCCESS) goto freturn;
                     
                     if (tnext == discs[iroot]) {
-                        status = fdeltaqB(t,deltaqB,x,xB,xQB,udata);
+                        /*status = fdeltaqB(t,deltaqB,x,xB,xQB,udata);
                         if (status != AMI_SUCCESS) goto freturn;
                         status = fdeltaxB(t,deltaxB,x,xB,udata);
-                        if (status != AMI_SUCCESS) goto freturn;
+                        if (status != AMI_SUCCESS) goto freturn;*/
                         
                         xB_tmp = NV_DATA_S(xB);
                         for (ix=0; ix<nx; ix++) {

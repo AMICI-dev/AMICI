@@ -128,7 +128,7 @@ function this = parseModel(this)
     funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root'};
     
     if(this.forward)
-        funs = {funs{:},'sxdot','sx0','sy','sz','deltasx','stau'};
+        funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau'};
     end
     if(this.adjoint)
         funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','sigma_y','sigma_z','dsigma_ydp','dsigma_zdp','sx0'};

@@ -57,6 +57,7 @@
 #define tmp_dxdotdp udata->am_dxdotdp
 
 #define z2event udata->am_z2event
+#define h udata->am_h
 
 #ifndef _MY_UDATA
 #define _MY_UDATA
@@ -168,6 +169,9 @@ typedef struct {
     
     /** index indicating to which event an event output belongs */
     double *am_z2event;
+    
+    /** flag indicating whether a certain heaviside function should be active or not */
+    double *am_h;
     
     /** tempory storage of Jacobian data across functions */
     SlsMat am_J;
