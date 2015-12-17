@@ -335,17 +335,29 @@ freturn:
         N_VDestroy_Serial(x);
         N_VDestroy_Serial(dx);
         N_VDestroy_Serial(xdot);
+        N_VDestroy_Serial(x_old);
+        N_VDestroy_Serial(dx_old);
+        N_VDestroy_Serial(xdot_old);
         AMIFree(&ami_mem);
         DestroyMat(Jtmp);
         if (ne>0) {
             if(rootsfound) mxFree(rootsfound);
-        }
-        if (ne>0) {
+            if(rootvals) mxFree(rootvals);
             if(rootidx) mxFree(rootidx);
             if(sigma_z)    mxFree(sigma_z);
+            if(nroots)    mxFree(nroots);
+            if(discs)    mxFree(discs);
+            if(h)    mxFree(h);
+            
+            if(deltax)    mxFree(deltax);
+            if(deltasx)    mxFree(deltasx);
+            if(deltaxB)    mxFree(deltaxB);
+            if(deltaqB)    mxFree(deltaqB);
         }
         
-        if(sigma_y)    mxFree(sigma_y);
+        if(ny>0) {
+            if(sigma_y)    mxFree(sigma_y);
+        }
         if (sensi >= 1) {
             N_VDestroyVectorArray_Serial(sx,np);
             if (sensi_meth == AMI_FSA) {
@@ -375,6 +387,10 @@ freturn:
         }
     }
     
+    if(udata)   mxFree(plist);
+    if (sensi >= 1) {
+        if(udata)   mxFree(tmp_dxdotdp);
+    }
     if(ami_mem)     N_VDestroy_Serial(id);
 
     

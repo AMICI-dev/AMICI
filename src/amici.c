@@ -367,10 +367,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) discs = mxMalloc(nmaxevent*ne*sizeof(realtype));
         if(ne>0) h = mxMalloc(ne*sizeof(realtype));
         
-        deltax = mxMalloc(nx*sizeof(realtype));
-        deltasx = mxMalloc(nx*np*sizeof(realtype));
-        deltaxB = mxMalloc(nx*sizeof(realtype));
-        deltaqB = mxMalloc(np*sizeof(realtype));
+        if(ne>0) deltax = mxMalloc(nx*sizeof(realtype));
+        if(ne>0) deltasx = mxMalloc(nx*np*sizeof(realtype));
+        if(ne>0) deltaxB = mxMalloc(nx*sizeof(realtype));
+        if(ne>0) deltaqB = mxMalloc(np*sizeof(realtype));
         
         if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));

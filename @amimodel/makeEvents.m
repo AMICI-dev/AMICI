@@ -59,7 +59,11 @@ function [ this ] = makeEvents( this )
     end
     
     % update number of events
-    nevent = length(trigger);
+    if(exist('trigger','var'))
+        nevent = length(trigger);
+    else
+        nevent = 0;
+    end
     
     if(nevent>0)        
         % initialis tmp_bolus
@@ -79,9 +83,9 @@ function [ this ] = makeEvents( this )
                     % extract coefficient
                     cfp = coeffs(sym(symchar),polydirac);
                     % add coefficient to bolus
-                    tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp;
+                    tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(2);
                     % remove dirac
-                    symchar = strrep(symchar,'polydirac',0);
+                    symchar = strrep(symchar,'polydirac','0');
                 end
             end
             if(strfind(symchar,'heaviside'))

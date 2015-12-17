@@ -55,9 +55,9 @@ for j=transpose(ff(:));
         end
         
         % recombine
-        cstr = [cstr(1:(arg1start-1)) '(pow('                                                    cstr(arg1start:arg1end)   ','              cstr(arg2start:arg2end)                 '))'             cstr((arg2end+1):end)];
+        cstr = [cstr(1:(arg1start-1)) '(pow(' cstr(arg1start:arg1end) ',' cstr(arg2start:arg2end) '))' cstr((arg2end+1):end)];
         % compute new bracket level
-        brl  = [ brl(1:(arg1start-1)); brl(idx(1))+1; ones(3,1)*brl(idx(1))+1 ; brl(idx(1))+2 ; brl(arg1start:arg1end)+2 ; brl(idx(1))+2 ; brl(arg2start:arg2end)+2 ; brl(idx(1))+2; brl(idx(1))+1; brl((arg2end+1):end) ];
+        brl = cumsum(cstr == '(') - cumsum(cstr == ')');
         idx = strfind(cstr,'^');
     end
     cstr = deblank(cstr);
@@ -129,9 +129,19 @@ for j=transpose(ff(:));
         if(strcmp(this.funstr,'dydx'))
             cstr = strrep(cstr,'dydx_tmp','dydx');
         end
+        if(strcmp(this.funstr,'deltax'))
+            cstr = strrep(cstr,'deltax_tmp','deltax');
+        end
         if(strcmp(this.funstr,'deltasx'))
             cstr = strrep(cstr,'deltasx_tmp','deltasx');
         end
+        if(strcmp(this.funstr,'deltaxB'))
+            cstr = strrep(cstr,'deltaxB_tmp','deltaxB');
+        end
+        if(strcmp(this.funstr,'deltaqB'))
+            cstr = strrep(cstr,'deltaqB_tmp','deltaqB');
+        end
+        
     end
     
     %%

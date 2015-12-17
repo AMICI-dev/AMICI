@@ -277,8 +277,12 @@ function [this,model] = getSyms(this,model)
             this.sym = jacobian(model.fun.sigma_z.sym,p);
             
         case 'root'
-            this.sym = transpose([model.event.trigger]);
-            this = unifySyms(this,model);
+            if(nevent>0)
+                this.sym = transpose([model.event.trigger]);
+                this = unifySyms(this,model);
+            else
+                this.sym = sym(zeros(0,1));
+            end
             
         case 'drootdp'
             this.sym = jacobian(model.fun.root.sym,p);
@@ -305,8 +309,12 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'deltax'
-            this.sym = [model.event.bolus];
-            this = unifySyms(this,model);
+            if(nevent>0)
+                this.sym = [model.event.bolus];
+                this = unifySyms(this,model);
+            else
+                this.sym = sym(zeros(0,1));
+            end
             
         case 'deltaxdot'
             this.sym = model.fun.xdot.strsym-model.fun.xdot.strsym_old;
@@ -358,8 +366,12 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'z'
-            this.sym = transpose([model.event.z]);
-            this = unifySyms(this,model);
+            if(nevent>0)
+                this.sym = transpose([model.event.z]);
+                this = unifySyms(this,model);
+            else
+                this.sym = sym(zeros(0,1));
+            end
             % construct the event identifyer, this is a vector which maps
             % events to outputs z
             model.z2event = zeros(nz,1);

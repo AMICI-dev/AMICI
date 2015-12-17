@@ -12,6 +12,8 @@ model.maxsteps = 1e4;
 % 'lin' (default).
 model.param = 'log10'; 
 
+model.debug = true;
+
 %% STATES
 
 % create state syms
