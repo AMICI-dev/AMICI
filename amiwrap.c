@@ -29,7 +29,7 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    int ip, ix, jx, iy, it, ir; /* integers for indexing in loops */
+    int ip, ix, jx, iy, it, ir, ie; /* integers for indexing in loops */
     int jp; /* integers for indexing in loops */
     int ncheck; /* the number of (internal) checkpoints stored so far */
     
@@ -76,7 +76,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     cv_status = 0;
     
+    /*******************/
     /* FORWARD PROBLEM */
+    /*******************/
     
     ncheck = 0; /* the number of (internal) checkpoints stored so far */
     
@@ -96,7 +98,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     if (cv_status==AMI_ROOT_RETURN) {
                         discs[iroot] = t;
-                        iroot++;
+                        
+                        status = AMIGetRootInfo(ami_mem, rootsfound);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        
+                        for (ie=0; ie<ne; ie++) {
+                            rootidx[iroot*ne + ie] = rootsfound[ie];
+                        }
+                        
                         
                         if(sensi >= 1){
                             if (sensi_meth == AMI_FSA) {
@@ -157,6 +166,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         if (t==ts[it]) {
                             cv_status = 0;
                         }
+                        iroot++;
                     }
                 }
             }
@@ -207,47 +217,94 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
     }
     
+    /********************/
+    /* BACKWARD PROBLEM */
+    /********************/
+    
     if (sensi >= 1) {
-        /* only set output sensitivities if no errors occured */
         if(sensi_meth == AMI_ASA) {
             if(cv_status == 0) {
                 setupAMIB(&status, ami_mem, udata, tdata);
                 
                 it = nt-2;
-                while (it>0 || iroot>0) {
-                    /* enter while */
+                iroot--;
+                while (it>=0 || iroot>=0) {
                     
+                    /* check if next timepoint is a discontinuity or a data-point */
                     
-                    if (discs[iroot]>ts[it]) {
+                    if (it<0) {
                         tnext = discs[iroot];
                     } else {
-                        tnext = ts[it];
+                        if (iroot<0) {
+                            tnext = ts[it];
+                        } else {
+                            if (ne>0) {
+                                if (discs[iroot]>ts[it]) {
+                                    tnext = discs[iroot];
+                                } else {
+                                    tnext = ts[it];
+                                }
+                            } else {
+                                tnext = ts[it];
+                            }
+                        }
                     }
                     
-                    cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+
                     
-                    status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                    if (status != AMI_SUCCESS) goto freturn;
-                    status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                    if (status != AMI_SUCCESS) goto freturn;
-                    
-                    if (tnext == discs[iroot]) {
-                        /*status = fdeltaqB(t,deltaqB,x,xB,xQB,udata);
+                    if (tnext<t) {
+                        cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                        
+                        /* get states only if we actually integrated */
+                        status = AMIGetB(ami_mem, which, &t, xB, dxB);
                         if (status != AMI_SUCCESS) goto freturn;
-                        status = fdeltaxB(t,deltaxB,x,xB,udata);
-                        if (status != AMI_SUCCESS) goto freturn;*/
-                        
-                        xB_tmp = NV_DATA_S(xB);
-                        for (ix=0; ix<nx; ix++) {
-                            xB_tmp[ix] += deltaxB[ix];
-                        }
-                        
-                        xQB_tmp = NV_DATA_S(xQB);
-                        for (ip=0; ip<np; ip++) {
-                            xQB_tmp[ip] += deltaqB[ip];
-                        }
-                        iroot--;
+                        status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                        if (status != AMI_SUCCESS) goto freturn;
                     }
+                    
+                    /* handle discontinuity */
+                    
+                    if(ne>0){
+                        if (tnext == discs[iroot]) {
+                            
+                            /* store current values */
+                            N_VScale(1.0,xB,xB_old);
+                            N_VScale(1.0,xQB,xQB_old);
+                            
+                            xB_tmp = NV_DATA_S(xB);
+                            xQB_tmp = NV_DATA_S(xQB);
+                            
+                            for (ie=0; ie<ne; ie++) {
+                                
+                                if (rootidx[iroot*ne + ie] != 0) {
+                                    status = fdeltaqB(t,ie,deltaqB,x,xB_old,xQB_old,udata);
+                                    if (status != AMI_SUCCESS) goto freturn;
+                                    status = fdeltaxB(t,ie,deltaxB,x,xB_old,udata);
+                                    if (status != AMI_SUCCESS) goto freturn;
+                                    
+                                    for (ix=0; ix<nx; ix++) {
+                                        xB_tmp[ix] += deltaxB[ix];
+                                        if (nz>0) {
+                                            xB_tmp[ix] += drdx[nroots[ie] + nmaxevent*ix];
+                                        }
+                                    }
+                                    
+                                    for (ip=0; ip<np; ip++) {
+                                        xQB_tmp[ip] += deltaqB[ip];
+                                    }
+                                    nroots[ie]--;
+                                    
+                                }
+                            }
+                            
+                            updateHeavisideB(&status, iroot, udata, tdata);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            
+                            iroot--;
+                        }
+                    }
+                    
+                    /* handle data-point */
                     
                     if (tnext == ts[it]) {
                         xB_tmp = NV_DATA_S(xB);
@@ -255,16 +312,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             xB_tmp[ix] += dgdx[it+ix*nt];
                         }
                         getDiagnosisB(&status,it,ami_mem,udata,rdata,tdata);
+                        it--;
                     }
                     
+                    /* reinit states */
                     status = AMIReInitB(ami_mem, which, t, xB, dxB);
                     if (status != AMI_SUCCESS) goto freturn;
                     status = AMIQuadReInitB(ami_mem, which, xQB);
                     if (status != AMI_SUCCESS) goto freturn;
                     
-                    status = AMICalcICB(ami_mem, which, tstart, xB, dxB);
+                    status = AMICalcICB(ami_mem, which, t, xB, dxB);
                     if (status != AMI_SUCCESS) goto freturn;
                 }
+                
+                /* we still need to integrate from first datapoint to tstart */
+                
                 if (t>tstart) {
                     if(cv_status == 0) {
                         if (nx>0) {
@@ -305,7 +367,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     xQB_tmp = NV_DATA_S(xQB);
                     
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = - llhS0[ip] - dgdp[ip] - drdp[ip] - xQB_tmp[ip];
+                        llhSdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                        if (ny>0) {
+                            llhSdata[ip] -= dgdp[ip];
+                        }
+                        if (nz>0) {
+                            llhSdata[ip] -= drdp[ip];
+                        }
                     }
                     
                 } else {

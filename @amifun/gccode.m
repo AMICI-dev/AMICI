@@ -61,6 +61,7 @@ for j=transpose(ff(:));
         idx = strfind(cstr,'^');
     end
     cstr = deblank(cstr);
+    cstr = regexprep(cstr,'D\(\[([0-9]*)\]\, ([\w]*)\)\(','D$2\($1,'); % fix derivatives
     cstr = regexprep(cstr,'abs\(','fabs\('); % fix abs->fabs
 
     %%
@@ -90,9 +91,9 @@ for j=transpose(ff(:));
         
         if(strcmp(this.cvar,'qBdot'))
             cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
-        elseif(strcmp(this.cvar,'y') || strcmp(this.cvar,'dydp'))
+        elseif(strcmp(this.cvar,'y'))
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*$1\]']);
-        elseif(strcmp(this.cvar,'sy') || strcmp(this.cvar,'dydp'))
+        elseif(strcmp(this.cvar,'sy'))
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[it+nt*\($1+ip*ny\)\]']);
         elseif(strcmp(this.cvar,'z'))
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*$1\]']);
@@ -115,8 +116,8 @@ for j=transpose(ff(:));
         elseif(strcmp(this.cvar,'sroot') || strcmp(this.cvar,'srootval'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[nroots + nmaxroot*(ip*nr + $1)] = ']);
         elseif(strcmp(this.cvar,'dsigma_zdp')  || strcmp(this.cvar,'sz')|| strcmp(this.cvar,'dzdp'))
-            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ne + $1] = ']);
-        elseif(strcmp(this.cvar,'dsigma_ydp'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nz + $1] = ']);
+        elseif(strcmp(this.cvar,'dsigma_ydp') || strcmp(this.cvar,'dydp'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ny + $1] = ']);
         elseif(strcmp(this.cvar,'deltasx'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nx + $1] = ']);
@@ -124,7 +125,8 @@ for j=transpose(ff(:));
 
         
         for nvec = this.nvecs
-            cstr = strrep(cstr, [nvec{1} '['],[nvec{1} '_tmp[']);
+            nstr = strrep(nvec{1},'*','');
+            cstr = strrep(cstr, [nstr '['],[nstr '_tmp[']);
         end
         if(strcmp(this.funstr,'dydx'))
             cstr = strrep(cstr,'dydx_tmp','dydx');

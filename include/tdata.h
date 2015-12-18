@@ -7,8 +7,10 @@
 #define xdot tdata->am_xdot
 #define xdot_old tdata->am_xdot_old
 #define xB tdata->am_xB
+#define xB_old tdata->am_xB_old
 #define dxB tdata->am_dxB
 #define xQB tdata->am_xQB
+#define xQB_old tdata->am_xQB_old
 #define sx tdata->am_sx
 #define sdx tdata->am_sdx
 #define Jtmp tdata->am_Jtmp
@@ -88,11 +90,15 @@ typedef struct {
     /** old time derivative state vector */
     N_Vector am_xdot_old;
     /** adjoint state vector */
-    N_Vector am_xB; 
+    N_Vector am_xB;
+    /** old adjoint state vector */
+    N_Vector am_xB_old;
     /** differential adjoint state vector */
     N_Vector am_dxB; 
     /** quadrature state vector */
-    N_Vector am_xQB; 
+    N_Vector am_xQB;
+    /** old quadrature state vector */
+    N_Vector am_xQB_old;
     /** sensitivity state vector array */
     N_Vector *am_sx; 
     /** differential sensitivity state vector array */

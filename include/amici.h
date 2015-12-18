@@ -55,6 +55,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void 
 
 void initHeaviside(int *status, void  *user_data, void *temp_data);
 void updateHeaviside(int *status, void  *user_data, void *temp_data);
+void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data);
 
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);

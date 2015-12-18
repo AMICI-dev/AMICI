@@ -361,7 +361,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         
         if(ne>0) rootsfound = mxMalloc(ne*sizeof(int));
         if(ne>0) rootvals= mxMalloc(ne*sizeof(realtype));
-        if(ne>0) rootidx = mxMalloc(nmaxevent*ne*sizeof(int));
+        if(ne>0) rootidx = mxMalloc(nmaxevent*ne*ne*sizeof(int));
         if(ne>0) nroots = mxMalloc(ne*sizeof(int));
         if(ne>0) memset(nroots,0,ne*sizeof(int));
         if(ne>0) discs = mxMalloc(nmaxevent*ne*sizeof(realtype));
@@ -642,10 +642,12 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     int ix;
     
     xB = N_VNew_Serial(nx);
+    xB_old = N_VNew_Serial(nx);
     
     dxB = N_VNew_Serial(nx);
     
     xQB = N_VNew_Serial(np);
+    xQB_old = N_VNew_Serial(np);
     
     /* BACKWARD PROBLEM */
     
@@ -1127,12 +1129,12 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                 
                 for (ip=0; ip<np; ip++) {
                     if(event_model == AMI_NORMAL) {
-                        drdp[nroots[ie] + nmaxevent*(ip + np*iz)] += dsigma_zdp[ip*ne+ie]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[ie] , 2) - dsigma_zdp[ip*ne+ie]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
+                        drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*ne+ie]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[ie] , 2) - dsigma_zdp[ip*ne+ie]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
                     }
                 }
                 for (ix=0; ix<nx; ix++) {
                     if(event_model  == AMI_NORMAL) {
-                        drdx[nroots[ie] + nmaxevent*(ix + nx*iz)] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
+                        drdx[nroots[ie] + nmaxevent*ix] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
                     }
                 }
             }
@@ -1242,9 +1244,6 @@ int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_
         AMIRootInit(ami_mem, 0, NULL);
         cv_status = 0;
     }
-    
-    *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return(*status);
     
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
@@ -1462,6 +1461,35 @@ void updateHeaviside(int *status, void  *user_data, void *temp_data) {
     
     for (ie = 0; ie<ne; ie++) {
         h[ie] += rootsfound[ie];
+    }
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/*******************************************************************************/
+
+void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data) {
+    /**
+     * updateHeaviside updates the heaviside variables h on event occurences
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    int ie;
+    
+    UserData udata; /* user udata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    tdata = (TempData) temp_data;
+    
+    /* rootsfound provides the direction of the zero-crossing, so adding it will give
+     the right update to the heaviside variables */
+    
+    for (ie = 0; ie<ne; ie++) {
+        h[ie] -= rootidx[iroot*ne + ie];
     }
 }
 
