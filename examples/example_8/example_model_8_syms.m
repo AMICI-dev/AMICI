@@ -1,7 +1,6 @@
 function model = example_model_8_syms()
     
     model.param = 'lin';
-    model.debug = true;
     model.recompile = true;
     
     syms a b c d
@@ -26,15 +25,16 @@ function model = example_model_8_syms()
     
     x0 = v0;
     
-    root = v-1;
+    sym('t');
+    event(1) = amievent(v-1/2,x^2,t);
     
     model.sym.p = p;
     model.sym.k = k;
     model.sym.x = x;
     model.sym.y = y;
     model.sym.f = f;
-    model.sym.root = root;
     model.sym.x0 = x0;
+    model.event = event;
     
     
 end

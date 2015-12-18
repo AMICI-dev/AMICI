@@ -62,6 +62,7 @@ plot(t,abs(sol.x-X_ode15s),'--')
 set(gca,'YScale','log')
 legend('error x1','error x2','error x3','Location','NorthEastOutside')
 legend boxoff
+ylabel('x')
 
 subplot(2,2,3)
 plot(t,sol.y,'.-','Color',c_x(1,:))
@@ -113,16 +114,16 @@ for ip = 1:4
         plot(t,sol.sx(:,ix,ip),'.-','Color',c_x(ix,:))
         plot(t,sx_fd(:,ix,ip),'d','Color',c_x(ix,:))
     end
-    legend('x1','x1_{fd}','x2','x2_{fd}','x3','x3_{fd}','Location','NorthEastOutside')
+    legend('sx1','sx1_{fd}','sx2','sx2_{fd}','sx3','sx3_{fd}','Location','NorthEastOutside')
     legend boxoff
     title(['state sensitivity for p' num2str(ip)])
     xlabel('time t')
-    ylabel('x')
+    ylabel('sx')
     box on
     
     subplot(4,2,ip*2)
     plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'--')
-    legend('error x1','error x2','error x3','Location','NorthEastOutside')
+    legend('error sx1','error sx2','error sx3','Location','NorthEastOutside')
     legend boxoff
     title(['state sensitivity for p' num2str(ip)])
     xlabel('time t')
@@ -140,16 +141,16 @@ for ip = 1:4
         plot(t,sol.sy(:,iy,ip),'.-','Color',c_x(iy,:))
         plot(t,sy_fd(:,iy,ip),'d','Color',c_x(iy,:))
     end
-    legend('y1','y1_fd','Location','NorthEastOutside')
+    legend('sy1','sy1_fd','Location','NorthEastOutside')
     legend boxoff
     title(['observable sensitivity for p' num2str(ip)])
     xlabel('time t')
-    ylabel('y')
+    ylabel('sy')
     box on
     
     subplot(4,2,ip*2)
     plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'--')
-    legend('error y1','Location','NorthEastOutside')
+    legend('error sy1','Location','NorthEastOutside')
     legend boxoff
     title(['error observable sensitivity for p' num2str(ip)])
     xlabel('time t')
@@ -169,7 +170,7 @@ legend('x3==x2','x3==x1','x3==x2 fd','x3==x1 fd','Location','NorthEastOutside')
 legend boxoff
 title(['event sensitivity for p' num2str(ip)])
 xlabel('event #')
-ylabel('y')
+ylabel('sz')
 box on
 
 subplot(4,2,2*ip)
@@ -178,7 +179,7 @@ legend('error x3==x2','error x3==x1','Location','NorthEastOutside')
 legend boxoff
 title(['error event sensitivity for p' num2str(ip)])
 xlabel('event #')
-ylabel('y')
+ylabel('sz')
 box on
 end
 set(gcf,'Position',[100 300 1200 500])

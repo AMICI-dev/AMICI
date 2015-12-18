@@ -125,6 +125,16 @@ classdef amimodel
                     if(isfield(model,props{j}))
                        AM.(props{j}) = model.(props{j});
                     end
+                else
+                    if(~isfield(AM.sym,'xdot'))
+                        if(isfield(AM.sym,'f'))
+                           AM.sym.xdot = AM.sym.f;
+                           AM.sym = rmfield(AM.sym,'f');
+                        else
+                            error('field xdot/f is missing in model definition')
+                        end
+                        
+                    end
                 end
             end
 

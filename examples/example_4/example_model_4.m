@@ -5,9 +5,9 @@ amiwrap('model_example_4','example_model_4_syms',exdir)
 
 num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
 
-t = num(2,1);
+t = num(:,1);
 
-D.Y = num(2,[2,4,6]);
+D.Y = num(:,[2,4,6]);
 D.Sigma_Y = NaN(size(D.Y));
 
 

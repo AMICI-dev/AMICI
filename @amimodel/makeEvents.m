@@ -22,7 +22,7 @@ function [ this ] = makeEvents( this )
     end
     
     ievent = nevent;
-    nx = length(this.sym.xdot);
+    nx = length(this.sym.x);
     
     for ix = 1:nx
         tmp_str = char(this.sym.xdot(ix));

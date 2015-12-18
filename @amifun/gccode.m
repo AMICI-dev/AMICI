@@ -29,8 +29,7 @@ for j=transpose(ff(:));
     idx = strfind(cstr,'^');
     % parse brackets
     if(~isempty(idx))
-        % compute bracket levels add one for each (, remove 1 for each )
-        brl = cumsum(cstr == '(') - cumsum(cstr == ')');
+        brl = computeBracketLevel(cstr);
     end
     while(~isempty(idx))
         samebrl = find(brl == brl(idx(1))); % find bracket level same as found level
@@ -57,7 +56,7 @@ for j=transpose(ff(:));
         % recombine
         cstr = [cstr(1:(arg1start-1)) '(pow(' cstr(arg1start:arg1end) ',' cstr(arg2start:arg2end) '))' cstr((arg2end+1):end)];
         % compute new bracket level
-        brl = cumsum(cstr == '(') - cumsum(cstr == ')');
+        brl = computeBracketLevel(cstr);
         idx = strfind(cstr,'^');
     end
     cstr = deblank(cstr);
