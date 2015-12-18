@@ -368,7 +368,7 @@ function this = compileC(this)
     for j=1:length(this.funs)
         if(this.cfun(1).(this.funs{j}))
             fprintf([this.funs{j} ' | ']);
-            eval(['mex -g ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' "' fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]) '" ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
+            eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' "' fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]) '" ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
             hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']),'w');
             fprintf(fid,hash);
