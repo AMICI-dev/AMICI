@@ -1612,7 +1612,9 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
 
 realtype getTnext(realtype troot, int iroot, realtype tdata, int it, void *user_data) {
     /**
-     * handleDataPoint executes everything necessary for the handling of data points
+     * getTnext computes the next timepoint to integrate to. This is the maximum of
+     * tdata and troot but also takes into account if it<0 or iroot<0 where these expressions
+     * do not necessarily make sense
      *
      * @param[in] troot timepoint of next event @type realtype
      * @param[in] iroot index of next event @type int
