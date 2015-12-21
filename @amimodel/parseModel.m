@@ -3,47 +3,7 @@ function this = parseModel(this)
     %
     % Return values:
     %  this: updated model definition object @type amimodel
-    
-    % check whether sym is properly defined
-    if(~isfield(this.sym,'x'))
-        error('Model this is missing the definition of the state vector x (.sym.x)!')
-    end
-    if(~isfield(this.sym,'xdot') && ~isfield(this.sym,'f'))
-        error('Model this is missing the definition of the right hand side (.sym.xdot) or (.sym.f)!')
-    end
-    if(isfield(this.sym,'f'))
-        if(isfield(this.sym,'xdot'))
-            if(~isequaln(this.sym.f,this.sym.xdot))
-                error('Model this contains conflicting definitions sym.f and sym.xdot of DE right hand side');
-            end
-        else
-            this.sym.xdot = this.sym.f;
-        end
-    end
-    
-    if(~isfield(this.sym,'p'))
-        error('Model this is missing the definition of the parameter vector p (.sym.p)!')
-    end
-    if(~isfield(this.sym,'x0'))
-        error('Model this is missing the definition of the vector of initial conditions x0 (.sym.x0)!')
-    end
-    if(~isfield(this.sym,'y'))
-        error('Model this is missing the definition of the vector of observables y (.sym.y)!')
-    end
-    if(size(this.sym.x,1)<size(this.sym.x,2))
-        this.sym.x = transpose(this.sym.x);
-    end
-    if(size(this.sym.xdot,1)<size(this.sym.xdot,2))
-        this.sym.xdot = transpose(this.sym.xdot);
-    end
-    
-    if(size(this.sym.x0,1)<size(this.sym.x0,2))
-        this.sym.x0 = transpose(this.sym.x0);
-    end
-    if(~all([size(this.sym.x,2)==size(this.sym.xdot,2),size(this.sym.xdot,2)==size(this.sym.x0,2)]))
-        error('Sizes of x0, xdot and x do not agree!')
-    end
-    
+
     % complete optional fields
     if(~isfield(this.sym,'u'))
         this.sym.u = sym.empty(0,0);
@@ -51,6 +11,14 @@ function this = parseModel(this)
     if(~isfield(this.sym,'k'))
         this.sym.k = sym.empty(0,0);
     end
+    if(~isfield(this.sym,'Jy'))
+        this.sym.Jy = sym('log(2*pi*sigma_y^2) + ((y-my)/sigma_y)^2');
+    end
+    if(~isfield(this.sym,'Jz'))
+        this.sym.Jz = sym('log(2*pi*sigma_z^2) + ((z-mz)/sigma_z)^2');
+    end
+        
+    
     if(isfield(this.sym,'root'))
         error('The definition of events via a root function is deprecated and no longer supported. Please update the model definition syntax!')
     end
@@ -69,13 +37,6 @@ function this = parseModel(this)
     
     if(any(ismember(this.sym.k,this.sym.p)))
         error(['Invalid Model: ' char(this.sym.k(find(ismember(this.sym.k,this.sym.p),1))) ' is contained in both p and k!'])
-    end
-    
-    % check whether we have a DAE or ODE
-    if(isfield(this.sym,'M'))
-        this.wtype = 'iw'; % DAE
-    else
-        this.wtype = 'cw'; % ODE
     end
 
     % load old hashes

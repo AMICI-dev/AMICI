@@ -58,7 +58,7 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
 void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_data);
 void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void *temp_data);
 
-realtype getTnext(realtype troot, int iroot, realtype tdata, int it, void *user_data);
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *user_data);
 
 void initHeaviside(int *status, void  *user_data, void *temp_data);
 void updateHeaviside(int *status, void  *user_data, void *temp_data);

@@ -36,7 +36,7 @@ classdef amifun
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
             AF = AF.getFArgs();
-            AF = AF.getNVecs(model);
+            AF = AF.getNVecs();
             AF = AF.getCVar();
             AF = AF.getSensiFlag();
         end
@@ -53,7 +53,7 @@ classdef amifun
         
         [ this ] = getArgs(this,model)
         
-        [ this ] = getNVecs(this,model)
+        [ this ] = getNVecs(this)
         
         [ this ] = getCVar(this)
         

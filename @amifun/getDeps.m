@@ -194,6 +194,28 @@ function [ this ] = getDeps(this, model)
         
         case 'deltaxdot'
             this.deps = {};
+            
+        case 'Jy'
+            this.deps = {'y','sigma_y','p'};
+        case 'dJydx'
+            this.deps = {'Jy','x'};
+        case 'dJydsigma'
+            this.deps = {'Jy','sigma_y'};
+        case 'dJydp'
+            this.deps = {'Jy','p','dJydsigma'};
+        case 'sJy'
+            this.deps = {'dJydp','dJydx','sy'};
+            
+        case 'Jz'
+            this.deps = {'z','sigma_z','p'};
+        case 'dJzdx'
+            this.deps = {'Jz','x'};
+        case 'dJzdsigma'
+            this.deps = {'Jz','sigma_z'};
+        case 'dJzdp'
+            this.deps = {'Jz','p','dJzdsigma'};
+        case 'sJz'
+            this.deps = {'dJzdp','dJydx','sz'};
 
 
         otherwise

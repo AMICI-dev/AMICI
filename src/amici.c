@@ -582,6 +582,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 which = 0;
                 
+                if(ne>0) x_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
@@ -1290,7 +1292,6 @@ int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_
                 for (iz=0; iz<nz; iz++) {
                     if(z2event[iz] == ie) {
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
-                        
                     }
                 }
                 
@@ -1357,99 +1358,6 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
             nroots[ie]++;
         }
     }
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
-    /**
-     * handleEvent executes everything necessary for the handling of events
-     *
-     * @param[out] status flag indicating success of execution @type *int
-     * @param[out] iroot index of event @type int
-     * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return void
-     */
-    
-    int ie;
-    
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-    
-    *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return;
-    
-    for (ie=0; ie<ne; ie++) {
-        rootidx[iroot*ne + ie] = rootsfound[ie];
-    }
-    
-    
-    if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
-            *status = AMIGetSens(ami_mem, &t, sx);
-            if (*status != AMI_SUCCESS) return;
-        }
-    }
-    
-    *status = getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
-    if (*status != AMI_SUCCESS) return;
-    
-    /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
-    if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
-            N_VScale(1.0,x,x_old);
-            
-            *status = fxdot(t,x,dx,xdot,udata);
-            N_VScale(1.0,xdot,xdot_old);
-            N_VScale(1.0,dx,dx_old);
-        }
-    }
-    
-    applyEventBolus(status, ami_mem, udata, tdata);
-    if (*status != AMI_SUCCESS) return;
-    
-    updateHeaviside(status, udata, tdata);
-    if (*status != AMI_SUCCESS) return;
-    
-    *status = AMIReInit(ami_mem, t, x, dx);
-    if (*status != AMI_SUCCESS) return;
-    
-    /* make time derivative consistent */
-    *status = AMICalcIC(ami_mem, t);
-    if (*status != AMI_SUCCESS) return;
-    
-    if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
-            
-            /* compute the new xdot  */
-            *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-            applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
-            if (*status != AMI_SUCCESS) return;
-            
-            if(sensi >= 1){
-                if (sensi_meth == AMI_FSA) {
-                    *status = AMISensReInit(ami_mem, ism, sx, sdx);
-                    if (*status != AMI_SUCCESS) return;
-                }
-            }
-        }
-    }
-
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1552,6 +1460,105 @@ void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+    /**
+     * handleEvent executes everything necessary for the handling of events
+     *
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[out] iroot index of event @type int
+     * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] exp_data pointer to the experimental data struct @type ExpData
+     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    int ie;
+    
+    UserData udata; /* user udata */
+    ReturnData rdata; /* return rdata */
+    ExpData edata; /* exp edata */
+    TempData tdata; /* temp tdata */
+    udata = (UserData) user_data;
+    rdata = (ReturnData) return_data;
+    edata = (ExpData) exp_data;
+    tdata = (TempData) temp_data;
+    
+    *status = AMIGetRootInfo(ami_mem, rootsfound);
+    if (*status != AMI_SUCCESS) return;
+    
+    for (ie=0; ie<ne; ie++) {
+        rootidx[iroot*ne + ie] = rootsfound[ie];
+    }
+    
+    
+    if(sensi >= 1){
+        if (sensi_meth == AMI_FSA) {
+            *status = AMIGetSens(ami_mem, &t, sx);
+            if (*status != AMI_SUCCESS) return;
+        }
+    }
+    
+    *status = getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
+    if (*status != AMI_SUCCESS) return;
+    
+    /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
+    if(sensi >= 1){
+        if (sensi_meth == AMI_FSA) {
+            /* store x and xdot to compute jump in sensitivities */
+            N_VScale(1.0,x,x_old);
+            
+            *status = fxdot(t,x,dx,xdot,udata);
+            N_VScale(1.0,xdot,xdot_old);
+            N_VScale(1.0,dx,dx_old);
+        }
+        
+        if (sensi_meth == AMI_FSA) {
+            /* store x to compute jump in discontinuity */
+            N_VScale(1.0,x,x_disc[iroot]);
+        }
+    }
+    
+    applyEventBolus(status, ami_mem, udata, tdata);
+    if (*status != AMI_SUCCESS) return;
+    
+    updateHeaviside(status, udata, tdata);
+    if (*status != AMI_SUCCESS) return;
+    
+    *status = AMIReInit(ami_mem, t, x, dx);
+    if (*status != AMI_SUCCESS) return;
+    
+    /* make time derivative consistent */
+    *status = AMICalcIC(ami_mem, t);
+    if (*status != AMI_SUCCESS) return;
+    
+    if(sensi >= 1){
+        if (sensi_meth == AMI_FSA) {
+            
+            /* compute the new xdot  */
+            *status = fxdot(t,x,dx,xdot,udata);
+            if (*status != AMI_SUCCESS) return;
+            
+            applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
+            if (*status != AMI_SUCCESS) return;
+            
+            if(sensi >= 1){
+                if (sensi_meth == AMI_FSA) {
+                    *status = AMISensReInit(ami_mem, ism, sx, sdx);
+                    if (*status != AMI_SUCCESS) return;
+                }
+            }
+        }
+    }
+    
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
 void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void *temp_data) {
     /**
      * handleEventB executes everything necessary for the handling of events for the backward problem
@@ -1583,9 +1590,9 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     for (ie=0; ie<ne; ie++) {
         
         if (rootidx[iroot*ne + ie] != 0) {
-            *status = fdeltaqB(t,ie,deltaqB,x,xB_old,xQB_old,udata);
+            *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,udata);
             if (*status != AMI_SUCCESS) return;
-            *status = fdeltaxB(t,ie,deltaxB,x,xB_old,udata);
+            *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,udata);
             if (*status != AMI_SUCCESS) return;
             
             for (ix=0; ix<nx; ix++) {
@@ -1610,7 +1617,7 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-realtype getTnext(realtype troot, int iroot, realtype tdata, int it, void *user_data) {
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *user_data) {
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum of
      * tdata and troot but also takes into account if it<0 or iroot<0 where these expressions
@@ -1629,19 +1636,19 @@ realtype getTnext(realtype troot, int iroot, realtype tdata, int it, void *user_
     udata = (UserData) user_data;
     
     if (it<0) {
-        tnext = troot;
+        tnext = troot[iroot];
     } else {
         if (iroot<0) {
-            tnext = tdata;
+            tnext = tdata[it];
         } else {
             if (ne>0) {
                 if (troot>tdata) {
-                    tnext = troot;
+                    tnext = troot[iroot];
                 } else {
-                    tnext = tdata;
+                    tnext = tdata[it];
                 }
             } else {
-                tnext = tdata;
+                tnext = tdata[it];
             }
         }
     }

@@ -110,7 +110,7 @@ function [ this ] = makeEvents( this )
         
         % update events
         for ievent = 1:nevent
-            this.event(ievent) = amievent(trigger{ievent},bolus{ievent},z{ievent});
+            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent}(:));
         end
         
     end

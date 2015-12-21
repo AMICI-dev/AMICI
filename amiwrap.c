@@ -136,7 +136,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 while (it>=0 || iroot>=0) {
                     
                     /* check if next timepoint is a discontinuity or a data-point */
-                    tnext = getTnext(discs[iroot], iroot, ts[it], it, udata);
+                    tnext = getTnext(discs, iroot, ts, it, udata);
                     
                     if (tnext<t) {
                         cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);

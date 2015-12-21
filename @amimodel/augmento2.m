@@ -12,33 +12,27 @@ function [this] = augmento2(this)
     syms Sx Sdot Sy S0
    
     
-    this.nxtrue = length(this.sym.x); %! number of states
-    this.nytrue = length(this.sym.y); %! number of observables
+    this.nxtrue = length(this.sym.x); % number of states
+    this.nytrue = length(this.sym.y); % number of observables
+    this.nztrue = length([this.event.z]); % number of observables
     
-    
+    % augment states
     Sx = sym(zeros(length(this.sym.x),length(this.sym.p)));
-    
     for j = 1:length(this.sym.x)
         for k = 1:length(this.sym.p)
             eval(['syms S' num2str(j) '_' num2str(k)]);
             eval(['Sx(j,k) = S' num2str(j) '_' num2str(k) ';']);
         end
     end
-    
     Sdot = jacobian(this.sym.xdot,this.sym.x)*Sx+jacobian(this.sym.xdot,this.sym.p);
     
+    % augment output
     Sy = jacobian(this.sym.y,this.sym.x)*Sx+jacobian(this.sym.y,this.sym.p);
     
-    if(size(this.sym.y,2)>size(this.sym.y,1))
-        this.sym.y = transpose(this.sym.y);
+    for ievent = 1:length(this.event);
+        Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
+        this.event(ievent).z = [this.event(ievent).z;reshape(Sz,[numel(Sz),1])];
     end
-    if(size(this.sym.x,2)>size(this.sym.x,1))
-        this.sym.x = transpose(this.sym.x);
-    end
-    if(size(this.sym.xdot,2)>size(this.sym.xdot,1))
-        this.sym.xdot = transpose(this.sym.xdot);
-    end
-    
     
     S0 = jacobian(this.sym.x0,this.sym.p);
     

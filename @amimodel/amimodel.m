@@ -126,14 +126,47 @@ classdef amimodel
                        AM.(props{j}) = model.(props{j});
                     end
                 else
+                    % check whether sym is properly defined
                     if(~isfield(AM.sym,'xdot'))
                         if(isfield(AM.sym,'f'))
-                           AM.sym.xdot = AM.sym.f;
+                           AM.sym.xdot = AM.sym.f(:);
                            AM.sym = rmfield(AM.sym,'f');
                         else
                             error('field xdot/f is missing in model definition')
                         end
-                        
+                    else
+                        if(isfield(AM.sym,'f'))
+                            if(~isequaln(this.sym.f,this.sym.xdot))
+                                error('Model this contains conflicting definitions sym.f and sym.xdot of DE right hand side');
+                            end
+                        else
+                            AM.sym.xdot = AM.sym.xdot(:);
+                        end
+                    end
+                    
+                    if(~isfield(AM.sym,'x'))
+                        error('Model this is missing the definition of the state vector x (.sym.x)!')
+                    else
+                        AM.sym.x = AM.sym.x(:);
+                    end
+                    
+                    if(~isfield(AM.sym,'p'))
+                        error('Model this is missing the definition of the parameter vector p (.sym.p)!')
+                    else
+                        AM.sym.p = AM.sym.p(:);
+                    end
+                    if(~isfield(AM.sym,'x0'))
+                        error('Model this is missing the definition of the vector of initial conditions x0 (.sym.x0)!')
+                    else
+                        AM.sym.x0 = AM.sym.x0(:);
+                    end
+                    if(~isfield(AM.sym,'y'))
+                        error('Model this is missing the definition of the vector of observables y (.sym.y)!')
+                    else
+                        AM.sym.y = AM.sym.y(:);
+                    end
+                    if(~all([size(AM.sym.x,2)==size(AM.sym.xdot,2),size(AM.sym.xdot,2)==size(AM.sym.x0,2)]))
+                        error('Sizes of x0, xdot and x do not agree!')
                     end
                 end
             end
@@ -150,6 +183,13 @@ classdef amimodel
                 end
             end
             AM = AM.makeEvents();
+            
+            % check whether we have a DAE or ODE
+            if(isfield(AM.sym,'M'))
+                AM.wtype = 'iw'; % DAE
+            else
+                AM.wtype = 'cw'; % ODE
+            end
         end
         
         this = parseModel(this)

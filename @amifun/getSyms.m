@@ -18,6 +18,7 @@ function [this,model] = getSyms(this,model)
     np = model.np;
     nk = model.nk;
     nz = model.nz;
+    ny = model.ny;
     
     fprintf([this.funstr ' | '])
     switch(this.funstr)
@@ -125,11 +126,25 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_y'
             this.sym = model.sym.sigma_y;
+            sdys = cell(ny,1);
+            % fill cell array
+            for j=1:ny
+                sdys{j} = sprintf('sdy_%i',j-1);
+            end
+            % transform into symbolic expression
+            this.strsym = sym(sdys);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
         case 'sigma_z'
             this.sym = model.sym.sigma_z;
+            sdzs = cell(nz,1);
+            % fill cell array
+            for j=1:nz
+                sdzs{j} = sprintf('sdz_%i',j-1);
+            end
+            % transform into symbolic expression
+            this.strsym = sym(sdzs);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -415,6 +430,29 @@ function [this,model] = getSyms(this,model)
             %do nothing 
         case 'JSparseB'
             %do nothing 
+            
+        case 'Jy'
+            this.sym = model.sym.Jy;
+        case 'dJydx'
+            this.sym = jacobian(model.fun.Jy.syms,x);
+        case 'dJydsigma'
+            this.sym = jacobian(model.fun.Jy.syms,model.fun.sigma_y.strsyms);
+        case 'dJydp'
+            this.sym = jacobian(model.fun.Jy.syms,p) + model.fun.dJydsigma.syms*model.fun.dsigma_ydp.syms;
+        case 'sJy'
+            this.sym = model.fun.dJydx.syms*sx + model.fun.dJydp.syms;
+            
+        case 'Jz'
+            this.sym = model.sym.Jz;
+        case 'dJzdx'
+            this.sym = jacobian(model.fun.Jy.syms,x);
+        case 'dJzdsigma'
+            this.sym = jacobian(model.fun.Jz.syms,model.fun.sigma_z.strsyms);
+        case 'dJzdp'
+            this.sym = jacobian(model.fun.Jz.syms,p) + model.fun.dJzdsigma.syms*model.fun.dsigma_zdp.syms;
+        case 'sJz'
+            this.sym = model.fun.dJzdx.syms*sx + model.fun.dJzdp.syms;
+
             
         otherwise
             error('unknown function name')

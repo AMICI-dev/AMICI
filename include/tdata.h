@@ -2,6 +2,7 @@
 
 #define x tdata->am_x
 #define x_old tdata->am_x_old
+#define x_disc tdata->am_x_disc
 #define dx tdata->am_dx
 #define dx_old tdata->am_dx_old
 #define xdot tdata->am_xdot
@@ -79,8 +80,10 @@ typedef struct {
     
     /** state vector */
     N_Vector am_x; 
-    /** old differential state vector */
+    /** old state vector */
     N_Vector am_x_old;
+    /** array of state vectors at discontinuities*/
+    N_Vector *am_x_disc;
     /** differential state vector */
     N_Vector am_dx;
     /** old differential state vector */

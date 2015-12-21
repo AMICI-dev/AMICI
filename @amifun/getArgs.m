@@ -115,6 +115,22 @@ function this = getArgs(this,model)
             this.argstr = '(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data)';
         case 'root'
             this.argstr = '(realtype t, N_Vector x, realtype *root, void *user_data)';
+        case 'Jy'
+            this.argstr = '(realtype t, int it, N_Vector x, realtype *ybar, realtype *sigma_y, void *user_data)';
+        case 'dJydx'
+            this.argstr = '(realtype t, int it, N_Vector x, realtype *ybar, realtype *sigma_y, void *user_data)';
+        case 'dJydp'
+            this.argstr = '(realtype t, int it, N_Vector x, realtype *ybar, realtype *sigma_y, realtype *dsigma_ydp, void *user_data)';
+        case 'sJy'
+            this.argstr = '(realtype t, int it, N_Vector x, N_Vector *sx, realtype *ybar, realtype *sigma_y, realtype *dsigma_ydp, void *user_data)';
+        case 'Jz'
+            this.argstr = '(realtype t, int ie, N_Vector x, realtype *zbar, realtype *sigma_z, void *user_data)';
+        case 'dJzdx'
+            this.argstr = '(realtype t, int ie, N_Vector x, realtype *zbar, realtype *sigma_z, void *user_data)';
+        case 'dJzdp'
+            this.argstr = '(realtype t, int ie, N_Vector x, realtype *zbar, realtype *sigma_z, realtype *dsigma_zdp, void *user_data)';
+        case 'sJz'
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, realtype *zbar, realtype *sigma_z, realtype *dsigma_zdp, void *user_data)';
         otherwise
             % do nothing
     end
