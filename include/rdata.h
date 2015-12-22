@@ -4,12 +4,8 @@
 #define dydxdata rdata->am_dydxdata
 #define dydpdata rdata->am_dydpdata
 #define Jdata rdata->am_Jdata
-#define rootdata rdata->am_rootdata
-#define rootSdata rdata->am_rootSdata
-#define rootS2data rdata->am_rootS2data
-#define rootvaldata rdata->am_rootvaldata
-#define rootvalSdata rdata->am_rootvalSdata
-#define rootvalS2data rdata->am_rootvalS2data
+#define zdata rdata->am_zdata
+#define zSdata rdata->am_zSdata
 #define xdata rdata->am_xdata
 #define xSdata rdata->am_xSdata
 #define ydata rdata->am_ydata
@@ -53,18 +49,10 @@ typedef struct {
     double *am_dydpdata; 
     /** Jacobian of differential equation right hand side */
     double *am_Jdata; 
-    /** events */
-    double *am_rootdata;
-    /** parameter derivative of events */
-    double *am_rootSdata;
-    /** second order parameter derivative of events */
-    double *am_rootS2data; 
-    /** value of event function */
-    double *am_rootvaldata;
-    /** parameter derivative of event function */
-    double *am_rootvalSdata;
-    /** second order parameter derivative of event function */
-    double *am_rootvalS2data; /** returned vector */
+    /** event output */
+    double *am_zdata;
+    /** parameter derivative of event output */
+    double *am_zSdata;
     /** state */
     double *am_xdata;
     /** parameter derivative of state */

@@ -12,8 +12,8 @@ function this = generateM(this, amimodelo2)
     ny = this.ny;
     np = this.np;
     nk = this.nk;
-    ndisc = this.ndisc;
-    nr = this.nr;
+    nevent = this.nevent;
+    nz = this.nz;
     nnz = this.nnz;
     
     o2flag = ~isempty(amimodelo2);
@@ -121,10 +121,8 @@ function this = generateM(this, amimodelo2)
         '%% sol.sx ... time-resolved state sensitivity vector\n'...
         '%% sol.sy ... time-resolved output sensitivity vector\n'...
         '%% sol.xdot time-resolved right-hand side of differential equation\n'...
-        '%% sol.rootval value of root at end of simulation time\n'...
-        '%% sol.srootval value of root at end of simulation time\n'...
-        '%% sol.root time of events\n'...
-        '%% sol.sroot value of root at end of simulation time\n'...
+        '%% sol.z event output\n'...
+        '%% sol.sz sensitivity of event output\n'...
         ]);
     fprintf(fid,['function varargout = simulate_' this.modelname '(varargin)\n\n']);
     fprintf(fid,['%% DO NOT CHANGE ANYTHING IN THIS FILE UNLESS YOU ARE VERY SURE ABOUT WHAT YOU ARE DOING\n']);
@@ -171,8 +169,7 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['options_ami.maxsteps = ' num2str(this.maxsteps) ';\n']);
     fprintf(fid,['options_ami.sens_ind = 1:' num2str(np) ';\n']);
     fprintf(fid,['options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n\n']);
-    fprintf(fid,['options_ami.nr = ' num2str(nr) '; %% MUST NOT CHANGE THIS VALUE\n']);
-    fprintf(fid,['options_ami.ndisc = ' num2str(ndisc) '; %% MUST NOT CHANGE THIS VALUE\n']);
+    fprintf(fid,['options_ami.ne = ' num2str(nevent) '; %% MUST NOT CHANGE THIS VALUE\n']);
     
     fprintf(fid,['options_ami.tstart = ' num2str(this.t0) ';\n']);
     fprintf(fid,['options_ami.lmm = 2;\n']);
@@ -186,10 +183,10 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['options_ami.ism = 1;\n']);
     fprintf(fid,['options_ami.sensi_meth = ''forward'';\n\n']);
     fprintf(fid,['options_ami.sensi = 0;\n\n']);
-    fprintf(fid,['options_ami.nmaxroot = 100;\n']);
-    fprintf(fid,['options_ami.nmaxdisc = 100;\n\n']);
-    fprintf(fid,['options_ami.ubw = ' num2str(this.ubw) ';\n']);
-    fprintf(fid,['options_ami.lbw = ' num2str(this.lbw)  ';\n\n']);
+    fprintf(fid,['options_ami.nmaxevent = 10;\n']);
+    fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
+    fprintf(fid,['options_ami.ubw = ' num2str(this.ubw) '; %% MUST NOT CHANGE THIS VALUE\n']);
+    fprintf(fid,['options_ami.lbw = ' num2str(this.lbw)  '; %% MUST NOT CHANGE THIS VALUE\n\n']);
     fprintf(fid,['options_ami.data_model = 1;\n']);
     fprintf(fid,['options_ami.event_model = 1;\n\n']);
     fprintf(fid,['options_ami.ordering = 1;\n\n']);
@@ -215,8 +212,7 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['sol.root = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
-    fprintf(fid,['sol.rootval = NaN(options_ami.nmaxroot,' num2str(nr) ');\n']);
+    fprintf(fid,['sol.z = NaN(options_ami.nmaxevent,' num2str(nz) ');\n']);
     if(o2flag)
         fprintf(fid,['if(nargout>1)\n']);
         fprintf(fid,['    if(nargout>6)\n']);
@@ -281,6 +277,7 @@ function this = generateM(this, amimodelo2)
         fprintf(fid,'if(options_ami.sensi<2)\n');
         fprintf(fid,['    options_ami.nx = ' num2str(nxtrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['    options_ami.ny = ' num2str(nytrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
+        fprintf(fid,['    options_ami.nz = ' num2str(nztrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['    options_ami.nnz = ' num2str(this.nnz) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['    sol.x = NaN(length(tout),' num2str(nxtrue) ');\n']);
         fprintf(fid,['    sol.y = NaN(length(tout),' num2str(nytrue) ');\n']);
@@ -304,6 +301,7 @@ function this = generateM(this, amimodelo2)
     else
         fprintf(fid,['options_ami.nx = ' num2str(nx) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['options_ami.ny = ' num2str(ny) '; %% MUST NOT CHANGE THIS VALUE\n']);
+        fprintf(fid,['options_ami.nz = ' num2str(nz) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['options_ami.nnz = ' num2str(nnz) '; %% MUST NOT CHANGE THIS VALUE\n']);
         fprintf(fid,['sol.x = NaN(length(tout),' num2str(nx) ');\n']);
         fprintf(fid,['sol.y = NaN(length(tout),' num2str(ny) ');\n']);
@@ -330,10 +328,10 @@ function this = generateM(this, amimodelo2)
     fprintf(fid,['    data.Sigma_Y= NaN(length(tout),options_ami.ny);\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,['if(isfield(data,''T''))\n']);
-    fprintf(fid,['    options_ami.nmaxroot = size(data.T,1);\n']);
+    fprintf(fid,['    options_ami.nmaxevent = size(data.T,1);\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    data.T = NaN(options_ami.nmaxroot,options_ami.nr);\n']);
-    fprintf(fid,['    data.Sigma_T = NaN(options_ami.nmaxroot,options_ami.nr);\n']);
+    fprintf(fid,['    data.Z = NaN(options_ami.nmaxevent,options_ami.nz);\n']);
+    fprintf(fid,['    data.Sigma_Z = NaN(options_ami.nmaxevent,options_ami.nz);\n']);
     fprintf(fid,['end\n']);
     
     
@@ -342,25 +340,20 @@ function this = generateM(this, amimodelo2)
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(amimodelo2.nx) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(amimodelo2.ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.nr) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.nr) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS2 =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.nr) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS2 =  NaN(options_ami.nmaxroot,' num2str(amimodelo2.nr) ',length(options_ami.sens_ind),length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.nz) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
         fprintf(fid,'if(options_ami.sensi==1)\n');
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nxtrue) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(nytrue) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(nr) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(nr) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(nz) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
     else
         fprintf(fid,'if(options_ami.sensi>0)\n');
         fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
         fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nx) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootS =  NaN(options_ami.nmaxroot,' num2str(nr) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.rootvalS =  NaN(options_ami.nmaxroot,' num2str(nr) ',length(options_ami.sens_ind));\n']);
+        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(nz) ',length(options_ami.sens_ind));\n']);
         fprintf(fid,'end\n');
     end
     
@@ -408,87 +401,74 @@ function this = generateM(this, amimodelo2)
             fprintf(fid,['    sol.sllh = sol.llhS.*theta(options_ami.sens_ind);\n']);
             fprintf(fid,['    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
             fprintf(fid,['    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-            fprintf(fid,['    sol.sroot = bsxfun(@times,sol.rootS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-            fprintf(fid,['    sol.srootval = bsxfun(@times,sol.rootvalS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+            fprintf(fid,['    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
         case 'log10'
             fprintf(fid,['    sol.sllh = sol.llhS.*theta(options_ami.sens_ind)*log(10);\n']);
             fprintf(fid,['    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
             fprintf(fid,['    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
-            fprintf(fid,['    sol.sroot = bsxfun(@times,sol.rootS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
-            fprintf(fid,['    sol.srootval = bsxfun(@times,sol.rootvalS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+            fprintf(fid,['    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
         case 'lin'
             fprintf(fid,['    sol.sllh = sol.llhS;\n']);
             fprintf(fid,'    sol.sx = sol.xS;\n');
             fprintf(fid,'    sol.sy = sol.yS;\n');
-            fprintf(fid,'    sol.sroot = sol.rootS;\n');
-            fprintf(fid,'    sol.srootval = sol.rootvalS;\n');
+            fprintf(fid,'    sol.sz = sol.zS;\n');
         otherwise
             fprintf(fid,['    sol.sllh = sol.llhS;\n']);
             fprintf(fid,'    sol.sx = sol.xS;\n');
             fprintf(fid,'    sol.sy = sol.yS;\n');
-            fprintf(fid,'    sol.sroot = sol.rootS;\n');
-            fprintf(fid,'    sol.srootval = sol.rootvalS;\n');
-            fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootvalS'');\n']);
+            fprintf(fid,'    sol.sz = sol.zS;\n');
     end
+    fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
+    fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
+    fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
+    fprintf(fid,['    sol = rmfield(sol,''zS'');\n']);
     fprintf(fid,'end\n');
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi == 2)\n');
         fprintf(fid,['    sx = reshape(sol.x(:,' num2str(nxtrue+1) ':end),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    sy = sol.yS(:,1:' num2str(nytrue) ',:);\n']);
+        fprintf(fid,['    sz = sol.zS(:,1:' num2str(nztrue) ',:);\n']);
         fprintf(fid,['    s2x = reshape(sol.xS(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    s2y = reshape(sol.yS(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+        fprintf(fid,['    s2y = reshape(sol.zS(:,' num2str(nztrue+1) ':end,:),length(tout),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
         fprintf(fid,['    sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
+        fprintf(fid,['    sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
         switch(amimodelo2.param)
             case 'log'
                 fprintf(fid,['    sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sx,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                 fprintf(fid,['    sol.sy = bsxfun(@times,sy,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sy,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                fprintf(fid,['    sol.sroot = bsxfun(@times,sol.rootS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-                fprintf(fid,['    sol.s2root = bsxfun(@times,sol.rootS2,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sol.rootS,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                fprintf(fid,['    sol.srootval = bsxfun(@times,sol.rootvalS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-                fprintf(fid,['    sol.s2rootval = bsxfun(@times,sol.rootvalS2,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sol.rootvalS,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                fprintf(fid,['    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                
             case 'log10'
                 fprintf(fid,['    sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sx,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                 fprintf(fid,['    sol.sy = bsxfun(@times,sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sy,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                fprintf(fid,['    sol.sroot = bsxfun(@times,sol.rootS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
-                fprintf(fid,['    sol.s2root = bsxfun(@times,sol.rootS2,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sol.rootS,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                fprintf(fid,['    sol.srootval = bsxfun(@times,sol.rootvalS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
-                fprintf(fid,['    sol.s2root = bsxfun(@times,sol.rootS2,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sol.rootS,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                fprintf(fid,['    sol.s2rootval = bsxfun(@times,sol.rootvalS2,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sol.rootvalS,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                fprintf(fid,['    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+                fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
             case 'lin'
                 fprintf(fid,'    sol.sx = sx;\n');
                 fprintf(fid,'    sol.s2x = s2x;\n');
                 fprintf(fid,'    sol.sy = sx;\n');
                 fprintf(fid,'    sol.s2y = s2y;\n');
-                fprintf(fid,'    sol.sroot = sol.rootS;\n');
-                fprintf(fid,'    sol.s2root = sol.rootS2;\n');
-                fprintf(fid,'    sol.srootval = sol.rootvalS;\n');
-                fprintf(fid,'    sol.s2rootval = sol.rootvalS2;\n');
+                fprintf(fid,'    sol.sz = sz;\n');
+                fprintf(fid,'    sol.s2z = s2z;\n');
             otherwise
                 fprintf(fid,'    sol.sx = sx;\n');
                 fprintf(fid,'    sol.s2x = s2x;\n');
                 fprintf(fid,'    sol.sy = sx;\n');
                 fprintf(fid,'    sol.s2y = s2y;\n');
-                fprintf(fid,'    sol.sroot = sol.rootS;\n');
-                fprintf(fid,'    sol.s2root = sol.rootS2;\n');
-                fprintf(fid,'    sol.srootval = sol.rootvalS;\n');
-                fprintf(fid,'    sol.s2rootval = sol.rootvalS2;\n');
+                fprintf(fid,'    sol.sz = sz;\n');
+                fprintf(fid,'    sol.s2z = s2z;\n');
         end
-            fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootS2'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootvalS'');\n']);
-            fprintf(fid,['    sol = rmfield(sol,''rootvalS2'');\n']);
+        fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
+        fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
+        fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
+        fprintf(fid,['    sol = rmfield(sol,''zS'');\n']);
         fprintf(fid,'end\n');
     end
     

@@ -8,6 +8,9 @@ function amiwrap( varargin )
     %  tdir: target directory where the simulation file should be placed @type string @default $AMICIDIR/models/modelname
     %  o2flag: boolean whether second order sensitivities should be enabled @type boolean @default false
     %
+    
+    %%
+    % check inputs
     if(nargin<2)
         error('Must provide modelname and symfun.')
     end
@@ -49,6 +52,9 @@ function amiwrap( varargin )
     
     warningreset = warning;
     warning('off','symbolic:mupadmex:MuPADTextWarning')
+    
+    %% 
+    % computations
     
     % generate modelstruct
     disp('Generating model struct ...')

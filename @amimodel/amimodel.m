@@ -5,17 +5,18 @@
 classdef amimodel
     % amimodel is the object in which all model definitions are stored 
     
-    properties ( GetAccess = 'public', SetAccess = 'public' )
+    properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
-        sym;
+        sym@struct;
         % struct which stores information for which functions c code needs to be generated @type struct
-        fun;
-        % short names for symbolic variables @type struct
-        strsym;
+        fun@struct;
+        % struct which stores information for which functions c code needs
+        % to be generated @type *amievent
+        event@amievent;
         % name of the model @type string
-        modelname;
+        modelname@char;
         % struct that contains hash values for the symbolic model definitions @type struct
-        HTable;
+        HTable@struct;
         % default absolute tolerance @type double
         atol = 1e-8;
         % default relative tolerance @type double
@@ -31,56 +32,64 @@ classdef amimodel
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string
-        wtype;
+        wtype@char;
         % number of states @type int
-        nx;
+        nx@double;
         % number of original states for second order sensitivities @type int
         nxtrue = 0;
         % number of observables @type int
-        ny;
+        ny@double;
         % number of original observables for second order sensitivities @type int
         nytrue = 0;
-        % number of events @type int
-        nr;
-        % number of discontinuities @type int
-        ndisc;
         % number of parameters @type int
-        np;
+        np@double;
         % number of constants @type int
-        nk;
+        nk@double;
+        % number of events @type int
+        nevent@double;
+        % number of event outputs @type int
+        nz@double;
         % flag for DAEs @type *int
-        id;
+        id@double;
         % upper Jacobian bandwidth @type int
-        ubw;
+        ubw@double;
         % lower Jacobian bandwidth @type int
-        lbw;
+        lbw@double;
         % number of nonzero entries in Jacobian @type int
-        nnz;
+        nnz@double;
         % dataindexes of sparse Jacobian @type *int
-        sparseidx;
+        sparseidx@double;
         % rowindexes of sparse Jacobian @type *int
-        rowvals;
+        rowvals@double;
         % columnindexes of sparse Jacobian @type *int
-        colptrs;
+        colptrs@double;
         % dataindexes of sparse Jacobian @type *int
-        sparseidxB;
+        sparseidxB@double;
         % rowindexes of sparse Jacobian @type *int
-        rowvalsB;
+        rowvalsB@double;
         % columnindexes of sparse Jacobian @type *int
-        colptrsB;
+        colptrsB@double;
         % cell array of functions to be compiled @type *cell
-        funs;
+        funs@cell;
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
         % path to wrapper
-        wrap_path;
+        wrap_path@char;
         % flag to enforce recompilation of the model
         recompile = false;
+        % storage for flags determining recompilation of individual
+        % functions
+        cfun@struct;
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 1;
+        compver = 2;
+    end
+    
+    properties ( GetAccess = 'public', SetAccess = 'public' )
+        % vector that maps outputs to events
+        z2event@double;
     end
     
     methods
@@ -116,6 +125,8 @@ classdef amimodel
                     if(isfield(model,props{j}))
                        AM.(props{j}) = model.(props{j});
                     end
+                else
+                    AM = AM.makeSyms();
                 end
             end
 
@@ -130,6 +141,14 @@ classdef amimodel
                     mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
                 end
             end
+            AM = AM.makeEvents();
+            
+            % check whether we have a DAE or ODE
+            if(isfield(AM.sym,'M'))
+                AM.wtype = 'iw'; % DAE
+            else
+                AM.wtype = 'cw'; % ODE
+            end
         end
         
         this = parseModel(this)
@@ -137,24 +156,14 @@ classdef amimodel
         this = generateC(this)
         
         this = compileC(this)
-        
-        this = writeCcode_sensi(this,svar,fid)
-        
-        this = writeCcode(this, funstr, fid, ip, jp)
-        
-        this = gccode(this,csym,funstr,cvar,fid)
-        
+
         this = generateM(this,amimodelo2)
         
         this = getFun(this,HTable,funstr)
         
-        [ deps ] = getFunDeps(this, funstr )
+        this = makeEvents(this)
         
-        [ argstr ] = getFunArgs(this, funstr )
-        
-        [ cvar ] = getFunCVar(this, funstr )
-        
-        [ svar ] = getFunSVar(this, funstr )
+        this = makeSyms(this)
         
         [this,cflag] = checkDeps(this,HTable,deps)
         

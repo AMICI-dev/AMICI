@@ -1,8 +1,8 @@
 
 #define my edata->am_my
 #define ysigma edata->am_ysigma
-#define mt edata->am_mt
-#define tsigma edata->am_tsigma
+#define mz edata->am_mz
+#define zsigma edata->am_zsigma
 
 #ifndef _MY_EDATA
 #define _MY_EDATA
@@ -22,9 +22,9 @@ typedef struct {
     double *am_ysigma; 
     
     /** observed events */
-    double *am_mt; 
+    double *am_mz; 
     /** standard deviation of observed events */
-    double *am_tsigma; 
+    double *am_zsigma; 
     
 	} *ExpData;
 #endif /* _MY_EDATA */

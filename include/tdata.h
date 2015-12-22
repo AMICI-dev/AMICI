@@ -1,11 +1,17 @@
 #define t tdata->am_t
 
 #define x tdata->am_x
+#define x_old tdata->am_x_old
+#define x_disc tdata->am_x_disc
 #define dx tdata->am_dx
+#define dx_old tdata->am_dx_old
 #define xdot tdata->am_xdot
+#define xdot_old tdata->am_xdot_old
 #define xB tdata->am_xB
+#define xB_old tdata->am_xB_old
 #define dxB tdata->am_dxB
 #define xQB tdata->am_xQB
+#define xQB_old tdata->am_xQB_old
 #define sx tdata->am_sx
 #define sdx tdata->am_sdx
 #define Jtmp tdata->am_Jtmp
@@ -14,21 +20,19 @@
 #define llhS0 tdata->am_llhS0
 #define g tdata->am_g
 #define r tdata->am_r
-#define rval tdata->am_rval
-#define dtdp tdata->am_dtdp
-#define dtdx tdata->am_dtdx
+#define dzdp tdata->am_dzdp
+#define dzdx tdata->am_dzdx
 #define dgdp tdata->am_dgdp
 #define dgdx tdata->am_dgdx
 #define drdp tdata->am_drdp
 #define drdx tdata->am_drdx
-#define drvaldp tdata->am_drvaldp
 #define drvaldx tdata->am_drvaldx
 #define dydp tdata->am_dydp
 #define dydx tdata->am_dydx
 #define sigma_y tdata->am_sigma_y
 #define dsigma_ydp tdata->am_dsigma_ydp
-#define sigma_t tdata->am_sigma_t
-#define dsigma_tdp tdata->am_dsigma_tdp
+#define sigma_z tdata->am_sigma_z
+#define dsigma_zdp tdata->am_dsigma_zdp
 
 #define x_tmp tdata->am_x_tmp
 #define dx_tmp tdata->am_dx_tmp
@@ -41,13 +45,21 @@
 #define id_tmp tdata->am_id_tmp
 
 #define rootsfound tdata->am_rootsfound
-#define rootvaltmp tdata->am_rootvaltmp
+#define rootvals tdata->am_rootvals
 #define rootidx tdata->am_rootidx
+#define nroots tdata->am_nroots
+
+#define deltax tdata->am_deltax
+#define deltasx tdata->am_deltasx
+#define deltaxB tdata->am_deltaxB
+#define deltaqB tdata->am_deltaqB
 
 #define which tdata->am_which
 
 #define discs tdata->am_discs
 #define irdiscs tdata->am_irdiscs
+
+
 
 
 #ifndef _MY_TDATA
@@ -63,20 +75,33 @@
 /** @brief struct that provides temporary storage for different variables */
 typedef struct {
     /** current time */
-    realtype am_t; 
+    realtype am_t;
+    
     
     /** state vector */
     N_Vector am_x; 
+    /** old state vector */
+    N_Vector am_x_old;
+    /** array of state vectors at discontinuities*/
+    N_Vector *am_x_disc;
     /** differential state vector */
-    N_Vector am_dx; 
+    N_Vector am_dx;
+    /** old differential state vector */
+    N_Vector am_dx_old;
     /** time derivative state vector */
-    N_Vector am_xdot; 
+    N_Vector am_xdot;
+    /** old time derivative state vector */
+    N_Vector am_xdot_old;
     /** adjoint state vector */
-    N_Vector am_xB; 
+    N_Vector am_xB;
+    /** old adjoint state vector */
+    N_Vector am_xB_old;
     /** differential adjoint state vector */
     N_Vector am_dxB; 
     /** quadrature state vector */
-    N_Vector am_xQB; 
+    N_Vector am_xQB;
+    /** old quadrature state vector */
+    N_Vector am_xQB_old;
     /** sensitivity state vector array */
     N_Vector *am_sx; 
     /** differential sensitivity state vector array */
@@ -87,81 +112,94 @@ typedef struct {
     DlsMat am_Jtmp;
     
     /** parameter derivative of likelihood array */
-    double *am_llhS0;
+    realtype *am_llhS0;
     /** data likelihood */
-    double am_g;
+    realtype am_g;
     /** parameter derivative of data likelihood */
-    double *am_dgdp;
+    realtype *am_dgdp;
     /** state derivative of data likelihood */
-    double *am_dgdx;
+    realtype *am_dgdx;
     /** event likelihood */
-    double am_r;
+    realtype am_r;
     /** parameter derivative of event likelihood */
-    double *am_drdp;
+    realtype *am_drdp;
     /** state derivative of event likelihood */
-    double *am_drdx;
+    realtype *am_drdx;
     /** root function likelihood */
-    double am_rval; 
+    realtype am_rval; 
     /** parameter derivative of root function likelihood */
-    double *am_drvaldp;
+    realtype *am_drvaldp;
     /** state derivative of root function likelihood */
-    double *am_drvaldx;
+    realtype *am_drvaldx;
     /** state derivative of event */
-    double *am_dtdx;
+    realtype *am_dzdx;
     /** parameter derivative of event */
-    double *am_dtdp;
+    realtype *am_dzdp;
     /** parameter derivative of observable */
-    double *am_dydp;
+    realtype *am_dydp;
     /** state derivative of observable */
-    double *am_dydx;
+    realtype *am_dydx;
     /** initial sensitivity of observable */
-    double *am_yS0;
+    realtype *am_yS0;
     /** data standard deviation */
-    double *am_sigma_y;
+    realtype *am_sigma_y;
     /** parameter derivative of data standard deviation */
-    double *am_dsigma_ydp;
+    realtype *am_dsigma_ydp;
     /** event standard deviation */
-    double *am_sigma_t;
+    realtype *am_sigma_z;
     /** parameter derivative of event standard deviation */
-    double *am_dsigma_tdp;
+    realtype *am_dsigma_zdp;
     
     /** state array */
-    double *am_x_tmp;
+    realtype *am_x_tmp;
     /** sensitivity state array */
-    double *am_sx_tmp;
+    realtype *am_sx_tmp;
     /** differential state array */
-    double *am_dx_tmp;
+    realtype *am_dx_tmp;
     /** differential sensitivity state array */
-    double *am_sdx_tmp;
+    realtype *am_sdx_tmp;
     /** time derivative state array */
-    double *am_xdot_tmp;
+    realtype *am_xdot_tmp;
     /** differential adjoint state array */
-    double *am_xB_tmp;
+    realtype *am_xB_tmp;
     /** quadrature state array */
-    double *am_xQB_tmp;
+    realtype *am_xQB_tmp;
     /** differential adjoint state array */
-    double *am_dxB_tmp;
+    realtype *am_dxB_tmp;
     /** index indicating DAE equations array */
-    double *am_id_tmp;
+    realtype *am_id_tmp;
+
     
     /** array of flags indicating which root has beend found */
     /*!
     array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound[i]?= 0 if gi has a root, and = 0 if not.
     */
     int *am_rootsfound;
-    /** array of values of the root function */
-    double *am_rootvaltmp; 
     /** array of index which root has been found */
     int *am_rootidx;
+    /** array of number of found roots for a certain event type */
+    int *am_nroots;
+    /** array of values of the root function */
+    double *am_rootvals;
+    
+    
+    /** change in x */
+    realtype *am_deltax;
+    /** change in sx */
+    realtype *am_deltasx;
+    /** change in xB */
+    realtype *am_deltaxB;
+    /** change in qB */
+    realtype *am_deltaqB;
  
     
     /** integer for indexing of backwards problems */
     int am_which;
     
     /** array containing the time-points of discontinuities*/
-    double *am_discs; 
+    realtype *am_discs; 
     /** array containing the index of discontinuities */
-    double *am_irdiscs; 
+    realtype *am_irdiscs; 
 
 	} *TempData;
 #endif /* _MY_TDATA */

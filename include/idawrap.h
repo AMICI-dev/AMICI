@@ -235,7 +235,7 @@ void *AMIGetAdjBmem(void *mem, int which) {
     return IDAGetAdjIDABmem(mem,which);
 }
 
-int AMICalcIC(void *mem, realtype tout1) {
+int   {
     return IDACalcIC(mem,IDA_YA_YDP_INIT , tout1);
 }
 
