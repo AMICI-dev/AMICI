@@ -87,6 +87,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tlastroot = 0;
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
+        status = CVodeSetStopTime(ami_mem, ts[it]);
         if (cv_status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
@@ -117,7 +118,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             
             handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
+            if (cv_status==AMI_DATA_RETURN) {
+                cv_status = 0;
+            }
             if (status != AMI_SUCCESS) goto freturn;
+
             
         } else {
             for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
@@ -283,7 +288,15 @@ freturn:
             if(sigma_y)    mxFree(sigma_y);
         }
         if (sensi >= 1) {
-            N_VDestroyVectorArray_Serial(sx,np);
+            if (sensi_meth == AMI_FSA) {
+                N_VDestroyVectorArray_Serial(sx,np);
+            }
+            if (sensi_meth == AMI_ASA) {
+                if(cv_status == 0) {
+                    N_VDestroyVectorArray_Serial(sx,np);
+                }
+            }
+
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(sdx, np);
             }

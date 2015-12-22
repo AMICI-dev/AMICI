@@ -27,6 +27,7 @@
 
 #define AMI_SUCCESS               0
 #define AMI_ROOT_RETURN           2
+#define AMI_DATA_RETURN           1
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
 
