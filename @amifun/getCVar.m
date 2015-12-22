@@ -1,11 +1,10 @@
 function [ this ] = getCVar(this)
-    % getDeps returns the c variable for the requested function.
+    % getCVar populates the cvar property
     %
     % Parameters:
-    %  funstr: function or expression for which the dependencies should be returned  @type string
     %
     % Return values:
-    %  cvar: cell array of dependencies @type string
+    %  this: updated function definition object @type amifun
     
     switch(this.funstr)
         case 'J'

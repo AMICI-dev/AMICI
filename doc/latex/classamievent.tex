@@ -1,0 +1,56 @@
+\hypertarget{classamievent}{}\subsection{amievent Class Reference}
+\label{classamievent}\index{amievent@{amievent}}
+
+
+the amievent class defines the prototype for all events which later on will be transformed into C code  
+
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classamievent_aa89b0efd53c33a18acf04c1dda76842c}{amievent} (\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger},\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus},\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z})
+\begin{DoxyCompactList}\small\item\em constructor of the amievent class. this function constructs an event object based on the provided trigger function, bolus function and output function \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classamievent_ae194cb817eae4085f8023885100c68dd}{}\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger}\label{classamievent_ae194cb817eae4085f8023885100c68dd}
+
+\begin{DoxyCompactList}\small\item\em the trigger function activates the event on every zero crossing \end{DoxyCompactList}\item 
+\hypertarget{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{}\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus}\label{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}
+
+\begin{DoxyCompactList}\small\item\em the bolus function defines the change in states that is applied on every event occurence \end{DoxyCompactList}\item 
+\hypertarget{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{}\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z}\label{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}
+
+\begin{DoxyCompactList}\small\item\em output function for the event \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+
+
+Definition at line 17 of file amievent.\+m.
+
+
+
+\subsubsection{Constructor \& Destructor Documentation}
+\hypertarget{classamievent_aa89b0efd53c33a18acf04c1dda76842c}{}\index{amievent@{amievent}!amievent@{amievent}}
+\index{amievent@{amievent}!amievent@{amievent}}
+\paragraph[{amievent(\+::symbolic trigger,\+::symbolic bolus,\+::symbolic z)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf amievent} (
+\begin{DoxyParamCaption}
+\item[{\+::symbolic}]{trigger, }
+\item[{\+::symbolic}]{bolus, }
+\item[{\+::symbolic}]{z}
+\end{DoxyParamCaption}
+)}\label{classamievent_aa89b0efd53c33a18acf04c1dda76842c}
+
+\begin{DoxyParams}{Parameters}
+{\em trigger} & trigger fuction, the roots of this function define the occurence of the event \\
+\hline
+{\em bolus} & bolus fuction, this function defines the change in the states on event occurences \\
+\hline
+{\em z} & output function, this expression is evaluated on event occurences and returned by the simulation function \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 52 of file amievent.\+m.
+

@@ -1,24 +1,12 @@
 var searchData=
 [
-  ['dam_5fand',['Dam_and',['../symbolic__functions_8c.html#a2e57d2256dc064c22df97238ebfaf8dd',1,'symbolic_functions.c']]],
-  ['dam_5fge',['Dam_ge',['../symbolic__functions_8c.html#a76889cd2e1fe3a6005ed553a1608e289',1,'symbolic_functions.c']]],
-  ['dam_5fgt',['Dam_gt',['../symbolic__functions_8c.html#a7d989d003a1d9a9fa31e9dd9d3dccdf6',1,'symbolic_functions.c']]],
-  ['dam_5fif',['Dam_if',['../symbolic__functions_8c.html#aeaa0ba7aeaeeb254e5b347024cf58ec3',1,'symbolic_functions.c']]],
-  ['dam_5fle',['Dam_le',['../symbolic__functions_8c.html#a39ac4ffd072b6dcd21c52273d1d50af4',1,'symbolic_functions.c']]],
-  ['dam_5flt',['Dam_lt',['../symbolic__functions_8c.html#a4744c81e4b2cf2ccd624784dccfa1e60',1,'symbolic_functions.c']]],
-  ['dam_5fmax',['Dam_max',['../symbolic__functions_8c.html#a0a33e3a0a034cdd86eb780ddb80ce3cb',1,'symbolic_functions.c']]],
-  ['dam_5fmin',['Dam_min',['../symbolic__functions_8c.html#ac0fc17e87d0f8593f2f98a0d7bb795e9',1,'symbolic_functions.c']]],
-  ['dam_5for',['Dam_or',['../symbolic__functions_8c.html#a6d6b6e6facde6d147d36e583947292bd',1,'symbolic_functions.c']]],
-  ['ddirac',['Ddirac',['../symbolic__functions_8c.html#a6199dbaeed0d47ab67ba8da9e9ffc570',1,'symbolic_functions.c']]],
-  ['debug',['debug',['../classamimodel.html#a0514aabed091ee5e2f35766eb01eced6',1,'amimodel']]],
-  ['deriv',['deriv',['../spline_8c.html#a93a9f0123f360ba443ceb6efb5e7223d',1,'spline.c']]],
-  ['dirac',['dirac',['../symbolic__functions_8c.html#a9f096cac6ced6b3a2ec6c32f4f3651bd',1,'symbolic_functions.c']]],
-  ['dspline10',['Dspline10',['../symbolic__functions_8c.html#a4a6a923e481880d64aaf1c2b5e204945',1,'symbolic_functions.c']]],
-  ['dspline3',['Dspline3',['../symbolic__functions_8c.html#a2399f365706b74fa78fd9ff7906ff909',1,'symbolic_functions.c']]],
-  ['dspline4',['Dspline4',['../symbolic__functions_8c.html#a504a06d04401217f51af719fae8662e3',1,'symbolic_functions.c']]],
-  ['dspline5',['Dspline5',['../symbolic__functions_8c.html#a8b1ac13ae08a38d7f716671779f9c35a',1,'symbolic_functions.c']]],
-  ['dspline_5fpos10',['Dspline_pos10',['../symbolic__functions_8c.html#a18144547f7fd385767fa61b0ccca0c9f',1,'symbolic_functions.c']]],
-  ['dspline_5fpos3',['Dspline_pos3',['../symbolic__functions_8c.html#a8a381f25e4c7a60c643c8df1c132c483',1,'symbolic_functions.c']]],
-  ['dspline_5fpos4',['Dspline_pos4',['../symbolic__functions_8c.html#a8440b8a58c3b7a45193dffaed0dc3043',1,'symbolic_functions.c']]],
-  ['dspline_5fpos5',['Dspline_pos5',['../symbolic__functions_8c.html#a031e8ddd09bad7e95e1d2bbdd2015412',1,'symbolic_functions.c']]]
+  ['cfun',['cfun',['../classamimodel.html#afec809c626a350367485aa6aaea6b585',1,'amimodel']]],
+  ['checkdeps',['checkDeps',['../classamimodel.html#aa04dcfc1d2188cae948a75ebd46a6e03',1,'amimodel']]],
+  ['code_20organization',['Code Organization',['../code.html',1,'']]],
+  ['colptrs',['colptrs',['../classamimodel.html#a887e8a11654afa197d040d8bb10cbb38',1,'amimodel']]],
+  ['colptrsb',['colptrsB',['../classamimodel.html#a3a4891c5565b544dd7d4362dbbfaadf7',1,'amimodel']]],
+  ['compilec',['compileC',['../classamimodel.html#ad1339463ebc3a2e6c6aeda6f63f1b4ed',1,'amimodel']]],
+  ['compver',['compver',['../classamimodel.html#a0a9e4caf628a02e6db68e91c2de6f382',1,'amimodel']]],
+  ['coptim',['coptim',['../classamimodel.html#ad99abcd270ac97546c46292ebc6c2e0a',1,'amimodel']]],
+  ['cvar',['cvar',['../classamifun.html#a716c1ceb8235bc1005b606f777530ede',1,'amifun']]]
 ];

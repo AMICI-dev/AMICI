@@ -1,4 +1,3 @@
 <map id="getFun" name="getFun">
-<area shape="rect" id="node2" href="$classamimodel.html#ab2be9a8b5a1467cc7c4a5bcd651c209e" title="getDeps returns the dependencies for the requested function/expression. " alt="" coords="251,5,345,33"/>
-<area shape="rect" id="node3" href="$classamimodel.html#aa04dcfc1d2188cae948a75ebd46a6e03" title="checkDeps checks the dependencies of functions and populates sym fields if necessary ..." alt="" coords="116,31,203,58"/>
+<area shape="rect" id="node2" href="$classamimodel.html#aa04dcfc1d2188cae948a75ebd46a6e03" title="checkDeps checks the dependencies of functions and populates sym fields if necessary ..." alt="" coords="116,5,203,33"/>
 </map>

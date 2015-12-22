@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>example_model_1_syms</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-11-11"><meta name="DC.source" content="example_model_1_syms.m"><style type="text/css">
+      --><title>example_model_1_syms</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-12-22"><meta name="DC.source" content="example_model_1_syms.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -111,19 +111,18 @@ x0(3) = k3;
 </pre><p>OBSERVALES</p><pre class="codeinput">y = sym(zeros(1,1));
 
 y(1) = p4 * (x1+x2+x3);
-</pre><p>EVENTS this part is optional and can be ommited</p><pre class="codeinput"><span class="comment">% events fire when there is a zero crossing of the root function</span>
-root = sym(zeros(2,1));
-<span class="comment">% x3 == x2</span>
-root(1) = x3 - x2;
-<span class="comment">% x3 == x1</span>
-root(2) = x3 - x1;
+</pre><p>EVENTS this part is optional and can be ommited</p><pre class="codeinput">syms <span class="string">t</span>
+
+<span class="comment">% events fire when there is a zero crossing of the root function</span>
+event(1) = amievent(x3-x2,0,t);
+event(2) = amievent(x3-x1,0,t);
 </pre><p>SYSTEM STRUCT</p><pre class="codeinput">model.sym.x = x;
 model.sym.k = k;
-model.sym.root = root;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
 model.sym.y = y;
+model.event = event;
 </pre><pre class="codeinput"><span class="keyword">end</span>
 </pre><pre class="codeoutput">ans = 
         atol: 1e-08
@@ -131,6 +130,7 @@ model.sym.y = y;
     maxsteps: 10000
        param: 'log10'
          sym: [1x1 struct]
+       event: [1x2 amievent]
 </pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 function [model] = example_model_1_syms()
@@ -150,6 +150,7 @@ model.param = 'log10';
 
 %%
 % STATES
+
 
 % create state syms
 syms x1 x2 x3
@@ -212,24 +213,22 @@ y(1) = p4 * (x1+x2+x3);
 %%
 % EVENTS
 % this part is optional and can be ommited
+syms t
 
 % events fire when there is a zero crossing of the root function
-root = sym(zeros(2,1));
-% x3 == x2
-root(1) = x3 - x2;
-% x3 == x1
-root(2) = x3 - x1;
+event(1) = amievent(x3-x2,0,t);
+event(2) = amievent(x3-x1,0,t);
 
 %%
 % SYSTEM STRUCT
 
 model.sym.x = x;
 model.sym.k = k;
-model.sym.root = root;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
 model.sym.y = y;
+model.event = event;
 end
 ##### SOURCE END #####
 --></body></html>

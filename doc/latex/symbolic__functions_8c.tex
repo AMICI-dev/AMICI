@@ -7,16 +7,14 @@ definition of symbolic functions
 
 {\ttfamily \#include $<$math.\+h$>$}\\*
 {\ttfamily \#include $<$include/spline.\+h$>$}\\*
-Include dependency graph for symbolic\+\_\+functions.\+c\+:
-\nopagebreak
+Include dependency graph for symbolic\+\_\+functions.\+c\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=220pt]{symbolic__functions_8c__incl}
 \end{center}
 \end{figure}
-This graph shows which files directly or indirectly include this file\+:
-\nopagebreak
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -33,47 +31,7 @@ This graph shows which files directly or indirectly include this file\+:
 \subsubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-static int \hyperlink{symbolic__functions_8c_a416970620771a36bed91a7010d7c354a}{am\+\_\+ge} (double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a76889cd2e1fe3a6005ed553a1608e289}{Dam\+\_\+ge} (int id, double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a2b6c469661d55fb8e0eaa582c79d8fee}{am\+\_\+gt} (double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a7d989d003a1d9a9fa31e9dd9d3dccdf6}{Dam\+\_\+gt} (int id, double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a44c61e895621ce85295d5c343e57bad8}{am\+\_\+le} (double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a39ac4ffd072b6dcd21c52273d1d50af4}{Dam\+\_\+le} (int id, double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_ac9f1433f4d234e1b6bc9d45a33e07ea3}{am\+\_\+lt} (double a, double b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a4744c81e4b2cf2ccd624784dccfa1e60}{Dam\+\_\+lt} (int id, double a, double b)
-\item 
-static double \hyperlink{symbolic__functions_8c_aba184e5c7e2c8afb0df0a03cba9d7d10}{am\+\_\+if} (int condition, double truepart, double falsepart)
-\item 
-static double \hyperlink{symbolic__functions_8c_aeaa0ba7aeaeeb254e5b347024cf58ec3}{Dam\+\_\+if} (int id, int condition, double truepart, double falsepart)
-\item 
-static int \hyperlink{symbolic__functions_8c_abd84c9d657c25603d2b4483c52fff27d}{am\+\_\+and} (int a, int b)
-\item 
-static double \hyperlink{symbolic__functions_8c_a2e57d2256dc064c22df97238ebfaf8dd}{Dam\+\_\+and} (int id, int a, int b)
-\item 
-static int \hyperlink{symbolic__functions_8c_a9504cc85fdd150b973feeee8bb702513}{am\+\_\+or} (int a, int b)
-\item 
-static double \hyperlink{symbolic__functions_8c_a6d6b6e6facde6d147d36e583947292bd}{Dam\+\_\+or} (int id, int a, int b)
-\item 
-static double \hyperlink{symbolic__functions_8c_ae3b9dc0b0e71095d2f5981de04b7c885}{am\+\_\+min} (double a, double b)
-\item 
-static double \hyperlink{symbolic__functions_8c_ac0fc17e87d0f8593f2f98a0d7bb795e9}{Dam\+\_\+min} (int id, double a, double b)
-\item 
-static double \hyperlink{symbolic__functions_8c_ace1bc6a7a6979ae44dee3b7778a773cb}{am\+\_\+max} (double a, double b)
-\item 
-static double \hyperlink{symbolic__functions_8c_a0a33e3a0a034cdd86eb780ddb80ce3cb}{Dam\+\_\+max} (int id, double a, double b)
-\item 
-static double \hyperlink{symbolic__functions_8c_a2588f876f0b91cb5f301c20724390799}{heaviside} (double x)
-\item 
-static double \hyperlink{symbolic__functions_8c_a9f096cac6ced6b3a2ec6c32f4f3651bd}{dirac} (double x)
-\item 
-static double \hyperlink{symbolic__functions_8c_a6199dbaeed0d47ab67ba8da9e9ffc570}{Ddirac} (int id, double x)
+static double \hyperlink{symbolic__functions_8c_a08874f3ecb3cab16c1e7a0c743eebff4}{sign} (double x)
 \item 
 static double \hyperlink{symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229}{spline3} (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)
 \item 
@@ -130,599 +88,27 @@ Definition at line 16 of file symbolic\+\_\+functions.\+c.
 
 
 \subsubsection{Function Documentation}
-\hypertarget{symbolic__functions_8c_a416970620771a36bed91a7010d7c354a}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+ge@{am\+\_\+ge}}
-\index{am\+\_\+ge@{am\+\_\+ge}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+ge(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+ge (
+\hypertarget{symbolic__functions_8c_a08874f3ecb3cab16c1e7a0c743eebff4}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!sign@{sign}}
+\index{sign@{sign}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{sign(double x)}]{\setlength{\rightskip}{0pt plus 5cm}static double sign (
 \begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
+\item[{double}]{x}
 \end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a416970620771a36bed91a7010d7c354a}
-c implementation of matlab function ge
+)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a08874f3ecb3cab16c1e7a0c743eebff4}
+c implementation of matlab function sign
 
 
 \begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
+{\em x} & argument \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-if(a $>$= 0) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
+0 ~\newline
+{\bfseries Type}\+: double 
 \end{DoxyReturn}
 
 
 Definition at line 26 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a76889cd2e1fe3a6005ed553a1608e289}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+ge@{Dam\+\_\+ge}}
-\index{Dam\+\_\+ge@{Dam\+\_\+ge}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+ge(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int Dam\+\_\+ge (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a76889cd2e1fe3a6005ed553a1608e289}
-parameter derivative of c implementation of matlab function ge
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 
-\end{DoxyReturn}
-
-
-Definition at line 43 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a2b6c469661d55fb8e0eaa582c79d8fee}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+gt@{am\+\_\+gt}}
-\index{am\+\_\+gt@{am\+\_\+gt}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+gt(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+gt (
-\begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a2b6c469661d55fb8e0eaa582c79d8fee}
-c implementation of matlab function gt
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $>$ 0) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 55 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a7d989d003a1d9a9fa31e9dd9d3dccdf6}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+gt@{Dam\+\_\+gt}}
-\index{Dam\+\_\+gt@{Dam\+\_\+gt}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+gt(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int Dam\+\_\+gt (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a7d989d003a1d9a9fa31e9dd9d3dccdf6}
-parameter derivative of c implementation of matlab function gt
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 
-\end{DoxyReturn}
-
-
-Definition at line 72 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a44c61e895621ce85295d5c343e57bad8}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+le@{am\+\_\+le}}
-\index{am\+\_\+le@{am\+\_\+le}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+le(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+le (
-\begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a44c61e895621ce85295d5c343e57bad8}
-c implementation of matlab function le
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $<$= 0) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 84 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a39ac4ffd072b6dcd21c52273d1d50af4}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+le@{Dam\+\_\+le}}
-\index{Dam\+\_\+le@{Dam\+\_\+le}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+le(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int Dam\+\_\+le (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a39ac4ffd072b6dcd21c52273d1d50af4}
-parameter derivative of c implementation of matlab function le
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 
-\end{DoxyReturn}
-
-
-Definition at line 101 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_ac9f1433f4d234e1b6bc9d45a33e07ea3}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+lt@{am\+\_\+lt}}
-\index{am\+\_\+lt@{am\+\_\+lt}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+lt(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+lt (
-\begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_ac9f1433f4d234e1b6bc9d45a33e07ea3}
-c implementation of matlab function lt
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $<$ 0) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 113 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a4744c81e4b2cf2ccd624784dccfa1e60}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+lt@{Dam\+\_\+lt}}
-\index{Dam\+\_\+lt@{Dam\+\_\+lt}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+lt(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static int Dam\+\_\+lt (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a4744c81e4b2cf2ccd624784dccfa1e60}
-parameter derivative of c implementation of matlab function lt
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 
-\end{DoxyReturn}
-
-
-Definition at line 130 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_aba184e5c7e2c8afb0df0a03cba9d7d10}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+if@{am\+\_\+if}}
-\index{am\+\_\+if@{am\+\_\+if}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+if(int condition, double truepart, double falsepart)}]{\setlength{\rightskip}{0pt plus 5cm}static double am\+\_\+if (
-\begin{DoxyParamCaption}
-\item[{int}]{condition, }
-\item[{double}]{truepart, }
-\item[{double}]{falsepart}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_aba184e5c7e2c8afb0df0a03cba9d7d10}
-c implementation of if function
-
-
-\begin{DoxyParams}{Parameters}
-{\em condition} & condition that decides on the output \\
-\hline
-{\em truepart} & returnvalue if condition is true ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em falsepart} & returnvalue if condition is false ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(condition) then truepart else falsepart ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 143 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_aeaa0ba7aeaeeb254e5b347024cf58ec3}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+if@{Dam\+\_\+if}}
-\index{Dam\+\_\+if@{Dam\+\_\+if}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+if(int id, int condition, double truepart, double falsepart)}]{\setlength{\rightskip}{0pt plus 5cm}static double Dam\+\_\+if (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{int}]{condition, }
-\item[{double}]{truepart, }
-\item[{double}]{falsepart}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_aeaa0ba7aeaeeb254e5b347024cf58ec3}
-parameter derivative of c implementation of if function
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em condition} & condition that decides on the output \\
-\hline
-{\em truepart} & returnvalue if condition is true ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em falsepart} & returnvalue if condition is false ~\newline
-{\bfseries Type}\+: double\\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-id==1\+: 0 ~\newline
-{\bfseries Type}\+: double 
-
-id==2\+: if(condition) then 1 else 0 ~\newline
-{\bfseries Type}\+: double 
-
-id==3\+: if(condition) then 0 else 1 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 164 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_abd84c9d657c25603d2b4483c52fff27d}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+and@{am\+\_\+and}}
-\index{am\+\_\+and@{am\+\_\+and}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+and(int a, int b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+and (
-\begin{DoxyParamCaption}
-\item[{int}]{a, }
-\item[{int}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_abd84c9d657c25603d2b4483c52fff27d}
-c implementation of matlab function and
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a \& b) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 198 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a2e57d2256dc064c22df97238ebfaf8dd}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+and@{Dam\+\_\+and}}
-\index{Dam\+\_\+and@{Dam\+\_\+and}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+and(int id, int a, int b)}]{\setlength{\rightskip}{0pt plus 5cm}static double Dam\+\_\+and (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{int}]{a, }
-\item[{int}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a2e57d2256dc064c22df97238ebfaf8dd}
-parameter derivative of c implementation of matlab function and
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 215 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a9504cc85fdd150b973feeee8bb702513}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+or@{am\+\_\+or}}
-\index{am\+\_\+or@{am\+\_\+or}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+or(int a, int b)}]{\setlength{\rightskip}{0pt plus 5cm}static int am\+\_\+or (
-\begin{DoxyParamCaption}
-\item[{int}]{a, }
-\item[{int}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a9504cc85fdd150b973feeee8bb702513}
-c implementation of matlab function or
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $\vert$ b) then 1 else 0 ~\newline
-{\bfseries Type}\+: int 
-\end{DoxyReturn}
-
-
-Definition at line 227 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a6d6b6e6facde6d147d36e583947292bd}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+or@{Dam\+\_\+or}}
-\index{Dam\+\_\+or@{Dam\+\_\+or}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+or(int id, int a, int b)}]{\setlength{\rightskip}{0pt plus 5cm}static double Dam\+\_\+or (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{int}]{a, }
-\item[{int}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a6d6b6e6facde6d147d36e583947292bd}
-parameter derivative of c implementation of matlab function or
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: int \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 244 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_ae3b9dc0b0e71095d2f5981de04b7c885}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+min@{am\+\_\+min}}
-\index{am\+\_\+min@{am\+\_\+min}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+min(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static double am\+\_\+min (
-\begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_ae3b9dc0b0e71095d2f5981de04b7c885}
-c implementation of matlab function min
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $<$ b) then a else b ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 256 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_ac0fc17e87d0f8593f2f98a0d7bb795e9}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+min@{Dam\+\_\+min}}
-\index{Dam\+\_\+min@{Dam\+\_\+min}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+min(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static double Dam\+\_\+min (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_ac0fc17e87d0f8593f2f98a0d7bb795e9}
-parameter derivative of c implementation of matlab function min
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-id == 1\+: if(a $<$ b) then 1 else 0 ~\newline
-{\bfseries Type}\+: double 
-
-id == 2\+: if(a $<$ b) then 0 else 1 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 274 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_ace1bc6a7a6979ae44dee3b7778a773cb}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+max@{am\+\_\+max}}
-\index{am\+\_\+max@{am\+\_\+max}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{am\+\_\+max(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static double am\+\_\+max (
-\begin{DoxyParamCaption}
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_ace1bc6a7a6979ae44dee3b7778a773cb}
-c implementation of matlab function min
-
-
-\begin{DoxyParams}{Parameters}
-{\em a} & value1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & value2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(a $>$ b) then a else b ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 298 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a0a33e3a0a034cdd86eb780ddb80ce3cb}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+max@{Dam\+\_\+max}}
-\index{Dam\+\_\+max@{Dam\+\_\+max}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Dam\+\_\+max(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}static double Dam\+\_\+max (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{a, }
-\item[{double}]{b}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a0a33e3a0a034cdd86eb780ddb80ce3cb}
-parameter derivative of c implementation of matlab function min
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em a} & bool1 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-{\em b} & bool2 ~\newline
-{\bfseries Type}\+: double \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-id == 1\+: if(a $>$ b) then 1 else 0 ~\newline
-{\bfseries Type}\+: double 
-
-id == 2\+: if(a $>$ b) then 0 else 1 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 316 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a2588f876f0b91cb5f301c20724390799}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!heaviside@{heaviside}}
-\index{heaviside@{heaviside}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{heaviside(double x)}]{\setlength{\rightskip}{0pt plus 5cm}static double heaviside (
-\begin{DoxyParamCaption}
-\item[{double}]{x}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a2588f876f0b91cb5f301c20724390799}
-c implementation of matlab function heaviside
-
-
-\begin{DoxyParams}{Parameters}
-{\em x} & argument \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(x$>$0) then 1 else 0 
-\end{DoxyReturn}
-
-
-Definition at line 339 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a9f096cac6ced6b3a2ec6c32f4f3651bd}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!dirac@{dirac}}
-\index{dirac@{dirac}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{dirac(double x)}]{\setlength{\rightskip}{0pt plus 5cm}static double dirac (
-\begin{DoxyParamCaption}
-\item[{double}]{x}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a9f096cac6ced6b3a2ec6c32f4f3651bd}
-c implementation of matlab function dirac
-
-
-\begin{DoxyParams}{Parameters}
-{\em x} & argument \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-if(x==0) then 1 else 0 
-\end{DoxyReturn}
-
-
-Definition at line 354 of file symbolic\+\_\+functions.\+c.
-
-\hypertarget{symbolic__functions_8c_a6199dbaeed0d47ab67ba8da9e9ffc570}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Ddirac@{Ddirac}}
-\index{Ddirac@{Ddirac}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
-\paragraph[{Ddirac(int id, double x)}]{\setlength{\rightskip}{0pt plus 5cm}static double Ddirac (
-\begin{DoxyParamCaption}
-\item[{int}]{id, }
-\item[{double}]{x}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [static]}}\label{symbolic__functions_8c_a6199dbaeed0d47ab67ba8da9e9ffc570}
-derivatives of the c implementation of matlab function dirac
-
-
-\begin{DoxyParams}{Parameters}
-{\em id} & argument index for differentiation \\
-\hline
-{\em x} & argument \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-0 ~\newline
-{\bfseries Type}\+: double 
-\end{DoxyReturn}
-
-
-Definition at line 370 of file symbolic\+\_\+functions.\+c.
 
 \hypertarget{symbolic__functions_8c_af979880b391183ffe4f954d4f8b72229}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline3@{spline3}}
 \index{spline3@{spline3}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
@@ -767,12 +153,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 394 of file symbolic\+\_\+functions.\+c.
+Definition at line 54 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -824,12 +209,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 435 of file symbolic\+\_\+functions.\+c.
+Definition at line 95 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -840,8 +224,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -899,12 +282,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 483 of file symbolic\+\_\+functions.\+c.
+Definition at line 143 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -962,12 +344,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 527 of file symbolic\+\_\+functions.\+c.
+Definition at line 187 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -978,8 +359,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1043,12 +423,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 579 of file symbolic\+\_\+functions.\+c.
+Definition at line 239 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1112,12 +491,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 627 of file symbolic\+\_\+functions.\+c.
+Definition at line 287 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1128,8 +506,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1223,12 +600,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 691 of file symbolic\+\_\+functions.\+c.
+Definition at line 351 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1322,12 +698,11 @@ spline(t)
 \end{DoxyReturn}
 
 
-Definition at line 759 of file symbolic\+\_\+functions.\+c.
+Definition at line 419 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1338,8 +713,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1394,12 +768,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 820 of file symbolic\+\_\+functions.\+c.
+Definition at line 480 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1410,8 +783,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1466,12 +838,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 865 of file symbolic\+\_\+functions.\+c.
+Definition at line 525 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1532,12 +903,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 908 of file symbolic\+\_\+functions.\+c.
+Definition at line 568 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1548,8 +918,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1610,12 +979,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 957 of file symbolic\+\_\+functions.\+c.
+Definition at line 617 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1682,12 +1050,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 1002 of file symbolic\+\_\+functions.\+c.
+Definition at line 662 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1698,8 +1065,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1766,12 +1132,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 1055 of file symbolic\+\_\+functions.\+c.
+Definition at line 715 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1868,12 +1233,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 1111 of file symbolic\+\_\+functions.\+c.
+Definition at line 771 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1884,8 +1248,7 @@ Here is the call graph for this function\+:
 
 
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -1982,12 +1345,11 @@ dspline(t)dp(id)
 \end{DoxyReturn}
 
 
-Definition at line 1184 of file symbolic\+\_\+functions.\+c.
+Definition at line 844 of file symbolic\+\_\+functions.\+c.
 
 
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode

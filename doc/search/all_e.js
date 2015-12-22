@@ -1,6 +1,28 @@
 var searchData=
 [
-  ['t0',['t0',['../classamimodel.html#abdb5a42ffee3ca622484b53a322f1004',1,'amimodel']]],
-  ['tempdata',['TempData',['../struct_temp_data.html',1,'']]],
-  ['true',['TRUE',['../symbolic__functions_8c.html#aa8cecfc5c5c054d2875c03e77b7be15d',1,'symbolic_functions.c']]]
+  ['sensiflag',['sensiflag',['../classamifun.html#ad8930a02bca1d5facc6203b722d5349d',1,'amifun']]],
+  ['setupami',['setupAMI',['../amici_8c.html#a1f59a60d757981b9a2196bc6b3491027',1,'amici.c']]],
+  ['setupamib',['setupAMIB',['../amici_8c.html#a3899f1dc888ee4e27c36d139dd938fc0',1,'amici.c']]],
+  ['setupexpdata',['setupExpData',['../amici_8c.html#a3c8f6481c1efc210fe8d82c618ddfcca',1,'amici.c']]],
+  ['setupreturndata',['setupReturnData',['../amici_8c.html#af60e81f8da9f9fe2ef8cdc8549a48ce1',1,'amici.c']]],
+  ['setupuserdata',['setupUserData',['../amici_8c.html#aaa3b0319b9104865ac61df2ea87b8a13',1,'amici.c']]],
+  ['seval',['seval',['../spline_8c.html#a71fd4956d49f5f12c5018a8d7890c20a',1,'spline.c']]],
+  ['sign',['sign',['../symbolic__functions_8c.html#a08874f3ecb3cab16c1e7a0c743eebff4',1,'symbolic_functions.c']]],
+  ['sinteg',['sinteg',['../spline_8c.html#a5738bb8177d038a9a55fe487a9d79d82',1,'spline.c']]],
+  ['sparseidx',['sparseidx',['../classamimodel.html#a6ffb112eda9ff756e17104210981b30b',1,'amimodel']]],
+  ['sparseidxb',['sparseidxB',['../classamimodel.html#adcfae93a688a66f1954d0832f51e4cc0',1,'amimodel']]],
+  ['spline',['spline',['../spline_8c.html#a46804aa218bd46034f2da928e5602a08',1,'spline.c']]],
+  ['spline_2ec',['spline.c',['../spline_8c.html',1,'']]],
+  ['spline10',['spline10',['../symbolic__functions_8c.html#a1934626be4166d13e4d027f07f440b06',1,'symbolic_functions.c']]],
+  ['spline3',['spline3',['../symbolic__functions_8c.html#af979880b391183ffe4f954d4f8b72229',1,'symbolic_functions.c']]],
+  ['spline4',['spline4',['../symbolic__functions_8c.html#ad7067d60ae8ced98cdb98da954c0af41',1,'symbolic_functions.c']]],
+  ['spline5',['spline5',['../symbolic__functions_8c.html#a9cd044210c329dd88bb7ff69bad3d024',1,'symbolic_functions.c']]],
+  ['spline_5fpos10',['spline_pos10',['../symbolic__functions_8c.html#a76f58ea224a1a2d2aa742d9418a05fbc',1,'symbolic_functions.c']]],
+  ['spline_5fpos3',['spline_pos3',['../symbolic__functions_8c.html#ada526b79025616265c040c133b1526d2',1,'symbolic_functions.c']]],
+  ['spline_5fpos4',['spline_pos4',['../symbolic__functions_8c.html#a6e7905bf54d6a32212bae5dc2b8c15e1',1,'symbolic_functions.c']]],
+  ['spline_5fpos5',['spline_pos5',['../symbolic__functions_8c.html#af8758b5809518fc3c34c5564fb693a47',1,'symbolic_functions.c']]],
+  ['strsym',['strsym',['../classamifun.html#a4814315a739f43461b003c1c1ef6f550',1,'amifun']]],
+  ['strsym_5fold',['strsym_old',['../classamifun.html#ac42759baa6575c9d39f487be5a2e01a1',1,'amifun']]],
+  ['sym',['sym',['../classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6',1,'amifun::sym()'],['../classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6',1,'amimodel::sym()']]],
+  ['symbolic_5ffunctions_2ec',['symbolic_functions.c',['../symbolic__functions_8c.html',1,'']]]
 ];

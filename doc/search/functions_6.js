@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mexfunction',['mexFunction',['../amiwrap_8c.html#a6a215cbfde54f82a3ce599228fc3fce5',1,'amiwrap.c']]]
+  ['initheaviside',['initHeaviside',['../amici_8c.html#a7b40c978a19ec5c1fcfedf6543de5b75',1,'amici.c']]]
 ];

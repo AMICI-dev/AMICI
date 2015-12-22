@@ -99,12 +99,11 @@ y(1) = p4 * (x1+x2+x3);
 EVENTS this part is optional and can be ommited
 \end{par} \vspace{1em}
 \begin{DoxyCode}
+syms t
+
 % events fire when there is a zero crossing of the root function
-root = sym(zeros(2,1));
-% x3 == x2
-root(1) = x3 - x2;
-% x3 == x1
-root(2) = x3 - x1;
+event(1) = amievent(x3-x2,0,t);
+event(2) = amievent(x3-x1,0,t);
 \end{DoxyCode}
 \begin{par}
 SYSTEM STRUCT
@@ -112,11 +111,11 @@ SYSTEM STRUCT
 \begin{DoxyCode}
 model.sym.x = x;
 model.sym.k = k;
-model.sym.root = root;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
 model.sym.y = y;
+model.event = event;
 \end{DoxyCode}
 \begin{DoxyCode}
 end
@@ -128,6 +127,7 @@ end
     maxsteps: 10000
        param: 'log10'
          sym: [1x1 struct]
+       event: [1x2 amievent]
 \end{DoxyCode} 
     
 

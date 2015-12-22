@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['wrap_5fpath',['wrap_path',['../classamimodel.html#a0b316a20054ba282555674d939a82406',1,'amimodel']]],
-  ['writeccode',['writeCcode',['../classamimodel.html#a874862825ea3346f977f518072dec051',1,'amimodel']]],
-  ['writeccode_5fsensi',['writeCcode_sensi',['../classamimodel.html#a65b30e6d951ff694d40d45b0625742c7',1,'amimodel']]],
-  ['wtype',['wtype',['../classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff',1,'amimodel']]]
+  ['ubw',['ubw',['../classamimodel.html#a955c9d10635afed4ebc04c60010e5d40',1,'amimodel']]],
+  ['updateheaviside',['updateHeaviside',['../amici_8c.html#a4a2138c2065d8a952778dcbc649a9191',1,'amici.c']]],
+  ['updateheavisideb',['updateHeavisideB',['../amici_8c.html#a244dfa5b6e39cf3011e4e7c3bf849834',1,'amici.c']]],
+  ['userdata',['UserData',['../struct_user_data.html',1,'']]]
 ];

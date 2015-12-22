@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['wrap_5fpath',['wrap_path',['../classamimodel.html#a0b316a20054ba282555674d939a82406',1,'amimodel']]],
-  ['wtype',['wtype',['../classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff',1,'amimodel']]]
+  ['t0',['t0',['../classamimodel.html#abdb5a42ffee3ca622484b53a322f1004',1,'amimodel']]],
+  ['trigger',['trigger',['../classamievent.html#ae194cb817eae4085f8023885100c68dd',1,'amievent']]]
 ];

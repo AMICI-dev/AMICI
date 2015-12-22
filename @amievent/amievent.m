@@ -18,6 +18,20 @@ classdef amievent
     
     methods
         function AE = amievent(trigger,bolus,z)
+            % constructor of the amievent class. this function constructs an event object based on the provided
+            % trigger function, bolus function and output function
+            %
+            % Parameters:
+            %  trigger: trigger fuction, the roots of this function define
+            %  the occurence of the event @type symbolic
+            %  bolus: bolus fuction, this function defines the change in 
+            %  the states on event occurences @type symbolic
+            %  z: output function, this expression is evaluated on event
+            %  occurences and returned by the simulation function @type
+            %  symbolic
+            % 
+            % Return values:
+            %  AM: model definition object
             if(~isa(trigger,'sym'))
                 if(isa(trigger,'double'))
                     AE.trigger = sym(trigger);

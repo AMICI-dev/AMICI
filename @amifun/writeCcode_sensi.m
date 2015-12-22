@@ -1,13 +1,13 @@
-function this = writeCcode_sensi(this,model,fid)
+function writeCcode_sensi(this,model,fid)
 % writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces
 % overhead by check nonzero values
 %
 % Parameters:
-%  svar: symbolic variable which is later on passed to ggode @type symbolic
+%  model: model defintion object @type amimodel
 %  fid: file id in which the final expression is written @type fileid
 % 
 % Return values:
-%  this: model definition object @type amimodel
+%  void
       
 np = model.np;
 

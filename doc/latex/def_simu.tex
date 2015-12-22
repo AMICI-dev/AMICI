@@ -87,8 +87,8 @@ Specify the right hand side of the differential equation f or xdot
 
 \begin{DoxyCode}
 xdot(1) = [ const1 - param1*state1 ];
-xdot(2) = [ +param2*x(1) + \hyperlink{symbolic__functions_8c_a9f096cac6ced6b3a2ec6c32f4f3651bd}{dirac}(t-param3) - const2*x(2) ];
-xdot(3) = [ param4*x(2) ];
+xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+xdot(3) = [ param4*state2 ];
 \end{DoxyCode}
 
 
@@ -97,8 +97,8 @@ or
 
 \begin{DoxyCode}
 f(1) = [ const1 - param1*state1 ];
-f(2) = [ +param2*x(1) + \hyperlink{symbolic__functions_8c_a9f096cac6ced6b3a2ec6c32f4f3651bd}{dirac}(t-param3) - const2*x(2) ];
-f(3) = [ 2*x(2) ];
+f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+f(3) = [ param4*state2 ];
 \end{DoxyCode}
 
 
@@ -138,11 +138,11 @@ y(2) = state3 - state2;
 
 
 In the definition of the observable you can use certain symbolic functions. For a full list of available functions see \hyperlink{symbolic__functions_8c}{symbolic\+\_\+functions.\+c}. Dirac functions in observables will have no effect.\hypertarget{def_simu_events}{}\subsubsection{Events}\label{def_simu_events}
-Specifying events is optional. Events are specified in terms of a root function. Events are defined to happen at the roots of the root function.
+Specifying events is optional. Events are specified in terms of a trigger function, a bolus fuction and an output function. The roots of the trigger function defines the occurences of the event. The bolus function defines the change in the state on event occurences. The output function defines the expression which is evaluated and reported by the simulation routine on every event occurence. The user can create events by constructing a vector of objects of the class \hyperlink{classamievent}{amievent}.
 
 
 \begin{DoxyCode}
-root(1) = state1 - state2; 
+event(1) = \hyperlink{classamievent}{amievent}(state1 - state2,0,[]); 
 \end{DoxyCode}
 
 
@@ -172,7 +172,7 @@ Eventually all symbolic expressions need to be attached to the model struct.
 \begin{DoxyCode}
 model.sym.x = x;
 model.sym.k = k;
-model.sym.root = root;
+model.sym.event = event;
 model.sym.xdot = xdot;
 % or
 model.sym.f = f;

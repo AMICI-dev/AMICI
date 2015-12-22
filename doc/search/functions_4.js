@@ -1,4 +1,26 @@
 var searchData=
 [
-  ['heaviside',['heaviside',['../symbolic__functions_8c.html#a2588f876f0b91cb5f301c20724390799',1,'symbolic_functions.c']]]
+  ['gccode',['gccode',['../classamifun.html#ae91161616e6339e77298a072acb5dd58',1,'amifun']]],
+  ['generatec',['generateC',['../classamimodel.html#af2ce5001c2320c95471ecb8c3d73bdbb',1,'amimodel']]],
+  ['generatem',['generateM',['../classamimodel.html#a1b75344ed773e2c5c1b76b8a97861234',1,'amimodel']]],
+  ['getargs',['getArgs',['../classamifun.html#a4b16e7670c0d60e530545e58628bde3f',1,'amifun']]],
+  ['getcvar',['getCVar',['../classamifun.html#a969775839d9d32ff4a0ba70395117ca7',1,'amifun']]],
+  ['getdataoutput',['getDataOutput',['../amici_8c.html#a849f9b366ee551e5ae9bd3f1e5e0f00b',1,'amici.c']]],
+  ['getdatasensisasa',['getDataSensisASA',['../amici_8c.html#a1a1f330e1abb07810e5b28863e15ca15',1,'amici.c']]],
+  ['getdatasensisfsa',['getDataSensisFSA',['../amici_8c.html#a208e8bb47d7e9c8b140f4356f2d1a8fd',1,'amici.c']]],
+  ['getdeps',['getDeps',['../classamifun.html#a1cb97b695ab609e1655ec1067b140b70',1,'amifun']]],
+  ['getdiagnosis',['getDiagnosis',['../amici_8c.html#a13d94826e6a875f0e06ec633a88dd551',1,'amici.c']]],
+  ['getdiagnosisb',['getDiagnosisB',['../amici_8c.html#a90da28fbc4745516101db3c8d6be9305',1,'amici.c']]],
+  ['geteventobjective',['getEventObjective',['../amici_8c.html#a253e331f8a34f5b10a9b7ca57aa5ea83',1,'amici.c']]],
+  ['geteventoutput',['getEventOutput',['../amici_8c.html#a1815f9679d16a9472953e70c7842f6a5',1,'amici.c']]],
+  ['geteventsensisasa',['getEventSensisASA',['../amici_8c.html#a93b461a8130ea160b431d9f16b649228',1,'amici.c']]],
+  ['geteventsensisfsa',['getEventSensisFSA',['../amici_8c.html#ad300419eafb91e86a19ca56acf7de799',1,'amici.c']]],
+  ['geteventsensisfsa_5ftf',['getEventSensisFSA_tf',['../amici_8c.html#af2a34b17a8ecbce23a6c6f2cf18e4f94',1,'amici.c']]],
+  ['geteventsigma',['getEventSigma',['../amici_8c.html#a794797be954ca7feb5a6a8aa3249843c',1,'amici.c']]],
+  ['getfargs',['getFArgs',['../classamifun.html#aa1f074dbf83e821bc999eb2d701fd9ed',1,'amifun']]],
+  ['getfun',['getFun',['../classamimodel.html#a73f1b1b08350475e8d854d1a7f1944e1',1,'amimodel']]],
+  ['getnvecs',['getNVecs',['../classamifun.html#a3ae210044df5eb51e2f9280d03b86c3c',1,'amifun']]],
+  ['getsensiflag',['getSensiFlag',['../classamifun.html#ac60147b051aa541057d0da18a78582a8',1,'amifun']]],
+  ['getsyms',['getSyms',['../classamifun.html#a44e49602645d85f94841f38e4673fa1a',1,'amifun']]],
+  ['gettnext',['getTnext',['../amici_8c.html#a1827b26efff0f0bf3b7b84e45b273c49',1,'amici.c']]]
 ];

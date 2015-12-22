@@ -4,60 +4,9 @@
 #include <include/spline.h>
 #include <src/symbolic_functions.c>
 
-/* ge */
-
-static int cw_ge(double a, double b);
-static int Dcw_ge(int id, double a, double b);
-
-/* gt */
-
-static int cw_gt(double a, double b);
-
-static int Dcw_gt(int id, double a, double b);
-
-/* le */
-
-static int cw_le(double a, double b);
-static int Dcw_le(int id, double a, double b);
-
-/* lt */
-
-static int cw_lt(double a, double b);
-
-static int Dcw_lt(int id, double a, double b);
-
-/* If */
-
-static double cw_if(int condition, double truepart, double falsepart);
-static double Dcw_if(int id, int condition, double truepart, double falsepart);
-
-/* min */
-
-static double cw_min(double a, double b);
-static double Dcw_min(int id,double a, double b);
-
-static double cw_max(double a, double b);
-static double Dcw_max(int id,double a, double b);
-
-/* and */
-
-static int cw_and(int a, int b);
-static double Dcw_and(int id,int a, int b);
-
-/* or */
-
-static int cw_or(int a, int b);
-static double Dcw_or(int id,int a, int b);
-
-
-/* step */
-
-static double heaviside(double x);
-static double dirac(double x);
-static double Ddirac(int ip, double x);
 
 /* sign */
-static double step(double x);
+static double sign(double x);
 
 /* splines */
 

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['param',['param',['../classamimodel.html#a51f20d6b1b54a2eee3be0e8adc96a0ae',1,'amimodel']]]
+  ['maxsteps',['maxsteps',['../classamimodel.html#ac37622882dacee1f11688d4941ccb45e',1,'amimodel']]],
+  ['modelname',['modelname',['../classamimodel.html#a71bca9c21a6de42d8079ade31cb61044',1,'amimodel']]]
 ];

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>AMICI: @amimodel/gccode.m Source File</title>
+<title>AMICI: @amifun/gccode.m Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('gccode_8m_source.html','');});
 <div class="title">gccode.m</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &quot;amimodel.m&quot;</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &quot;amifun.m&quot;</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;</div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;</div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">/* (Autoinserted by mtoc++)</span></div>
@@ -125,149 +125,194 @@ $(document).ready(function(){initNavTree('gccode_8m_source.html','');});
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * However, the line numbers most likely do not correspond to the line numbers in the original MATLAB source files.</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> */</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classamimodel.html#aca8ccaf522a4aadb4ce12b7b636570b2">   18</a></span>&#160;function amimodel = <a class="code" href="classamimodel.html#aca8ccaf522a4aadb4ce12b7b636570b2">amimodel.gccode</a>(symbolic csym,<span class="keywordtype">string</span> funstr,<span class="keywordtype">string</span> cvar,fileid fid) {</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classamifun.html#ae91161616e6339e77298a072acb5dd58">   18</a></span>&#160;function amifun = <a class="code" href="classamifun.html#ae91161616e6339e77298a072acb5dd58">amifun.gccode</a>(fileid fid) {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;lcsym = length(csym);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;ff = find(csym~=0);</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordflow">for</span> j=transpose(ff(:));</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="comment">/*  temp = sprintf(mupadmex(&#39;generate.C&#39;, [cvar &#39;[&#39; num2str(j) &#39;] =</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">     * &#39; char(csym(j))], 0)); this is much too slow for large systems */</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">if</span>( lcsym == 1)</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        cstr = [cvar <span class="stringliteral">&quot;  =  &quot;</span> char(vpa(csym)) <span class="stringliteral">&quot; ; &quot;</span>];</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">/*          tmp_str = ccode(csym(j));</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment"> *         cstr = [ cvar tmp_str(5:end) &#39;;&#39;]; */</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        cstr = [cvar <span class="stringliteral">&quot; [ &quot;</span> num2str(j-1) <span class="stringliteral">&quot; ] =  &quot;</span> char(vpa(csym(j))) <span class="stringliteral">&quot; ; &quot;</span>];</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">/*          tmp_str = ccode(csym(j));</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment"> *         cstr = [ cvar &#39;[&#39; num2str(j-1) &#39;] &#39; tmp_str(5:end) &#39;;&#39;]; */</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    end</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;ff = find(this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>~=0);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keywordflow">for</span> j=transpose(ff(:));</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="comment">/*  temp = sprintf(mupadmex(&#39;generate.C&#39;, [cvar &#39;[&#39; num2str(j) &#39;] =</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="comment">     * &#39; char(csym(j))], 0)); this is much too slow for large systems so we</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="comment">     * built our own implementation here */</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="comment">/* % </span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">     * convert to strings */</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="comment">/*  apply vpa to convert to fix point numbers, this prevents</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment">     * erroneous computations from bad casting.</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">     * we always output vectors! */</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    cstr = [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [ &quot;</span> num2str(j-1) <span class="stringliteral">&quot; ] =  &quot;</span> char(vpa(this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>(j))) <span class="stringliteral">&quot; ; &quot;</span>];</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">/* %</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">     * parse pow(...,...) */</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="comment">/*  parse pow(...,...) */</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="comment">/*  find ^ */</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    idx = strfind(cstr,<span class="stringliteral">&quot; ^ &quot;</span>);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordflow">if</span>(~isempty(idx))</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        bro = regexp(cstr,<span class="stringliteral">&quot; \( &quot;</span>);<span class="comment">/* find bracket opening */</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        brc = regexp(cstr,<span class="stringliteral">&quot; \) &quot;</span>);<span class="comment">/* find bracket closing</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">         * compute nested bracket level of expression */</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        brl = zeros(length(cstr),1);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        l = 0;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keywordflow">for</span> k = 1:length(cstr)</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            <span class="keywordflow">if</span>(~isempty(find(k==bro,1)))</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                l = l+1;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            end</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;            brl(k) = l;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            <span class="keywordflow">if</span>(~isempty(find(k==brc,1)))</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                l = l-1;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            end</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        end</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    end</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordflow">while</span>(~isempty(idx))</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        samebrl = find(brl == brl(idx(1))); <span class="comment">/*  find bracket level same as found level</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">         * find first argument */</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keywordflow">if</span>(strcmp(cstr(idx(1)-1),<span class="stringliteral">&quot; ) &quot;</span>))<span class="comment">/*  if the expression is braced find start of higher levels */</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="comment">/*  parse brackets */</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordflow">if</span>(~isempty(idx))</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        brl = computeBracketLevel(cstr);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    end</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordflow">while</span>(~isempty(idx))</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        samebrl = find(brl == brl(idx(1))); <span class="comment">/*  find bracket level same as found level</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">         * find first argument */</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keywordflow">if</span>(strcmp(cstr(idx(1)-1),<span class="stringliteral">&quot; ) &quot;</span>))<span class="comment">/*  if the expression is braced find start of higher levels */</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;            arg1start = samebrl(find(samebrl&lt;idx(1),1,<span class="stringliteral">&quot; last &quot;</span>)) + 1;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            <span class="keywordflow">while</span>(~isempty(regexp(cstr(arg1start-1),<span class="stringliteral">&quot; [\w] &quot;</span>,<span class="stringliteral">&quot; once &quot;</span>)))</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                arg1start = arg1start-1;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            end</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordflow">else</span> <span class="comment">/*  otherwise find start of expression */</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            m = regexp(cstr(1:(idx(1)-1)),<span class="stringliteral">&quot; ([\w\[\]]*) &quot;</span>,<span class="stringliteral">&quot; start &quot;</span>);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            arg1start = m(end);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        end</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        arg1end = idx(1)-1;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="comment">/*  find second argument */</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        arg2start = idx(1)+1;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keywordflow">if</span>(strcmp(cstr(idx(1)+1),<span class="stringliteral">&quot; ( &quot;</span>))<span class="comment">/*  if the expression is braced find end of higher levels */</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            arg1start = samebrl(find(samebrl&lt;idx(1),1,<span class="stringliteral">&quot; last &quot;</span>)) + 1;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            <span class="keywordflow">while</span>(~isempty(regexp(cstr(arg1start-1),<span class="stringliteral">&quot; [\w] &quot;</span>,<span class="stringliteral">&quot; once &quot;</span>)))</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                arg1start = arg1start-1;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            end</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordflow">else</span> <span class="comment">/*  otherwise find start of expression */</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            m = regexp(cstr(1:(idx(1)-1)),<span class="stringliteral">&quot; ([\w\[\]]*) &quot;</span>,<span class="stringliteral">&quot; start &quot;</span>);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            arg1start = m(end);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        end</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        arg1end = idx(1)-1;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="comment">/*  find second argument */</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        arg2start = idx(1)+1;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <span class="keywordflow">if</span>(strcmp(cstr(idx(1)+1),<span class="stringliteral">&quot; ( &quot;</span>))<span class="comment">/*  if the expression is braced find end of higher levels */</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            arg2end = samebrl(find(samebrl&gt;idx(1),1,<span class="stringliteral">&quot; first &quot;</span>)) - 1;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keywordflow">else</span> <span class="comment">/*  otherwise find end of expression */</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            m = regexp(cstr((idx(1)+1):end),<span class="stringliteral">&quot; ([\w\[\]]*) &quot;</span>,<span class="stringliteral">&quot; end &quot;</span>);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            arg2end = idx(1)+m(1);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        end</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="comment">/*  recombine */</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        cstr = [cstr(1:(arg1start-1)) <span class="stringliteral">&quot; (pow( &quot;</span>                                                    cstr(arg1start:arg1end)   <span class="stringliteral">&quot; , &quot;</span>              cstr(arg2start:arg2end)                 <span class="stringliteral">&quot; )) &quot;</span>             cstr((arg2end+1):end)];</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="comment">/*  compute new bracket level */</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        brl  = [ brl(1:(arg1start-1)); brl(idx(1))+1; ones(3,1)*brl(idx(1))+1 ; brl(idx(1))+2 ; brl(arg1start:arg1end)+2 ; brl(idx(1))+2 ; brl(arg2start:arg2end)+2 ; brl(idx(1))+2; brl(idx(1))+1; brl((arg2end+1):end) ];</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        idx = strfind(cstr,<span class="stringliteral">&quot; ^ &quot;</span>);</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    end</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    cstr = deblank(cstr);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; D\(\[([0-9]*)\]\, ([\w]*)\)\( &quot;</span>,<span class="stringliteral">&quot; D$2\($1, &quot;</span>); <span class="comment">/*  fix derivatives */</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; dirac\(([1-2]*), &quot;</span>,<span class="stringliteral">&quot; Ddirac\($1, &quot;</span>); <span class="comment">/*  fix derivatives */</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; dirac\(([^,]*), ([1-2]*)\) &quot;</span>,<span class="stringliteral">&quot; Ddirac\($2,$1\) &quot;</span>); <span class="comment">/*  fix matlab &lt;= R2014a */</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; abs\( &quot;</span>,<span class="stringliteral">&quot; fabs\( &quot;</span>); <span class="comment">/*  fix abs-&gt;fabs */</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">if</span>(~(length(cstr)==1 &amp;&amp; isempty(cstr[1])))</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        cstr = strrep(cstr, [cvar <span class="stringliteral">&quot;  = &quot;</span>],[cvar <span class="stringliteral">&quot; [0] = &quot;</span>]);</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        <span class="keywordflow">if</span>(strcmp(cvar,<span class="stringliteral">&quot; qBdot &quot;</span>))</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; qBdot\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; qBdot\[ip] &quot;</span>);</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; y &quot;</span>) || strcmp(cvar,<span class="stringliteral">&quot; dydp &quot;</span>))</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; x\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; x\[it+nt*$1\] &quot;</span>);</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; y\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; y\[it+nt*$1\] &quot;</span>);</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            <span class="keywordflow">if</span>(strcmp(cvar,<span class="stringliteral">&quot; dydp &quot;</span>))</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                cstr = regexprep(cstr,<span class="stringliteral">&quot; dydp\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; dydp\[$1+ip*ny\] &quot;</span>);</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            end</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; sy &quot;</span>))</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sx\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; sx\[it+nt*\($1+ip*nx\)\] &quot;</span>);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sy\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; sy\[it+nt*\($1+ip*ny\)\] &quot;</span>);</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            <span class="comment">/*  this needs to stay after the sx replacement, it cannot be put</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="comment">             * together with the replacements in y and dydp */</span></div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; x\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; x\[it+nt*$1\] &quot;</span>);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; y\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; y\[it+nt*$1\] &quot;</span>);</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; dxdotdp &quot;</span>))</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;            cstr = regexprep(cstr, <span class="stringliteral">&quot; dxdotdp\[([0-9]*)\] &quot;</span>, <span class="stringliteral">&quot; dxdotdp[\($1+ip*nx\)\] &quot;</span>);</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; sdeltadisc &quot;</span>))</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sdeltadisc\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; sdeltadisc\[plist[ip]+np*$1\] &quot;</span>);</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; Jdata &quot;</span>))</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; Jdata[ &quot;</span>, <span class="stringliteral">&quot; J-&gt;data[ &quot;</span>);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; JBdata &quot;</span>))</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; JBdata[ &quot;</span>, <span class="stringliteral">&quot; JB-&gt;data[ &quot;</span>);</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; Jv &quot;</span>))</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; v[ &quot;</span>, <span class="stringliteral">&quot; v_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; JvB &quot;</span>))</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; v[ &quot;</span>, <span class="stringliteral">&quot; vB_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; sroot &quot;</span>) || strcmp(cvar,<span class="stringliteral">&quot; srootval &quot;</span>))</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            cstr = regexprep(cstr, [cvar <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ cvar <span class="stringliteral">&quot; [nroots + nmaxroot*(ip*nr + $1)] =  &quot;</span>]);</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; dsigma_tdp &quot;</span>)  || strcmp(cvar,<span class="stringliteral">&quot; dtdp &quot;</span>)|| strcmp(cvar,<span class="stringliteral">&quot; drvaldp &quot;</span>))</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            cstr = regexprep(cstr, [cvar <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ cvar <span class="stringliteral">&quot; [ip*nr + $1] =  &quot;</span>]);</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        elseif(strcmp(cvar,<span class="stringliteral">&quot; dsigma_ydp &quot;</span>))</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;            cstr = regexprep(cstr, [cvar <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ cvar <span class="stringliteral">&quot; [ip*ny + $1] =  &quot;</span>]);</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        end</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        <span class="keywordflow">if</span>(strfind(this.<a class="code" href="classamimodel.html#a47ece64d988c9c183782a94bd7de3e6b">getFunArgs</a>(funstr),<span class="stringliteral">&quot; N_Vector &quot;</span>))</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; dot[ &quot;</span>, <span class="stringliteral">&quot; dot_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; x[ &quot;</span>, <span class="stringliteral">&quot; x_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; B[ &quot;</span>, <span class="stringliteral">&quot; B_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; 0[ &quot;</span>, <span class="stringliteral">&quot; 0_tmp[ &quot;</span>);</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        end</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    end</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    fprintf(fid,[cstr <span class="stringliteral">&quot; \n &quot;</span>]);</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;end</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;end</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;}</div>
-<div class="ttc" id="classamimodel_html_a47ece64d988c9c183782a94bd7de3e6b"><div class="ttname"><a href="classamimodel.html#a47ece64d988c9c183782a94bd7de3e6b">amimodel.getFunArgs</a></div><div class="ttdeci">function   = getFunArgs(string funstr)</div><div class="ttdoc">getfunargs returns a string which contains all input arguments for the function fun. </div><div class="ttdef"><b>Definition:</b> <a href="get_fun_args_8m_source.html#l00018">getFunArgs.m:18</a></div></div>
-<div class="ttc" id="classamimodel_html_aca8ccaf522a4aadb4ce12b7b636570b2"><div class="ttname"><a href="classamimodel.html#aca8ccaf522a4aadb4ce12b7b636570b2">amimodel.gccode</a></div><div class="ttdeci">function   = gccode(symbolic csym,string funstr,string cvar,fileid fid)</div><div class="ttdoc">gccode transforms symbolic expressions into c code and writes the respective expression into a specif...</div><div class="ttdef"><b>Definition:</b> <a href="gccode_8m_source.html#l00018">gccode.m:18</a></div></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            arg2end = samebrl(find(samebrl&gt;idx(1),1,<span class="stringliteral">&quot; first &quot;</span>)) - 1;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keywordflow">else</span> <span class="comment">/*  otherwise find end of expression */</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            m = regexp(cstr((idx(1)+1):end),<span class="stringliteral">&quot; ([\w\[\]]*) &quot;</span>,<span class="stringliteral">&quot; end &quot;</span>);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;            arg2end = idx(1)+m(1);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        end</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="comment">/*  recombine */</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        cstr = [cstr(1:(arg1start-1)) <span class="stringliteral">&quot; (pow( &quot;</span> cstr(arg1start:arg1end) <span class="stringliteral">&quot; , &quot;</span> cstr(arg2start:arg2end) <span class="stringliteral">&quot; )) &quot;</span> cstr((arg2end+1):end)];</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="comment">/*  compute new bracket level */</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        brl = computeBracketLevel(cstr);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        idx = strfind(cstr,<span class="stringliteral">&quot; ^ &quot;</span>);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    end</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    cstr = deblank(cstr);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; D\(\[([0-9]*)\]\, ([\w]*)\)\( &quot;</span>,<span class="stringliteral">&quot; D$2\($1, &quot;</span>); <span class="comment">/*  fix derivatives */</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    cstr = regexprep(cstr,<span class="stringliteral">&quot; abs\( &quot;</span>,<span class="stringliteral">&quot; fabs\( &quot;</span>); <span class="comment">/*  fix abs-&gt;fabs */</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">/* %</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment">     * fix symbolic expressions */</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">if</span>(~(length(cstr)==1 &amp;&amp; isempty(cstr[1])))</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="comment">/*  fix various function specific variable names/indexes */</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <span class="keywordflow">if</span>(ismember(<span class="stringliteral">&quot; x &quot;</span>,this.<a class="code" href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">nvecs</a>^t))</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; x_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; x\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        end</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordflow">if</span>(ismember(<span class="stringliteral">&quot; xdot &quot;</span>,this.<a class="code" href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">nvecs</a>^t))</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; xdot_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; xdot\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        end</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keywordflow">if</span>(ismember(<span class="stringliteral">&quot; xdot_old &quot;</span>,this.<a class="code" href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">nvecs</a>^t))</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; xdot_old_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; xdot_old\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        end</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        cstr = regexprep(cstr,<span class="stringliteral">&quot; p_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; p\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        cstr = regexprep(cstr,<span class="stringliteral">&quot; k_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; k\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        cstr = regexprep(cstr,<span class="stringliteral">&quot; h_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; h\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keywordflow">if</span>(ismember(<span class="stringliteral">&quot; xB &quot;</span>,this.<a class="code" href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">nvecs</a>^t))</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; xB_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; xB\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        end</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        cstr = regexprep(cstr,<span class="stringliteral">&quot; J([0-9]+) &quot;</span>,<span class="stringliteral">&quot; J\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        cstr = regexprep(cstr,<span class="stringliteral">&quot; xdotdp([0-9]+) &quot;</span>,<span class="stringliteral">&quot; xdotdp\[$1 + ip*nx\] &quot;</span>);</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; qBdot &quot;</span>))</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; qBdot\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; qBdot\[ip] &quot;</span>);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; y &quot;</span>))</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            cstr = regexprep(cstr,[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] &quot;</span>],[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[it+nt*$1\] &quot;</span>]);</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; sy &quot;</span>))</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            cstr = regexprep(cstr,[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] &quot;</span>],[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[it+nt*\($1+ip*ny\)\] &quot;</span>]);</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; z &quot;</span>))</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;            cstr = regexprep(cstr,[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] &quot;</span>],[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[nroots[ie] + nmaxevent*$1\] &quot;</span>]);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; sz &quot;</span>))</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            cstr = regexprep(cstr,[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] &quot;</span>],[this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[nroots[ie] + nmaxevent*($1+ip*nz)\] &quot;</span>]);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dxdotdp &quot;</span>))</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            cstr = regexprep(cstr, <span class="stringliteral">&quot; dxdotdp\[([0-9]*)\] &quot;</span>, <span class="stringliteral">&quot; dxdotdp[\($1+ip*nx\)\] &quot;</span>);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; Jdata &quot;</span>))</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; Jdata[ &quot;</span>, <span class="stringliteral">&quot; J-&gt;data[ &quot;</span>);</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; JBdata &quot;</span>))</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; JBdata[ &quot;</span>, <span class="stringliteral">&quot; JB-&gt;data[ &quot;</span>);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; Jv &quot;</span>))</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; v[ &quot;</span>, <span class="stringliteral">&quot; v_tmp[ &quot;</span>);</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; JvB &quot;</span>))</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;            cstr = strrep(cstr, <span class="stringliteral">&quot; v[ &quot;</span>, <span class="stringliteral">&quot; vB_tmp[ &quot;</span>);</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; sxdot &quot;</span>))</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; tmp_J[ &quot;</span>,<span class="stringliteral">&quot; tmp_J-&gt;data[ &quot;</span>);</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dsigma_zdp &quot;</span>)  || strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; sz &quot;</span>)|| strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dzdp &quot;</span>))</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;            cstr = regexprep(cstr, [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [ip*nz + $1] =  &quot;</span>]);</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dsigma_ydp &quot;</span>) || strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dydp &quot;</span>))</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            cstr = regexprep(cstr, [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [ip*ny + $1] =  &quot;</span>]);</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; deltasx &quot;</span>))</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            cstr = regexprep(cstr, [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [ip*nx + $1] =  &quot;</span>]);</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dJydx &quot;</span>))</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;            cstr = regexprep(cstr, [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [it+$1*nt] =  &quot;</span>]);</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        elseif(strcmp(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; dJzdx &quot;</span>))</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            cstr = regexprep(cstr, [this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; \[([0-9]*)\] =  &quot;</span>], [ this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a> <span class="stringliteral">&quot; [nroots[ie]+$1*maxevent] =  &quot;</span>]);</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        end</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        <span class="keywordflow">if</span>(strfind(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; Jy &quot;</span>))</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dydx_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; dydx\[$1] &quot;</span>);</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dydp_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; dydp\[$1+ip*ny] &quot;</span>);</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; my_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; my\[it+nt*$1] &quot;</span>);</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sy_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; sy\[it+nt*\($1+ip*ny\)\] &quot;</span>);</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sdy_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; sigma_y\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dsdydp\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; dsigma_ydp\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; y_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; y\[it+nt*$1\] &quot;</span>);</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; = &quot;</span>,<span class="stringliteral">&quot; += &quot;</span>);</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        end</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        <span class="keywordflow">if</span>(strfind(this.<a class="code" href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">cvar</a>,<span class="stringliteral">&quot; Jz &quot;</span>))</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dzdx_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; dzdx\[$1] &quot;</span>);</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dzdp_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; dzdp\[$1+ip*nz] &quot;</span>);</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; mz_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; mz\[nroots[ie]+nmaxevent*$1] &quot;</span>);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sz_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; sz\[nroots[ie]+nmaxevent*\($1+ip*nz\)\] &quot;</span>);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; sdz_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; sigma_z\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; dsdzdp\[([0-9]*)\] &quot;</span>,<span class="stringliteral">&quot; dsigma_zdp\[$1\] &quot;</span>);</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;            cstr = regexprep(cstr,<span class="stringliteral">&quot; z_([0-9]+) &quot;</span>,<span class="stringliteral">&quot; z\[nroots[ie]+nmaxevent*$1\] &quot;</span>);</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; = &quot;</span>,<span class="stringliteral">&quot; += &quot;</span>);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        end</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        <span class="keywordflow">for</span> nvec = this.<a class="code" href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">nvecs</a></div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;            nstr = strrep(nvec[1],<span class="stringliteral">&quot; * &quot;</span>,);</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;            cstr = strrep(cstr, [nstr <span class="stringliteral">&quot; [ &quot;</span>],[nstr <span class="stringliteral">&quot; _tmp[ &quot;</span>]);</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        end</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; dydx &quot;</span>))</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; dydx_tmp &quot;</span>,<span class="stringliteral">&quot; dydx &quot;</span>);</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;        end</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltax &quot;</span>))</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; deltax_tmp &quot;</span>,<span class="stringliteral">&quot; deltax &quot;</span>);</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;        end</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltasx &quot;</span>))</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; deltasx_tmp &quot;</span>,<span class="stringliteral">&quot; deltasx &quot;</span>);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;        end</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltaxB &quot;</span>))</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; deltaxB_tmp &quot;</span>,<span class="stringliteral">&quot; deltaxB &quot;</span>);</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;        end</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;        <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltaqB &quot;</span>))</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;            cstr = strrep(cstr,<span class="stringliteral">&quot; deltaqB_tmp &quot;</span>,<span class="stringliteral">&quot; deltaqB &quot;</span>);</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;        end</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    end</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="comment">/* %</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">     * print to file */</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    fprintf(fid,[cstr <span class="stringliteral">&quot; \n &quot;</span>]);</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;end</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;end</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;}</div>
+<div class="ttc" id="classamifun_html_a484b54379bc8b29b6ce65d84966ea4c4"><div class="ttname"><a href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">amifun.funstr</a></div><div class="ttdeci">char funstr</div><div class="ttdoc">name of the model </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00048">amifun.m:48</a></div></div>
+<div class="ttc" id="classamifun_html_a019d960f3d1c1c819a7f3fc90f952c4b"><div class="ttname"><a href="classamifun.html#a019d960f3d1c1c819a7f3fc90f952c4b">amifun.nvecs</a></div><div class="ttdeci">nvecs</div><div class="ttdoc">nvec dependencies </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00083">amifun.m:83</a></div></div>
+<div class="ttc" id="classamifun_html_ae91161616e6339e77298a072acb5dd58"><div class="ttname"><a href="classamifun.html#ae91161616e6339e77298a072acb5dd58">amifun.gccode</a></div><div class="ttdeci">function  gccode(fileid fid)</div><div class="ttdoc">gccode transforms symbolic expressions into c code and writes the respective expression into a specif...</div><div class="ttdef"><b>Definition:</b> <a href="gccode_8m_source.html#l00018">gccode.m:18</a></div></div>
+<div class="ttc" id="classamifun_html_a3c48fff3d28406486a4f1b5e18da7ca6"><div class="ttname"><a href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">amifun.sym</a></div><div class="ttdeci">symbolic sym</div><div class="ttdoc">symbolic definition struct </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00027">amifun.m:27</a></div></div>
+<div class="ttc" id="classamifun_html_a716c1ceb8235bc1005b606f777530ede"><div class="ttname"><a href="classamifun.html#a716c1ceb8235bc1005b606f777530ede">amifun.cvar</a></div><div class="ttdeci">char cvar</div><div class="ttdoc">name of the c variable </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00055">amifun.m:55</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_714d08c2e8b2f86fd226dae60958336c.html">@amimodel</a></li><li class="navelem"><b>gccode.m</b></li>
-    <li class="footer">Generated on Wed Nov 18 2015 10:51:35 for AMICI by
+    <li class="navelem"><a class="el" href="dir_6389ab307fd46836f49cd0fe1303009d.html">@amifun</a></li><li class="navelem"><b>gccode.m</b></li>
+    <li class="footer">Generated on Tue Dec 22 2015 18:10:41 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

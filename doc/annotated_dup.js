@@ -1,5 +1,7 @@
 var annotated_dup =
 [
+    [ "amievent", "classamievent.html", "classamievent" ],
+    [ "amifun", "classamifun.html", "classamifun" ],
     [ "amimodel", "classamimodel.html", "classamimodel" ],
     [ "ExpData", "struct_exp_data.html", "struct_exp_data" ],
     [ "ReturnData", "struct_return_data.html", "struct_return_data" ],

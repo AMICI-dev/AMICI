@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>AMICI: @amimodel/writeCcode_sensi.m Source File</title>
+<title>AMICI: @amifun/writeCcode_sensi.m Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('write_ccode__sensi_8m_source.html','')
 <div class="title">writeCcode_sensi.m</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &quot;amimodel.m&quot;</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &quot;amifun.m&quot;</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;</div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;</div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">/* (Autoinserted by mtoc++)</span></div>
@@ -125,105 +125,70 @@ $(document).ready(function(){initNavTree('write_ccode__sensi_8m_source.html','')
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * However, the line numbers most likely do not correspond to the line numbers in the original MATLAB source files.</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> */</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classamimodel.html#a65b30e6d951ff694d40d45b0625742c7">   18</a></span>&#160;function amimodel = <a class="code" href="classamimodel.html#a65b30e6d951ff694d40d45b0625742c7">amimodel.writeCcode_sensi</a>(symbolic svar,fileid fid) {</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classamifun.html#a7845c1193d9a963f7bb9802f1eeefac7">   18</a></span>&#160;function  <a class="code" href="classamifun.html#a7845c1193d9a963f7bb9802f1eeefac7">amifun.writeCcode_sensi</a>(<a class="code" href="classamimodel.html">amimodel</a> model,fileid fid) {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a> = this.<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a>;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;np = model.<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a>;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keywordflow">if</span>(strcmp(svar,<span class="stringliteral">&quot; drvaldp &quot;</span>))</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    nonzero = this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>.drootpdp~=0;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordflow">if</span>(any(any(nonzero)))</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="keywordflow">for</span> ip=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            <span class="keywordflow">if</span>(any(nonzero(:,ip)))</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                this.<a class="code" href="classamimodel.html#a874862825ea3346f977f518072dec051">writeCcode</a>(<span class="stringliteral">&quot; drvaldp &quot;</span>, fid, ip);</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;            end</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        end</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    end</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;elseif(strcmp(svar,<span class="stringliteral">&quot; s2root &quot;</span>))</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    nonzero = this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>.s2root~=0;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordflow">if</span>(any(any(any(nonzero))))</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <span class="keywordflow">for</span> ip=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            <span class="keywordflow">if</span>(any(any(nonzero(:,:,ip))))</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;     sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n &quot;</span>);</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;       switch(jp) {\n &quot;</span>]);</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                <span class="keywordflow">for</span> jp=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                    <span class="keywordflow">if</span>(any(nonzero(:,jp,ip)))</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                        fprintf(fid,[<span class="stringliteral">&quot;           case  &quot;</span> num2str(jp-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                        this.<a class="code" href="classamimodel.html#a874862825ea3346f977f518072dec051">writeCcode</a>(<span class="stringliteral">&quot; s2root &quot;</span>, fid, ip, jp);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                        fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                        fprintf(fid,<span class="stringliteral">&quot;           } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                    end</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                end</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n      }\n &quot;</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;            end</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        end</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    end</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;elseif(strcmp(svar,<span class="stringliteral">&quot; s2rootval &quot;</span>))</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    nonzero = this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>.s2rootval~=0;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">if</span>(any(any(any(nonzero))))</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keywordflow">for</span> ip=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            <span class="keywordflow">if</span>(any(any(nonzero(:,:,ip))))</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n &quot;</span>);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;       switch(jp) {\n &quot;</span>]);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                <span class="keywordflow">for</span> jp=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                    <span class="keywordflow">if</span>(any(nonzero(:,jp,ip)))</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                        fprintf(fid,[<span class="stringliteral">&quot;           case  &quot;</span> num2str(jp-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                        this.<a class="code" href="classamimodel.html#a874862825ea3346f977f518072dec051">writeCcode</a>(<span class="stringliteral">&quot; s2rootval &quot;</span>, fid, ip, jp);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                        fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                        fprintf(fid,<span class="stringliteral">&quot;            } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                    end</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                end</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n      }\n &quot;</span>);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            end</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        end</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    end</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;elseif(strcmp(svar,<span class="stringliteral">&quot; ideltadisc &quot;</span>))</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    nonzero = this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>.(svar) ~=0;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordflow">if</span>(any(nonzero))</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keywordflow">for</span> ip=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            <span class="keywordflow">if</span>(nonzero(ip))</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                this.<a class="code" href="classamimodel.html#a874862825ea3346f977f518072dec051">writeCcode</a>(svar, fid, ip);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            end</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        end</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    end</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordflow">else</span> </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    nonzero = this.<a class="code" href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>.(svar) ~=0;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordflow">if</span>(any(any(nonzero)))</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        <span class="keywordflow">for</span> ip=1:<a class="code" href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">np</a></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;            <span class="keywordflow">if</span>(any(nonzero(:,ip)))</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                <span class="keywordflow">if</span>(strcmp(svar,<span class="stringliteral">&quot; sroot &quot;</span>) || strcmp(svar,<span class="stringliteral">&quot; srootval &quot;</span>) || strcmp(svar,<span class="stringliteral">&quot; sdeltadisc &quot;</span>))</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                    fprintf(fid,<span class="stringliteral">&quot;   sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n &quot;</span>);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                end</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                this.<a class="code" href="classamimodel.html#a874862825ea3346f977f518072dec051">writeCcode</a>(svar, fid, ip);</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;            end</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        end</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    end</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;end</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;end</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;}</div>
-<div class="ttc" id="classamimodel_html_a3c48fff3d28406486a4f1b5e18da7ca6"><div class="ttname"><a href="classamimodel.html#a3c48fff3d28406486a4f1b5e18da7ca6">amimodel.sym</a></div><div class="ttdeci">struct sym</div><div class="ttdoc">symbolic definition struct </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00026">amimodel.m:26</a></div></div>
-<div class="ttc" id="classamimodel_html_a874862825ea3346f977f518072dec051"><div class="ttname"><a href="classamimodel.html#a874862825ea3346f977f518072dec051">amimodel.writeCcode</a></div><div class="ttdeci">function   = writeCcode(string funstr,fileid fid, ip, jp)</div><div class="ttdoc">writeCcode is a wrapper for this.gccode which initialises data and reduces overhead by check nonzero ...</div><div class="ttdef"><b>Definition:</b> <a href="write_ccode_8m_source.html#l00018">writeCcode.m:18</a></div></div>
-<div class="ttc" id="classamimodel_html_a6f6e2fe71b05c4c2f2d967ce9ca02dfd"><div class="ttname"><a href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">amimodel.np</a></div><div class="ttdeci">int np</div><div class="ttdoc">number of parameters </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00168">amimodel.m:168</a></div></div>
-<div class="ttc" id="classamimodel_html_a65b30e6d951ff694d40d45b0625742c7"><div class="ttname"><a href="classamimodel.html#a65b30e6d951ff694d40d45b0625742c7">amimodel.writeCcode_sensi</a></div><div class="ttdeci">function   = writeCcode_sensi(symbolic svar,fileid fid)</div><div class="ttdoc">writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces overhead by chec...</div><div class="ttdef"><b>Definition:</b> <a href="write_ccode__sensi_8m_source.html#l00018">writeCcode_sensi.m:18</a></div></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;nonzero = this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>~=0;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltaqB &quot;</span>))</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">if</span>(any(nonzero))</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        tmpfun = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        <span class="keywordflow">for</span> ip=1:np</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;            <span class="keywordflow">if</span>(nonzero(ip))</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                tmpfun.sym= this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>(ip,:);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                tmpfun.writeCcode(model,fid);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;            end</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        end</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    end</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;elseif(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; deltasx &quot;</span>))</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordflow">if</span>(any(any(any(nonzero))))</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        tmpfun = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <span class="keywordflow">for</span> ip=1:np</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordflow">if</span>(any(any(any(nonzero(:,ip,:)))))</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                tmpfun.sym= squeeze(this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>(:,ip,:));</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                tmpfun.writeCcode(model,fid);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;            end</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        end</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    end</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordflow">else</span> </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    nonzero = this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a> ~=0;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordflow">if</span>(any(any(nonzero)))</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        tmpfun = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordflow">for</span> ip=1:np</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            <span class="keywordflow">if</span>(any(nonzero(:,ip)))</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                fprintf(fid,[<span class="stringliteral">&quot;   case  &quot;</span> num2str(ip-1) <span class="stringliteral">&quot; : {\n &quot;</span>]);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; sroot &quot;</span>) || strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; sz &quot;</span>) || strcmp(this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a>,<span class="stringliteral">&quot; sy &quot;</span>))</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                    fprintf(fid,<span class="stringliteral">&quot;   sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n &quot;</span>);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                end</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                tmpfun.sym= this.<a class="code" href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">sym</a>(:,ip);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                tmpfun.writeCcode(model,fid);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                fprintf(fid,<span class="stringliteral">&quot;   } break;\n\n &quot;</span>);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            end</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        end</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    end</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;end</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;end</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;}</div>
+<div class="ttc" id="classamifun_html_a484b54379bc8b29b6ce65d84966ea4c4"><div class="ttname"><a href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">amifun.funstr</a></div><div class="ttdeci">char funstr</div><div class="ttdoc">name of the model </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00048">amifun.m:48</a></div></div>
+<div class="ttc" id="classamimodel_html_a6f6e2fe71b05c4c2f2d967ce9ca02dfd"><div class="ttname"><a href="classamimodel.html#a6f6e2fe71b05c4c2f2d967ce9ca02dfd">amimodel.np</a></div><div class="ttdeci">int np</div><div class="ttdoc">number of parameters </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00206">amimodel.m:206</a></div></div>
+<div class="ttc" id="classamifun_html_a7845c1193d9a963f7bb9802f1eeefac7"><div class="ttname"><a href="classamifun.html#a7845c1193d9a963f7bb9802f1eeefac7">amifun.writeCcode_sensi</a></div><div class="ttdeci">function  writeCcode_sensi(amimodel model,fileid fid)</div><div class="ttdoc">writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces overhead by chec...</div><div class="ttdef"><b>Definition:</b> <a href="write_ccode__sensi_8m_source.html#l00018">writeCcode_sensi.m:18</a></div></div>
+<div class="ttc" id="classamifun_html_a3c48fff3d28406486a4f1b5e18da7ca6"><div class="ttname"><a href="classamifun.html#a3c48fff3d28406486a4f1b5e18da7ca6">amifun.sym</a></div><div class="ttdeci">symbolic sym</div><div class="ttdoc">symbolic definition struct </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00027">amifun.m:27</a></div></div>
+<div class="ttc" id="classamimodel_html"><div class="ttname"><a href="classamimodel.html">amimodel</a></div><div class="ttdoc">amimodel is the object in which all model definitions are stored </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00017">amimodel.m:17</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_714d08c2e8b2f86fd226dae60958336c.html">@amimodel</a></li><li class="navelem"><b>writeCcode_sensi.m</b></li>
-    <li class="footer">Generated on Wed Nov 18 2015 10:51:36 for AMICI by
+    <li class="navelem"><a class="el" href="dir_6389ab307fd46836f49cd0fe1303009d.html">@amifun</a></li><li class="navelem"><b>writeCcode_sensi.m</b></li>
+    <li class="footer">Generated on Tue Dec 22 2015 18:10:41 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

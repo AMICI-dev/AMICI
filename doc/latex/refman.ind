@@ -1,642 +1,770 @@
 \begin{theindex}
 
   \item {A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}
-    \subitem {amici.\+c}, \hyperpage{64}
+    \subitem {amici.\+c}, \hyperpage{67}
   \item {adjoint}
-    \subitem {amimodel}, \hyperpage{45}
+    \subitem {amimodel}, \hyperpage{44}
   \item {am\+\_\+\+J}
-    \subitem {User\+Data}, \hyperpage{59}
+    \subitem {User\+Data}, \hyperpage{63}
   \item {am\+\_\+\+Jdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+\+Jtmp}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+and}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
-  \item {am\+\_\+atol}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+bsx0}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+chi2data}
-    \subitem {Return\+Data}, \hyperpage{49}
-  \item {am\+\_\+data\+\_\+model}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+dgdp}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+dgdx}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+discs}
-    \subitem {Temp\+Data}, \hyperpage{55}
-  \item {am\+\_\+drdp}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+drdx}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+drvaldp}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+drvaldx}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dsigma\+\_\+tdp}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dsigma\+\_\+ydp}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dtdp}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dtdx}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dx}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+dx\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+dx\+B}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+dx\+B\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+dxdotdp}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+dxdotdpdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+dydp}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dydpdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+dydx}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+dydxdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+event\+\_\+model}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+g}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+ge}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
-  \item {am\+\_\+gt}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
-  \item {am\+\_\+id}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+id\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+idlist}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+if}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
-  \item {am\+\_\+interp\+Type}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+irdiscs}
-    \subitem {Temp\+Data}, \hyperpage{55}
-  \item {am\+\_\+ism}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+iter}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+k}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+lbw}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+le}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{78}
-  \item {am\+\_\+linsol}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+llh\+S0}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+llh\+S2data}
     \subitem {Return\+Data}, \hyperpage{50}
+  \item {am\+\_\+\+Jtmp}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+atol}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+bsx0}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+chi2data}
+    \subitem {Return\+Data}, \hyperpage{52}
+  \item {am\+\_\+data\+\_\+model}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+deltaq\+B}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+deltasx}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+deltax}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+deltax\+B}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+dgdp}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+dgdx}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+discs}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+drdp}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+drdx}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+drvaldp}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+drvaldx}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dsigma\+\_\+ydp}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dsigma\+\_\+zdp}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dx}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+dx\+\_\+old}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+dx\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+dx\+B}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+dx\+B\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+dxdotdp}
+    \subitem {User\+Data}, \hyperpage{63}
+  \item {am\+\_\+dxdotdpdata}
+    \subitem {Return\+Data}, \hyperpage{50}
+  \item {am\+\_\+dydp}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dydpdata}
+    \subitem {Return\+Data}, \hyperpage{50}
+  \item {am\+\_\+dydx}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dydxdata}
+    \subitem {Return\+Data}, \hyperpage{50}
+  \item {am\+\_\+dzdp}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+dzdx}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+event\+\_\+model}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+g}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+h}
+    \subitem {User\+Data}, \hyperpage{63}
+  \item {am\+\_\+id}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+id\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+idlist}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+interp\+Type}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+irdiscs}
+    \subitem {Temp\+Data}, \hyperpage{58}
+  \item {am\+\_\+ism}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+iter}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+k}
+    \subitem {User\+Data}, \hyperpage{60}
+  \item {am\+\_\+lbw}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+linsol}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+llh\+S0}
+    \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+llh\+S2data}
+    \subitem {Return\+Data}, \hyperpage{52}
   \item {am\+\_\+llh\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{52}
   \item {am\+\_\+llhdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{52}
   \item {am\+\_\+lmm}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+lt}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
-  \item {am\+\_\+max}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
+    \subitem {User\+Data}, \hyperpage{62}
   \item {am\+\_\+maxsteps}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+min}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
-  \item {am\+\_\+mt}
-    \subitem {Exp\+Data}, \hyperpage{46}
+    \subitem {User\+Data}, \hyperpage{61}
   \item {am\+\_\+my}
-    \subitem {Exp\+Data}, \hyperpage{46}
-  \item {am\+\_\+ndisc}
-    \subitem {User\+Data}, \hyperpage{56}
-  \item {am\+\_\+nmaxdisc}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+nmaxroot}
-    \subitem {User\+Data}, \hyperpage{57}
+    \subitem {Exp\+Data}, \hyperpage{49}
+  \item {am\+\_\+mz}
+    \subitem {Exp\+Data}, \hyperpage{49}
+  \item {am\+\_\+ne}
+    \subitem {User\+Data}, \hyperpage{60}
+  \item {am\+\_\+nmaxevent}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+nnz}
-    \subitem {User\+Data}, \hyperpage{56}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+np}
-    \subitem {User\+Data}, \hyperpage{56}
-  \item {am\+\_\+nr}
-    \subitem {User\+Data}, \hyperpage{56}
+    \subitem {User\+Data}, \hyperpage{59}
+  \item {am\+\_\+nroots}
+    \subitem {Temp\+Data}, \hyperpage{58}
   \item {am\+\_\+nt}
-    \subitem {User\+Data}, \hyperpage{56}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+numrhsevals\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+numrhsevalsdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+numsteps\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+numstepsdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+nx}
-    \subitem {User\+Data}, \hyperpage{56}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+ny}
-    \subitem {User\+Data}, \hyperpage{56}
-  \item {am\+\_\+or}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
+    \subitem {User\+Data}, \hyperpage{60}
+  \item {am\+\_\+nz}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+orderdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+ordering}
-    \subitem {User\+Data}, \hyperpage{59}
+    \subitem {User\+Data}, \hyperpage{63}
   \item {am\+\_\+p}
-    \subitem {User\+Data}, \hyperpage{57}
+    \subitem {User\+Data}, \hyperpage{60}
   \item {am\+\_\+pbar}
-    \subitem {User\+Data}, \hyperpage{57}
+    \subitem {User\+Data}, \hyperpage{61}
   \item {am\+\_\+plist}
-    \subitem {User\+Data}, \hyperpage{56}
+    \subitem {User\+Data}, \hyperpage{59}
   \item {am\+\_\+r}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+root\+S2data}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+root\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+rootdata}
-    \subitem {Return\+Data}, \hyperpage{48}
+    \subitem {Temp\+Data}, \hyperpage{55}
   \item {am\+\_\+rootidx}
-    \subitem {Temp\+Data}, \hyperpage{55}
+    \subitem {Temp\+Data}, \hyperpage{57}
   \item {am\+\_\+rootsfound}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+rootval\+S2data}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+rootval\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+rootvaldata}
-    \subitem {Return\+Data}, \hyperpage{48}
-  \item {am\+\_\+rootvaltmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+rootvals}
+    \subitem {Temp\+Data}, \hyperpage{58}
   \item {am\+\_\+rtol}
-    \subitem {User\+Data}, \hyperpage{58}
+    \subitem {User\+Data}, \hyperpage{61}
   \item {am\+\_\+rval}
-    \subitem {Temp\+Data}, \hyperpage{52}
-  \item {am\+\_\+sdx}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+sdx\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+sensi}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+sensi\+\_\+meth}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+sigma\+\_\+t}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+sigma\+\_\+y}
-    \subitem {Temp\+Data}, \hyperpage{53}
-  \item {am\+\_\+stldet}
-    \subitem {User\+Data}, \hyperpage{58}
-  \item {am\+\_\+sx}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+sx0data}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+sx\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
-  \item {am\+\_\+t}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+ts}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+tsdata}
-    \subitem {Return\+Data}, \hyperpage{47}
-  \item {am\+\_\+tsigma}
-    \subitem {Exp\+Data}, \hyperpage{47}
-  \item {am\+\_\+tstart}
-    \subitem {User\+Data}, \hyperpage{57}
-  \item {am\+\_\+ubw}
-    \subitem {User\+Data}, \hyperpage{59}
-  \item {am\+\_\+which}
     \subitem {Temp\+Data}, \hyperpage{55}
+  \item {am\+\_\+sdx}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+sdx\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+sensi}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+sensi\+\_\+meth}
+    \subitem {User\+Data}, \hyperpage{61}
+  \item {am\+\_\+sigma\+\_\+y}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+sigma\+\_\+z}
+    \subitem {Temp\+Data}, \hyperpage{56}
+  \item {am\+\_\+stldet}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+sx}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+sx0data}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+sx\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
+  \item {am\+\_\+t}
+    \subitem {Temp\+Data}, \hyperpage{53}
+  \item {am\+\_\+ts}
+    \subitem {User\+Data}, \hyperpage{60}
+  \item {am\+\_\+tsdata}
+    \subitem {Return\+Data}, \hyperpage{50}
+  \item {am\+\_\+tstart}
+    \subitem {User\+Data}, \hyperpage{60}
+  \item {am\+\_\+ubw}
+    \subitem {User\+Data}, \hyperpage{62}
+  \item {am\+\_\+which}
+    \subitem {Temp\+Data}, \hyperpage{58}
   \item {am\+\_\+x}
-    \subitem {Temp\+Data}, \hyperpage{51}
+    \subitem {Temp\+Data}, \hyperpage{53}
+  \item {am\+\_\+x\+\_\+disc}
+    \subitem {Temp\+Data}, \hyperpage{53}
+  \item {am\+\_\+x\+\_\+old}
+    \subitem {Temp\+Data}, \hyperpage{53}
   \item {am\+\_\+x\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{53}
+    \subitem {Temp\+Data}, \hyperpage{56}
   \item {am\+\_\+x\+B}
-    \subitem {Temp\+Data}, \hyperpage{51}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+x\+B\+\_\+old}
+    \subitem {Temp\+Data}, \hyperpage{54}
   \item {am\+\_\+x\+B\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
+    \subitem {Temp\+Data}, \hyperpage{57}
   \item {am\+\_\+x\+Q\+B}
-    \subitem {Temp\+Data}, \hyperpage{51}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+x\+Q\+B\+\_\+old}
+    \subitem {Temp\+Data}, \hyperpage{54}
   \item {am\+\_\+x\+Q\+B\+\_\+tmp}
-    \subitem {Temp\+Data}, \hyperpage{54}
+    \subitem {Temp\+Data}, \hyperpage{57}
   \item {am\+\_\+x\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+xbar}
-    \subitem {User\+Data}, \hyperpage{57}
+    \subitem {User\+Data}, \hyperpage{61}
   \item {am\+\_\+xdata}
-    \subitem {Return\+Data}, \hyperpage{48}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+xdot}
-    \subitem {Temp\+Data}, \hyperpage{51}
-  \item {am\+\_\+xdot\+\_\+tmp}
     \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+xdot\+\_\+old}
+    \subitem {Temp\+Data}, \hyperpage{54}
+  \item {am\+\_\+xdot\+\_\+tmp}
+    \subitem {Temp\+Data}, \hyperpage{57}
   \item {am\+\_\+xdotdata}
-    \subitem {Return\+Data}, \hyperpage{47}
+    \subitem {Return\+Data}, \hyperpage{50}
   \item {am\+\_\+y\+S0}
-    \subitem {Temp\+Data}, \hyperpage{53}
+    \subitem {Temp\+Data}, \hyperpage{56}
   \item {am\+\_\+y\+Sdata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+ydata}
-    \subitem {Return\+Data}, \hyperpage{49}
+    \subitem {Return\+Data}, \hyperpage{51}
   \item {am\+\_\+ysigma}
-    \subitem {Exp\+Data}, \hyperpage{46}
+    \subitem {Exp\+Data}, \hyperpage{49}
+  \item {am\+\_\+z2event}
+    \subitem {User\+Data}, \hyperpage{63}
+  \item {am\+\_\+z\+Sdata}
+    \subitem {Return\+Data}, \hyperpage{51}
+  \item {am\+\_\+zdata}
+    \subitem {Return\+Data}, \hyperpage{51}
+  \item {am\+\_\+zsigma}
+    \subitem {Exp\+Data}, \hyperpage{49}
   \item {amici.\+c}
-    \subitem {A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}, \hyperpage{64}
-    \subitem {get\+Diagnosis}, \hyperpage{70}
-    \subitem {get\+Diagnosis\+B}, \hyperpage{70}
-    \subitem {get\+Root\+Data\+A\+S\+A}, \hyperpage{69}
-    \subitem {get\+Root\+Data\+F\+S\+A}, \hyperpage{67}
-    \subitem {setup\+A\+M\+I}, \hyperpage{64}
-    \subitem {setup\+A\+M\+I\+B}, \hyperpage{65}
-    \subitem {setup\+Exp\+Data}, \hyperpage{67}
-    \subitem {setup\+Return\+Data}, \hyperpage{65}
-    \subitem {setup\+User\+Data}, \hyperpage{64}
-  \item {amimodel}, \hyperpage{34}
-    \subitem {adjoint}, \hyperpage{45}
-    \subitem {amimodel}, \hyperpage{36}
-    \subitem {atol}, \hyperpage{45}
-    \subitem {augmento2}, \hyperpage{43}
-    \subitem {check\+Deps}, \hyperpage{42}
-    \subitem {compile\+C}, \hyperpage{37}
-    \subitem {coptim}, \hyperpage{46}
-    \subitem {debug}, \hyperpage{45}
-    \subitem {forward}, \hyperpage{45}
-    \subitem {gccode}, \hyperpage{39}
-    \subitem {generate\+C}, \hyperpage{37}
+    \subitem {A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}, \hyperpage{67}
+    \subitem {apply\+Event\+Bolus}, \hyperpage{83}
+    \subitem {apply\+Event\+Sensi\+Bolus\+F\+S\+A}, \hyperpage{83}
+    \subitem {fill\+Event\+Output}, \hyperpage{77}
+    \subitem {get\+Data\+Output}, \hyperpage{72}
+    \subitem {get\+Data\+Sensis\+A\+S\+A}, \hyperpage{71}
+    \subitem {get\+Data\+Sensis\+F\+S\+A}, \hyperpage{70}
+    \subitem {get\+Diagnosis}, \hyperpage{86}
+    \subitem {get\+Diagnosis\+B}, \hyperpage{86}
+    \subitem {get\+Event\+Objective}, \hyperpage{75}
+    \subitem {get\+Event\+Output}, \hyperpage{76}
+    \subitem {get\+Event\+Sensis\+A\+S\+A}, \hyperpage{74}
+    \subitem {get\+Event\+Sensis\+F\+S\+A}, \hyperpage{73}
+    \subitem {get\+Event\+Sensis\+F\+S\+A\+\_\+tf}, \hyperpage{73}
+    \subitem {get\+Event\+Sigma}, \hyperpage{75}
+    \subitem {get\+Tnext}, \hyperpage{82}
+    \subitem {handle\+Data\+Point}, \hyperpage{78}
+    \subitem {handle\+Data\+Point\+B}, \hyperpage{79}
+    \subitem {handle\+Event}, \hyperpage{80}
+    \subitem {handle\+Event\+B}, \hyperpage{81}
+    \subitem {init\+Heaviside}, \hyperpage{84}
+    \subitem {setup\+A\+M\+I}, \hyperpage{69}
+    \subitem {setup\+A\+M\+I\+B}, \hyperpage{70}
+    \subitem {setup\+Exp\+Data}, \hyperpage{68}
+    \subitem {setup\+Return\+Data}, \hyperpage{68}
+    \subitem {setup\+User\+Data}, \hyperpage{67}
+    \subitem {update\+Heaviside}, \hyperpage{85}
+    \subitem {update\+Heaviside\+B}, \hyperpage{85}
+  \item {amievent}, \hyperpage{32}
+    \subitem {amievent}, \hyperpage{32}
+  \item {amifun}, \hyperpage{33}
+    \subitem {amifun}, \hyperpage{34}
+    \subitem {gccode}, \hyperpage{35}
+    \subitem {get\+Args}, \hyperpage{36}
+    \subitem {get\+C\+Var}, \hyperpage{36}
+    \subitem {get\+Deps}, \hyperpage{35}
+    \subitem {get\+F\+Args}, \hyperpage{36}
+    \subitem {get\+N\+Vecs}, \hyperpage{36}
+    \subitem {get\+Sensi\+Flag}, \hyperpage{36}
+    \subitem {get\+Syms}, \hyperpage{36}
+    \subitem {print\+Local\+Vars}, \hyperpage{34}
+    \subitem {write\+Ccode}, \hyperpage{35}
+    \subitem {write\+Ccode\+\_\+sensi}, \hyperpage{34}
+  \item {amimodel}, \hyperpage{37}
+    \subitem {adjoint}, \hyperpage{44}
+    \subitem {amimodel}, \hyperpage{39}
+    \subitem {atol}, \hyperpage{43}
+    \subitem {augmento2}, \hyperpage{42}
+    \subitem {cfun}, \hyperpage{48}
+    \subitem {check\+Deps}, \hyperpage{41}
+    \subitem {colptrs}, \hyperpage{47}
+    \subitem {colptrs\+B}, \hyperpage{47}
+    \subitem {compile\+C}, \hyperpage{40}
+    \subitem {compver}, \hyperpage{48}
+    \subitem {coptim}, \hyperpage{48}
+    \subitem {debug}, \hyperpage{44}
+    \subitem {event}, \hyperpage{43}
+    \subitem {forward}, \hyperpage{44}
+    \subitem {fun}, \hyperpage{43}
+    \subitem {funs}, \hyperpage{47}
+    \subitem {generate\+C}, \hyperpage{40}
     \subitem {generate\+M}, \hyperpage{40}
     \subitem {get\+Fun}, \hyperpage{40}
-    \subitem {get\+Fun\+Args}, \hyperpage{41}
-    \subitem {get\+Fun\+C\+Var}, \hyperpage{42}
-    \subitem {get\+Fun\+Deps}, \hyperpage{41}
-    \subitem {get\+Fun\+S\+Var}, \hyperpage{42}
-    \subitem {load\+Old\+Hashes}, \hyperpage{43}
-    \subitem {maxsteps}, \hyperpage{45}
+    \subitem {H\+Table}, \hyperpage{43}
+    \subitem {id}, \hyperpage{46}
+    \subitem {lbw}, \hyperpage{46}
+    \subitem {load\+Old\+Hashes}, \hyperpage{42}
+    \subitem {make\+Events}, \hyperpage{41}
+    \subitem {make\+Syms}, \hyperpage{41}
+    \subitem {maxsteps}, \hyperpage{44}
+    \subitem {modelname}, \hyperpage{43}
+    \subitem {nevent}, \hyperpage{46}
+    \subitem {nk}, \hyperpage{45}
+    \subitem {nnz}, \hyperpage{46}
+    \subitem {np}, \hyperpage{45}
+    \subitem {nx}, \hyperpage{45}
     \subitem {nxtrue}, \hyperpage{45}
+    \subitem {ny}, \hyperpage{45}
     \subitem {nytrue}, \hyperpage{45}
-    \subitem {param}, \hyperpage{46}
-    \subitem {parse\+Model}, \hyperpage{36}
-    \subitem {recompile}, \hyperpage{46}
-    \subitem {rtol}, \hyperpage{45}
-    \subitem {t0}, \hyperpage{45}
-    \subitem {write\+Ccode}, \hyperpage{38}
-    \subitem {write\+Ccode\+\_\+sensi}, \hyperpage{37}
+    \subitem {nz}, \hyperpage{46}
+    \subitem {param}, \hyperpage{48}
+    \subitem {parse\+Model}, \hyperpage{39}
+    \subitem {recompile}, \hyperpage{48}
+    \subitem {rowvals}, \hyperpage{47}
+    \subitem {rowvals\+B}, \hyperpage{47}
+    \subitem {rtol}, \hyperpage{43}
+    \subitem {sparseidx}, \hyperpage{46}
+    \subitem {sparseidx\+B}, \hyperpage{47}
+    \subitem {sym}, \hyperpage{42}
+    \subitem {t0}, \hyperpage{44}
+    \subitem {ubw}, \hyperpage{46}
+    \subitem {wrap\+\_\+path}, \hyperpage{48}
+    \subitem {wtype}, \hyperpage{44}
   \item {amiwrap}
-    \subitem {amiwrap.\+m}, \hyperpage{63}
-  \item {amiwrap.\+c}, \hyperpage{60}
-    \subitem {mex\+Function}, \hyperpage{61}
-  \item {amiwrap.\+m}, \hyperpage{62}
-    \subitem {amiwrap}, \hyperpage{63}
+    \subitem {amiwrap.\+m}, \hyperpage{65}
+  \item {amiwrap.\+c}, \hyperpage{63}
+    \subitem {mex\+Function}, \hyperpage{64}
+  \item {amiwrap.\+m}, \hyperpage{65}
+    \subitem {amiwrap}, \hyperpage{65}
+  \item {apply\+Event\+Bolus}
+    \subitem {amici.\+c}, \hyperpage{83}
+  \item {apply\+Event\+Sensi\+Bolus\+F\+S\+A}
+    \subitem {amici.\+c}, \hyperpage{83}
   \item {atol}
-    \subitem {amimodel}, \hyperpage{45}
-  \item {augmento2}
     \subitem {amimodel}, \hyperpage{43}
-
-  \indexspace
-
-  \item {check\+Deps}
+  \item {augmento2}
     \subitem {amimodel}, \hyperpage{42}
+
+  \indexspace
+
+  \item {cfun}
+    \subitem {amimodel}, \hyperpage{48}
+  \item {check\+Deps}
+    \subitem {amimodel}, \hyperpage{41}
+  \item {colptrs}
+    \subitem {amimodel}, \hyperpage{47}
+  \item {colptrs\+B}
+    \subitem {amimodel}, \hyperpage{47}
   \item {compile\+C}
-    \subitem {amimodel}, \hyperpage{37}
+    \subitem {amimodel}, \hyperpage{40}
+  \item {compver}
+    \subitem {amimodel}, \hyperpage{48}
   \item {coptim}
-    \subitem {amimodel}, \hyperpage{46}
+    \subitem {amimodel}, \hyperpage{48}
 
   \indexspace
 
-  \item {Dam\+\_\+and}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{81}
-  \item {Dam\+\_\+ge}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
-  \item {Dam\+\_\+gt}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{78}
-  \item {Dam\+\_\+if}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
-  \item {Dam\+\_\+le}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{78}
-  \item {Dam\+\_\+lt}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{79}
-  \item {Dam\+\_\+max}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
-  \item {Dam\+\_\+min}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
-  \item {Dam\+\_\+or}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{82}
-  \item {Ddirac}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
   \item {debug}
-    \subitem {amimodel}, \hyperpage{45}
+    \subitem {amimodel}, \hyperpage{44}
   \item {deriv}
-    \subitem {spline.\+c}, \hyperpage{73}
-  \item {dirac}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
+    \subitem {spline.\+c}, \hyperpage{93}
   \item {Dspline10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{97}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{110}
   \item {Dspline3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{91}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{104}
   \item {Dspline4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{93}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{106}
   \item {Dspline5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{95}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{108}
   \item {Dspline\+\_\+pos10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{98}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{111}
   \item {Dspline\+\_\+pos3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{92}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{105}
   \item {Dspline\+\_\+pos4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{94}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{107}
   \item {Dspline\+\_\+pos5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{109}
 
   \indexspace
 
-  \item {Exp\+Data}, \hyperpage{46}
-    \subitem {am\+\_\+mt}, \hyperpage{46}
-    \subitem {am\+\_\+my}, \hyperpage{46}
-    \subitem {am\+\_\+tsigma}, \hyperpage{47}
-    \subitem {am\+\_\+ysigma}, \hyperpage{46}
+  \item {event}
+    \subitem {amimodel}, \hyperpage{43}
+  \item {Exp\+Data}, \hyperpage{49}
+    \subitem {am\+\_\+my}, \hyperpage{49}
+    \subitem {am\+\_\+mz}, \hyperpage{49}
+    \subitem {am\+\_\+ysigma}, \hyperpage{49}
+    \subitem {am\+\_\+zsigma}, \hyperpage{49}
 
   \indexspace
 
   \item {F\+A\+L\+S\+E}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
+  \item {fill\+Event\+Output}
+    \subitem {amici.\+c}, \hyperpage{77}
   \item {forward}
-    \subitem {amimodel}, \hyperpage{45}
+    \subitem {amimodel}, \hyperpage{44}
+  \item {fun}
+    \subitem {amimodel}, \hyperpage{43}
+  \item {funs}
+    \subitem {amimodel}, \hyperpage{47}
 
   \indexspace
 
   \item {gccode}
-    \subitem {amimodel}, \hyperpage{39}
+    \subitem {amifun}, \hyperpage{35}
   \item {generate\+C}
-    \subitem {amimodel}, \hyperpage{37}
+    \subitem {amimodel}, \hyperpage{40}
   \item {generate\+M}
     \subitem {amimodel}, \hyperpage{40}
+  \item {get\+Args}
+    \subitem {amifun}, \hyperpage{36}
+  \item {get\+C\+Var}
+    \subitem {amifun}, \hyperpage{36}
+  \item {get\+Data\+Output}
+    \subitem {amici.\+c}, \hyperpage{72}
+  \item {get\+Data\+Sensis\+A\+S\+A}
+    \subitem {amici.\+c}, \hyperpage{71}
+  \item {get\+Data\+Sensis\+F\+S\+A}
+    \subitem {amici.\+c}, \hyperpage{70}
+  \item {get\+Deps}
+    \subitem {amifun}, \hyperpage{35}
   \item {get\+Diagnosis}
-    \subitem {amici.\+c}, \hyperpage{70}
+    \subitem {amici.\+c}, \hyperpage{86}
   \item {get\+Diagnosis\+B}
-    \subitem {amici.\+c}, \hyperpage{70}
+    \subitem {amici.\+c}, \hyperpage{86}
+  \item {get\+Event\+Objective}
+    \subitem {amici.\+c}, \hyperpage{75}
+  \item {get\+Event\+Output}
+    \subitem {amici.\+c}, \hyperpage{76}
+  \item {get\+Event\+Sensis\+A\+S\+A}
+    \subitem {amici.\+c}, \hyperpage{74}
+  \item {get\+Event\+Sensis\+F\+S\+A}
+    \subitem {amici.\+c}, \hyperpage{73}
+  \item {get\+Event\+Sensis\+F\+S\+A\+\_\+tf}
+    \subitem {amici.\+c}, \hyperpage{73}
+  \item {get\+Event\+Sigma}
+    \subitem {amici.\+c}, \hyperpage{75}
+  \item {get\+F\+Args}
+    \subitem {amifun}, \hyperpage{36}
   \item {get\+Fun}
     \subitem {amimodel}, \hyperpage{40}
-  \item {get\+Fun\+Args}
-    \subitem {amimodel}, \hyperpage{41}
-  \item {get\+Fun\+C\+Var}
-    \subitem {amimodel}, \hyperpage{42}
-  \item {get\+Fun\+Deps}
-    \subitem {amimodel}, \hyperpage{41}
-  \item {get\+Fun\+S\+Var}
-    \subitem {amimodel}, \hyperpage{42}
-  \item {get\+Root\+Data\+A\+S\+A}
-    \subitem {amici.\+c}, \hyperpage{69}
-  \item {get\+Root\+Data\+F\+S\+A}
-    \subitem {amici.\+c}, \hyperpage{67}
+  \item {get\+N\+Vecs}
+    \subitem {amifun}, \hyperpage{36}
+  \item {get\+Sensi\+Flag}
+    \subitem {amifun}, \hyperpage{36}
+  \item {get\+Syms}
+    \subitem {amifun}, \hyperpage{36}
+  \item {get\+Tnext}
+    \subitem {amici.\+c}, \hyperpage{82}
 
   \indexspace
 
-  \item {heaviside}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{83}
+  \item {H\+Table}
+    \subitem {amimodel}, \hyperpage{43}
+  \item {handle\+Data\+Point}
+    \subitem {amici.\+c}, \hyperpage{78}
+  \item {handle\+Data\+Point\+B}
+    \subitem {amici.\+c}, \hyperpage{79}
+  \item {handle\+Event}
+    \subitem {amici.\+c}, \hyperpage{80}
+  \item {handle\+Event\+B}
+    \subitem {amici.\+c}, \hyperpage{81}
 
   \indexspace
 
+  \item {id}
+    \subitem {amimodel}, \hyperpage{46}
+  \item {init\+Heaviside}
+    \subitem {amici.\+c}, \hyperpage{84}
+
+  \indexspace
+
+  \item {lbw}
+    \subitem {amimodel}, \hyperpage{46}
   \item {load\+Old\+Hashes}
+    \subitem {amimodel}, \hyperpage{42}
+
+  \indexspace
+
+  \item {make\+Events}
+    \subitem {amimodel}, \hyperpage{41}
+  \item {make\+Syms}
+    \subitem {amimodel}, \hyperpage{41}
+  \item {maxsteps}
+    \subitem {amimodel}, \hyperpage{44}
+  \item {mex\+Function}
+    \subitem {amiwrap.\+c}, \hyperpage{64}
+  \item {modelname}
     \subitem {amimodel}, \hyperpage{43}
 
   \indexspace
 
-  \item {maxsteps}
+  \item {nevent}
+    \subitem {amimodel}, \hyperpage{46}
+  \item {nk}
     \subitem {amimodel}, \hyperpage{45}
-  \item {mex\+Function}
-    \subitem {amiwrap.\+c}, \hyperpage{61}
-
-  \indexspace
-
+  \item {nnz}
+    \subitem {amimodel}, \hyperpage{46}
+  \item {np}
+    \subitem {amimodel}, \hyperpage{45}
+  \item {nx}
+    \subitem {amimodel}, \hyperpage{45}
   \item {nxtrue}
+    \subitem {amimodel}, \hyperpage{45}
+  \item {ny}
     \subitem {amimodel}, \hyperpage{45}
   \item {nytrue}
     \subitem {amimodel}, \hyperpage{45}
+  \item {nz}
+    \subitem {amimodel}, \hyperpage{46}
 
   \indexspace
 
   \item {param}
-    \subitem {amimodel}, \hyperpage{46}
+    \subitem {amimodel}, \hyperpage{48}
   \item {parse\+Model}
-    \subitem {amimodel}, \hyperpage{36}
+    \subitem {amimodel}, \hyperpage{39}
+  \item {print\+Local\+Vars}
+    \subitem {amifun}, \hyperpage{34}
 
   \indexspace
 
   \item {recompile}
-    \subitem {amimodel}, \hyperpage{46}
-  \item {Return\+Data}, \hyperpage{47}
-    \subitem {am\+\_\+\+Jdata}, \hyperpage{48}
-    \subitem {am\+\_\+chi2data}, \hyperpage{49}
-    \subitem {am\+\_\+dxdotdpdata}, \hyperpage{48}
-    \subitem {am\+\_\+dydpdata}, \hyperpage{48}
-    \subitem {am\+\_\+dydxdata}, \hyperpage{48}
-    \subitem {am\+\_\+llh\+S2data}, \hyperpage{50}
-    \subitem {am\+\_\+llh\+Sdata}, \hyperpage{49}
-    \subitem {am\+\_\+llhdata}, \hyperpage{49}
-    \subitem {am\+\_\+numrhsevals\+Sdata}, \hyperpage{49}
-    \subitem {am\+\_\+numrhsevalsdata}, \hyperpage{49}
-    \subitem {am\+\_\+numsteps\+Sdata}, \hyperpage{49}
-    \subitem {am\+\_\+numstepsdata}, \hyperpage{49}
-    \subitem {am\+\_\+orderdata}, \hyperpage{49}
-    \subitem {am\+\_\+root\+S2data}, \hyperpage{48}
-    \subitem {am\+\_\+root\+Sdata}, \hyperpage{48}
-    \subitem {am\+\_\+rootdata}, \hyperpage{48}
-    \subitem {am\+\_\+rootval\+S2data}, \hyperpage{48}
-    \subitem {am\+\_\+rootval\+Sdata}, \hyperpage{48}
-    \subitem {am\+\_\+rootvaldata}, \hyperpage{48}
-    \subitem {am\+\_\+tsdata}, \hyperpage{47}
-    \subitem {am\+\_\+x\+Sdata}, \hyperpage{49}
-    \subitem {am\+\_\+xdata}, \hyperpage{48}
-    \subitem {am\+\_\+xdotdata}, \hyperpage{47}
-    \subitem {am\+\_\+y\+Sdata}, \hyperpage{49}
-    \subitem {am\+\_\+ydata}, \hyperpage{49}
+    \subitem {amimodel}, \hyperpage{48}
+  \item {Return\+Data}, \hyperpage{49}
+    \subitem {am\+\_\+\+Jdata}, \hyperpage{50}
+    \subitem {am\+\_\+chi2data}, \hyperpage{52}
+    \subitem {am\+\_\+dxdotdpdata}, \hyperpage{50}
+    \subitem {am\+\_\+dydpdata}, \hyperpage{50}
+    \subitem {am\+\_\+dydxdata}, \hyperpage{50}
+    \subitem {am\+\_\+llh\+S2data}, \hyperpage{52}
+    \subitem {am\+\_\+llh\+Sdata}, \hyperpage{52}
+    \subitem {am\+\_\+llhdata}, \hyperpage{52}
+    \subitem {am\+\_\+numrhsevals\+Sdata}, \hyperpage{51}
+    \subitem {am\+\_\+numrhsevalsdata}, \hyperpage{51}
+    \subitem {am\+\_\+numsteps\+Sdata}, \hyperpage{51}
+    \subitem {am\+\_\+numstepsdata}, \hyperpage{51}
+    \subitem {am\+\_\+orderdata}, \hyperpage{51}
+    \subitem {am\+\_\+tsdata}, \hyperpage{50}
+    \subitem {am\+\_\+x\+Sdata}, \hyperpage{51}
+    \subitem {am\+\_\+xdata}, \hyperpage{51}
+    \subitem {am\+\_\+xdotdata}, \hyperpage{50}
+    \subitem {am\+\_\+y\+Sdata}, \hyperpage{51}
+    \subitem {am\+\_\+ydata}, \hyperpage{51}
+    \subitem {am\+\_\+z\+Sdata}, \hyperpage{51}
+    \subitem {am\+\_\+zdata}, \hyperpage{51}
+  \item {rowvals}
+    \subitem {amimodel}, \hyperpage{47}
+  \item {rowvals\+B}
+    \subitem {amimodel}, \hyperpage{47}
   \item {rtol}
-    \subitem {amimodel}, \hyperpage{45}
+    \subitem {amimodel}, \hyperpage{43}
 
   \indexspace
 
   \item {setup\+A\+M\+I}
-    \subitem {amici.\+c}, \hyperpage{64}
+    \subitem {amici.\+c}, \hyperpage{69}
   \item {setup\+A\+M\+I\+B}
-    \subitem {amici.\+c}, \hyperpage{65}
+    \subitem {amici.\+c}, \hyperpage{70}
   \item {setup\+Exp\+Data}
-    \subitem {amici.\+c}, \hyperpage{67}
+    \subitem {amici.\+c}, \hyperpage{68}
   \item {setup\+Return\+Data}
-    \subitem {amici.\+c}, \hyperpage{65}
+    \subitem {amici.\+c}, \hyperpage{68}
   \item {setup\+User\+Data}
-    \subitem {amici.\+c}, \hyperpage{64}
+    \subitem {amici.\+c}, \hyperpage{67}
   \item {seval}
-    \subitem {spline.\+c}, \hyperpage{73}
+    \subitem {spline.\+c}, \hyperpage{91}
+  \item {sign}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
   \item {sinteg}
-    \subitem {spline.\+c}, \hyperpage{74}
+    \subitem {spline.\+c}, \hyperpage{94}
+  \item {sparseidx}
+    \subitem {amimodel}, \hyperpage{46}
+  \item {sparseidx\+B}
+    \subitem {amimodel}, \hyperpage{47}
   \item {spline}
-    \subitem {spline.\+c}, \hyperpage{72}
+    \subitem {spline.\+c}, \hyperpage{89}
   \item {spline.\+c}
-    \subitem {deriv}, \hyperpage{73}
-    \subitem {seval}, \hyperpage{73}
-    \subitem {sinteg}, \hyperpage{74}
-    \subitem {spline}, \hyperpage{72}
+    \subitem {deriv}, \hyperpage{93}
+    \subitem {seval}, \hyperpage{91}
+    \subitem {sinteg}, \hyperpage{94}
+    \subitem {spline}, \hyperpage{89}
   \item {spline10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{89}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{102}
   \item {spline3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{84}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{97}
   \item {spline4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{86}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{98}
   \item {spline5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{87}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{100}
   \item {spline\+\_\+pos10}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{90}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{103}
   \item {spline\+\_\+pos3}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{85}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{97}
   \item {spline\+\_\+pos4}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{86}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{99}
   \item {spline\+\_\+pos5}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{88}
-  \item {src/amici.\+c}, \hyperpage{63}
-  \item {src/spline.\+c}, \hyperpage{71}
-  \item {src/symbolic\+\_\+functions.\+c}, \hyperpage{74}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{101}
+  \item {src/amici.\+c}, \hyperpage{66}
+  \item {src/spline.\+c}, \hyperpage{88}
+  \item {src/symbolic\+\_\+functions.\+c}, \hyperpage{94}
+  \item {sym}
+    \subitem {amimodel}, \hyperpage{42}
+  \item {symbolic/am\+\_\+and.\+m}, \hyperpage{112}
+  \item {symbolic/am\+\_\+ge.\+m}, \hyperpage{112}
+  \item {symbolic/am\+\_\+gt.\+m}, \hyperpage{113}
+  \item {symbolic/am\+\_\+if.\+m}, \hyperpage{113}
+  \item {symbolic/am\+\_\+le.\+m}, \hyperpage{113}
+  \item {symbolic/am\+\_\+lt.\+m}, \hyperpage{113}
+  \item {symbolic/am\+\_\+or.\+m}, \hyperpage{113}
   \item {symbolic\+\_\+functions.\+c}
-    \subitem {am\+\_\+and}, \hyperpage{81}
-    \subitem {am\+\_\+ge}, \hyperpage{77}
-    \subitem {am\+\_\+gt}, \hyperpage{77}
-    \subitem {am\+\_\+if}, \hyperpage{79}
-    \subitem {am\+\_\+le}, \hyperpage{78}
-    \subitem {am\+\_\+lt}, \hyperpage{79}
-    \subitem {am\+\_\+max}, \hyperpage{83}
-    \subitem {am\+\_\+min}, \hyperpage{82}
-    \subitem {am\+\_\+or}, \hyperpage{81}
-    \subitem {Dam\+\_\+and}, \hyperpage{81}
-    \subitem {Dam\+\_\+ge}, \hyperpage{77}
-    \subitem {Dam\+\_\+gt}, \hyperpage{78}
-    \subitem {Dam\+\_\+if}, \hyperpage{79}
-    \subitem {Dam\+\_\+le}, \hyperpage{78}
-    \subitem {Dam\+\_\+lt}, \hyperpage{79}
-    \subitem {Dam\+\_\+max}, \hyperpage{83}
-    \subitem {Dam\+\_\+min}, \hyperpage{82}
-    \subitem {Dam\+\_\+or}, \hyperpage{82}
-    \subitem {Ddirac}, \hyperpage{84}
-    \subitem {dirac}, \hyperpage{84}
-    \subitem {Dspline10}, \hyperpage{97}
-    \subitem {Dspline3}, \hyperpage{91}
-    \subitem {Dspline4}, \hyperpage{93}
-    \subitem {Dspline5}, \hyperpage{95}
-    \subitem {Dspline\+\_\+pos10}, \hyperpage{98}
-    \subitem {Dspline\+\_\+pos3}, \hyperpage{92}
-    \subitem {Dspline\+\_\+pos4}, \hyperpage{94}
-    \subitem {Dspline\+\_\+pos5}, \hyperpage{96}
-    \subitem {F\+A\+L\+S\+E}, \hyperpage{77}
-    \subitem {heaviside}, \hyperpage{83}
-    \subitem {spline10}, \hyperpage{89}
-    \subitem {spline3}, \hyperpage{84}
-    \subitem {spline4}, \hyperpage{86}
-    \subitem {spline5}, \hyperpage{87}
-    \subitem {spline\+\_\+pos10}, \hyperpage{90}
-    \subitem {spline\+\_\+pos3}, \hyperpage{85}
-    \subitem {spline\+\_\+pos4}, \hyperpage{86}
-    \subitem {spline\+\_\+pos5}, \hyperpage{88}
-    \subitem {T\+R\+U\+E}, \hyperpage{77}
+    \subitem {Dspline10}, \hyperpage{110}
+    \subitem {Dspline3}, \hyperpage{104}
+    \subitem {Dspline4}, \hyperpage{106}
+    \subitem {Dspline5}, \hyperpage{108}
+    \subitem {Dspline\+\_\+pos10}, \hyperpage{111}
+    \subitem {Dspline\+\_\+pos3}, \hyperpage{105}
+    \subitem {Dspline\+\_\+pos4}, \hyperpage{107}
+    \subitem {Dspline\+\_\+pos5}, \hyperpage{109}
+    \subitem {F\+A\+L\+S\+E}, \hyperpage{96}
+    \subitem {sign}, \hyperpage{96}
+    \subitem {spline10}, \hyperpage{102}
+    \subitem {spline3}, \hyperpage{97}
+    \subitem {spline4}, \hyperpage{98}
+    \subitem {spline5}, \hyperpage{100}
+    \subitem {spline\+\_\+pos10}, \hyperpage{103}
+    \subitem {spline\+\_\+pos3}, \hyperpage{97}
+    \subitem {spline\+\_\+pos4}, \hyperpage{99}
+    \subitem {spline\+\_\+pos5}, \hyperpage{101}
+    \subitem {T\+R\+U\+E}, \hyperpage{96}
 
   \indexspace
 
   \item {t0}
-    \subitem {amimodel}, \hyperpage{45}
+    \subitem {amimodel}, \hyperpage{44}
   \item {T\+R\+U\+E}
-    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{77}
-  \item {Temp\+Data}, \hyperpage{50}
-    \subitem {am\+\_\+\+Jtmp}, \hyperpage{52}
-    \subitem {am\+\_\+dgdp}, \hyperpage{52}
-    \subitem {am\+\_\+dgdx}, \hyperpage{52}
-    \subitem {am\+\_\+discs}, \hyperpage{55}
-    \subitem {am\+\_\+drdp}, \hyperpage{52}
-    \subitem {am\+\_\+drdx}, \hyperpage{52}
-    \subitem {am\+\_\+drvaldp}, \hyperpage{52}
-    \subitem {am\+\_\+drvaldx}, \hyperpage{53}
-    \subitem {am\+\_\+dsigma\+\_\+tdp}, \hyperpage{53}
-    \subitem {am\+\_\+dsigma\+\_\+ydp}, \hyperpage{53}
-    \subitem {am\+\_\+dtdp}, \hyperpage{53}
-    \subitem {am\+\_\+dtdx}, \hyperpage{53}
-    \subitem {am\+\_\+dx}, \hyperpage{51}
-    \subitem {am\+\_\+dx\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+dx\+B}, \hyperpage{51}
-    \subitem {am\+\_\+dx\+B\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+dydp}, \hyperpage{53}
-    \subitem {am\+\_\+dydx}, \hyperpage{53}
-    \subitem {am\+\_\+g}, \hyperpage{52}
-    \subitem {am\+\_\+id}, \hyperpage{52}
-    \subitem {am\+\_\+id\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+irdiscs}, \hyperpage{55}
-    \subitem {am\+\_\+llh\+S0}, \hyperpage{52}
-    \subitem {am\+\_\+r}, \hyperpage{52}
-    \subitem {am\+\_\+rootidx}, \hyperpage{55}
-    \subitem {am\+\_\+rootsfound}, \hyperpage{54}
-    \subitem {am\+\_\+rootvaltmp}, \hyperpage{54}
-    \subitem {am\+\_\+rval}, \hyperpage{52}
-    \subitem {am\+\_\+sdx}, \hyperpage{51}
-    \subitem {am\+\_\+sdx\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+sigma\+\_\+t}, \hyperpage{53}
-    \subitem {am\+\_\+sigma\+\_\+y}, \hyperpage{53}
-    \subitem {am\+\_\+sx}, \hyperpage{51}
-    \subitem {am\+\_\+sx\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+t}, \hyperpage{51}
-    \subitem {am\+\_\+which}, \hyperpage{55}
-    \subitem {am\+\_\+x}, \hyperpage{51}
-    \subitem {am\+\_\+x\+\_\+tmp}, \hyperpage{53}
-    \subitem {am\+\_\+x\+B}, \hyperpage{51}
-    \subitem {am\+\_\+x\+B\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+x\+Q\+B}, \hyperpage{51}
-    \subitem {am\+\_\+x\+Q\+B\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+xdot}, \hyperpage{51}
-    \subitem {am\+\_\+xdot\+\_\+tmp}, \hyperpage{54}
-    \subitem {am\+\_\+y\+S0}, \hyperpage{53}
+    \subitem {symbolic\+\_\+functions.\+c}, \hyperpage{96}
+  \item {Temp\+Data}, \hyperpage{52}
+    \subitem {am\+\_\+\+Jtmp}, \hyperpage{55}
+    \subitem {am\+\_\+deltaq\+B}, \hyperpage{58}
+    \subitem {am\+\_\+deltasx}, \hyperpage{58}
+    \subitem {am\+\_\+deltax}, \hyperpage{58}
+    \subitem {am\+\_\+deltax\+B}, \hyperpage{58}
+    \subitem {am\+\_\+dgdp}, \hyperpage{55}
+    \subitem {am\+\_\+dgdx}, \hyperpage{55}
+    \subitem {am\+\_\+discs}, \hyperpage{58}
+    \subitem {am\+\_\+drdp}, \hyperpage{55}
+    \subitem {am\+\_\+drdx}, \hyperpage{55}
+    \subitem {am\+\_\+drvaldp}, \hyperpage{55}
+    \subitem {am\+\_\+drvaldx}, \hyperpage{56}
+    \subitem {am\+\_\+dsigma\+\_\+ydp}, \hyperpage{56}
+    \subitem {am\+\_\+dsigma\+\_\+zdp}, \hyperpage{56}
+    \subitem {am\+\_\+dx}, \hyperpage{54}
+    \subitem {am\+\_\+dx\+\_\+old}, \hyperpage{54}
+    \subitem {am\+\_\+dx\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+dx\+B}, \hyperpage{54}
+    \subitem {am\+\_\+dx\+B\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+dydp}, \hyperpage{56}
+    \subitem {am\+\_\+dydx}, \hyperpage{56}
+    \subitem {am\+\_\+dzdp}, \hyperpage{56}
+    \subitem {am\+\_\+dzdx}, \hyperpage{56}
+    \subitem {am\+\_\+g}, \hyperpage{55}
+    \subitem {am\+\_\+id}, \hyperpage{55}
+    \subitem {am\+\_\+id\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+irdiscs}, \hyperpage{58}
+    \subitem {am\+\_\+llh\+S0}, \hyperpage{55}
+    \subitem {am\+\_\+nroots}, \hyperpage{58}
+    \subitem {am\+\_\+r}, \hyperpage{55}
+    \subitem {am\+\_\+rootidx}, \hyperpage{57}
+    \subitem {am\+\_\+rootsfound}, \hyperpage{57}
+    \subitem {am\+\_\+rootvals}, \hyperpage{58}
+    \subitem {am\+\_\+rval}, \hyperpage{55}
+    \subitem {am\+\_\+sdx}, \hyperpage{54}
+    \subitem {am\+\_\+sdx\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+sigma\+\_\+y}, \hyperpage{56}
+    \subitem {am\+\_\+sigma\+\_\+z}, \hyperpage{56}
+    \subitem {am\+\_\+sx}, \hyperpage{54}
+    \subitem {am\+\_\+sx\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+t}, \hyperpage{53}
+    \subitem {am\+\_\+which}, \hyperpage{58}
+    \subitem {am\+\_\+x}, \hyperpage{53}
+    \subitem {am\+\_\+x\+\_\+disc}, \hyperpage{53}
+    \subitem {am\+\_\+x\+\_\+old}, \hyperpage{53}
+    \subitem {am\+\_\+x\+\_\+tmp}, \hyperpage{56}
+    \subitem {am\+\_\+x\+B}, \hyperpage{54}
+    \subitem {am\+\_\+x\+B\+\_\+old}, \hyperpage{54}
+    \subitem {am\+\_\+x\+B\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+x\+Q\+B}, \hyperpage{54}
+    \subitem {am\+\_\+x\+Q\+B\+\_\+old}, \hyperpage{54}
+    \subitem {am\+\_\+x\+Q\+B\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+xdot}, \hyperpage{54}
+    \subitem {am\+\_\+xdot\+\_\+old}, \hyperpage{54}
+    \subitem {am\+\_\+xdot\+\_\+tmp}, \hyperpage{57}
+    \subitem {am\+\_\+y\+S0}, \hyperpage{56}
 
   \indexspace
 
-  \item {User\+Data}, \hyperpage{55}
-    \subitem {am\+\_\+\+J}, \hyperpage{59}
-    \subitem {am\+\_\+atol}, \hyperpage{57}
-    \subitem {am\+\_\+bsx0}, \hyperpage{59}
-    \subitem {am\+\_\+data\+\_\+model}, \hyperpage{59}
-    \subitem {am\+\_\+dxdotdp}, \hyperpage{59}
-    \subitem {am\+\_\+event\+\_\+model}, \hyperpage{59}
-    \subitem {am\+\_\+idlist}, \hyperpage{57}
-    \subitem {am\+\_\+interp\+Type}, \hyperpage{58}
-    \subitem {am\+\_\+ism}, \hyperpage{58}
-    \subitem {am\+\_\+iter}, \hyperpage{58}
-    \subitem {am\+\_\+k}, \hyperpage{57}
-    \subitem {am\+\_\+lbw}, \hyperpage{59}
-    \subitem {am\+\_\+linsol}, \hyperpage{58}
-    \subitem {am\+\_\+lmm}, \hyperpage{58}
-    \subitem {am\+\_\+maxsteps}, \hyperpage{58}
-    \subitem {am\+\_\+ndisc}, \hyperpage{56}
-    \subitem {am\+\_\+nmaxdisc}, \hyperpage{57}
-    \subitem {am\+\_\+nmaxroot}, \hyperpage{57}
-    \subitem {am\+\_\+nnz}, \hyperpage{56}
-    \subitem {am\+\_\+np}, \hyperpage{56}
-    \subitem {am\+\_\+nr}, \hyperpage{56}
-    \subitem {am\+\_\+nt}, \hyperpage{56}
-    \subitem {am\+\_\+nx}, \hyperpage{56}
-    \subitem {am\+\_\+ny}, \hyperpage{56}
-    \subitem {am\+\_\+ordering}, \hyperpage{59}
-    \subitem {am\+\_\+p}, \hyperpage{57}
-    \subitem {am\+\_\+pbar}, \hyperpage{57}
-    \subitem {am\+\_\+plist}, \hyperpage{56}
-    \subitem {am\+\_\+rtol}, \hyperpage{58}
-    \subitem {am\+\_\+sensi}, \hyperpage{57}
-    \subitem {am\+\_\+sensi\+\_\+meth}, \hyperpage{58}
-    \subitem {am\+\_\+stldet}, \hyperpage{58}
-    \subitem {am\+\_\+sx0data}, \hyperpage{59}
-    \subitem {am\+\_\+ts}, \hyperpage{57}
-    \subitem {am\+\_\+tstart}, \hyperpage{57}
-    \subitem {am\+\_\+ubw}, \hyperpage{59}
-    \subitem {am\+\_\+xbar}, \hyperpage{57}
+  \item {ubw}
+    \subitem {amimodel}, \hyperpage{46}
+  \item {update\+Heaviside}
+    \subitem {amici.\+c}, \hyperpage{85}
+  \item {update\+Heaviside\+B}
+    \subitem {amici.\+c}, \hyperpage{85}
+  \item {User\+Data}, \hyperpage{58}
+    \subitem {am\+\_\+\+J}, \hyperpage{63}
+    \subitem {am\+\_\+atol}, \hyperpage{61}
+    \subitem {am\+\_\+bsx0}, \hyperpage{62}
+    \subitem {am\+\_\+data\+\_\+model}, \hyperpage{62}
+    \subitem {am\+\_\+dxdotdp}, \hyperpage{63}
+    \subitem {am\+\_\+event\+\_\+model}, \hyperpage{62}
+    \subitem {am\+\_\+h}, \hyperpage{63}
+    \subitem {am\+\_\+idlist}, \hyperpage{61}
+    \subitem {am\+\_\+interp\+Type}, \hyperpage{62}
+    \subitem {am\+\_\+ism}, \hyperpage{61}
+    \subitem {am\+\_\+iter}, \hyperpage{62}
+    \subitem {am\+\_\+k}, \hyperpage{60}
+    \subitem {am\+\_\+lbw}, \hyperpage{62}
+    \subitem {am\+\_\+linsol}, \hyperpage{61}
+    \subitem {am\+\_\+lmm}, \hyperpage{62}
+    \subitem {am\+\_\+maxsteps}, \hyperpage{61}
+    \subitem {am\+\_\+ne}, \hyperpage{60}
+    \subitem {am\+\_\+nmaxevent}, \hyperpage{60}
+    \subitem {am\+\_\+nnz}, \hyperpage{60}
+    \subitem {am\+\_\+np}, \hyperpage{59}
+    \subitem {am\+\_\+nt}, \hyperpage{60}
+    \subitem {am\+\_\+nx}, \hyperpage{60}
+    \subitem {am\+\_\+ny}, \hyperpage{60}
+    \subitem {am\+\_\+nz}, \hyperpage{60}
+    \subitem {am\+\_\+ordering}, \hyperpage{63}
+    \subitem {am\+\_\+p}, \hyperpage{60}
+    \subitem {am\+\_\+pbar}, \hyperpage{61}
+    \subitem {am\+\_\+plist}, \hyperpage{59}
+    \subitem {am\+\_\+rtol}, \hyperpage{61}
+    \subitem {am\+\_\+sensi}, \hyperpage{61}
+    \subitem {am\+\_\+sensi\+\_\+meth}, \hyperpage{61}
+    \subitem {am\+\_\+stldet}, \hyperpage{62}
+    \subitem {am\+\_\+sx0data}, \hyperpage{62}
+    \subitem {am\+\_\+ts}, \hyperpage{60}
+    \subitem {am\+\_\+tstart}, \hyperpage{60}
+    \subitem {am\+\_\+ubw}, \hyperpage{62}
+    \subitem {am\+\_\+xbar}, \hyperpage{61}
+    \subitem {am\+\_\+z2event}, \hyperpage{63}
 
   \indexspace
 
+  \item {wrap\+\_\+path}
+    \subitem {amimodel}, \hyperpage{48}
   \item {write\+Ccode}
-    \subitem {amimodel}, \hyperpage{38}
+    \subitem {amifun}, \hyperpage{35}
   \item {write\+Ccode\+\_\+sensi}
-    \subitem {amimodel}, \hyperpage{37}
+    \subitem {amifun}, \hyperpage{34}
+  \item {wtype}
+    \subitem {amimodel}, \hyperpage{44}
 
 \end{theindex}

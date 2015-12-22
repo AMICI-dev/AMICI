@@ -985,6 +985,7 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
      * getEventSensisFSA extracts event information for forward sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type int
+     * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type void
      * @param[in] user_data pointer to the user data struct @type UserData
      * @param[out] return_data pointer to the return data struct @type ReturnData
@@ -1019,6 +1020,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
      *     analysis for events that happen at the end of the considered interval
      *
      * @param[out] status flag indicating success of execution @type int
+     * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type void
      * @param[in] user_data pointer to the user data struct @type UserData
      * @param[out] return_data pointer to the return data struct @type ReturnData
@@ -1052,6 +1054,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
      * getEventSensisASA extracts event information for adjoint sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] user_data pointer to the user data struct @type UserData
      * @param[out] return_data pointer to the return data struct @type ReturnData
@@ -1574,6 +1577,7 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *use
      * @param[in] iroot index of next event @type int
      * @param[in] tdata timepoint of next data point @type realtype
      * @param[in] it index of next data point @type int
+     * @param[in] user_data pointer to the user data struct @type UserData
      * @return tnext next timepoint @type realtype
      */
     
@@ -1748,6 +1752,7 @@ void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data)
      * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
      *
      * @param[out] status flag indicating success of execution @type *int
+     * @param[in] iroot discontinuity occurance index @type int
      * @param[in] user_data pointer to the user data struct @type UserData
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
