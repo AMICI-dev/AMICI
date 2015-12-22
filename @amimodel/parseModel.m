@@ -4,40 +4,7 @@ function this = parseModel(this)
     % Return values:
     %  this: updated model definition object @type amimodel
 
-    % complete optional fields
-    if(~isfield(this.sym,'u'))
-        this.sym.u = sym.empty(0,0);
-    end
-    if(~isfield(this.sym,'k'))
-        this.sym.k = sym.empty(0,0);
-    end
-    if(~isfield(this.sym,'Jy'))
-        this.sym.Jy = sym('log(2*pi*sigma_y^2) + ((y-my)/sigma_y)^2');
-    end
-    if(~isfield(this.sym,'Jz'))
-        this.sym.Jz = sym('log(2*pi*sigma_z^2) + ((z-mz)/sigma_z)^2');
-    end
-        
     
-    if(isfield(this.sym,'root'))
-        error('The definition of events via a root function is deprecated and no longer supported. Please update the model definition syntax!')
-    end
-    if(~isfield(this.sym,'sigma_y'))
-        this.sym.sigma_y = sym.ones(size(this.sym.y));
-    end
-    if(numel(this.sym.sigma_y) == 1)
-        this.sym.sigma_y = this.sym.sigma_y*sym.ones(size(this.sym.y));
-    end
-    if(~isfield(this.sym,'sigma_z'))
-        this.sym.sigma_z = sym.ones(size(this.sym.y));
-    end
-    if(numel(this.sym.sigma_z) == 1)
-        this.sym.sigma_z = this.sym.sigma_z*sym.ones(size(this.sym.y));
-    end
-    
-    if(any(ismember(this.sym.k,this.sym.p)))
-        error(['Invalid Model: ' char(this.sym.k(find(ismember(this.sym.k,this.sym.p),1))) ' is contained in both p and k!'])
-    end
 
     % load old hashes
     [this,HTable] = this.loadOldHashes();
@@ -86,7 +53,7 @@ function this = parseModel(this)
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
-    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root'};
+    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','dJydx','dJydp','sJy','Jz','dJzdx','dJzdp','sJz'};
     
     if(this.forward)
         funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau'};

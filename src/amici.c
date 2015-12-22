@@ -911,50 +911,17 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
     for (iy=0; iy<ny; iy++) {
-        if(data_model != AMI_ONEOUTPUT) {
-            if (mxIsNaN(ysigma[iy*nt+it])) {
-                *status = fsigma_y(t,sigma_y,udata);
-                if (*status != AMI_SUCCESS) return;
-                *status = fdsigma_ydp(t,dsigma_ydp,udata);
-                if (*status != AMI_SUCCESS) return;
-            } else {
-                for (ip=0; ip<np; ip++) {
-                    dsigma_ydp[ip*ny+iy] = 0;
-                }
-                sigma_y[iy] = ysigma[iy*nt+it];
-            }
-        }
-        for (ip=0; ip<np; ip++) {
-            if(data_model == AMI_NORMAL) {
-                if(!mxIsNaN(my[iy*nt+it])){
-                    dgdp[ip] += dsigma_ydp[ip*ny+iy]/sigma_y[iy] + ( dydp[ip*ny+iy]* ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2) - dsigma_ydp[ip*ny+iy]*pow( ( ydata[iy*nt+it] - my[iy*nt+it] ),2)/pow( sigma_y[iy] , 3);
-                }
-            }
-            if(data_model == AMI_LOGNORMAL) {
-                if(!mxIsNaN(my[iy*nt+it])){
-                    dgdp[ip] += (sigma_y[iy]*dydp[ip*ny+iy] + ydata[iy*nt+it]*dsigma_ydp[ip*ny+iy])/(sigma_y[iy]*ydata[iy*nt+it]) + ( dydp[ip*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2) -  dsigma_ydp[ip*ny+iy]*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ),2)/pow(sigma_y[iy] , 3);
-                }
-            }
-            if(data_model == AMI_ONEOUTPUT) {
-                dgdp[ip] += dydp[ip*ny+iy];
-            }
-        }
-        for (ix=0; ix<nx; ix++) {
-            if(data_model == AMI_NORMAL) {
-                if(!mxIsNaN(my[iy*nt+it])){
-                    dgdx[it+ix*nt] += ( dydx[ix*ny+iy] * ( ydata[iy*nt+it] - my[iy*nt+it] ) )/pow( sigma_y[iy] , 2);
-                }
-            }
-            if(data_model == AMI_LOGNORMAL) {
-                if(!mxIsNaN(my[iy*nt+it])){
-                    dgdx[it+ix*nt] += 1/(2*pi)*dydx[ix*ny+iy]/ydata[iy*nt+it] + ( dydx[ix*ny+iy]/ydata[iy*nt+it] * ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) ) )/pow( sigma_y[iy] , 2);
-                }
-            }
-            if(data_model == AMI_ONEOUTPUT) {
-                dgdx[it+ix*nt] += dydx[ix*ny+iy];
+        if (mxIsNaN(ysigma[iy*nt+it])) {
+            *status = fdsigma_ydp(t,dsigma_ydp,udata);
+            if (*status != AMI_SUCCESS) return;
+        } else {
+            for (ip=0; ip<np; ip++) {
+                dsigma_ydp[ip*ny+iy] = 0;
             }
         }
     }
+    fdJydp(ts[it],it,dgdp,ydata,dydp,my,sigma_y,dsigma_ydp,udata);
+    fdJydx(ts[it],it,dgdx,ydata,dydx,my,sigma_y,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -990,33 +957,15 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
     if (*status != AMI_SUCCESS) return;
     
     for (iy=0; iy<ny; iy++) {
-        
-        if(data_model != AMI_ONEOUTPUT) {
-            if (mxIsNaN(ysigma[iy*nt+it])) {
-                *status =fsigma_y(t,sigma_y,udata);
-                if (*status != AMI_SUCCESS) return;
-                
-            } else {
-                sigma_y[iy] = ysigma[iy*nt+it];
-            }
-        }
-        
-        if (data_model == AMI_NORMAL) {
-            if(!mxIsNaN(my[iy*nt+it])){
-                g += 0.5*log(2*pi*pow(sigma_y[iy],2)) + 0.5*pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
-                *chi2data += pow( ( ydata[iy*nt+it] - my[iy*nt+it] )/sigma_y[iy] , 2);
-            }
-        }
-        if (data_model == AMI_LOGNORMAL) {
-            if(!mxIsNaN(my[iy*nt+it])){
-                g += 0.5*log(2*pi*pow(sigma_y[iy]*ydata[iy*nt+it],2)) + 0.5*pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
-                *chi2data += pow( ( log(ydata[iy*nt+it]) - log(my[iy*nt+it]) )/sigma_y[iy] , 2);
-            }
-        }
-        if (data_model == AMI_ONEOUTPUT) {
-            g += ydata[iy*nt+it];
+        if (mxIsNaN(ysigma[iy*nt+it])) {
+            *status =fsigma_y(t,sigma_y,udata);
+            if (*status != AMI_SUCCESS) return;
+            
+        } else {
+            sigma_y[iy] = ysigma[iy*nt+it];
         }
     }
+    fJy(t,it,&g,ydata,my,sigma_y,udata);
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -1242,7 +1191,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getEventOutput extracts output information for events
      *
@@ -1256,7 +1205,6 @@ int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_
      * @return cv_status updated status flag @type int
      */
     
-    int cv_status;
     int iz;
     int ie;
     
@@ -1273,33 +1221,30 @@ int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_
         /* we are stuck in a root => turn off rootfinding */
         /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
         AMIRootInit(ami_mem, 0, NULL);
-        cv_status = 0;
     }
     *tlastroot = t;
-    
-    if (cv_status == -22) {
-        /* clustering of roots => turn off rootfinding */
-        AMIRootInit(ami_mem, 0, NULL);
-        cv_status = 0;
-    }
     
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
             if(rootsfound[ie] != 0) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
+                if (*status != AMI_SUCCESS) return;
                 
                 for (iz=0; iz<nz; iz++) {
                     if(z2event[iz] == ie) {
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
+                        if (*status != AMI_SUCCESS) return;
                     }
                 }
                 
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
+                        if (*status != AMI_SUCCESS) return;
                     } else {
                         getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
+                        if (*status != AMI_SUCCESS) return;
                     }
                 }
                 
@@ -1307,8 +1252,6 @@ int getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_
             }
         }
     }
-
-    return(cv_status);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1344,14 +1287,18 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
             *status = fz(t,ie,nroots,zdata,x,udata);
+            if (*status != AMI_SUCCESS) return;
 
             getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+            if (*status != AMI_SUCCESS) return;
             
             if (sensi >= 1) {
                 if(sensi_meth == AMI_ASA) {
                     getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
+                    if (*status != AMI_SUCCESS) return;
                 } else {
                     getEventSensisFSA_tf(status, ie, ami_mem, udata, rdata, tdata);
+                    if (*status != AMI_SUCCESS) return;
                 }
             }
             
@@ -1501,7 +1448,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
         }
     }
     
-    *status = getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
+    getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
     if (*status != AMI_SUCCESS) return;
     
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */

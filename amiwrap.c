@@ -96,10 +96,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     } else {
                         cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                     }
+                    if (cv_status == -22) {
+                        /* clustering of roots => turn off rootfinding */
+                        AMIRootInit(ami_mem, 0, NULL);
+                        cv_status = 0;
+                    }
                     if (cv_status==AMI_ROOT_RETURN) {
                         discs[iroot] = t;
                         
                         handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
+                        if (status != AMI_SUCCESS) goto freturn;
                         
                         if (t==ts[it]) {
                             cv_status = 0;
@@ -111,6 +117,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             
             handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
+            if (status != AMI_SUCCESS) goto freturn;
             
         } else {
             for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();

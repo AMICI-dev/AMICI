@@ -121,7 +121,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'z','x','xdot'};
             
         case 'sz'
-            this.deps = {'dzdp','dzdx','dzdt','sx','dtaudp'};
+            this.deps = {'dzdp','dzdx','dzdt','sx','dtaudp','stau'};
             
         case 'sz_tf'
             this.deps = {'dzdp','dzdx','sx'};
@@ -197,25 +197,29 @@ function [ this ] = getDeps(this, model)
             
         case 'Jy'
             this.deps = {'y','sigma_y','p'};
+        case 'dJydy'
+            this.deps = {'Jy','y'};
         case 'dJydx'
-            this.deps = {'Jy','x'};
+            this.deps = {'dJydy','dydx'};
         case 'dJydsigma'
             this.deps = {'Jy','sigma_y'};
         case 'dJydp'
-            this.deps = {'Jy','p','dJydsigma'};
+            this.deps = {'dJydy','dydp','dJydsigma','dsigma_ydp'};
         case 'sJy'
-            this.deps = {'dJydp','dJydx','sy'};
+            this.deps = {'dJydp','dJydy','sy'};
             
         case 'Jz'
             this.deps = {'z','sigma_z','p'};
-        case 'dJzdx'
+        case 'dJzdz'
             this.deps = {'Jz','x'};
+        case 'dJzdx'
+            this.deps = {'dJzdz','dzdx'};
         case 'dJzdsigma'
             this.deps = {'Jz','sigma_z'};
         case 'dJzdp'
-            this.deps = {'Jz','p','dJzdsigma'};
+            this.deps = {'dJzdz','dzdp','dJzdsigma','dsigma_zdp'};
         case 'sJz'
-            this.deps = {'dJzdp','dJydx','sz'};
+            this.deps = {'dJzdp','dJzdz','sz'};
 
 
         otherwise

@@ -1,5 +1,5 @@
 function [ this ] = makeEvents( this )
-    % getEvents extracts discontiniuties from the model right hand side
+    % makeEvents extracts discontiniuties from the model right hand side
     % and converts them into events
     %
     % Return values:
@@ -113,6 +113,20 @@ function [ this ] = makeEvents( this )
             this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent}(:));
         end
         
+    end
+    
+    if(~isfield(this.sym,'sigma_z'))
+        this.sym.sigma_z = sym.ones(size([this.event.z]));
+    end
+    if(numel(this.sym.sigma_z) == 1)
+        this.sym.sigma_z = this.sym.sigma_z*sym.ones(size([this.event.z]));
+    end
+    
+    if(~isfield(this.sym,'Jz'))
+        this.sym.Jz = sym(0);
+        for iz = 1:length([this.event.z])
+            this.sym.Jz = this.sym.Jy + sym(['log(2*pi*sdz_' num2str(iz) '^2) + ((z_' num2str(iz) '-mz_' num2str(iz) ')/sdz_' num2str(iz) ')^2']);
+        end
     end
     
 end

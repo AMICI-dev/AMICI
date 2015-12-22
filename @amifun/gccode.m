@@ -100,8 +100,6 @@ for j=transpose(ff(:));
             cstr = regexprep(cstr,[this.cvar '\[([0-9]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*($1+ip*nz)\]']);
         elseif(strcmp(this.cvar,'dxdotdp'))
             cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]', 'dxdotdp[\($1+ip*nx\)\]');
-        elseif(strcmp(this.cvar,'sdeltadisc'))
-            cstr = regexprep(cstr,'sdeltadisc\[([0-9]*)\]','sdeltadisc\[plist[ip]+np*$1\]');
         elseif(strcmp(this.cvar,'Jdata'))
             cstr = strrep(cstr, 'Jdata[', 'J->data[');
         elseif(strcmp(this.cvar,'JBdata'))
@@ -112,15 +110,40 @@ for j=transpose(ff(:));
             cstr = strrep(cstr, 'v[', 'vB_tmp[');
         elseif(strcmp(this.cvar,'sxdot'))
             cstr = strrep(cstr,'tmp_J[','tmp_J->data[');
-        elseif(strcmp(this.cvar,'sroot') || strcmp(this.cvar,'srootval'))
-            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[nroots + nmaxroot*(ip*nr + $1)] = ']);
         elseif(strcmp(this.cvar,'dsigma_zdp')  || strcmp(this.cvar,'sz')|| strcmp(this.cvar,'dzdp'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nz + $1] = ']);
         elseif(strcmp(this.cvar,'dsigma_ydp') || strcmp(this.cvar,'dydp'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*ny + $1] = ']);
         elseif(strcmp(this.cvar,'deltasx'))
             cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[ip*nx + $1] = ']);
+        elseif(strcmp(this.cvar,'dJydx'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[it+$1*nt] = ']);
+        elseif(strcmp(this.cvar,'dJzdx'))
+            cstr = regexprep(cstr, [this.cvar '\[([0-9]*)\] = '], [ this.cvar '[nroots[ie]+$1*maxevent] = ']);
         end
+        
+        if(strfind(this.cvar,'Jy'))
+            cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
+            cstr = regexprep(cstr,'dydp_([0-9]+)','dydp\[$1+ip*ny]');
+            cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');
+            cstr = regexprep(cstr,'sy_([0-9]+)','sy\[it+nt*\($1+ip*ny\)\]');
+            cstr = regexprep(cstr,'sdy_([0-9]+)','sigma_y\[$1\]');
+            cstr = regexprep(cstr,'dsdydp\[([0-9]*)\]','dsigma_ydp\[$1\]');
+            cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
+            cstr = strrep(cstr,'=','+=');
+        end
+        
+        if(strfind(this.cvar,'Jz'))
+            cstr = regexprep(cstr,'dzdx_([0-9]+)','dzdx\[$1]');
+            cstr = regexprep(cstr,'dzdp_([0-9]+)','dzdp\[$1+ip*nz]');
+            cstr = regexprep(cstr,'mz_([0-9]+)','mz\[nroots[ie]+nmaxevent*$1]');
+            cstr = regexprep(cstr,'sz_([0-9]+)','sz\[nroots[ie]+nmaxevent*\($1+ip*nz\)\]');
+            cstr = regexprep(cstr,'sdz_([0-9]+)','sigma_z\[$1\]');
+            cstr = regexprep(cstr,'dsdzdp\[([0-9]*)\]','dsigma_zdp\[$1\]');
+            cstr = regexprep(cstr,'z_([0-9]+)','z\[nroots[ie]+nmaxevent*$1\]');
+            cstr = strrep(cstr,'=','+=');
+        end
+        
 
         
         for nvec = this.nvecs

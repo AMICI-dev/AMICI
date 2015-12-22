@@ -111,6 +111,22 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*nz);\n']);
         case 'dsigma_zdp'
             fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*nz*np);\n']);
+        case 'Jy'
+            % nothing
+        case 'dJydx'
+            % nothing
+        case 'dJydp'
+            % nothing
+        case 'sJy'
+            % nothing
+        case 'Jz'
+            % nothing
+        case 'dJzdx'
+            % nothing
+        case 'dJzdp'
+            % nothing
+        case 'sJz'
+            % nothing
         otherwise
             error(['unkown function: ' fun])
     end
