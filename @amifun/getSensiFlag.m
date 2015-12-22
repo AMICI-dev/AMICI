@@ -1,8 +1,7 @@
 function [ this ] = getSensiFlag(this)
-    % getDeps populates the dependencies for the requested function
+    % getSensiFlag populates the sensiflag property
     %
     % Parameters:
-    %  model: model definition object @type amimodel
     %
     % Return values:
     %  this: updated function definition object @type amifun

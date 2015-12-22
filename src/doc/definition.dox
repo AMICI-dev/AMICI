@@ -75,16 +75,16 @@
  
  @code
  xdot(1) = [ const1 - param1*state1 ];
- xdot(2) = [ +param2*x(1) + dirac(t-param3) - const2*x(2) ];
- xdot(3) = [ param4*x(2) ];
+ xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ xdot(3) = [ param4*state2 ];
  @endcode
  
  or
  
  @code
  f(1) = [ const1 - param1*state1 ];
- f(2) = [ +param2*x(1) + dirac(t-param3) - const2*x(2) ];
- f(3) = [ 2*x(2) ];
+ f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ f(3) = [ param4*state2 ];
  @endcode
  
  The specification of f or xdot may depend on @ref states, @ref parameters and @ref constants.
@@ -126,9 +126,9 @@
  
  @subsection events Events
  
- Specifying events is optional. Events are specified in terms of a root function. Events are defined to happen at the roots of the root function.
+ Specifying events is optional. Events are specified in terms of a trigger function, a bolus fuction and an output function. The roots of the trigger function defines the occurences of the event. The bolus function defines the change in the state on event occurences. The output function defines the expression which is evaluated and reported by the simulation routine on every event occurence. The user can create events by constructing a vector of objects of the class @ref amievent.
  
- @code root(1) = state1 - state2; @endcode
+ @code event(1) = amievent(state1 - state2,0,[]); @endcode
  
  Events may depend on @ref states, @ref parameters and @ref constants but <b>not</b> on @ref observables
  
@@ -154,7 +154,7 @@
  @code
  model.sym.x = x;
  model.sym.k = k;
- model.sym.root = root;
+ model.sym.event = event;
  model.sym.xdot = xdot;
  % or
  model.sym.f = f;

@@ -1,11 +1,12 @@
 clear
-%% COMPILATION
+%%
+% COMPILATION
 [exdir,~,~]=fileparts(which('example_model_5.m'));
-cd(exdir)
 % compile the model
 amiwrap('model_example_5','example_model_5_syms',exdir)
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 tout = linspace(0,4,9);
@@ -42,7 +43,8 @@ xlabel('time t')
 ylabel('observable')
 title(['log-likelihood: ' num2str(sol.llh) ])
 
-%% FD
+%%
+% FD
 
 eps = 1e-4;
 xi = log10(p);

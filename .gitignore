@@ -7,6 +7,14 @@ debug_amici/*
 
 models/*
 
+fonts/*
+
+src/doc/*
+
+stylesheets/*
+
+images/*
+
 *.mexmaci64
 
 *.eps
@@ -50,3 +58,13 @@ examples/example_5/example_model_5_paper.m
 mtoc/makeDocumentation.m
 
 mtoc/makeDocumentation.m
+
+index.html
+
+*.js
+
+*.template
+
+*.dox
+
+*.json

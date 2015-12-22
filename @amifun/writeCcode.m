@@ -6,7 +6,8 @@ function writeCcode(this,model, fid)
 %  model: model defintion object @type amimodel
 %  fid: file id in which the final expression is written @type fileid
 %
-%
+% Return values:
+%  void
 
 nevent = model.nevent;
 ny = model.ny;
