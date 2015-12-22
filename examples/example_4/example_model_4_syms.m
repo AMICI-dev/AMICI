@@ -6,7 +6,6 @@ model.atol = 1e-12;
 model.rtol = 1e-8;
 model.maxsteps = 1e4;
 model.param = 'log10';
-model.debug = true;
 
 %% STATES
 
