@@ -323,16 +323,17 @@ function this = compileC(this)
     end
     
     for j=1:length(this.funs)
+        this.cfun(1).(this.funs{j}) = 0;
         if(this.recompile)
-            recompile = 1;
+            this.cfun(1).(this.funs{j}) = 1;
             hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
         else
             if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'file'))
-                recompile = 1;
+                this.cfun(1).(this.funs{j}) = 1;
                 hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             else
                 if(~exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']), 'file'))
-                    recompile = 1;
+                    this.cfun(1).(this.funs{j}) = 1;
                     hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
                 else
                     hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
@@ -341,16 +342,34 @@ function this = compileC(this)
                     fclose(fid);
                     if(~strcmp(tline,hash))
                         % file was updated, we need to recompile
-                        recompile = 1;
+                        this.cfun(1).(this.funs{j}) = 1;
                     else
-                        recompile = 0;
+                        this.cfun(1).(this.funs{j}) = 0;
                     end
                 end
             end
         end
-        if(recompile)
+    end
+    % flag dependencies for recompilation
+    if(this.cfun(1).J)
+        this.cfun(1).JBand = 1;
+    end
+    if(this.cfun(1).JB)
+        this.cfun(1).JBandB = 1;
+    end
+    if(this.cfun(1).JSparse)
+        this.cfun(1).sxdot = 1;
+    end
+    if(this.cfun(1).dxdotdp)
+        this.cfun(1).sxdot = 1;
+        this.cfun(1).qBdot = 1;
+    end
+    
+    for j=1:length(this.funs)
+        if(this.cfun(1).(this.funs{j}))
             fprintf([this.funs{j} ' | ']);
             eval(['mex ' COPT ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) includesstr ' "' fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]) '" ' fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
+            hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']),'w');
             fprintf(fid,hash);
             fclose(fid);

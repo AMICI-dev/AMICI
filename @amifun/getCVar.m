@@ -1,4 +1,4 @@
-function [ cvar ] = getFunCVar(this, funstr )
+function [ this ] = getCVar(this)
     % getDeps returns the c variable for the requested function.
     %
     % Parameters:
@@ -7,23 +7,19 @@ function [ cvar ] = getFunCVar(this, funstr )
     % Return values:
     %  cvar: cell array of dependencies @type string
     
-    switch(funstr)
+    switch(this.funstr)
         case 'J'
-            cvar =  'Jdata';
+            this.cvar =  'Jdata';
         case 'rootval'
-            cvar =  'rootval';
+            this.cvar =  'rootval';
         case 'JSparse'
-            cvar =  'Jdata';
+            this.cvar =  'Jdata';
         case 'JB'
-            cvar =  'JBdata';
+            this.cvar =  'JBdata';
         case 'JSparseB'
-            cvar =  'JBdata';
-        case 'drvaldp'
-            cvar =  'drvaldp';
-        case 'drvaldx'
-            cvar =  'drvaldx';
+            this.cvar =  'JBdata';
         otherwise
-            cvar = funstr;
+            this.cvar = this.funstr;
     end
 end
 

@@ -17,8 +17,9 @@ function [this,cflag] = checkDeps(this,HTable,deps)
         for id = 1:length(deps)
             if(~isfield(this.HTable,deps{id}))
                 % check subdependencies
-                subdeps = this.getFunDeps(deps{id});
-                [this,cflagdep] = this.checkDeps(HTable,subdeps);
+                fun = amifun(deps{id},this);
+                fun = fun.getDeps(this);
+                [this,cflagdep] = this.checkDeps(HTable,fun.deps);
                 cflags(id) = cflagdep;
             else
                 cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
@@ -33,14 +34,8 @@ function [this,cflag] = checkDeps(this,HTable,deps)
         % all symbolic definitions are generated. this is forced by passing
         % an empty HTable to getFun
         for id = 1:length(deps)
-            if(any(strcmp(deps{id},{'x','dx','k','p','sx','sdx','xB','dxB','y','x0','dx0','sigma_y','sigma_t','M','rfun','xdot'})))
-                if(~isfield(this.strsym,[deps{id} 's']))
-                    this = this.getFun([],deps{id});
-                end
-            else
-                if(~isfield(this.sym,deps{id}))
-                    this = this.getFun([],deps{id});
-                end
+            if(~isfield(this.fun,deps{id}))
+                this = this.getFun([],deps{id});
             end
         end
     end

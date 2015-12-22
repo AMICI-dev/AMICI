@@ -12,9 +12,6 @@ model.maxsteps = 1e4;
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10'; 
-model.debug = false;
-model.recompile = true;
-
 
 %%
 % STATES
@@ -80,22 +77,20 @@ y(1) = p4 * (x1+x2+x3);
 %%
 % EVENTS
 % this part is optional and can be ommited
+syms t
 
 % events fire when there is a zero crossing of the root function
-root = sym(zeros(2,1));
-% x3 == x2
-root(1) = x3 - x2;
-% x3 == x1
-root(2) = x3 - x1;
+event(1) = amievent(x3-x2,0,t);
+event(2) = amievent(x3-x1,0,t);
 
 %%
 % SYSTEM STRUCT
 
 model.sym.x = x;
 model.sym.k = k;
-model.sym.root = root;
 model.sym.xdot = xdot;
 model.sym.p = p;
 model.sym.x0 = x0;
 model.sym.y = y;
+model.event = event;
 end

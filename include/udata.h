@@ -9,12 +9,11 @@
 #define np udata->am_np
 #define ny udata->am_ny
 #define nx udata->am_nx
-#define nr udata->am_nr
+#define nz udata->am_nz
+#define ne udata->am_ne
 #define nt udata->am_nt
-#define ndisc udata->am_ndisc
 #define nnz udata->am_nnz
-#define nmaxroot udata->am_nmaxroot
-#define nmaxdisc udata->am_nmaxdisc
+#define nmaxevent udata->am_nmaxevent
 
 #define p udata->am_p
 #define k udata->am_k
@@ -57,6 +56,9 @@
 #define tmp_J udata->am_J
 #define tmp_dxdotdp udata->am_dxdotdp
 
+#define z2event udata->am_z2event
+#define h udata->am_h
+
 #ifndef _MY_UDATA
 #define _MY_UDATA
 
@@ -71,18 +73,16 @@ typedef struct {
     int    am_ny;
     /** number of states */
     int    am_nx;
-    /** number of roots */
-    int    am_nr;
+    /** number of event outputs */
+    int    am_nz;
+    /** number of events */
+    int    am_ne;
     /** number of timepoints */
     int    am_nt;
-    /** number of discontinuities */
-    int    am_ndisc;
     /** number of nonzero entries in jacobian */
     int    am_nnz;
-    /** maximal number of roots to collect */
-    int    am_nmaxroot;
-    /** maximal number of discontinuities to track */
-    int    am_nmaxdisc;
+    /** maximal number of events to track */
+    int    am_nmaxevent;
     
     /** parameter array */
     double *am_p;
@@ -166,6 +166,12 @@ typedef struct {
     
     /** state ordering */
     int am_ordering;
+    
+    /** index indicating to which event an event output belongs */
+    double *am_z2event;
+    
+    /** flag indicating whether a certain heaviside function should be active or not */
+    double *am_h;
     
     /** tempory storage of Jacobian data across functions */
     SlsMat am_J;
