@@ -40,7 +40,7 @@ for j=transpose(ff(:));
                 arg1start = arg1start-1;
             end
         else % otherwise find start of expression
-            m = regexp(cstr(1:(idx(1)-1)),'([\w\[\]]*)','start');
+            m = regexp(cstr(1:(idx(1)-1)),'([\w\.\[\]]*)','start');
             arg1start = m(end);
         end
         arg1end = idx(1)-1;
@@ -49,7 +49,7 @@ for j=transpose(ff(:));
         if(strcmp(cstr(idx(1)+1),'('))% if the expression is braced find end of higher levels
             arg2end = samebrl(find(samebrl>idx(1),1,'first')) - 1;
         else % otherwise find end of expression
-            m = regexp(cstr((idx(1)+1):end),'([\w\[\]]*)','end');
+            m = regexp(cstr((idx(1)+1):end),'([\w\.\[\]]*)','end');
             arg2end = idx(1)+m(1);
         end
         
