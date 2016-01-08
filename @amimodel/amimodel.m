@@ -132,7 +132,7 @@ classdef amimodel
 
             AM.modelname = modelname;
             % set path and create folder
-            AM.wrap_path=fileparts(which('amiwrap.m'));
+            AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
             if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
                 mkdir(fullfile(AM.wrap_path,'models'));
                 mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
