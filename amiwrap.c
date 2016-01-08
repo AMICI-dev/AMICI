@@ -108,6 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     /* integration error occured */
                     if (cv_status<0) {
+                        status = cv_status;
                         goto freturn;
                     }
                     
