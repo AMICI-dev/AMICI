@@ -48,6 +48,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     bool rootflag, discflag;
     
+    bool setupBdone;
+    
+    setupBdone = false;
+    
     udata = setupUserData(prhs);
     if (udata == NULL) goto freturn;
     
@@ -102,6 +106,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         AMIRootInit(ami_mem, 0, NULL);
                         cv_status = 0;
                     }
+                    /* integration error occured */
+                    if (cv_status<0) {
+                        goto freturn;
+                    }
+                    
                     if (cv_status==AMI_ROOT_RETURN) {
                         discs[iroot] = t;
                         
@@ -142,6 +151,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if(sensi_meth == AMI_ASA) {
             if(cv_status == 0) {
                 setupAMIB(&status, ami_mem, udata, tdata);
+                setupBdone = true;
                 
                 it = nt-2;
                 iroot--;
@@ -267,21 +277,20 @@ freturn:
         N_VDestroy_Serial(x_old);
         N_VDestroy_Serial(dx_old);
         N_VDestroy_Serial(xdot_old);
-        AMIFree(&ami_mem);
         DestroyMat(Jtmp);
         if (ne>0) {
-            if(rootsfound) mxFree(rootsfound);
-            if(rootvals) mxFree(rootvals);
-            if(rootidx) mxFree(rootidx);
-            if(sigma_z)    mxFree(sigma_z);
-            if(nroots)    mxFree(nroots);
-            if(discs)    mxFree(discs);
-            if(h)    mxFree(h);
+            if(ami_mem) mxFree(rootsfound);
+            if(ami_mem) mxFree(rootvals);
+            if(ami_mem) mxFree(rootidx);
+            if(ami_mem)    mxFree(sigma_z);
+            if(ami_mem)    mxFree(nroots);
+            if(ami_mem)    mxFree(discs);
+            if(ami_mem)    mxFree(h);
             
-            if(deltax)    mxFree(deltax);
-            if(deltasx)    mxFree(deltasx);
-            if(deltaxB)    mxFree(deltaxB);
-            if(deltaqB)    mxFree(deltaqB);
+            if(ami_mem)    mxFree(deltax);
+            if(ami_mem)    mxFree(deltasx);
+            if(ami_mem)    mxFree(deltaxB);
+            if(ami_mem)    mxFree(deltaqB);
         }
         
         if(ny>0) {
@@ -301,35 +310,37 @@ freturn:
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(dydx)    mxFree(dydx);
-                if(dydp)    mxFree(dydp);
-                if(dgdp)    mxFree(dgdp);
-                if(dgdx)    mxFree(dgdx);
-                if(drdp)    mxFree(drdp);
-                if(drdx)    mxFree(drdx);
+                if(ami_mem)    mxFree(dydx);
+                if(ami_mem)    mxFree(dydp);
+                if(ami_mem)    mxFree(dgdp);
+                if(ami_mem)    mxFree(dgdx);
+                if(ami_mem)    mxFree(drdp);
+                if(ami_mem)    mxFree(drdx);
                 if (ne>0) {
-                    if(dzdp)    mxFree(dzdp);
-                    if(dzdx)    mxFree(dzdx);
+                    if(ami_mem)    mxFree(dzdp);
+                    if(ami_mem)    mxFree(dzdx);
                 }
-                if(llhS0)     mxFree(llhS0);
-                if(dsigma_ydp)    mxFree(dsigma_ydp);
+                if(ami_mem)     mxFree(llhS0);
+                if(ami_mem)    mxFree(dsigma_ydp);
                 if (ne>0) {
-                    if(dsigma_zdp)    mxFree(dsigma_zdp);
+                    if(ami_mem)    mxFree(dsigma_zdp);
                 }
-                if(dxB)      N_VDestroy_Serial(dxB);
-                if(xB)      N_VDestroy_Serial(xB);
-                if(xQB)     N_VDestroy_Serial(xQB);
+                if(setupBdone)      N_VDestroy_Serial(dxB);
+                if(setupBdone)      N_VDestroy_Serial(xB);
+                if(setupBdone)     N_VDestroy_Serial(xB_old);
+                if(setupBdone)      N_VDestroy_Serial(xQB);
+                if(setupBdone)      N_VDestroy_Serial(xQB_old);
             }
             
         }
+        if(ami_mem)     N_VDestroy_Serial(id);
+        if(ami_mem)     AMIFree(&ami_mem);
     }
     
     if(udata)   mxFree(plist);
     if (sensi >= 1) {
         if(udata)   mxFree(tmp_dxdotdp);
     }
-    if(ami_mem)     N_VDestroy_Serial(id);
-
     
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
