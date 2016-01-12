@@ -292,7 +292,7 @@ function this = generateC(this)
         if(ismember(iffun{1},this.funs))
             fprintf(fid,['                    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
         else
-            if(strcmp(iffun{1},'dx0') || strcmp(iffun{1},'sdx0'))
+            if(strcmp(iffun{1},'sx0') || strcmp(iffun{1},'dx0') || strcmp(iffun{1},'sdx0'))
                 % these two should always work, if they are not required
                 % they should act as placeholders
                 fprintf(fid,'                    return(0);\n');
@@ -363,7 +363,7 @@ end
 
     
 function argstr = removeTypes(argstr)
-    % gccode transforms an argument string from a string with variable
+    % removeTypes transforms an argument string from a string with variable
     % types (for function definition) to a string without variable types
     % (for function calling)
     %
