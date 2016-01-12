@@ -11,7 +11,7 @@ classdef amimodel
         % struct which stores information for which functions c code needs to be generated @type struct
         fun@struct;
         % struct which stores information for which functions c code needs
-        % to be generated @type *amievent
+        % to be generated @type amievent
         event@amievent;
         % name of the model @type string
         modelname@char;

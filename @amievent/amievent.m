@@ -44,8 +44,12 @@ classdef amievent
             
             if(~isa(z,'sym'))
                 if(isa(z,'double'))
-                    AE.z = sym(z);
-                    warning('Constant outputs are not informative. Please check the event definition.')
+                    if(~isempty(z))
+                        AE.z = sym(z);
+                        warning('Constant outputs are not informative. Please check the event definition.')
+                    else
+                        AE.z = sym(zeros(0,1));
+                    end
                 else
                     error('output function must be a symbolic expression')
                 end      

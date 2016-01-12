@@ -163,6 +163,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     
                     if (tnext<t) {
                         cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                        if (cv_status != AMI_SUCCESS) goto freturn;
                         
                         /* get states only if we actually integrated */
                         status = AMIGetB(ami_mem, which, &t, xB, dxB);

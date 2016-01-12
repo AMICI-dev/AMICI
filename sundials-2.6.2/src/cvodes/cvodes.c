@@ -2955,7 +2955,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
    * --------------------------------------------------
    */  
   
-  nstloc = 0;
+  nstloc = nst;
   loop {
    
     next_h = h;
@@ -3010,7 +3010,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
 
     /* Check for too many steps */
-    if ( (mxstep>0) && (nstloc >= mxstep) ) {
+    if ( (mxstep>0) && (nst >= mxstep) ) {
       cvProcessError(cv_mem, CV_TOO_MUCH_WORK, "CVODES", "CVode", MSGCV_MAX_STEPS, tn);
       istate = CV_TOO_MUCH_WORK;
       tretlast = *tret = tn;

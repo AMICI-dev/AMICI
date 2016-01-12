@@ -584,6 +584,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 if(ne>0) x_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 
+                
+                /* we always want N_d to be equal to the number of maximal steps, this prevents additional forward passes
+                 and thus ensures correctness for systems with discontinuous right hand sides */
+                
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
