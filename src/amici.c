@@ -1469,7 +1469,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
             N_VScale(1.0,dx,dx_old);
         }
         
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
             N_VScale(1.0,x,x_disc[iroot]);
         }
