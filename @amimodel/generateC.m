@@ -65,7 +65,7 @@ function this = generateC(this)
                     else
                         fprintf(fid,'int status;\n');
                         fprintf(fid,'if(ip == 0) {\n');
-                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'NULL,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
