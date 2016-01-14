@@ -54,7 +54,10 @@ for j=transpose(ff(:));
         end
         
         % recombine
-        cstr = [cstr(1:(arg1start-1)) '(pow(' cstr(arg1start:arg1end) ',' cstr(arg2start:arg2end) '))' cstr((arg2end+1):end)];
+        % the char(vpa(sym())) ensures that also fractions in exponents are
+        % transformed into floating point numbers. this prevents erroneous
+        % results due to rounding from int-casting
+        cstr = [cstr(1:(arg1start-1)) '(pow(' cstr(arg1start:arg1end) ',' char(vpa(sym(cstr(arg2start:arg2end)))) '))' cstr((arg2end+1):end)];
         % compute new bracket level
         brl = computeBracketLevel(cstr);
         idx = strfind(cstr,'^');

@@ -40,7 +40,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     TempData tdata; /* temporary data */
     int status; /* general status flag */
     double *pstatus; /* return status flag */
-    int cv_status; /* status flag returned by integration method */
     
     realtype tlastroot; /* storage for last found root */
     int iroot;
@@ -48,9 +47,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     bool rootflag, discflag;
     
-    bool setupBdone;
-    
-    setupBdone = false;
+    bool setupBdone = false;
     
     udata = setupUserData(prhs);
     if (udata == NULL) goto freturn;
@@ -78,8 +75,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     edata = setupExpData(prhs, udata);
     if (edata == NULL) goto freturn;
     
-    cv_status = 0;
-    
     /*******************/
     /* FORWARD PROBLEM */
     /*******************/
@@ -92,35 +87,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
         status = CVodeSetStopTime(ami_mem, ts[it]);
-        if (cv_status == 0) {
+        if (status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
                 while (t<ts[it]) {
                     if(sensi_meth == AMI_ASA && sensi >= 1) {
-                        cv_status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                        status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                     } else {
-                        cv_status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                        status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                     }
-                    if (cv_status == -22) {
+                    if (status == -22) {
                         /* clustering of roots => turn off rootfinding */
                         AMIRootInit(ami_mem, 0, NULL);
-                        cv_status = 0;
+                        status = 0;
                     }
                     /* integration error occured */
-                    if (cv_status<0) {
-                        status = cv_status;
+                    if (status<0) {
                         goto freturn;
                     }
                     
-                    if (cv_status==AMI_ROOT_RETURN) {
+                    if (status==AMI_ROOT_RETURN) {
                         discs[iroot] = t;
                         
                         handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
                         if (status != AMI_SUCCESS) goto freturn;
-                        
-                        if (t==ts[it]) {
-                            cv_status = 0;
-                        }
                         
                         iroot++;
                     }
@@ -128,9 +118,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             
             handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
-            if (cv_status==AMI_DATA_RETURN) {
-                cv_status = 0;
-            }
             if (status != AMI_SUCCESS) goto freturn;
 
             
@@ -150,7 +137,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     if (sensi >= 1) {
         if(sensi_meth == AMI_ASA) {
-            if(cv_status == 0) {
+            if(status == 0) {
                 setupAMIB(&status, ami_mem, udata, tdata);
                 setupBdone = true;
                 
@@ -162,8 +149,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     tnext = getTnext(discs, iroot, ts, it, udata);
                     
                     if (tnext<t) {
-                        cv_status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
-                        if (cv_status != AMI_SUCCESS) goto freturn;
+                        status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                        if (status != AMI_SUCCESS) goto freturn;
                         
                         /* get states only if we actually integrated */
                         status = AMIGetB(ami_mem, which, &t, xB, dxB);
@@ -201,10 +188,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 /* we still need to integrate from first datapoint to tstart */
                 
                 if (t>tstart) {
-                    if(cv_status == 0) {
+                    if(status == 0) {
                         if (nx>0) {
                             /* solve for backward problems */
-                            cv_status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
+                            status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
+                            if (status != AMI_SUCCESS) goto freturn;
                             
                             status = AMIGetQuadB(ami_mem, which, &t, xQB);
                             if (status != AMI_SUCCESS) goto freturn;
@@ -225,7 +213,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 status = fsx0(sx, x, dx, udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 
-                if(cv_status == 0) {
+                if(status == 0) {
                     
                     xB_tmp = NV_DATA_S(xB);
                     
@@ -266,8 +254,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     *llhdata = - g - r;
     
-    status = cv_status;
-    
     goto freturn;
     
 freturn:
@@ -303,7 +289,7 @@ freturn:
                 N_VDestroyVectorArray_Serial(sx,np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(cv_status == 0) {
+                if(status == 0) {
                     N_VDestroyVectorArray_Serial(sx,np);
                 }
             }

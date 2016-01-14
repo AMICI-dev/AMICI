@@ -193,7 +193,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {};
         
         case 'deltaxdot'
-            this.deps = {};
+            this.deps = {'xdot'};
             
         case 'Jy'
             this.deps = {'y','sigma_y','p'};
