@@ -29,7 +29,17 @@ function this = generateC(this)
             fprintf(fid,'#include <include/symbolic_functions.h>\n');
             fprintf(fid,'#include <string.h>\n');
             fprintf(fid,'#include <mex.h>\n');
-            fprintf(fid,'#include <include/udata.h>\n');
+            if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
+                fprintf(fid,'#include <include/udata.h>\n');
+            end
+            if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
+                fprintf(fid,'#include <include/tdata.h>\n');
+                % avoid conflicts
+                fprintf(fid,'#undef t\n');
+                fprintf(fid,'#undef dzdp\n'); 
+                fprintf(fid,'#undef dzdx\n'); 
+                fprintf(fid,'#undef dsigma_zdp\n'); 
+            end
             if(strcmp(ifun{1},'JBand'))
                 fprintf(fid,['#include "' this.modelname '_J.h"\n']);
             elseif(strcmp(ifun{1},'JBandB'))
@@ -48,7 +58,12 @@ function this = generateC(this)
             elseif(strcmp(ifun{1},'JBandB'))
                 fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
             else
-                fprintf(fid,'UserData udata = (UserData) user_data;\n');
+                if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
+                    fprintf(fid,'UserData udata = (UserData) user_data;\n');
+                end
+                if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
+                    fprintf(fid,'TempData tdata = (TempData) temp_data;\n');
+                end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if( strcmp(ifun{1},'sxdot') )
                     if(strcmp(this.wtype,'iw'))
@@ -199,6 +214,7 @@ function this = generateC(this)
     fprintf('wrapfunctions | ');
     fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
     fprintf(fid,'                \n');
+    fprintf(fid,'#include "wrapfunctions.h"\n');
     fprintf(fid,'                \n');
     fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
     fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
@@ -330,13 +346,12 @@ function this = generateC(this)
     fprintf(fid,'\n');
     fprintf(fid,'#define pi M_PI\n');
     fprintf(fid,'\n');
-    fprintf(fid,'#include <wrapfunctions.c>\n');
-    fprintf(fid,'\n');
     fprintf(fid,'\n');
     fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
     fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
     fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
     fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data);\n');
+    fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
     fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem);\n');
     fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem);\n');
     fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem);\n');

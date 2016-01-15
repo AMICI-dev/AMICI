@@ -116,21 +116,21 @@ function this = getArgs(this,model)
         case 'root'
             this.argstr = '(realtype t, N_Vector x, realtype *root, void *user_data)';
         case 'Jy'
-            this.argstr = '(realtype t, int it, realtype *Jy, realtype *y, realtype *my, realtype *sigma_y, void *user_data)';
+            this.argstr = '(realtype t, int it, realtype *Jy, realtype *y, realtype *my, realtype *sd_y, void *user_data)';
         case 'dJydx'
-            this.argstr = '(realtype t, int it, realtype *dJydx, realtype *y, realtype *dydx, realtype *my, realtype *sigma_y, void *user_data)';
+            this.argstr = '(realtype t, int it, realtype *dJydx, realtype *y, realtype *dydx, realtype *my, realtype *sd_y, void *user_data)';
         case 'dJydp'
-            this.argstr = '(realtype t, int it, realtype *dJydp, realtype *y, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data)';
+            this.argstr = '(realtype t, int it, realtype *dJydp, realtype *y, realtype *dydp, realtype *my, realtype *sd_y, realtype *dsigma_ydp, void *user_data)';
         case 'sJy'
-            this.argstr = '(realtype t, int it, realtype *sJy, realtype *y, realtype *dydp, realtype *sy, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data)';
+            this.argstr = '(realtype t, int it, realtype *sJy, realtype *y, realtype *dydp, realtype *sy, realtype *my, realtype *sd_y, realtype *dsigma_ydp, void *user_data)';
         case 'Jz'
-            this.argstr = '(realtype t, int ie, realtype *Jz, realtype *z, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data)';
+            this.argstr = '(realtype t, int ie, realtype *Jz, realtype *z, realtype *mz, realtype *sd_z, void *user_data, void *temp_data)';
         case 'dJzdx'
-            this.argstr = '(realtype t, int ie, realtype *dJzdx, realtype *z, realtype *dzdx, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data)';
+            this.argstr = '(realtype t, int ie, realtype *dJzdx, realtype *z, realtype *dzdx, realtype *mz, realtype *sd_z, void *user_data, void *temp_data)';
         case 'dJzdp'
-            this.argstr = '(realtype t, int ie, realtype *dJzdp, realtype *z, realtype *dzdp, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data)';
+            this.argstr = '(realtype t, int ie, realtype *dJzdp, realtype *z, realtype *dzdp, realtype *mz, realtype *sd_z, realtype *dsigma_zdp, void *user_data, void *temp_data)';
         case 'sJz'
-            this.argstr = '(realtype t, int ie, realtype *sJz, realtype *z, realtype *dzdp, realtype *sz, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data)';
+            this.argstr = '(realtype t, int ie, realtype *sJz, realtype *z, realtype *dzdp, realtype *sz, realtype *mz, realtype *sd_z, realtype *dsigma_zdp, void *user_data, void *temp_data)';
         otherwise
             % do nothing
     end

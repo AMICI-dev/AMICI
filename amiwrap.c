@@ -16,7 +16,6 @@
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
-#include <src/amici.c>
 
 /*!
  * mexFunction is the main function of the mex simulation file this function carries out all numerical integration and writes results into the sol struct.

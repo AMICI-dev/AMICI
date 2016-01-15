@@ -323,7 +323,7 @@ function [this,model] = getSyms(this,model)
         case 'xBdot'
             if(strcmp(model.wtype,'iw'))
                 syms t
-                this.sym = diff(transpose(model.fun.M.syms),t)*model.fun.xB.syms + transpose(model.fun.M.syms)*model.fun.dxB.syms - transpose(model.fun.dfdx.syms)*model.fun.xB.syms;
+                this.sym = diff(transpose(model.fun.M.sym),t)*model.fun.xB.sym + transpose(model.fun.M.sym)*model.fun.dxB.sym - transpose(model.fun.dfdx.sym)*model.fun.xB.sym;
             else
                 this.sym = -transpose(model.fun.J.sym)*model.fun.xB.sym;
             end

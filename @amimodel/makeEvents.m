@@ -18,7 +18,7 @@ function [ this ] = makeEvents( this )
         else
             error(['Bolus of event ' num2str(ievent) ' is neither a scalar nor does it match the state dimension!']);
         end
-        z{ievent} = this.event(ievent).z;
+        z{ievent} = this.event(ievent).z(:);
     end
     
     ievent = nevent;
@@ -52,7 +52,7 @@ function [ this ] = makeEvents( this )
                     ievent = ievent + 1;
                     trigger{ievent} = sym(arg);
                     bolus{ievent} = sym(zeros(nx,1));
-                    z{ievent} = sym.empty([0,1]);
+                    z{ievent} = sym.empty([0,0]);
                 end
             end
         end
@@ -110,7 +110,10 @@ function [ this ] = makeEvents( this )
         
         % update events
         for ievent = 1:nevent
-            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent}(:));
+            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
+            % do not add a (:) after z{ievent} this will transform an 
+            % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
+            % zero entry if we apply [this.event.z]
         end
         
     end
