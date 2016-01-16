@@ -320,6 +320,8 @@ function this = generateC(this)
         fprintf(fid,'                \n');
     end
     
+    fclose(fid);
+    
     %
     %----------------------------------------------------------------
     % cvodewrapfunctions.h
