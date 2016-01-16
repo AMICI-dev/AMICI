@@ -488,6 +488,18 @@ function hash = getFileHash(file)
     
     
 function recompile = checkHash(filestr,o_suffix,DEBUG)
+    % checkHash checks whether filestr.c  has already been compiled as
+    % filestr.o and whether the md5 hash of filestr.c matches the one in
+    % filestr.md5
+    %
+    % Parameters:
+    %  filestr: path of the file @type string
+    %  o_suffix: OS specific suffix for compiled objects
+    %  DEBUG: debug flag
+    %
+    % Return values:
+    %  recompile: flag indicating whether we need to recompile filestr.c
+    
     if(~exist([filestr o_suffix],'file'))
         % file does not exist, we need to recompile
         recompile = 1;
@@ -505,6 +517,7 @@ function recompile = checkHash(filestr,o_suffix,DEBUG)
                 % file was updated, we need to recompile
                 recompile = 1;
             else
+                % everything is fine
                 recompile = 0;
             end
         end
