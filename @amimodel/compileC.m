@@ -278,7 +278,8 @@ function this = compileC(this)
             ' "',fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
     end
     
-    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]),'"');
+    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]),'"');
+    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'src',['amici' o_suffix]),'"');
     
     
     % compile all the sundials objects if we haven't done so yet
@@ -432,9 +433,7 @@ function this = compileC(this)
         ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ...
         ' ' fullfile(this.wrap_path,cstr)  ...
         includesstr ...
-        objectsstr ...
-        ' "' fullfile(this.wrap_path,'models',mexext,['amici' o_suffix]) '" ' ...
-        ' "' fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]) '" '...
+        objectsstr
         ])
 
     
