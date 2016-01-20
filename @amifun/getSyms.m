@@ -567,11 +567,19 @@ function [this,model] = getSyms(this,model)
         case 'Jz'
             this.sym = model.sym.Jz(:);
         case 'dJzdz'
-            this.sym = jacobian(model.fun.Jz.sym,model.fun.z.strsym);
+            if(nz>0)
+                this.sym = jacobian(model.fun.Jz.sym,model.fun.z.strsym);
+            else
+                this.sym = sym(zeros(1,0));
+            end
         case 'dJzdx'
             this.sym = model.fun.dJzdz.sym*model.fun.dzdx.strsym;
         case 'dJzdsigma'
-            this.sym = jacobian(model.fun.Jz.sym,model.fun.sigma_z.strsym);
+            if(nz>0)
+                this.sym = jacobian(model.fun.Jz.sym,model.fun.sigma_z.strsym);
+            else
+                this.sym = sym(zeros(1,0));
+            end
         case 'dJzdp'
             this.sym = model.fun.dJzdz.sym*model.fun.dzdp.strsym + model.fun.dJzdsigma.sym*model.fun.dsigma_zdp.strsym;
         case 'sJz'
