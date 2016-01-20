@@ -349,8 +349,10 @@ function this = compileC(this)
     if(this.cfun(1).J)
         this.cfun(1).JBand = 1;
     end
-    if(this.cfun(1).JB)
-        this.cfun(1).JBandB = 1;
+    if(this.adjoint)
+        if(this.cfun(1).JB)
+            this.cfun(1).JBandB = 1;
+        end
     end
     if(this.cfun(1).JSparse)
         this.cfun(1).sxdot = 1;
@@ -371,7 +373,7 @@ function this = compileC(this)
             eval(['mex ' COPT ...
                 ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ...
                 includesstr ...
-                ' "' fullfile(this.wrap_path,'models',mexext,['symbolic_functions' o_suffix]) '" ' ...
+                ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '" ' ...
                 fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
             hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
             hash = [hash DEBUG];
