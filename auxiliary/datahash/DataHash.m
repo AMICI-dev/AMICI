@@ -141,7 +141,7 @@ if isempty(usetypecastx)
    end
 
    % Search the time-consuming search once only:
-   usetypecastx = ~isempty(which(['typecastx.', mexext]));
+   usetypecastx = ~isempty(which(['typecastx.m']));
 end
 
 % Default options: -------------------------------------------------------------
