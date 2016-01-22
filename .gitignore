@@ -68,3 +68,5 @@ index.html
 *.dox
 
 *.json
+
+examples/geneExpression/simulate_geneExpression.m
