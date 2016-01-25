@@ -49,6 +49,8 @@ classdef amimodel
         nevent@double;
         % number of event outputs @type int
         nz@double;
+        % number of original event outputs for second order sensitivities @type int
+        nztrue@double;
         % flag for DAEs @type *int
         id@double;
         % upper Jacobian bandwidth @type int

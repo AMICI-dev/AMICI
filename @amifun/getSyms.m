@@ -435,14 +435,22 @@ function [this,model] = getSyms(this,model)
                     % dtdp  = (1/drdt)*drdp
                     dtdp = model.fun.stau.sym(ievent,:);
                     
-                    % dxdp  = dx/dt*dt/dp + dx/dp
-                    dxdp = model.fun.xdot.sym*dtdp + sx;
-                    
-                    this.sym(:,:,ievent)= ...
-                        - model.fun.deltaxdot.sym*dtdp ...
-                        + permute(model.fun.ddeltaxdx.sym(:,ievent,:),[1 3 2])*dxdp ...
-                        + model.fun.ddeltaxdt.sym(:,ievent)*dtdp ...
-                        + permute(model.fun.ddeltaxdp.sym(:,ievent,:),[1 3 2]);
+                    % if we are just non-differentiable and but not
+                    % discontinuous we can ignore some of the terms!                
+                    if(any(double(model.fun.ddeltaxdx.sym(:,ievent)~=0)))
+                        % dxdp  = dx/dt*dt/dp + dx/dp
+                        dxdp = model.fun.xdot.sym*dtdp + sx;
+                        
+                        this.sym(:,:,ievent) = ...
+                            + permute(model.fun.ddeltaxdx.sym(:,ievent,:),[1 3 2])*dxdp ...
+                            + model.fun.ddeltaxdt.sym(:,ievent)*dtdp ...
+                            + permute(model.fun.ddeltaxdp.sym(:,ievent,:),[1 3 2]);
+                    else
+                        this.sym(:,:,ievent) = sym(zeros([nx,np]));
+                    end
+                    this.sym(model.event(ievent).hflag,:,ievent) = ...
+                        this.sym(model.event(ievent).hflag,:,ievent) ...
+                        - model.fun.deltaxdot.sym(model.event(ievent).hflag)*dtdp;
                 end
             end
             

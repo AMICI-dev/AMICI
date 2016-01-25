@@ -72,10 +72,16 @@ function [ this ] = makeEvents( this )
             tmp_bolus{ievent} = sym(zeros([nx,1]));
         end
         syms polydirac
+        
+        % initialise hflag
+        hflags = zeros([nx,nevent]);
+        
         for ix = 1:nx
             symchar = char(this.sym.xdot(ix));
             if(strfind(symchar,'dirac'))
                 for ievent = 1:nevent
+                    % remove the dirac function and replace by adding
+                    % respective bolus
                     triggerchar = char(trigger{ievent});
                     str_arg_d = ['dirac(' triggerchar ')' ];
                     % replace event specific functions by "polydirac" variable
@@ -90,12 +96,17 @@ function [ this ] = makeEvents( this )
             end
             if(strfind(symchar,'heaviside'))
                 for ievent = 1:nevent
+                    % remove the heaviside function and replace by h
+                    % variable which is update on event occurrence in the
+                    % solver
                     triggerchar = char(trigger{ievent});
                     str_arg_h = ['heaviside(' triggerchar ')' ];
                     symchar = strrep(symchar,str_arg_h,['h_' num2str(ievent-1)]);
                     mtriggerchar = char(-trigger{ievent});
                     str_arg_h = ['heaviside(' mtriggerchar ')' ];
                     symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
+                    % set hflag
+                    hflags(ix,ievent) = 1;
                 end
             end
             % update xdot
@@ -114,6 +125,7 @@ function [ this ] = makeEvents( this )
             % do not add a (:) after z{ievent} this will transform an 
             % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
             % zero entry if we apply [this.event.z]
+            this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
         end
         
     end
