@@ -134,9 +134,9 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_y'
             this.sym = model.sym.sigma_y;
-            sdys = cell(ny,1);
+            sdys = cell(model.nytrue,1);
             % fill cell array
-            for j=1:ny
+            for j=1:model.nytrue
                 sdys{j} = sprintf('sdy_%i',j-1);
             end
             % transform into symbolic expression
@@ -146,9 +146,9 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_z'
             this.sym = model.sym.sigma_z;
-            sdzs = cell(nz,1);
+            sdzs = cell(model.nztrue,1);
             % fill cell array
-            for j=1:nz
+            for j=1:model.nztrue
                 sdzs{j} = sprintf('sdz_%i',j-1);
             end
             % transform into symbolic expression
@@ -336,12 +336,12 @@ function [this,model] = getSyms(this,model)
             % create cell array of same size
             dsdydps = cell(ny,np);
             % fill cell array
-            for j = 1:ny
-                for i = 1:np
-                    if(this.sym(j,i)~=0)
-                        dsdydps{j,i} = sprintf('dsdydp_%i', j-1 + (i-1)*ny);
+            for iy = 1:model.nytrue
+                for ip = 1:np
+                    if(this.sym(iy,ip)~=0)
+                        dsdydps{iy,ip} = sprintf('dsdydp_%i', iy-1 + (ip-1)*ny);
                     else
-                        dsdydps{j,i} = sprintf('0');
+                        dsdydps{iy,ip} = sprintf('0');
                     end
                 end
             end
@@ -357,7 +357,7 @@ function [this,model] = getSyms(this,model)
             % create cell array of same size
             dsdydps = cell(nz,np);
             % fill cell array
-            for j = 1:nz
+            for j = 1:model.nztrue
                 for i = 1:np
                     if(this.sym(j,i)~=0)
                         dsdydps{j,i} = sprintf('dsdzdp_%i', j-1 + (i-1)*nz);

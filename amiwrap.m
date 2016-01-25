@@ -55,6 +55,7 @@ function amiwrap( varargin )
     warningreset = warning;
     warning('off','symbolic:mupadmex:MuPADTextWarning')
     warning('off','MATLAB:dispatcher:nameConflict')
+    warning('off','symbolic:sym:sym:DeprecateExpressions')
     %% 
     % computations
     

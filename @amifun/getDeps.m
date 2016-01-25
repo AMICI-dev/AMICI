@@ -106,7 +106,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'ddeltaxdp','xB'};
             
         case 'deltaxB'
-            this.deps = {'deltax','dtaudp','xdot','xB'};
+            this.deps = {'deltax','dtaudp','xdot','xB','ddeltaxdx'};
             
         case 'z'
             this.deps = {'x','k','p'};

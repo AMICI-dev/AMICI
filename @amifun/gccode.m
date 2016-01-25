@@ -168,6 +168,9 @@ for j=transpose(ff(:));
         if(strcmp(this.funstr,'deltaqB'))
             cstr = strrep(cstr,'deltaqB_tmp','deltaqB');
         end
+        if(strcmp(this.funstr,'dJydx'))
+            cstr = strrep(cstr,'ydx_tmp','ydx');
+        end
         
     end
     

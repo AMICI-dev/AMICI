@@ -36,6 +36,8 @@ function this = generateC(this)
                 fprintf(fid,'#include <include/tdata.h>\n');
                 % avoid conflicts
                 fprintf(fid,'#undef t\n');
+                fprintf(fid,'#undef x\n');
+                fprintf(fid,'#undef x_tmp\n');
                 fprintf(fid,'#undef dzdp\n'); 
                 fprintf(fid,'#undef dzdx\n'); 
                 fprintf(fid,'#undef dsigma_zdp\n'); 

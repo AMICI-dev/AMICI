@@ -120,6 +120,8 @@ classdef amimodel
                 error('symbolic definitions missing in struct returned by symfun')
             end
             
+            
+            
             props = properties(AM);
             
             for j = 1:length(props)
@@ -129,6 +131,10 @@ classdef amimodel
                     end
                 else
                     AM = AM.makeSyms();
+                    AM.nx = length(AM.sym.x);
+                    AM.np = length(AM.sym.p);
+                    AM.nk = length(AM.sym.k);
+                    AM.ny = length(AM.sym.y);
                 end
             end
 
@@ -144,6 +150,8 @@ classdef amimodel
                 end
             end
             AM = AM.makeEvents();
+            AM.nz = length([AM.event.z]);
+            AM.nevent = length(AM.event);
             
             % check whether we have a DAE or ODE
             if(isfield(AM.sym,'M'))
