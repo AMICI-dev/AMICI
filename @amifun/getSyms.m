@@ -301,7 +301,7 @@ function [this,model] = getSyms(this,model)
             vs = cell(nx,1);
             % fill cells
             for j=1:nx
-                vs{j} = sprintf('v[%i]',j-1);
+                vs{j} = sprintf('v_%i',j-1);
             end
             % transform to symbolic variable
             vs = sym(vs);
@@ -313,7 +313,7 @@ function [this,model] = getSyms(this,model)
             vs = cell(nx,1);
             % fill cells
             for j=1:nx
-                vs{j} = sprintf('v[%i]',j-1);
+                vs{j} = sprintf('v_%i',j-1);
             end
             % transform to symbolic variable
             vs = sym(vs);

@@ -41,7 +41,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         fprintf(fid,'              switch(ie) { \n');
         tmpfun = this;
         for ievent=1:nevent
-            if(any(nonzero(:,ievent)~=0))
+            if(any(nonzero(:,ievent)))
                 fprintf(fid,['              case ' num2str(ievent-1) ': {\n']);
                 tmpfun.sym = this.sym(:,ievent);
                 tmpfun.gccode(fid);
@@ -74,7 +74,10 @@ elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.fu
         fprintf(fid,'} \n');
     end
 else
-    this.gccode(fid);
+    nonzero = this.sym ~=0;
+    if(any(nonzero))
+        this.gccode(fid);
+    end
 end
 
 
