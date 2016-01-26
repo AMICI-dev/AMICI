@@ -106,7 +106,30 @@ function [ this ] = makeEvents( this )
                     str_arg_h = ['heaviside(' mtriggerchar ')' ];
                     symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
                     % set hflag
-                    hflags(ix,ievent) = 1;
+                    
+                    % we can check whether dividing cfp(2) by
+                    % trigger{ievent} reduced the length of the symbolic
+                    % expression. If it does, this suggests that
+                    % trigger{ievent} is a factor of cfp(2), which will be
+                    % the case for min/max functions. in that case we do
+                    % not need a hflag as there is no discontinuity in the
+                    % right hand side. This is not a perfect fix, in the
+                    % long run one should maybe go back to the old syntax for
+                    % am_max and am_min?
+                    try
+                        cfp = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
+                        if(length(cfp)>1)
+                            if(length(char(cfp(2)/trigger{ievent}))<length(char(cfp(2))))
+                                hflags(ix,ievent) = 0;
+                            else
+                                hflags(ix,ievent) = 1;
+                            end
+                        else
+                            hflags(ix,ievent) = 0;
+                        end
+                    catch
+                        hflags(ix,ievent) = 1;
+                    end
                 end
             end
             % update xdot
