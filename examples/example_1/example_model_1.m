@@ -6,7 +6,7 @@ clc
 
 [exdir,~,~]=fileparts(which('example_model_1.m'));
 % compile the model
-amiwrap('model_example_1','example_model_1_syms',exdir,true)
+amiwrap('model_example_1','example_model_1_syms',exdir)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
 
@@ -93,7 +93,7 @@ set(gcf,'Position',[100 300 1200 500])
 %%
 % FORWARD SENSITIVITY ANALYSIS
 
-options.sensi = 2;
+options.sensi = 1;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 
