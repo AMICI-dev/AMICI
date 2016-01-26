@@ -117,9 +117,15 @@ function [ this ] = makeEvents( this )
                     % long run one should maybe go back to the old syntax for
                     % am_max and am_min?
                     try
-                        cfp = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
+                        [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
                         if(length(cfp)>1)
                             if(length(char(cfp(2)/trigger{ievent}))<length(char(cfp(2))))
+                                hflags(ix,ievent) = 0;
+                            else
+                                hflags(ix,ievent) = 1;
+                            end
+                        elseif(isequaln(tfp,sym(['h_' num2str(ievent-1) ])))
+                            if(length(char(cfp(1)/trigger{ievent}))<length(char(cfp(1))))
                                 hflags(ix,ievent) = 0;
                             else
                                 hflags(ix,ievent) = 1;
