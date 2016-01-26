@@ -148,6 +148,19 @@ function [ this ] = makeEvents( this )
             bolus{ievent} = bolus{ievent} + tmp_bolus{ievent}/abs(dtriggerdt);
         end 
         
+        % update hflags according to bolus
+        for ievent = 1:nevent
+            for ix = 1:nx
+                if(~hflags(ix,ievent))
+                    for j = find(double(bolus{ievent}~=0))
+                        if(ismember(this.sym.x(j),symvar(this.sym.xdot(ix))))
+                            hflags(ix,ievent) = 1;
+                        end
+                    end
+                end
+            end
+        end
+        
         % update events
         for ievent = 1:nevent
             this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
