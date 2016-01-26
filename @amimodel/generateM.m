@@ -15,9 +15,15 @@ function this = generateM(this, amimodelo2)
     nevent = this.nevent;
     nz = this.nz;
     nnz = this.nnz;
-    nztrue = amimodelo2.nztrue;
-    nxtrue = amimodelo2.nxtrue;
-    nytrue = amimodelo2.nytrue;
+    if(~isempty(amimodelo2))
+        nztrue = amimodelo2.nztrue;
+        nxtrue = amimodelo2.nxtrue;
+        nytrue = amimodelo2.nytrue;
+    else
+        nztrue = nz;
+        nxtrue = nx;
+        nytrue = ny;
+    end
     
     o2flag = ~isempty(amimodelo2);
     
