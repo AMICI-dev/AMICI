@@ -334,7 +334,7 @@ function [this,model] = getSyms(this,model)
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);
             % create cell array of same size
-            dsdydps = cell(ny,np);
+            dsdydps = cell(model.nytrue,np);
             % fill cell array
             for iy = 1:model.nytrue
                 for ip = 1:np
@@ -352,10 +352,10 @@ function [this,model] = getSyms(this,model)
             if(nz>0)
                 this.sym = jacobian(model.fun.sigma_z.sym,p);
             else
-                this.sym = sym(zeros(nz,np));
+                this.sym = sym(zeros(model.nztrue,np));
             end
             % create cell array of same size
-            dsdydps = cell(nz,np);
+            dsdydps = cell(model.nztrue,np);
             % fill cell array
             for j = 1:model.nztrue
                 for i = 1:np

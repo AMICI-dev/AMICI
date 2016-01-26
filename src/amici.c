@@ -596,6 +596,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 which = 0;
                 
                 if(ne>0) x_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                if(ne>0) xdot_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                if(ne>0) xdot_old_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 
                 
                 /* we always want N_d to be equal to the number of maximal steps, this prevents additional forward passes
@@ -937,8 +939,8 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    fdJydp(ts[it],it,dgdp,ydata,dydp,my,sigma_y,dsigma_ydp,udata);
-    fdJydx(ts[it],it,dgdx,ydata,dydx,my,sigma_y,udata);
+    fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
+    fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -982,7 +984,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
             sigma_y[iy] = ysigma[iy*nt+it];
         }
     }
-    fJy(t,it,&g,ydata,my,sigma_y,udata);
+    fJy(t,it,&g,ydata,x,my,sigma_y,udata);
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -1485,6 +1487,8 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
             N_VScale(1.0,x,x_disc[iroot]);
+            N_VScale(1.0,xdot,xdot_disc[iroot]);
+            N_VScale(1.0,xdot_old,xdot_old_disc[iroot]);
         }
     }
     
@@ -1557,9 +1561,9 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     for (ie=0; ie<ne; ie++) {
         
         if (rootidx[iroot*ne + ie] != 0) {
-            *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,udata);
+            *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
-            *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,udata);
+            *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
             
             for (ix=0; ix<nx; ix++) {
@@ -1650,7 +1654,7 @@ void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_da
     
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltax(t,ie,deltax,x,user_data);
+            *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,user_data);
             
             x_tmp = NV_DATA_S(x);
             for (ix=0; ix<nx; ix++) {

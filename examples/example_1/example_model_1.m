@@ -79,7 +79,7 @@ ylabel('y')
 box on
 
 subplot(2,2,4)
-plot(t,sol.y-p(4)*sum(X_ode15s,2),'--')
+plot(t,abs(sol.y-p(4)*sum(X_ode15s,2)),'--')
 set(gca,'YScale','log')
 legend('error y1','Location','NorthEastOutside')
 legend boxoff
@@ -93,7 +93,7 @@ set(gcf,'Position',[100 300 1200 500])
 %%
 % FORWARD SENSITIVITY ANALYSIS
 
-options.sensi = 1;
+options.sensi = 2;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 

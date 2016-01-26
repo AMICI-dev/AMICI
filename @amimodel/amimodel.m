@@ -132,9 +132,11 @@ classdef amimodel
                 else
                     AM = AM.makeSyms();
                     AM.nx = length(AM.sym.x);
+                    AM.nxtrue = AM.nx;
                     AM.np = length(AM.sym.p);
                     AM.nk = length(AM.sym.k);
                     AM.ny = length(AM.sym.y);
+                    AM.nytrue = AM.ny;
                 end
             end
 
@@ -151,6 +153,7 @@ classdef amimodel
             end
             AM = AM.makeEvents();
             AM.nz = length([AM.event.z]);
+            AM.nztrue = AM.nz;
             AM.nevent = length(AM.event);
             
             % check whether we have a DAE or ODE

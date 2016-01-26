@@ -41,7 +41,9 @@ function [this] = augmento2(this)
         znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
         bolusnew = [this.event(ievent).bolus;reshape(this.fun.deltasx.sym(:,:,ievent),[numel(Sx),1])];
         % replace sx by augmented x
-        bolusnew = mysubs(bolusnew, this.fun.sx.sym,Sx);
+        for ip = 1:np
+            bolusnew(this.nxtrue*ip+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue*ip+(1:this.nxtrue)), this.fun.sx.sym(:,ip),Sx(:,ip));
+        end
         hflagold = this.event(ievent).hflag;
         this.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
         this.event(ievent) = this.event(ievent).setHflag([hflagold;zeros([numel(Sx),1])]);
