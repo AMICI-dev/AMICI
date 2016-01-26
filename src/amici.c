@@ -1492,10 +1492,10 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
         }
     }
     
-    applyEventBolus(status, ami_mem, udata, tdata);
+    updateHeaviside(status, udata, tdata);
     if (*status != AMI_SUCCESS) return;
     
-    updateHeaviside(status, udata, tdata);
+    applyEventBolus(status, ami_mem, udata, tdata);
     if (*status != AMI_SUCCESS) return;
     
     *status = AMIReInit(ami_mem, t, x, dx);
