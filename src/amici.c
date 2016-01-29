@@ -1601,7 +1601,7 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *use
             tnext = tdata[it];
         } else {
             if (ne>0) {
-                if (troot>tdata) {
+                if (troot[iroot]>tdata[it]) {
                     tnext = troot[iroot];
                 } else {
                     tnext = tdata[it];
