@@ -19,9 +19,11 @@
 
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
-    char buffer [250];
+    char buffer[250];
     sprintf(buffer,"AMICI ERROR: in module %s in function %s : %s ",module,function,msg);
-    mexWarnMsgTxt(buffer);
+    char buffid[250];
+    sprintf(buffid,"AMICI:mex:%s:%s:%d",module,function,error_code);
+    mexWarnMsgIdAndTxt(buffid,buffer);
 };
 
 static void *AMICreate(int lmm, int iter) {
