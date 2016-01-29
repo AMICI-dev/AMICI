@@ -25,7 +25,7 @@
  |------------|------------------------------------------|---------
  | .atol      | absolute integration tolerance           | 1e-8
  | .rtol      | relative integration tolerance           | 1e-8
- | .maxsteps  | maximal number integration steps         | 1e-8
+ | .maxsteps  | maximal number integration steps         | 1e4
  | .param     | parametrisation 'log'/'log10'/'lin'      | 'lin'
  | .debug     | flag to compile with debug symbols       | false
  | .forward   | flag to activate forward sensitivities   | true
