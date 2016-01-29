@@ -109,7 +109,7 @@ function this = parseModel(this)
     end
     
     if(strcmp(this.wtype,'iw'))
-        this.id = logical(sum(this.fun.M.sym,2)~=0);
+        this.id = double(logical(sum(this.fun.M.sym,2)~=0));
     else
         this.id = zeros(nx,1);
     end
