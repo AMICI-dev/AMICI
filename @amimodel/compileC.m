@@ -484,8 +484,7 @@ function hash = getFileHash(file)
     %
     % Return values:
     %  hash: md5 hash of the provided file @type string
-    Opt.Input = 'file';
-    hash = DataHash(file,Opt);
+    hash = CalcMD5(file,'File','hex');
     
     
     
