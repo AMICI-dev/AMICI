@@ -43,7 +43,7 @@ static double sign(double x) {
  * @return if(a < b) then a else b @type double
  *
  */
-double am_min(double a, double b) {
+static double am_min(double a, double b) {
     if (a < b) {
         return(a);
     } else {
@@ -61,7 +61,7 @@ double am_min(double a, double b) {
  * @return id == 2:  if(a < b) then 0 else 1 @type double
  *
  */
-double Dam_min(int id,double a, double b) {
+static double Dam_min(int id,double a, double b) {
     if (id == 1) {
         if (a < b) {
             return(1);
@@ -85,7 +85,7 @@ double Dam_min(int id,double a, double b) {
  * @return if(a > b) then a else b @type double
  *
  */
-double am_max(double a, double b) {
+static double am_max(double a, double b) {
     if (a > b) {
         return(a);
     } else {
@@ -103,7 +103,7 @@ double am_max(double a, double b) {
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
  */
-double Dam_max(int id,double a, double b) {
+static double Dam_max(int id,double a, double b) {
     if (id == 1) {
         if (a > b) {
             return(1);
