@@ -437,7 +437,7 @@ function [this,model] = getSyms(this,model)
                     
                     % if we are just non-differentiable and but not
                     % discontinuous we can ignore some of the terms!                
-                    if(any(double(model.fun.ddeltaxdx.sym(:,ievent)~=0)))
+                    if(any(logical(model.fun.deltax.sym(:,ievent)~=0)))
                         % dxdp  = dx/dt*dt/dp + dx/dp
                         dxdp = model.fun.xdot.sym*dtdp + sx;
                         

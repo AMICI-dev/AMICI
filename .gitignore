@@ -72,3 +72,5 @@ index.html
 examples/geneExpression/simulate_geneExpression.m
 
 @amifun/simulate_villab2.m
+
+*.m~
