@@ -347,7 +347,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
-    int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* user udata */
@@ -664,8 +663,6 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
      * @param[in] temp_data pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
-    bool error_corr = TRUE;
-    int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
@@ -914,7 +911,6 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     
     int iy;
     int ip;
-    int ix;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1012,10 +1008,6 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
      * @return void
      */
     
-    int ip;
-    int jp;
-    int iz;
-    
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1046,10 +1038,6 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    
-    int ip;
-    int jp;
-    int iz;
     
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
@@ -1293,7 +1281,6 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
     
-    int iz;
     int ie;
     
     UserData udata; /* user udata */

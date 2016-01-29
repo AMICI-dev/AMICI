@@ -150,11 +150,13 @@ function [ this ] = makeEvents( this )
         
         % update hflags according to bolus
         for ievent = 1:nevent
-            for ix = 1:nx
-                if(~hflags(ix,ievent))
-                    for j = find(double(bolus{ievent}~=0))
-                        if(ismember(this.sym.x(j),symvar(this.sym.xdot(ix))))
-                            hflags(ix,ievent) = 1;
+            if(any(double(bolus{ievent}~=0)))
+                for ix = 1:nx
+                    if(~hflags(ix,ievent))
+                        for j = find(double(bolus{ievent}~=0))
+                            if(ismember(this.sym.x(j),symvar(this.sym.xdot(ix))))
+                                hflags(ix,ievent) = 1;
+                            end
                         end
                     end
                 end

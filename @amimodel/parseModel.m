@@ -4,8 +4,6 @@ function this = parseModel(this)
     % Return values:
     %  this: updated model definition object @type amimodel
 
-    
-
     % load old hashes
     [this,HTable] = this.loadOldHashes();
     

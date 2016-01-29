@@ -28,7 +28,8 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    int ip, ix,  it; /* integers for indexing in loops */
+    int ip, ix, jx, iy, it, ir, ie; /* integers for indexing in loops */
+    int jp; /* integers for indexing in loops */
     int ncheck; /* the number of (internal) checkpoints stored so far */
     
     void *ami_mem; /* pointer to cvodes memory block */
@@ -42,6 +43,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     realtype tlastroot; /* storage for last found root */
     int iroot;
     double tnext;
+    
+    bool rootflag, discflag;
     
     bool setupBdone = false;
     

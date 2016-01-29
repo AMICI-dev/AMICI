@@ -15,6 +15,7 @@
 #include <amd.h>
 #include <colamd.h>
 #include <btf.h>
+#include <stdbool.h>
 
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {

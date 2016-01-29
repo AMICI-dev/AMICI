@@ -36,6 +36,91 @@ static double sign(double x) {
 }
 
 /**
+ * c implementation of matlab function min
+ *
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @return if(a < b) then a else b @type double
+ *
+ */
+double am_min(double a, double b) {
+    if (a < b) {
+        return(a);
+    } else {
+        return(b);
+    }
+}
+
+/**
+ * parameter derivative of c implementation of matlab function min
+ *
+ * @param id argument index for differentiation
+ * @param a bool1 @type double
+ * @param b bool2 @type double
+ * @return id == 1:  if(a < b) then 1 else 0 @type double
+ * @return id == 2:  if(a < b) then 0 else 1 @type double
+ *
+ */
+double Dam_min(int id,double a, double b) {
+    if (id == 1) {
+        if (a < b) {
+            return(1);
+        } else {
+            return(0);
+        }
+    } else {
+        if (a < b) {
+            return(0);
+        } else {
+            return(1);
+        }
+    }
+}
+
+/**
+ * c implementation of matlab function max
+ *
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @return if(a > b) then a else b @type double
+ *
+ */
+double am_max(double a, double b) {
+    if (a > b) {
+        return(a);
+    } else {
+        return(b);
+    }
+}
+
+/**
+ * parameter derivative of c implementation of matlab function max
+ *
+ * @param id argument index for differentiation
+ * @param a bool1 @type double
+ * @param b bool2 @type double
+ * @return id == 1:  if(a > b) then 1 else 0 @type double
+ * @return id == 2:  if(a > b) then 0 else 1 @type double
+ *
+ */
+double Dam_max(int id,double a, double b) {
+    if (id == 1) {
+        if (a > b) {
+            return(1);
+        } else {
+            return(0);
+        }
+    } else {
+        if (a > b) {
+            return(0);
+        } else {
+            return(1);
+        }
+    }
+}
+
+
+/**
  * spline function with 3 nodes
  *
  * @param t point at which the spline should be evaluated
