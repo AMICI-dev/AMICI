@@ -423,7 +423,7 @@ function this = compileC(this)
         CLIBS = [];
     end
     
-    if(this.nxtrue > 0)
+    if(this.nxtrue ~= this.nx)
         cstr = 'amiwrapo2.c';
     else
         cstr = 'amiwrap.c';
