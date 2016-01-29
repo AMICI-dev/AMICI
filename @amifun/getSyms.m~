@@ -224,7 +224,7 @@ function [this,model] = getSyms(this,model)
             % find nonzero rows, only completely nonzero rows matter as we
             % will have parameter dependent implementation later on
             % anyways.
-            idx = find(any(logical(this.sym~=0),2));
+            idx = find(any(double(this.sym~=0),2));
             % create cell array of same size
             dxdotdps = cell(length(idx),1);
             % fill cells with strings
@@ -449,10 +449,9 @@ function [this,model] = getSyms(this,model)
                         this.sym(:,:,ievent) = sym(zeros([nx,np]));
                     end
                     if(any(model.event(ievent).hflag))
-                        this.sym(model.event(ievent).hflag,:,ievent) = ...
-                            this.sym(model.event(ievent).hflag,:,ievent) ...
-                            - model.fun.deltaxdot.sym(model.event(ievent).hflag)*dtdp;
-                    end
+                    this.sym(model.event(ievent).hflag,:,ievent) = ...
+                        this.sym(model.event(ievent).hflag,:,ievent) ...
+                        - model.fun.deltaxdot.sym(model.event(ievent).hflag)*dtdp;
                 end
             end
             

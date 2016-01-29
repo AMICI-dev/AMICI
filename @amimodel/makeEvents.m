@@ -175,7 +175,7 @@ function [ this ] = makeEvents( this )
     end
     
     if(~isfield(this.sym,'sigma_z'))
-        this.sym.sigma_z = sym.ones(size([this.event.z]));
+        this.sym.sigma_z = sym(ones(size([this.event.z])));
     end
     if(numel(this.sym.sigma_z) == 1)
         this.sym.sigma_z = this.sym.sigma_z*sym.ones(size([this.event.z]));
