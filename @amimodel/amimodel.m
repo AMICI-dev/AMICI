@@ -86,7 +86,7 @@ classdef amimodel
         cfun@struct;
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 2;
+        compver = 3;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )

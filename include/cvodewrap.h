@@ -22,7 +22,32 @@ static void wrap_ErrHandlerFn(int error_code, const char *module, const char *fu
     char buffer[250];
     sprintf(buffer,"AMICI ERROR: in module %s in function %s : %s ",module,function,msg);
     char buffid[250];
-    sprintf(buffid,"AMICI:mex:%s:%s:%d",module,function,error_code);
+    switch (error_code) {
+        case 99:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_WARNING",module,function);
+            break;
+            
+        case -1:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_TOO_MUCH_WORK",module,function);
+            break;
+            
+        case -2:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_TOO_MUCH_ACC",module,function);
+            break;
+
+        case -3:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_ERR_FAILURE",module,function);
+            break;
+
+        case -4:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_CONV_FAILURE",module,function);
+            break;
+            
+        default:
+            sprintf(buffid,"AMICI:mex:%s:%s:CV_OTHER",module,function);
+            break;
+    }
+    
     mexWarnMsgIdAndTxt(buffid,buffer);
 };
 
