@@ -136,7 +136,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'drootdp','drootdx','sx'};
  
         case 'x0'
-            this.deps = {'p','k'};
+            this.deps = {'p','k','x'};
             
         case 'JBand'
             this.deps = {'J'};
