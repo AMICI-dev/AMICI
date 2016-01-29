@@ -10,7 +10,6 @@ function writeCcode(this,model, fid)
 %  void
 
 nevent = model.nevent;
-ny = model.ny;
 if(strcmp(this.funstr,'JSparse'))
     tmpfun = this;
     tmpfun.sym = model.fun.J.sym(model.sparseidx);
@@ -64,7 +63,7 @@ elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.fu
     end
 else
     nonzero = this.sym ~=0;
-    if(any(nonzero))
+    if(any(any(nonzero)))
         this.gccode(fid);
     end
 end
