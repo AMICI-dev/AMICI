@@ -124,7 +124,7 @@ function [ this ] = makeEvents( this )
                             else
                                 hflags(ix,ievent) = 1;
                             end
-                        elseif(isequaln(tfp,sym(['h_' num2str(ievent-1) ])))
+                        elseif(logical(tfp==sym(['h_' num2str(ievent-1) ])))
                             if(length(char(cfp(1)/trigger{ievent}))<length(char(cfp(1))))
                                 hflags(ix,ievent) = 0;
                             else
