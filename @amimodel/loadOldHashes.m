@@ -10,6 +10,16 @@ function [this,HTable] = loadOldHashes(this)
     try
         load(fullfile(wrap_path,'models',this.modelname,['hashes.mat']))
         try
+            if(this.compver>compver)
+                this.recompile = true;
+                error('catchmeifyoucan');
+            end
+        catch
+            disp('Code changes made recompilation of model neventcessary!')
+            this.recompile = true;
+            error('catchmeifyoucan');
+        end
+        try
             this.nxtrue = nxtrue;
             this.nytrue = nytrue;
             this.nx = nx;
@@ -30,17 +40,6 @@ function [this,HTable] = loadOldHashes(this)
             this.rowvalsB = rowvalsB;
             this.sparseidxB = sparseidxB;
         catch err
-        end
-        try
-            if(this.compver>compver)
-                disp('Code changes made recompilation of model neventcessary!')
-                this.recompile = true;
-                error('catchmeifyoucan');
-            end
-        catch
-            disp('Code changes made recompilation of model neventcessary!')
-            this.recompile = true;
-            error('catchmeifyoucan');
         end
         
     catch

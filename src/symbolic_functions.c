@@ -15,6 +15,21 @@
 /*! bool return value false */
 #define FALSE 0
 
+/**
+ * c implementation of matlab function heaviside
+ *
+ * @param x argument
+ * @return if(x>0) then 1 else 0
+ *
+ */
+double heaviside(double x) {
+    if (x <= 0) {
+        return(0);
+    } else {
+        return(1);
+    }
+}
+
 
 /**
  *  c implementation of matlab function sign
