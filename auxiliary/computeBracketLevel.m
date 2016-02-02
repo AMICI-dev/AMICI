@@ -19,8 +19,8 @@ function [ brl ] = computeBracketLevel( cstr )
     close = [0,close(1:end-1)];
     brl = cumsum(open) - cumsum(close);
     % take care of functions
-    fun_startidx = regexp(cstr,'([\w]+\()','start');
-    fun_endidx = regexp(cstr,'([\w]+\()','end');
+    fun_startidx = regexp(cstr,'([\w_]+\()','start');
+    fun_endidx = regexp(cstr,'([\w_]+\()','end');
     for ifun = 1:length(fun_startidx)
         brl(fun_startidx(ifun):(fun_endidx(ifun)-1)) = brl(fun_endidx(ifun));
     end

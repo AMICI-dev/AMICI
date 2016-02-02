@@ -15,6 +15,20 @@
 /*! bool return value false */
 #define FALSE 0
 
+/**
+ * c implementation of matlab function heaviside
+ *
+ * @param x argument
+ * @return if(x>0) then 1 else 0
+ *
+ */
+double heaviside(double x) {
+    if (x <= 0) {
+        return(0);
+    } else {
+        return(1);
+    }
+}
 
 /**
  *  c implementation of matlab function sign
@@ -31,6 +45,90 @@ static double sign(double x) {
             return(-1);
         } else {
             return(0);
+        }
+    }
+}
+
+/**
+ * c implementation of matlab function min
+ *
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @return if(a < b) then a else b @type double
+ *
+ */
+static double am_min(double a, double b) {
+    if (a < b) {
+        return(a);
+    } else {
+        return(b);
+    }
+}
+
+/**
+ * parameter derivative of c implementation of matlab function min
+ *
+ * @param id argument index for differentiation
+ * @param a bool1 @type double
+ * @param b bool2 @type double
+ * @return id == 1:  if(a < b) then 1 else 0 @type double
+ * @return id == 2:  if(a < b) then 0 else 1 @type double
+ *
+ */
+static double Dam_min(int id,double a, double b) {
+    if (id == 1) {
+        if (a < b) {
+            return(1);
+        } else {
+            return(0);
+        }
+    } else {
+        if (a < b) {
+            return(0);
+        } else {
+            return(1);
+        }
+    }
+}
+
+/**
+ * c implementation of matlab function max
+ *
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @return if(a > b) then a else b @type double
+ *
+ */
+static double am_max(double a, double b) {
+    if (a > b) {
+        return(a);
+    } else {
+        return(b);
+    }
+}
+
+/**
+ * parameter derivative of c implementation of matlab function max
+ *
+ * @param id argument index for differentiation
+ * @param a bool1 @type double
+ * @param b bool2 @type double
+ * @return id == 1:  if(a > b) then 1 else 0 @type double
+ * @return id == 2:  if(a > b) then 0 else 1 @type double
+ *
+ */
+static double Dam_max(int id,double a, double b) {
+    if (id == 1) {
+        if (a > b) {
+            return(1);
+        } else {
+            return(0);
+        }
+    } else {
+        if (a > b) {
+            return(0);
+        } else {
+            return(1);
         }
     }
 }

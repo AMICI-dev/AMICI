@@ -1,7 +1,7 @@
 
 models/*
 
-debug_amici/*
+*.mexmaci64
 
 *.o
 
@@ -25,5 +25,20 @@ examples/example_6/simulate_model_example_6.m
 
 examples/example_5/example_model_5_paper.m
 
+*.m~
 
-*.mexmaci64
+*.plist
+
+*.pbxproj
+
+*.xcworkspacedata
+
+*.xcuserstate
+
+*.xcsettings
+
+*.xcbkptlist
+
+*.xcscheme
+
+*.xccheckout

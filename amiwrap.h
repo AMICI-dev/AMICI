@@ -28,7 +28,8 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    int ip, ix,  it; /* integers for indexing in loops */
+    int ip, ix, jx, iy, it, ir, ie; /* integers for indexing in loops */
+    int jp; /* integers for indexing in loops */
     int ncheck; /* the number of (internal) checkpoints stored so far */
     
     void *ami_mem; /* pointer to cvodes memory block */
@@ -43,6 +44,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int iroot;
     double tnext;
     
+    bool rootflag, discflag;
+    
     bool setupBdone = false;
     
     udata = setupUserData(prhs);
@@ -51,12 +54,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* solution struct */
     
     if (!prhs[0]) {
-        mexErrMsgIdAndTxt("AMICI:mex:sol","No solution struct provided!");
+        mexErrMsgTxt("No solution struct provided!");
     }
     
     /* options */
     if (!prhs[4]) {
-        mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
+        mexErrMsgTxt("No options provided!");
     }
     
     tdata = (TempData) mxMalloc(sizeof *tdata);
@@ -329,7 +332,7 @@ freturn:
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
     
-    if(mxGetField(prhs[0], 0 ,"status")) { pstatus = mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgIdAndTxt("AMICI:mex:status","Parameter status not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"status")) { pstatus = mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgTxt("Parameter status not specified as field in solution struct!"); }
     *pstatus = (double) status;
     
     return;

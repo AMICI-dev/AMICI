@@ -106,7 +106,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'ddeltaxdp','xB'};
             
         case 'deltaxB'
-            this.deps = {'deltax','dtaudp','xdot','xB'};
+            this.deps = {'deltax','dtaudp','xdot','xB','ddeltaxdx'};
             
         case 'z'
             this.deps = {'x','k','p'};
@@ -136,7 +136,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'drootdp','drootdx','sx'};
  
         case 'x0'
-            this.deps = {'p','k'};
+            this.deps = {'p','k','x'};
             
         case 'JBand'
             this.deps = {'J'};
@@ -193,7 +193,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {};
         
         case 'deltaxdot'
-            this.deps = {};
+            this.deps = {'xdot'};
             
         case 'Jy'
             this.deps = {'y','sigma_y','p'};

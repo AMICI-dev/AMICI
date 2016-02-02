@@ -1,12 +1,12 @@
-% simulate_model_example_8.m is the matlab interface to the cvodes mex
+% simulate_geneExpression.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
 %
 % USAGE:
 % ======
-% [...] = simulate_model_example_8(tout,theta)
-% [...] = simulate_model_example_8(tout,theta,kappa,data,options)
-% [status,tout,x,y,sx,sy] = simulate_model_example_8(...)
+% [...] = simulate_geneExpression(tout,theta)
+% [...] = simulate_geneExpression(tout,theta,kappa,data,options)
+% [status,tout,x,y,sx,sy] = simulate_geneExpression(...)
 %
 % INPUTS:
 % =======
@@ -95,7 +95,7 @@
 % sol.xdot time-resolved right-hand side of differential equation
 % sol.z event output
 % sol.sz sensitivity of event output
-function varargout = simulate_model_example_8(varargin)
+function varargout = simulate_geneExpression(varargin)
 
 % DO NOT CHANGE ANYTHING IN THIS FILE UNLESS YOU ARE VERY SURE ABOUT WHAT YOU ARE DOING
 % MANUAL CHANGES TO THIS FILE CAN RESULT IN WRONG SOLUTIONS AND CRASHING OF MATLAB
@@ -113,20 +113,20 @@ end
 theta = phi(:);
 
 
-if(length(theta)<4)
+if(length(theta)<10)
     error('provided parameter vector is too short');
 end
-if(length(kappa)<2)
+if(length(kappa)<29)
     error('provided constant vector is too short');
 end
 
 options_ami.atol = 1e-08;
 options_ami.rtol = 1e-08;
 options_ami.maxsteps = 10000;
-options_ami.sens_ind = 1:4;
-options_ami.id = transpose([0]);
+options_ami.sens_ind = 1:10;
+options_ami.id = transpose([0  0  0  0  0  0  0  0  0  0  0  0  0  0]);
 
-options_ami.ne = 1; % MUST NOT CHANGE THIS VALUE
+options_ami.ne = 0; % MUST NOT CHANGE THIS VALUE
 options_ami.tstart = 0;
 options_ami.lmm = 2;
 options_ami.iter = 2;
@@ -142,9 +142,9 @@ options_ami.sensi_meth = 'forward';
 options_ami.sensi = 0;
 
 options_ami.nmaxevent = 10;
-options_ami.z2event = [1]; % MUST NOT CHANGE THIS VALUE
-options_ami.ubw = 0; % MUST NOT CHANGE THIS VALUE
-options_ami.lbw = 0; % MUST NOT CHANGE THIS VALUE
+options_ami.z2event = []; % MUST NOT CHANGE THIS VALUE
+options_ami.ubw = 7; % MUST NOT CHANGE THIS VALUE
+options_ami.lbw = 11; % MUST NOT CHANGE THIS VALUE
 
 options_ami.data_model = 1;
 options_ami.event_model = 1;
@@ -170,7 +170,7 @@ if(nargin>=5)
     options_ami = am_setdefault(varargin{5},options_ami);
 else
 end
-sol.z = NaN(options_ami.nmaxevent,1);
+sol.z = NaN(options_ami.nmaxevent,0);
 if(nargout>1)
     if(nargout>4)
         options_ami.sensi = 1;
@@ -199,21 +199,31 @@ if(options_ami.ss>0)
     end
     options_ami.sensi = 0;
 end
+if(options_ami.sensi>0)
+    if(options_ami.sensi_meth == 1)
+        error('forward sensitivities are disabled as necessary routines were not compiled');
+    end
+end
+if(options_ami.sensi>0)
+    if(options_ami.sensi_meth == 2)
+        error('adjoint sensitivities are disabled as necessary routines were not compiled');
+    end
+end
 options_ami.np = length(options_ami.sens_ind); % MUST NOT CHANGE THIS VALUE
 if(options_ami.np == 0)
     options_ami.sensi = 0;
 end
-options_ami.nx = 1; % MUST NOT CHANGE THIS VALUE
-options_ami.ny = 1; % MUST NOT CHANGE THIS VALUE
-options_ami.nz = 1; % MUST NOT CHANGE THIS VALUE
-options_ami.nnz = 1; % MUST NOT CHANGE THIS VALUE
-sol.x = NaN(length(tout),1);
-sol.y = NaN(length(tout),1);
-sol.xdot = NaN(1,1);
-sol.J = NaN(1,1);
-sol.dydx = NaN(1,1);
-sol.dydp = NaN(1,options_ami.np);
-sol.dxdotdp = NaN(1,options_ami.np);
+options_ami.nx = 14; % MUST NOT CHANGE THIS VALUE
+options_ami.ny = 2; % MUST NOT CHANGE THIS VALUE
+options_ami.nz = 0; % MUST NOT CHANGE THIS VALUE
+options_ami.nnz = 68; % MUST NOT CHANGE THIS VALUE
+sol.x = NaN(length(tout),14);
+sol.y = NaN(length(tout),2);
+sol.xdot = NaN(1,14);
+sol.J = NaN(14,14);
+sol.dydx = NaN(2,14);
+sol.dydp = NaN(2,options_ami.np);
+sol.dxdotdp = NaN(14,options_ami.np);
 plist = options_ami.sens_ind-1;
 if(nargin>=4)
     if(~isempty(varargin{4}))
@@ -234,11 +244,11 @@ else
 end
 if(options_ami.sensi>0)
     sol.llhS = zeros(length(options_ami.sens_ind),1);
-    sol.xS = zeros(length(tout),1,length(options_ami.sens_ind));
-    sol.yS = zeros(length(tout),1,length(options_ami.sens_ind));
-    sol.zS =  NaN(options_ami.nmaxevent,1,length(options_ami.sens_ind));
+    sol.xS = zeros(length(tout),14,length(options_ami.sens_ind));
+    sol.yS = zeros(length(tout),2,length(options_ami.sens_ind));
+    sol.zS =  NaN(options_ami.nmaxevent,0,length(options_ami.sens_ind));
 end
-if(max(options_ami.sens_ind)>4)
+if(max(options_ami.sens_ind)>10)
     error('Sensitivity index exceeds parameter dimension!')
 end
 if(isfield(options_ami,'sx0'))
@@ -247,7 +257,7 @@ if(isfield(options_ami,'sx0'))
     end
     options_ami.sx0 = options_ami.sx0;
 end
-ami_model_example_8(sol,tout,theta(1:4),kappa(1:2),options_ami,plist,pbar,xscale,data);
+ami_geneExpression(sol,tout,theta(1:10),kappa(1:29),options_ami,plist,pbar,xscale,data);
 if(options_ami.sensi==1)
     sol.sllh = sol.llhS;
     sol.sx = sol.xS;

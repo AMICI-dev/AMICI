@@ -5,6 +5,19 @@
 
 /** return value indicating successful execution */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
+#include <math.h>
+#ifndef M_PI /* define PI if we still have no definition */
+#define M_PI 3.14159265358979323846
+#endif
+#include <mex.h>
+#include "wrapfunctions.h" /* user functions */
+#include <include/amici.h> /* amici functions */
+
+
 #define AMI_SUCCESS               0
 
 UserData setupUserData(const mxArray *prhs[]) {
@@ -27,7 +40,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* time */
     
     if (!prhs[1]) {
-        mexErrMsgTxt("No time vector provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
     }
     ts = mxGetPr(prhs[1]);
     
@@ -36,35 +49,35 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* parameters */
     
     if (!prhs[2]) {
-        mexErrMsgTxt("No parameter vector provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
     }
     p = mxGetPr(prhs[2]);
     
     /* constants */
     
     if (!prhs[3]) {
-        mexErrMsgTxt("No constant vector provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
     }
     k = mxGetPr(prhs[3]);
     
     if (!prhs[4]) {
-        mexErrMsgTxt("No options provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
-    if(mxGetField(prhs[4], 0 ,"nx")) { nx = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nx")); } else { mexErrMsgTxt("Parameter nx not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"ny")) { ny = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ny")); } else { mexErrMsgTxt("Parameter ny not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"np")) { np = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"np")); } else { mexErrMsgTxt("Parameter np not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"ne")) { ne = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ne")); } else { mexErrMsgTxt("Parameter ne not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"nz")) { nz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nz")); } else { mexErrMsgTxt("Parameter nz not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"nnz")) { nnz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nnz")); } else { mexErrMsgTxt("Parameter nnz not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"nmaxevent")) { nmaxevent = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nmaxevent")); } else { mexErrMsgTxt("Parameter nmaxevent not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"nx")) { nx = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nx")); } else { mexErrMsgIdAndTxt("AMICI:mex:nx","Parameter nx not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"ny")) { ny = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ny")); } else { mexErrMsgIdAndTxt("AMICI:mex:ny","Parameter ny not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"np")) { np = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"np")); } else { mexErrMsgIdAndTxt("AMICI:mex:np","Parameter np not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"ne")) { ne = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ne")); } else { mexErrMsgIdAndTxt("AMICI:mex:ne","Parameter ne not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"nz")) { nz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nz")); } else { mexErrMsgIdAndTxt("AMICI:mex:nz","Parameter nz not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"nnz")) { nnz = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nnz")); } else { mexErrMsgIdAndTxt("AMICI:mex:nnz","Parameter nnz not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"nmaxevent")) { nmaxevent = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"nmaxevent")); } else { mexErrMsgIdAndTxt("AMICI:mex:nmaxevent","Parameter nmaxevent not specified as field in options struct!"); }
     
     
-    if(mxGetField(prhs[4], 0 ,"tstart")) { tstart = mxGetScalar(mxGetField(prhs[4], 0 ,"tstart")); } else { mexErrMsgTxt("Parameter tstart not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"tstart")) { tstart = mxGetScalar(mxGetField(prhs[4], 0 ,"tstart")); } else { mexErrMsgIdAndTxt("AMICI:mex:tstart","Parameter tstart not specified as field in options struct!"); }
     
     /* plist */
     if (!prhs[5]) {
-        mexErrMsgTxt("No parameter list provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     }
     
     if(prhs[5]) {
@@ -76,17 +89,17 @@ UserData setupUserData(const mxArray *prhs[]) {
         plist[ip] = (int)plistdata[ip];
     }
     
-    if(mxGetField(prhs[4], 0 ,"atol")) { atol = mxGetScalar(mxGetField(prhs[4], 0 ,"atol")); } else { mexErrMsgTxt("Parameter atol not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"rtol")) { rtol = mxGetScalar(mxGetField(prhs[4], 0 ,"rtol")); } else { mexErrMsgTxt("Parameter rtol not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"maxsteps")) { maxsteps = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"maxsteps")); } else { mexErrMsgTxt("Parameter maxsteps not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"atol")) { atol = mxGetScalar(mxGetField(prhs[4], 0 ,"atol")); } else { mexErrMsgIdAndTxt("AMICI:mex:atol","Parameter atol not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"rtol")) { rtol = mxGetScalar(mxGetField(prhs[4], 0 ,"rtol")); } else { mexErrMsgIdAndTxt("AMICI:mex:rtol","Parameter rtol not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"maxsteps")) { maxsteps = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"maxsteps")); } else { mexErrMsgIdAndTxt("AMICI:mex:maxsteps","Parameter maxsteps not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"lmm")) { lmm = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"lmm")); } else {  mexErrMsgTxt("Parameter lmm not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"iter")) { iter = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"iter")); } else { mexErrMsgTxt("Parameter iter not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"lmm")) { lmm = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"lmm")); } else {  mexErrMsgIdAndTxt("AMICI:mex:lmm","Parameter lmm not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"iter")) { iter = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"iter")); } else { mexErrMsgIdAndTxt("AMICI:mex:iter","Parameter iter not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"interpType"))  { interpType = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"interpType")); } else { mexErrMsgTxt("Parameter interpType not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"interpType"))  { interpType = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"interpType")); } else { mexErrMsgIdAndTxt("AMICI:mex:interpType","Parameter interpType not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"linsol")) { linsol = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"linsol")); } else { mexErrMsgTxt("Parameter linsol not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"stldet")) { stldetdata = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"stldet")); } else { mexErrMsgTxt("Parameter stldetdata not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"linsol")) { linsol = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"linsol")); } else { mexErrMsgIdAndTxt("AMICI:mex:linsol","Parameter linsol not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"stldet")) { stldetdata = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"stldet")); } else { mexErrMsgIdAndTxt("AMICI:mex:stldet","Parameter stldetdata not specified as field in options struct!"); }
     
     if ((int)stldetdata>0.5) {
         stldet = TRUE;
@@ -94,51 +107,51 @@ UserData setupUserData(const mxArray *prhs[]) {
         stldet = FALSE;
     }
 
-    if(mxGetField(prhs[4], 0 ,"id")) { idlist = mxGetData(mxGetField(prhs[4], 0, "id")); } else { mexErrMsgTxt("Parameter id not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"id")) { idlist = mxGetData(mxGetField(prhs[4], 0, "id")); } else { mexErrMsgIdAndTxt("AMICI:mex:id","Parameter id not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"z2event")) { z2event = mxGetData(mxGetField(prhs[4], 0, "z2event")); } else { mexErrMsgTxt("Parameter z2event not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"z2event")) { z2event = mxGetData(mxGetField(prhs[4], 0, "z2event")); } else { mexErrMsgIdAndTxt("AMICI:mex:z2event","Parameter z2event not specified as field in options struct!"); }
 
-    if(mxGetField(prhs[4], 0 ,"sensi")) { sensi = (int) mxGetScalar(mxGetField(prhs[4], 0 ,"sensi")); } else { mexErrMsgTxt("Parameter sensi not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"ism")) { ism = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ism")); } else { mexErrMsgTxt("Parameter ism not specified as field in options struct!"); }
-    if(mxGetField(prhs[4], 0 ,"sensi_meth")) { sensi_meth = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"sensi_meth")); } else { mexErrMsgTxt("Parameter sensi_meth not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"sensi")) { sensi = (int) mxGetScalar(mxGetField(prhs[4], 0 ,"sensi")); } else { mexErrMsgIdAndTxt("AMICI:mex:sensi","Parameter sensi not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"ism")) { ism = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ism")); } else { mexErrMsgIdAndTxt("AMICI:mex:ism","Parameter ism not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"sensi_meth")) { sensi_meth = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"sensi_meth")); } else { mexErrMsgIdAndTxt("AMICI:mex:sensi_meth","Parameter sensi_meth not specified as field in options struct!"); }
     
     if (sensi > 0) {
         if (sensi_meth != AMI_ASA && sensi_meth != AMI_FSA) {
-            mexErrMsgTxt("Invalid sensi_meth specified as field in options struct!");
+            mexErrMsgIdAndTxt("AMICI:mex:status","Invalid sensi_meth specified as field in options struct!");
         }
     }
     
     
-    if(mxGetField(prhs[4], 0 ,"ubw")) { ubw = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ubw")); } else { mexErrMsgTxt("Parameter ubw not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"ubw")) { ubw = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ubw")); } else { mexErrMsgIdAndTxt("AMICI:mex:ubw","Parameter ubw not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"lbw")) { lbw = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"lbw")); } else { mexErrMsgTxt("Parameter lbw not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"lbw")) { lbw = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"lbw")); } else { mexErrMsgIdAndTxt("AMICI:mex:lbw","Parameter lbw not specified as field in options struct!"); }
     
     
     if(mxGetField(prhs[4], 0 ,"sx0")) { sx0data = mxGetPr(mxGetField(prhs[4], 0 ,"sx0")); b_sx0 = TRUE;} else { b_sx0 = FALSE;}
     if (b_sx0) {
         /* check dimensions */
-        if(mxGetN(mxGetField(prhs[4], 0 ,"sx0")) != np) { mexErrMsgTxt("Number of rows in sx0 field does not agree with number of model parameters!"); }
-        if(mxGetM(mxGetField(prhs[4], 0 ,"sx0")) != nx) { mexErrMsgTxt("Number of columns in sx0 field does not agree with number of model states!"); }
+        if(mxGetN(mxGetField(prhs[4], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+        if(mxGetM(mxGetField(prhs[4], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
     }
     
-    if(mxGetField(prhs[4], 0 ,"data_model")) { data_model = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"data_model")); } else { mexErrMsgTxt("Parameter data_model not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"data_model")) { data_model = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"data_model")); } else { mexErrMsgIdAndTxt("AMICI:mex:data_model","Parameter data_model not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"event_model")) { event_model = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"event_model")); } else { mexErrMsgTxt("Parameter event_model not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"event_model")) { event_model = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"event_model")); } else { mexErrMsgIdAndTxt("AMICI:mex:event_model","Parameter event_model not specified as field in options struct!"); }
     
-    if(mxGetField(prhs[4], 0 ,"ordering")) { ordering = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ordering")); } else { mexErrMsgTxt("Parameter ordering not specified as field in options struct!"); }
+    if(mxGetField(prhs[4], 0 ,"ordering")) { ordering = (int)mxGetScalar(mxGetField(prhs[4], 0 ,"ordering")); } else { mexErrMsgIdAndTxt("AMICI:mex:ordering","Parameter ordering not specified as field in options struct!"); }
 
     
     
     /* pbar */
     if (!prhs[6]) {
-        mexErrMsgTxt("No parameter scales provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
     }
     
     pbar = mxGetPr(prhs[6]);
     
     /* xscale */
     if (!prhs[7]) {
-        mexErrMsgTxt("No state scales provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
     }
     
     xbar = mxGetPr(prhs[7]);
@@ -176,44 +189,44 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    if(mxGetField(prhs[0], 0 ,"t")) { tsdata = mxGetPr(mxGetField(prhs[0], 0 ,"t")); } else { mexErrMsgTxt("t not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"t")) { tsdata = mxGetPr(mxGetField(prhs[0], 0 ,"t")); } else { mexErrMsgIdAndTxt("AMICI:mex:t","t not specified as field in solution struct!"); }
     
-    if(mxGetField(prhs[0], 0 ,"x")) { xdata = mxGetPr(mxGetField(prhs[0], 0 ,"x")); } else { mexErrMsgTxt("x not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"y")) { ydata = mxGetPr(mxGetField(prhs[0], 0 ,"y")); } else { mexErrMsgTxt("y not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"xdot")) { xdotdata = mxGetPr(mxGetField(prhs[0], 0 ,"xdot")); } else { mexErrMsgTxt("xdot not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dxdotdp")) { dxdotdpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dxdotdp")); } else { mexErrMsgTxt("dxdotdp not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"J")) { Jdata = mxGetPr(mxGetField(prhs[0], 0 ,"J")); } else { mexErrMsgTxt("J not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dydx")) { dydxdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydx")); } else { mexErrMsgTxt("dydx not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dydp")) { dydpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydp")); } else { mexErrMsgTxt("dydp not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"x")) { xdata = mxGetPr(mxGetField(prhs[0], 0 ,"x")); } else { mexErrMsgIdAndTxt("AMICI:mex:x","x not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"y")) { ydata = mxGetPr(mxGetField(prhs[0], 0 ,"y")); } else { mexErrMsgIdAndTxt("AMICI:mex:y","y not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"xdot")) { xdotdata = mxGetPr(mxGetField(prhs[0], 0 ,"xdot")); } else { mexErrMsgIdAndTxt("AMICI:mex:xdot","xdot not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"dxdotdp")) { dxdotdpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dxdotdp")); } else { mexErrMsgIdAndTxt("AMICI:mex:dxdotdp","dxdotdp not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"J")) { Jdata = mxGetPr(mxGetField(prhs[0], 0 ,"J")); } else { mexErrMsgIdAndTxt("AMICI:mex:J","J not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"dydx")) { dydxdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydx")); } else { mexErrMsgIdAndTxt("AMICI:mex:dydx","dydx not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"dydp")) { dydpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydp")); } else { mexErrMsgIdAndTxt("AMICI:mex:dydp","dydp not specified as field in solution struct!"); }
     if (ne>0) {
-        if(mxGetField(prhs[0], 0 ,"z")) { zdata = mxGetPr(mxGetField(prhs[0], 0 ,"z")); } else { mexErrMsgTxt("z not specified as field in solution struct!"); }
+        if(mxGetField(prhs[0], 0 ,"z")) { zdata = mxGetPr(mxGetField(prhs[0], 0 ,"z")); } else { mexErrMsgIdAndTxt("AMICI:mex:zdata","z not specified as field in solution struct!"); }
     }
     
-    if(mxGetField(prhs[0], 0 ,"numsteps")) { numstepsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numsteps")); } else { mexErrMsgTxt("numsteps not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"numrhsevals")) { numrhsevalsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevals")); } else { mexErrMsgTxt("numrhsevals not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"order")) { orderdata = mxGetPr(mxGetField(prhs[0], 0 ,"order")); } else { mexErrMsgTxt("order not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"numsteps")) { numstepsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numsteps")); } else { mexErrMsgIdAndTxt("AMICI:mex:numsteps","numsteps not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"numrhsevals")) { numrhsevalsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevals")); } else { mexErrMsgIdAndTxt("AMICI:mex:numrhsevals","numrhsevals not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"order")) { orderdata = mxGetPr(mxGetField(prhs[0], 0 ,"order")); } else { mexErrMsgIdAndTxt("AMICI:mex:order","order not specified as field in solution struct!"); }
     
-    if(mxGetField(prhs[0], 0 ,"numstepsS")) { numstepsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numstepsS")); } else { mexErrMsgTxt("numstepsS not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"numrhsevalsS")) { numrhsevalsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevalsS")); } else { mexErrMsgTxt("numrhsevalsS not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"numstepsS")) { numstepsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numstepsS")); } else { mexErrMsgIdAndTxt("AMICI:mex:numstesS","numstepsS not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"numrhsevalsS")) { numrhsevalsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevalsS")); } else { mexErrMsgIdAndTxt("AMICI:mex:numrhsevalsS","numrhsevalsS not specified as field in solution struct!"); }
     
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
-            if(mxGetField(prhs[0], 0 ,"yS")) { ySdata = mxGetPr(mxGetField(prhs[0], 0 ,"yS")); } else { mexErrMsgTxt("yS not specified as field in solution struct!"); }
+            if(mxGetField(prhs[0], 0 ,"yS")) { ySdata = mxGetPr(mxGetField(prhs[0], 0 ,"yS")); } else { mexErrMsgIdAndTxt("AMICI:mex:yS","yS not specified as field in solution struct!"); }
             if (ne>0) {
-                if(mxGetField(prhs[0], 0 ,"zS")) { zSdata = mxGetPr(mxGetField(prhs[0], 0 ,"zS")); } else { mexErrMsgTxt("zS not specified as field in solution struct!"); }
+                if(mxGetField(prhs[0], 0 ,"zS")) { zSdata = mxGetPr(mxGetField(prhs[0], 0 ,"zS")); } else { mexErrMsgIdAndTxt("AMICI:mex:zS","zS not specified as field in solution struct!"); }
             }
-            if(mxGetField(prhs[0], 0 ,"xS")) { xSdata = mxGetPr(mxGetField(prhs[0], 0 ,"xS")); } else { mexErrMsgTxt("xS not specified as field in solution struct!"); }
+            if(mxGetField(prhs[0], 0 ,"xS")) { xSdata = mxGetPr(mxGetField(prhs[0], 0 ,"xS")); } else { mexErrMsgIdAndTxt("AMICI:mex:xS","xS not specified as field in solution struct!"); }
         }
         if (sensi_meth == AMI_ASA) {
-            if(mxGetField(prhs[0], 0 ,"llhS")) { llhSdata = mxGetPr(mxGetField(prhs[0], 0 ,"llhS")); } else { mexErrMsgTxt("llhS not specified as field in solution struct!"); }
+            if(mxGetField(prhs[0], 0 ,"llhS")) { llhSdata = mxGetPr(mxGetField(prhs[0], 0 ,"llhS")); } else { mexErrMsgIdAndTxt("AMICI:mex:llhS","llhS not specified as field in solution struct!"); }
             if (sensi >= 2) {
-                if(mxGetField(prhs[0], 0 ,"llhS2")) { llhS2data = mxGetPr(mxGetField(prhs[0], 0 ,"llhS2")); } else { mexErrMsgTxt("llhS not specified as field in solution struct!"); }
+                if(mxGetField(prhs[0], 0 ,"llhS2")) { llhS2data = mxGetPr(mxGetField(prhs[0], 0 ,"llhS2")); } else { mexErrMsgIdAndTxt("AMICI:mex:llhS2","llhS2 not specified as field in solution struct!"); }
             }
         }
     }
     
-    if(mxGetField(prhs[0], 0 ,"llh")) { llhdata = mxGetPr(mxGetField(prhs[0], 0 ,"llh")); } else { mexErrMsgTxt("llh not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"chi2")) { chi2data = mxGetPr(mxGetField(prhs[0], 0 ,"chi2")); } else { mexErrMsgTxt("chi2 not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"llh")) { llhdata = mxGetPr(mxGetField(prhs[0], 0 ,"llh")); } else { mexErrMsgIdAndTxt("AMICI:mex:llh","llh not specified as field in solution struct!"); }
+    if(mxGetField(prhs[0], 0 ,"chi2")) { chi2data = mxGetPr(mxGetField(prhs[0], 0 ,"chi2")); } else { mexErrMsgIdAndTxt("AMICI:mex:chi2","chi2 not specified as field in solution struct!"); }
     
     return(rdata);
 }
@@ -244,19 +257,19 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     
     if (data_model == AMI_ONEOUTPUT) {
         if ( (ny>1) | (nt>1) ) {
-            mexErrMsgTxt("Data model AMI_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
+            mexErrMsgIdAndTxt("AMICI:mex:datamodel","Data model AMI_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
         }
     } else {
         
         if (!prhs[8]) {
-            mexErrMsgTxt("No data provided!");
+            mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
         }
         if (mxGetField(prhs[8], 0 ,"Y")) {
             my = mxGetPr(mxGetField(prhs[8], 0 ,"Y"));
             nmyy = (int) mxGetN(mxGetField(prhs[8], 0 ,"Y"));
             nmyt = (int) mxGetM(mxGetField(prhs[8], 0 ,"Y"));
         } else {
-            mexErrMsgTxt("Field Y not specified as field in data struct!");
+            mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_Y")) {
@@ -264,14 +277,14 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
             nysigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Y"));
             nysigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Y"));
         } else {
-            mexErrMsgTxt("Field Sigma_Y not specified as field in data struct!");
+            mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
         }
         if (mxGetField(prhs[8], 0 ,"Z")) {
             mz = mxGetPr(mxGetField(prhs[8], 0 ,"Z"));
             nmzy = (int) mxGetN(mxGetField(prhs[8], 0 ,"Z"));
             nmzt = (int) mxGetM(mxGetField(prhs[8], 0 ,"Z"));
         } else {
-            mexErrMsgTxt("Field T not specified as field in data struct!");
+            mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
         }
         
         if (mxGetField(prhs[8], 0 ,"Sigma_Z")) {
@@ -279,39 +292,39 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
             nzsigmay = (int) mxGetN(mxGetField(prhs[8], 0 ,"Sigma_Z"));
             nzsigmat = (int) mxGetM(mxGetField(prhs[8], 0 ,"Sigma_Z"));
         } else {
-            mexErrMsgTxt("Field Sigma_Z not specified as field in data struct!");
+            mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
         }
         
         if (nmyt != nt) {
-            mexErrMsgTxt("Number of time-points in data matrix does not match provided time vector");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nty","Number of time-points in data matrix does not match provided time vector");
         }
         
         if (nysigmat != nt) {
-            mexErrMsgTxt("Number of time-points in data-sigma matrix does not match provided time vector");
+            mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy","Number of time-points in data-sigma matrix does not match provided time vector");
         }
         
         if (nmyy != ny) {
-            mexErrMsgTxt("Number of observables in data matrix does not match provided ny");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match provided ny");
         }
         
         if (nysigmay != ny) {
-            mexErrMsgTxt("Number of observables in data-sigma matrix does not match provided ny");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match provided ny");
         }
         
         if (nmzt != nmaxevent) {
-            mexErrMsgTxt("Number of time-points in event matrix does not match provided nmaxevent");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz","Number of time-points in event matrix does not match provided nmaxevent");
         }
         
         if (nzsigmat != nmaxevent) {
-            mexErrMsgTxt("Number of time-points in event-sigma matrix does not match provided nmaxevent");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz","Number of time-points in event-sigma matrix does not match provided nmaxevent");
         }
         
         if (nmzy != nz) {
-            mexErrMsgTxt("Number of events in event matrix does not match provided ne");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match provided ne");
         }
         
         if (nzsigmay != nz) {
-            mexErrMsgTxt("Number of events in event-sigma matrix does not match provided ne");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nensdz","Number of events in event-sigma matrix does not match provided ne");
         }
         
     }
@@ -334,7 +347,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
-    int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* user udata */
@@ -393,10 +405,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     /* Create AMIS object */
     if (lmm>2||lmm<1) {
-        mexErrMsgTxt("Illegal value for lmm!");
+        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgTxt("Illegal value for iter!");
+        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     ami_mem = AMICreate(lmm, iter);
     if (ami_mem == NULL) return(NULL);
@@ -455,7 +467,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             break;
             
         case AMI_LAPACKDENSE:
-            mexErrMsgTxt("Solver currently not supported!");
+            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackDense(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -466,7 +478,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
         case AMI_LAPACKBAND:
             
-            mexErrMsgTxt("Solver currently not supported!");
+            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackBand(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -525,7 +537,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             break;
             
         default:
-            mexErrMsgTxt("Invalid choice of solver!");
+            mexErrMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
             break;
     }
     
@@ -583,6 +595,12 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 which = 0;
                 
                 if(ne>0) x_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                if(ne>0) xdot_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                if(ne>0) xdot_old_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
+                
+                
+                /* we always want N_d to be equal to the number of maximal steps, this prevents additional forward passes
+                 and thus ensures correctness for systems with discontinuous right hand sides */
                 
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
@@ -645,8 +663,6 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
      * @param[in] temp_data pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
-    bool error_corr = TRUE;
-    int pretype= PREC_NONE; /* specifies the type of preconditioning and must be one of: PREC NONE, PREC LEFT, PREC RIGHT, or PREC BOTH. */
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
@@ -681,10 +697,10 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
-        mexErrMsgTxt("Illegal value for lmm!");
+        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgTxt("Illegal value for iter!");
+        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     /* allocate memory for the backward problem */
     *status = AMICreateB(ami_mem, lmm, iter, &which);
@@ -738,7 +754,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
              *status = wrap_SetDenseJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgTxt("Solver currently not supported!");
+            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             
@@ -752,7 +768,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
              *status = wrap_SetBandJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgTxt("Solver currently not supported!");
+            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             break;
@@ -895,7 +911,6 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     
     int iy;
     int ip;
-    int ix;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -920,8 +935,8 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    fdJydp(ts[it],it,dgdp,ydata,dydp,my,sigma_y,dsigma_ydp,udata);
-    fdJydx(ts[it],it,dgdx,ydata,dydx,my,sigma_y,udata);
+    fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
+    fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -965,7 +980,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
             sigma_y[iy] = ysigma[iy*nt+it];
         }
     }
-    fJy(t,it,&g,ydata,my,sigma_y,udata);
+    fJy(t,it,&g,ydata,x,my,sigma_y,udata);
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -992,10 +1007,6 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    
-    int ip;
-    int jp;
-    int iz;
     
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
@@ -1027,10 +1038,6 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    
-    int ip;
-    int jp;
-    int iz;
     
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
@@ -1274,7 +1281,6 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
     
-    int iz;
     int ie;
     
     UserData udata; /* user udata */
@@ -1465,16 +1471,18 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
             N_VScale(1.0,dx,dx_old);
         }
         
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
             N_VScale(1.0,x,x_disc[iroot]);
+            N_VScale(1.0,xdot,xdot_disc[iroot]);
+            N_VScale(1.0,xdot_old,xdot_old_disc[iroot]);
         }
     }
     
-    applyEventBolus(status, ami_mem, udata, tdata);
+    updateHeaviside(status, udata, tdata);
     if (*status != AMI_SUCCESS) return;
     
-    updateHeaviside(status, udata, tdata);
+    applyEventBolus(status, ami_mem, udata, tdata);
     if (*status != AMI_SUCCESS) return;
     
     *status = AMIReInit(ami_mem, t, x, dx);
@@ -1540,9 +1548,9 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     for (ie=0; ie<ne; ie++) {
         
         if (rootidx[iroot*ne + ie] != 0) {
-            *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,udata);
+            *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
-            *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,udata);
+            *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
             
             for (ix=0; ix<nx; ix++) {
@@ -1593,7 +1601,7 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *use
             tnext = tdata[it];
         } else {
             if (ne>0) {
-                if (troot>tdata) {
+                if (troot[iroot]>tdata[it]) {
                     tnext = troot[iroot];
                 } else {
                     tnext = tdata[it];
@@ -1633,7 +1641,7 @@ void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_da
     
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltax(t,ie,deltax,x,user_data);
+            *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,user_data);
             
             x_tmp = NV_DATA_S(x);
             for (ix=0; ix<nx; ix++) {

@@ -29,11 +29,10 @@ D.Sigma_Y = 0.01*ones(size(D.Y));
 
 options.sensi = 1;
 options.sensi_meth = 'adjoint';
-options.cvode_maxsteps = 1e4;
+options.maxsteps = 1e5;
 sol = simulate_model_example_5(tout,log10(p),k,D,options);
 options.sensi = 0;
 solfine = simulate_model_example_5(tfine,log10(p),k,[],options);
-
 figure
 errorbar(tout,D.Y,D.Sigma_Y)
 hold on
