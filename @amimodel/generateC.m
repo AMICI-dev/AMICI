@@ -1,4 +1,4 @@
-function this = generateC(this)
+function generateC(this)
     % generateC generates the c files which will be used in the compilation.
     %
     % Return values:

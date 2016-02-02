@@ -1,4 +1,4 @@
-function this = generateM(this, amimodelo2)
+function generateM(this, amimodelo2)
     % generateM generates the matlab wrapper for the compiled C files.
     %
     % Parameters:

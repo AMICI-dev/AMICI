@@ -1,8 +1,7 @@
-function [this,HTable] = loadOldHashes(this)
+function HTable = loadOldHashes(this)
     % loadOldHashes loads information from a previous compilation of the model.
     %
     % Return values:
-    %  this: updated model definition object @type amimodel
     %  HTable: struct with hashes of symbolic definition from the previous
     %  compilation @type struct
     

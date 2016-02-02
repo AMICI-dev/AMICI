@@ -69,9 +69,9 @@ function amiwrap( varargin )
     
     % do symbolic computations of modelstruct
     disp('Parsing model struct ...')
-    model = model.parseModel();
+    model.parseModel();
     if(o2flag)
-        modelo2 = modelo2.parseModel();
+        modelo2.parseModel();
     end
     
     % generate C code out of symbolic computations

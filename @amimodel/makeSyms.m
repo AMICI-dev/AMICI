@@ -1,9 +1,7 @@
-function [ this ] = makeSyms( this )
+function makeSyms( this )
     % makeSyms extracts symbolic definition from the user provided model
     % and checks them for consistency
-    %
-    % Return values:
-    %  this: updated model definition object @type amimodel
+
     
     % check whether sym is properly defined
     if(~isfield(this.sym,'xdot'))
