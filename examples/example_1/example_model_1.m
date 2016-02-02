@@ -1,7 +1,8 @@
 clear
 close all
 clc
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_1.m'));
 % compile the model
@@ -9,7 +10,8 @@ amiwrap('model_example_1','example_model_1_syms',exdir)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = linspace(0,10,20);
@@ -26,7 +28,8 @@ tic
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
-%% ODE15S
+%%
+% ODE15S
 
 ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
     +p(2)*x(1)*exp(-0.1*t)-p(3)*x(2);
@@ -40,7 +43,8 @@ tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
 disp(['Time elapsed with ode15s: ' num2str(toc) ])
 
-%% PLOTTING
+%%
+% PLOTTING
 
 figure
 c_x = get(gca,'ColorOrder');
@@ -75,7 +79,7 @@ ylabel('y')
 box on
 
 subplot(2,2,4)
-plot(t,sol.y-p(4)*sum(X_ode15s,2),'--')
+plot(t,abs(sol.y-p(4)*sum(X_ode15s,2)),'--')
 set(gca,'YScale','log')
 legend('error y1','Location','NorthEastOutside')
 legend boxoff
@@ -86,13 +90,15 @@ box on
 set(gcf,'Position',[100 300 1200 500])
 
 
-%% FORWARD SENSITIVITY ANALYSIS
+%%
+% FORWARD SENSITIVITY ANALYSIS
 
 options.sensi = 1;
 
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 
-%% FINITE DIFFERENCES
+%%
+% FINITE DIFFERENCES
 
 eps = 1e-4;
 xi = log10(p);
@@ -105,7 +111,8 @@ for ip = 1:4;
     sz_fd(:,:,ip) = (solp.z - sol.z)/eps;
 end
 
-%% PLOTTING
+%%
+% PLOTTING
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)

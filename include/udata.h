@@ -175,6 +175,7 @@ typedef struct {
     
     /** tempory storage of Jacobian data across functions */
     SlsMat am_J;
+    /** tempory storage of dxdotdp data across functions */
     realtype *am_dxdotdp;
     
 } *UserData;

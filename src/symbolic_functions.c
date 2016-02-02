@@ -16,233 +16,38 @@
 #define FALSE 0
 
 /**
- * c implementation of matlab function ge
+ * c implementation of matlab function heaviside
  *
- * @param a value1 @type double
- * @param b value2 @type double
- * @return if(a >= 0) then 1 else 0 @type int
+ * @param x argument
+ * @return if(x>0) then 1 else 0
  *
  */
-static int am_ge(double a, double b) {
-    if (a >= b) {
-        return(TRUE);
+double heaviside(double x) {
+    if (x <= 0) {
+        return(0);
     } else {
-        return(FALSE);
+        return(1);
     }
 }
 
-/**
- * parameter derivative of c implementation of matlab function ge
- *
- * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @return 0
- *
- */
-static int Dam_ge(int id, double a, double b) {
-    return(FALSE);
-}
 
 /**
- * c implementation of matlab function gt
+ *  c implementation of matlab function sign
  *
- * @param a value1 @type double
- * @param b value2 @type double
- * @return if(a > 0) then 1 else 0 @type int
- *
- */
-static int am_gt(double a, double b) {
-    if (a > b) {
-        return(TRUE);
-    } else {
-        return(FALSE);
-    }
-}
-
-/**
- * parameter derivative of c implementation of matlab function gt
- *
- * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @return 0
- *
- */
-static int Dam_gt(int id, double a, double b) {
-    return(FALSE);
-}
-
-/**
- * c implementation of matlab function le
- *
- * @param a value1 @type double
- * @param b value2 @type double
- * @return if(a <= 0) then 1 else 0 @type int
- *
- */
-static int am_le(double a, double b) {
-    if (a <= b) {
-        return(TRUE);
-    } else {
-        return(FALSE);
-    }
-}
-
-/**
- * parameter derivative of c implementation of matlab function le
- *
- * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @return 0
- *
- */
-static int Dam_le(int id, double a, double b) {
-    return(FALSE);
-}
-
-/**
- * c implementation of matlab function lt
- *
- * @param a value1 @type double
- * @param b value2 @type double
- * @return if(a < 0) then 1 else 0 @type int
- *
- */
-static int am_lt(double a, double b) {
-    if (a < b) {
-        return(TRUE);
-    } else {
-        return(FALSE);
-    }
-}
-
-/**
- * parameter derivative of c implementation of matlab function lt
- *
- * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @return 0
- *
- */
-static int Dam_lt(int id, double a, double b) {
-    return(FALSE);
-}
-
-/**
- * c implementation of if function
- *
- * @param condition condition that decides on the output
- * @param truepart returnvalue if condition is true @type double
- * @param falsepart returnvalue if condition is false @type double
- * @return if(condition) then truepart else falsepart @type int
- *
- */
-static double am_if(int condition, double truepart, double falsepart) {
-    if(condition){
-        return(truepart);
-    }else{
-        return(falsepart);
-    }
-}
-
-/**
- * parameter derivative of c implementation of if function
- *
- * @param id argument index for differentiation
- * @param condition condition that decides on the output
- * @param truepart returnvalue if condition is true @type double
- * @param falsepart returnvalue if condition is false @type double
- *
- * @return id==1:  0 @type double
- * @return id==2:  if(condition) then 1 else 0 @type double
- * @return id==3:  if(condition) then 0 else 1 @type double
- *
- */
-static double Dam_if(int id, int condition, double truepart, double falsepart) {
-    switch (id) {
-        case 1:
-            return(0);
-        case 2:
-            if(condition){
-                return(1);
-            }else{
-                return(0);
-            }
-            break;
-        case 3:
-            if(condition){
-                return(0);
-            }else{
-                return(1);
-            }
-            break;
-            
-        default:
-            return(0);
-            break; 
-    }
-
-}
-
-/**
- * c implementation of matlab function and
- *
- * @param a bool1 @type int
- * @param b bool2 @type int
- * @return if(a & b) then 1 else 0 @type int
- *
- */
-static int am_and(int a, int b) {
-    if (a & b) {
-        return(TRUE);
-    } else {
-        return(FALSE);
-    }
-}
-
-/**
- * parameter derivative of c implementation of matlab function and
- *
- * @param id argument index for differentiation
- * @param a bool1 @type int
- * @param b bool2 @type int
+ * @param x argument
  * @return 0 @type double
  *
  */
-static double Dam_and(int id,int a, int b) {
-    return(0);
-}
-
-/**
- * c implementation of matlab function or
- *
- * @param a bool1 @type int
- * @param b bool2 @type int
- * @return if(a | b) then 1 else 0 @type int
- *
- */
-static int am_or(int a, int b) {
-    if (a | b) {
-        return(TRUE);
+static double sign(double x) {
+    if (x > 0) {
+        return(1);
     } else {
-        return(FALSE);
+        if (x < 0 ) {
+            return(-1);
+        } else {
+            return(0);
+        }
     }
-}
-
-/**
- * parameter derivative of c implementation of matlab function or
- *
- * @param id argument index for differentiation
- * @param a bool1 @type int
- * @param b bool2 @type int
- * @return 0 @type double
- *
- */
-static double Dam_or(int id,int a, int b) {
-    return(0);
 }
 
 /**
@@ -288,7 +93,7 @@ static double Dam_min(int id,double a, double b) {
 }
 
 /**
- * c implementation of matlab function min
+ * c implementation of matlab function max
  *
  * @param a value1 @type double
  * @param b value2 @type double
@@ -304,7 +109,7 @@ static double am_max(double a, double b) {
 }
 
 /**
- * parameter derivative of c implementation of matlab function min
+ * parameter derivative of c implementation of matlab function max
  *
  * @param id argument index for differentiation
  * @param a bool1 @type double
@@ -329,71 +134,6 @@ static double Dam_max(int id,double a, double b) {
     }
 }
 
-/**
- * c implementation of matlab function heaviside
- *
- * @param x argument
- * @return if(x>0) then 1 else 0
- *
- */
-static double heaviside(double x) {
-    if (x <= 0) {
-        return(0);
-    } else {
-        return(1);
-    }
-}
-
-/**
- * c implementation of matlab function dirac
- *
- * @param x argument
- * @return if(x==0) then 1 else 0
- *
- */
-static double dirac(double x) {
-    if (x == 0) {
-        return(1);
-    } else {
-        return(0);
-    }
-}
-
-/**
- * derivatives of the c implementation of matlab function dirac
- *
- * @param id argument index for differentiation
- * @param x argument
- * @return 0 @type double
- *
- */
-static double Ddirac(int id, double x) {
-    if (x == 0) {
-        return(0);
-    } else {
-        return(0);
-    }
-}
-
-/**
- *  c implementation of matlab function sign
- *
- * @param id argument index for differentiation
- * @param x argument
- * @return 0 @type double
- *
- */
-static double sign(double x) {
-    if (x > 0) {
-        return(1);
-    } else {
-        if (x < 0 ) {
-            return(-1);
-        } else {
-            return(0);
-        }
-    }
-}
 
 /**
  * spline function with 3 nodes

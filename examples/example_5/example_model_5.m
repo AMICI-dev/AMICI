@@ -1,11 +1,12 @@
 clear
-%% COMPILATION
+%%
+% COMPILATION
 [exdir,~,~]=fileparts(which('example_model_5.m'));
-cd(exdir)
 % compile the model
 amiwrap('model_example_5','example_model_5_syms',exdir)
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 tout = linspace(0,4,9);
@@ -28,11 +29,10 @@ D.Sigma_Y = 0.01*ones(size(D.Y));
 
 options.sensi = 1;
 options.sensi_meth = 'adjoint';
-options.cvode_maxsteps = 1e4;
+options.maxsteps = 1e5;
 sol = simulate_model_example_5(tout,log10(p),k,D,options);
 options.sensi = 0;
 solfine = simulate_model_example_5(tfine,log10(p),k,[],options);
-
 figure
 errorbar(tout,D.Y,D.Sigma_Y)
 hold on
@@ -42,7 +42,8 @@ xlabel('time t')
 ylabel('observable')
 title(['log-likelihood: ' num2str(sol.llh) ])
 
-%% FD
+%%
+% FD
 
 eps = 1e-4;
 xi = log10(p);

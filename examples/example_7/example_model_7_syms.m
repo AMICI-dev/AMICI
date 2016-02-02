@@ -1,5 +1,6 @@
 function [model] = example_model_7_syms()
 
+%%
 % CVODES OPTIONS
 
 model.atol = 1e-8;
@@ -7,6 +8,7 @@ model.rtol = 1e-8;
 model.maxsteps = 1e4;
 model.debug = true;
 
+%%
 % STATES
 
 syms p_y_1_0 p_y_0_1 mu_1_y_1_0 mu_2_y_1_0 C_1_1_y_1_0 C_1_2_y_1_0 C_2_2_y_1_0 mu_1_y_0_1 mu_2_y_0_1 C_1_1_y_0_1 C_1_2_y_0_1 C_2_2_y_0_1
@@ -15,16 +17,19 @@ x = [
 p_y_1_0, p_y_0_1, mu_1_y_1_0, mu_2_y_1_0, C_1_1_y_1_0, C_1_2_y_1_0, C_2_2_y_1_0, mu_1_y_0_1, mu_2_y_0_1, C_1_1_y_0_1, C_1_2_y_0_1, C_2_2_y_0_1 ...
 ];
 
+%%
 % PARAMETERS
 
 syms tau_on tau_off k_m gamma_m k_p gamma_p tau_on_p Omega 
 
 p = [tau_on,tau_off,k_m,gamma_m,k_p,gamma_p,tau_on_p,Omega];
 
+%%
 % INPUT 
 
 u = sym.empty(0,0);
 
+%%
 % SYSTEM EQUATIONS
 
 f = sym(zeros(size(x)));
@@ -42,6 +47,7 @@ f(10) = p_y_0_1*(k_m - 2*C_1_1_y_0_1*gamma_m + gamma_m*mu_1_y_0_1) - C_1_1_y_0_1
 f(11) = C_1_2_y_1_0*p_y_1_0*tau_on - C_1_2_y_0_1*p_y_1_0*(tau_on + mu_2_y_1_0*tau_on_p) - p_y_0_1*(C_1_2_y_0_1*gamma_m + C_1_2_y_0_1*gamma_p - C_1_1_y_0_1*k_p) - C_1_2_y_1_0*p_y_1_0*tau_on_p*(mu_2_y_0_1 - mu_2_y_1_0) - C_2_2_y_1_0*p_y_1_0*tau_on_p*(mu_1_y_0_1 - mu_1_y_1_0) + p_y_1_0*tau_on*(mu_1_y_0_1 - mu_1_y_1_0)*(mu_2_y_0_1 - mu_2_y_1_0) + C_1_2_y_1_0*mu_2_y_1_0*p_y_1_0*tau_on_p + mu_2_y_1_0*p_y_1_0*tau_on_p*(mu_1_y_0_1 - mu_1_y_1_0)*(mu_2_y_0_1 - mu_2_y_1_0);
 f(12) = p_y_0_1*(2*C_1_2_y_0_1*k_p - 2*C_2_2_y_0_1*gamma_p + gamma_p*mu_2_y_0_1 + k_p*mu_1_y_0_1) - C_2_2_y_0_1*p_y_1_0*(tau_on + mu_2_y_1_0*tau_on_p) + p_y_1_0*tau_on*(mu_2_y_0_1 - mu_2_y_1_0)^2 + C_2_2_y_1_0*p_y_1_0*tau_on - C_2_2_y_1_0*p_y_1_0*tau_on_p*(2*mu_2_y_0_1 - 2*mu_2_y_1_0) + mu_2_y_1_0*p_y_1_0*tau_on_p*(mu_2_y_0_1 - mu_2_y_1_0)^2 + C_2_2_y_1_0*mu_2_y_1_0*p_y_1_0*tau_on_p;
 M = diag(sym([[1], [1], [p_y_1_0], [p_y_1_0], [p_y_1_0], [p_y_1_0], [p_y_1_0], [p_y_0_1], [p_y_0_1], [p_y_0_1], [p_y_0_1], [p_y_0_1]]));
+%%
 % INITIAL CONDITIONS
 
 x0 = sym(zeros(size(x)));
@@ -72,6 +78,7 @@ dx0(10) = (19999999999*gamma_m)/5000000000 + k_m;
 dx0(11) = k_p/10000000000 - gamma_p/10000000000 - gamma_m/10000000000;
 dx0(12) = (49999999999*gamma_p)/5000000000 + (20000000001*k_p)/5000000000;
 
+%%
 % OBSERVABLES
 
 y = sym(zeros(14,1));
@@ -91,6 +98,7 @@ y(12) = p_y_0_1*(C_1_1_y_0_1 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y
 y(13) = p_y_0_1*(C_1_2_y_0_1 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y_1_0)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0)) + p_y_1_0*(C_1_2_y_1_0 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_1_0 + mu_1_y_1_0*p_y_1_0)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0));
 y(14) = p_y_0_1*(C_2_2_y_0_1 + (mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0)^2) + p_y_1_0*(C_2_2_y_1_0 + (mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0)^2);
 
+%%
 % SYSTEM STRUCT
 
 model.sym.x = x;

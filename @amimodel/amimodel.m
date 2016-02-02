@@ -11,7 +11,7 @@ classdef amimodel
         % struct which stores information for which functions c code needs to be generated @type struct
         fun@struct;
         % struct which stores information for which functions c code needs
-        % to be generated @type *amievent
+        % to be generated @type amievent
         event@amievent;
         % name of the model @type string
         modelname@char;
@@ -49,6 +49,8 @@ classdef amimodel
         nevent@double;
         % number of event outputs @type int
         nz@double;
+        % number of original event outputs for second order sensitivities @type int
+        nztrue@double;
         % flag for DAEs @type *int
         id@double;
         % upper Jacobian bandwidth @type int
@@ -84,7 +86,7 @@ classdef amimodel
         cfun@struct;
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 2;
+        compver = 3;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -118,6 +120,8 @@ classdef amimodel
                 error('symbolic definitions missing in struct returned by symfun')
             end
             
+            
+            
             props = properties(AM);
             
             for j = 1:length(props)
@@ -127,12 +131,18 @@ classdef amimodel
                     end
                 else
                     AM = AM.makeSyms();
+                    AM.nx = length(AM.sym.x);
+                    AM.nxtrue = AM.nx;
+                    AM.np = length(AM.sym.p);
+                    AM.nk = length(AM.sym.k);
+                    AM.ny = length(AM.sym.y);
+                    AM.nytrue = AM.ny;
                 end
             end
 
             AM.modelname = modelname;
             % set path and create folder
-            AM.wrap_path=fileparts(which('amiwrap.m'));
+            AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
             if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
                 mkdir(fullfile(AM.wrap_path,'models'));
                 mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
@@ -142,6 +152,9 @@ classdef amimodel
                 end
             end
             AM = AM.makeEvents();
+            AM.nz = length([AM.event.z]);
+            AM.nztrue = AM.nz;
+            AM.nevent = length(AM.event);
             
             % check whether we have a DAE or ODE
             if(isfield(AM.sym,'M'))

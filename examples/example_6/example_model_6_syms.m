@@ -1,6 +1,7 @@
 function [model] = example_model_6_syms()
 
-%% CVODES OPTIONS
+%%
+% CVODES OPTIONS
 
 % set the default absolute tolerance
 model.atol = 1e-8; 
@@ -12,7 +13,8 @@ model.maxsteps = 1e4;
 % 'lin' (default).
 model.param = 'log10';
 
-%% STATES
+%%
+% STATES
 
 % create state syms
 syms x1
@@ -20,7 +22,8 @@ syms x1
 % create state vector
 x = [ x1];
 
-%% PARAMETERS ( for these sensitivities will be computed )
+%%
+% PARAMETERS ( for these sensitivities will be computed )
 
 % create parameter syms
 syms p1 p2 p3 
@@ -28,7 +31,8 @@ syms p1 p2 p3
 % create parameter vector 
 p = [p1 p2 p3];
 
-%% SYSTEM EQUATIONS
+%%
+% SYSTEM EQUATIONS
 
 % create symbolic variable for time
 syms t
@@ -38,19 +42,22 @@ xdot = sym(zeros(size(x)));
 % piecewise defined function
 xdot(1) = -p1*x1*heaviside(t-2) + p2;
 
-%% INITIAL CONDITIONS
+%%
+% INITIAL CONDITIONS
 
 x0 = sym(zeros(size(x)));
 
 x0(1) = p3;
 
-%% OBSERVALES
+%%
+% OBSERVALES
 
 y = sym(zeros(1,1));
 
 y(1) = x1;
 
-%% SYSTEM STRUCT
+%%
+% SYSTEM STRUCT
 
 model.sym.x = x;
 model.sym.xdot = xdot;

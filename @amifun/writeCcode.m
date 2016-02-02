@@ -6,10 +6,10 @@ function writeCcode(this,model, fid)
 %  model: model defintion object @type amimodel
 %  fid: file id in which the final expression is written @type fileid
 %
-%
+% Return values:
+%  void
 
 nevent = model.nevent;
-ny = model.ny;
 if(strcmp(this.funstr,'JSparse'))
     tmpfun = this;
     tmpfun.sym = model.fun.J.sym(model.sparseidx);
@@ -40,7 +40,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         fprintf(fid,'              switch(ie) { \n');
         tmpfun = this;
         for ievent=1:nevent
-            if(any(nonzero(:,ievent)~=0))
+            if(any(nonzero(:,ievent)))
                 fprintf(fid,['              case ' num2str(ievent-1) ': {\n']);
                 tmpfun.sym = this.sym(:,ievent);
                 tmpfun.gccode(fid);
@@ -55,25 +55,17 @@ elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.fu
     if(any(any(nonzero)))
         fprintf(fid,'int iy;\n');
         fprintf(fid,'for(iy=0;iy<ny;iy++){\n');
-        fprintf(fid,'    if(!mxIsNaN(my[iy*nt+it])){\n');
-        fprintf(fid,'        switch(iy) { \n');
-
-        tmpfun = this;
-        for iy=1:ny
-            if(any(nonzero(iy,:)~=0))
-                fprintf(fid,['              case ' num2str(iy-1) ': {\n']);
-                tmpfun.sym = this.sym(iy,:);
-                tmpfun.gccode(fid);
-                fprintf(fid,'\n');
-                fprintf(fid,'              } break;\n\n');
-            end
-        end
-        fprintf(fid,'        } \n');
-        fprintf(fid,'    } \n');
-        fprintf(fid,'} \n');
+        fprintf(fid,'    if(mxIsNaN(my[iy*nt+it])){\n');
+        fprintf(fid,'        my[iy*nt+it] = y[iy*nt+it];\n');
+        fprintf(fid,'    }\n');
+        fprintf(fid,'}\n');
+        this.gccode(fid);
     end
 else
-    this.gccode(fid);
+    nonzero = this.sym ~=0;
+    if(any(any(nonzero)))
+        this.gccode(fid);
+    end
 end
 
 

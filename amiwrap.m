@@ -8,6 +8,8 @@ function amiwrap( varargin )
     %  tdir: target directory where the simulation file should be placed @type string @default $AMICIDIR/models/modelname
     %  o2flag: boolean whether second order sensitivities should be enabled @type boolean @default false
     %
+    % Return values:
+    %  void
     
     %%
     % check inputs
@@ -52,7 +54,9 @@ function amiwrap( varargin )
     
     warningreset = warning;
     warning('off','symbolic:mupadmex:MuPADTextWarning')
-    
+    warning('off','MATLAB:dispatcher:nameConflict')
+    warning('off','symbolic:sym:sym:DeprecateExpressions')
+    warning('off','symbolic:generate:FunctionNotVerifiedToBeValid')
     %% 
     % computations
     

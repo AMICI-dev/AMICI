@@ -1,11 +1,13 @@
 clear
-%% COMPILATION
+%%
+% COMPILATION
 
 [exdir,~,~]=fileparts(which('example_model_2.m'));
 % compile the model
 amiwrap('model_example_2','example_model_2_syms',exdir)
 
-%% SIMULATION
+%%
+% SIMULATION
 
 % time vector
 t = linspace(0,3,1001);
@@ -22,7 +24,8 @@ tic
 sol = simulate_model_example_2(t,log10(p),k,[],options);
 disp(['Time elapsed with amiwrap: ' num2str(toc) ])
 
-%% ODE15S
+%%
+% ODE15S
 
 sig = 1e-2;
 delta_num = @(tau) exp(-1/2*(tau/sig).^2)/(sqrt(2*pi)*sig);
@@ -36,7 +39,8 @@ tic
 [~, X_ode45] = ode45(@(t,x) ode_system(t,x,p,k),t,[0;0],options_ode45);
 disp(['Time elapsed with ode45: ' num2str(toc) ])
 
-%% PLOTTING
+%%
+% PLOTTING
 
 figure
 c_x = get(gca,'ColorOrder');
@@ -81,13 +85,15 @@ box on
 set(gcf,'Position',[100 300 1200 500])
 
 
-%% FORWARD SENSITIVITY ANALYSIS
+%%
+% FORWARD SENSITIVITY ANALYSIS
 
 options.sensi = 1;
 
 sol = simulate_model_example_2(t,log10(p),k,[],options);
 
-%% FINITE DIFFERENCES
+%%
+% FINITE DIFFERENCES
 
 eps = 1e-4;
 xi = log10(p);
@@ -99,7 +105,8 @@ for ip = 1:4;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 end
 
-%% PLOTTING
+%%
+% PLOTTING
 figure
 for ip = 1:4
     subplot(4,2,ip*2-1)

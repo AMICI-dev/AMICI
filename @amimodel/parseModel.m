@@ -3,8 +3,14 @@ function this = parseModel(this)
     %
     % Return values:
     %  this: updated model definition object @type amimodel
-
     
+    % compile CalcMD5 if necessary
+    try
+        CalcMD5('TEST','char','hex');
+    catch
+        disp('CalcMD5 has not been compiled yet. Compiling now!')
+        mex(fullfile(this.wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
+    end
 
     % load old hashes
     [this,HTable] = this.loadOldHashes();
@@ -30,25 +36,25 @@ function this = parseModel(this)
     this.nk = nk;
     
     % initial hashes
-    this.HTable(1).y = DataHash(char(this.sym.y));
-    this.HTable(1).x = DataHash(char(this.sym.x));
-    this.HTable(1).p = DataHash(char(this.sym.p));
-    this.HTable(1).k = DataHash(char(this.sym.k));
-    this.HTable(1).x0 = DataHash(char(this.sym.x0));
+    this.HTable(1).y = CalcMD5(char(this.sym.y));
+    this.HTable(1).x = CalcMD5(char(this.sym.x));
+    this.HTable(1).p = CalcMD5(char(this.sym.p));
+    this.HTable(1).k = CalcMD5(char(this.sym.k));
+    this.HTable(1).x0 = CalcMD5(char(this.sym.x0));
     if(nevent>0)
-        this.HTable(1).trigger = DataHash(char([this.event.trigger]));
-        this.HTable(1).bolus = DataHash(char([this.event.bolus]));
-        this.HTable(1).z = DataHash(char([this.event.z]));
+        this.HTable(1).trigger = CalcMD5(char([this.event.trigger]));
+        this.HTable(1).bolus = CalcMD5(char([this.event.bolus]));
+        this.HTable(1).z = CalcMD5(char([this.event.z]));
     end
     if(strcmp(this.wtype,'iw'))
-        this.HTable(1).xdot = DataHash(char(this.sym.xdot));
-        this.HTable(1).dx0 = DataHash(char(this.sym.dx0));
-        this.HTable(1).M = DataHash(char(this.sym.M));
+        this.HTable(1).xdot = CalcMD5(char(this.sym.xdot));
+        this.HTable(1).dx0 = CalcMD5(char(this.sym.dx0));
+        this.HTable(1).M = CalcMD5(char(this.sym.M));
     else
-        this.HTable(1).xdot = DataHash(char(this.sym.xdot));
+        this.HTable(1).xdot = CalcMD5(char(this.sym.xdot));
     end
-    this.HTable(1).sigma_y = DataHash(char(this.sym.sigma_y));
-    this.HTable(1).sigma_z = DataHash(char(this.sym.sigma_z));
+    this.HTable(1).sigma_y = CalcMD5(char(this.sym.sigma_y));
+    this.HTable(1).sigma_z = CalcMD5(char(this.sym.sigma_z));
     
     % compute functions
     
@@ -111,7 +117,7 @@ function this = parseModel(this)
     end
     
     if(strcmp(this.wtype,'iw'))
-        this.id = sum(model.fun.M.sym,2)~=0;
+        this.id = double(logical(sum(this.fun.M.sym,2)~=0));
     else
         this.id = zeros(nx,1);
     end
