@@ -47,7 +47,7 @@ classdef amifun
         
         writeCcode(this,model,fid)
         
-        gccode(this,fid)
+        gccode(this,model,fid)
         
         [ this ] = getDeps(this,model)
         

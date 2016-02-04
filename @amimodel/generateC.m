@@ -80,7 +80,7 @@ function generateC(this)
                         fprintf(fid,'}\n');
                         fprintf(fid,'}\n');
                     else
-                        fprintf(fid,'int status;\n');
+                        fprintf(fid,'int status = 0;\n');
                         fprintf(fid,'if(ip == 0) {\n');
                         fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);

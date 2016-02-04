@@ -84,6 +84,7 @@ classdef amimodel < handle
         % storage for flags determining recompilation of individual
         % functions
         cfun@struct;
+
         % counter that allows enforcing of recompilation of models after
         % code changes
         compver = 3;
@@ -92,6 +93,12 @@ classdef amimodel < handle
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
         z2event@double;
+        % flag indicating whether the model contains spline functions
+        splineflag = false;
+        % flag indicating whether the model contains min functions
+        minflag = false;
+        % flag indicating whether the model contains max functions
+        maxflag = false;
     end
     
     methods

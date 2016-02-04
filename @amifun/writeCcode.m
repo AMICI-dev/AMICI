@@ -1,4 +1,4 @@
-function writeCcode(this,model, fid)
+function writeCcode(this,model,fid)
 % writeCcode is a wrapper for gccode which initialises data and reduces
 % overhead by check nonzero values
 %
@@ -13,11 +13,11 @@ nevent = model.nevent;
 if(strcmp(this.funstr,'JSparse'))
     tmpfun = this;
     tmpfun.sym = model.fun.J.sym(model.sparseidx);
-    tmpfun.gccode(fid);
+    tmpfun.gccode(model,fid);
 elseif(strcmp(this.funstr,'JSparseB'))
     tmpfun = this;
     tmpfun.sym = model.fun.JB.sym(model.sparseidxB);
-    tmpfun.gccode(fid);
+    tmpfun.gccode(model,fid);
 elseif(strcmp(this.funstr,'z') || strcmp(this.funstr,'sz'))
     nonzero = this.sym ~=0;
     if(any(nonzero))
@@ -28,7 +28,7 @@ elseif(strcmp(this.funstr,'z') || strcmp(this.funstr,'sz'))
             % dont shorten the vector as we need the indices
             fprintf(fid,['        case ' num2str(ievent-1) ': {\n']);
             tmpfun.sym(model.z2event~=ievent) = 0;
-            tmpfun.gccode(fid);
+            tmpfun.gccode(model,fid);
             fprintf(fid,'\n');
             fprintf(fid,'        } break;\n\n');
         end
@@ -43,7 +43,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
             if(any(nonzero(:,ievent)))
                 fprintf(fid,['              case ' num2str(ievent-1) ': {\n']);
                 tmpfun.sym = this.sym(:,ievent);
-                tmpfun.gccode(fid);
+                tmpfun.gccode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'              } break;\n\n');
             end
@@ -64,7 +64,7 @@ elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.fu
 else
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))
-        this.gccode(fid);
+        this.gccode(model,fid);
     end
 end
 
