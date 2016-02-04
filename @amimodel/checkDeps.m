@@ -1,4 +1,4 @@
-function [this,cflag] = checkDeps(this,HTable,deps)
+function cflag = checkDeps(this,HTable,deps)
     % checkDeps checks the dependencies of functions and populates sym
     % fields if necessary
     %
@@ -8,9 +8,9 @@ function [this,cflag] = checkDeps(this,HTable,deps)
     %  deps: cell array with containing a list of dependencies @type cell
     %
     % Return values:
-    %  cflag: boolean indicating whether any of the dependencies have @type
+    %  cflag: boolean indicating whether any of the dependencies have 
+    %  changed with respect to the hashes stored in HTable @type
     %  bool
-    %  changed with respect to the hashes stored in HTable @type HTable
     
     if(~isempty(HTable))
         cflags = zeros(length(deps),1);
@@ -19,7 +19,7 @@ function [this,cflag] = checkDeps(this,HTable,deps)
                 % check subdependencies
                 fun = amifun(deps{id},this);
                 fun = fun.getDeps(this);
-                [this,cflagdep] = this.checkDeps(HTable,fun.deps);
+                cflagdep = this.checkDeps(HTable,fun.deps);
                 cflags(id) = cflagdep;
             else
                 cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
@@ -35,7 +35,7 @@ function [this,cflag] = checkDeps(this,HTable,deps)
         % an empty HTable to getFun
         for id = 1:length(deps)
             if(~isfield(this.fun,deps{id}))
-                this = this.getFun([],deps{id});
+                this.getFun([],deps{id});
             end
         end
     end

@@ -1,8 +1,6 @@
-function this = parseModel(this)
+function parseModel(this)
     % parseModel parses the model definition and computes all necessary symbolic expressions.
     %
-    % Return values:
-    %  this: updated model definition object @type amimodel
     
     % compile CalcMD5 if necessary
     try
@@ -13,7 +11,7 @@ function this = parseModel(this)
     end
 
     % load old hashes
-    [this,HTable] = this.loadOldHashes();
+    HTable = this.loadOldHashes();
     
     nx = length(this.sym.x);
     np = length(this.sym.p);
@@ -78,7 +76,7 @@ function this = parseModel(this)
     
     % compute symbolic expressions
     for ifun = 1:length(funs)
-        this = this.getFun(HTable,funs{ifun});
+        this.getFun(HTable,funs{ifun});
     end
     
     if(isfield(this.fun,'J'))

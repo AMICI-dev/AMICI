@@ -1,9 +1,6 @@
-function [ this ] = makeEvents( this )
+function makeEvents( this )
     % makeEvents extracts discontiniuties from the model right hand side
     % and converts them into events
-    %
-    % Return values:
-    %  this: updated model definition object @type amimodel
     
     nevent = length(this.event);
     nx = length(this.sym.x);
