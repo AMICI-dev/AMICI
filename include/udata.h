@@ -178,5 +178,19 @@ typedef struct {
     /** tempory storage of dxdotdp data across functions */
     realtype *am_dxdotdp;
     
+    /** flag indicating whether a NaN in dxdotdp has been reported */
+    booleantype am_nan_dxdotdp;
+    /** flag indicating whether a NaN in J has been reported */
+    booleantype am_nan_J;
+    /** flag indicating whether a NaN in JSparse has been reported */
+    booleantype am_nan_JSparse;
+    /** flag indicating whether a NaN in xdot has been reported */
+    booleantype am_nan_xdot;
+    /** flag indicating whether a NaN in xBdot has been reported */
+    booleantype am_nan_xBdot;
+    /** flag indicating whether a NaN in qBdot has been reported */
+    booleantype am_nan_qBdot;
+    
+    
 } *UserData;
 #endif /* _MY_UDATA */

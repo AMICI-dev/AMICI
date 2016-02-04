@@ -2,8 +2,8 @@
 % @file amimodel
 % @brief definition of amimodel class
 %
-classdef amimodel
-    % amimodel is the object in which all model definitions are stored 
+classdef amimodel < handle
+    % amimodel is the object in which all model definitions are stored
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
@@ -103,7 +103,7 @@ classdef amimodel
             %  symfun: this is the string to the function which generates
             %  the modelstruct. You can also directly pass the struct here @type string
             %  modelname: name of the model @type string
-            % 
+            %
             % Return values:
             %  AM: model definition object
             if(isa(symfun,'char'))
@@ -127,10 +127,10 @@ classdef amimodel
             for j = 1:length(props)
                 if(~strcmp(props{j},'sym')) % we already checked for the sym field
                     if(isfield(model,props{j}))
-                       AM.(props{j}) = model.(props{j});
+                        AM.(props{j}) = model.(props{j});
                     end
                 else
-                    AM = AM.makeSyms();
+                    AM.makeSyms();
                     AM.nx = length(AM.sym.x);
                     AM.nxtrue = AM.nx;
                     AM.np = length(AM.sym.p);
@@ -139,7 +139,7 @@ classdef amimodel
                     AM.nytrue = AM.ny;
                 end
             end
-
+            
             AM.modelname = modelname;
             % set path and create folder
             AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
@@ -151,7 +151,7 @@ classdef amimodel
                     mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
                 end
             end
-            AM = AM.makeEvents();
+            AM.makeEvents();
             AM.nz = length([AM.event.z]);
             AM.nztrue = AM.nz;
             AM.nevent = length(AM.event);
@@ -164,26 +164,26 @@ classdef amimodel
             end
         end
         
-        this = parseModel(this)
+        parseModel(this)
         
-        this = generateC(this)
+        generateC(this)
         
-        this = compileC(this)
-
-        this = generateM(this,amimodelo2)
+        compileC(this)
         
-        this = getFun(this,HTable,funstr)
+        generateM(this,amimodelo2)
         
-        this = makeEvents(this)
+        getFun(this,HTable,funstr)
         
-        this = makeSyms(this)
+        makeEvents(this)
         
-        [this,cflag] = checkDeps(this,HTable,deps)
+        makeSyms(this)
         
-        [this,HTable] = loadOldHashes(this) 
+        cflag = checkDeps(this,HTable,deps)
         
-        [this] = augmento2(this)
-
+        HTable = loadOldHashes(this)
+        
+        modelo2 = augmento2(this)
+        
     end
 end
 

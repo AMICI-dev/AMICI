@@ -1,4 +1,4 @@
-function this = compileC(this)
+function compileC(this)
     % compileC compiles the mex simulation file
     %
     % Return values:

@@ -1,4 +1,4 @@
-function this = getFun(this,HTable,funstr)
+function getFun(this,HTable,funstr)
     % getFun generates symbolic expressions for the requested function.
     %
     % Parameters:
@@ -6,8 +6,6 @@ function this = getFun(this,HTable,funstr)
     %  compilation @type struct
     %  funstr: function for which symbolic expressions should be computed @type string
     %
-    % Return values:
-    %  this: updated model definition object @type amimodel
     
     [wrap_path,~,~]=fileparts(which('amiwrap.m'));
     
@@ -19,12 +17,12 @@ function this = getFun(this,HTable,funstr)
             % check whether the corresponding c file exists, if not we have to
             % force recompilation by passing an empty HTable
             if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
-                [this,cflag] = this.checkDeps([],fun.deps);
+                cflag = this.checkDeps([],fun.deps);
             else
                 if(this.recompile)
-                    [this,cflag] = this.checkDeps([],fun.deps);
+                    cflag = this.checkDeps([],fun.deps);
                 else
-                    [this,cflag] = this.checkDeps(HTable,fun.deps);
+                    cflag = this.checkDeps(HTable,fun.deps);
                 end
             end
         else
