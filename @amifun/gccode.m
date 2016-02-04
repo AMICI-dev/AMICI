@@ -1,8 +1,9 @@
-function this = gccode(this,fid)
+function this = gccode(this,model,fid)
     % gccode transforms symbolic expressions into c code and writes the
     % respective expression into a specified file
     %
     % Parameters:
+    %  model: model defintion object @type amimodel
     %  fid: file id in which the expression should be written @type fileid
     %
     % Return values:
@@ -12,14 +13,20 @@ function this = gccode(this,fid)
     if(any(any(any(this.sym~=0))))
         
         % replace unknown partial derivatives
-        this.sym = subs(this.sym,sym('D([1], am_max)'),sym('D1am_max'));
-        this.sym = subs(this.sym,sym('D([2], am_max)'),sym('D2am_max'));
-        this.sym = subs(this.sym,sym('D([1], am_min)'),sym('D1am_min'));
-        this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
-        for nodes = [3,4,5,10]
-            for ideriv = 1:nodes
-                this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline_pos' num2str(nodes)]));
-                this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline' num2str(nodes)]));
+        if(model.maxflag)
+            this.sym = subs(this.sym,sym('D([1], am_max)'),sym('D1am_max'));
+            this.sym = subs(this.sym,sym('D([2], am_max)'),sym('D2am_max'));
+        end
+        if(model.minflag)
+            this.sym = subs(this.sym,sym('D([1], am_min)'),sym('D1am_min'));
+            this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
+        end
+        if(model.splineflag)
+            for nodes = [3,4,5,10]
+                for ideriv = 1:nodes
+                    this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline_pos' num2str(nodes)]));
+                    this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline' num2str(nodes)]));
+                end
             end
         end
         

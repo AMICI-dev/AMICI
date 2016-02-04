@@ -122,6 +122,24 @@ function [this,model] = getSyms(this,model)
             % transform into symbolic expression
             this.strsym = sym(ys);
             
+            
+            % activate splines
+            for iy = 1:ny
+                if(not(all([model.splineflag,model.minflag,model.maxflag])))
+                    str = char(this.sym(iy));
+                    if(strfind(str,'spline'))
+                        model.splineflag = true;
+                    end
+                    if(strfind(str,'max'))
+                        model.maxflag = true;
+                    end
+                    if(strfind(str,'min'))
+                        model.minflag = true;
+                    end
+                end
+            end
+            
+            
         case 'x0'
             this.sym = model.sym.x0;
             % replace unify symbolic expression
@@ -184,6 +202,23 @@ function [this,model] = getSyms(this,model)
             end
             this.strsym = sym(xdots);
             this.strsym_old = sym(xdot_olds);
+            
+            % activate splines
+            for ix = 1:nx
+                if(not(all([model.splineflag,model.minflag,model.maxflag])))
+                    str = char(this.sym(ix));
+                    if(strfind(str,'spline'))
+                        model.splineflag = true;
+                    end
+                    if(strfind(str,'max'))
+                        model.maxflag = true;
+                    end
+                    if(strfind(str,'min'))
+                        model.minflag = true;
+                    end
+                end
+            end
+            
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x);
