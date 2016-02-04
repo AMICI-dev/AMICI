@@ -186,6 +186,10 @@ typedef struct {
     booleantype am_nan_JSparse;
     /** flag indicating whether a NaN in xdot has been reported */
     booleantype am_nan_xdot;
+    /** flag indicating whether a NaN in xBdot has been reported */
+    booleantype am_nan_xBdot;
+    /** flag indicating whether a NaN in qBdot has been reported */
+    booleantype am_nan_qBdot;
     
     
 } *UserData;

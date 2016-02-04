@@ -169,6 +169,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     udata->am_nan_J = FALSE;
     udata->am_nan_JSparse = FALSE;
     udata->am_nan_xdot = FALSE;
+    udata->am_nan_xBdot = FALSE;
+    udata->am_nan_qBdot = FALSE;
     
     return(udata);
 }
