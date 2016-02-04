@@ -165,6 +165,11 @@ UserData setupUserData(const mxArray *prhs[]) {
         tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
     }
     
+    udata->am_nan_dxdotdp = FALSE;
+    udata->am_nan_J = FALSE;
+    udata->am_nan_JSparse = FALSE;
+    udata->am_nan_xdot = FALSE;
+    
     return(udata);
 }
 
