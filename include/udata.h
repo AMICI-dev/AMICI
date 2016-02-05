@@ -37,9 +37,6 @@
 
 #define stldet udata->am_stldet
 
-#define ubw udata->am_ubw
-#define lbw udata->am_lbw
-
 #define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 
@@ -129,11 +126,6 @@ typedef struct {
     
     /** flag controlling stability limit detection */
     booleantype am_stldet;
-    
-    /** upper bandwith of the jacobian */
-    int am_ubw;
-    /** lower bandwith of the jacobian */
-    int am_lbw;
     
     /** flag for sensitivity initialisation */
     /*!

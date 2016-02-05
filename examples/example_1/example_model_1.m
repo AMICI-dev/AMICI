@@ -18,9 +18,9 @@ t = linspace(0,10,20);
 p = [0.5;2;0.5;0.5];
 k = [4,8,10,4];
 
-options.sensi = 0;
-options.cvode_maxsteps = 1e6;
-options.nmaxevent = 2;
+options = amioption('sensi',0,...
+    'maxsteps',1e4,...
+    'nmaxevent', 2);
 % load mex into memory
 sol = simulate_model_example_1(t,log10(p),k,[],options);
 

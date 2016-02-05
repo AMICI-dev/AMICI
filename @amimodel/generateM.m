@@ -172,44 +172,22 @@ function generateM(this, amimodelo2)
     fprintf(fid,'    error(''provided constant vector is too short'');\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
-    fprintf(fid,['options_ami.atol = ' num2str(this.atol) ';\n']);
-    fprintf(fid,['options_ami.rtol = ' num2str(this.atol) ';\n']);
-    fprintf(fid,['options_ami.maxsteps = ' num2str(this.maxsteps) ';\n']);
-    fprintf(fid,['options_ami.sens_ind = 1:' num2str(np) ';\n']);
-    fprintf(fid,['options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n\n']);
-    fprintf(fid,['options_ami.ne = ' num2str(nevent) '; %% MUST NOT CHANGE THIS VALUE\n']);
     
-    fprintf(fid,['options_ami.tstart = ' num2str(this.t0) ';\n']);
-    fprintf(fid,['options_ami.lmm = 2;\n']);
-    fprintf(fid,['options_ami.iter = 2;\n']);
-    fprintf(fid,['options_ami.linsol = 9;\n']);
-    fprintf(fid,['options_ami.stldet = 1;\n']);
-    fprintf(fid,['options_ami.Nd = 1000;\n']);
-    fprintf(fid,['options_ami.interpType = 1;\n']);
-    fprintf(fid,['options_ami.lmmB = 2;\n']);
-    fprintf(fid,['options_ami.iterB = 2;\n']);
-    fprintf(fid,['options_ami.ism = 1;\n']);
-    fprintf(fid,['options_ami.sensi_meth = ''forward'';\n\n']);
-    fprintf(fid,['options_ami.sensi = 0;\n\n']);
-    fprintf(fid,['options_ami.nmaxevent = 10;\n']);
-    fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
-    fprintf(fid,['options_ami.ubw = ' num2str(this.ubw) '; %% MUST NOT CHANGE THIS VALUE\n']);
-    fprintf(fid,['options_ami.lbw = ' num2str(this.lbw)  '; %% MUST NOT CHANGE THIS VALUE\n\n']);
-    fprintf(fid,['options_ami.data_model = 1;\n']);
-    fprintf(fid,['options_ami.event_model = 1;\n\n']);
-    fprintf(fid,['options_ami.ordering = 1;\n\n']);
-    fprintf(fid,['options_ami.ss = 0;\n']);
-    
-
     fprintf(fid,'\n');
     fprintf(fid,'pbar = ones(size(theta));\n');
     fprintf(fid,'pbar(pbar==0) = 1;\n');
     fprintf(fid,'xscale = [];\n');
-    
     fprintf(fid,['if(nargin>=5)\n']);
-    fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
+    fprintf(fid,['    options_ami = amioption(varargin{5});\n']);
     fprintf(fid,['else\n']);
+    fprintf(fid,['    options_ami = amioption();\n']);
     fprintf(fid,['end\n']);
+    fprintf(fid,['if(isempty(options_ami.sens_ind))\n']);
+    fprintf(fid,['    options_ami.sens_ind = 1:' num2str(np) ';\n']);
+    fprintf(fid,['end\n']);
+    fprintf(fid,['options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n\n']);
+    fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
+    
     if(o2flag)
         fprintf(fid,['if(nargout>1)\n']);
         fprintf(fid,['    if(nargout>6)\n']);
@@ -232,20 +210,6 @@ function generateM(this, amimodelo2)
         fprintf(fid,['    end\n']);
         fprintf(fid,['end\n']);
     end
-    fprintf(fid,['if(ischar(options_ami.sensi_meth))\n']);
-    fprintf(fid,['    if(strcmp(options_ami.sensi_meth,''forward''))\n']);
-    fprintf(fid,['        options_ami.sensi_meth = 1;\n']);
-    fprintf(fid,['    elseif(strcmp(options_ami.sensi_meth,''adjoint''))\n']);
-    fprintf(fid,['        options_ami.sensi_meth = 2;\n']);
-    fprintf(fid,['    elseif(strcmp(options_ami.sensi_meth,''ss''))\n']);
-    fprintf(fid,['        options_ami.sensi_meth = 3;\n']);
-    fprintf(fid,['        options_ami.sensi = 0;\n']);
-    fprintf(fid,['    else\n']);
-    fprintf(fid,['        error(''Invalid choice of options.sensi_meth. Must be either ''''forward'''',''''adjoint'''' or ''''ss'''''');\n']);
-    fprintf(fid,['    end\n']);
-    fprintf(fid,['else\n']);
-    fprintf(fid,['    error(''Invalid choice of options.sensi_meth. Must be either ''''forward'''',''''adjoint'''' or ''''ss'''''');\n']);
-    fprintf(fid,['end\n']);
     fprintf(fid,['if(options_ami.ss>0)\n']);
     fprintf(fid,['    if(options_ami.sensi>1)\n']);
     fprintf(fid,['        error(''Computation of steady state sensitivity only possible for first order sensitivities'');\n']);
@@ -270,12 +234,7 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(options_ami.np == 0)\n']);
     fprintf(fid,['    options_ami.sensi = 0;\n']);
     fprintf(fid,['end\n']);
-    
-    
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
-    
-    
-    
     fprintf(fid,['if(nargin>=4)\n']);
     fprintf(fid,['    if(~isempty(varargin{4}))\n']);
     fprintf(fid,['        data=varargin{4};\n']);
@@ -302,21 +261,21 @@ function generateM(this, amimodelo2)
     
     switch(this.param)
         case 'log'
-            fprintf(fid,['if(isfield(options_ami,''sx0''))\n']);
+            fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
             fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
             fprintf(fid,['    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./permute(theta(options_ami.sens_ind),[2,1]));\n']);
             fprintf(fid,['end\n']);
         case 'log10'
-            fprintf(fid,['if(isfield(options_ami,''sx0''))\n']);
+            fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
             fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
             fprintf(fid,['    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./(permute(theta(options_ami.sens_ind),[2,1])*log(10)));\n']);
             fprintf(fid,['end\n']);
         otherwise
-            fprintf(fid,['if(isfield(options_ami,''sx0''))\n']);
+            fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
             fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
@@ -357,10 +316,6 @@ function generateM(this, amimodelo2)
             fprintf(fid,'    sol.sy = sol.yS;\n');
             fprintf(fid,'    sol.sz = sol.zS;\n');
     end
-    fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
-    fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
-    fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
-    fprintf(fid,['    sol = rmfield(sol,''zS'');\n']);
     fprintf(fid,'end\n');
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi == 2)\n');
@@ -408,13 +363,8 @@ function generateM(this, amimodelo2)
                 fprintf(fid,'    sol.sz = sz;\n');
                 fprintf(fid,'    sol.s2z = s2z;\n');
         end
-        fprintf(fid,['    sol = rmfield(sol,''llhS'');\n']);
-        fprintf(fid,['    sol = rmfield(sol,''xS'');\n']);
-        fprintf(fid,['    sol = rmfield(sol,''yS'');\n']);
-        fprintf(fid,['    sol = rmfield(sol,''zS'');\n']);
         fprintf(fid,'end\n');
     end
-    
     
     fprintf(fid,['if(options_ami.sensi_meth == 3)\n']);
     switch(this.param)

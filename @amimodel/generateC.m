@@ -458,6 +458,8 @@ function generateC(this)
     fprintf(fid,['#define nz ' num2str(this.nz) '\n']);
     fprintf(fid,['#define ne ' num2str(this.nevent) '\n']);
     fprintf(fid,['#define nnz ' num2str(this.nnz) '\n']);
+    fprintf(fid,['#define ubw ' num2str(this.ubw) '\n']);
+    fprintf(fid,['#define lbw ' num2str(this.lbw) '\n']);
     
     fprintf(fid,'#define pi M_PI\n');
     fprintf(fid,'\n');
