@@ -70,11 +70,9 @@ x0(3) = k3;
 %%
 % OBSERVALES
 
-% y = sym(zeros(1,1));
-% 
-% y(1) = p4 * (x1+x2+x3);
+y = sym(zeros(1,1));
 
-y = [];
+y(1) = p4 * (x1+x2+x3);
 
 
 %%

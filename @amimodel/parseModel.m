@@ -17,7 +17,9 @@ function parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
+    nytrue = length(this.sym.sigma_y);
     nz = length([this.event.z]);
+    nztrue = length(this.sym.sigma_z);
     nevent = length(this.event);
     %check zero trigger events
     for ievent = 1:nevent
@@ -28,8 +30,10 @@ function parseModel(this)
     
     this.nx = nx;
     this.ny = ny;
+    this.nytrue = nytrue;
     this.nevent = nevent;
     this.nz = nz;
+    this.nztrue = nztrue;
     this.np = np;
     this.nk = nk;
     
