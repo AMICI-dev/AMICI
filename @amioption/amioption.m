@@ -1,6 +1,10 @@
+%
+% @file amioption
+% @brief definition of amioption class
+%
 classdef amioption < matlab.mixin.SetGet
-    %AMIOPTION Summary of this class goes here
-    %   Detailed explanation goes here
+    %AMIOPTION provides an option container to pass simulation parameters to the
+    %simulation routine. 
     
     properties
         atol = 1e-16;

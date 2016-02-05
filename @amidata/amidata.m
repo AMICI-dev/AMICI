@@ -1,6 +1,10 @@
+%
+% @file amidata
+% @brief definition of amidata class
+%
 classdef amidata < handle
-    %AMIDATA provides a data container to pass experimental data do the
-    %simulation routine for likelihood computation. the 
+    %AMIDATA provides a data container to pass experimental data to the
+    %simulation routine for likelihood computation. 
     
     properties
         % number of timepoints
