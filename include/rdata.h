@@ -1,4 +1,4 @@
-#define tsdata rdata->am_tsdata
+#define tdata rdata->am_tdata
 #define xdotdata rdata->am_xdotdata
 #define dxdotdpdata rdata->am_dxdotdpdata
 #define dydxdata rdata->am_dydxdata
@@ -38,7 +38,7 @@
 typedef struct {
 
     /** timepoints */
-    double *am_tsdata; 
+    double *am_tdata; 
     /** time derivative */
     double *am_xdotdata; 
     /** parameter derivative of time derivative */

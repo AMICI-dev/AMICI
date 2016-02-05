@@ -17,6 +17,18 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
+#define initField2(FIELD,D1,D2) \
+mxArray *mx ## FIELD; \
+mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
+FIELD ## data = mxGetPr(mx ## FIELD); \
+mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+
+#define initField3(FIELD,D1,D2,D3) \
+mxArray *mx ## FIELD; \
+const mwSize dims ## FIELD[]={D1,D2,D3}; \
+mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+FIELD ## data = mxGetPr(mx ## FIELD); \
+mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 #define AMI_SUCCESS               0
 
@@ -196,44 +208,48 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    if(mxGetField(prhs[0], 0 ,"t")) { tsdata = mxGetPr(mxGetField(prhs[0], 0 ,"t")); } else { mexErrMsgIdAndTxt("AMICI:mex:t","t not specified as field in solution struct!"); }
+    const char *field_names_sol[] = {"status","llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","xdot","J","dydp","dydx","dxdotdp"};
     
-    if(mxGetField(prhs[0], 0 ,"x")) { xdata = mxGetPr(mxGetField(prhs[0], 0 ,"x")); } else { mexErrMsgIdAndTxt("AMICI:mex:x","x not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"y")) { ydata = mxGetPr(mxGetField(prhs[0], 0 ,"y")); } else { mexErrMsgIdAndTxt("AMICI:mex:y","y not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"xdot")) { xdotdata = mxGetPr(mxGetField(prhs[0], 0 ,"xdot")); } else { mexErrMsgIdAndTxt("AMICI:mex:xdot","xdot not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dxdotdp")) { dxdotdpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dxdotdp")); } else { mexErrMsgIdAndTxt("AMICI:mex:dxdotdp","dxdotdp not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"J")) { Jdata = mxGetPr(mxGetField(prhs[0], 0 ,"J")); } else { mexErrMsgIdAndTxt("AMICI:mex:J","J not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dydx")) { dydxdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydx")); } else { mexErrMsgIdAndTxt("AMICI:mex:dydx","dydx not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"dydp")) { dydpdata = mxGetPr(mxGetField(prhs[0], 0 ,"dydp")); } else { mexErrMsgIdAndTxt("AMICI:mex:dydp","dydp not specified as field in solution struct!"); }
-    if (ne>0) {
-        if(mxGetField(prhs[0], 0 ,"z")) { zdata = mxGetPr(mxGetField(prhs[0], 0 ,"z")); } else { mexErrMsgIdAndTxt("AMICI:mex:zdata","z not specified as field in solution struct!"); }
+    mxsol = mxCreateStructMatrix(1,1,17,field_names_sol);
+    
+    initField2(status,1,1);
+    initField2(llh,1,1);
+    initField2(chi2,1,1);
+    initField2(t,nt,1);
+    initField2(numsteps,nt,1);
+    initField2(numrhsevals,nt,1);
+    if(sensi>0){
+        initField2(numstepsS,nt,1);
+        initField2(numrhsevalsS,nt,1);
     }
-    
-    if(mxGetField(prhs[0], 0 ,"numsteps")) { numstepsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numsteps")); } else { mexErrMsgIdAndTxt("AMICI:mex:numsteps","numsteps not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"numrhsevals")) { numrhsevalsdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevals")); } else { mexErrMsgIdAndTxt("AMICI:mex:numrhsevals","numrhsevals not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"order")) { orderdata = mxGetPr(mxGetField(prhs[0], 0 ,"order")); } else { mexErrMsgIdAndTxt("AMICI:mex:order","order not specified as field in solution struct!"); }
-    
-    if(mxGetField(prhs[0], 0 ,"numstepsS")) { numstepsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numstepsS")); } else { mexErrMsgIdAndTxt("AMICI:mex:numstesS","numstepsS not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"numrhsevalsS")) { numrhsevalsSdata = mxGetPr(mxGetField(prhs[0], 0 ,"numrhsevalsS")); } else { mexErrMsgIdAndTxt("AMICI:mex:numrhsevalsS","numrhsevalsS not specified as field in solution struct!"); }
-    
-    if (sensi >= 1) {
+    initField2(order,nt,1);
+    if(nz>0){
+        initField2(z,ne,nz);
+    }
+    if(nx>0) {
+        initField2(x,nt,nx);
+        initField2(xdot,1,nx);
+        initField2(J,nx,nx);
+    }
+    if(ny>0) {
+        initField2(y,nt,ny);
+        initField2(dydp,ny,np);
+        initField2(dydx,ny,nx);
+        initField2(dxdotdp,nx,np);
+    }
+    if(sensi>0) {
+        initField2(llhS,1,np);
         if (sensi_meth == AMI_FSA) {
-            if(mxGetField(prhs[0], 0 ,"yS")) { ySdata = mxGetPr(mxGetField(prhs[0], 0 ,"yS")); } else { mexErrMsgIdAndTxt("AMICI:mex:yS","yS not specified as field in solution struct!"); }
-            if (ne>0) {
-                if(mxGetField(prhs[0], 0 ,"zS")) { zSdata = mxGetPr(mxGetField(prhs[0], 0 ,"zS")); } else { mexErrMsgIdAndTxt("AMICI:mex:zS","zS not specified as field in solution struct!"); }
-            }
-            if(mxGetField(prhs[0], 0 ,"xS")) { xSdata = mxGetPr(mxGetField(prhs[0], 0 ,"xS")); } else { mexErrMsgIdAndTxt("AMICI:mex:xS","xS not specified as field in solution struct!"); }
+            initField3(yS,nt,ny,np);
+            initField3(xS,nt,nx,np);
+            initField3(zS,ne,nz,np);
         }
-        if (sensi_meth == AMI_ASA) {
-            if(mxGetField(prhs[0], 0 ,"llhS")) { llhSdata = mxGetPr(mxGetField(prhs[0], 0 ,"llhS")); } else { mexErrMsgIdAndTxt("AMICI:mex:llhS","llhS not specified as field in solution struct!"); }
-            if (sensi >= 2) {
-                if(mxGetField(prhs[0], 0 ,"llhS2")) { llhS2data = mxGetPr(mxGetField(prhs[0], 0 ,"llhS2")); } else { mexErrMsgIdAndTxt("AMICI:mex:llhS2","llhS2 not specified as field in solution struct!"); }
-            }
+        if(sensi>1) {
+            initField2(llhS2,np,np);
         }
     }
-    
-    if(mxGetField(prhs[0], 0 ,"llh")) { llhdata = mxGetPr(mxGetField(prhs[0], 0 ,"llh")); } else { mexErrMsgIdAndTxt("AMICI:mex:llh","llh not specified as field in solution struct!"); }
-    if(mxGetField(prhs[0], 0 ,"chi2")) { chi2data = mxGetPr(mxGetField(prhs[0], 0 ,"chi2")); } else { mexErrMsgIdAndTxt("AMICI:mex:chi2","chi2 not specified as field in solution struct!"); }
+    initField2(llh,1,1);
+    initField2(chi2,1,1);
     
     return(rdata);
 }
