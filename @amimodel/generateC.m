@@ -68,6 +68,7 @@ function generateC(this)
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if( strcmp(ifun{1},'sxdot') )
+                    fprintf(fid,'int status = 0;\n');
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
@@ -80,7 +81,6 @@ function generateC(this)
                         fprintf(fid,'}\n');
                         fprintf(fid,'}\n');
                     else
-                        fprintf(fid,'int status = 0;\n');
                         fprintf(fid,'if(ip == 0) {\n');
                         fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
@@ -103,6 +103,10 @@ function generateC(this)
                     if(ismember('*sx0',this.fun.(ifun{1}).nvecs))
                         fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);\n');
                         fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
+                    end
+                    if(ismember('*sdx0',this.fun.(ifun{1}).nvecs))
+                        fprintf(fid,'sdx0_tmp = N_VGetArrayPointer(sdx0[plist[ip]]);\n');
+                        fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                     end
                     fprintf(fid,'switch (plist[ip]) {\n');
                     this.fun.(ifun{1}).writeCcode_sensi(this,fid);

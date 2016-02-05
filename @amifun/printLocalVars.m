@@ -16,8 +16,14 @@ function printLocalVars(this,model,fid)
     for nvec = this.nvecs
         if(strcmp(nvec{1},'*sx'))
             fprintf(fid,'realtype *sx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx'))
+            fprintf(fid,'realtype *sdx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sxdot'))
+            fprintf(fid,'realtype *sxdot_tmp;\n');
         elseif(strcmp(nvec{1},'*sx0'))
             fprintf(fid,'realtype *sx0_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx0'))
+            fprintf(fid,'realtype *sdx0_tmp;\n');
         else
             fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
         end
