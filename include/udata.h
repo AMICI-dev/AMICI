@@ -7,12 +7,7 @@
 
 #define plist udata->am_plist
 #define np udata->am_np
-#define ny udata->am_ny
-#define nx udata->am_nx
-#define nz udata->am_nz
-#define ne udata->am_ne
 #define nt udata->am_nt
-#define nnz udata->am_nnz
 #define nmaxevent udata->am_nmaxevent
 
 #define p udata->am_p
@@ -69,18 +64,8 @@ typedef struct {
     int    *am_plist;
     /** number of parameters */
     int    am_np;
-    /** number of observables */
-    int    am_ny;
-    /** number of states */
-    int    am_nx;
-    /** number of event outputs */
-    int    am_nz;
-    /** number of events */
-    int    am_ne;
     /** number of timepoints */
     int    am_nt;
-    /** number of nonzero entries in jacobian */
-    int    am_nnz;
     /** maximal number of events to track */
     int    am_nmaxevent;
     

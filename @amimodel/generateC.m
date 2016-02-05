@@ -118,15 +118,15 @@ function generateC(this)
                 if(strcmp(ifun{1},'dxdotdp'))
                     fprintf(fid,'int ix;\n');
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                    fprintf(fid,'   for(ix = 0; ix<nx; ix++) {\n');
-                    fprintf(fid,'       if(mxIsNaN(dxdotdp[ix+ip*nx])) {\n');
-                    fprintf(fid,'           dxdotdp[ix+ip*nx] = 0;\n');
+                    fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
+                    fprintf(fid,['       if(mxIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
+                    fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
                     fprintf(fid,'           if(!udata->am_nan_dxdotdp) {\n');
                     fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again.");\n');
                     fprintf(fid,'               udata->am_nan_dxdotdp = TRUE;\n');
                     fprintf(fid,'           }\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'       if(mxIsInf(dxdotdp[ix+ip*nx])) {\n');
+                    fprintf(fid,['       if(mxIsInf(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                     fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                     fprintf(fid,'           return(-1);\n');
                     fprintf(fid,'       }\n');
@@ -135,7 +135,7 @@ function generateC(this)
                 end
                 if(strcmp(ifun{1},'xdot'))
                     fprintf(fid,'int ix;\n');
-                    fprintf(fid,'for(ix = 0; ix<nx; ix++) {\n');
+                    fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xdot_tmp[ix])) {\n');
                     fprintf(fid,'       xdot_tmp[ix] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_xdot) {\n');
@@ -151,7 +151,7 @@ function generateC(this)
                 end
                 if(strcmp(ifun{1},'JSparse'))
                     fprintf(fid,'int inz;\n');
-                    fprintf(fid,'for(inz = 0; inz<nnz; inz++) {\n');
+                    fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[inz])) {\n');
                     fprintf(fid,'       J->data[inz] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_JSparse) {\n');
@@ -167,7 +167,7 @@ function generateC(this)
                 end
                 if(strcmp(ifun{1},'J'))
                     fprintf(fid,'int ix;\n');
-                    fprintf(fid,'for(ix = 0; ix<nx*nx; ix++) {\n');
+                    fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[ix])) {\n');
                     fprintf(fid,'       J->data[ix] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_J) {\n');
@@ -183,7 +183,7 @@ function generateC(this)
                 end
                 if(strcmp(ifun{1},'xBdot'))
                     fprintf(fid,'int ix;\n');
-                    fprintf(fid,'for(ix = 0; ix<nx; ix++) {\n');
+                    fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xBdot_tmp[ix])) {\n');
                     fprintf(fid,'       xBdot_tmp[ix] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_xBdot) {\n');
@@ -351,7 +351,7 @@ function generateC(this)
     fprintf(fid,'                \n');
     fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data){\n');
     fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
-    fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ne, root_' this.modelname ');\n']);
+    fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
     fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem){\n');
@@ -453,6 +453,12 @@ function generateC(this)
     fprintf(fid,'#include <include/udata.h>\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');
+    fprintf(fid,['#define nx ' num2str(this.nx) '\n']);
+    fprintf(fid,['#define ny ' num2str(this.ny) '\n']);
+    fprintf(fid,['#define nz ' num2str(this.nz) '\n']);
+    fprintf(fid,['#define ne ' num2str(this.nevent) '\n']);
+    fprintf(fid,['#define nnz ' num2str(this.nnz) '\n']);
+    
     fprintf(fid,'#define pi M_PI\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');

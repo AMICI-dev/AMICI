@@ -120,7 +120,7 @@ function generateM(this, amimodelo2)
         '%% Outputs:\n'...
         '%% ========\n'...
         '%% sol.status ... flag for status of integration. generally status<0 for failed integration\n'...
-        '%% sol.tout ... vector at which the solution was computed\n'...
+        '%% sol.t ... vector at which the solution was computed\n'...
         '%% sol.llh ... likelihood value\n'...
         '%% sol.chi2 ... chi2 value\n'...
         '%% sol.sllh ... gradient of likelihood\n'...
@@ -129,7 +129,6 @@ function generateM(this, amimodelo2)
         '%% sol.y ... time-resolved output vector\n'...
         '%% sol.sx ... time-resolved state sensitivity vector\n'...
         '%% sol.sy ... time-resolved output sensitivity vector\n'...
-        '%% sol.xdot time-resolved right-hand side of differential equation\n'...
         '%% sol.z event output\n'...
         '%% sol.sz sensitivity of event output\n'...
         ]);
@@ -201,17 +200,7 @@ function generateM(this, amimodelo2)
     fprintf(fid,['options_ami.ordering = 1;\n\n']);
     fprintf(fid,['options_ami.ss = 0;\n']);
     
-    fprintf(fid,['\n']);
-    
-    fprintf(fid,['sol.status = 0;\n']);
-    fprintf(fid,['sol.llh = 0;\n']);
-    fprintf(fid,['sol.chi2 = 0;\n']);
-    fprintf(fid,['sol.t = tout;\n']);
-    fprintf(fid,['sol.numsteps = zeros(length(tout),1);\n']);
-    fprintf(fid,['sol.numrhsevals = zeros(length(tout),1);\n']);
-    fprintf(fid,['sol.order = zeros(length(tout),1);\n']);
-    fprintf(fid,['sol.numstepsS = zeros(length(tout),1);\n']);
-    fprintf(fid,['sol.numrhsevalsS = zeros(length(tout),1);\n']);
+
     fprintf(fid,'\n');
     fprintf(fid,'pbar = ones(size(theta));\n');
     fprintf(fid,'pbar(pbar==0) = 1;\n');
@@ -221,7 +210,6 @@ function generateM(this, amimodelo2)
     fprintf(fid,['    options_ami = am_setdefault(varargin{5},options_ami);\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['sol.z = NaN(options_ami.nmaxevent,' num2str(nz) ');\n']);
     if(o2flag)
         fprintf(fid,['if(nargout>1)\n']);
         fprintf(fid,['    if(nargout>6)\n']);
@@ -282,45 +270,7 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(options_ami.np == 0)\n']);
     fprintf(fid,['    options_ami.sensi = 0;\n']);
     fprintf(fid,['end\n']);
-    if(o2flag)
-        fprintf(fid,'if(options_ami.sensi<2)\n');
-        fprintf(fid,['    options_ami.nx = ' num2str(nxtrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.ny = ' num2str(nytrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.nz = ' num2str(nztrue) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.nnz = ' num2str(this.nnz) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    sol.x = NaN(length(tout),' num2str(nxtrue) ');\n']);
-        fprintf(fid,['    sol.y = NaN(length(tout),' num2str(nytrue) ');\n']);
-        fprintf(fid,['    sol.xdot = NaN(length(tout),' num2str(nxtrue) ');\n']);
-        fprintf(fid,['    sol.J = NaN(length(tout),' num2str(nxtrue) ',' num2str(nxtrue) ');\n']);
-        fprintf(fid,['    sol.dydx = NaN(' num2str(nytrue) ',' num2str(nxtrue) ');\n']);
-        fprintf(fid,['    sol.dydp = NaN(' num2str(nytrue) ',options_ami.np);\n']);
-        fprintf(fid,['    sol.dxdotdp = NaN(length(tout),' num2str(nxtrue) ',options_ami.np);\n']);
-        fprintf(fid,'else\n');
-        fprintf(fid,['    options_ami.nx = ' num2str(amimodelo2.nx) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.ny = ' num2str(amimodelo2.ny) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.nz = ' num2str(amimodelo2.nz) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    options_ami.nnz = ' num2str(amimodelo2.nnz) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['    sol.x = NaN(length(tout),' num2str(amimodelo2.nx) ');\n']);
-        fprintf(fid,['    sol.y = NaN(length(tout),' num2str(amimodelo2.ny) ');\n']);
-        fprintf(fid,['    sol.xdot = NaN(length(tout),' num2str(amimodelo2.nx) ');\n']);
-        fprintf(fid,['    sol.J = NaN(length(tout),' num2str(amimodelo2.nx) ',' num2str(amimodelo2.nx) ');\n']);
-        fprintf(fid,['    sol.dydx = NaN(' num2str(amimodelo2.ny) ',' num2str(amimodelo2.nx) ');\n']);
-        fprintf(fid,['    sol.dydp = NaN(' num2str(amimodelo2.ny) ',options_ami.np);\n']);
-        fprintf(fid,['    sol.dxdotdp = NaN(length(tout),' num2str(amimodelo2.nx) ',options_ami.np);\n']);
-        fprintf(fid,'end\n');
-    else
-        fprintf(fid,['options_ami.nx = ' num2str(nx) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['options_ami.ny = ' num2str(ny) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['options_ami.nz = ' num2str(nz) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['options_ami.nnz = ' num2str(nnz) '; %% MUST NOT CHANGE THIS VALUE\n']);
-        fprintf(fid,['sol.x = NaN(length(tout),' num2str(nx) ');\n']);
-        fprintf(fid,['sol.y = NaN(length(tout),' num2str(ny) ');\n']);
-        fprintf(fid,['sol.xdot = NaN(1,' num2str(nx) ');\n']);
-        fprintf(fid,['sol.J = NaN(' num2str(nx) ',' num2str(nx) ');\n']);
-        fprintf(fid,['sol.dydx = NaN(' num2str(ny) ',' num2str(nx) ');\n']);
-        fprintf(fid,['sol.dydp = NaN(' num2str(ny) ',options_ami.np);\n']);
-        fprintf(fid,['sol.dxdotdp = NaN(' num2str(nx) ',options_ami.np);\n']);
-    end
+    
     
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
     
@@ -330,42 +280,21 @@ function generateM(this, amimodelo2)
     fprintf(fid,['    if(~isempty(varargin{4}))\n']);
     fprintf(fid,['        data=varargin{4};\n']);
     fprintf(fid,['    else\n']);
-    fprintf(fid,['        data.Y=NaN(length(tout),options_ami.ny);\n']);
-    fprintf(fid,['        data.Sigma_Y=-ones(length(tout),options_ami.ny);\n']);
+    fprintf(fid,['        data.Y=NaN(length(tout),' num2str(this.ny) ');\n']);
+    fprintf(fid,['        data.Sigma_Y=-ones(length(tout),' num2str(this.ny) ');\n']);
     fprintf(fid,['    end\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    data.Y=NaN(length(tout),options_ami.ny);\n']);
-    fprintf(fid,['    data.Sigma_Y= NaN(length(tout),options_ami.ny);\n']);
+    fprintf(fid,['    data.Y=NaN(length(tout),' num2str(this.ny) ');\n']);
+    fprintf(fid,['    data.Sigma_Y= NaN(length(tout),' num2str(this.ny) ');\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,['if(isfield(data,''T''))\n']);
     fprintf(fid,['    options_ami.nmaxevent = size(data.T,1);\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    data.Z = NaN(options_ami.nmaxevent,options_ami.nz);\n']);
-    fprintf(fid,['    data.Sigma_Z = NaN(options_ami.nmaxevent,options_ami.nz);\n']);
+    fprintf(fid,['    data.Z = NaN(options_ami.nmaxevent,' num2str(this.nz) ');\n']);
+    fprintf(fid,['    data.Sigma_Z = NaN(options_ami.nmaxevent,' num2str(this.nz) ');\n']);
     fprintf(fid,['end\n']);
     
-    
-    if(o2flag)
-        fprintf(fid,'if(options_ami.sensi==2)\n');
-        fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
-        fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(amimodelo2.nx) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(amimodelo2.ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(amimodelo2.nz) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,'end\n');
-        fprintf(fid,'if(options_ami.sensi==1)\n');
-        fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
-        fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nxtrue) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(nytrue) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(nz) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,'end\n');
-    else
-        fprintf(fid,'if(options_ami.sensi>0)\n');
-        fprintf(fid,['    sol.llhS = zeros(length(options_ami.sens_ind),1);\n']);
-        fprintf(fid,['    sol.xS = zeros(length(tout),' num2str(nx) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.yS = zeros(length(tout),' num2str(ny) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,['    sol.zS =  NaN(options_ami.nmaxevent,' num2str(nz) ',length(options_ami.sens_ind));\n']);
-        fprintf(fid,'end\n');
-    end
+   
     
     fprintf(fid,['if(max(options_ami.sens_ind)>' num2str(np) ')\n']);
     fprintf(fid,['    error(''Sensitivity index exceeds parameter dimension!'')\n']);

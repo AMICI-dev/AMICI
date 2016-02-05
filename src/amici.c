@@ -76,12 +76,8 @@ UserData setupUserData(const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
-    if(mxGetField(prhs[3], 0 ,"nx")) { nx = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"nx")); } else { mexErrMsgIdAndTxt("AMICI:mex:nx","Parameter nx not specified as field in options struct!"); }
-    if(mxGetField(prhs[3], 0 ,"ny")) { ny = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"ny")); } else { mexErrMsgIdAndTxt("AMICI:mex:ny","Parameter ny not specified as field in options struct!"); }
-    if(mxGetField(prhs[3], 0 ,"np")) { np = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"np")); } else { mexErrMsgIdAndTxt("AMICI:mex:np","Parameter np not specified as field in options struct!"); }
-    if(mxGetField(prhs[3], 0 ,"ne")) { ne = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"ne")); } else { mexErrMsgIdAndTxt("AMICI:mex:ne","Parameter ne not specified as field in options struct!"); }
-    if(mxGetField(prhs[3], 0 ,"nz")) { nz = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"nz")); } else { mexErrMsgIdAndTxt("AMICI:mex:nz","Parameter nz not specified as field in options struct!"); }
-    if(mxGetField(prhs[3], 0 ,"nnz")) { nnz = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"nnz")); } else { mexErrMsgIdAndTxt("AMICI:mex:nnz","Parameter nnz not specified as field in options struct!"); }
+    np = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
+    
     if(mxGetField(prhs[3], 0 ,"nmaxevent")) { nmaxevent = (int)mxGetScalar(mxGetField(prhs[3], 0 ,"nmaxevent")); } else { mexErrMsgIdAndTxt("AMICI:mex:nmaxevent","Parameter nmaxevent not specified as field in options struct!"); }
     
     
