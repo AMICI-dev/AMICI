@@ -68,8 +68,8 @@ function makeSyms( this )
         error('Model this is missing the definition of the vector of observables y (.sym.y)!')
     else
         try
-        this.sym.y = sym(this.sym.y(:));
-                catch
+            this.sym.y = sym(this.sym.y(:));
+        catch
             error('Could not transform model.sym.y into a symbolic variable, please check the definition!')
         end
     end
@@ -80,6 +80,13 @@ function makeSyms( this )
     end
     if(~isfield(this.sym,'k'))
         this.sym.k = sym(zeros(0,0));
+    else
+        try
+            this.sym.k = sym(this.sym.k(:));
+        catch
+            error('Could not transform model.sym.k into a symbolic variable, please check the definition!')
+        end
+            
     end
         
     if(isfield(this.sym,'root'))
@@ -106,5 +113,11 @@ function makeSyms( this )
         end
     end
     
+    symvars = symvar(this.sym.xdot);
+    for ivar = 1:length(symvars)
+        if(~ismember(symvars(ivar),[this.sym.p;this.sym.k;this.sym.x;sym('t')]))
+            error(['The symbolic variable ' char(symvars(ivar)) ' is used in the differential equation right hand side but was not specified as parameter/state/constant!']);
+        end
+    end
 end
 
