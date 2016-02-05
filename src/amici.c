@@ -238,7 +238,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
         initField2(numrhsevalsS,nt,1);
     }
     if(nz>0 & ne>0){
-        initField2(z,ne,nz);
+        initField2(z,nmaxevent,nz);
     }
     if(nx>0) {
         initField2(x,nt,nx);
@@ -259,7 +259,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(yS,nt,ny,np);
             }
             if(nz>0 & ne>0){
-                initField3(zS,ne,nz,np);
+                initField3(zS,nmaxevent,nz,np);
             }
         }
         if(sensi>1) {
