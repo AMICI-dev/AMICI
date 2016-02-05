@@ -65,7 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     ami_mem = setupAMI(&status, udata, tdata);
     if (ami_mem == NULL) goto freturn;
     
-    rdata = setupReturnData(prhs, udata);
+    rdata = setupReturnData(plhs, udata, pstatus);
     if (rdata == NULL) goto freturn;
     
     edata = setupExpData(prhs, udata);
@@ -328,9 +328,6 @@ freturn:
     
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
-    
-    if(mxGetField(prhs[0], 0 ,"status")) { pstatus = mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgIdAndTxt("AMICI:mex:status","Parameter status not specified as field in solution struct!"); }
-    *pstatus = (double) status;
-    
+        
     return;
 }

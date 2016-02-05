@@ -32,7 +32,7 @@
 #define AMI_ONE_STEP              2
 
 UserData setupUserData(const mxArray *prhs[]);
-ReturnData setupReturnData(const mxArray *prhs[], void *user_data);
+ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
 
 void *setupAMI(int *status, void *user_data, void *temp_data);

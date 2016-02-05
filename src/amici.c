@@ -191,7 +191,7 @@ UserData setupUserData(const mxArray *prhs[]) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
+ReturnData setupReturnData(const mxArray *plhs[], void *user_data, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
      * @param[in] prhs user input @type *mxArray
@@ -200,6 +200,8 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
      */
     ReturnData rdata; /* returned rdata struct */
     UserData udata; /** user udata */
+    
+    mxArray *mxsol;
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -212,10 +214,21 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
     
     mxsol = mxCreateStructMatrix(1,1,17,field_names_sol);
     
-    initField2(status,1,1);
+    plhs[0] = mxsol;
+    
+    mxArray *mxstatus;
+    mxstatus = mxCreateDoubleMatrix(0,0,mxREAL);
+    mxSetPr(mxstatus,pstatus);
+    mxSetField(mxsol,0,"status",mxstatus);
+    
     initField2(llh,1,1);
     initField2(chi2,1,1);
-    initField2(t,nt,1);
+    
+    mxArray *mxts;
+    mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
+    tsdata = mxGetPr(mxts);
+    mxSetField(mxsol,0,"t",mxts);
+    
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
     if(sensi>0){
@@ -248,8 +261,6 @@ ReturnData setupReturnData(const mxArray *prhs[], void *user_data) {
             initField2(llhS2,np,np);
         }
     }
-    initField2(llh,1,1);
-    initField2(chi2,1,1);
     
     return(rdata);
 }
