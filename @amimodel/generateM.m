@@ -398,12 +398,12 @@ function generateM(this, amimodelo2)
     
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi<2)\n');
-        fprintf(fid,['ami_' this.modelname '(sol,tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+        fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
         fprintf(fid,'else\n');
-        fprintf(fid,['ami_' this.modelname '_o2(sol,tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+        fprintf(fid,['sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
         fprintf(fid,'end\n');
     else
-        fprintf(fid,['ami_' this.modelname '(sol,tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+        fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
     end
     fprintf(fid,'if(options_ami.sensi==1)\n');
     switch(this.param)

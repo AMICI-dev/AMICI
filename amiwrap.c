@@ -45,17 +45,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     bool setupBdone = false;
     
+    pstatus = mxMalloc(sizeof(double));
+    
     udata = setupUserData(prhs);
     if (udata == NULL) goto freturn;
     
-    /* solution struct */
-    
-    if (!prhs[0]) {
-        mexErrMsgIdAndTxt("AMICI:mex:sol","No solution struct provided!");
-    }
-    
     /* options */
-    if (!prhs[4]) {
+    if (!prhs[3]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
@@ -328,6 +324,8 @@ freturn:
     
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
+    
+    if(pstatus) *pstatus = (double) status;
         
     return;
 }
