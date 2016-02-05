@@ -27,15 +27,65 @@ classdef amidata < handle
         Z@double;
         % standard deviation of event observations
         Sigma_Z@double;
+        % experimental condition
+        condition@double
     end
     
     methods
-        function D = amidata(nt,ny,nz,ne,nk)
-            D.nt = nt;
-            D.ny = ny;
-            D.nz = nz;
-            D.ne = ne;
-            D.nk = nk;
+        function D = amidata(varargin)
+            % initialisation via struct
+            if isa(varargin{1},'amidata')
+                    if strcmp(class(varargin{1}),class(D))
+                        D = varargin{1};
+                    else
+                        thisProps = properties(D);
+                        for i = 1:length(thisProps)
+                            try %#ok
+                                % Try to set one of the properties of the
+                                % old object in the new one.
+                                D.(thisProps{i}) = varargin{1}.(thisProps{i});
+                            end
+                        end
+                    end
+            elseif(isstruct(varargin{1}))
+                if(isfield(varargin{1},'t'))
+                    D.nt = numel(varargin{1}.t);
+                    D.t = varargin{1}.t(:);
+                else
+                    error('Cannot construct valid amidata object from input struct');
+                end
+                if(isfield(varargin{1},'Y'))
+                    D.ny = size(varargin{1}.Y,2);
+                    D.Y = varargin{1}.Y;
+                else
+                    D.ny = 0;
+                end
+                if(isfield(varargin{1},'Z'))
+                    D.nz = size(varargin{1}.Z,2);
+                    D.Z = varargin{1}.Z;
+                else
+                    D.nz = 0;
+                end
+                if(isfield(varargin{1},'Sigma_Y'))
+                    D.Sigma_Y = varargin{1}.Sigma_Y;
+                end
+                if(isfield(varargin{1},'Sigma_Z'))
+                    D.Sigma_Z = varargin{1}.Sigma_Z;
+                end   
+                if(isfield(varargin{1},'condition'))
+                    D.nk = numel(varargin{1}.condition);
+                    D.condition = varargin{1}.condition;
+                else
+                    D.nk = 0;
+                end
+            elseif(nargin == 5)
+                D.nt = nt;
+                D.ny = ny;
+                D.nz = nz;
+                D.ne = ne;
+                D.nk = nk;
+            end
+
         end
         
         function set.nt(this,nt)
@@ -57,11 +107,23 @@ classdef amidata < handle
             this.Sigma_Z = NaN;
         end
         
+        function set.nk(this,nk)
+            this.nk = nk;
+            this.condition = NaN;
+        end
+        
         function set.t(this,value)
             assert(isnumeric(value),'AMICI:amimodel:t:numeric','t must have a numeric value!')
             assert(ismatrix(value),'AMICI:amimodel:t:ndims','t must be a two dimensional matrix!')
             assert(numel(value)==this.nt,'AMICI:amimodel:t:ndims',['t must have ' num2str(this.nt) ' (D.nt) elements!'])
             this.t = double(value(:));
+        end
+        
+        function set.condition(this,value)
+            assert(isnumeric(value),'AMICI:amimodel:condition:numeric','condition must have a numeric value!')
+            assert(ismatrix(value),'AMICI:amimodel:condition:ndims','condition must be a two dimensional matrix!')
+            assert(numel(value)==this.nk,'AMICI:amimodel:condition:ndims',['condition must have ' num2str(this.nk) ' (D.nk) elements!'])
+            this.condition = double(value(:));
         end
         
         function set.Y(this,value)

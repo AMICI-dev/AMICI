@@ -230,31 +230,19 @@ function generateM(this, amimodelo2)
         fprintf(fid,['    end\n']);
         fprintf(fid,['end\n']);
     end
-    fprintf(fid,['options_ami.np = length(options_ami.sens_ind); %% MUST NOT CHANGE THIS VALUE\n']);
-    fprintf(fid,['if(options_ami.np == 0)\n']);
+    fprintf(fid,['np = length(options_ami.sens_ind); %% MUST NOT CHANGE THIS VALUE\n']);
+    fprintf(fid,['if(np == 0)\n']);
     fprintf(fid,['    options_ami.sensi = 0;\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
     fprintf(fid,['if(nargin>=4)\n']);
-    fprintf(fid,['    if(~isempty(varargin{4}))\n']);
-    fprintf(fid,['        data=varargin{4};\n']);
-    fprintf(fid,['    else\n']);
-    fprintf(fid,['        data.Y=NaN(length(tout),' num2str(this.ny) ');\n']);
-    fprintf(fid,['        data.Sigma_Y=-ones(length(tout),' num2str(this.ny) ');\n']);
-    fprintf(fid,['    end\n']);
+    fprintf(fid,['    data=amidata(varargin{4});\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    data.Y=NaN(length(tout),' num2str(this.ny) ');\n']);
-    fprintf(fid,['    data.Sigma_Y= NaN(length(tout),' num2str(this.ny) ');\n']);
+    fprintf(fid,['    data=amidata(length(tout),' num2str(this.ny) ',' num2str(this.nz) ',options_ami.nmaxevent,length(kappa));\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['if(isfield(data,''T''))\n']);
-    fprintf(fid,['    options_ami.nmaxevent = size(data.T,1);\n']);
-    fprintf(fid,['else\n']);
-    fprintf(fid,['    data.Z = NaN(options_ami.nmaxevent,' num2str(this.nz) ');\n']);
-    fprintf(fid,['    data.Sigma_Z = NaN(options_ami.nmaxevent,' num2str(this.nz) ');\n']);
+    fprintf(fid,['if(isempty(kappa))\n']);
+    fprintf(fid,['    kappa = data.condition;\n']);
     fprintf(fid,['end\n']);
-    
-   
-    
     fprintf(fid,['if(max(options_ami.sens_ind)>' num2str(np) ')\n']);
     fprintf(fid,['    error(''Sensitivity index exceeds parameter dimension!'')\n']);
     fprintf(fid,['end\n']);
@@ -262,21 +250,21 @@ function generateM(this, amimodelo2)
     switch(this.param)
         case 'log'
             fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
-            fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
+            fprintf(fid,['    if(size(options_ami.sx0,2)~=np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
             fprintf(fid,['    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./permute(theta(options_ami.sens_ind),[2,1]));\n']);
             fprintf(fid,['end\n']);
         case 'log10'
             fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
-            fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
+            fprintf(fid,['    if(size(options_ami.sx0,2)~=np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
             fprintf(fid,['    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./(permute(theta(options_ami.sens_ind),[2,1])*log(10)));\n']);
             fprintf(fid,['end\n']);
         otherwise
             fprintf(fid,['if(~isempty(options_ami.sx0))\n']);
-            fprintf(fid,['    if(size(options_ami.sx0,2)~=options_ami.np)\n']);
+            fprintf(fid,['    if(size(options_ami.sx0,2)~=np)\n']);
             fprintf(fid,['        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n']);
             fprintf(fid,['    end\n']);
             fprintf(fid,['    options_ami.sx0 = options_ami.sx0;\n']);

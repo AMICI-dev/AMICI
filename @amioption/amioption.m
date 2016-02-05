@@ -15,7 +15,7 @@ classdef amioption < matlab.mixin.SetGet
         lmm = 2;
         iter = 2;
         linsol = 9;
-        stldet = 1;
+        stldet = true;
         interpType = 1;
         lmmB = 2;
         iterB = 2;
@@ -31,7 +31,6 @@ classdef amioption < matlab.mixin.SetGet
     properties (Hidden)
         z2event@double;
         id@double;
-        np@double;
     end
     
     methods
@@ -62,7 +61,7 @@ classdef amioption < matlab.mixin.SetGet
                     else
                         % Get the properties from options object passed
                         % into the constructor.
-                        thisProps = getOptionNames(varargin{1});
+                        thisProps = properties(obj);;
                         % Set the common properties. Note that we
                         % investigated first finding the properties that
                         % are common to both objects and just looping over
@@ -78,7 +77,7 @@ classdef amioption < matlab.mixin.SetGet
                         end
                     end
                     firstInputObj = true;
-                elseif isa(varargin{1},'struct')
+                elseif isstruct(varargin{1})
                     fieldlist = fieldnames(varargin{1});
                     for ifield = 1:length(fieldlist)
                         obj.(fieldlist{ifield}) = varargin{1}.(fieldlist{ifield});
@@ -143,37 +142,6 @@ classdef amioption < matlab.mixin.SetGet
                     obj.(optionSet{1}) = ip.Results.(optionSet{1});
                 end
             end
-        end
-        
-        function OptionNames = getOptionNames(obj)
-            %GETOPTIONNAMES Get the options a user can set/get
-            %
-            %   OPTIONNAMES = GETOPTIONNAMES(OBJ) returns a list of the
-            %   options that a user can set/get. This list is the union of
-            %   the public properties and those that are hidden, dependent
-            %   and have public set/get access.
-            
-            % All public properties are options that can be set/get by the
-            % user.
-            OptionNames = properties(obj);
-            
-            % Find any hidden options. These options will not be returned
-            % from the call to properties. These options can still be
-            % set/get by users.
-            mc = metaclass(obj);
-            numProps = length(mc.PropertyList);
-            OptionsOnDeprecationPath = cell(numProps, 1);
-            idxDep = false(1, numProps);
-            for i = 1:length(mc.PropertyList)
-                if mc.PropertyList(i).Dependent && mc.PropertyList(i).Hidden && ...
-                        strcmp(mc.PropertyList(i).SetAccess, 'public') && ...
-                        strcmp(mc.PropertyList(i).GetAccess, 'public')
-                    OptionsOnDeprecationPath{i} = mc.PropertyList(i).Name;
-                    idxDep(i) = true;
-                end
-            end
-            OptionNames = [OptionNames; OptionsOnDeprecationPath(idxDep)];
-            
         end
         
         function set.sensi_meth(this,value)
