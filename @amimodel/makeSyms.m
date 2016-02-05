@@ -38,6 +38,9 @@ function makeSyms( this )
             error('Could not transform model.sym.x into a symbolic variable, please check the definition!')
         end
     end
+    if(numel(this.sym.x)~=numel(this.sym.xdot))
+        error('Size of model.sym.x and model.sym.xdot does not agree.')
+    end
     
     if(~isfield(this.sym,'p'))
         error('Model this is missing the definition of the parameter vector p (.sym.p)!')
@@ -57,6 +60,10 @@ function makeSyms( this )
             error('Could not transform model.sym.x0 into a symbolic variable, please check the definition!')
         end
     end
+    if(numel(this.sym.x)~=numel(this.sym.x0))
+        error('Size of model.sym.x and model.sym.x0 does not agree.')
+    end
+    
     if(~isfield(this.sym,'y'))
         error('Model this is missing the definition of the vector of observables y (.sym.y)!')
     else
@@ -65,9 +72,6 @@ function makeSyms( this )
                 catch
             error('Could not transform model.sym.y into a symbolic variable, please check the definition!')
         end
-    end
-    if(~all([size(this.sym.x,2)==size(this.sym.xdot,2),size(this.sym.xdot,2)==size(this.sym.x0,2)]))
-        error('Sizes of x0, xdot and x do not agree!')
     end
     
     % complete optional fields
@@ -86,6 +90,9 @@ function makeSyms( this )
     end
     if(numel(this.sym.sigma_y) == 1)
         this.sym.sigma_y = this.sym.sigma_y*sym(ones(size(this.sym.y)));
+    end
+    if(numel(this.sym.sigma_y)~=numel(this.sym.y))
+        error('Size of model.sym.y and model.sym.sigma_ygit does not agree.')
     end
     
     if(any(ismember(this.sym.k,this.sym.p)))
