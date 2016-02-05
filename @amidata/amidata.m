@@ -26,7 +26,7 @@ classdef amidata < handle
     end
     
     methods
-        function D = amidata(nt,ny,nz,nk,ne)
+        function D = amidata(nt,ny,nz,ne,nk)
             D.nt = nt;
             D.ny = ny;
             D.nz = nz;
