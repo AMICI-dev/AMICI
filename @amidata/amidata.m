@@ -79,11 +79,11 @@ classdef amidata < handle
                     D.nk = 0;
                 end
             elseif(nargin == 5)
-                D.nt = nt;
-                D.ny = ny;
-                D.nz = nz;
-                D.ne = ne;
-                D.nk = nk;
+                D.nt = varargin{1};
+                D.ny = varargin{2};
+                D.nz = varargin{3};
+                D.ne = varargin{4};
+                D.nk = varargin{5};
             end
 
         end
@@ -107,9 +107,15 @@ classdef amidata < handle
             this.Sigma_Z = NaN;
         end
         
+        function set.ne(this,ne)
+            this.ne = ne;
+            this.Z = NaN;
+            this.Sigma_Z = NaN;
+        end
+        
         function set.nk(this,nk)
             this.nk = nk;
-            this.condition = NaN;
+            this.condition = NaN(nk,1);
         end
         
         function set.t(this,value)

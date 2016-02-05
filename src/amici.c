@@ -294,33 +294,33 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         if (!prhs[7]) {
             mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
         }
-        if (mxGetField(prhs[7], 0 ,"Y")) {
-            my = mxGetPr(mxGetField(prhs[7], 0 ,"Y"));
-            nmyy = (int) mxGetN(mxGetField(prhs[7], 0 ,"Y"));
-            nmyt = (int) mxGetM(mxGetField(prhs[7], 0 ,"Y"));
+        if (mxGetProperty(prhs[7], 0 ,"Y")) {
+            my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
+            nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
+            nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
         } else {
             mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
         }
         
-        if (mxGetField(prhs[7], 0 ,"Sigma_Y")) {
-            ysigma = mxGetPr(mxGetField(prhs[7], 0 ,"Sigma_Y"));
-            nysigmay = (int) mxGetN(mxGetField(prhs[7], 0 ,"Sigma_Y"));
-            nysigmat = (int) mxGetM(mxGetField(prhs[7], 0 ,"Sigma_Y"));
+        if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
+            ysigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+            nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+            nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
         } else {
             mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
         }
-        if (mxGetField(prhs[7], 0 ,"Z")) {
-            mz = mxGetPr(mxGetField(prhs[7], 0 ,"Z"));
-            nmzy = (int) mxGetN(mxGetField(prhs[7], 0 ,"Z"));
-            nmzt = (int) mxGetM(mxGetField(prhs[7], 0 ,"Z"));
+        if (mxGetProperty(prhs[7], 0 ,"Z")) {
+            mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
+            nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
+            nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
         } else {
             mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
         }
         
-        if (mxGetField(prhs[7], 0 ,"Sigma_Z")) {
-            zsigma = mxGetPr(mxGetField(prhs[7], 0 ,"Sigma_Z"));
-            nzsigmay = (int) mxGetN(mxGetField(prhs[7], 0 ,"Sigma_Z"));
-            nzsigmat = (int) mxGetM(mxGetField(prhs[7], 0 ,"Sigma_Z"));
+        if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
+            zsigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+            nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+            nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
         } else {
             mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
         }

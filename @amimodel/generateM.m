@@ -236,7 +236,11 @@ function generateM(this, amimodelo2)
     fprintf(fid,['end\n']);
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
     fprintf(fid,['if(nargin>=4)\n']);
-    fprintf(fid,['    data=amidata(varargin{4});\n']);
+    fprintf(fid,['    if(isempty(varargin{4}));\n']);
+    fprintf(fid,['        data=amidata(length(tout),' num2str(this.ny) ',' num2str(this.nz) ',options_ami.nmaxevent,length(kappa));\n']);
+    fprintf(fid,['    else\n']);
+    fprintf(fid,['        data=amidata(varargin{4});\n']);
+    fprintf(fid,['    end\n']);
     fprintf(fid,['else\n']);
     fprintf(fid,['    data=amidata(length(tout),' num2str(this.ny) ',' num2str(this.nz) ',options_ami.nmaxevent,length(kappa));\n']);
     fprintf(fid,['end\n']);
