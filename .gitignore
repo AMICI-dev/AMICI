@@ -76,3 +76,5 @@ examples/geneExpression/simulate_geneExpression.m
 *.m~
 
 *.plist
+
+AMICI.mlappinstall

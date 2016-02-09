@@ -38,6 +38,9 @@ function makeSyms( this )
             error('Could not transform model.sym.x into a symbolic variable, please check the definition!')
         end
     end
+    if(numel(this.sym.x)~=numel(this.sym.xdot))
+        error('Size of model.sym.x and model.sym.xdot does not agree.')
+    end
     
     if(~isfield(this.sym,'p'))
         error('Model this is missing the definition of the parameter vector p (.sym.p)!')
@@ -57,17 +60,18 @@ function makeSyms( this )
             error('Could not transform model.sym.x0 into a symbolic variable, please check the definition!')
         end
     end
+    if(numel(this.sym.x)~=numel(this.sym.x0))
+        error('Size of model.sym.x and model.sym.x0 does not agree.')
+    end
+    
     if(~isfield(this.sym,'y'))
         error('Model this is missing the definition of the vector of observables y (.sym.y)!')
     else
         try
-        this.sym.y = sym(this.sym.y(:));
-                catch
+            this.sym.y = sym(this.sym.y(:));
+        catch
             error('Could not transform model.sym.y into a symbolic variable, please check the definition!')
         end
-    end
-    if(~all([size(this.sym.x,2)==size(this.sym.xdot,2),size(this.sym.xdot,2)==size(this.sym.x0,2)]))
-        error('Sizes of x0, xdot and x do not agree!')
     end
     
     % complete optional fields
@@ -76,6 +80,13 @@ function makeSyms( this )
     end
     if(~isfield(this.sym,'k'))
         this.sym.k = sym(zeros(0,0));
+    else
+        try
+            this.sym.k = sym(this.sym.k(:));
+        catch
+            error('Could not transform model.sym.k into a symbolic variable, please check the definition!')
+        end
+            
     end
         
     if(isfield(this.sym,'root'))
@@ -86,6 +97,9 @@ function makeSyms( this )
     end
     if(numel(this.sym.sigma_y) == 1)
         this.sym.sigma_y = this.sym.sigma_y*sym(ones(size(this.sym.y)));
+    end
+    if(numel(this.sym.sigma_y)~=numel(this.sym.y))
+        error('Size of model.sym.y and model.sym.sigma_ygit does not agree.')
     end
     
     if(any(ismember(this.sym.k,this.sym.p)))
@@ -99,5 +113,14 @@ function makeSyms( this )
         end
     end
     
+    symvars = symvar(this.sym.xdot);
+    for ivar = 1:length(symvars)
+        if(isequaln(symvars(ivar),sym('E')))
+            error('The symbolic entities named ''E'' are currently not supported due to restrictions of the symbolic math toolbox!');
+        end
+        if(~ismember(symvars(ivar),[this.sym.p;this.sym.k;this.sym.x;sym('t')]))
+            error(['The symbolic variable ' char(symvars(ivar)) ' is used in the differential equation right hand side but was not specified as parameter/state/constant!']);
+        end
+    end
 end
 

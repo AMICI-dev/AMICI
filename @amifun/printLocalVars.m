@@ -16,8 +16,14 @@ function printLocalVars(this,model,fid)
     for nvec = this.nvecs
         if(strcmp(nvec{1},'*sx'))
             fprintf(fid,'realtype *sx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx'))
+            fprintf(fid,'realtype *sdx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sxdot'))
+            fprintf(fid,'realtype *sxdot_tmp;\n');
         elseif(strcmp(nvec{1},'*sx0'))
             fprintf(fid,'realtype *sx0_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx0'))
+            fprintf(fid,'realtype *sdx0_tmp;\n');
         else
             fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
         end
@@ -108,9 +114,9 @@ function printLocalVars(this,model,fid)
         case 'dsigma_ydp'
             fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
         case 'sigma_z'
-            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*nz);\n']);
+            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*' num2str(model.nz) ');\n']);
         case 'dsigma_zdp'
-            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*nz*np);\n']);
+            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*' num2str(model.nz) '*np);\n']);
         case 'Jy'
             % nothing
         case 'dJydx'
