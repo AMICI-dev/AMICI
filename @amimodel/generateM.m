@@ -242,7 +242,11 @@ function generateM(this, amimodelo2)
     fprintf(fid,['else\n']);
     fprintf(fid,['    data=amidata(length(tout),' num2str(this.ny) ',' num2str(this.nz) ',options_ami.nmaxevent,length(kappa));\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['options_ami.nmaxevent = data.ne;\n']);
+    fprintf(fid,['if(data.ne>0);\n']);
+    fprintf(fid,['    options_ami.nmaxevent = data.ne;\n']);
+    fprintf(fid,['else\n']);
+    fprintf(fid,['    data.ne = options_ami.nmaxevent;\n']);
+    fprintf(fid,['end\n']);
     fprintf(fid,['if(isempty(kappa))\n']);
     fprintf(fid,['    kappa = data.condition;\n']);
     fprintf(fid,['end\n']);
