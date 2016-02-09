@@ -66,6 +66,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     udata = (UserData) mxMalloc(sizeof *udata);
     if (udata == NULL) return(NULL);
     
+    init_modeldims(udata);
+    
     /* time */
     
     if (!prhs[0]) {
@@ -334,11 +336,15 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         
         if (nmyy != ny) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match provided ny");
+            mexPrintf("ny = %d",ny);
+            mexPrintf("nmyy = %d",nmyy);
+            mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match model ny");
         }
         
         if (nysigmay != ny) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match provided ny");
+            mexPrintf("ny = %d",ny);
+            mexPrintf("nysigmay = %d",nysigmay);
+            mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match model ny");
         }
         
         if (nmzt != nmaxevent) {
@@ -350,11 +356,13 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         
         if (nmzy != nz) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match provided ne");
+            mexPrintf("nz = %d",nz);
+            mexPrintf("nmzy = %d",nmzy);
+            mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match model nz");
         }
         
         if (nzsigmay != nz) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nensdz","Number of events in event-sigma matrix does not match provided ne");
+            mexErrMsgIdAndTxt("AMICI:mex:data:nensdz","Number of events in event-sigma matrix does not match model nz");
         }
         
     }

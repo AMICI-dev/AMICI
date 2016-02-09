@@ -323,6 +323,16 @@ function generateC(this)
     fprintf(fid,'                \n');
     fprintf(fid,'#include "wrapfunctions.h"\n');
     fprintf(fid,'                \n');
+    fprintf(fid,'                void init_modeldims(void *user_data){\n');
+    fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+    fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
+    fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
+    fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
+    fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
+    fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
+    fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
+    fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);
+    fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
     fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
     fprintf(fid,'                }\n');
@@ -453,17 +463,11 @@ function generateC(this)
     fprintf(fid,'#include <include/udata.h>\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');
-    fprintf(fid,['#define nx ' num2str(this.nx) '\n']);
-    fprintf(fid,['#define ny ' num2str(this.ny) '\n']);
-    fprintf(fid,['#define nz ' num2str(this.nz) '\n']);
-    fprintf(fid,['#define ne ' num2str(this.nevent) '\n']);
-    fprintf(fid,['#define nnz ' num2str(this.nnz) '\n']);
-    fprintf(fid,['#define ubw ' num2str(this.ubw) '\n']);
-    fprintf(fid,['#define lbw ' num2str(this.lbw) '\n']);
     
     fprintf(fid,'#define pi M_PI\n');
     fprintf(fid,'\n');
     fprintf(fid,'\n');
+    fprintf(fid,'                void init_modeldims(void *user_data);\n');
     fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
     fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
     fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
