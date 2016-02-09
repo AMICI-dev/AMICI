@@ -100,18 +100,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     
                     if (status==AMI_ROOT_RETURN) {
-                        /* we only want to record events with non-empty outputs here. For events with empty outputs the returned silent value will be true and false otherwise */
-                        silent = handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
+                        handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
                         if (status != AMI_SUCCESS) goto freturn;
                         
-                        if (!silent) {
-                            if (iroot<nmaxevent*nz) {
-                                discs[iroot] = t;
-                                iroot++;
-                            } else {
-                                mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of rows in data.Z)!");
-                                status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
-                            }
+                        if (iroot<nmaxevent*ne) {
+                            discs[iroot] = t;
+                            iroot++;
+                        } else {
+                            mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
+                            status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
                         }
                     }
                 }

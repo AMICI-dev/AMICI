@@ -8,7 +8,7 @@ classdef amioption < matlab.mixin.SetGet
     
     properties
         atol = 1e-16;
-        rtol = 1e-6;
+        rtol = 1e-8;
         maxsteps = 1e4;
         sens_ind@double;
         tstart = 0;
