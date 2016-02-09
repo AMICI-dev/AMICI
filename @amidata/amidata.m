@@ -51,8 +51,10 @@ classdef amidata < handle
                 if(isfield(varargin{1},'t'))
                     D.nt = numel(varargin{1}.t);
                     D.t = varargin{1}.t(:);
+                elseif(isfield(varargin{1},'Y'))
+                    D.nt = size(varargin{1}.Y,1);
                 else
-                    error('Cannot construct valid amidata object from input struct');
+                    error('Cannot construct valid amidata object from input struct. There is no field D.t or D.Y in the input struct!');
                 end
                 if(isfield(varargin{1},'Y'))
                     D.ny = size(varargin{1}.Y,2);

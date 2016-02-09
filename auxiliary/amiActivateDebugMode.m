@@ -1,6 +1,6 @@
-function activateDebugMode( flag )
-    %activateDebugMode recompiles sundials objects in order to enable
-    %debugging of sundials specific functions
+function amiActivateDebugMode( flag )
+    %amiActivateDebugMode recompiles sundials objects in order to
+    %enable/disable debugging of sundials specific functions
     
     this.wrap_path=fileparts(fileparts(mfilename('fullpath')));  
     sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
