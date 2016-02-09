@@ -43,7 +43,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int iroot;
     double tnext;
     
-    bool setupBdone = false;
+    booleantype silent;
+    booleantype setupBdone = false;
     
     pstatus = mxMalloc(sizeof(double));
     
@@ -99,15 +100,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     
                     if (status==AMI_ROOT_RETURN) {
-                        if (iroot<nmaxevent) {
-                            discs[iroot] = t;
+                        if (iroot<nmaxevent*nz) {
+
                             
-                            handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
+                            /* we only want to record events with non-empty outputs here. For events with empty outputs the returned silent value will be true and false otherwise */
+                            silent = handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
                             if (status != AMI_SUCCESS) goto freturn;
                             
-                            iroot++;
+                            if (!silent) {
+                                discs[iroot] = t;
+                                iroot++;
+                            }
                         } else {
-                            mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded the provided nmaxevents (number of rows in data.Z)!");
+                            mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of rows in data.Z)!");
                             status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
                         }
 

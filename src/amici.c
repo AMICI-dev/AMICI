@@ -1231,7 +1231,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+booleantype getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * getEventOutput extracts output information for events
      *
@@ -1244,7 +1244,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return cv_status updated status flag @type int
      */
-    
+    booleantype silent = TRUE;
     int iz;
     int ie;
     
@@ -1269,22 +1269,23 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
         if (nroots[ie]<nmaxevent) {
             if(rootsfound[ie] != 0) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
-                if (*status != AMI_SUCCESS) return;
+                if (*status != AMI_SUCCESS) return(silent);
                 
                 for (iz=0; iz<nz; iz++) {
                     if(z2event[iz] == ie) {
+                        silent = FALSE;
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
-                        if (*status != AMI_SUCCESS) return;
+                        if (*status != AMI_SUCCESS) return(silent);
                     }
                 }
                 
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
-                        if (*status != AMI_SUCCESS) return;
+                        if (*status != AMI_SUCCESS) return(silent);
                     } else {
                         getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
-                        if (*status != AMI_SUCCESS) return;
+                        if (*status != AMI_SUCCESS) return(silent);
                     }
                 }
                 
@@ -1292,6 +1293,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
             }
         }
     }
+    return(silent);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1446,7 +1448,7 @@ void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+booleantype handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -1460,7 +1462,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    
+    booleantype silent;
     int ie;
     
     UserData udata; /* user udata */
@@ -1473,7 +1475,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     tdata = (TempData) temp_data;
     
     *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return;
+    if (*status != AMI_SUCCESS) return(false);
     
     for (ie=0; ie<ne; ie++) {
         rootidx[iroot*ne + ie] = rootsfound[ie];
@@ -1483,12 +1485,12 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
             *status = AMIGetSens(ami_mem, &t, sx);
-            if (*status != AMI_SUCCESS) return;
+            if (*status != AMI_SUCCESS) return(false);
         }
     }
     
-    getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
-    if (*status != AMI_SUCCESS) return;
+    silent = getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
+    if (*status != AMI_SUCCESS) return(false);
     
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
     if(sensi >= 1){
@@ -1510,36 +1512,37 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     }
     
     updateHeaviside(status, udata, tdata);
-    if (*status != AMI_SUCCESS) return;
+    if (*status != AMI_SUCCESS) return(false);
     
     applyEventBolus(status, ami_mem, udata, tdata);
-    if (*status != AMI_SUCCESS) return;
+    if (*status != AMI_SUCCESS) return(false);
     
     *status = AMIReInit(ami_mem, t, x, dx);
-    if (*status != AMI_SUCCESS) return;
+    if (*status != AMI_SUCCESS) return(false);
     
     /* make time derivative consistent */
     *status = AMICalcIC(ami_mem, t);
-    if (*status != AMI_SUCCESS) return;
+    if (*status != AMI_SUCCESS) return(false);
     
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
             
             /* compute the new xdot  */
             *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) return;
+            if (*status != AMI_SUCCESS) return(false);
             
             applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
-            if (*status != AMI_SUCCESS) return;
+            if (*status != AMI_SUCCESS) return(false);
             
             if(sensi >= 1){
                 if (sensi_meth == AMI_FSA) {
                     *status = AMISensReInit(ami_mem, ism, sx, sdx);
-                    if (*status != AMI_SUCCESS) return;
+                    if (*status != AMI_SUCCESS) return(false);
                 }
             }
         }
     }
+    return(silent);
     
 }
 
