@@ -79,7 +79,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tlastroot = 0;
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
-        status = AMISetStopTime(ami_mem, ts[it]);
+        if(sensi_meth == AMI_FSA && sensi >= 1) {
+            status = AMISetStopTime(ami_mem, ts[it]);
+        }
         if (status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
