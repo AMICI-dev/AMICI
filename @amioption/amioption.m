@@ -51,7 +51,7 @@ classdef amioption < matlab.mixin.SetGet
             
             % adapted from SolverOptions
             
-            if nargin > 0
+            if nargin > 0 
                 
                 % Deal with the case where the first input to the
                 % constructor is a amioptions/struct object.
@@ -61,7 +61,7 @@ classdef amioption < matlab.mixin.SetGet
                     else
                         % Get the properties from options object passed
                         % into the constructor.
-                        thisProps = properties(obj);;
+                        thisProps = properties(obj);
                         % Set the common properties. Note that we
                         % investigated first finding the properties that
                         % are common to both objects and just looping over
@@ -83,65 +83,67 @@ classdef amioption < matlab.mixin.SetGet
                         obj.(fieldlist{ifield}) = varargin{1}.(fieldlist{ifield});
                     end
                     firstInputObj = true;
+                elseif isempty(varargin{1})
+                    firstInputObj = true;
                 else
                     firstInputObj = false;
                 end
                 
+                % Extract the options that the caller of the constructor
+                % wants to set.
+                if firstInputObj
+                    pvPairs = varargin(2:end);
+                else
+                    pvPairs = varargin;
+                end
                 
-            end
-            
-            % Extract the options that the caller of the constructor
-            % wants to set.
-            if firstInputObj
-                pvPairs = varargin(2:end);
-            else
-                pvPairs = varargin;
-            end
-            
-            % Loop through each param-value pair and just try to set
-            % the option. When the option has been fully specified with
-            % the correct case, this is fast. The catch clause deals
-            % with partial matches or errors.
-            haveCreatedInputParser = false;
-            for i = 1:2:length(pvPairs)
-                try
-                    obj.(pvPairs{i}) = pvPairs{i+1};
-                catch ME %#ok
-                    
-                    % Create the input parser if we haven't already. We
-                    % do it here to avoid creating it if possible, as
-                    % it is slow to set up.
-                    if ~haveCreatedInputParser
-                        ip = inputParser;
-                        % Structures are currently not supported as
-                        % an input to optimoptions. Setting the
-                        % StructExpand property of the input parser to
-                        % false, forces the parser to treat the
-                        % structure as a single input and not a set of
-                        % param-value pairs.
-                        ip.StructExpand =  false;
-                        % Get list of option names
-                        allOptionNames = getOptionNames(obj);
-                        for j = 1:length(allOptionNames)
-                            % Just specify an empty default as we already have the
-                            % defaults in the options object.
-                            ip.addParameter(allOptionNames{j}, []);
+                % Loop through each param-value pair and just try to set
+                % the option. When the option has been fully specified with
+                % the correct case, this is fast. The catch clause deals
+                % with partial matches or errors.
+                haveCreatedInputParser = false;
+                for i = 1:2:length(pvPairs)
+                    try
+                        obj.(pvPairs{i}) = pvPairs{i+1};
+                    catch ME %#ok
+                        
+                        % Create the input parser if we haven't already. We
+                        % do it here to avoid creating it if possible, as
+                        % it is slow to set up.
+                        if ~haveCreatedInputParser
+                            ip = inputParser;
+                            % Structures are currently not supported as
+                            % an input to optimoptions. Setting the
+                            % StructExpand property of the input parser to
+                            % false, forces the parser to treat the
+                            % structure as a single input and not a set of
+                            % param-value pairs.
+                            ip.StructExpand =  false;
+                            % Get list of option names
+                            allOptionNames = properties(obj);
+                            for j = 1:length(allOptionNames)
+                                % Just specify an empty default as we already have the
+                                % defaults in the options object.
+                                ip.addParameter(allOptionNames{j}, []);
+                            end
+                            haveCreatedInputParser = true;
                         end
-                        haveCreatedInputParser = true;
+                        
+                        % Get the p-v pair to parse.
+                        thisPair = pvPairs(i:min(i+1, length(pvPairs)));
+                        ip.parse(thisPair{:});
+                        
+                        % Determine the option that was specified in p-v pairs.
+                        % These options will now be matched even if only partially
+                        % specified (by 13a). Now set the specified value in the
+                        % options object.
+                        optionSet = setdiff(allOptionNames, ip.UsingDefaults);
+                        obj.(optionSet{1}) = ip.Results.(optionSet{1});
                     end
-                    
-                    % Get the p-v pair to parse.
-                    thisPair = pvPairs(i:min(i+1, length(pvPairs)));
-                    ip.parse(thisPair{:});
-                    
-                    % Determine the option that was specified in p-v pairs.
-                    % These options will now be matched even if only partially
-                    % specified (by 13a). Now set the specified value in the
-                    % options object.
-                    optionSet = setdiff(allOptionNames, ip.UsingDefaults);
-                    obj.(optionSet{1}) = ip.Results.(optionSet{1});
                 end
             end
+            
+            
         end
         
         function set.sensi_meth(this,value)

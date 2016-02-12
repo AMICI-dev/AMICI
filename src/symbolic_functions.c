@@ -24,7 +24,7 @@
  *
  */
 double amilog(double x) {
-    return(log(abs(x)));
+    return(log(fabs(x)));
 }
 
 /**
