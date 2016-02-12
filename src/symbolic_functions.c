@@ -15,6 +15,18 @@
 /*! bool return value false */
 #define FALSE 0
 
+
+/**
+ * c implementation of log function, this prevents returning NaN/Inf values for negative values
+ *
+ * @param x argument
+ * @return if(x>0) then 1 else 0
+ *
+ */
+double amilog(double x) {
+    return(log(abs(x)));
+}
+
 /**
  * c implementation of matlab function heaviside
  *

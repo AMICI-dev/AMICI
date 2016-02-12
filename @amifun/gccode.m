@@ -21,6 +21,7 @@ function this = gccode(this,model,fid)
             this.sym = subs(this.sym,sym('D([1], am_min)'),sym('D1am_min'));
             this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
         end
+        this.sym = subs(this.sym,sym('log'),sym('amilog'));
         if(model.splineflag)
             for nodes = [3,4,5,10]
                 for ideriv = 1:nodes

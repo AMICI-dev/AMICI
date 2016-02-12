@@ -14,7 +14,7 @@ function HTable = loadOldHashes(this)
                 error('catchmeifyoucan');
             end
         catch
-            disp('Code changes made recompilation of model neventcessary!')
+            disp('Code changes made recompilation of model necessary!')
             this.recompile = true;
             error('catchmeifyoucan');
         end
