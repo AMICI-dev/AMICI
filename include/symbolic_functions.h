@@ -3,6 +3,7 @@
 #include <math.h>
 #include <include/spline.h>
 
+double amilog(double x);
 double heaviside(double x);
 
 double am_min(double a, double b);

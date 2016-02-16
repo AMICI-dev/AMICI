@@ -21,7 +21,7 @@ function this = gccode(this,model,fid)
             this.sym = subs(this.sym,sym('D([1], am_min)'),sym('D1am_min'));
             this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
         end
-        this.sym = subs(this.sym,sym('log'),sym('amilog'));
+
         if(model.splineflag)
             for nodes = [3,4,5,10]
                 for ideriv = 1:nodes
@@ -37,7 +37,7 @@ function this = gccode(this,model,fid)
         else
             cstr = strrep(cstr,'t0',[this.cvar '[0]']);
         end
-        
+        cstr = strrep(cstr,'log','amilog');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
         cstr = regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,');
