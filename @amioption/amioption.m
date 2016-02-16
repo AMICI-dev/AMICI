@@ -11,6 +11,7 @@ classdef amioption < matlab.mixin.SetGet
         rtol = 1e-8;
         maxsteps = 1e4;
         sens_ind@double;
+        qpositivex@double;
         tstart = 0;
         lmm = 2;
         iter = 2;

@@ -122,7 +122,7 @@ function generateC(this)
                     fprintf(fid,['       if(mxIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                     fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
                     fprintf(fid,'           if(!udata->am_nan_dxdotdp) {\n');
-                    fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again.");\n');
+                    fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'               udata->am_nan_dxdotdp = TRUE;\n');
                     fprintf(fid,'           }\n');
                     fprintf(fid,'       }\n');
@@ -137,48 +137,51 @@ function generateC(this)
                     fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xdot_tmp[ix])) {\n');
-                    fprintf(fid,'       xdot_tmp[ix] = 0;');
+                    fprintf(fid,'       xdot_tmp[ix] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_xdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_xdot = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(xdot_tmp[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
+                    fprintf(fid,'   if(qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {\n');
+                    fprintf(fid,'       xdot_tmp[ix] = -xdot_tmp[ix];\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'JSparse'))
                     fprintf(fid,'int inz;\n');
                     fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[inz])) {\n');
-                    fprintf(fid,'       J->data[inz] = 0;');
+                    fprintf(fid,'       J->data[inz] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_JSparse) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_JSparse = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(J->data[inz])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'J'))
                     fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[ix])) {\n');
-                    fprintf(fid,'       J->data[ix] = 0;');
+                    fprintf(fid,'       J->data[ix] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_J) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_J = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(J->data[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'xBdot'))
@@ -187,13 +190,13 @@ function generateC(this)
                     fprintf(fid,'   if(mxIsNaN(xBdot_tmp[ix])) {\n');
                     fprintf(fid,'       xBdot_tmp[ix] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_xBdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_xBdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'   if(mxIsInf(xBdot_tmp[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'}\n');
                 end
@@ -202,13 +205,13 @@ function generateC(this)
                     fprintf(fid,'   if(mxIsNaN(qBdot_tmp[ip])) {\n');
                     fprintf(fid,'       qBdot_tmp[ip] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_qBdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'   if(mxIsInf(qBdot_tmp[ip])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'}\n');
                 end
@@ -340,14 +343,14 @@ function generateC(this)
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
@@ -355,7 +358,7 @@ function generateC(this)
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
         fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');

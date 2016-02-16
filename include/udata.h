@@ -5,6 +5,8 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
+#define qpositivex udata->am_qpositivex
+
 #define plist udata->am_plist
 #define np udata->am_np
 #define ny udata->am_ny
@@ -64,6 +66,8 @@
 
 /** @brief struct that stores all user provided data */
 typedef struct {
+    /** positivity flag */
+    double *am_qpositivex;
     
     /** parameter reordering */
     int    *am_plist;

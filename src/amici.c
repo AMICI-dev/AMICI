@@ -130,6 +130,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
     
     readOptionData(z2event)
+    readOptionData(qpositivex)
     readOptionScalar(sensi,int)
     readOptionScalar(ism,int)
     readOptionScalar(sensi_meth,int)
