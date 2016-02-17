@@ -240,38 +240,31 @@ function [this,model] = getSyms(this,model)
             % transform into symbolic expression
             this.strsym = sym(ws);
             tmpxdot = mysubs(tmpxdot,temps(2:end),this.strsym); % replace common expressions
+            this.sym = mysubs(this.sym,temps(2:end),this.strsym);
             model.updateRHS(tmpxdot); % update rhs
             
             w = this.strsym;
          
         case 'dwdx'
             this.sym = jacobian(model.fun.w.sym,x);
-            dwdxs = cell(model.nw,nx);
             % fill cell array
-            for iw = 1:model.nw
-                for ix = 1:nx
-                    if(this.sym(iw,ix)~=0)
-                        dwdxs{iw,ix} = sprintf('dwdx_%i', (iw-1)*nx+ix);
-                    else
-                        dwdxs{iw,ix} = '0';
-                    end
-                end
+            idx_w = find(this.sym~=0);
+            dwdxs = cell(model.nw,nx);
+            [dwdxs{:}] = deal('0');
+            for iw = idx_w
+                dwdxs{iw} = sprintf('dwdx_%i', iw-1);
             end
             % transform into symbolic expression
             this.strsym = sym(dwdxs);
             
         case 'dwdp'
             this.sym = jacobian(model.fun.w.sym,p);
-            dwdps = cell(model.nw,np);
             % fill cell array
-            for iw = 1:model.nw
-                for ip = 1:np
-                    if(this.sym(iw,ip)~=0)
-                        dwdps{iw,ip} = sprintf('dwdp_%i', (iw-1)*nx+ip);
-                    else
-                        dwdps{iw,ip} = '0';
-                    end
-                end
+            idx_w = find(this.sym~=0);
+            dwdps = cell(model.nw,np);
+            [dwdps{:}] = deal('0');
+            for iw = idx_w
+                dwdps{iw} = sprintf('dwdx_%i', iw-1);
             end
             % transform into symbolic expression
             this.strsym = sym(dwdps);
