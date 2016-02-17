@@ -395,23 +395,12 @@ function compileC(this)
                 fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c')]);
     end
     
-    if(this.recompile)
-        recompile = 1;
-    else
-        recompile = checkHash(fullfile(this.wrap_path,'src','amici'),o_suffix,DEBUG);
-    end
-    if(recompile)
+
         fprintf('amici | ');
         eval(['mex ' DEBUG COPT ...
             ' -c -outdir ' fullfile(this.wrap_path,'src') ...
             includesstr ' ' ...
             fullfile(this.wrap_path,'src','amici.c')]);
-        hash = getFileHash(fullfile(this.wrap_path,'src','amici.c'));
-        hash = [hash DEBUG];
-        fid = fopen(fullfile(this.wrap_path,'src',['amici' '_' mexext '.md5']),'w');
-        fprintf(fid,hash);
-        fclose(fid);
-    end
     
     if(isunix)
         if(~ismac)
