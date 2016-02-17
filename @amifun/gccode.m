@@ -56,9 +56,13 @@ function this = gccode(this,model,fid)
             if(ismember('xdot_old',this.nvecs'))
                 cstr = regexprep(cstr,'xdot_old_([0-9]+)','xdot_old\[$1\]');
             end
+            cstr = regexprep(cstr,'dwdp_([0-9]+)','dwdp_tmp\[$1\]');
             cstr = regexprep(cstr,'p_([0-9]+)','p\[$1\]');
             cstr = regexprep(cstr,'k_([0-9]+)','k\[$1\]');
             cstr = regexprep(cstr,'h_([0-9]+)','h\[$1\]');
+            cstr = regexprep(cstr,'w_([0-9]+)','w_tmp\[$1\]');
+            
+            cstr = regexprep(cstr,'dwdx_([0-9]+)','dwdx_tmp\[$1\]');
             if(ismember('xB',this.nvecs'))
                 cstr = regexprep(cstr,'xB_([0-9]+)','xB\[$1\]');
             end

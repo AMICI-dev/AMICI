@@ -57,6 +57,9 @@
 
 #define tmp_J udata->am_J
 #define tmp_dxdotdp udata->am_dxdotdp
+#define w_tmp udata->am_w
+#define dwdx_tmp udata->am_dwdx
+#define dwdp_tmp udata->am_dwdp
 
 #define z2event udata->am_z2event
 #define h udata->am_h
@@ -181,6 +184,12 @@ typedef struct {
     SlsMat am_J;
     /** tempory storage of dxdotdp data across functions */
     realtype *am_dxdotdp;
+    /** tempory storage of w data across functions */
+    realtype *am_w;
+    /** tempory storage of dwdx data across functions */
+    realtype *am_dwdx;
+    /** tempory storage of dwdp data across functions */
+    realtype *am_dwdp;
     
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;

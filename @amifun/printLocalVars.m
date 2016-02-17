@@ -133,8 +133,14 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'sJz'
             % nothing
+        case 'w'
+            fprintf(fid,['memset(w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
+        case 'dwdx'
+            fprintf(fid,['memset(dwdx,0,sizeof(realtype)*' num2str(model.nw*model.nx) ');\n']);
+        case 'dwdp'
+            fprintf(fid,['memset(dwdp,0,sizeof(realtype)*' num2str(model.nw) '*np);\n']);
         otherwise
-            error(['unkown function: ' fun])
+            error(['unkown function: ' this.funstr])
     end
     
 end

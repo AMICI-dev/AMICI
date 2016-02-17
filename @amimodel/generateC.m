@@ -49,12 +49,17 @@ function generateC(this)
             elseif(strcmp(ifun{1},'sxdot'))
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+                fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
+            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') )
+                fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
             elseif(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
             end
+            fprintf(fid,['#include "' this.modelname '_w.h"\n']);
             fprintf(fid,'\n');
             % function definition
             fprintf(fid,['int ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+            fprintf(fid,'int status = 0;\n');
             if(strcmp(ifun{1},'JBand'))
                 fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
             elseif(strcmp(ifun{1},'JBandB'))
@@ -67,8 +72,10 @@ function generateC(this)
                     fprintf(fid,'TempData tdata = (TempData) temp_data;\n');
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
+                if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
+                    fprintf(fid,['status = w_' this.modelname '(t,w_tmp,x,' dxvec 'user_data);\n']);
+                end
                 if( strcmp(ifun{1},'sxdot') )
-                    fprintf(fid,'int status = 0;\n');
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
@@ -83,12 +90,12 @@ function generateC(this)
                     else
                         fprintf(fid,'if(ip == 0) {\n');
                         fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = dwdp_' this.modelname '(t,dwdp_tmp,x,' dxvec 'user_data);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
                     end
                 elseif( strcmp(ifun{1},'qBdot') )
-                    fprintf(fid,'int status;\n');
                     fprintf(fid,'int ip;\n');
                     fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
@@ -113,6 +120,9 @@ function generateC(this)
                     fprintf(fid,'}\n');
                     fprintf(fid,'}\n');
                 else
+                    if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') )
+                        fprintf(fid,['status = dwdx_' this.modelname '(t,dwdx_tmp,x,' dxvec 'user_data);\n']);
+                    end
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end
                 if(strcmp(ifun{1},'dxdotdp'))
@@ -215,11 +225,7 @@ function generateC(this)
                     fprintf(fid,'   }');
                     fprintf(fid,'}\n');
                 end
-                if( strcmp(ifun{1},'sxdot') || strcmp(ifun{1},'qBdot') )
-                    fprintf(fid,'return(status);\n');
-                else
-                    fprintf(fid,'return(0);\n');
-                end
+                fprintf(fid,'return(status);\n');
                 fprintf(fid,'\n');
             end
             fprintf(fid,'}\n');
@@ -444,7 +450,7 @@ function generateC(this)
     
     %
     %----------------------------------------------------------------
-    % cvodewrapfunctions.h
+    % wrapfunctions.h
     % function declarations for wrapfunctions.c
     %----------------------------------------------------------------
     %

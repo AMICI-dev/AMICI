@@ -99,6 +99,9 @@ classdef amimodel < handle
         minflag = false;
         % flag indicating whether the model contains max functions
         maxflag = false;
+        % number of derived variables w, w is used for code optimization to reduce the number of frequently occuring
+        % expressions @type int
+        nw = 0;
     end
     
     methods
@@ -169,6 +172,10 @@ classdef amimodel < handle
             else
                 AM.wtype = 'cw'; % ODE
             end
+        end
+        
+        function updateRHS(this,xdot)
+            this.fun.xdot.sym = xdot;
         end
         
         parseModel(this)

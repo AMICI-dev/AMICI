@@ -11,7 +11,7 @@ function [this,model] = getSyms(this,model)
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
     
-    persistent x p sx
+    persistent x p sx w
     
     nx = model.nx;
     nevent = model.nevent;
@@ -180,7 +180,7 @@ function [this,model] = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'xdot'
-            this.sym = model.sym.xdot;
+            this.sym = simplify(model.sym.xdot);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -219,16 +219,72 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
+        case 'w'
+            optimize = getoptimized(optsym(model.fun.xdot.sym));
+            tmpxdot = children(optimize(end));
+            temps = sym('t',[(length(optimize)),1]);
+            nw = (length(optimize)-1);
+            model.nw = nw;
+            for iw = 1:nw % save common expressions
+                expr = children(optimize(iw));
+                this.sym(iw) = expr(2);
+            end
+            
+
+            
+            ws = cell(nw,1);
+            % fill cell array
+            for iw = 1:nw
+                ws{iw} = sprintf('w_%i', iw-1);
+            end
+            % transform into symbolic expression
+            this.strsym = sym(ws);
+            tmpxdot = mysubs(tmpxdot,temps(2:end),this.strsym); % replace common expressions
+            model.updateRHS(tmpxdot); % update rhs
+            
+            w = this.strsym;
+         
+        case 'dwdx'
+            this.sym = jacobian(model.fun.w.sym,x);
+            dwdxs = cell(model.nw,nx);
+            % fill cell array
+            for iw = 1:model.nw
+                for ix = 1:nx
+                    if(this.sym(iw,ix)~=0)
+                        dwdxs{iw,ix} = sprintf('dwdx_%i', (iw-1)*nx+ix);
+                    else
+                        dwdxs{iw,ix} = '0';
+                    end
+                end
+            end
+            % transform into symbolic expression
+            this.strsym = sym(dwdxs);
+            
+        case 'dwdp'
+            this.sym = jacobian(model.fun.w.sym,p);
+            dwdps = cell(model.nw,np);
+            % fill cell array
+            for iw = 1:model.nw
+                for ip = 1:np
+                    if(this.sym(iw,ip)~=0)
+                        dwdps{iw,ip} = sprintf('dwdp_%i', (iw-1)*nx+ip);
+                    else
+                        dwdps{iw,ip} = '0';
+                    end
+                end
+            end
+            % transform into symbolic expression
+            this.strsym = sym(dwdps);
             
         case 'dfdx'
-            this.sym=jacobian(model.fun.xdot.sym,x);
+            this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
             
         case 'J'
             if(strcmp(model.wtype,'iw'))
                 syms cj
                 this.sym = model.fun.dfdx.sym - cj*model.fun.M.sym;
             else
-                this.sym = jacobian(model.fun.xdot.sym,x);
+                this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
             end
             
             %%
@@ -251,7 +307,7 @@ function [this,model] = getSyms(this,model)
             this.sym=-transpose(model.fun.J.sym);
             
         case 'dxdotdp'
-            this.sym=jacobian(model.fun.xdot.sym,p);
+            this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
             
             %%
             % build short strings for reuse of dxdotdp
