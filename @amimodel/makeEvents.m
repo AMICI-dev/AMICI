@@ -35,7 +35,7 @@ function makeEvents( this )
                 if(ievent>0)
                     %check whether we already had this trigger function
                     ediscf = zeros(length(trigger));
-                    for id = 1:length(trigger{ievent})
+                    for id = 1:length(trigger)
                         ediscf(id) = isequaln(abs(trigger{id}),abs(sym(arg)));
                     end
                     if(~any(ediscf))
