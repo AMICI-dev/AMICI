@@ -11,7 +11,7 @@ function [this,model] = getSyms(this,model)
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
     
-    persistent x p sx w ndw
+    persistent x p sx w
     
     nx = model.nx;
     nevent = model.nevent;
@@ -251,52 +251,48 @@ function [this,model] = getSyms(this,model)
             model.updateRHS(tmpxdot); % update rhs
             
             w = this.strsym;
-            
-            % find hierarchy depth
-            ndw = 0;
-            jacw = jacobian(this.sym,w);
-            while(any((jacw^ndw)*w~=0)) % any((jacw^ndw)*w~=0) is MUCH faster than any(any(jacw^ndw~=0))
-                ndw = ndw+1; 
-            end
-         
+
         case 'dwdx'
             jacx = jacobian(model.fun.w.sym,x);
             jacw = jacobian(model.fun.w.sym,w);
-            this.sym = jacx + jacw*jacx;
-            for ind = 2:ndw
-                this.sym = this.sym + jacw^ind*jacx;
-            end
+            this.sym = jacx + jacw*jacx; % this part is only to get the right nonzero entries 
             % fill cell array
             idx_w = find(this.sym~=0);
             dwdxs = cell(model.nw,nx);
             [dwdxs{:}] = deal('0');
             if(numel(idx_w)>0)
-                for iw = transpose(idx_w)
-                    dwdxs{iw} = sprintf('dwdx_%i', iw-1);
+                for iw = 1:length(idx_w)
+                    dwdxs{idx_w(iw)} = sprintf('dwdx_%i', iw-1);
                 end
             end
+            model.ndwdx = length(idx_w);
             % transform into symbolic expression
             this.strsym = sym(dwdxs);
+            % update dwdx with simplified expressions, here we can exploit
+            % the proper ordering of w to ensure correctness of expressions
+            tmp = jacx + jacw*this.strsym;
+            this.sym = tmp(tmp~=0);
             
         case 'dwdp'
             jacp = jacobian(model.fun.w.sym,p);
             jacw = jacobian(model.fun.w.sym,w);
-            this.sym = jacp + jacw*jacp;
-            for ind = 2:ndw
-                this.sym = this.sym + jacw^ind*jacp;
-            end
-            this.sym = jacobian(model.fun.w.sym,p);
+            this.sym = jacp + jacw*jacp; % this part is only to get the right nonzero entries 
             % fill cell array
             idx_w = find(this.sym~=0);
             dwdps = cell(model.nw,np);
             [dwdps{:}] = deal('0');
             if numel(idx_w)>0
-                for iw = transpose(idx_w)
-                    dwdps{iw} = sprintf('dwdx_%i', iw-1);
+                for iw = length(idx_w)
+                    dwdps{iw} = sprintf('dwdp_%i', iw-1);
                 end
             end
+            model.ndwdp = length(idx_w);
             % transform into symbolic expression
             this.strsym = sym(dwdps);
+            % update dwdx with simplified expressions, here we can exploit
+            % the proper ordering of w to ensure correctness of expressions
+            tmp = jacp + jacw*this.strsym;
+            this.sym = tmp(tmp~=0);
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;

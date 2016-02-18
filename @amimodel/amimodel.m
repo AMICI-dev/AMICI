@@ -102,6 +102,10 @@ classdef amimodel < handle
         % number of derived variables w, w is used for code optimization to reduce the number of frequently occuring
         % expressions @type int
         nw = 0;
+        % number of derivatives of derived variables w, dwdx @type int
+        ndwdx = 0;
+        % number of derivatives of derived variables w, dwdp @type int
+        ndwdp = 0;
     end
     
     methods
