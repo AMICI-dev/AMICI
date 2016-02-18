@@ -222,7 +222,6 @@ function [this,model] = getSyms(this,model)
         case 'w'
             optimize = getoptimized(optsym(model.fun.xdot.sym));
             tmpxdot = children(optimize(end));
-            temps = sym('t',[(length(optimize)),1]);
             nw = (length(optimize)-1);
             model.nw = nw;
             exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
@@ -230,6 +229,9 @@ function [this,model] = getSyms(this,model)
             S.type='()';
             C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false); % get second element
             this.sym = [C{:}]; % transform cell to matrix
+            S.subs = {1};
+            C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false);
+            temps = [C{:}];
 %             model.nw = 0;
 %             nw = 0;
 %             this.sym = sym(zeros(0,1));          
@@ -237,26 +239,24 @@ function [this,model] = getSyms(this,model)
 
             
             ws = cell(nw,1);
+            ts = cell(nw,1);
             % fill cell array
             for iw = 1:nw
                 ws{iw} = sprintf('w_%i', iw-1);
             end
             % transform into symbolic expression
             this.strsym = sym(ws);
-            tmpxdot = mysubs(tmpxdot,temps(2:end),this.strsym); % replace common expressions
-            this.sym = mysubs(this.sym,temps(2:end),this.strsym);
+            tmpxdot = mysubs(tmpxdot,temps,this.strsym); % replace common expressions
+            this.sym = mysubs(this.sym,temps,this.strsym);
             model.updateRHS(tmpxdot); % update rhs
             
             w = this.strsym;
             
             % find hierarchy depth
             ndw = 0;
-            jacw = jacobian(model.fun.w.sym,w);
-            S = sparse(double(jacw~=0));
-            Sndw = S;
-            while(any(any(Sndw)))
-                ndw = ndw+1;
-                Sndw = Sndw*S;
+            jacw = jacobian(this.sym,w);
+            while(any((jacw^ndw)*w~=0)) % any((jacw^ndw)*w~=0) is MUCH faster than any(any(jacw^ndw~=0))
+                ndw = ndw+1; 
             end
          
         case 'dwdx'
