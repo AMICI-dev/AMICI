@@ -11,7 +11,7 @@ function [this,model] = getSyms(this,model)
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
     
-    persistent x p sx w
+    persistent x p sx w ndw
     
     nx = model.nx;
     nevent = model.nevent;
@@ -225,10 +225,14 @@ function [this,model] = getSyms(this,model)
             temps = sym('t',[(length(optimize)),1]);
             nw = (length(optimize)-1);
             model.nw = nw;
-            for iw = 1:nw % save common expressions
-                expr = children(optimize(iw));
-                this.sym(iw) = expr(2);
-            end
+            exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
+            S.subs = {2};
+            S.type='()';
+            C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false); % get second element
+            this.sym = [C{:}]; % transform cell to matrix
+%             model.nw = 0;
+%             nw = 0;
+%             this.sym = sym(zeros(0,1));          
             
 
             
@@ -244,27 +248,52 @@ function [this,model] = getSyms(this,model)
             model.updateRHS(tmpxdot); % update rhs
             
             w = this.strsym;
+            
+            % find hierarchy depth
+            ndw = 0;
+            jacw = jacobian(model.fun.w.sym,w);
+            S = sparse(double(jacw~=0));
+            Sndw = S;
+            while(any(any(Sndw)))
+                ndw = ndw+1;
+                Sndw = Sndw*S;
+            end
          
         case 'dwdx'
-            this.sym = jacobian(model.fun.w.sym,x);
+            jacx = jacobian(model.fun.w.sym,x);
+            jacw = jacobian(model.fun.w.sym,w);
+            this.sym = jacx + jacw*jacx;
+            for ind = 2:ndw
+                this.sym = this.sym + jacw^ind*jacx;
+            end
             % fill cell array
             idx_w = find(this.sym~=0);
             dwdxs = cell(model.nw,nx);
             [dwdxs{:}] = deal('0');
-            for iw = idx_w
-                dwdxs{iw} = sprintf('dwdx_%i', iw-1);
+            if(numel(idx_w)>0)
+                for iw = transpose(idx_w)
+                    dwdxs{iw} = sprintf('dwdx_%i', iw-1);
+                end
             end
             % transform into symbolic expression
             this.strsym = sym(dwdxs);
             
         case 'dwdp'
+            jacp = jacobian(model.fun.w.sym,p);
+            jacw = jacobian(model.fun.w.sym,w);
+            this.sym = jacp + jacw*jacp;
+            for ind = 2:ndw
+                this.sym = this.sym + jacw^ind*jacp;
+            end
             this.sym = jacobian(model.fun.w.sym,p);
             % fill cell array
             idx_w = find(this.sym~=0);
             dwdps = cell(model.nw,np);
             [dwdps{:}] = deal('0');
-            for iw = idx_w
-                dwdps{iw} = sprintf('dwdx_%i', iw-1);
+            if numel(idx_w)>0
+                for iw = transpose(idx_w)
+                    dwdps{iw} = sprintf('dwdx_%i', iw-1);
+                end
             end
             % transform into symbolic expression
             this.strsym = sym(dwdps);
