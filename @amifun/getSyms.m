@@ -257,7 +257,7 @@ function [this,model] = getSyms(this,model)
             jacw = jacobian(model.fun.w.sym,w);
             this.sym = jacx + jacw*jacx; % this part is only to get the right nonzero entries 
             % fill cell array
-            idx_w = find(this.sym~=0);
+            idx_w = find(logical(this.sym~=0));
             dwdxs = cell(model.nw,nx);
             [dwdxs{:}] = deal('0');
             if(numel(idx_w)>0)
@@ -271,14 +271,14 @@ function [this,model] = getSyms(this,model)
             % update dwdx with simplified expressions, here we can exploit
             % the proper ordering of w to ensure correctness of expressions
             tmp = jacx + jacw*this.strsym;
-            this.sym = tmp(tmp~=0);
+            this.sym = tmp(idx_w);
             
         case 'dwdp'
             jacp = jacobian(model.fun.w.sym,p);
             jacw = jacobian(model.fun.w.sym,w);
             this.sym = jacp + jacw*jacp; % this part is only to get the right nonzero entries 
             % fill cell array
-            idx_w = find(this.sym~=0);
+            idx_w = find(logical(this.sym~=0));
             dwdps = cell(model.nw,np);
             [dwdps{:}] = deal('0');
             if numel(idx_w)>0
@@ -292,7 +292,7 @@ function [this,model] = getSyms(this,model)
             % update dwdx with simplified expressions, here we can exploit
             % the proper ordering of w to ensure correctness of expressions
             tmp = jacp + jacw*this.strsym;
-            this.sym = tmp(tmp~=0);
+            this.sym = tmp(idx_w);
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;

@@ -136,7 +136,7 @@ function printLocalVars(this,model,fid)
         case 'w'
             fprintf(fid,['memset(w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
         case 'dwdx'
-            fprintf(fid,['memset(dwdx,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
+            fprintf(fid,['memset(dwdx,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
         case 'dwdp'
             fprintf(fid,['memset(dwdp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
         otherwise
