@@ -361,6 +361,9 @@ function compileC(this)
         this.cfun(1).sxdot = 1;
         this.cfun(1).qBdot = 1;
     end
+    if(this.cfun(1).w)
+        this.recompile = 1;
+    end
     
     recompileWrapFunction = false; 
     % if any of the functions in this.funs is recompiled, we also need to

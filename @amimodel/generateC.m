@@ -50,7 +50,7 @@ function generateC(this)
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') )
+            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot'))
                 fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
             elseif(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -73,8 +73,8 @@ function generateC(this)
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
-                    if(~strcmp(ifun{1},'q') )
-                        fprintf(fid,['status = w_' this.modelname '(t,w_tmp,x,' dxvec 'user_data);\n']);
+                    if(~strcmp(ifun{1},'w') )
+                        fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     end
                 end
                 if( strcmp(ifun{1},'sxdot') )
@@ -92,7 +92,7 @@ function generateC(this)
                     else
                         fprintf(fid,'if(ip == 0) {\n');
                         fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
-                        fprintf(fid,['    status = dwdp_' this.modelname '(t,dwdp_tmp,x,' dxvec 'user_data);\n']);
+                        fprintf(fid,['    status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
@@ -122,8 +122,8 @@ function generateC(this)
                     fprintf(fid,'}\n');
                     fprintf(fid,'}\n');
                 else
-                    if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') )
-                        fprintf(fid,['status = dwdx_' this.modelname '(t,dwdx_tmp,x,' dxvec 'user_data);\n']);
+                    if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') )
+                        fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     end
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end

@@ -224,6 +224,7 @@ function [this,model] = getSyms(this,model)
             tmpxdot = children(optimize(end));
             nw = (length(optimize)-1);
             model.nw = nw;
+            if(nw>0)
             exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
             S.subs = {2};
             S.type='()';
@@ -232,6 +233,7 @@ function [this,model] = getSyms(this,model)
             S.subs = {1};
             C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false);
             temps = [C{:}];
+            end
 %             model.nw = 0;
 %             nw = 0;
 %             this.sym = sym(zeros(0,1));          
