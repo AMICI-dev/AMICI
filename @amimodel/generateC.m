@@ -73,7 +73,9 @@ function generateC(this)
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
-                    fprintf(fid,['status = w_' this.modelname '(t,w_tmp,x,' dxvec 'user_data);\n']);
+                    if(~strcmp(ifun{1},'q') )
+                        fprintf(fid,['status = w_' this.modelname '(t,w_tmp,x,' dxvec 'user_data);\n']);
+                    end
                 end
                 if( strcmp(ifun{1},'sxdot') )
                     if(strcmp(this.wtype,'iw'))
@@ -338,6 +340,9 @@ function generateC(this)
     fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
     fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
     fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
+    fprintf(fid,['                   nw = ' num2str(this.nw) ';\n']);
+    fprintf(fid,['                   ndwdx = ' num2str(this.ndwdx) ';\n']);
+    fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);
     fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
     fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
     fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);

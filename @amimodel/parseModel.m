@@ -143,6 +143,9 @@ function parseModel(this)
     np = this.np;
     nk = this.nk;
     nz = this.nz;
+    nw = this.nw;
+    ndwdx = this.ndwdx;
+    ndwdp = this.ndwdp;
     nevent = this.nevent;
     z2event = this.z2event;
     nnonzeros = this.nnz;
@@ -157,7 +160,7 @@ function parseModel(this)
     sparseidxB = this.sparseidxB;
     compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver','ndwdx','ndwdp','nw');
 
     fprintf('\r')
 

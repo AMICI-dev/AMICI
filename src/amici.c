@@ -171,6 +171,12 @@ UserData setupUserData(const mxArray *prhs[]) {
         tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
     }
     
+    if (nw>0) {
+        w_tmp = mxMalloc(nw*sizeof(realtype));
+        dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
+        dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
+    }
+    
     udata->am_nan_dxdotdp = FALSE;
     udata->am_nan_J = FALSE;
     udata->am_nan_JSparse = FALSE;
@@ -427,6 +433,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
         if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
         if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
+        
         
         /* initialise states */
         

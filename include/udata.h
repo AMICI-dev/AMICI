@@ -14,6 +14,9 @@
 #define nz udata->am_nz
 #define ne udata->am_ne
 #define nt udata->am_nt
+#define nw udata->am_nw
+#define ndwdx udata->am_ndwdx
+#define ndwdp udata->am_ndwdp
 #define nnz udata->am_nnz
 #define nmaxevent udata->am_nmaxevent
 
@@ -86,6 +89,12 @@ typedef struct {
     int    am_ne;
     /** number of timepoints */
     int    am_nt;
+    /** number of common expressions */
+    int    am_nw;
+    /** number of derivatives of common expressions wrt x */
+    int    am_ndwdx;
+    /** number of derivatives of common expressions wrt p */
+    int    am_ndwdp;
     /** number of nonzero entries in jacobian */
     int    am_nnz;
     /** maximal number of events to track */
