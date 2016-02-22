@@ -180,7 +180,10 @@ function [this,model] = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'xdot'
-            this.sym = simplify(model.sym.xdot);
+            this.sym = sym(zeros(nx,1));
+            for ix = 1:nx % making this a loop makes it faster for certain systems, god knows why.
+                this.sym(ix) = simplify(model.sym.xdot(ix));
+            end
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -225,14 +228,14 @@ function [this,model] = getSyms(this,model)
             nw = (length(optimize)-1);
             model.nw = nw;
             if(nw>0)
-            exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
-            S.subs = {2};
-            S.type='()';
-            C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false); % get second element
-            this.sym = [C{:}]; % transform cell to matrix
-            S.subs = {1};
-            C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false);
-            temps = [C{:}];
+                exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
+                S.subs = {2};
+                S.type='()';
+                C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false); % get second element
+                this.sym = [C{:}]; % transform cell to matrix
+                S.subs = {1};
+                C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false);
+                temps = [C{:}];
             end
 %             model.nw = 0;
 %             nw = 0;
@@ -248,9 +251,11 @@ function [this,model] = getSyms(this,model)
             end
             % transform into symbolic expression
             this.strsym = sym(ws);
-            tmpxdot = mysubs(tmpxdot,temps,this.strsym); % replace common expressions
-            this.sym = mysubs(this.sym,temps,this.strsym);
-            model.updateRHS(tmpxdot); % update rhs
+            if(nw>0)
+                tmpxdot = mysubs(tmpxdot,temps,this.strsym); % replace common expressions
+                this.sym = mysubs(this.sym,temps,this.strsym);
+                model.updateRHS(tmpxdot); % update rhs
+            end
             
             w = this.strsym;
 
