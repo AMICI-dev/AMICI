@@ -163,7 +163,7 @@ classdef amioption < matlab.mixin.SetGet
                 assert(isnumeric(value),'The option sensi_meth must have a numeric value!')
                 assert(floor(value)==value,'The option sensi_meth must be an integer!')
                 assert(value<=4,'Only 1, 2, 3 are valid options for sensi_meth!')
-                assert(value==0,'Only 1, 2, 3 are valid options for sensi_meth!')
+                assert(value>=0,'Only 1, 2, 3 are valid options for sensi_meth!')
                 this.sensi_meth = value;
             end
         end

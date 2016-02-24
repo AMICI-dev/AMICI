@@ -589,6 +589,11 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     if ( sensi >= 1) {
         
+        dydx = mxMalloc(ny*nx*sizeof(realtype));
+        memset(dydx,0,ny*nx*sizeof(realtype));
+        dydp = mxMalloc(ny*np*sizeof(realtype));
+        memset(dydp,0,ny*np*sizeof(realtype));
+        
         if (sensi_meth == AMI_FSA) {
             
             if(nx>0) {
@@ -651,10 +656,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
-                dydx = mxMalloc(ny*nx*sizeof(realtype));
-                memset(dydx,0,ny*nx*sizeof(realtype));
-                dydp = mxMalloc(ny*np*sizeof(realtype));
-                memset(dydp,0,ny*np*sizeof(realtype));
                 llhS0 = mxMalloc(np*sizeof(realtype));
                 memset(llhS0,0,np*sizeof(realtype));
                 dgdp = mxMalloc(np*sizeof(realtype));
@@ -935,7 +936,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
         }
     }
     fdydx(ts[it],it,dydx,x,udata);
-    fdydp(ts[it],it,dydx,x,udata);
+    fdydp(ts[it],it,dydp,x,udata);
     fsy(ts[it],it,ySdata,dydx,dydp,sx,udata);
 }
 

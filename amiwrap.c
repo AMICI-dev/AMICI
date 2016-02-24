@@ -91,6 +91,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     } else {
                         status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                     }
+                    x_tmp = NV_DATA_S(x);
                     if (status == -22) {
                         /* clustering of roots => turn off rootfinding */
                         AMIRootInit(ami_mem, 0, NULL);
@@ -286,6 +287,8 @@ freturn:
             if(sigma_y)    mxFree(sigma_y);
         }
         if (sensi >= 1) {
+            if(ami_mem)    mxFree(dydx);
+            if(ami_mem)    mxFree(dydp);
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(sx,np);
             }
@@ -299,8 +302,6 @@ freturn:
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem)    mxFree(dydx);
-                if(ami_mem)    mxFree(dydp);
                 if(ami_mem)    mxFree(dgdp);
                 if(ami_mem)    mxFree(dgdx);
                 if(ami_mem)    mxFree(drdp);
