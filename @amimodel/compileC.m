@@ -5,7 +5,7 @@ function compileC(this)
     %  this: model definition object @type amimodel
     
     sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    sundials_ver = '2.6.2';
+    sundials_ver = '2.6.2.1';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
     ssparse_ver = '4.4.4';
