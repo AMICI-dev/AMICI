@@ -50,6 +50,7 @@ function generateC(this)
             elseif(strcmp(ifun{1},'sxdot'))
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+            elseif(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
             elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot'))
                 fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
@@ -75,7 +76,7 @@ function generateC(this)
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
                     if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
-                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') )
+                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') && ~strcmp(ifun{1},'dxdotdp') )
                             fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                         end
                     end
@@ -96,7 +97,6 @@ function generateC(this)
                     else
                         fprintf(fid,'if(ip == 0) {\n');
                         fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
-                        fprintf(fid,['    status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                         fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
@@ -109,6 +109,9 @@ function generateC(this)
                     fprintf(fid,'}\n');
                 elseif(this.fun.(ifun{1}).sensiflag)
                     fprintf(fid,'int ip;\n');
+                    if( strcmp(ifun{1},'dxdotdp'))
+                        fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    end
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     if(ismember('*sx',this.fun.(ifun{1}).nvecs))
                         fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');

@@ -286,8 +286,8 @@ function [this,model] = getSyms(this,model)
             dwdps = cell(model.nw,np);
             [dwdps{:}] = deal('0');
             if numel(idx_w)>0
-                for iw = length(idx_w)
-                    dwdps{iw} = sprintf('dwdp_%i', iw-1);
+                for iw = 1:length(idx_w)
+                    dwdps{idx_w(iw)} = sprintf('dwdp_%i', iw-1);
                 end
             end
             model.ndwdp = length(idx_w);
