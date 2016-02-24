@@ -49,6 +49,10 @@ function this = gccode(this,model,fid)
             
             if(ismember('x',this.nvecs'))
                 cstr = regexprep(cstr,'x_([0-9]+)','x\[$1\]');
+            else
+                if(ismember('*sx',this.nvecs'))
+                    cstr = regexprep(cstr,'sx_([0-9]+)','sx\[$1\]');
+                end
             end
             if(ismember('xdot',this.nvecs'))
                 cstr = regexprep(cstr,'xdot_([0-9]+)','xdot\[$1\]');
@@ -57,12 +61,14 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'xdot_old_([0-9]+)','xdot_old\[$1\]');
             end
             cstr = regexprep(cstr,'dwdp_([0-9]+)','dwdp_tmp\[$1\]');
+            cstr = regexprep(cstr,'dydp_([0-9]+)','dydp\[$1\]');
             cstr = regexprep(cstr,'p_([0-9]+)','p\[$1\]');
             cstr = regexprep(cstr,'k_([0-9]+)','k\[$1\]');
             cstr = regexprep(cstr,'h_([0-9]+)','h\[$1\]');
             cstr = regexprep(cstr,'w_([0-9]+)','w_tmp\[$1\]');
             
             cstr = regexprep(cstr,'dwdx_([0-9]+)','dwdx_tmp\[$1\]');
+            cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1\]');
             if(ismember('xB',this.nvecs'))
                 cstr = regexprep(cstr,'xB_([0-9]+)','xB\[$1\]');
             end
@@ -106,12 +112,17 @@ function this = gccode(this,model,fid)
             if(strfind(this.cvar,'Jy'))
                 cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
                 cstr = regexprep(cstr,'dydp_([0-9]+)',['dydp\[$1+ip*' num2str(model.ny) ']']);
-                cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');
-                cstr = regexprep(cstr,'sy_([0-9]+)',['sy\[it+nt*\($1+ip*' num2str(model.ny) '\)\]']);
+                cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');            
                 cstr = regexprep(cstr,'sdy_([0-9]+)','sd_y\[$1\]');
                 cstr = regexprep(cstr,'dsdydp\[([0-9]*)\]','dsigma_ydp\[$1\]');
-                cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
-                cstr = strrep(cstr,'=','+=');
+                if(strcmp(this.cvar,'sJy'))
+                    cstr = regexprep(cstr,'sy_([0-9]+)','sy\[$1\]');
+                    cstr = regexprep(cstr,'dJydy_([0-9]+)','dJydy\[$1\]');
+                else
+                    cstr = regexprep(cstr,'sy_([0-9]+)',['sy\[it+nt*\($1+ip*' num2str(model.ny) '\)\]']);
+                    cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
+                    cstr = strrep(cstr,'=','+=');
+                end
             end
             
             if(strfind(this.cvar,'Jz'))

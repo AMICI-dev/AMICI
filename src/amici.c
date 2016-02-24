@@ -934,7 +934,9 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    fsy(ts[it],it,ySdata,x,sx,udata);
+    fdydx(ts[it],it,dydx,x,udata);
+    fdydp(ts[it],it,dydx,x,udata);
+    fsy(ts[it],it,ySdata,dydx,dydp,sx,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */

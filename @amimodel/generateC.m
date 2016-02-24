@@ -40,6 +40,7 @@ function generateC(this)
                 fprintf(fid,'#undef x_tmp\n');
                 fprintf(fid,'#undef dzdp\n'); 
                 fprintf(fid,'#undef dzdx\n'); 
+                fprintf(fid,'#undef dx\n');
                 fprintf(fid,'#undef dsigma_zdp\n'); 
             end
             if(strcmp(ifun{1},'JBand'))
@@ -73,21 +74,24 @@ function generateC(this)
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
-                    if(~strcmp(ifun{1},'w') )
-                        fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
+                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') )
+                            fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        end
                     end
                 end
                 if( strcmp(ifun{1},'sxdot') )
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
+                        fprintf(fid,['status = dfdx_' this.modelname '(t,' rtcj 'x,' dxvec ',user_data);\n']);
+                        fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                         fprintf(fid,'realtype *sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                         fprintf(fid,'realtype *sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
                         fprintf(fid,'realtype *sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
                         fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
-                        fprintf(fid,'switch (plist[ip]) {\n');
-                        this.fun.(ifun{1}).writeCcode_sensi(this,fid);
-                        fprintf(fid,'}\n');
+                        this.fun.(ifun{1}).writeCcode(this,fid);
                         fprintf(fid,'}\n');
                     else
                         fprintf(fid,'if(ip == 0) {\n');

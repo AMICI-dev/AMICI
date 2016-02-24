@@ -180,10 +180,7 @@ function [this,model] = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'xdot'
-            this.sym = sym(zeros(nx,1));
-            for ix = 1:nx % making this a loop makes it faster for certain systems, god knows why.
-                this.sym(ix) = simplify(model.sym.xdot(ix));
-            end
+            this.sym = model.sym.xdot;
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -360,7 +357,7 @@ function [this,model] = getSyms(this,model)
             
         case 'sxdot'
             if(strcmp(model.wtype,'iw'))
-                this.sym=model.fun.dfdx.sym*sx-model.fun.M.sym*model.fun.sdx.sym+model.fun.dxdotdp.sym;
+                this.sym=model.fun.dfdx.sym*sx-model.fun.M.sym*model.fun.sdx.sym+model.fun.dxdotdp.strsym;
             else
                 this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
             end
@@ -400,7 +397,7 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(dydps);
             
         case 'sy'
-            this.sym=model.fun.dydp.sym + model.fun.dydx.sym*model.fun.sx.sym ;
+            this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
             % create cell array of same size
             sys = cell(ny,np);
             % fill cell array
@@ -685,14 +682,16 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.Jy(:);
         case 'dJydy'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.y.strsym);
+            this = makeStrSyms(this);
         case 'dJydx'
             this.sym = model.fun.dJydy.sym*model.fun.dydx.strsym;
         case 'dJydsigma'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.sigma_y.strsym);
         case 'dJydp'
             this.sym = model.fun.dJydy.sym*model.fun.dydp.strsym + model.fun.dJydsigma.sym*model.fun.dsigma_ydp.strsym;
+            this = makeStrSyms(this);
         case 'sJy'
-            this.sym = model.fun.dJydy.sym*model.fun.sy.strsym + model.fun.dJydp.sym;
+            this.sym = model.fun.dJydy.strsym*model.fun.sy.strsym + model.fun.dJydp.strsym;
             
         case 'Jz'
             this.sym = model.sym.Jz(:);
@@ -730,6 +729,25 @@ function this = unifySyms(this,model)
     this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
     this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
+end
+
+function this = makeStrSyms(this)
+    strsym = cell(size(this.sym));
+    [strsym{:}] = deal('0');
+    idx = find(logical(this.sym~=0));
+    for icell = idx
+        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    end
+    this.strsym = sym(strsym);
+end
+
+function this = makeStrSymsfull(this)
+    strsym = cell(size(this.sym));
+    [strsym{:}] = deal('0');
+    for icell = 1:numel(strsym)
+        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    end
+    this.strsym = sym(strsym);
 end
 
 function out = mysubs(in, old, new)

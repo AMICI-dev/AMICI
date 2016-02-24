@@ -16,7 +16,7 @@ function [ this ] = getDeps(this, model)
             end
             
         case 'dfdx'
-            this.deps = {'xdot','x'};
+            this.deps = {'xdot','x','dwdx'};
             
         case 'J'
             if(strcmp(model.wtype,'iw'))

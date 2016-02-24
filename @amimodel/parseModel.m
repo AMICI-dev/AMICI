@@ -80,7 +80,7 @@ function parseModel(this)
     end
     
     if(strcmp(this.wtype,'iw'))
-        funs = {funs{:},'dx0','sdx0'};
+        funs = {funs{:},'dx0','sdx0','dfdx','M'};
     end
     
     funs = unique(funs);
