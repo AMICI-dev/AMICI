@@ -25,7 +25,9 @@ function printLocalVars(this,model,fid)
         elseif(strcmp(nvec{1},'*sdx0'))
             fprintf(fid,'realtype *sdx0_tmp;\n');
         else
-            fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+            if(or(strcmp(model.wtype,'iw'),~strcmp(nvec{1},'dx')))
+                fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+            end
         end
     end
     
@@ -139,6 +141,10 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(dwdx_tmp,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
         case 'dwdp'
             fprintf(fid,['memset(dwdp_tmp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
+        case 'M'
+            fprintf(fid,['memset(M_tmp,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+        case 'dfdx'
+            fprintf(fid,['memset(dfdx_tmp,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         otherwise
             error(['unkown function: ' this.funstr])
     end

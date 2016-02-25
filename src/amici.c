@@ -165,6 +165,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
+        M_tmp = mxMalloc(nx*nx*sizeof(realtype));
+        dfdx_tmp = mxMalloc(nx*nx*sizeof(realtype));
     }
     if (sensi>0) {
         /* initialise temporary jacobian storage */
@@ -1413,7 +1415,7 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
             memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
             memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
             
-            *status = fdxdotdp(t,dxdotdpdata,x,udata);
+            *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
             if (*status != AMI_SUCCESS) return;
             *status = fdydp(ts[it],it,dydpdata,x,udata);
             if (*status != AMI_SUCCESS) return;

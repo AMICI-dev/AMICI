@@ -178,6 +178,7 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.M;
             % replace unify symbolic expression
             this = unifySyms(this,model);
+            this = makeStrSyms(this);
             
         case 'xdot'
             this.sym = model.sym.xdot;
@@ -300,6 +301,7 @@ function [this,model] = getSyms(this,model)
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+            this = makeStrSyms(this);
             
         case 'J'
             if(strcmp(model.wtype,'iw'))
@@ -357,7 +359,7 @@ function [this,model] = getSyms(this,model)
             
         case 'sxdot'
             if(strcmp(model.wtype,'iw'))
-                this.sym=model.fun.dfdx.sym*sx-model.fun.M.sym*model.fun.sdx.sym+model.fun.dxdotdp.strsym;
+                this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
             else
                 this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
             end
@@ -726,7 +728,9 @@ function this = unifySyms(this,model)
     %
     % Parameters:
     %  model: model definition object @type amimodel
-    this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
+    if(ismember('x',this.deps))
+        this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
+    end
     this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
 end
@@ -735,6 +739,7 @@ function this = makeStrSyms(this)
     strsym = cell(size(this.sym));
     [strsym{:}] = deal('0');
     idx = find(logical(this.sym~=0));
+    idx = transpose(idx(:));
     for icell = idx
         strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
     end

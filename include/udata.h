@@ -63,6 +63,8 @@
 #define w_tmp udata->am_w
 #define dwdx_tmp udata->am_dwdx
 #define dwdp_tmp udata->am_dwdp
+#define M_tmp udata->am_M
+#define dfdx_tmp udata->am_dfdx
 
 #define z2event udata->am_z2event
 #define h udata->am_h
@@ -199,6 +201,10 @@ typedef struct {
     realtype *am_dwdx;
     /** tempory storage of dwdp data across functions */
     realtype *am_dwdp;
+    /** tempory storage of M data across functions */
+    realtype *am_M;
+    /** tempory storage of dfdx data across functions */
+    realtype *am_dfdx;
     
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;

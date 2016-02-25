@@ -12,7 +12,7 @@ function generateC(this)
         rtcj = 'cj,';
     else
         xvec = '';
-        dxvec = '';
+        dxvec = 'NULL,';
         sdxvec = '';
         dxBvec = '';
         rtcj = '';
@@ -50,6 +50,10 @@ function generateC(this)
             elseif(strcmp(ifun{1},'sxdot'))
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+                if(strcmp(this.wtype,'iw'))
+                    fprintf(fid,['#include "' this.modelname '_dfdx.h"\n']);
+                    fprintf(fid,['#include "' this.modelname '_M.h"\n']);
+                end
             elseif(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
             elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot'))
@@ -84,9 +88,9 @@ function generateC(this)
                 if( strcmp(ifun{1},'sxdot') )
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
-                        fprintf(fid,['status = dfdx_' this.modelname '(t,' rtcj 'x,' dxvec ',user_data);\n']);
+                        fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                         fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                        fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
+                        fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                         fprintf(fid,'realtype *sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                         fprintf(fid,'realtype *sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
@@ -96,14 +100,14 @@ function generateC(this)
                         fprintf(fid,'}\n');
                     else
                         fprintf(fid,'if(ip == 0) {\n');
-                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
-                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
+                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
                     end
                 elseif( strcmp(ifun{1},'qBdot') )
                     fprintf(fid,'int ip;\n');
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     this.fun.(ifun{1}).writeCcode(this,fid);
                     fprintf(fid,'}\n');
