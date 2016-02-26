@@ -6,7 +6,6 @@ function [model] = example_model_7_syms()
 model.atol = 1e-8;
 model.rtol = 1e-8;
 model.maxsteps = 1e4;
-model.debug = true;
 
 %%
 % STATES

@@ -11,6 +11,7 @@ function amiActivateDebugMode( flag )
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','idas'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'include'), '"');

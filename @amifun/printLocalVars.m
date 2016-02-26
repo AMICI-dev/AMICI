@@ -77,7 +77,7 @@ function printLocalVars(this,model,fid)
         case 'sx0'
             % nothing
         case 'sdx0'
-            fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
+            % nothing
         case 'y'
             % nothing
         case 'sy'
