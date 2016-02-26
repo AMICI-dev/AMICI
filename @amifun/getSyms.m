@@ -11,7 +11,7 @@ function [this,model] = getSyms(this,model)
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
     
-    persistent x p sx w
+    persistent x p sx w ndw jacw
     
     nx = model.nx;
     nevent = model.nevent;
@@ -254,13 +254,20 @@ function [this,model] = getSyms(this,model)
                 this.sym = mysubs(this.sym,temps,this.strsym);
                 model.updateRHS(tmpxdot); % update rhs
             end
-            
+            jacw = jacobian(model.fun.w.sym,w);
+            ndw = 1;
+            vv = sym('v',[length(w),1]);
+            while(sum(jacw^ndw*vv)~=0)
+                ndw = ndw+1;
+            end
             w = this.strsym;
 
         case 'dwdx'
             jacx = jacobian(model.fun.w.sym,x);
-            jacw = jacobian(model.fun.w.sym,w);
-            this.sym = jacx + jacw*jacx; % this part is only to get the right nonzero entries 
+            this.sym = jacx;
+            for idw = 1:ndw
+                this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
+            end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
             dwdxs = cell(model.nw,nx);
@@ -280,8 +287,10 @@ function [this,model] = getSyms(this,model)
             
         case 'dwdp'
             jacp = jacobian(model.fun.w.sym,p);
-            jacw = jacobian(model.fun.w.sym,w);
-            this.sym = jacp + jacw*jacp; % this part is only to get the right nonzero entries 
+            this.sym = jacp;
+            for idw = 1:ndw
+                this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
+            end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
             dwdps = cell(model.nw,np);
