@@ -12,7 +12,7 @@ function generateC(this)
         rtcj = 'cj,';
     else
         xvec = '';
-        dxvec = '';
+        dxvec = 'NULL,';
         sdxvec = '';
         dxBvec = '';
         rtcj = '';
@@ -40,6 +40,7 @@ function generateC(this)
                 fprintf(fid,'#undef x_tmp\n');
                 fprintf(fid,'#undef dzdp\n'); 
                 fprintf(fid,'#undef dzdx\n'); 
+                fprintf(fid,'#undef dx\n');
                 fprintf(fid,'#undef dsigma_zdp\n'); 
             end
             if(strcmp(ifun{1},'JBand'))
@@ -49,12 +50,22 @@ function generateC(this)
             elseif(strcmp(ifun{1},'sxdot'))
                 fprintf(fid,['#include "' this.modelname '_JSparse.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
+                if(strcmp(this.wtype,'iw'))
+                    fprintf(fid,['#include "' this.modelname '_dfdx.h"\n']);
+                    fprintf(fid,['#include "' this.modelname '_M.h"\n']);
+                end
+            elseif(strcmp(ifun{1},'dxdotdp'))
+                fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
+            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+                fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
             elseif(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
             end
+            fprintf(fid,['#include "' this.modelname '_w.h"\n']);
             fprintf(fid,'\n');
             % function definition
             fprintf(fid,['int ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+            fprintf(fid,'int status = 0;\n');
             if(strcmp(ifun{1},'JBand'))
                 fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
             elseif(strcmp(ifun{1},'JBandB'))
@@ -67,35 +78,44 @@ function generateC(this)
                     fprintf(fid,'TempData tdata = (TempData) temp_data;\n');
                 end
                 this.fun.(ifun{1}).printLocalVars(this,fid);
+                if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
+                    if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
+                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') && ~strcmp(ifun{1},'dxdotdp') && ~strcmp(ifun{1},'dfdx') )
+                            fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        end
+                    end
+                end
                 if( strcmp(ifun{1},'sxdot') )
-                    fprintf(fid,'int status = 0;\n');
                     if(strcmp(this.wtype,'iw'))
                         fprintf(fid,'int ip;\n');
+                        fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                         fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                        fprintf(fid,'realtype *sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
-                        fprintf(fid,'realtype *sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
-                        fprintf(fid,'realtype *sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
+                        fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
+                        fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
+                        fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
                         fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
-                        fprintf(fid,'switch (plist[ip]) {\n');
-                        this.fun.(ifun{1}).writeCcode_sensi(this,fid);
-                        fprintf(fid,'}\n');
+                        this.fun.(ifun{1}).writeCcode(this,fid);
                         fprintf(fid,'}\n');
                     else
                         fprintf(fid,'if(ip == 0) {\n');
-                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
-                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
+                        fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
+                        fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                         fprintf(fid,'}\n');
                         this.fun.(ifun{1}).writeCcode(this,fid);
                     end
                 elseif( strcmp(ifun{1},'qBdot') )
-                    fprintf(fid,'int status;\n');
                     fprintf(fid,'int ip;\n');
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,user_data);\n']);
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     this.fun.(ifun{1}).writeCcode(this,fid);
                     fprintf(fid,'}\n');
                 elseif(this.fun.(ifun{1}).sensiflag)
                     fprintf(fid,'int ip;\n');
+                    if( strcmp(ifun{1},'dxdotdp'))
+                        fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    end
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     if(ismember('*sx',this.fun.(ifun{1}).nvecs))
                         fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
@@ -113,6 +133,9 @@ function generateC(this)
                     fprintf(fid,'}\n');
                     fprintf(fid,'}\n');
                 else
+                    if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
+                        fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    end
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end
                 if(strcmp(ifun{1},'dxdotdp'))
@@ -122,7 +145,7 @@ function generateC(this)
                     fprintf(fid,['       if(mxIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                     fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
                     fprintf(fid,'           if(!udata->am_nan_dxdotdp) {\n');
-                    fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again.");\n');
+                    fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'               udata->am_nan_dxdotdp = TRUE;\n');
                     fprintf(fid,'           }\n');
                     fprintf(fid,'       }\n');
@@ -137,48 +160,51 @@ function generateC(this)
                     fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xdot_tmp[ix])) {\n');
-                    fprintf(fid,'       xdot_tmp[ix] = 0;');
+                    fprintf(fid,'       xdot_tmp[ix] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_xdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_xdot = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(xdot_tmp[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
+                    fprintf(fid,'   if(qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {\n');
+                    fprintf(fid,'       xdot_tmp[ix] = -xdot_tmp[ix];\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'JSparse'))
                     fprintf(fid,'int inz;\n');
                     fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[inz])) {\n');
-                    fprintf(fid,'       J->data[inz] = 0;');
+                    fprintf(fid,'       J->data[inz] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_JSparse) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_JSparse = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(J->data[inz])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'J'))
                     fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[ix])) {\n');
-                    fprintf(fid,'       J->data[ix] = 0;');
+                    fprintf(fid,'       J->data[ix] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_J) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_J = TRUE;\n');
                     fprintf(fid,'       }\n');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'   if(mxIsInf(J->data[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
-                    fprintf(fid,'   }');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
+                    fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'xBdot'))
@@ -187,13 +213,13 @@ function generateC(this)
                     fprintf(fid,'   if(mxIsNaN(xBdot_tmp[ix])) {\n');
                     fprintf(fid,'       xBdot_tmp[ix] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_xBdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_xBdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'   if(mxIsInf(xBdot_tmp[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'}\n');
                 end
@@ -202,21 +228,17 @@ function generateC(this)
                     fprintf(fid,'   if(mxIsNaN(qBdot_tmp[ip])) {\n');
                     fprintf(fid,'       qBdot_tmp[ip] = 0;');
                     fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");');
+                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_qBdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'   if(mxIsInf(qBdot_tmp[ip])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");');
-                    fprintf(fid,'       return(-1);');
+                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'}\n');
                 end
-                if( strcmp(ifun{1},'sxdot') || strcmp(ifun{1},'qBdot') )
-                    fprintf(fid,'return(status);\n');
-                else
-                    fprintf(fid,'return(0);\n');
-                end
+                fprintf(fid,'return(status);\n');
                 fprintf(fid,'\n');
             end
             fprintf(fid,'}\n');
@@ -329,6 +351,9 @@ function generateC(this)
     fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
     fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
     fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
+    fprintf(fid,['                   nw = ' num2str(this.nw) ';\n']);
+    fprintf(fid,['                   ndwdx = ' num2str(this.ndwdx) ';\n']);
+    fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);
     fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
     fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
     fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);
@@ -340,14 +365,14 @@ function generateC(this)
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
     if(this.adjoint)
         fprintf(fid,['                    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
@@ -355,7 +380,7 @@ function generateC(this)
         fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
         fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
     else
-        fprintf(fid,'                    return(-1);');
+        fprintf(fid,'                    return(-1);\n');
     end
     fprintf(fid,'                }\n');
     fprintf(fid,'                \n');
@@ -441,7 +466,7 @@ function generateC(this)
     
     %
     %----------------------------------------------------------------
-    % cvodewrapfunctions.h
+    % wrapfunctions.h
     % function declarations for wrapfunctions.c
     %----------------------------------------------------------------
     %

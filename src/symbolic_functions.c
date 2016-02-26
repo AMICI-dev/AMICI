@@ -6,6 +6,7 @@
  */
 
 #include <math.h>
+#include <mex.h>
 #include <include/spline.h>
 
 #undef ts
@@ -14,6 +15,22 @@
 #define TRUE 1
 /*! bool return value false */
 #define FALSE 0
+
+
+/**
+ * c implementation of log function, this prevents returning NaN values for negative values
+ *
+ * @param x argument
+ * @return if(x>0) then log(x) else -Inf
+ *
+ */
+double amilog(double x) {
+    if (x<=0) {
+        return(-mxGetInf());
+    } else {
+        return(log(x));
+    }
+}
 
 /**
  * c implementation of matlab function heaviside

@@ -130,6 +130,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
     
     readOptionData(z2event)
+    readOptionData(qpositivex)
     readOptionScalar(sensi,int)
     readOptionScalar(ism,int)
     readOptionScalar(sensi_meth,int)
@@ -164,10 +165,18 @@ UserData setupUserData(const mxArray *prhs[]) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
+        M_tmp = mxMalloc(nx*nx*sizeof(realtype));
+        dfdx_tmp = mxMalloc(nx*nx*sizeof(realtype));
     }
     if (sensi>0) {
         /* initialise temporary jacobian storage */
         tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+    }
+    
+    if (nw>0) {
+        w_tmp = mxMalloc(nw*sizeof(realtype));
+        dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
+        dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
     }
     
     udata->am_nan_dxdotdp = FALSE;
@@ -427,6 +436,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
         if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
         
+        
         /* initialise states */
         
         if (x == NULL) return(NULL);
@@ -581,6 +591,11 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     if ( sensi >= 1) {
         
+        dydx = mxMalloc(ny*nx*sizeof(realtype));
+        memset(dydx,0,ny*nx*sizeof(realtype));
+        dydp = mxMalloc(ny*np*sizeof(realtype));
+        memset(dydp,0,ny*np*sizeof(realtype));
+        
         if (sensi_meth == AMI_FSA) {
             
             if(nx>0) {
@@ -643,10 +658,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
-                dydx = mxMalloc(ny*nx*sizeof(realtype));
-                memset(dydx,0,ny*nx*sizeof(realtype));
-                dydp = mxMalloc(ny*np*sizeof(realtype));
-                memset(dydp,0,ny*np*sizeof(realtype));
                 llhS0 = mxMalloc(np*sizeof(realtype));
                 memset(llhS0,0,np*sizeof(realtype));
                 dgdp = mxMalloc(np*sizeof(realtype));
@@ -926,7 +937,9 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    fsy(ts[it],it,ySdata,x,sx,udata);
+    fdydx(ts[it],it,dydx,x,udata);
+    fdydp(ts[it],it,dydp,x,udata);
+    fsy(ts[it],it,ySdata,dydx,dydp,sx,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1402,7 +1415,7 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
             memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
             memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
             
-            *status = fdxdotdp(t,dxdotdpdata,x,udata);
+            *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
             if (*status != AMI_SUCCESS) return;
             *status = fdydp(ts[it],it,dydpdata,x,udata);
             if (*status != AMI_SUCCESS) return;

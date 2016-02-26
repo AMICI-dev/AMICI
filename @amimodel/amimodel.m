@@ -87,7 +87,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 4;
+        compver = 5;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -99,6 +99,13 @@ classdef amimodel < handle
         minflag = false;
         % flag indicating whether the model contains max functions
         maxflag = false;
+        % number of derived variables w, w is used for code optimization to reduce the number of frequently occuring
+        % expressions @type int
+        nw = 0;
+        % number of derivatives of derived variables w, dwdx @type int
+        ndwdx = 0;
+        % number of derivatives of derived variables w, dwdp @type int
+        ndwdp = 0;
     end
     
     methods
@@ -169,6 +176,10 @@ classdef amimodel < handle
             else
                 AM.wtype = 'cw'; % ODE
             end
+        end
+        
+        function updateRHS(this,xdot)
+            this.fun.xdot.sym = xdot;
         end
         
         parseModel(this)

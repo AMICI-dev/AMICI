@@ -6,8 +6,17 @@ function parseModel(this)
     try
         CalcMD5('TEST','char','hex');
     catch
-        disp('CalcMD5 has not been compiled yet. Compiling now!')
-        mex(fullfile(this.wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
+        try
+            addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
+            CalcMD5('TEST','char','hex');
+        catch
+            disp('CalcMD5 has not been compiled yet. Compiling now!')
+            tmpdir = pwd;
+            cd(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
+            mex(fullfile(this.wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
+            addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
+            cd(tmpdir);
+        end
     end
 
     % load old hashes
@@ -61,7 +70,7 @@ function parseModel(this)
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
-    funs = {'xdot','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','dJydx','dJydp','sJy','Jz','dJzdx','dJzdp','sJz'};
+    funs = {'xdot','w','dwdx','dwdp','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','dJydx','dJydp','sJy','Jz','dJzdx','dJzdp','sJz'};
     
     if(this.forward)
         funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau'};
@@ -71,7 +80,7 @@ function parseModel(this)
     end
     
     if(strcmp(this.wtype,'iw'))
-        funs = {funs{:},'dx0','sdx0'};
+        funs = {funs{:},'dx0','sdx0','dfdx','M'};
     end
     
     funs = unique(funs);
@@ -134,6 +143,9 @@ function parseModel(this)
     np = this.np;
     nk = this.nk;
     nz = this.nz;
+    nw = this.nw;
+    ndwdx = this.ndwdx;
+    ndwdp = this.ndwdp;
     nevent = this.nevent;
     z2event = this.z2event;
     nnonzeros = this.nnz;
@@ -148,7 +160,7 @@ function parseModel(this)
     sparseidxB = this.sparseidxB;
     compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver','ndwdx','ndwdp','nw');
 
     fprintf('\r')
 
