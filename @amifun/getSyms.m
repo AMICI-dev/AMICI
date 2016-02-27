@@ -254,12 +254,13 @@ function [this,model] = getSyms(this,model)
                 this.sym = mysubs(this.sym,temps,this.strsym);
                 model.updateRHS(tmpxdot); % update rhs
             end
-            jacw = jacobian(model.fun.w.sym,w);
+            jacw = jacobian(this.sym,this.strsym);
             ndw = 1;
-            vv = sym('v',[length(w),1]);
+            vv = sym('v',[length(this.strsym),1]);
             while(sum(jacw^ndw*vv)~=0)
                 ndw = ndw+1;
             end
+            ndw = ndw - 1;
             w = this.strsym;
 
         case 'dwdx'

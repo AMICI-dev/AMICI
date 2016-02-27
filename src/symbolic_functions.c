@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <mex.h>
+#include <float.h>
 #include <include/spline.h>
 
 #undef ts
@@ -26,7 +27,7 @@
  */
 double amilog(double x) {
     if (x<=0) {
-        return(-mxGetInf());
+        return(-log(DBL_MAX));
     } else {
         return(log(x));
     }
