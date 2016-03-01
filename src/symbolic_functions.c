@@ -77,11 +77,7 @@ double sign(double x) {
  *
  */
 double am_min(double a, double b) {
-    if (a < b) {
-        return(a);
-    } else {
-        return(b);
-    }
+    return(fmin(a,b));
 }
 
 /**
@@ -119,11 +115,7 @@ double Dam_min(int id,double a, double b) {
  *
  */
 double am_max(double a, double b) {
-    if (a > b) {
-        return(a);
-    } else {
-        return(b);
-    }
+    return(fmax(a,b));
 }
 
 /**
