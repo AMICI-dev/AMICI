@@ -5,6 +5,8 @@ classdef SBMLode < handle
     properties
         state@sym;
         observable@sym;
+        observable_name@sym;
+        param@sym;
         parameter@sym;
         constant@sym;
         reaction@sym;
@@ -19,8 +21,7 @@ classdef SBMLode < handle
         bolus@sym;
         funmath@cell;
         funarg@cell;
-        p@sym;
-        k@sym;
+        time_symbol@char;
     end
     
     methods

@@ -3,6 +3,13 @@ function writeAMICI(this,modelname)
     fid = fopen([modelname '_syms.m'],'w');
     
     fprintf(fid,['function model = ' modelname '_syms()\n']);
+    fprintf(fid,'\n');
+    if(strcmp(this.time_symbol,''))
+        fprintf(fid,'t = sym(''t'');\n');
+    else
+        fprintf(fid,[this.time_symbol ' = sym(''t'');\n']);
+    end
+    fprintf(fid,'\n');
     writeDefinition('STATES','x','state',this,fid)
     writeDefinition('PARAMETERS','p','parameter',this,fid)
     writeDefinition('CONDITIONS','k','condition',this,fid)
@@ -21,12 +28,20 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
+    fprintf(fid,'function r = pow(x,y)\n');
+    fprintf(fid,'\n');
+    fprintf(fid,'    r = x^y;\n');
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+    
     for ifun = 1:length(this.funmath)
         fprintf(fid,['function r = ' this.funarg{ifun} '\n']);
         fprintf(fid,'\n');
-        fprintf(fid,['r = ' this.funmath{ifun} '\n']);
+        fprintf(fid,['    r = ' this.funmath{ifun} ';\n']);
         fprintf(fid,'\n');
         fprintf(fid,'end\n');
+        fprintf(fid,'\n');
     end
     fclose(fid);
 end
@@ -44,5 +59,8 @@ function writeDerived(header,identifier,field,this,fid)
     fprintf(fid,'\n');
     fprintf(fid,['% ' header '\n']);
     fprintf(fid,'\n');
+    if(strcmp(header,'OBSERVABLES'))
+        fprintf(fid,['% ' strjoin(cellfun(@char,num2cell(this.observable_name),'UniformOutput',false),'\n % ')  '\n']);
+    end
     fprintf(fid,['model.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),', ...\n') '];']);
 end

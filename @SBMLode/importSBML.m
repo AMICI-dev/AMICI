@@ -79,18 +79,18 @@ function importSBML(this,modelname)
     
     %% PARAMETERS
     
-    fprintf('loading parameters ...\n')
+    fprintf('loading this.param ...\n')
     
-    % extract parameters
+    % extract this.param
     parameter_sym = sym({model.parameter.id});
     parameter_sym = parameter_sym(:);
-    parameters = parameter_sym;
+    this.param = parameter_sym;
     
     % set initial assignments
     setInitialAssignment(this,model,'parameter')
-    applyRule(this,model,'parameter')
+    applyRule(this,model,'param')
     
-    np = length(parameters);
+    np = length(this.param);
     
     %% RULES
     
@@ -115,6 +115,9 @@ function importSBML(this,modelname)
     nr = length(model.reaction);
     
     this.flux = sym(cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false));
+    % replace local parameters
+    tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
+    this.flux = [tmp{:}];
     this.flux = this.flux(:);
     % convert to macroscopic rates
     
@@ -191,7 +194,7 @@ function importSBML(this,modelname)
     assignments_param_pidx = double(subs(assignments_param,parameter_sym,parameter_idx));
     assignments_param_tidx = assignments_tidx(param_assign_idx);
     
-    parameters(assignments_param_pidx) = parameters(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
+    this.param(assignments_param_pidx) = this.param(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
     
     condition_idx = transpose(sym(1:nk));
     assignments_cond = assignments(cond_assign_idx);
@@ -226,13 +229,13 @@ function importSBML(this,modelname)
         tmpfun = cellfun(@(x) ['fun_' num2str(x)],num2cell(1:length(model.functionDefinition)),'UniformOutput',false);
         this.funmath = strrep(this.funmath,{model.functionDefinition.id},tmpfun);
         % replace helper functions
-        this.funmath = strrep(this.funmath,'ge(','ami_ge(');
-        this.funmath = strrep(this.funmath,'gt(','ami_gt(');
-        this.funmath = strrep(this.funmath,'le(','ami_le(');
-        this.funmath = strrep(this.funmath,'lt(','ami_lt(');
-        this.funmath = strrep(this.funmath,'piecewise(','ami_piecewise(');
-        this.funmath = strrep(this.funmath,'max(','ami_max(');
-        this.funmath = strrep(this.funmath,'min(','ami_min(');
+        this.funmath = strrep(this.funmath,'ge(','am_ge(');
+        this.funmath = strrep(this.funmath,'gt(','am_gt(');
+        this.funmath = strrep(this.funmath,'le(','am_le(');
+        this.funmath = strrep(this.funmath,'lt(','am_lt(');
+        this.funmath = strrep(this.funmath,'piecewise(','am_piecewise(');
+        this.funmath = strrep(this.funmath,'max(','am_max(');
+        this.funmath = strrep(this.funmath,'min(','am_min(');
         
         this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
         this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
@@ -250,24 +253,28 @@ function importSBML(this,modelname)
     this.xdot(or(cond_idx,const_idx)) = [];
     this.bolus(or(cond_idx,const_idx),:) = [];
     
-    % remove parameters
+    % substitute with actual expressions
+    makeSubs(this,parameter_sym,this.param);
+    makeSubs(this,condition_sym,conditions);
+    makeSubs(this,constant_sym,constants);
+    makeSubs(this,compartments_sym,this.compartment);
     
-    param_vars = symvar(parameters);
     state_vars = [symvar(this.xdot),symvar(this.initState)];
     event_vars = [symvar(addToBolus),symvar(this.trigger)];
     
     isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
-    this.parameter = parameter_sym(and(ismember(parameter_sym,param_vars),isUsedParam));
+    isPartOfRule = and(ismember(parameter_sym,symvar(sym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
+    this.parameter = parameter_sym(and(isUsedParam,not(isPartOfRule)));
     
     this.condition = condition_sym;
+    this.observable = this.param(and(not(isUsedParam),not(isPartOfRule)));
+    this.observable_name = parameter_sym(and(not(isUsedParam),not(isPartOfRule)));
     
-    % substitute with actual expressions
-    makeSubs(this,parameter_sym,parameters);
-    makeSubs(this,condition_sym,conditions);
-    makeSubs(this,constant_sym,constants);
+    equal_idx = logical(this.observable==this.observable_name); % this is the unused stuff
+    this.observable(equal_idx) = [];
+    this.observable_name(equal_idx) = [];
     
-    this.observable = parameters(not(isUsedParam));
-    
+    this.time_symbol = model.time_symbol;
 end
 
 function setInitialAssignment(this,model,field)
