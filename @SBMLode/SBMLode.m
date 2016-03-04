@@ -22,6 +22,8 @@ classdef SBMLode < handle
         funmath@cell;
         funarg@cell;
         time_symbol@char;
+        pnom@double;
+        knom@double;
     end
     
     methods

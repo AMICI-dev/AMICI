@@ -70,6 +70,8 @@ function importSBML(this,modelname)
     % apply rules
     applyRule(this,model,'initState')
     
+    this.knom = double(this.initState(cond_idx));
+    
     % remove constant species
     const_idx = logical([model.species.constant]) & not(cond_idx);
     constant_sym = this.state(const_idx);
@@ -83,6 +85,7 @@ function importSBML(this,modelname)
     
     % extract this.param
     parameter_sym = sym({model.parameter.id});
+    parameter_val = [model.parameter.value];
     parameter_sym = parameter_sym(:);
     this.param = parameter_sym;
     
@@ -265,6 +268,7 @@ function importSBML(this,modelname)
     isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
     isPartOfRule = and(ismember(parameter_sym,symvar(sym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
     this.parameter = parameter_sym(and(isUsedParam,not(isPartOfRule)));
+    this.pnom = parameter_val(and(isUsedParam,not(isPartOfRule)));
     
     this.condition = condition_sym;
     this.observable = this.param(and(not(isUsedParam),not(isPartOfRule)));
