@@ -6,7 +6,7 @@ clc
 
 [exdir,~,~]=fileparts(which('example_model_1.m'));
 % compile the model
-amiwrap('model_example_1','example_model_1_syms',exdir)
+amiwrap('model_example_1','example_model_1_syms',exdir,2)
 % add the model to the path
 addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
 

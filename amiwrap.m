@@ -35,8 +35,8 @@ function amiwrap( varargin )
     
     if nargin > 3
         o2flag = varargin{4};
-        if(~islogical(o2flag))
-            error('Parameter o2flag must have a logical value');
+        if(~ismember(o2flag,[0,1,2]))
+            error('Parameter o2flag must have value 0, 1 or 2.');
         end
     else
         o2flag = false;
@@ -63,8 +63,13 @@ function amiwrap( varargin )
     % generate modelstruct
     disp('Generating model struct ...')
     model = amimodel(symfun,modelname);
-    if(o2flag)
-        modelo2 = augmento2(model);
+    switch(o2flag)
+        case 0 
+            % do nothing
+        case 1
+            modelo2 = augmento2(model);
+        case 2
+            modelo2 = augmento2vec(model);
     end
     
     % do symbolic computations of modelstruct
@@ -103,8 +108,11 @@ function amiwrap( varargin )
         movefile(fullfile(odewrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
         movefile(fullfile(odewrap_path,'models',modelname,[ 'ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
         % clear .m and .mex files from memory
-        if(o2flag)
-            movefile(fullfile(odewrap_path,'models',[modelname '_o2'],[ 'ami_' modelname '_o2.' mexext]),fullfile(tdir,['ami_' modelname '_o2.' mexext]))
+        switch(o2flag)
+            case 1
+                movefile(fullfile(odewrap_path,'models',[modelname '_o2'],[ 'ami_' modelname '_o2.' mexext]),fullfile(tdir,['ami_' modelname '_o2.' mexext]))
+            case 2
+                movefile(fullfile(odewrap_path,'models',[modelname '_o2vec'],[ 'ami_' modelname '_o2vec.' mexext]),fullfile(tdir,['ami_' modelname '_o2vec.' mexext]))
         end
 
     end

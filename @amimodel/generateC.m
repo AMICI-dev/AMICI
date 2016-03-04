@@ -348,7 +348,7 @@ function generateC(this)
     fprintf(fid,'                void init_modeldims(void *user_data){\n');
     fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
     fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
-    fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
+    fprintf(fid,['                   ny = ' num2str(this.nytrue) ';\n']);
     fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
     fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
     fprintf(fid,['                   nw = ' num2str(this.nw) ';\n']);

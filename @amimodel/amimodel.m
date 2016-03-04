@@ -202,6 +202,8 @@ classdef amimodel < handle
         
         modelo2 = augmento2(this)
         
+        modelo2vec = augmento2vec(this)
+        
     end
 end
 

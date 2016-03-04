@@ -345,14 +345,10 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         
         if (nmyy != ny) {
-            mexPrintf("ny = %d",ny);
-            mexPrintf("nmyy = %d",nmyy);
             mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match model ny");
         }
         
         if (nysigmay != ny) {
-            mexPrintf("ny = %d",ny);
-            mexPrintf("nysigmay = %d",nysigmay);
             mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match model ny");
         }
         
@@ -365,8 +361,6 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         }
         
         if (nmzy != nz) {
-            mexPrintf("nz = %d",nz);
-            mexPrintf("nmzy = %d",nmzy);
             mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match model nz");
         }
         
