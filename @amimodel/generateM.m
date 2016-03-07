@@ -17,13 +17,15 @@ function generateM(this, amimodelo2)
         nztrue = amimodelo2.nztrue;
         nxtrue = amimodelo2.nxtrue;
         nytrue = amimodelo2.nytrue;
+        o2flag = amimodelo2.o2flag;
     else
         nztrue = nz;
         nxtrue = nx;
         nytrue = ny;
+        o2flag = this.o2flag;
     end
     
-    o2flag = ~isempty(amimodelo2);
+    
     
     if(o2flag)
         nxtrue = amimodelo2.nxtrue;
@@ -195,7 +197,7 @@ function generateM(this, amimodelo2)
             case 'log10'
                 fprintf(fid,'    v = v.*theta(options_ami.sens_ind)*log(10);\n');
         end
-        fprintf(fid,['    kappa = [k(:),v(:)];\n']);
+        fprintf(fid,['    kappa = [kappa(:),v(:)];\n']);
         fprintf(fid,['end\n']);
     end
     
@@ -341,18 +343,18 @@ function generateM(this, amimodelo2)
     fprintf(fid,'end\n');
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi == 2)\n');
-        fprintf(fid,['    sx = reshape(sol.x(:,' num2str(nxtrue+1) ':end),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)));\n']);
+        fprintf(fid,['    sx = sol.xS(:,1:' num2str(nxtrue) ',:);\n']);
         fprintf(fid,['    sy = sol.yS(:,1:' num2str(nytrue) ',:);\n']);
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
-        fprintf(fid,['        sz(:,iz,:) = sol.zS(:,(iz-1)*(length(theta(options_ami.sens_ind)+1))+1,:);\n']);
+        fprintf(fid,['        sz(:,iz,:) = sol.zS(:,2*iz-1,:);\n']);
         fprintf(fid,['    end\n']);
         switch(o2flag)
             case 1
             fprintf(fid,['    s2x = reshape(sol.xS(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             fprintf(fid,['    s2y = reshape(sol.yS(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             case 2
-            fprintf(fid,['    s2x = reshape(sol.xS(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),1));\n']);
-            fprintf(fid,['    s2y = reshape(sol.yS(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),1));\n']);   
+            fprintf(fid,['    s2x = reshape(sol.xS(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),1);\n']);
+            fprintf(fid,['    s2y = reshape(sol.yS(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),1);\n']);   
         end
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         switch(o2flag)
@@ -397,14 +399,14 @@ function generateM(this, amimodelo2)
             case 'lin'
                 fprintf(fid,'    sol.sx = sx;\n');
                 fprintf(fid,'    sol.s2x = s2x;\n');
-                fprintf(fid,'    sol.sy = sx;\n');
+                fprintf(fid,'    sol.sy = sy;\n');
                 fprintf(fid,'    sol.s2y = s2y;\n');
                 fprintf(fid,'    sol.sz = sz;\n');
                 fprintf(fid,'    sol.s2z = s2z;\n');
             otherwise
                 fprintf(fid,'    sol.sx = sx;\n');
                 fprintf(fid,'    sol.s2x = s2x;\n');
-                fprintf(fid,'    sol.sy = sx;\n');
+                fprintf(fid,'    sol.sy = sy;\n');
                 fprintf(fid,'    sol.s2y = s2y;\n');
                 fprintf(fid,'    sol.sz = sz;\n');
                 fprintf(fid,'    sol.s2z = s2z;\n');

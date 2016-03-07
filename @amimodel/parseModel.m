@@ -26,9 +26,16 @@ function parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
-    nytrue = length(this.sym.sigma_y);
     nz = length([this.event.z]);
-    nztrue = length(this.sym.sigma_z);
+    if(this.nytrue == 0) % only set this if it still has the default value, if 0 is already the non default value it does not matter anyways
+        nytrue = length(this.sym.sigma_y);
+        this.nytrue = nytrue;
+    end  
+    if(this.nztrue == 0)
+        nztrue = length(this.sym.sigma_z);
+        this.nztrue = nztrue;
+    end
+    
     nevent = length(this.event);
     %check zero trigger events
     for ievent = 1:nevent
@@ -39,10 +46,8 @@ function parseModel(this)
     
     this.nx = nx;
     this.ny = ny;
-    this.nytrue = nytrue;
     this.nevent = nevent;
     this.nz = nz;
-    this.nztrue = nztrue;
     this.np = np;
     this.nk = nk;
     

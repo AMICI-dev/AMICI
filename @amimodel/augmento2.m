@@ -73,6 +73,7 @@ function [modelo2] = augmento2(this)
     augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
+    modelo2.o2flag = 1;
 end
 
 

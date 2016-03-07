@@ -15,6 +15,8 @@ function [modelo2vec] = augmento2vec(this)
    
     augmodel.nxtrue = length(this.sym.x); % number of states
     augmodel.nytrue = length(this.sym.y); % number of observables
+    augmodel.nztrue = this.nz;
+    
     
     % multiplication vector (extension of kappa
     vecs = cell([length(this.sym.p),1]);
@@ -60,6 +62,7 @@ function [modelo2vec] = augmento2vec(this)
         + jacobian(this.sym.Jy,this.fun.y.strsym)*this.fun.dydp.sym;
     this.getFun([],'dsigma_zdp');
     this.getFun([],'z');
+    
     this.getFun([],'dzdp');
     SJz = jacobian(this.sym.Jz,this.sym.p) ...
         + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
@@ -78,6 +81,7 @@ function [modelo2vec] = augmento2vec(this)
     augmodel.sym.p = this.sym.p;
     
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
+    modelo2vec.o2flag = 2;
 end
 
 

@@ -344,11 +344,11 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
             mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy","Number of time-points in data-sigma matrix does not match provided time vector");
         }
         
-        if (nmyy != ny) {
+        if (nmyy != nytrue) {
             mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match model ny");
         }
         
-        if (nysigmay != ny) {
+        if (nysigmay != nytrue) {
             mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match model ny");
         }
         
@@ -360,11 +360,11 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
             mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz","Number of time-points in event-sigma matrix does not match provided nmaxevent");
         }
         
-        if (nmzy != nz) {
+        if (nmzy != nztrue) {
             mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match model nz");
         }
         
-        if (nzsigmay != nz) {
+        if (nzsigmay != nztrue) {
             mexErrMsgIdAndTxt("AMICI:mex:data:nensdz","Number of events in event-sigma matrix does not match model nz");
         }
         
