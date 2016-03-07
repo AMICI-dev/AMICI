@@ -197,7 +197,7 @@ function generateM(this, amimodelo2)
             case 'log10'
                 fprintf(fid,'    v = v.*theta(options_ami.sens_ind)*log(10);\n');
         end
-        fprintf(fid,['    kappa = [kappa(:),v(:)];\n']);
+        fprintf(fid,['    kappa = [kappa(:);v(:)];\n']);
         fprintf(fid,['end\n']);
     end
     
@@ -311,7 +311,7 @@ function generateM(this, amimodelo2)
             case 1
                 fprintf(fid,['sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
             case 2
-                fprintf(fid,['sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+                fprintf(fid,['sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' amimodelo2.nk '),options_ami,plist,pbar,xscale,data);\n']);
         end
         fprintf(fid,'end\n');
     else
@@ -361,6 +361,7 @@ function generateM(this, amimodelo2)
             case 1
                 fprintf(fid,['        s2z(:,iz,:,:) = reshape(sol.zS(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             case 2
+                fprintf(fid,['        s2z= [];\n']);
                 %TBD
         end
         fprintf(fid,['    end\n']);

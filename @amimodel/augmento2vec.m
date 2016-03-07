@@ -16,7 +16,8 @@ function [modelo2vec] = augmento2vec(this)
     augmodel.nxtrue = length(this.sym.x); % number of states
     augmodel.nytrue = length(this.sym.y); % number of observables
     augmodel.nztrue = this.nz;
-    
+    augmodel.coptim = this.coptim;
+    augmodel.debug = this.debug;
     
     % multiplication vector (extension of kappa
     vecs = cell([length(this.sym.p),1]);
