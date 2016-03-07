@@ -14,8 +14,14 @@ function importSBML(this,modelname)
     this.compartment = compartments_sym;
     
     % set initial assignments
-    
-    setInitialAssignment(this,model,'compartment')
+    if(isfield(model,'initialAssignment'))
+    initAssignemnts_sym = sym({model.initialAssignment.symbol});
+    initAssignemnts_math = sym({model.initialAssignment.math});
+    else
+        initAssignemnts_sym = sym([]);
+        initAssignemnts_math = sym([]);
+    end
+    setInitialAssignment(this,model,'compartment',initAssignemnts_sym,initAssignemnts_math)
     
     % extract compartment sizes, default to 1
     this.compartment = subs(this.compartment,compartments_sym([model.compartment.isSetSize]),sym([model.compartment.size]));
@@ -23,7 +29,15 @@ function importSBML(this,modelname)
     % set remaining ones to default value 1
     this.compartment = subs(this.compartment,compartments_sym,sym(ones(size(compartments_sym))));
     
-    applyRule(this,model,'compartment')
+    rulevars = sym({model.rule.variable});
+    rulemath = sym({model.rule.formula});
+    repeat_idx = ismember(rulevars,symvar(rulemath));
+    while(any(repeat_idx))
+        rulemath= subs(rulemath,rulevars,rulemath);
+        repeat_idx = ismember(rulevars,symvar(rulemath));
+    end
+    
+    applyRule(this,model,'compartment',rulevars,rulemath)
     
     %% SPECIES
     
@@ -47,19 +61,22 @@ function importSBML(this,modelname)
     this.initState = species_sym;
     
     % set initial assignments
-    setInitialAssignment(this,model,'initState')
+    setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math)
     
-    
-    % remove conditions species
-    cond_idx = logical([model.species.boundaryCondition]);
+
+    % remove conditions species (boundary condition + no initialisation)
+    cond_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState)));
+    bound_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState)));
     condition_sym = this.state(cond_idx);
     conditions = this.state(cond_idx);
-    
+    boundary_sym = this.state(bound_idx);
+    boundaries = this.initState(bound_idx);
+
     nk = length(conditions);
     
-    applyRule(this,model,'condition')
+    applyRule(this,model,'condition',rulevars,rulemath)
     
-    % set initial concentrations
+        % set initial concentrations
     concentration_idx = logical([model.species.isSetInitialConcentration]);
     this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx)));
     
@@ -68,7 +85,7 @@ function importSBML(this,modelname)
     this.initState = subs(this.initState,species_sym(amount_idx),sym(initAmount(amount_idx))./this.volume(amount_idx));
     
     % apply rules
-    applyRule(this,model,'initState')
+    applyRule(this,model,'initState',rulevars,rulemath)
     
     this.knom = double(this.initState(cond_idx));
     
@@ -76,12 +93,11 @@ function importSBML(this,modelname)
     const_idx = logical([model.species.constant]) & not(cond_idx);
     constant_sym = this.state(const_idx);
     constants = this.initState(const_idx);
-    
-    
+
     
     %% PARAMETERS
     
-    fprintf('loading this.param ...\n')
+    fprintf('loading parameters ...\n')
     
     % extract this.param
     parameter_sym = sym({model.parameter.id});
@@ -90,8 +106,8 @@ function importSBML(this,modelname)
     this.param = parameter_sym;
     
     % set initial assignments
-    setInitialAssignment(this,model,'parameter')
-    applyRule(this,model,'param')
+    setInitialAssignment(this,model,'parameter',initAssignemnts_sym,initAssignemnts_math)
+    applyRule(this,model,'param',rulevars,rulemath)
     
     np = length(this.param);
     
@@ -109,7 +125,6 @@ function importSBML(this,modelname)
         %custom reate laws TBD
         error('custom rate laws currently not supported!');
     end
-    
     
     %% REACTIONS
     
@@ -148,8 +163,6 @@ function importSBML(this,modelname)
     
     this.xdot = this.stochiometry*this.flux;
     
-    
-    
     %% CONVERSION FACTORS/VOLUMES
     
     fprintf('converting to concentrations ...\n')
@@ -166,7 +179,6 @@ function importSBML(this,modelname)
     end
     
     this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)./this.volume;
-    
     
     %% EVENTS
     
@@ -188,9 +200,10 @@ function importSBML(this,modelname)
     tmp = cellfun(@(x) {x.math},{model.event.eventAssignment},'UniformOutput',false);
     assignments_math = sym(cat(2,tmp{:}));
     
-    state_assign_idx = ismember(assignments,species_sym(not(or(cond_idx,const_idx))));
+    state_assign_idx = ismember(assignments,species_sym(not(any([cond_idx;const_idx;bound_idx]))));
     param_assign_idx = ismember(assignments,parameter_sym);
     cond_assign_idx = ismember(assignments,condition_sym);
+    bound_assign_idx = ismember(assignments,boundary_sym);
     
     parameter_idx = transpose(sym(1:np));
     assignments_param = assignments(param_assign_idx);
@@ -205,6 +218,13 @@ function importSBML(this,modelname)
     assignments_cond_tidx = assignments_tidx(cond_assign_idx);
     
     conditions(assignments_cond_kidx) = conditions(assignments_cond_kidx).*heaviside(this.trigger(assignments_cond_tidx));
+    
+    boundary_idx = transpose(sym(1:length(boundaries)));
+    assignments_bound = assignments(bound_assign_idx);
+    assignments_bound_bidx = double(subs(assignments_bound,boundary_sym,boundary_idx));
+    assignments_bound_tidx = assignments_tidx(bound_assign_idx);
+    
+    boundaries(assignments_bound_bidx) = conditions(assignments_bound_bidx).*heaviside(this.trigger(assignments_bound_tidx));
     
     assignments_state = assignments(state_assign_idx);
     assignments_state_sidx = double(subs(assignments_state,species_sym,species_idx));
@@ -244,66 +264,63 @@ function importSBML(this,modelname)
         this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
     end
     
-    
     %% CLEAN-UP
     
     fprintf('cleaning up ...\n')
     
     % remove constant/condition states
-    this.state(or(cond_idx,const_idx)) = [];
-    this.volume(or(cond_idx,const_idx)) = [];
-    this.initState(or(cond_idx,const_idx)) = [];
-    this.xdot(or(cond_idx,const_idx)) = [];
-    this.bolus(or(cond_idx,const_idx),:) = [];
+    this.state(any([cond_idx;const_idx;bound_idx])) = [];
+    this.volume(any([cond_idx;const_idx;bound_idx])) = [];
+    this.initState(any([cond_idx;const_idx;bound_idx])) = [];
+    this.xdot(any([cond_idx;const_idx;bound_idx])) = [];
+    this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
+    
+    state_vars = [symvar(this.xdot),symvar(this.initState)];
+    event_vars = [symvar(addToBolus),symvar(this.trigger)];
     
     % substitute with actual expressions
     makeSubs(this,parameter_sym,this.param);
     makeSubs(this,condition_sym,conditions);
     makeSubs(this,constant_sym,constants);
+    makeSubs(this,boundary_sym,boundaries);
     makeSubs(this,compartments_sym,this.compartment);
-    
-    state_vars = [symvar(this.xdot),symvar(this.initState)];
-    event_vars = [symvar(addToBolus),symvar(this.trigger)];
     
     isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
     isPartOfRule = and(ismember(parameter_sym,symvar(sym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
-    this.parameter = parameter_sym(and(isUsedParam,not(isPartOfRule)));
-    this.pnom = parameter_val(and(isUsedParam,not(isPartOfRule)));
+    isRuleVar = ismember(parameter_sym,sym({model.rule.variable}));
+    hasAssignment = ismember(parameter_sym,initAssignemnts_sym);
+    this.parameter = parameter_sym(and(not(isRuleVar),not(isPartOfRule)));
+    this.pnom = parameter_val(and(not(isRuleVar),not(isPartOfRule)));
     
     this.condition = condition_sym;
-    this.observable = this.param(and(not(isUsedParam),not(isPartOfRule)));
-    this.observable_name = parameter_sym(and(not(isUsedParam),not(isPartOfRule)));
+    obs_idx = all([isRuleVar,not(isPartOfRule),not(isUsedParam),not(hasAssignment)],2);
+    this.observable = this.param(obs_idx);
+    this.observable_name = parameter_sym(obs_idx);
     
     equal_idx = logical(this.observable==this.observable_name); % this is the unused stuff
     this.observable(equal_idx) = [];
     this.observable_name(equal_idx) = [];
     
+    this.observable = subs(this.observable,parameter_sym,this.param);
+    this.observable = subs(this.observable,condition_sym,conditions);
+    this.observable = subs(this.observable,constant_sym,constants);
+    this.observable = subs(this.observable,boundary_sym,boundaries);
+    this.observable = subs(this.observable,compartments_sym,this.compartment);
     this.time_symbol = model.time_symbol;
+    
+    prohibited = sym({'null','beta'});
+    alt_prohib = sym({'null_sym','beta_sym'});
+    this.parameter = subs(this.parameter,prohibited,alt_prohib);
+    this.state = subs(this.state,prohibited,alt_prohib);
+    this.condition = subs(this.condition,prohibited,alt_prohib);
 end
 
-function setInitialAssignment(this,model,field)
-    persistent initAssignemnts_sym initAssignemnts_math
-    if(isfield(model,'initialAssignment'))
-        if(isempty(initAssignemnts_sym))
-            initAssignemnts_sym = sym({model.initialAssignment.symbol});
-            initAssignemnts_math = sym({model.initialAssignment.math});
-        end
-        this.(field) = subs(this.(field),initAssignemnts_sym,initAssignemnts_math);
-    end
+function setInitialAssignment(this,~,field,initAssignemnts_sym,initAssignemnts_math)
+    this.(field) = subs(this.(field),initAssignemnts_sym,initAssignemnts_math);
 end
 
 
-function applyRule(this,model,field)
-    persistent rulevars rulemath
-    if(isempty(rulevars))
-        rulevars = sym({model.rule.variable});
-        rulemath = sym({model.rule.formula});
-        repeat_idx = ismember(rulevars,symvar(rulemath));
-        while(any(repeat_idx))
-            rulemath= subs(rulemath,rulevars,rulemath);
-            repeat_idx = ismember(rulevars,symvar(rulemath));
-        end
-    end
+function applyRule(this,~,field,rulevars,rulemath)
     this.(field) = subs(this.(field),rulevars,rulemath);
 end
 
