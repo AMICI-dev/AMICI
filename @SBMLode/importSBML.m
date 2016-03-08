@@ -93,8 +93,7 @@ function importSBML(this,modelname)
     const_idx = logical([model.species.constant]) & not(cond_idx);
     constant_sym = this.state(const_idx);
     constants = this.initState(const_idx);
-
-    
+  
     %% PARAMETERS
     
     fprintf('loading parameters ...\n')
@@ -159,7 +158,7 @@ function importSBML(this,modelname)
     tmp = cat(2,product_stochiometry{:});
     pS(sub2ind(size(eS),product_sidx,product_ridx)) = [tmp{:}];
     
-    this.stochiometry = eS + pS;
+    this.stochiometry = - eS + pS;
     
     this.xdot = this.stochiometry*this.flux;
     
