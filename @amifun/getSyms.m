@@ -249,18 +249,19 @@ function [this,model] = getSyms(this,model)
             end
             % transform into symbolic expression
             this.strsym = sym(ws);
+            ndw = 0;
             if(nw>0)
                 tmpxdot = mysubs(tmpxdot,temps,this.strsym); % replace common expressions
                 this.sym = mysubs(this.sym,temps,this.strsym);
                 model.updateRHS(tmpxdot); % update rhs
+                ndw = 1;
+                jacw = jacobian(this.sym,this.strsym);
+                vv = sym('v',[length(this.strsym),1]);
+                while(sum(jacw^ndw*vv)~=0)
+                    ndw = ndw+1;
+                end
+                ndw = ndw - 1;
             end
-            jacw = jacobian(this.sym,this.strsym);
-            ndw = 1;
-            vv = sym('v',[length(this.strsym),1]);
-            while(sum(jacw^ndw*vv)~=0)
-                ndw = ndw+1;
-            end
-            ndw = ndw - 1;
             w = this.strsym;
 
         case 'dwdx'

@@ -10,8 +10,10 @@
 #define plist udata->am_plist
 #define np udata->am_np
 #define ny udata->am_ny
+#define nytrue udata->am_nytrue
 #define nx udata->am_nx
 #define nz udata->am_nz
+#define nztrue udata->am_nztrue
 #define ne udata->am_ne
 #define nt udata->am_nt
 #define nw udata->am_nw
@@ -83,10 +85,14 @@ typedef struct {
     int    am_np;
     /** number of observables */
     int    am_ny;
+    /** number of observables in the unaugmented system */
+    int    am_nytrue;
     /** number of states */
     int    am_nx;
     /** number of event outputs */
     int    am_nz;
+    /** number of event outputs in the unaugmented system */
+    int    am_nztrue;
     /** number of events */
     int    am_ne;
     /** number of timepoints */

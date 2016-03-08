@@ -1,4 +1,4 @@
-function [modelo2] = augmento2(this)
+function [modelo2vec] = augmento2vec(this)
     % augmento2 augments the system equation to also include equations for
     % sensitivity equation. This will enable us to compute second order
     % sensitivities in a forward-adjoint or forward-forward apporach later on.
@@ -10,9 +10,22 @@ function [modelo2] = augmento2(this)
     %  original system and its sensitivities @type amimodel
     
     syms Sx Sdot Sy S0
+    
+
    
     augmodel.nxtrue = length(this.sym.x); % number of states
     augmodel.nytrue = length(this.sym.y); % number of observables
+    augmodel.nztrue = this.nz;
+    augmodel.coptim = this.coptim;
+    augmodel.debug = this.debug;
+    
+    % multiplication vector (extension of kappa
+    vecs = cell([length(this.sym.p),1]);
+    for ivec = 1:length(this.sym.p)
+        vecs{ivec} = sprintf('k_%i', length(this.sym.k) + ivec-1);
+    end
+    vec = sym(vecs);
+    
     if(this.nevent>0)
         augmodel.nztrue = length([this.event.z]); % number of observables
     else
@@ -21,31 +34,24 @@ function [modelo2] = augmento2(this)
     np = this.np;
     
     % augment states
-    Sx = sym(zeros(length(this.sym.x),np));
-    for j = 1:length(this.sym.x)
-        for k = 1:np
-            eval(['syms S' num2str(j) '_' num2str(k)]);
-            eval(['Sx(j,k) = S' num2str(j) '_' num2str(k) ';']);
-        end
-    end
-    Sdot = jacobian(this.sym.xdot,this.sym.x)*Sx+jacobian(this.sym.xdot,this.sym.p);
+    sv = sym('sv',[length(this.sym.x),1]);
+    Sdot = jacobian(this.sym.xdot,this.sym.x)*sv+jacobian(this.sym.xdot,this.sym.p)*vec;
     
     % augment output
-    Sy = jacobian(this.sym.y,this.sym.x)*Sx+jacobian(this.sym.y,this.sym.p);
+    Sy = jacobian(this.sym.y,this.sym.x)*sv+jacobian(this.sym.y,this.sym.p)*vec;
    
     % generate deltasx
     this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
-        Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
-        znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
-        bolusnew = [this.event(ievent).bolus;reshape(this.fun.deltasx.sym(:,:,ievent),[numel(Sx),1])];
+        Sz = jacobian(this.event(ievent).z,this.sym.x)*sv+jacobian(this.event(ievent).z,this.sym.p)*vec;
+        znew = [this.event(ievent).z,Sz];
+        bolusnew = [this.event(ievent).bolus;squeeze(this.fun.deltasx.sym(:,:,ievent))*vec];
         % replace sx by augmented x
-        for ip = 1:np
-            bolusnew(this.nxtrue*ip+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue*ip+(1:this.nxtrue)), this.fun.sx.sym(:,ip),Sx(:,ip));
-        end
+        bolusnew(this.nxtrue+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue+(1:this.nxtrue)), this.fun.sx.sym(:,1),sv);
+
         hflagold = this.event(ievent).hflag;
         augmodel.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
-        augmodel.event(ievent) = augmodel.event(ievent).setHflag([hflagold;zeros([numel(Sx),1])]);
+        augmodel.event(ievent) = augmodel.event(ievent).setHflag([hflagold;zeros([numel(sv),1])]);
     end
     
     % augment likelihood
@@ -57,23 +63,26 @@ function [modelo2] = augmento2(this)
         + jacobian(this.sym.Jy,this.fun.y.strsym)*this.fun.dydp.sym;
     this.getFun([],'dsigma_zdp');
     this.getFun([],'z');
+    
     this.getFun([],'dzdp');
     SJz = jacobian(this.sym.Jz,this.sym.p) ...
         + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
         + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
     
-    S0 = jacobian(this.sym.x0,this.sym.p);
+    S0 = jacobian(this.sym.x0,this.sym.p)*vec;
     
-    augmodel.sym.x = [this.sym.x;reshape(Sx,[numel(Sx),1])];
-    augmodel.sym.xdot = [this.sym.xdot;reshape(Sdot,[numel(Sdot),1])];
+    augmodel.sym.x = [this.sym.x;sv];
+    augmodel.sym.xdot = [this.sym.xdot;Sdot];
     augmodel.sym.f = augmodel.sym.xdot;
-    augmodel.sym.y = [this.sym.y;reshape(Sy,[numel(Sy),1])];
-    augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
-    augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
-    augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
+    augmodel.sym.y = [this.sym.y;Sy];
+    augmodel.sym.x0 = [this.sym.x0;S0];
+    augmodel.sym.Jy = [this.sym.Jy;SJy*vec];
+    augmodel.sym.Jz = [this.sym.Jz;SJz*vec];
+    augmodel.sym.k = [this.sym.k;vec];
+    augmodel.sym.p = this.sym.p;
     
-    modelo2 = amimodel(augmodel,[this.modelname '_o2']);
-    modelo2.o2flag = 1;
+    modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
+    modelo2vec.o2flag = 2;
 end
 
 

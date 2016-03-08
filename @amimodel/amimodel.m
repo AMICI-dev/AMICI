@@ -84,10 +84,17 @@ classdef amimodel < handle
         % storage for flags determining recompilation of individual
         % functions
         cfun@struct;
+        % flag which identifies augmented models 
+        %  0 indicates no augmentation
+        %  1 indicates augmentation by first order sensitivities (yields
+        %  second order sensitivities)
+        %  2 indicates augmentation by one linear combination of first
+        %  order sensitivities (yields hessian-vector product)
+        o2flag = 0;
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 5;
+        compver = 6;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -167,7 +174,9 @@ classdef amimodel < handle
             end
             AM.makeEvents();
             AM.nz = length([AM.event.z]);
-            AM.nztrue = AM.nz;
+            if(isempty(AM.nztrue))
+                AM.nztrue = AM.nz;
+            end
             AM.nevent = length(AM.event);
             
             % check whether we have a DAE or ODE
@@ -201,6 +210,8 @@ classdef amimodel < handle
         HTable = loadOldHashes(this)
         
         modelo2 = augmento2(this)
+        
+        modelo2vec = augmento2vec(this)
         
     end
 end

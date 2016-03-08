@@ -15,7 +15,7 @@ function makeEvents( this )
         else
             error(['Bolus of event ' num2str(ievent) ' is neither a scalar nor does it match the state dimension!']);
         end
-        z{ievent} = this.event(ievent).z(:);
+        z{ievent} = transpose(this.event(ievent).z(:));
     end
     
     ievent = nevent;

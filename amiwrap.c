@@ -268,6 +268,7 @@ freturn:
         N_VDestroy_Serial(dx_old);
         N_VDestroy_Serial(xdot_old);
         DestroyMat(Jtmp);
+        DestroySparseMat(tmp_J);
         if (ne>0) {
             if(ami_mem) mxFree(rootsfound);
             if(ami_mem) mxFree(rootvals);

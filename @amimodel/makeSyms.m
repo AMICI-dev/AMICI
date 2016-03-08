@@ -119,9 +119,9 @@ function makeSyms( this )
             error('The symbolic entities named ''E'' are currently not supported due to restrictions of the symbolic math toolbox!');
         end
     end
-    svaridx = not(ismember(symvars,[this.sym.p;this.sym.k;this.sym.x;sym('t')]));
-    if(any(svaridx))
-        error(['The symbolic variable ' char(symvars(find(svaridx,1))) ' is used in the differential equation right hand side but was not specified as parameter/state/constant!']);
-    end
+%     svaridx = not(ismember(symvars,[this.sym.p;this.sym.k;this.sym.x;sym('t')]));
+%     if(any(svaridx))
+%         error(['The symbolic variable ' char(symvars(find(svaridx,1))) ' is used in the differential equation right hand side but was not specified as parameter/state/constant!']);
+%     end
 end
 
