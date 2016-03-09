@@ -298,7 +298,7 @@ function importSBML(this,modelname)
     event_vars = [symvar(addToBolus),symvar(this.trigger)];
     
     % substitute with actual expressions
-    makeSubs(this,parameter_sym,this.param);
+    makeSubs(this,parameter_sym(1:np),this.param);
     makeSubs(this,condition_sym,conditions);
     makeSubs(this,constant_sym,constants);
     makeSubs(this,boundary_sym,boundaries);
@@ -320,7 +320,7 @@ function importSBML(this,modelname)
     this.observable(equal_idx) = [];
     this.observable_name(equal_idx) = [];
     
-    this.observable = subs(this.observable,parameter_sym,this.param);
+    this.observable = subs(this.observable,parameter_sym(1:np),this.param);
     this.observable = subs(this.observable,condition_sym,conditions);
     this.observable = subs(this.observable,constant_sym,constants);
     this.observable = subs(this.observable,boundary_sym,boundaries);
