@@ -20,7 +20,7 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,['% EVENTS\n']);
     for ievent = 1:length(this.trigger)
-        fprintf(fid,['model.event(' num2str(ievent) ') = amivent(' ...
+        fprintf(fid,['model.sym.event(' num2str(ievent) ') = amivent(' ...
             char(this.trigger(ievent)) ', ...\n' ...
             '[' strjoin(cellfun(@char,{this.bolus(:,ievent)},'UniformOutput',false),',') '], ...\n' ...
             '[]);\n']);
@@ -51,16 +51,16 @@ function writeDefinition(header,identifier,field,this,fid)
     fprintf(fid,'\n');
     fprintf(fid,['%% ' header '\n']);
     fprintf(fid,['syms ' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false)) '\n']);
-    fprintf(fid,['model.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),',') '];\n']);
+    fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),',') '];\n']);
 end
 
 function writeDerived(header,identifier,field,this,fid)
     fprintf(fid,'\n');
     fprintf(fid,'\n');
-    fprintf(fid,['%% ' header '\n']);
+    fprintf(fid,['%%%%\n%%? ' header '\n']);
     fprintf(fid,'\n');
     if(strcmp(header,'OBSERVABLES'))
-        fprintf(fid,['%% ' strjoin(cellfun(@char,num2cell(this.observable_name),'UniformOutput',false),'\n %% ')  '\n']);
+        fprintf(fid,['%% ' strjoin(cellfun(@char,num2cell(this.observable_name),'UniformOutput',false),'\n%% ')  '\n']);
     end
-    fprintf(fid,['model.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),', ...\n') '];']);
+    fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),', ...\n') '];']);
 end

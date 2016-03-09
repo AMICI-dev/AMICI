@@ -132,10 +132,20 @@ function importSBML(this,modelname)
     nr = length(model.reaction);
     
     this.flux = sym(cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false));
-    % replace local parameters
-    tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
-    this.flux = [tmp{:}];
-    this.flux = this.flux(:);
+%     % replace local parameters
+%     tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
+%     this.flux = [tmp{:}];
+%     this.flux = this.flux(:);
+    % add local parameters to global parameters, make them global by
+    % extending them by the reaction id
+    tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+    plocal = [tmp{:}];
+    tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
+    pvallocal = [tmp{:}];
+    
+    parameter_sym = [parameter_sym;plocal];
+    parameter_val = [parameter_val;pvallocal];
+   
     % convert to macroscopic rates
     
     species_idx = transpose(sym(1:nx));
@@ -182,8 +192,11 @@ function importSBML(this,modelname)
     %% EVENTS
     
     fprintf('loading events ...\n')
-    
-    this.trigger = sym({model.event.trigger});
+    try
+        this.trigger = sym({model.event.trigger});
+    catch
+        this.trigger = sym({model.event.trigger.math});
+    end
     this.trigger = this.trigger(:);
     this.trigger = subs(this.trigger,sym('ge'),sym('am_ge'));
     this.trigger = subs(this.trigger,sym('gt'),sym('am_gt'));
