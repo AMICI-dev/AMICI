@@ -93,15 +93,14 @@ function importSBML(this,modelname)
     const_idx = logical([model.species.constant]) & not(cond_idx);
     constant_sym = this.state(const_idx);
     constants = this.initState(const_idx);
-
-    
+  
     %% PARAMETERS
     
     fprintf('loading parameters ...\n')
     
     % extract this.param
     parameter_sym = sym({model.parameter.id});
-    parameter_val = [model.parameter.value];
+    parameter_val = transpose([model.parameter.value]);
     parameter_sym = parameter_sym(:);
     this.param = parameter_sym;
     
@@ -133,10 +132,22 @@ function importSBML(this,modelname)
     nr = length(model.reaction);
     
     this.flux = sym(cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false));
-    % replace local parameters
-    tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
+    this.flux = this.flux(:);
+    % add local parameters to global parameters, make them global by
+    % extending them by the reaction id
+    tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+    plocal = transpose([tmp{:}]);
+    tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
+    pvallocal = transpose([tmp{:}]);
+    
+    % replace local parameters by globalized ones
+    tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
     this.flux = [tmp{:}];
     this.flux = this.flux(:);
+    
+    parameter_sym = [parameter_sym;plocal];
+    parameter_val = [parameter_val;pvallocal];
+   
     % convert to macroscopic rates
     
     species_idx = transpose(sym(1:nx));
@@ -159,7 +170,7 @@ function importSBML(this,modelname)
     tmp = cat(2,product_stochiometry{:});
     pS(sub2ind(size(eS),product_sidx,product_ridx)) = [tmp{:}];
     
-    this.stochiometry = eS + pS;
+    this.stochiometry = - eS + pS;
     
     this.xdot = this.stochiometry*this.flux;
     
@@ -183,8 +194,11 @@ function importSBML(this,modelname)
     %% EVENTS
     
     fprintf('loading events ...\n')
-    
-    this.trigger = sym({model.event.trigger});
+    try
+        this.trigger = sym({model.event.trigger});
+    catch
+        this.trigger = sym({model.event.trigger.math});
+    end
     this.trigger = this.trigger(:);
     this.trigger = subs(this.trigger,sym('ge'),sym('am_ge'));
     this.trigger = subs(this.trigger,sym('gt'),sym('am_gt'));
@@ -205,26 +219,32 @@ function importSBML(this,modelname)
     cond_assign_idx = ismember(assignments,condition_sym);
     bound_assign_idx = ismember(assignments,boundary_sym);
     
+    if(np>0)
     parameter_idx = transpose(sym(1:np));
     assignments_param = assignments(param_assign_idx);
-    assignments_param_pidx = double(subs(assignments_param,parameter_sym,parameter_idx));
+    assignments_param_pidx = double(subs(assignments_param,parameter_sym(1:np),parameter_idx));
     assignments_param_tidx = assignments_tidx(param_assign_idx);
     
     this.param(assignments_param_pidx) = this.param(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
+    end
     
+    if(nk>0)
     condition_idx = transpose(sym(1:nk));
     assignments_cond = assignments(cond_assign_idx);
     assignments_cond_kidx = double(subs(assignments_cond,condition_sym,condition_idx));
     assignments_cond_tidx = assignments_tidx(cond_assign_idx);
     
     conditions(assignments_cond_kidx) = conditions(assignments_cond_kidx).*heaviside(this.trigger(assignments_cond_tidx));
+    end
     
+    if(length(boundaries)>0)
     boundary_idx = transpose(sym(1:length(boundaries)));
     assignments_bound = assignments(bound_assign_idx);
     assignments_bound_bidx = double(subs(assignments_bound,boundary_sym,boundary_idx));
     assignments_bound_tidx = assignments_tidx(bound_assign_idx);
     
     boundaries(assignments_bound_bidx) = conditions(assignments_bound_bidx).*heaviside(this.trigger(assignments_bound_tidx));
+    end
     
     assignments_state = assignments(state_assign_idx);
     assignments_state_sidx = double(subs(assignments_state,species_sym,species_idx));
@@ -279,7 +299,7 @@ function importSBML(this,modelname)
     event_vars = [symvar(addToBolus),symvar(this.trigger)];
     
     % substitute with actual expressions
-    makeSubs(this,parameter_sym,this.param);
+    makeSubs(this,parameter_sym(1:np),this.param);
     makeSubs(this,condition_sym,conditions);
     makeSubs(this,constant_sym,constants);
     makeSubs(this,boundary_sym,boundaries);
@@ -301,7 +321,7 @@ function importSBML(this,modelname)
     this.observable(equal_idx) = [];
     this.observable_name(equal_idx) = [];
     
-    this.observable = subs(this.observable,parameter_sym,this.param);
+    this.observable = subs(this.observable,parameter_sym(1:np),this.param);
     this.observable = subs(this.observable,condition_sym,conditions);
     this.observable = subs(this.observable,constant_sym,constants);
     this.observable = subs(this.observable,boundary_sym,boundaries);
