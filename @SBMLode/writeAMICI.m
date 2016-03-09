@@ -34,6 +34,12 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
+    fprintf(fid,'function r = power(x,y)\n');
+    fprintf(fid,'\n');
+    fprintf(fid,'    r = x^y;\n');
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
     
     for ifun = 1:length(this.funmath)
         fprintf(fid,['function r = ' this.funarg{ifun} '\n']);

@@ -100,7 +100,7 @@ function importSBML(this,modelname)
     
     % extract this.param
     parameter_sym = sym({model.parameter.id});
-    parameter_val = [model.parameter.value];
+    parameter_val = transpose([model.parameter.value]);
     parameter_sym = parameter_sym(:);
     this.param = parameter_sym;
     
@@ -132,6 +132,7 @@ function importSBML(this,modelname)
     nr = length(model.reaction);
     
     this.flux = sym(cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false));
+    this.flux = this.flux(:);
 %     % replace local parameters
 %     tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
 %     this.flux = [tmp{:}];
@@ -139,9 +140,9 @@ function importSBML(this,modelname)
     % add local parameters to global parameters, make them global by
     % extending them by the reaction id
     tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
-    plocal = [tmp{:}];
+    plocal = transpose([tmp{:}]);
     tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
-    pvallocal = [tmp{:}];
+    pvallocal = transpose([tmp{:}]);
     
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
@@ -217,26 +218,32 @@ function importSBML(this,modelname)
     cond_assign_idx = ismember(assignments,condition_sym);
     bound_assign_idx = ismember(assignments,boundary_sym);
     
+    if(np>0)
     parameter_idx = transpose(sym(1:np));
     assignments_param = assignments(param_assign_idx);
-    assignments_param_pidx = double(subs(assignments_param,parameter_sym,parameter_idx));
+    assignments_param_pidx = double(subs(assignments_param,parameter_sym(1:np),parameter_idx));
     assignments_param_tidx = assignments_tidx(param_assign_idx);
     
     this.param(assignments_param_pidx) = this.param(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
+    end
     
+    if(nk>0)
     condition_idx = transpose(sym(1:nk));
     assignments_cond = assignments(cond_assign_idx);
     assignments_cond_kidx = double(subs(assignments_cond,condition_sym,condition_idx));
     assignments_cond_tidx = assignments_tidx(cond_assign_idx);
     
     conditions(assignments_cond_kidx) = conditions(assignments_cond_kidx).*heaviside(this.trigger(assignments_cond_tidx));
+    end
     
+    if(length(boundaries)>0)
     boundary_idx = transpose(sym(1:length(boundaries)));
     assignments_bound = assignments(bound_assign_idx);
     assignments_bound_bidx = double(subs(assignments_bound,boundary_sym,boundary_idx));
     assignments_bound_tidx = assignments_tidx(bound_assign_idx);
     
     boundaries(assignments_bound_bidx) = conditions(assignments_bound_bidx).*heaviside(this.trigger(assignments_bound_tidx));
+    end
     
     assignments_state = assignments(state_assign_idx);
     assignments_state_sidx = double(subs(assignments_state,species_sym,species_idx));
