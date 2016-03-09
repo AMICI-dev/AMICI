@@ -133,16 +133,17 @@ function importSBML(this,modelname)
     
     this.flux = sym(cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false));
     this.flux = this.flux(:);
-%     % replace local parameters
-%     tmp = cellfun(@(x,y) subs(x,sym({y.parameter.id}),sym(cellfun(@num2str,{y.parameter.value},'UniformOutput',false))),num2cell(this.flux),{model.reaction.kineticLaw},'UniformOutput',false);
-%     this.flux = [tmp{:}];
-%     this.flux = this.flux(:);
     % add local parameters to global parameters, make them global by
     % extending them by the reaction id
     tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
     plocal = transpose([tmp{:}]);
     tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
     pvallocal = transpose([tmp{:}]);
+    
+    % replace local parameters by globalized ones
+    tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+    this.flux = [tmp{:}];
+    this.flux = this.flux(:);
     
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
