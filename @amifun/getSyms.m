@@ -455,7 +455,7 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'qBdot'
-            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.strsym;
+            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
             
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);

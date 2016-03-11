@@ -36,7 +36,7 @@ classdef amievent
             
             if(~isa(bolus,'sym'))
                 if(isa(bolus,'double'))
-                    AE.bolus = sym(bolus);
+                    AE.bolus = sym(bolus(:));
                 else
                     error('bolus function must be a symbolic expression')
                 end

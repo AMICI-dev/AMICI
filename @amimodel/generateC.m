@@ -56,7 +56,7 @@ function generateC(this)
                 end
             elseif(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
             elseif(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -80,7 +80,7 @@ function generateC(this)
                 this.fun.(ifun{1}).printLocalVars(this,fid);
                 if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
                     if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
-                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') && ~strcmp(ifun{1},'dxdotdp') && ~strcmp(ifun{1},'dfdx') )
+                        if(~strcmp(ifun{1},'w') && ~strcmp(ifun{1},'sxdot') && ~strcmp(ifun{1},'dxdotdp') && ~strcmp(ifun{1},'dfdx') && ~strcmp(ifun{1},'qBdot') )
                             fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                         end
                     end
@@ -107,9 +107,11 @@ function generateC(this)
                     end
                 elseif( strcmp(ifun{1},'qBdot') )
                     fprintf(fid,'int ip;\n');
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                    this.fun.(ifun{1}).writeCcode(this,fid);
+                    fprintf(fid,'switch (plist[ip]) {\n');
+                    this.fun.(ifun{1}).writeCcode_sensi(this,fid);
+                    fprintf(fid,'}\n');
                     fprintf(fid,'}\n');
                 elseif(this.fun.(ifun{1}).sensiflag)
                     fprintf(fid,'int ip;\n');
