@@ -8,14 +8,14 @@ classdef amievent
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % the trigger function activates the event on every zero crossing @type symbolic
-        trigger@sym;
+        trigger = sym([]);
         % the bolus function defines the change in states that is applied on every event occurence @type symbolic
-        bolus@sym;
+        bolus = sym([]);
         % output function for the event @type symbolic
-        z@sym;
+        z = sym([]);
         % flag indicating that a heaviside function is present, this helps
         % to speed up symbolic computations
-        hflag@logical;
+        hflag = logical([]);
     end
     
     methods

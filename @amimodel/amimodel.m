@@ -83,7 +83,7 @@ classdef amimodel < handle
         recompile = false;
         % storage for flags determining recompilation of individual
         % functions
-        cfun@struct;
+        cfun = struct([]);
         % flag which identifies augmented models 
         %  0 indicates no augmentation
         %  1 indicates augmentation by first order sensitivities (yields
@@ -98,7 +98,7 @@ classdef amimodel < handle
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
-        z2event@double;
+        z2event = double([]);
         % flag indicating whether the model contains spline functions
         splineflag = false;
         % flag indicating whether the model contains min functions

@@ -1,0 +1,247 @@
+\hypertarget{class_s_b_m_lode}{}\subsection{S\+B\+M\+Lode Class Reference}
+\label{class_s_b_m_lode}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+
+
+S\+B\+M\+L\+O\+D\+E carries all information about the differential equation defined by a S\+B\+M\+L model definition file. This class acts as an interface between S\+B\+M\+L files and \hyperlink{classamimodel}{amimodel}.  
+
+
+
+
+Inheritance diagram for S\+B\+M\+Lode\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=140pt]{class_s_b_m_lode__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for S\+B\+M\+Lode\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=140pt]{class_s_b_m_lode__coll__graph}
+\end{center}
+\end{figure}
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_s_b_m_lode_a2cd0d930d07eaf96753131799d7bdc9c}{}{\bfseries S\+B\+M\+Lode} (matlabtypesubstitute filename)\label{class_s_b_m_lode_a2cd0d930d07eaf96753131799d7bdc9c}
+
+\item 
+\hypertarget{class_s_b_m_lode_acec53dca9922c09c88e57eb531571c07}{}noret\+::substitute {\bfseries write\+A\+M\+I\+C\+I} (matlabtypesubstitute filename, matlabtypesubstitute this, matlabtypesubstitute modelname)\label{class_s_b_m_lode_acec53dca9922c09c88e57eb531571c07}
+
+\end{DoxyCompactItemize}
+\subsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_adc6e5733fc3c22f0a7b2914188c49c90}{state} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of non-\/constant and non-\/boundary states \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a072b6f6192ac4f40e74b69f901ecdfef}{observable} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of guessed observables \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a6e638e3379dc2d099b3cf3083246fbe0}{observable\+\_\+name} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of guessed observable names \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a51f20d6b1b54a2eee3be0e8adc96a0ae}{param} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of S\+B\+M\+L parameters \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a0d71b5c1dcca8d3fee88d6a11d3e2071}{parameter} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of amimodel parameters \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a391f14c28a859734cd091e4e521bb8f8}{constant} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of constant states \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a70729d905c114f8f08b3507f20806dd2}{compartment} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of compartments \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a9bc498ccac8db41438f855f5dd3f4c05}{volume} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of compartment volumes \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a67d068407e71cba6ca16f3f6b6d1794c}{init\+State} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of initial values for non-\/constant and non-\/boundary states \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a4824b91cc0e6b5f112bdd8049af4d7d6}{condition} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of boundary condition states which are not constant \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a96d7a28b6a4428be15fc1017d19343fa}{flux} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of reaction fluxes \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a8d6dd1568c43b32f1810a5fe9ef6100f}{stochiometry} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em matrix of reaction stochiometries \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_a914ee05b8f01d45602316710ca4b8a43}{xdot} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em right hand side of differential equation for states \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_ae194cb817eae4085f8023885100c68dd}{trigger} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em vector of trigger functions for events \end{DoxyCompactList}\item 
+\+::symbolic \hyperlink{class_s_b_m_lode_ab9227561ac246ee4b70f9e65c25ffda7}{bolus} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em matrix of event bolus \end{DoxyCompactList}\item 
+\+::cell \hyperlink{class_s_b_m_lode_a9c1cb6154a226c993c60010300a62e34}{funmath} = \{\char`\"{}\char`\"{}\}
+\begin{DoxyCompactList}\small\item\em cell array containing the function definition \end{DoxyCompactList}\item 
+\+::cell \hyperlink{class_s_b_m_lode_ae492d28f363cbbf0c960cab4e8911761}{funarg} = \{\char`\"{}\char`\"{}\}
+\begin{DoxyCompactList}\small\item\em cell array containing the function arguments \end{DoxyCompactList}\item 
+\+::char \hyperlink{class_s_b_m_lode_ac38903669f208bc49c971c7a69f62225}{time\+\_\+symbol} = char(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em expression for time in the model \end{DoxyCompactList}\item 
+\+::sym \hyperlink{class_s_b_m_lode_aab64bc684d10326610cc4e866d7ed65c}{pnom} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em nominal parameter value \end{DoxyCompactList}\item 
+\+::sym \hyperlink{class_s_b_m_lode_a744d356a79732f2b65d02f220c580dd4}{knom} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em nominal condition value \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+
+
+Definition at line 17 of file S\+B\+M\+Lode.\+m.
+
+
+
+\subsubsection{Member Data Documentation}
+\hypertarget{class_s_b_m_lode_adc6e5733fc3c22f0a7b2914188c49c90}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!state@{state}}
+\index{state@{state}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{state}]{\setlength{\rightskip}{0pt plus 5cm}state = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_adc6e5733fc3c22f0a7b2914188c49c90}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 29 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a072b6f6192ac4f40e74b69f901ecdfef}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!observable@{observable}}
+\index{observable@{observable}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{observable}]{\setlength{\rightskip}{0pt plus 5cm}observable = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a072b6f6192ac4f40e74b69f901ecdfef}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 37 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a6e638e3379dc2d099b3cf3083246fbe0}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!observable\+\_\+name@{observable\+\_\+name}}
+\index{observable\+\_\+name@{observable\+\_\+name}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{observable\+\_\+name}]{\setlength{\rightskip}{0pt plus 5cm}observable\+\_\+name = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a6e638e3379dc2d099b3cf3083246fbe0}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 45 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a51f20d6b1b54a2eee3be0e8adc96a0ae}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!param@{param}}
+\index{param@{param}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{param}]{\setlength{\rightskip}{0pt plus 5cm}param = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a51f20d6b1b54a2eee3be0e8adc96a0ae}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 53 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a0d71b5c1dcca8d3fee88d6a11d3e2071}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!parameter@{parameter}}
+\index{parameter@{parameter}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{parameter}]{\setlength{\rightskip}{0pt plus 5cm}parameter = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a0d71b5c1dcca8d3fee88d6a11d3e2071}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 61 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a391f14c28a859734cd091e4e521bb8f8}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!constant@{constant}}
+\index{constant@{constant}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{constant}]{\setlength{\rightskip}{0pt plus 5cm}constant = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a391f14c28a859734cd091e4e521bb8f8}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 69 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a70729d905c114f8f08b3507f20806dd2}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!compartment@{compartment}}
+\index{compartment@{compartment}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{compartment}]{\setlength{\rightskip}{0pt plus 5cm}compartment = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a70729d905c114f8f08b3507f20806dd2}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 77 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a9bc498ccac8db41438f855f5dd3f4c05}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!volume@{volume}}
+\index{volume@{volume}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{volume}]{\setlength{\rightskip}{0pt plus 5cm}volume = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a9bc498ccac8db41438f855f5dd3f4c05}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 85 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a67d068407e71cba6ca16f3f6b6d1794c}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!init\+State@{init\+State}}
+\index{init\+State@{init\+State}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{init\+State}]{\setlength{\rightskip}{0pt plus 5cm}init\+State = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a67d068407e71cba6ca16f3f6b6d1794c}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 93 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a4824b91cc0e6b5f112bdd8049af4d7d6}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!condition@{condition}}
+\index{condition@{condition}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{condition}]{\setlength{\rightskip}{0pt plus 5cm}condition = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a4824b91cc0e6b5f112bdd8049af4d7d6}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 101 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a96d7a28b6a4428be15fc1017d19343fa}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!flux@{flux}}
+\index{flux@{flux}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{flux}]{\setlength{\rightskip}{0pt plus 5cm}flux = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a96d7a28b6a4428be15fc1017d19343fa}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 109 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a8d6dd1568c43b32f1810a5fe9ef6100f}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!stochiometry@{stochiometry}}
+\index{stochiometry@{stochiometry}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{stochiometry}]{\setlength{\rightskip}{0pt plus 5cm}stochiometry = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a8d6dd1568c43b32f1810a5fe9ef6100f}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 117 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a914ee05b8f01d45602316710ca4b8a43}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!xdot@{xdot}}
+\index{xdot@{xdot}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{xdot}]{\setlength{\rightskip}{0pt plus 5cm}xdot = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a914ee05b8f01d45602316710ca4b8a43}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 125 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_ae194cb817eae4085f8023885100c68dd}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!trigger@{trigger}}
+\index{trigger@{trigger}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{trigger}]{\setlength{\rightskip}{0pt plus 5cm}trigger = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_ae194cb817eae4085f8023885100c68dd}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 133 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_ab9227561ac246ee4b70f9e65c25ffda7}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!bolus@{bolus}}
+\index{bolus@{bolus}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{bolus}]{\setlength{\rightskip}{0pt plus 5cm}bolus = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_ab9227561ac246ee4b70f9e65c25ffda7}
+~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 141 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a9c1cb6154a226c993c60010300a62e34}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!funmath@{funmath}}
+\index{funmath@{funmath}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{funmath}]{\setlength{\rightskip}{0pt plus 5cm}funmath = \{\char`\"{}\char`\"{}\}}\label{class_s_b_m_lode_a9c1cb6154a226c993c60010300a62e34}
+~\newline
+{\bfseries Default\+:} \{\char`\"{}\char`\"{}\} 
+
+Definition at line 149 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_ae492d28f363cbbf0c960cab4e8911761}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!funarg@{funarg}}
+\index{funarg@{funarg}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{funarg}]{\setlength{\rightskip}{0pt plus 5cm}funarg = \{\char`\"{}\char`\"{}\}}\label{class_s_b_m_lode_ae492d28f363cbbf0c960cab4e8911761}
+~\newline
+{\bfseries Default\+:} \{\char`\"{}\char`\"{}\} 
+
+Definition at line 157 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_ac38903669f208bc49c971c7a69f62225}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!time\+\_\+symbol@{time\+\_\+symbol}}
+\index{time\+\_\+symbol@{time\+\_\+symbol}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{time\+\_\+symbol}]{\setlength{\rightskip}{0pt plus 5cm}time\+\_\+symbol = char(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_ac38903669f208bc49c971c7a69f62225}
+~\newline
+{\bfseries Default\+:} char(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 165 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_aab64bc684d10326610cc4e866d7ed65c}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!pnom@{pnom}}
+\index{pnom@{pnom}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{pnom}]{\setlength{\rightskip}{0pt plus 5cm}pnom = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_aab64bc684d10326610cc4e866d7ed65c}
+~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 173 of file S\+B\+M\+Lode.\+m.
+
+\hypertarget{class_s_b_m_lode_a744d356a79732f2b65d02f220c580dd4}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!knom@{knom}}
+\index{knom@{knom}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{knom}]{\setlength{\rightskip}{0pt plus 5cm}knom = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{class_s_b_m_lode_a744d356a79732f2b65d02f220c580dd4}
+~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 181 of file S\+B\+M\+Lode.\+m.
+

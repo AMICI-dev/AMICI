@@ -71,6 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
       <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
@@ -130,9 +131,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8e48f2842268ff64ca32db8eb4b69377"><td class="memItemLeft" align="right" valign="top">function &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamifun.html#a8e48f2842268ff64ca32db8eb4b69377">writeCcode</a> (<a class="el" href="classamimodel.html">amimodel</a> model,fileid fid)</td></tr>
 <tr class="memdesc:a8e48f2842268ff64ca32db8eb4b69377"><td class="mdescLeft">&#160;</td><td class="mdescRight">writeCcode is a wrapper for gccode which initialises data and reduces overhead by check nonzero values  <a href="#a8e48f2842268ff64ca32db8eb4b69377">More...</a><br /></td></tr>
 <tr class="separator:a8e48f2842268ff64ca32db8eb4b69377"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae91161616e6339e77298a072acb5dd58"><td class="memItemLeft" align="right" valign="top">function &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamifun.html#ae91161616e6339e77298a072acb5dd58">gccode</a> (fileid fid)</td></tr>
-<tr class="memdesc:ae91161616e6339e77298a072acb5dd58"><td class="mdescLeft">&#160;</td><td class="mdescRight">gccode transforms symbolic expressions into c code and writes the respective expression into a specified file  <a href="#ae91161616e6339e77298a072acb5dd58">More...</a><br /></td></tr>
-<tr class="separator:ae91161616e6339e77298a072acb5dd58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05444f498e657a0010f6b539bc9c6596"><td class="memItemLeft" align="right" valign="top">function &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamifun.html#a05444f498e657a0010f6b539bc9c6596">gccode</a> (<a class="el" href="classamimodel.html">amimodel</a> model,fileid fid)</td></tr>
+<tr class="memdesc:a05444f498e657a0010f6b539bc9c6596"><td class="mdescLeft">&#160;</td><td class="mdescRight">gccode transforms symbolic expressions into c code and writes the respective expression into a specified file  <a href="#a05444f498e657a0010f6b539bc9c6596">More...</a><br /></td></tr>
+<tr class="separator:a05444f498e657a0010f6b539bc9c6596"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1cb97b695ab609e1655ec1067b140b70"><td class="memItemLeft" align="right" valign="top">function   =&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamifun.html#a1cb97b695ab609e1655ec1067b140b70">getDeps</a> (<a class="el" href="classamimodel.html">amimodel</a> model)</td></tr>
 <tr class="memdesc:a1cb97b695ab609e1655ec1067b140b70"><td class="mdescLeft">&#160;</td><td class="mdescRight">getDeps populates the sensiflag for the requested function  <a href="#a1cb97b695ab609e1655ec1067b140b70">More...</a><br /></td></tr>
 <tr class="separator:a1cb97b695ab609e1655ec1067b140b70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -364,28 +365,39 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="classamifun_a8e48f2842268ff64ca32db8eb4b69377_cgraph.png" border="0" usemap="#classamifun_a8e48f2842268ff64ca32db8eb4b69377_cgraph" alt=""/></div>
 <map name="classamifun_a8e48f2842268ff64ca32db8eb4b69377_cgraph" id="classamifun_a8e48f2842268ff64ca32db8eb4b69377_cgraph">
-<area shape="rect" id="node2" href="classamifun.html#ae91161616e6339e77298a072acb5dd58" title="gccode transforms symbolic expressions into c code and writes the respective expression into a specif..." alt="" coords="141,5,206,33"/>
+<area shape="rect" id="node2" href="classamifun.html#a05444f498e657a0010f6b539bc9c6596" title="gccode transforms symbolic expressions into c code and writes the respective expression into a specif..." alt="" coords="141,5,206,33"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ae91161616e6339e77298a072acb5dd58"></a>
+<a class="anchor" id="a05444f498e657a0010f6b539bc9c6596"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">function <a class="el" href="classamifun.html">amifun</a>  = gccode </td>
           <td>(</td>
-          <td class="paramtype">fileid&#160;</td>
-          <td class="paramname"><em>fid</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="classamimodel.html">amimodel</a>&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">fileid&#160;</td>
+          <td class="paramname"><em>fid</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramname">model</td><td>model defintion object </td></tr>
     <tr><td class="paramname">fid</td><td>file id in which the expression should be written</td></tr>
   </table>
   </dd>
@@ -402,8 +414,8 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="classamifun_ae91161616e6339e77298a072acb5dd58_icgraph.png" border="0" usemap="#classamifun_ae91161616e6339e77298a072acb5dd58_icgraph" alt=""/></div>
-<map name="classamifun_ae91161616e6339e77298a072acb5dd58_icgraph" id="classamifun_ae91161616e6339e77298a072acb5dd58_icgraph">
+<div class="center"><img src="classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph.png" border="0" usemap="#classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph" alt=""/></div>
+<map name="classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph" id="classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph">
 <area shape="rect" id="node2" href="classamifun.html#a8e48f2842268ff64ca32db8eb4b69377" title="writeCcode is a wrapper for gccode which initialises data and reduces overhead by check nonzero value..." alt="" coords="118,5,206,33"/>
 </map>
 </div>
@@ -607,7 +619,7 @@ Here is the caller graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classamifun.html">amifun</a></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:42 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:23 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

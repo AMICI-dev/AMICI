@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ami_5fsuccess',['AMI_SUCCESS',['../amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545',1,'amici.c']]]
+  ['_5fuse_5fmath_5fdefines',['_USE_MATH_DEFINES',['../amici_8c.html#a525335710b53cb064ca56b936120431e',1,'amici.c']]]
 ];

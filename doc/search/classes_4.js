@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['userdata',['UserData',['../struct_user_data.html',1,'']]]
+  ['optsym',['optsym',['../classoptsym.html',1,'']]]
 ];

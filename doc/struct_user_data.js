@@ -1,12 +1,18 @@
 var struct_user_data =
 [
+    [ "am_qpositivex", "struct_user_data.html#a24dcfe2da485ad1964d807779fce2092", null ],
     [ "am_plist", "struct_user_data.html#a122fcb4f213656e29d30e1e8713fcf1c", null ],
     [ "am_np", "struct_user_data.html#a1b32993ff88dfae4dd2aab311c24cc26", null ],
     [ "am_ny", "struct_user_data.html#a1c8d4eb301c60c34dc4870faca7ce5a4", null ],
+    [ "am_nytrue", "struct_user_data.html#a52aef12adf85a9a7361e79608bcf0e91", null ],
     [ "am_nx", "struct_user_data.html#a00ba9cf99f8f02b663241bb76b76ce96", null ],
     [ "am_nz", "struct_user_data.html#af6f8dfb3615c37e31bc8a1b232d2c99e", null ],
+    [ "am_nztrue", "struct_user_data.html#ae8335840fdbd8b91daef2c0affee61dc", null ],
     [ "am_ne", "struct_user_data.html#a1ee2e63bd2b30c7196b4984014fbc3a4", null ],
     [ "am_nt", "struct_user_data.html#a08ea6ecb241cd86a6f171761a48e27dd", null ],
+    [ "am_nw", "struct_user_data.html#abafd93498a922dbe7a03af57f45fcee9", null ],
+    [ "am_ndwdx", "struct_user_data.html#a0723cf4e6ad49bf9d0eb18de66fdcd07", null ],
+    [ "am_ndwdp", "struct_user_data.html#a87a3b720bf2ea277332fa3b35f5875a4", null ],
     [ "am_nnz", "struct_user_data.html#a43ad1c7f840dc744be4251902a4ae91d", null ],
     [ "am_nmaxevent", "struct_user_data.html#adfa3a6bf6b41a27f98cac31557e6930f", null ],
     [ "am_p", "struct_user_data.html#a1a679b0e8dfea7d284d777c937d8d13e", null ],
@@ -37,5 +43,16 @@ var struct_user_data =
     [ "am_z2event", "struct_user_data.html#af16fc75b57c68ab1d3784cc71ab073a9", null ],
     [ "am_h", "struct_user_data.html#a1a976a80dc74446059468485a0f279e1", null ],
     [ "am_J", "struct_user_data.html#a822be7d2872832008aa0b7c0282b04f6", null ],
-    [ "am_dxdotdp", "struct_user_data.html#a04716137a064f7c6d85c04aeb235b4f0", null ]
+    [ "am_dxdotdp", "struct_user_data.html#a04716137a064f7c6d85c04aeb235b4f0", null ],
+    [ "am_w", "struct_user_data.html#a8ecd7286d3c2cd32378874fb1be8da37", null ],
+    [ "am_dwdx", "struct_user_data.html#a0dee61b81181232717bffd84f3535b53", null ],
+    [ "am_dwdp", "struct_user_data.html#a7a0e690a17e9784061b5d50b6eafa442", null ],
+    [ "am_M", "struct_user_data.html#aed8938f3dd5b3c2a72c41d09907ec435", null ],
+    [ "am_dfdx", "struct_user_data.html#add62c739ea5cc6d2a6be03eb2bbdfe95", null ],
+    [ "am_nan_dxdotdp", "struct_user_data.html#a82073e35d78644037fb7570a4608d6de", null ],
+    [ "am_nan_J", "struct_user_data.html#a9e2b4f94b4dbe949e636af5cabbd47cf", null ],
+    [ "am_nan_JSparse", "struct_user_data.html#a56f3a28c756fe2ec27609fc7b6b8eba7", null ],
+    [ "am_nan_xdot", "struct_user_data.html#a53aa8cfb8e4f8c3b6684b6947cc1f5c8", null ],
+    [ "am_nan_xBdot", "struct_user_data.html#a31f1bd5bfd2c4b1e679b77a96a35e912", null ],
+    [ "am_nan_qBdot", "struct_user_data.html#ae0ff98d15a201a25bab372fe26bd1523", null ]
 ];

@@ -1,10 +1,12 @@
 var searchData=
 [
-  ['false',['FALSE',['../symbolic__functions_8c.html#aa93f0eb578d23995850d61f7d61c55c1',1,'symbolic_functions.c']]],
-  ['fargstr',['fargstr',['../classamifun.html#acdb54dfb4e0a737dba0367c5958e779e',1,'amifun']]],
-  ['filleventoutput',['fillEventOutput',['../amici_8c.html#a507f877042aaa296c1a49d1316c3b4ae',1,'amici.c']]],
-  ['forward',['forward',['../classamimodel.html#a81e42e48c9c72814166c8f7cd414ce24',1,'amimodel']]],
-  ['fun',['fun',['../classamimodel.html#a743fa290dbc0a67a3843d5ab0426e9b4',1,'amimodel']]],
-  ['funs',['funs',['../classamimodel.html#af80b2560853c3df2b09fef2a198cf5b8',1,'amimodel']]],
-  ['funstr',['funstr',['../classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4',1,'amifun']]]
+  ['event',['event',['../classamimodel.html#a3b65133bb9997cd1ccf311af0927fc9e',1,'amimodel']]],
+  ['example_201',['Example 1',['../example1.html',1,'examples']]],
+  ['example_202',['Example 2',['../example2.html',1,'examples']]],
+  ['example_203',['Example 3',['../example3.html',1,'examples']]],
+  ['example_204',['Example 4',['../example4.html',1,'examples']]],
+  ['example_205',['Example 5',['../example5.html',1,'examples']]],
+  ['example_206',['Example 6',['../example6.html',1,'examples']]],
+  ['examples',['Examples',['../examples.html',1,'']]],
+  ['expdata',['ExpData',['../struct_exp_data.html',1,'']]]
 ];

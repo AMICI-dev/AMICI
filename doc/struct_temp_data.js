@@ -4,6 +4,8 @@ var struct_temp_data =
     [ "am_x", "struct_temp_data.html#a4527d9abde45ba3982c35d2c12969d36", null ],
     [ "am_x_old", "struct_temp_data.html#ab2b23f4045b47a4a73226543e77f9dcc", null ],
     [ "am_x_disc", "struct_temp_data.html#aded6511f60d9b0cdfe5f4df047d8a5dd", null ],
+    [ "am_xdot_disc", "struct_temp_data.html#ab3837be5f66a858b04b2e6fbae66a100", null ],
+    [ "am_xdot_old_disc", "struct_temp_data.html#aae23888e89a7bd3c65a22784acaa1328", null ],
     [ "am_dx", "struct_temp_data.html#ac10ec733609d33c557d48c1cc4c9f6f1", null ],
     [ "am_dx_old", "struct_temp_data.html#aca2465f16eeb5dc94cea61c970f2682a", null ],
     [ "am_xdot", "struct_temp_data.html#abad4a9e3cc9cd42b3fe4e2fe28a915c1", null ],

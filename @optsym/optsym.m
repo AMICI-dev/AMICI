@@ -1,4 +1,10 @@
+%
+% @file optsym
+% @brief this is a placeholder class to get access to the protected sym.s
+% property which is necessary to apply the mupad command symobj::optimize
+%
 classdef optsym<sym
+    %OPTSYM is a placeholder class to get access to the protected sym.s 
 
     properties
     end

@@ -127,54 +127,63 @@ $(document).ready(function(){initNavTree('amievent_8m_source.html','');});
 <div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classamievent.html">   17</a></span>&#160;<span class="keyword">class </span><a class="code" href="classamievent.html">amievent</a> {</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">   27</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">trigger</a>;</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">   34</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">   41</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">z</a>;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">   52</a></span>&#160;        <a class="code" href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">amievent</a>(symbolic trigger,symbolic bolus,symbolic z) {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            <span class="keywordflow">if</span>(~isa(trigger,<span class="stringliteral">&quot; sym &quot;</span>))</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                <span class="keywordflow">if</span>(isa(trigger,<span class="stringliteral">&quot; double &quot;</span>))</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                    AE.trigger= sym(trigger);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                    warning(<span class="stringliteral">&quot; Constant trigger function will never trigger. Please check the event definition. &quot;</span>)</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                    error(<span class="stringliteral">&quot; trigger function must be a symbolic expression &quot;</span>)</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                end</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                AE.trigger= <a class="code" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">trigger</a>;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;            end</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;            <span class="keywordflow">if</span>(numel(AE.trigger)&gt;1)</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                error(<span class="stringliteral">&quot; The trigger function must be scalar. &quot;</span>)</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            end</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            <span class="keywordflow">if</span>(~isa(bolus,<span class="stringliteral">&quot; sym &quot;</span>))</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                <span class="keywordflow">if</span>(isa(bolus,<span class="stringliteral">&quot; double &quot;</span>))</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                    AE.bolus= sym(bolus);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                    error(<span class="stringliteral">&quot; bolus function must be a symbolic expression &quot;</span>)</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                end</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                AE.bolus= <a class="code" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            end</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            <span class="keywordflow">if</span>(~isa(z,<span class="stringliteral">&quot; sym &quot;</span>))</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                <span class="keywordflow">if</span>(isa(z,<span class="stringliteral">&quot; double &quot;</span>))</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                    AE.z= sym(z);</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                    warning(<span class="stringliteral">&quot; Constant outputs are not informative. Please check the event definition. &quot;</span>)</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    error(<span class="stringliteral">&quot; output function must be a symbolic expression &quot;</span>)</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                end      </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                AE.z= <a class="code" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">z</a>;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            end</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;};</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="ttc" id="classamievent_html_aa89b0efd53c33a18acf04c1dda76842c"><div class="ttname"><a href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">amievent.amievent</a></div><div class="ttdeci">amievent(symbolic trigger,symbolic bolus,symbolic z)</div><div class="ttdoc">constructor of the amievent class. this function constructs an event object based on the provided tri...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00052">amievent.m:52</a></div></div>
-<div class="ttc" id="classamievent_html_ab9227561ac246ee4b70f9e65c25ffda7"><div class="ttname"><a href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">amievent.bolus</a></div><div class="ttdeci">symbolic bolus</div><div class="ttdoc">the bolus function defines the change in states that is applied on every event occurence ...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00034">amievent.m:34</a></div></div>
-<div class="ttc" id="classamievent_html_a25ed1bcb423b0b7200f485fc5ff71c8e"><div class="ttname"><a href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">amievent.z</a></div><div class="ttdeci">symbolic z</div><div class="ttdoc">output function for the event </div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00041">amievent.m:41</a></div></div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">   27</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">trigger</a> = sym(<span class="stringliteral">&quot;[]&quot;</span>);</div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">   38</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a> = sym(<span class="stringliteral">&quot;[]&quot;</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">   49</a></span>&#160;        .symbolic <a class="code" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">z</a> = sym(<span class="stringliteral">&quot;[]&quot;</span>);</div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="classamievent.html#ab98347b5ce6fbe7bd007030346b88575">   60</a></span>&#160;        <a class="code" href="classamievent.html#ab98347b5ce6fbe7bd007030346b88575">hflag</a> = logical(<span class="stringliteral">&quot;[]&quot;</span>);</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">   75</a></span>&#160;        <a class="code" href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">amievent</a>(symbolic trigger,symbolic bolus,symbolic z) {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;            <span class="keywordflow">if</span>(~isa(trigger,<span class="stringliteral">&quot; sym &quot;</span>))</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                <span class="keywordflow">if</span>(isa(trigger,<span class="stringliteral">&quot; double &quot;</span>))</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                    AE.trigger= sym(trigger);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                    warning(<span class="stringliteral">&quot; Constant trigger function will never trigger. Please check the event definition. &quot;</span>)</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                    error(<span class="stringliteral">&quot; trigger function must be a symbolic expression &quot;</span>)</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                end</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                AE.trigger= <a class="code" href="classamievent.html#ae194cb817eae4085f8023885100c68dd">trigger</a>;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            end</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            <span class="keywordflow">if</span>(numel(AE.trigger)&gt;1)</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                error(<span class="stringliteral">&quot; The trigger function must be scalar. &quot;</span>)</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            end</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <span class="keywordflow">if</span>(~isa(bolus,<span class="stringliteral">&quot; sym &quot;</span>))</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                <span class="keywordflow">if</span>(isa(bolus,<span class="stringliteral">&quot; double &quot;</span>))</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                    AE.bolus= sym(<a class="code" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>(:));</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                    error(<span class="stringliteral">&quot; bolus function must be a symbolic expression &quot;</span>)</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                end</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                AE.bolus= <a class="code" href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;            end</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;            <span class="keywordflow">if</span>(~isa(z,<span class="stringliteral">&quot; sym &quot;</span>))</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                <span class="keywordflow">if</span>(isa(z,<span class="stringliteral">&quot; double &quot;</span>))</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                    <span class="keywordflow">if</span>(~isempty(z))</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                        AE.z= sym(z);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                        warning(<span class="stringliteral">&quot; Constant outputs are not informative. Please check the event definition. &quot;</span>)</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                        AE.z= sym(zeros(0,1));</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                    end</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                    error(<span class="stringliteral">&quot; output function must be a symbolic expression &quot;</span>)</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                end      </div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                AE.z= <a class="code" href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">z</a>;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            end</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        }</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        function  = <a class="code" href="classamievent.html#ac3b640fb9f5aa45290aab37bec8d070f">setHflag</a>(hflag);</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;};</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
+<div class="ttc" id="classamievent_html_ac3b640fb9f5aa45290aab37bec8d070f"><div class="ttname"><a href="classamievent.html#ac3b640fb9f5aa45290aab37bec8d070f">amievent.setHflag</a></div><div class="ttdeci">function   = setHflag(hflag)</div><div class="ttdoc">gethflag sets the hflag property. </div><div class="ttdef"><b>Definition:</b> <a href="set_hflag_8m_source.html#l00018">setHflag.m:18</a></div></div>
+<div class="ttc" id="classamievent_html_ab98347b5ce6fbe7bd007030346b88575"><div class="ttname"><a href="classamievent.html#ab98347b5ce6fbe7bd007030346b88575">amievent.hflag</a></div><div class="ttdeci">hflag</div><div class="ttdoc">flag indicating that a heaviside function is present, this helps to speed up symbolic computations ...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00060">amievent.m:60</a></div></div>
+<div class="ttc" id="classamievent_html_aa89b0efd53c33a18acf04c1dda76842c"><div class="ttname"><a href="classamievent.html#aa89b0efd53c33a18acf04c1dda76842c">amievent.amievent</a></div><div class="ttdeci">amievent(symbolic trigger,symbolic bolus,symbolic z)</div><div class="ttdoc">constructor of the amievent class. this function constructs an event object based on the provided tri...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00075">amievent.m:75</a></div></div>
+<div class="ttc" id="classamievent_html_ab9227561ac246ee4b70f9e65c25ffda7"><div class="ttname"><a href="classamievent.html#ab9227561ac246ee4b70f9e65c25ffda7">amievent.bolus</a></div><div class="ttdeci">symbolic bolus</div><div class="ttdoc">the bolus function defines the change in states that is applied on every event occurence ...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00038">amievent.m:38</a></div></div>
+<div class="ttc" id="classamievent_html_a25ed1bcb423b0b7200f485fc5ff71c8e"><div class="ttname"><a href="classamievent.html#a25ed1bcb423b0b7200f485fc5ff71c8e">amievent.z</a></div><div class="ttdeci">symbolic z</div><div class="ttdoc">output function for the event </div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00049">amievent.m:49</a></div></div>
 <div class="ttc" id="classamievent_html_ae194cb817eae4085f8023885100c68dd"><div class="ttname"><a href="classamievent.html#ae194cb817eae4085f8023885100c68dd">amievent.trigger</a></div><div class="ttdeci">symbolic trigger</div><div class="ttdoc">the trigger function activates the event on every zero crossing </div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00027">amievent.m:27</a></div></div>
 <div class="ttc" id="classamievent_html"><div class="ttname"><a href="classamievent.html">amievent</a></div><div class="ttdoc">the amievent class defines the prototype for all events which later on will be transformed into C cod...</div><div class="ttdef"><b>Definition:</b> <a href="amievent_8m_source.html#l00017">amievent.m:17</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -183,7 +192,7 @@ $(document).ready(function(){initNavTree('amievent_8m_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_9de405df183ec880cfd3ff76f2cd5ec6.html">@amievent</a></li><li class="navelem"><b>amievent.m</b></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:41 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:21 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

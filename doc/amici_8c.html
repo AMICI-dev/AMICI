@@ -114,13 +114,23 @@ $(document).ready(function(){initNavTree('amici_8c.html','');});
 
 <p>core routines for integration  
 <a href="#details">More...</a></p>
-<div class="textblock"><div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
+<div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
+<code>#include &lt;stdlib.h&gt;</code><br />
+<code>#include &lt;string.h&gt;</code><br />
+<code>#include &lt;math.h&gt;</code><br />
+<code>#include &lt;mex.h&gt;</code><br />
+<code>#include &quot;wrapfunctions.h&quot;</code><br />
+<code>#include &lt;include/amici.h&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for amici.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="amici_8c__dep__incl.png" border="0" usemap="#src_2amici_8cdep" alt=""/></div>
-<map name="src_2amici_8cdep" id="src_2amici_8cdep">
-<area shape="rect" id="node2" href="amiwrap_8c.html" title="core routines for mex interface " alt="" coords="13,81,95,108"/>
-<area shape="rect" id="node3" href="amiwrapo2_8c_source.html" title="amiwrapo2.c" alt="" coords="5,156,102,183"/>
+<div class="center"><img src="amici_8c__incl.png" border="0" usemap="#src_2amici_8c" alt=""/></div>
+<map name="src_2amici_8c" id="src_2amici_8c">
+<area shape="rect" id="node8" href="amici_8h_source.html" title="include/amici.h" alt="" coords="574,81,684,108"/>
+<area shape="rect" id="node9" href="udata_8h_source.html" title="include/udata.h" alt="" coords="640,156,752,183"/>
+<area shape="rect" id="node16" href="rdata_8h_source.html" title="include/rdata.h" alt="" coords="776,156,885,183"/>
+<area shape="rect" id="node17" href="edata_8h_source.html" title="include/edata.h" alt="" coords="373,156,485,183"/>
+<area shape="rect" id="node18" href="tdata_8h_source.html" title="include/tdata.h" alt="" coords="508,156,616,183"/>
 </map>
 </div>
 </div>
@@ -128,15 +138,29 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a15c09363d6bdc7162c154ab2a20ec545"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545">AMI_SUCCESS</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memitem:a525335710b53cb064ca56b936120431e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#a525335710b53cb064ca56b936120431e">_USE_MATH_DEFINES</a>&#160;&#160;&#160;/* MS definition of PI and other constants */</td></tr>
+<tr class="separator:a525335710b53cb064ca56b936120431e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae71449b1cc6e6250b91f539153a7a0d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae71449b1cc6e6250b91f539153a7a0d3"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>M_PI</b>&#160;&#160;&#160;3.14159265358979323846</td></tr>
+<tr class="separator:ae71449b1cc6e6250b91f539153a7a0d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4c533f51f538a5742e373cbc82eb3d7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>initField2</b>(FIELD,  D1,  D2)</td></tr>
+<tr class="separator:ac4c533f51f538a5742e373cbc82eb3d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa48a7d7fd17e041b538785b9eaa62e20"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>initField3</b>(FIELD,  D1,  D2,  D3)</td></tr>
+<tr class="separator:aa48a7d7fd17e041b538785b9eaa62e20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbee0a7c78ee0b090890b8f71651f1ca"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>readOptionScalar</b>(OPTION,  TYPE)</td></tr>
+<tr class="separator:abbee0a7c78ee0b090890b8f71651f1ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a124f0bb9d6f3f3d84262eb359166b64e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>readOptionData</b>(OPTION)</td></tr>
+<tr class="separator:a124f0bb9d6f3f3d84262eb359166b64e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15c09363d6bdc7162c154ab2a20ec545"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15c09363d6bdc7162c154ab2a20ec545"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>AMI_SUCCESS</b>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:a15c09363d6bdc7162c154ab2a20ec545"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aaa3b0319b9104865ac61df2ea87b8a13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_user_data.html">UserData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#aaa3b0319b9104865ac61df2ea87b8a13">setupUserData</a> (const mxArray *prhs[])</td></tr>
 <tr class="separator:aaa3b0319b9104865ac61df2ea87b8a13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af60e81f8da9f9fe2ef8cdc8549a48ce1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_return_data.html">ReturnData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#af60e81f8da9f9fe2ef8cdc8549a48ce1">setupReturnData</a> (const mxArray *prhs[], void *user_data)</td></tr>
-<tr class="separator:af60e81f8da9f9fe2ef8cdc8549a48ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfd73cf87e1ccb40672e8991850dd222"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_return_data.html">ReturnData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#adfd73cf87e1ccb40672e8991850dd222">setupReturnData</a> (mxArray *plhs[], void *user_data, double *pstatus)</td></tr>
+<tr class="separator:adfd73cf87e1ccb40672e8991850dd222"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c8f6481c1efc210fe8d82c618ddfcca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_exp_data.html">ExpData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#a3c8f6481c1efc210fe8d82c618ddfcca">setupExpData</a> (const mxArray *prhs[], void *user_data)</td></tr>
 <tr class="separator:a3c8f6481c1efc210fe8d82c618ddfcca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f59a60d757981b9a2196bc6b3491027"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="amici_8c.html#a1f59a60d757981b9a2196bc6b3491027">setupAMI</a> (int *status, void *user_data, void *temp_data)</td></tr>
@@ -189,18 +213,159 @@ Functions</h2></td></tr>
 <tr class="separator:a90da28fbc4745516101db3c8d6be9305"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a15c09363d6bdc7162c154ab2a20ec545"></a>
+<a class="anchor" id="a525335710b53cb064ca56b936120431e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define AMI_SUCCESS&#160;&#160;&#160;0</td>
+          <td class="memname">#define _USE_MATH_DEFINES&#160;&#160;&#160;/* MS definition of PI and other constants */</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>return value indicating successful execution </p>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00008">8</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00011">11</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ac4c533f51f538a5742e373cbc82eb3d7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define initField2</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">FIELD, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">D1, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">D2&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">mxArray *mx ## FIELD; \</div>
+<div class="line">mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \</div>
+<div class="line">FIELD ## data = mxGetPr(mx ## FIELD); \</div>
+<div class="line">mxSetField(mxsol,0,#FIELD,mx ## FIELD)</div>
+</div><!-- fragment -->
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00020">20</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aa48a7d7fd17e041b538785b9eaa62e20"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define initField3</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">FIELD, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">D1, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">D2, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">D3&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">mxArray *mx ## FIELD; \</div>
+<div class="line">const mwSize dims ## FIELD[]={D1,D2,D3}; \</div>
+<div class="line">mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \</div>
+<div class="line">FIELD ## data = mxGetPr(mx ## FIELD); \</div>
+<div class="line">mxSetField(mxsol,0,#FIELD,mx ## FIELD)</div>
+</div><!-- fragment -->
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00026">26</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="abbee0a7c78ee0b090890b8f71651f1ca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define readOptionScalar</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">OPTION, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">TYPE&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">if</span>(mxGetProperty(prhs[3],0,#OPTION)){ \</div>
+<div class="line">    OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \</div>
+<div class="line">} <span class="keywordflow">else</span> { \</div>
+<div class="line">    mexWarnMsgIdAndTxt(<span class="stringliteral">&quot;AMICI:mex:OPTION&quot;</span>,<span class="stringliteral">&quot;Provided options are not of class amioption!&quot;</span>); \</div>
+<div class="line">    return(NULL); \</div>
+<div class="line">}</div>
+</div><!-- fragment -->
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00033">33</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a124f0bb9d6f3f3d84262eb359166b64e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define readOptionData</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">OPTION</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">if</span>(mxGetProperty(prhs[3],0,#OPTION)){ \</div>
+<div class="line">    OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \</div>
+<div class="line">} <span class="keywordflow">else</span> { \</div>
+<div class="line">    mexWarnMsgIdAndTxt(<span class="stringliteral">&quot;AMICI:mex:OPTION&quot;</span>,<span class="stringliteral">&quot;Provided options are not of class amioption!&quot;</span>); \</div>
+<div class="line">    return(NULL); \</div>
+<div class="line">}</div>
+</div><!-- fragment -->
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00041">41</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 </div>
 </div>
@@ -228,7 +393,7 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>udata: struct containing all provided user data <br />
 <b>Type</b>: <a class="el" href="struct_user_data.html" title="struct that stores all user provided data ">UserData</a></dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00010">10</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00052">52</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -242,21 +407,27 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="af60e81f8da9f9fe2ef8cdc8549a48ce1"></a>
+<a class="anchor" id="adfd73cf87e1ccb40672e8991850dd222"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="struct_return_data.html">ReturnData</a> setupReturnData </td>
           <td>(</td>
-          <td class="paramtype">const mxArray *&#160;</td>
-          <td class="paramname"><em>prhs</em>[], </td>
+          <td class="paramtype">mxArray *&#160;</td>
+          <td class="paramname"><em>plhs</em>[], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>user_data</em>&#160;</td>
+          <td class="paramname"><em>user_data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>pstatus</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -278,13 +449,13 @@ Here is the caller graph for this function:</div>
 <b>Type</b>: <a class="el" href="struct_return_data.html" title="struct that stores all data which is later returned by the mex function ">ReturnData</a></dd></dl>
 <p>user udata </p>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00162">162</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00196">196</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph.png" border="0" usemap="#amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph" alt=""/></div>
-<map name="amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph" id="amici_8c_af60e81f8da9f9fe2ef8cdc8549a48ce1_icgraph">
+<div class="center"><img src="amici_8c_adfd73cf87e1ccb40672e8991850dd222_icgraph.png" border="0" usemap="#amici_8c_adfd73cf87e1ccb40672e8991850dd222_icgraph" alt=""/></div>
+<map name="amici_8c_adfd73cf87e1ccb40672e8991850dd222_icgraph" id="amici_8c_adfd73cf87e1ccb40672e8991850dd222_icgraph">
 <area shape="rect" id="node2" href="amiwrap_8c.html#a6a215cbfde54f82a3ce599228fc3fce5" title="mexFunction" alt="" coords="175,5,273,33"/>
 </map>
 </div>
@@ -328,7 +499,7 @@ Here is the caller graph for this function:</div>
 <b>Type</b>: <a class="el" href="struct_exp_data.html" title="struct that carries all information about experimental data ">ExpData</a></dd></dl>
 <p>user udata </p>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00225">225</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00279">279</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -384,7 +555,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ami_mem pointer to the cvodes/idas memory block</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00327">327</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00381">381</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -457,7 +628,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ami_mem pointer to the cvodes/idas memory block for the backward problem</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00639">639</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00700">700</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -546,7 +717,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00836">836</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00895">895</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -637,7 +808,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00882">882</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00943">943</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -728,7 +899,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00931">931</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l00991">991</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -821,7 +992,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l00983">983</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01043">1043</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -904,7 +1075,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01017">1017</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01073">1073</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -994,7 +1165,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01052">1052</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01104">1104</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1094,7 +1265,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01116">1116</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01168">1168</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1187,7 +1358,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01153">1153</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01205">1205</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1288,7 +1459,7 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>cv_status updated status flag <br />
 <b>Type</b>: int</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01197">1197</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01249">1249</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1382,7 +1553,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01264">1264</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01316">1316</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1484,7 +1655,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01317">1317</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01368">1368</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1578,7 +1749,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01382">1382</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01433">1433</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1685,7 +1856,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01413">1413</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01464">1464</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1693,8 +1864,8 @@ Here is the call graph for this function:</div>
 <div class="center"><img src="amici_8c_adc05a02d97b8703d15cf277a437f4b2a_cgraph.png" border="0" usemap="#amici_8c_adc05a02d97b8703d15cf277a437f4b2a_cgraph" alt=""/></div>
 <map name="amici_8c_adc05a02d97b8703d15cf277a437f4b2a_cgraph" id="amici_8c_adc05a02d97b8703d15cf277a437f4b2a_cgraph">
 <area shape="rect" id="node2" href="amici_8c.html#a1815f9679d16a9472953e70c7842f6a5" title="getEventOutput" alt="" coords="182,56,296,83"/>
-<area shape="rect" id="node6" href="amici_8c.html#ac5e6fcc60245e134da55f6e840aadbe0" title="applyEventBolus" alt="" coords="178,107,299,134"/>
-<area shape="rect" id="node7" href="amici_8c.html#a4a2138c2065d8a952778dcbc649a9191" title="updateHeaviside" alt="" coords="178,157,299,185"/>
+<area shape="rect" id="node6" href="amici_8c.html#a4a2138c2065d8a952778dcbc649a9191" title="updateHeaviside" alt="" coords="178,107,299,134"/>
+<area shape="rect" id="node7" href="amici_8c.html#ac5e6fcc60245e134da55f6e840aadbe0" title="applyEventBolus" alt="" coords="178,157,299,185"/>
 <area shape="rect" id="node8" href="amici_8c.html#a0795c299b2e92f899f4a67d417d92aed" title="applyEventSensiBolusFSA" alt="" coords="149,208,329,235"/>
 <area shape="rect" id="node3" href="amici_8c.html#a794797be954ca7feb5a6a8aa3249843c" title="getEventSigma" alt="" coords="391,5,503,33"/>
 <area shape="rect" id="node4" href="amici_8c.html#a93b461a8130ea160b431d9f16b649228" title="getEventSensisASA" alt="" coords="377,56,517,83"/>
@@ -1775,7 +1946,7 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>cv_status updated status flag <br />
 <b>Type</b>: int</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01512">1512</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01565">1565</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1859,7 +2030,7 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>tnext next timepoint <br />
 <b>Type</b>: realtype</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01570">1570</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01623">1623</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1924,7 +2095,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01615">1615</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01668">1668</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1990,7 +2161,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01650">1650</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01703">1703</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2048,7 +2219,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01688">1688</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01741">1741</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2106,7 +2277,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01721">1721</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01774">1774</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2172,7 +2343,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01750">1750</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01803">1803</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2246,7 +2417,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01780">1780</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01833">1833</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2328,7 +2499,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void</dd></dl>
 
-<p>Definition at line <a class="el" href="amici_8c_source.html#l01818">1818</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
+<p>Definition at line <a class="el" href="amici_8c_source.html#l01871">1871</a> of file <a class="el" href="amici_8c_source.html">amici.c</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2349,7 +2520,7 @@ Here is the caller graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="amici_8c.html">amici.c</a></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:42 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:23 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

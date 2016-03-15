@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['wrap_5fpath',['wrap_path',['../classamimodel.html#a0b316a20054ba282555674d939a82406',1,'amimodel']]],
-  ['writeccode',['writeCcode',['../classamifun.html#a8e48f2842268ff64ca32db8eb4b69377',1,'amifun']]],
-  ['writeccode_5fsensi',['writeCcode_sensi',['../classamifun.html#a7845c1193d9a963f7bb9802f1eeefac7',1,'amifun']]],
-  ['wtype',['wtype',['../classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff',1,'amimodel']]]
+  ['recompile',['recompile',['../classamimodel.html#a8d2e824e03e32034b634a7c48f2a26c6',1,'amimodel']]],
+  ['returndata',['ReturnData',['../struct_return_data.html',1,'']]],
+  ['rowvals',['rowvals',['../classamimodel.html#aa0abea3560da3f409a28567f42d52872',1,'amimodel']]],
+  ['rowvalsb',['rowvalsB',['../classamimodel.html#a1ba81ee0e28fe7c7576911973c82be70',1,'amimodel']]],
+  ['rtol',['rtol',['../classamimodel.html#a7978e9a4674f869e6b2950e2f6262ca5',1,'amimodel::rtol()'],['../classamioption.html#a7978e9a4674f869e6b2950e2f6262ca5',1,'amioption::rtol()']]]
 ];

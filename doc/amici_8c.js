@@ -1,8 +1,14 @@
 var amici_8c =
 [
+    [ "_USE_MATH_DEFINES", "amici_8c.html#a525335710b53cb064ca56b936120431e", null ],
+    [ "M_PI", "amici_8c.html#ae71449b1cc6e6250b91f539153a7a0d3", null ],
+    [ "initField2", "amici_8c.html#ac4c533f51f538a5742e373cbc82eb3d7", null ],
+    [ "initField3", "amici_8c.html#aa48a7d7fd17e041b538785b9eaa62e20", null ],
+    [ "readOptionScalar", "amici_8c.html#abbee0a7c78ee0b090890b8f71651f1ca", null ],
+    [ "readOptionData", "amici_8c.html#a124f0bb9d6f3f3d84262eb359166b64e", null ],
     [ "AMI_SUCCESS", "amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545", null ],
     [ "setupUserData", "amici_8c.html#aaa3b0319b9104865ac61df2ea87b8a13", null ],
-    [ "setupReturnData", "amici_8c.html#af60e81f8da9f9fe2ef8cdc8549a48ce1", null ],
+    [ "setupReturnData", "amici_8c.html#adfd73cf87e1ccb40672e8991850dd222", null ],
     [ "setupExpData", "amici_8c.html#a3c8f6481c1efc210fe8d82c618ddfcca", null ],
     [ "setupAMI", "amici_8c.html#a1f59a60d757981b9a2196bc6b3491027", null ],
     [ "setupAMIB", "amici_8c.html#a3899f1dc888ee4e27c36d139dd938fc0", null ],

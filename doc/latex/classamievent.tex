@@ -9,19 +9,20 @@ the amievent class defines the prototype for all events which later on will be t
 \begin{DoxyCompactItemize}
 \item 
 \hyperlink{classamievent_aa89b0efd53c33a18acf04c1dda76842c}{amievent} (\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger},\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus},\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z})
-\begin{DoxyCompactList}\small\item\em constructor of the amievent class. this function constructs an event object based on the provided trigger function, bolus function and output function \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em constructor of the amievent class. this function constructs an event object based on the provided trigger function, bolus function and output function \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}{set\+Hflag} (matlabtypesubstitute \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag})
+\begin{DoxyCompactList}\small\item\em gethflag sets the hflag property. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classamievent_ae194cb817eae4085f8023885100c68dd}{}\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger}\label{classamievent_ae194cb817eae4085f8023885100c68dd}
-
+\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
 \begin{DoxyCompactList}\small\item\em the trigger function activates the event on every zero crossing \end{DoxyCompactList}\item 
-\hypertarget{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{}\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus}\label{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}
-
+\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
 \begin{DoxyCompactList}\small\item\em the bolus function defines the change in states that is applied on every event occurence \end{DoxyCompactList}\item 
-\hypertarget{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{}\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z}\label{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}
-
-\begin{DoxyCompactList}\small\item\em output function for the event \end{DoxyCompactList}\end{DoxyCompactItemize}
+\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em output function for the event \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag} = logical(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em flag indicating that a heaviside function is present, this helps to speed up symbolic computations \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsubsection{Detailed Description}
@@ -52,5 +53,95 @@ Definition at line 17 of file amievent.\+m.
 \end{DoxyParams}
 
 
-Definition at line 52 of file amievent.\+m.
+Definition at line 75 of file amievent.\+m.
+
+
+
+\subsubsection{Member Function Documentation}
+\hypertarget{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}{}\index{amievent@{amievent}!set\+Hflag@{set\+Hflag}}
+\index{set\+Hflag@{set\+Hflag}!amievent@{amievent}}
+\paragraph[{set\+Hflag(matlabtypesubstitute hflag)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amievent} $>$ set\+Hflag (
+\begin{DoxyParamCaption}
+\item[{matlabtypesubstitute}]{hflag}
+\end{DoxyParamCaption}
+)}\label{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}
+
+\begin{DoxyParams}{Parameters}
+{\em hlfag} & value for the hflag property\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated event definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file set\+Hflag.\+m.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{classamievent_ac3b640fb9f5aa45290aab37bec8d070f_icgraph}
+\end{center}
+\end{figure}
+
+
+
+
+\subsubsection{Member Data Documentation}
+\hypertarget{classamievent_ae194cb817eae4085f8023885100c68dd}{}\index{amievent@{amievent}!trigger@{trigger}}
+\index{trigger@{trigger}!amievent@{amievent}}
+\paragraph[{trigger}]{\setlength{\rightskip}{0pt plus 5cm}trigger = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamievent_ae194cb817eae4085f8023885100c68dd}
+\begin{DoxyNote}{Note}
+This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 27 of file amievent.\+m.
+
+\hypertarget{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{}\index{amievent@{amievent}!bolus@{bolus}}
+\index{bolus@{bolus}!amievent@{amievent}}
+\paragraph[{bolus}]{\setlength{\rightskip}{0pt plus 5cm}bolus = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}
+\begin{DoxyNote}{Note}
+This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 38 of file amievent.\+m.
+
+\hypertarget{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{}\index{amievent@{amievent}!z@{z}}
+\index{z@{z}!amievent@{amievent}}
+\paragraph[{z}]{\setlength{\rightskip}{0pt plus 5cm}z = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}
+\begin{DoxyNote}{Note}
+This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 49 of file amievent.\+m.
+
+\hypertarget{classamievent_ab98347b5ce6fbe7bd007030346b88575}{}\index{amievent@{amievent}!hflag@{hflag}}
+\index{hflag@{hflag}!amievent@{amievent}}
+\paragraph[{hflag}]{\setlength{\rightskip}{0pt plus 5cm}hflag = logical(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamievent_ab98347b5ce6fbe7bd007030346b88575}
+\begin{DoxyNote}{Note}
+This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} logical(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 60 of file amievent.\+m.
 

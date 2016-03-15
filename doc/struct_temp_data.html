@@ -71,6 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
       <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
@@ -127,6 +128,10 @@ Public Attributes</h2></td></tr>
 <tr class="separator:ab2b23f4045b47a4a73226543e77f9dcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aded6511f60d9b0cdfe5f4df047d8a5dd"><td class="memItemLeft" align="right" valign="top">N_Vector *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_temp_data.html#aded6511f60d9b0cdfe5f4df047d8a5dd">am_x_disc</a></td></tr>
 <tr class="separator:aded6511f60d9b0cdfe5f4df047d8a5dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3837be5f66a858b04b2e6fbae66a100"><td class="memItemLeft" align="right" valign="top">N_Vector *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_temp_data.html#ab3837be5f66a858b04b2e6fbae66a100">am_xdot_disc</a></td></tr>
+<tr class="separator:ab3837be5f66a858b04b2e6fbae66a100"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae23888e89a7bd3c65a22784acaa1328"><td class="memItemLeft" align="right" valign="top">N_Vector *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_temp_data.html#aae23888e89a7bd3c65a22784acaa1328">am_xdot_old_disc</a></td></tr>
+<tr class="separator:aae23888e89a7bd3c65a22784acaa1328"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac10ec733609d33c557d48c1cc4c9f6f1"><td class="memItemLeft" align="right" valign="top">N_Vector&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_temp_data.html#ac10ec733609d33c557d48c1cc4c9f6f1">am_dx</a></td></tr>
 <tr class="separator:ac10ec733609d33c557d48c1cc4c9f6f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca2465f16eeb5dc94cea61c970f2682a"><td class="memItemLeft" align="right" valign="top">N_Vector&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_temp_data.html#aca2465f16eeb5dc94cea61c970f2682a">am_dx_old</a></td></tr>
@@ -234,7 +239,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00076">76</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00078">78</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a class="anchor" id="ae0484650df254ad9cd8883e2ba028892"></a>
 <div class="memitem">
@@ -247,7 +252,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>current time </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00078">78</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00080">80</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -262,7 +267,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00082">82</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00084">84</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -277,7 +282,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>old state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00084">84</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00086">86</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -292,7 +297,37 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array of state vectors at discontinuities </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00086">86</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00088">88</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ab3837be5f66a858b04b2e6fbae66a100"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">N_Vector* am_xdot_disc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>array of differential state vectors at discontinuities </p>
+
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00090">90</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aae23888e89a7bd3c65a22784acaa1328"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">N_Vector* am_xdot_old_disc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>array of old differential state vectors at discontinuities </p>
+
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00092">92</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -307,7 +342,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00088">88</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00094">94</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -322,7 +357,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>old differential state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00090">90</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00096">96</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -337,7 +372,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>time derivative state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00092">92</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00098">98</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -352,7 +387,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>old time derivative state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00094">94</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00100">100</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -367,7 +402,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>adjoint state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00096">96</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00102">102</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -382,7 +417,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>old adjoint state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00098">98</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00104">104</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -397,7 +432,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential adjoint state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00100">100</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00106">106</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -412,7 +447,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>quadrature state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00102">102</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00108">108</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -427,7 +462,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>old quadrature state vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00104">104</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00110">110</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -442,7 +477,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>sensitivity state vector array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00106">106</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00112">112</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -457,7 +492,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential sensitivity state vector array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00108">108</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00114">114</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -472,7 +507,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>index indicating DAE equations vector </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00110">110</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00116">116</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -487,7 +522,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>Jacobian </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00112">112</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00118">118</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -502,7 +537,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of likelihood array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00115">115</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00121">121</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -517,7 +552,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>data likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00117">117</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00123">123</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -532,7 +567,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of data likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00119">119</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00125">125</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -547,7 +582,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state derivative of data likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00121">121</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00127">127</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -562,7 +597,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>event likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00123">123</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00129">129</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -577,7 +612,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of event likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00125">125</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00131">131</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -592,7 +627,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state derivative of event likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00127">127</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00133">133</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -607,7 +642,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>root function likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00129">129</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00135">135</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -622,7 +657,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of root function likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00131">131</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00137">137</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -637,7 +672,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state derivative of root function likelihood </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00133">133</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00139">139</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -652,7 +687,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state derivative of event </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00135">135</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00141">141</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -667,7 +702,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of event </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00137">137</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00143">143</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -682,7 +717,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of observable </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00139">139</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00145">145</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -697,7 +732,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state derivative of observable </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00141">141</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00147">147</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -712,7 +747,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>initial sensitivity of observable </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00143">143</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00149">149</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -727,7 +762,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>data standard deviation </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00145">145</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00151">151</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -742,7 +777,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of data standard deviation </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00147">147</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00153">153</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -757,7 +792,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>event standard deviation </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00149">149</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00155">155</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -772,7 +807,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>parameter derivative of event standard deviation </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00151">151</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00157">157</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -787,7 +822,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00154">154</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00160">160</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -802,7 +837,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>sensitivity state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00156">156</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00162">162</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -817,7 +852,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00158">158</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00164">164</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -832,7 +867,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential sensitivity state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00160">160</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00166">166</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -847,7 +882,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>time derivative state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00162">162</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00168">168</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -862,7 +897,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential adjoint state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00164">164</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00170">170</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -877,7 +912,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>quadrature state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00166">166</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00172">172</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -892,7 +927,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>differential adjoint state array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00168">168</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00174">174</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -907,7 +942,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>index indicating DAE equations array </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00170">170</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00176">176</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -923,7 +958,7 @@ Public Attributes</h2></td></tr>
 <p>array of flags indicating which root has beend found</p>
 <p>array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound[i]?= 0 if gi has a root, and = 0 if not. </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00177">177</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00183">183</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -938,7 +973,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array of index which root has been found </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00179">179</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00185">185</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -953,7 +988,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array of number of found roots for a certain event type </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00181">181</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00187">187</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -968,7 +1003,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array of values of the root function </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00183">183</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00189">189</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -983,7 +1018,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>change in x </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00187">187</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00193">193</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -998,7 +1033,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>change in sx </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00189">189</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00195">195</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1013,7 +1048,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>change in xB </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00191">191</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00197">197</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1028,7 +1063,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>change in qB </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00193">193</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00199">199</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1043,7 +1078,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>integer for indexing of backwards problems </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00197">197</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00203">203</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1058,7 +1093,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array containing the time-points of discontinuities </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00200">200</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00206">206</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1073,7 +1108,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>array containing the index of discontinuities </p>
 
-<p>Definition at line <a class="el" href="tdata_8h_source.html#l00202">202</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
+<p>Definition at line <a class="el" href="tdata_8h_source.html#l00208">208</a> of file <a class="el" href="tdata_8h_source.html">tdata.h</a>.</p>
 
 </div>
 </div>
@@ -1083,7 +1118,7 @@ Public Attributes</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="struct_temp_data.html">TempData</a></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:42 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:23 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

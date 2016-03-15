@@ -132,13 +132,14 @@ $(document).ready(function(){initNavTree('get_f_args_8m_source.html','');});
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            this.<a class="code" href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">fargstr</a>= <span class="stringliteral">&quot; (realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) &quot;</span>;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; J &quot;</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;            this.<a class="code" href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">fargstr</a>= <span class="stringliteral">&quot; (long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) &quot;</span>;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        otherwise</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;            this.<a class="code" href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">fargstr</a>= this.<a class="code" href="classamifun.html#aa3914760f4131288b95f0f23d0fdfa6d">argstr</a>;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    end</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;end</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; root &quot;</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            this.<a class="code" href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">fargstr</a>= <span class="stringliteral">&quot; (realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) &quot;</span>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        otherwise</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;            this.<a class="code" href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">fargstr</a>= this.<a class="code" href="classamifun.html#aa3914760f4131288b95f0f23d0fdfa6d">argstr</a>;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    end</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;end</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}</div>
 <div class="ttc" id="classamifun_html_a484b54379bc8b29b6ce65d84966ea4c4"><div class="ttname"><a href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">amifun.funstr</a></div><div class="ttdeci">char funstr</div><div class="ttdoc">name of the model </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00048">amifun.m:48</a></div></div>
 <div class="ttc" id="classamifun_html_aa1f074dbf83e821bc999eb2d701fd9ed"><div class="ttname"><a href="classamifun.html#aa1f074dbf83e821bc999eb2d701fd9ed">amifun.getFArgs</a></div><div class="ttdeci">function   = getFArgs(amimodel model)</div><div class="ttdoc">getFArgs populates the fargstr property with the argument string of the respective f-function (if app...</div><div class="ttdef"><b>Definition:</b> <a href="get_f_args_8m_source.html#l00018">getFArgs.m:18</a></div></div>
 <div class="ttc" id="classamifun_html_acdb54dfb4e0a737dba0367c5958e779e"><div class="ttname"><a href="classamifun.html#acdb54dfb4e0a737dba0367c5958e779e">amifun.fargstr</a></div><div class="ttdeci">char fargstr</div><div class="ttdoc">argument string (solver unspecific) </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00069">amifun.m:69</a></div></div>
@@ -149,7 +150,7 @@ $(document).ready(function(){initNavTree('get_f_args_8m_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_6389ab307fd46836f49cd0fe1303009d.html">@amifun</a></li><li class="navelem"><b>getFArgs.m</b></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:41 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:21 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

@@ -4,7 +4,7 @@ var classamifun =
     [ "printLocalVars", "classamifun.html#a65387b406e8c310f20057ac62940dd2a", null ],
     [ "writeCcode_sensi", "classamifun.html#a7845c1193d9a963f7bb9802f1eeefac7", null ],
     [ "writeCcode", "classamifun.html#a8e48f2842268ff64ca32db8eb4b69377", null ],
-    [ "gccode", "classamifun.html#ae91161616e6339e77298a072acb5dd58", null ],
+    [ "gccode", "classamifun.html#a05444f498e657a0010f6b539bc9c6596", null ],
     [ "getDeps", "classamifun.html#a1cb97b695ab609e1655ec1067b140b70", null ],
     [ "getArgs", "classamifun.html#a4b16e7670c0d60e530545e58628bde3f", null ],
     [ "getFArgs", "classamifun.html#aa1f074dbf83e821bc999eb2d701fd9ed", null ],

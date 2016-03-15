@@ -16,7 +16,7 @@ noret\+::substitute \hyperlink{classamifun_a7845c1193d9a963f7bb9802f1eeefac7}{wr
 \begin{DoxyCompactList}\small\item\em write\+Ccode\+\_\+sensi is a wrapper for write\+Ccode which loops over parameters and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
 noret\+::substitute \hyperlink{classamifun_a8e48f2842268ff64ca32db8eb4b69377}{write\+Ccode} (\+::\hyperlink{classamimodel}{amimodel} model,\+::fileid fid)
 \begin{DoxyCompactList}\small\item\em write\+Ccode is a wrapper for gccode which initialises data and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
-noret\+::substitute \hyperlink{classamifun_ae91161616e6339e77298a072acb5dd58}{gccode} (\+::fileid fid)
+noret\+::substitute \hyperlink{classamifun_a05444f498e657a0010f6b539bc9c6596}{gccode} (\+::\hyperlink{classamimodel}{amimodel} model,\+::fileid fid)
 \begin{DoxyCompactList}\small\item\em gccode transforms symbolic expressions into c code and writes the respective expression into a specified file \end{DoxyCompactList}\item 
 mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamifun_a1cb97b695ab609e1655ec1067b140b70}{get\+Deps} (\+::\hyperlink{classamimodel}{amimodel} model)
 \begin{DoxyCompactList}\small\item\em get\+Deps populates the sensiflag for the requested function \end{DoxyCompactList}\item 
@@ -180,15 +180,18 @@ Here is the call graph for this function\+:\nopagebreak
 \end{figure}
 
 
-\hypertarget{classamifun_ae91161616e6339e77298a072acb5dd58}{}\index{amifun@{amifun}!gccode@{gccode}}
+\hypertarget{classamifun_a05444f498e657a0010f6b539bc9c6596}{}\index{amifun@{amifun}!gccode@{gccode}}
 \index{gccode@{gccode}!amifun@{amifun}}
-\paragraph[{gccode(\+::fileid fid)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amifun} $>$ gccode (
+\paragraph[{gccode(\+::amimodel model,\+::fileid fid)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amifun} $>$ gccode (
 \begin{DoxyParamCaption}
+\item[{\+::{\bf amimodel}}]{model, }
 \item[{\+::fileid}]{fid}
 \end{DoxyParamCaption}
-)}\label{classamifun_ae91161616e6339e77298a072acb5dd58}
+)}\label{classamifun_a05444f498e657a0010f6b539bc9c6596}
 
 \begin{DoxyParams}{Parameters}
+{\em model} & model defintion object \\
+\hline
 {\em fid} & file id in which the expression should be written\\
 \hline
 \end{DoxyParams}
@@ -207,7 +210,7 @@ Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=230pt]{classamifun_ae91161616e6339e77298a072acb5dd58_icgraph}
+\includegraphics[width=230pt]{classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph}
 \end{center}
 \end{figure}
 

@@ -136,20 +136,20 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            end</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; dfdx &quot;</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;            this.<a class="code" href="classamifun.html#a69ffe5c24686ceb79ed44399e6be556c">deps</a>= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>];</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;            this.<a class="code" href="classamifun.html#a69ffe5c24686ceb79ed44399e6be556c">deps</a>= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; dwdx &quot;</span>];</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; J &quot;</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;            <span class="keywordflow">if</span>(strcmp(model.<a class="code" href="classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff">wtype</a>,<span class="stringliteral">&quot; iw &quot;</span>))</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                this.deps= [<span class="stringliteral">&quot; dfdx &quot;</span>,<span class="stringliteral">&quot; M &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>];</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;            <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>];</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; dwdx &quot;</span>];</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;            end</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; JB &quot;</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            this.deps= [<span class="stringliteral">&quot; J &quot;</span>];</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; dxdotdp &quot;</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>];</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>,<span class="stringliteral">&quot; dwdp &quot;</span>];</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; sx0 &quot;</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;            this.deps= [<span class="stringliteral">&quot; x0 &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>];    </div>
@@ -226,7 +226,7 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            this.deps= [<span class="stringliteral">&quot; ddeltaxdp &quot;</span>,<span class="stringliteral">&quot; xB &quot;</span>];</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; deltaxB &quot;</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            this.deps= [<span class="stringliteral">&quot; deltax &quot;</span>,<span class="stringliteral">&quot; dtaudp &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; xB &quot;</span>];</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            this.deps= [<span class="stringliteral">&quot; deltax &quot;</span>,<span class="stringliteral">&quot; dtaudp &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; xB &quot;</span>,<span class="stringliteral">&quot; ddeltaxdx &quot;</span>];</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; z &quot;</span></div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;            this.deps= [<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; k &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>];</div>
@@ -256,7 +256,7 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;            this.deps= [<span class="stringliteral">&quot; drootdp &quot;</span>,<span class="stringliteral">&quot; drootdx &quot;</span>,<span class="stringliteral">&quot; sx &quot;</span>];</div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; x0 &quot;</span></div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;            this.deps= [<span class="stringliteral">&quot; p &quot;</span>,<span class="stringliteral">&quot; k &quot;</span>];</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;            this.deps= [<span class="stringliteral">&quot; p &quot;</span>,<span class="stringliteral">&quot; k &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>];</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; JBand &quot;</span></div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;            this.deps= [<span class="stringliteral">&quot; J &quot;</span>];</div>
@@ -313,7 +313,7 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            this.deps= [];</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; deltaxdot &quot;</span></div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            this.deps= [];</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>];</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; Jy &quot;</span></div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            this.deps= [<span class="stringliteral">&quot; y &quot;</span>,<span class="stringliteral">&quot; sigma_y &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>];</div>
@@ -341,17 +341,23 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; sJz &quot;</span></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;            this.deps= [<span class="stringliteral">&quot; dJzdp &quot;</span>,<span class="stringliteral">&quot; dJzdz &quot;</span>,<span class="stringliteral">&quot; sz &quot;</span>];</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        otherwise</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;            error([<span class="stringliteral">&quot; unknown function string:  &quot;</span> this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a> ])</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    end</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;end</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; w &quot;</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            this.deps= [<span class="stringliteral">&quot; xdot &quot;</span>];</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; dwdp &quot;</span></div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;            this.deps= [<span class="stringliteral">&quot; w &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>];</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        <span class="keywordflow">case</span> <span class="stringliteral">&quot; dwdx &quot;</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;            this.deps= [<span class="stringliteral">&quot; w &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>];</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;}</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;        otherwise</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;            error([<span class="stringliteral">&quot; unknown function string:  &quot;</span> this.<a class="code" href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">funstr</a> ])</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    end</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;end</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;}</div>
 <div class="ttc" id="classamifun_html_a484b54379bc8b29b6ce65d84966ea4c4"><div class="ttname"><a href="classamifun.html#a484b54379bc8b29b6ce65d84966ea4c4">amifun.funstr</a></div><div class="ttdeci">char funstr</div><div class="ttdoc">name of the model </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00048">amifun.m:48</a></div></div>
 <div class="ttc" id="classamifun_html_a69ffe5c24686ceb79ed44399e6be556c"><div class="ttname"><a href="classamifun.html#a69ffe5c24686ceb79ed44399e6be556c">amifun.deps</a></div><div class="ttdeci">cell deps</div><div class="ttdoc">dependencies on other functions </div><div class="ttdef"><b>Definition:</b> <a href="amifun_8m_source.html#l00076">amifun.m:76</a></div></div>
-<div class="ttc" id="classamimodel_html_a5376250224ce32fb558d88aa0b5a93ff"><div class="ttname"><a href="classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff">amimodel.wtype</a></div><div class="ttdeci">string wtype</div><div class="ttdoc">type of wrapper (cvodes/idas) </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00154">amimodel.m:154</a></div></div>
+<div class="ttc" id="classamimodel_html_a5376250224ce32fb558d88aa0b5a93ff"><div class="ttname"><a href="classamimodel.html#a5376250224ce32fb558d88aa0b5a93ff">amimodel.wtype</a></div><div class="ttdeci">string wtype</div><div class="ttdoc">type of wrapper (cvodes/idas) </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00155">amimodel.m:155</a></div></div>
 <div class="ttc" id="classamifun_html_a1cb97b695ab609e1655ec1067b140b70"><div class="ttname"><a href="classamifun.html#a1cb97b695ab609e1655ec1067b140b70">amifun.getDeps</a></div><div class="ttdeci">function   = getDeps(amimodel model)</div><div class="ttdoc">getDeps populates the sensiflag for the requested function </div><div class="ttdef"><b>Definition:</b> <a href="get_deps_8m_source.html#l00018">getDeps.m:18</a></div></div>
 <div class="ttc" id="classamimodel_html"><div class="ttname"><a href="classamimodel.html">amimodel</a></div><div class="ttdoc">amimodel is the object in which all model definitions are stored </div><div class="ttdef"><b>Definition:</b> <a href="amimodel_8m_source.html#l00017">amimodel.m:17</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -360,7 +366,7 @@ $(document).ready(function(){initNavTree('get_deps_8m_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_6389ab307fd46836f49cd0fe1303009d.html">@amifun</a></li><li class="navelem"><b>getDeps.m</b></li>
-    <li class="footer">Generated on Tue Dec 22 2015 18:10:41 for AMICI by
+    <li class="footer">Generated on Tue Mar 15 2016 18:00:21 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

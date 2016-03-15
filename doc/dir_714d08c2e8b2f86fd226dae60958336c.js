@@ -2,6 +2,7 @@ var dir_714d08c2e8b2f86fd226dae60958336c =
 [
     [ "amimodel.m", "amimodel_8m_source.html", null ],
     [ "augmento2.m", "augmento2_8m_source.html", null ],
+    [ "augmento2vec.m", "augmento2vec_8m_source.html", null ],
     [ "checkDeps.m", "check_deps_8m_source.html", null ],
     [ "compileC.m", "compile_c_8m_source.html", null ],
     [ "generateC.m", "generate_c_8m_source.html", null ],
