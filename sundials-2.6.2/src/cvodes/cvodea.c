@@ -570,19 +570,24 @@ int CVodeF(void *cvode_mem, realtype tout, N_Vector yout,
 
   } else if ( (tn - tout)*h >= ZERO ) {
       
-      /* If tout was passed, return interpolated solution.
-       No changes to ck_mem or dt_mem are needed. */
-      *tret = tout;
-      flag = CVodeGetDky(cv_mem, tout, 0, yout);
-      *ncheckPtr = nckpnts;
-      IMnewData = TRUE;
-      ckpntData = ca_mem->ck_mem;
-      np = nst % nsteps + 1;
-      
       if ((ca_mem->ck_mem->ck_t1 - tout)*h <= ZERO ) {
-          *tret = ca_mem->ck_mem->ck_t1;
+          /* If we recorded a checkpoint prior to the event return that checkpoint and the respective flag. */
+          /* Reset tretlast in cv_mem so that CVodeGetQuad and CVodeGetSens
+           * evaluate quadratures and/or sensitivities at the proper time */
+          cv_mem->cv_tretlast = *tret = ca_mem->ck_mem->ck_t1;
+          flag = CVodeGetDky(cv_mem, *tret, 0, yout);
           return(flagn);
       } else {
+          /* If tout was passed, return interpolated solution.
+           No changes to ck_mem or dt_mem are needed. */
+          /* Reset tretlast in cv_mem so that CVodeGetQuad and CVodeGetSens
+           * evaluate quadratures and/or sensitivities at the proper time */
+          cv_mem->cv_tretlast = *tret = tout;
+          flag = CVodeGetDky(cv_mem, tout, 0, yout);
+          *ncheckPtr = nckpnts;
+          IMnewData = TRUE;
+          ckpntData = ca_mem->ck_mem;
+          np = nst % nsteps + 1;
           return(flag);
       }
 

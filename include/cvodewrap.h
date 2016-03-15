@@ -271,4 +271,8 @@ static int AMICalcICB(void *mem, int which, realtype tout1, N_Vector xB, N_Vecto
     return(0);
 }
 
+static int AMISetStopTime(void *mem, realtype tstop) {
+    return CVodeSetStopTime(mem, tstop);
+}
+
 #endif /* CVodewrap_h */

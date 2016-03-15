@@ -69,8 +69,6 @@ x0(3) = k3;
 %%
 % OBSERVALES
 
-y = sym(zeros(1,1));
-
 y = x;
 
 %%

@@ -42,3 +42,5 @@ examples/example_5/example_model_5_paper.m
 *.xcscheme
 
 *.xccheckout
+
+*.plist

@@ -40,7 +40,7 @@ typedef struct {
     /** timepoints */
     double *am_tsdata; 
     /** time derivative */
-    double *am_xdotdata; 
+    double *am_xdotdata;
     /** parameter derivative of time derivative */
     double *am_dxdotdpdata; 
     /** state derivative of observables */

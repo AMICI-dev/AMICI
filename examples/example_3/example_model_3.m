@@ -17,7 +17,7 @@ p = [1;0.5;0.4;2;0.1];
 k = [0.1,0.4,0.7,1];
 
 options.sensi = 0;
-options.cvode_maxsteps = 1e6;
+options.maxsteps = 1e4;
 % load mex into memory
 sol = simulate_model_example_3(t,log10(p),k,[],options);
 

@@ -15,7 +15,7 @@ function makeEvents( this )
         else
             error(['Bolus of event ' num2str(ievent) ' is neither a scalar nor does it match the state dimension!']);
         end
-        z{ievent} = this.event(ievent).z(:);
+        z{ievent} = transpose(this.event(ievent).z(:));
     end
     
     ievent = nevent;
@@ -34,9 +34,9 @@ function makeEvents( this )
                 arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
                 if(ievent>0)
                     %check whether we already had this trigger function
-                    ediscf = zeros(size(trigger{ievent}));
-                    for id = 1:length(trigger{ievent})
-                        ediscf(id) = isequaln(abs(trigger{ievent}),abs(sym(arg)));
+                    ediscf = zeros(length(trigger));
+                    for id = 1:length(trigger)
+                        ediscf(id) = isequaln(abs(trigger{id}),abs(sym(arg)));
                     end
                     if(~any(ediscf))
                         ievent = ievent + 1;

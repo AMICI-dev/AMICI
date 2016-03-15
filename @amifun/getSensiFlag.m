@@ -68,7 +68,7 @@ function [ this ] = getSensiFlag(this)
             this.sensiflag = true;
             
         case 'sJy'
-            this.sensiflag = true;
+            this.sensiflag = false;
             
         case 'sJz'
             this.sensiflag = true;

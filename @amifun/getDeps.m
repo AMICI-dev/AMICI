@@ -16,20 +16,20 @@ function [ this ] = getDeps(this, model)
             end
             
         case 'dfdx'
-            this.deps = {'xdot','x'};
+            this.deps = {'xdot','x','dwdx'};
             
         case 'J'
             if(strcmp(model.wtype,'iw'))
                 this.deps = {'dfdx','M','x','xdot'};
             else
-                this.deps = {'xdot','x'};
+                this.deps = {'xdot','x','dwdx'};
             end
             
         case 'JB'
             this.deps = {'J'};
             
         case 'dxdotdp'
-            this.deps = {'xdot','p'};
+            this.deps = {'xdot','p','dwdp'};
             
         case 'sx0'
             this.deps = {'x0','p'};    
@@ -220,7 +220,13 @@ function [ this ] = getDeps(this, model)
             this.deps = {'dJzdz','dzdp','dJzdsigma','dsigma_zdp'};
         case 'sJz'
             this.deps = {'dJzdp','dJzdz','sz'};
-
+            
+        case 'w'
+            this.deps = {'xdot'};
+        case 'dwdp'
+            this.deps = {'w','p'};
+        case 'dwdx'
+            this.deps = {'w','x'};
 
         otherwise
             error(['unknown function string: ' this.funstr ])

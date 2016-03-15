@@ -11,7 +11,7 @@ function [this,model] = getSyms(this,model)
     % store often used variables for ease of notation, dependencies should
     % ensure that these variables are defined
     
-    persistent x p sx
+    persistent x p sx w ndw jacw
     
     nx = model.nx;
     nevent = model.nevent;
@@ -122,6 +122,24 @@ function [this,model] = getSyms(this,model)
             % transform into symbolic expression
             this.strsym = sym(ys);
             
+            
+            % activate splines
+            for iy = 1:ny
+                if(not(all([model.splineflag,model.minflag,model.maxflag])))
+                    str = char(this.sym(iy));
+                    if(strfind(str,'spline'))
+                        model.splineflag = true;
+                    end
+                    if(strfind(str,'max'))
+                        model.maxflag = true;
+                    end
+                    if(strfind(str,'min'))
+                        model.minflag = true;
+                    end
+                end
+            end
+            
+            
         case 'x0'
             this.sym = model.sym.x0;
             % replace unify symbolic expression
@@ -160,6 +178,7 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.M;
             % replace unify symbolic expression
             this = unifySyms(this,model);
+            this = makeStrSyms(this);
             
         case 'xdot'
             this.sym = model.sym.xdot;
@@ -185,15 +204,122 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(xdots);
             this.strsym_old = sym(xdot_olds);
             
+            % activate splines
+            for ix = 1:nx
+                if(not(all([model.splineflag,model.minflag,model.maxflag])))
+                    str = char(this.sym(ix));
+                    if(strfind(str,'spline'))
+                        model.splineflag = true;
+                    end
+                    if(strfind(str,'max'))
+                        model.maxflag = true;
+                    end
+                    if(strfind(str,'min'))
+                        model.minflag = true;
+                    end
+                end
+            end
+            
+        case 'w'
+            optimize = getoptimized(optsym(model.fun.xdot.sym));
+            tmpxdot = children(optimize(end));
+            nw = (length(optimize)-1);
+            model.nw = nw;
+            if(nw>0)
+                exprs = arrayfun(@(x) children(x),optimize(1:(end-1)),'UniformOutput',false); % extract symbolic variable
+                S.subs = {2};
+                S.type='()';
+                C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false); % get second element
+                this.sym = [C{:}]; % transform cell to matrix
+                S.subs = {1};
+                C = cellfun(@(x) subsref(x,S),exprs,'UniformOutput',false);
+                temps = [C{:}];
+            end
+%             model.nw = 0;
+%             nw = 0;
+%             this.sym = sym(zeros(0,1));          
+            
+
+            
+            ws = cell(nw,1);
+            ts = cell(nw,1);
+            % fill cell array
+            for iw = 1:nw
+                ws{iw} = sprintf('w_%i', iw-1);
+            end
+            % transform into symbolic expression
+            this.strsym = sym(ws);
+            ndw = 0;
+            if(nw>0)
+                tmpxdot = mysubs(tmpxdot,temps,this.strsym); % replace common expressions
+                this.sym = mysubs(this.sym,temps,this.strsym);
+                model.updateRHS(tmpxdot); % update rhs
+                ndw = 1;
+                jacw = jacobian(this.sym,this.strsym);
+                vv = sym('v',[length(this.strsym),1]);
+                while(sum(jacw^ndw*vv)~=0)
+                    ndw = ndw+1;
+                end
+                ndw = ndw - 1;
+            end
+            w = this.strsym;
+
+        case 'dwdx'
+            jacx = jacobian(model.fun.w.sym,x);
+            this.sym = jacx;
+            for idw = 1:ndw
+                this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
+            end
+            % fill cell array
+            idx_w = find(logical(this.sym~=0));
+            dwdxs = cell(model.nw,nx);
+            [dwdxs{:}] = deal('0');
+            if(numel(idx_w)>0)
+                for iw = 1:length(idx_w)
+                    dwdxs{idx_w(iw)} = sprintf('dwdx_%i', iw-1);
+                end
+            end
+            model.ndwdx = length(idx_w);
+            % transform into symbolic expression
+            this.strsym = sym(dwdxs);
+            % update dwdx with simplified expressions, here we can exploit
+            % the proper ordering of w to ensure correctness of expressions
+            tmp = jacx + jacw*this.strsym;
+            this.sym = tmp(idx_w);
+            
+        case 'dwdp'
+            jacp = jacobian(model.fun.w.sym,p);
+            this.sym = jacp;
+            for idw = 1:ndw
+                this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
+            end
+            % fill cell array
+            idx_w = find(logical(this.sym~=0));
+            dwdps = cell(model.nw,np);
+            [dwdps{:}] = deal('0');
+            if numel(idx_w)>0
+                for iw = 1:length(idx_w)
+                    dwdps{idx_w(iw)} = sprintf('dwdp_%i', iw-1);
+                end
+            end
+            model.ndwdp = length(idx_w);
+            % transform into symbolic expression
+            this.strsym = sym(dwdps);
+            % update dwdx with simplified expressions, here we can exploit
+            % the proper ordering of w to ensure correctness of expressions
+            tmp = jacp + jacw*this.strsym;
+            this.sym = tmp(idx_w);
+            
         case 'dfdx'
-            this.sym=jacobian(model.fun.xdot.sym,x);
+            this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+            this = makeStrSyms(this);
             
         case 'J'
             if(strcmp(model.wtype,'iw'))
                 syms cj
                 this.sym = model.fun.dfdx.sym - cj*model.fun.M.sym;
             else
-                this.sym = jacobian(model.fun.xdot.sym,x);
+                this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
             end
             
             %%
@@ -216,25 +342,18 @@ function [this,model] = getSyms(this,model)
             this.sym=-transpose(model.fun.J.sym);
             
         case 'dxdotdp'
-            this.sym=jacobian(model.fun.xdot.sym,p);
+            this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
             
             %%
             % build short strings for reuse of dxdotdp
-            
-            % find nonzero rows, only completely nonzero rows matter as we
-            % will have parameter dependent implementation later on
-            % anyways.
-            idx = find(any(logical(this.sym~=0),2));
             % create cell array of same size
-            dxdotdps = cell(length(idx),1);
+            dxdotdps = cell(nx,1);
             % fill cells with strings
-            for ix = 1:length(idx)
+            for ix = 1:nx
                 dxdotdps{ix} = sprintf('tmp_dxdotdp%i',ix-1);
             end
             % create full symbolic array
-            this.strsym = sym(zeros(nx,1));
-            % fill nonzero entries
-            this.strsym(idx) = sym(dxdotdps);
+            this.strsym = sym(dxdotdps);
             
         case 'sx0'
             this.sym=jacobian(model.fun.x0.sym,p);
@@ -244,14 +363,14 @@ function [this,model] = getSyms(this,model)
             
         case 'sxdot'
             if(strcmp(model.wtype,'iw'))
-                this.sym=model.fun.dfdx.sym*sx-model.fun.M.sym*model.fun.sdx.sym+model.fun.dxdotdp.sym;
+                this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
             else
                 this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
             end
             
         case 'dydx'
             this.sym=jacobian(model.fun.y.sym,x);
-            % create cell array of same size
+            % create cell array of same sizex
             dydxs = cell(ny,nx);
             % fill cell array
             for j = 1:ny
@@ -284,7 +403,7 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(dydps);
             
         case 'sy'
-            this.sym=model.fun.dydp.sym + model.fun.dydx.sym*model.fun.sx.sym ;
+            this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
             % create cell array of same size
             sys = cell(ny,np);
             % fill cell array
@@ -329,7 +448,7 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'qBdot'
-            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.strsym;
+            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
             
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);
@@ -569,14 +688,16 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.Jy(:);
         case 'dJydy'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.y.strsym);
+            this = makeStrSyms(this);
         case 'dJydx'
             this.sym = model.fun.dJydy.sym*model.fun.dydx.strsym;
         case 'dJydsigma'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.sigma_y.strsym);
         case 'dJydp'
             this.sym = model.fun.dJydy.sym*model.fun.dydp.strsym + model.fun.dJydsigma.sym*model.fun.dsigma_ydp.strsym;
+            this = makeStrSyms(this);
         case 'sJy'
-            this.sym = model.fun.dJydy.sym*model.fun.sy.strsym + model.fun.dJydp.sym;
+            this.sym = model.fun.dJydy.strsym*model.fun.sy.strsym + model.fun.dJydp.strsym;
             
         case 'Jz'
             this.sym = model.sym.Jz(:);
@@ -611,9 +732,31 @@ function this = unifySyms(this,model)
     %
     % Parameters:
     %  model: model definition object @type amimodel
-    this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
+    if(ismember('x',this.deps))
+        this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
+    end
     this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
+end
+
+function this = makeStrSyms(this)
+    strsym = cell(size(this.sym));
+    [strsym{:}] = deal('0');
+    idx = find(logical(this.sym~=0));
+    idx = transpose(idx(:));
+    for icell = idx
+        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    end
+    this.strsym = sym(strsym);
+end
+
+function this = makeStrSymsfull(this)
+    strsym = cell(size(this.sym));
+    [strsym{:}] = deal('0');
+    for icell = 1:numel(strsym)
+        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    end
+    this.strsym = sym(strsym);
 end
 
 function out = mysubs(in, old, new)

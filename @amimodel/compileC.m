@@ -5,7 +5,7 @@ function compileC(this)
     %  this: model definition object @type amimodel
     
     sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    sundials_ver = '2.6.2';
+    sundials_ver = '2.6.2.1';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
     ssparse_ver = '4.4.4';
@@ -361,6 +361,9 @@ function compileC(this)
         this.cfun(1).sxdot = 1;
         this.cfun(1).qBdot = 1;
     end
+    if(this.cfun(1).w)
+        this.recompile = 1;
+    end
     
     recompileWrapFunction = false; 
     % if any of the functions in this.funs is recompiled, we also need to
@@ -395,23 +398,12 @@ function compileC(this)
                 fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c')]);
     end
     
-    if(this.recompile)
-        recompile = 1;
-    else
-        recompile = checkHash(fullfile(this.wrap_path,'src','amici'),o_suffix,DEBUG);
-    end
-    if(recompile)
-        fprintf('amici | ');
-        eval(['mex ' DEBUG COPT ...
-            ' -c -outdir ' fullfile(this.wrap_path,'src') ...
-            includesstr ' ' ...
-            fullfile(this.wrap_path,'src','amici.c')]);
-        hash = getFileHash(fullfile(this.wrap_path,'src','amici.c'));
-        hash = [hash DEBUG];
-        fid = fopen(fullfile(this.wrap_path,'src',['amici' '_' mexext '.md5']),'w');
-        fprintf(fid,hash);
-        fclose(fid);
-    end
+
+    fprintf('amici | ');
+    eval(['mex ' DEBUG COPT ...
+        ' -c -outdir ' fullfile(this.wrap_path,'src') ...
+        includesstr ' ' ...
+        fullfile(this.wrap_path,'src','amici.c')]);
     
     if(isunix)
         if(~ismac)

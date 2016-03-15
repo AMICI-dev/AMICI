@@ -15,7 +15,7 @@ p = [1;0.5;2;3];
 k = [];
 
 options.sensi = 0;
-options.cvode_maxsteps = 1e6;
+options.maxsteps = 1e4;
 % load mex into memory
 [msg] = which('simulate_model_example_2'); % fix for inaccessability problems
 sol = simulate_model_example_2(t,log10(p),k,[],options);

@@ -83,15 +83,35 @@ classdef amimodel < handle
         recompile = false;
         % storage for flags determining recompilation of individual
         % functions
-        cfun;
+        cfun@struct;
+        % flag which identifies augmented models 
+        %  0 indicates no augmentation
+        %  1 indicates augmentation by first order sensitivities (yields
+        %  second order sensitivities)
+        %  2 indicates augmentation by one linear combination of first
+        %  order sensitivities (yields hessian-vector product)
+        o2flag = 0;
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 3;
+        compver = 6;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
-        z2event;
+        z2event@double;
+        % flag indicating whether the model contains spline functions
+        splineflag = false;
+        % flag indicating whether the model contains min functions
+        minflag = false;
+        % flag indicating whether the model contains max functions
+        maxflag = false;
+        % number of derived variables w, w is used for code optimization to reduce the number of frequently occuring
+        % expressions @type int
+        nw = 0;
+        % number of derivatives of derived variables w, dwdx @type int
+        ndwdx = 0;
+        % number of derivatives of derived variables w, dwdp @type int
+        ndwdp = 0;
     end
     
     methods
@@ -153,7 +173,9 @@ classdef amimodel < handle
             end
             AM.makeEvents();
             AM.nz = length([AM.event.z]);
-            AM.nztrue = AM.nz;
+            if(isempty(AM.nztrue))
+                AM.nztrue = AM.nz;
+            end
             AM.nevent = length(AM.event);
             
             % check whether we have a DAE or ODE
@@ -162,6 +184,10 @@ classdef amimodel < handle
             else
                 AM.wtype = 'cw'; % ODE
             end
+        end
+        
+        function updateRHS(this,xdot)
+            this.fun.xdot.sym = xdot;
         end
         
         parseModel(this)
@@ -183,6 +209,8 @@ classdef amimodel < handle
         HTable = loadOldHashes(this)
         
         modelo2 = augmento2(this)
+        
+        modelo2vec = augmento2vec(this)
         
     end
 end

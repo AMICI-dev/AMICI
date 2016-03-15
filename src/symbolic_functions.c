@@ -6,6 +6,8 @@
  */
 
 #include <math.h>
+#include <mex.h>
+#include <float.h>
 #include <include/spline.h>
 
 #undef ts
@@ -14,6 +16,22 @@
 #define TRUE 1
 /*! bool return value false */
 #define FALSE 0
+
+
+/**
+ * c implementation of log function, this prevents returning NaN values for negative values
+ *
+ * @param x argument
+ * @return if(x>0) then log(x) else -Inf
+ *
+ */
+double amilog(double x) {
+    if (x<=0) {
+        return(-log(DBL_MAX));
+    } else {
+        return(log(x));
+    }
+}
 
 /**
  * c implementation of matlab function heaviside
@@ -58,11 +76,7 @@ double sign(double x) {
  *
  */
 double am_min(double a, double b) {
-    if (a < b) {
-        return(a);
-    } else {
-        return(b);
-    }
+    return(fmin(a,b));
 }
 
 /**
@@ -100,11 +114,7 @@ double Dam_min(int id,double a, double b) {
  *
  */
 double am_max(double a, double b) {
-    if (a > b) {
-        return(a);
-    } else {
-        return(b);
-    }
+    return(fmax(a,b));
 }
 
 /**

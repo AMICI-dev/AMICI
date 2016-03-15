@@ -262,12 +262,16 @@ static void *AMIGetAdjBmem(void *mem, int which) {
     return IDAGetAdjIDABmem(mem,which);
 }
 
-static int   {
+static int AMICalcIC(void *mem, realtype tout1){
     return IDACalcIC(mem,IDA_YA_YDP_INIT , tout1);
 }
 
 static int AMICalcICB(void *mem, int which, realtype tout1, N_Vector xB, N_Vector dxB) {
     return IDACalcICB(mem, which, tout1, xB, dxB);
+}
+
+static int AMISetStopTime(void *mem, realtype tstop) {
+    return IDASetStopTime(mem, tstop);
 }
 
 

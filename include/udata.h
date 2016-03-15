@@ -5,13 +5,20 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
+#define qpositivex udata->am_qpositivex
+
 #define plist udata->am_plist
 #define np udata->am_np
 #define ny udata->am_ny
+#define nytrue udata->am_nytrue
 #define nx udata->am_nx
 #define nz udata->am_nz
+#define nztrue udata->am_nztrue
 #define ne udata->am_ne
 #define nt udata->am_nt
+#define nw udata->am_nw
+#define ndwdx udata->am_ndwdx
+#define ndwdp udata->am_ndwdp
 #define nnz udata->am_nnz
 #define nmaxevent udata->am_nmaxevent
 
@@ -55,6 +62,11 @@
 
 #define tmp_J udata->am_J
 #define tmp_dxdotdp udata->am_dxdotdp
+#define w_tmp udata->am_w
+#define dwdx_tmp udata->am_dwdx
+#define dwdp_tmp udata->am_dwdp
+#define M_tmp udata->am_M
+#define dfdx_tmp udata->am_dfdx
 
 #define z2event udata->am_z2event
 #define h udata->am_h
@@ -64,6 +76,8 @@
 
 /** @brief struct that stores all user provided data */
 typedef struct {
+    /** positivity flag */
+    double *am_qpositivex;
     
     /** parameter reordering */
     int    *am_plist;
@@ -71,14 +85,24 @@ typedef struct {
     int    am_np;
     /** number of observables */
     int    am_ny;
+    /** number of observables in the unaugmented system */
+    int    am_nytrue;
     /** number of states */
     int    am_nx;
     /** number of event outputs */
     int    am_nz;
+    /** number of event outputs in the unaugmented system */
+    int    am_nztrue;
     /** number of events */
     int    am_ne;
     /** number of timepoints */
     int    am_nt;
+    /** number of common expressions */
+    int    am_nw;
+    /** number of derivatives of common expressions wrt x */
+    int    am_ndwdx;
+    /** number of derivatives of common expressions wrt p */
+    int    am_ndwdp;
     /** number of nonzero entries in jacobian */
     int    am_nnz;
     /** maximal number of events to track */
@@ -177,6 +201,16 @@ typedef struct {
     SlsMat am_J;
     /** tempory storage of dxdotdp data across functions */
     realtype *am_dxdotdp;
+    /** tempory storage of w data across functions */
+    realtype *am_w;
+    /** tempory storage of dwdx data across functions */
+    realtype *am_dwdx;
+    /** tempory storage of dwdp data across functions */
+    realtype *am_dwdp;
+    /** tempory storage of M data across functions */
+    realtype *am_M;
+    /** tempory storage of dfdx data across functions */
+    realtype *am_dfdx;
     
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;

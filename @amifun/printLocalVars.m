@@ -16,10 +16,18 @@ function printLocalVars(this,model,fid)
     for nvec = this.nvecs
         if(strcmp(nvec{1},'*sx'))
             fprintf(fid,'realtype *sx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx'))
+            fprintf(fid,'realtype *sdx_tmp;\n');
+        elseif(strcmp(nvec{1},'*sxdot'))
+            fprintf(fid,'realtype *sxdot_tmp;\n');
         elseif(strcmp(nvec{1},'*sx0'))
             fprintf(fid,'realtype *sx0_tmp;\n');
+        elseif(strcmp(nvec{1},'*sdx0'))
+            fprintf(fid,'realtype *sdx0_tmp;\n');
         else
-            fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+            if(or(strcmp(model.wtype,'iw'),~strcmp(nvec{1},'dx')))
+                fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+            end
         end
     end
     
@@ -69,7 +77,7 @@ function printLocalVars(this,model,fid)
         case 'sx0'
             % nothing
         case 'sdx0'
-            fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
+            % nothing
         case 'y'
             % nothing
         case 'sy'
@@ -108,9 +116,9 @@ function printLocalVars(this,model,fid)
         case 'dsigma_ydp'
             fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
         case 'sigma_z'
-            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*nz);\n']);
+            fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*' num2str(model.nz) ');\n']);
         case 'dsigma_zdp'
-            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*nz*np);\n']);
+            fprintf(fid,['memset(dsigma_zdp,0,sizeof(realtype)*' num2str(model.nz) '*np);\n']);
         case 'Jy'
             % nothing
         case 'dJydx'
@@ -127,8 +135,18 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'sJz'
             % nothing
+        case 'w'
+            fprintf(fid,['memset(w_tmp,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
+        case 'dwdx'
+            fprintf(fid,['memset(dwdx_tmp,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
+        case 'dwdp'
+            fprintf(fid,['memset(dwdp_tmp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
+        case 'M'
+            fprintf(fid,['memset(M_tmp,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+        case 'dfdx'
+            fprintf(fid,['memset(dfdx_tmp,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         otherwise
-            error(['unkown function: ' fun])
+            error(['unkown function: ' this.funstr])
     end
     
 end

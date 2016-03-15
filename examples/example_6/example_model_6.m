@@ -25,9 +25,9 @@ D.Sigma_Y = 0.1*ones(size(D.Y));
 
 options.sensi = 1;
 options.sensi_meth = 'adjoint';
-options.cvode_maxsteps = 1e6;
-options.cvode_rtol = 1e-12;
-options.cvode_atol = 1e-12;
+options.maxsteps = 1e4;
+options.rtol = 1e-12;
+options.atol = 1e-12;
 % load mex into memory
 [msg] = which('simulate_model_example_6'); % fix for inaccessability problems
 sol = simulate_model_example_6(t,log10(p),k,D,options);

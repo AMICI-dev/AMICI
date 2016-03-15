@@ -18,14 +18,15 @@ t = linspace(0,10,20);
 p = [0.5;2;0.5;0.5];
 k = [4,8,10,4];
 
-options.sensi = 0;
-options.cvode_maxsteps = 1e6;
-options.nmaxevent = 2;
+options = amioption('sensi',0,...
+    'maxsteps',1e4,...
+    'nmaxevent', 2);
+D = amidata(length(t),1,2,2,4);
 % load mex into memory
-sol = simulate_model_example_1(t,log10(p),k,[],options);
+sol = simulate_model_example_1(t,log10(p),k,D,options);
 
 tic
-sol = simulate_model_example_1(t,log10(p),k,[],options);
+sol = simulate_model_example_1(t,log10(p),k,D,options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
 %%
@@ -95,7 +96,7 @@ set(gcf,'Position',[100 300 1200 500])
 
 options.sensi = 1;
 
-sol = simulate_model_example_1(t,log10(p),k,[],options);
+sol = simulate_model_example_1(t,log10(p),k,D,options);
 
 %%
 % FINITE DIFFERENCES
@@ -105,7 +106,7 @@ xi = log10(p);
 for ip = 1:4;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solp = simulate_model_example_1(t,xip,k,[],options);
+    solp = simulate_model_example_1(t,xip,k,D,options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
     sz_fd(:,:,ip) = (solp.z - sol.z)/eps;

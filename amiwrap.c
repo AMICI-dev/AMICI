@@ -43,19 +43,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int iroot;
     double tnext;
     
-    bool setupBdone = false;
+    booleantype silent;
+    booleantype setupBdone = false;
+    
+    pstatus = mxMalloc(sizeof(double));
     
     udata = setupUserData(prhs);
     if (udata == NULL) goto freturn;
     
-    /* solution struct */
-    
-    if (!prhs[0]) {
-        mexErrMsgIdAndTxt("AMICI:mex:sol","No solution struct provided!");
-    }
-    
     /* options */
-    if (!prhs[4]) {
+    if (!prhs[3]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
@@ -65,7 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     ami_mem = setupAMI(&status, udata, tdata);
     if (ami_mem == NULL) goto freturn;
     
-    rdata = setupReturnData(prhs, udata);
+    rdata = setupReturnData(plhs, udata, pstatus);
     if (rdata == NULL) goto freturn;
     
     edata = setupExpData(prhs, udata);
@@ -82,7 +79,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tlastroot = 0;
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
-        status = CVodeSetStopTime(ami_mem, ts[it]);
+        if(sensi_meth == AMI_FSA && sensi >= 1) {
+            status = AMISetStopTime(ami_mem, ts[it]);
+        }
         if (status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
@@ -92,6 +91,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     } else {
                         status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                     }
+                    x_tmp = NV_DATA_S(x);
                     if (status == -22) {
                         /* clustering of roots => turn off rootfinding */
                         AMIRootInit(ami_mem, 0, NULL);
@@ -103,12 +103,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     
                     if (status==AMI_ROOT_RETURN) {
-                        discs[iroot] = t;
-                        
                         handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
                         if (status != AMI_SUCCESS) goto freturn;
                         
-                        iroot++;
+                        if (iroot<nmaxevent*ne) {
+                            discs[iroot] = t;
+                            iroot++;
+                        } else {
+                            mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
+                            status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
+                        }
                     }
                 }
             }
@@ -158,9 +162,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     /* handle discontinuity */
                     
                     if(ne>0){
-                        if (tnext == discs[iroot]) {
-                            handleEventB(&status, iroot, ami_mem, udata, tdata);
-                            iroot--;
+                        if(nmaxevent>0){
+                            if (tnext == discs[iroot]) {
+                                handleEventB(&status, iroot, ami_mem, udata, tdata);
+                                iroot--;
+                            }
                         }
                     }
                     
@@ -262,6 +268,7 @@ freturn:
         N_VDestroy_Serial(dx_old);
         N_VDestroy_Serial(xdot_old);
         DestroyMat(Jtmp);
+        DestroySparseMat(tmp_J);
         if (ne>0) {
             if(ami_mem) mxFree(rootsfound);
             if(ami_mem) mxFree(rootvals);
@@ -281,6 +288,8 @@ freturn:
             if(sigma_y)    mxFree(sigma_y);
         }
         if (sensi >= 1) {
+            if(ami_mem)    mxFree(dydx);
+            if(ami_mem)    mxFree(dydp);
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(sx,np);
             }
@@ -294,8 +303,6 @@ freturn:
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem)    mxFree(dydx);
-                if(ami_mem)    mxFree(dydp);
                 if(ami_mem)    mxFree(dgdp);
                 if(ami_mem)    mxFree(dgdx);
                 if(ami_mem)    mxFree(drdp);
@@ -329,8 +336,7 @@ freturn:
     if(udata)    mxFree(udata);
     if(tdata)    mxFree(tdata);
     
-    if(mxGetField(prhs[0], 0 ,"status")) { pstatus = mxGetPr(mxGetField(prhs[0], 0 ,"status")); } else { mexErrMsgIdAndTxt("AMICI:mex:status","Parameter status not specified as field in solution struct!"); }
-    *pstatus = (double) status;
-    
+    if(pstatus) *pstatus = (double) status;
+        
     return;
 }

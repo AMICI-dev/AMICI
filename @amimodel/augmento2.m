@@ -34,7 +34,7 @@ function [modelo2] = augmento2(this)
     Sy = jacobian(this.sym.y,this.sym.x)*Sx+jacobian(this.sym.y,this.sym.p);
    
     % generate deltasx
-    this = this.getFun([],'deltasx');
+    this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
         Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
         znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
@@ -45,7 +45,7 @@ function [modelo2] = augmento2(this)
         end
         hflagold = this.event(ievent).hflag;
         augmodel.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
-        augmodel.event(ievent) = this.event(ievent).setHflag([hflagold;zeros([numel(Sx),1])]);
+        augmodel.event(ievent) = augmodel.event(ievent).setHflag([hflagold;zeros([numel(Sx),1])]);
     end
     
     % augment likelihood
@@ -60,19 +60,20 @@ function [modelo2] = augmento2(this)
     this.getFun([],'dzdp');
     SJz = jacobian(this.sym.Jz,this.sym.p) ...
         + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-        + [jacobian(this.sym.Jz,this.fun.z.strsym),sym(zeros([1,this.nztrue*np]))]*this.fun.dzdp.sym;
+        + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
     
     S0 = jacobian(this.sym.x0,this.sym.p);
     
     augmodel.sym.x = [this.sym.x;reshape(Sx,[numel(Sx),1])];
     augmodel.sym.xdot = [this.sym.xdot;reshape(Sdot,[numel(Sdot),1])];
-    augmodel.sym.f = this.sym.xdot;
+    augmodel.sym.f = augmodel.sym.xdot;
     augmodel.sym.y = [this.sym.y;reshape(Sy,[numel(Sy),1])];
     augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
     augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
     augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
+    modelo2.o2flag = 1;
 end
 
 
