@@ -346,21 +346,14 @@ function [this,model] = getSyms(this,model)
             
             %%
             % build short strings for reuse of dxdotdp
-            
-            % find nonzero rows, only completely nonzero rows matter as we
-            % will have parameter dependent implementation later on
-            % anyways.
-            idx = find(any(logical(this.sym~=0),2));
             % create cell array of same size
-            dxdotdps = cell(length(idx),1);
+            dxdotdps = cell(nx,1);
             % fill cells with strings
-            for ix = 1:length(idx)
+            for ix = 1:nx
                 dxdotdps{ix} = sprintf('tmp_dxdotdp%i',ix-1);
             end
             % create full symbolic array
-            this.strsym = sym(zeros(nx,1));
-            % fill nonzero entries
-            this.strsym(idx) = sym(dxdotdps);
+            this.strsym = sym(dxdotdps);
             
         case 'sx0'
             this.sym=jacobian(model.fun.x0.sym,p);
@@ -377,7 +370,7 @@ function [this,model] = getSyms(this,model)
             
         case 'dydx'
             this.sym=jacobian(model.fun.y.sym,x);
-            % create cell array of same size
+            % create cell array of same sizex
             dydxs = cell(ny,nx);
             % fill cell array
             for j = 1:ny

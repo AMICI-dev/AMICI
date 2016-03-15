@@ -54,9 +54,9 @@ function generateC(this)
                     fprintf(fid,['#include "' this.modelname '_dfdx.h"\n']);
                     fprintf(fid,['#include "' this.modelname '_M.h"\n']);
                 end
-            elseif(strcmp(ifun{1},'dxdotdp'))
+            elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'qBdot'))
+            elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
                 fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
             elseif(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
