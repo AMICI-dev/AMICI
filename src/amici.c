@@ -219,7 +219,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     plhs[0] = mxsol;
     
     mxArray *mxstatus;
-    mxstatus = mxCreateDoubleMatrix(0,0,mxREAL);
+    mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     
     mxSetPr(mxstatus,pstatus);
     mxSetField(mxsol,0,"status",mxstatus);

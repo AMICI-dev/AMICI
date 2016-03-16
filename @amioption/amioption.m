@@ -47,6 +47,9 @@ classdef amioption < matlab.mixin.SetGet
         nmaxevent = 10;
         % flag indicating whether steady state sensitivites should be computed @type int
         ss = 0;
+        % pre-ordering scheme for the LU decomposition, this only applies
+        % if the sparse direct linear solver is used
+        ordering = 1;
         % user provided initialization of sensitivity initial conditions
         % @type double
         sx0 = double([]);
