@@ -1,6 +1,8 @@
 function generateC(this)
     % generateC generates the c files which will be used in the compilation.
     %
+    % Return values:
+    %  this: model definition object @type amimodel
 
     if(strcmp(this.wtype,'iw'))
         xvec = 'x,';

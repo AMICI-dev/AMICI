@@ -5,7 +5,9 @@ function generateM(this, amimodelo2)
     %  amimodelo2: this struct must contain all necessary symbolic
     %  definitions for second order sensivities @type amimodel
     %
-
+    % Return values:
+    %  this: model definition object @type amimodel
+    
     nx = this.nx;
     ny = this.ny;
     np = this.np;

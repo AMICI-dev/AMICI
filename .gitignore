@@ -1,4 +1,10 @@
 
+*.o
+
+doc/*
+
+debug_amici/*
+
 models/*
 
 doc/*
@@ -17,7 +23,7 @@ images/*
 
 *.mexmaci64
 
-*.o
+*.eps
 
 *.js
 
@@ -61,24 +67,28 @@ examples/example_6/html/*
 
 *.mat
 
+mtoc/makeExampleDoc.m
+
+mtoc/makeDocumentation.m
+
 examples/example_5/example_model_5_paper.m
 
+mtoc/makeDocumentation.m
+
+mtoc/makeDocumentation.m
+
+index.html
+
+*.js
+
+*.template
+
+*.dox
+
+*.json
+
+examples/geneExpression/simulate_geneExpression.m
+
 *.m~
-
-*.plist
-
-*.pbxproj
-
-*.xcworkspacedata
-
-*.xcuserstate
-
-*.xcsettings
-
-*.xcbkptlist
-
-*.xcscheme
-
-*.xccheckout
 
 *.plist

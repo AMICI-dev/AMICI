@@ -9,7 +9,8 @@ function cflag = checkDeps(this,HTable,deps)
     %
     % Return values:
     %  cflag: boolean indicating whether any of the dependencies have 
-    %  changed with respect to the hashes stored in HTable @type logical
+    %  changed with respect to the hashes stored in HTable @type
+    %  bool
     
     if(~isempty(HTable))
         cflags = zeros(length(deps),1);
