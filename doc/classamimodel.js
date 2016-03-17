@@ -1,7 +1,7 @@
 var classamimodel =
 [
     [ "amimodel", "classamimodel.html#a05d52506788717b3d482845748446a60", null ],
-    [ "updateRHS", "classamimodel.html#aa508c0cd4ac026e464f85cec25678850", null ],
+    [ "updateRHS", "classamimodel.html#abd077fe30143ecfbb165fc2f9a3ded17", null ],
     [ "parseModel", "classamimodel.html#ae4172c2a8fac8b7c434f03274fcac6ac", null ],
     [ "generateC", "classamimodel.html#a73df9b3d523823e7a0105916471f13f5", null ],
     [ "compileC", "classamimodel.html#abf720a0c3104977029538e3b19d429bb", null ],
@@ -9,7 +9,7 @@ var classamimodel =
     [ "getFun", "classamimodel.html#a08d58ae650e5ff9310760f6d3f08015c", null ],
     [ "makeEvents", "classamimodel.html#a4d4b20c81af6d7ed977b6b818c7b22db", null ],
     [ "makeSyms", "classamimodel.html#a5aba9155145df4b3f70bfec887c25af9", null ],
-    [ "checkDeps", "classamimodel.html#ab566026e57f6cbce21a2a2c72b9f7f2b", null ],
+    [ "checkDeps", "classamimodel.html#ad8b3b7be2def1fea709aaa6f02f04137", null ],
     [ "loadOldHashes", "classamimodel.html#a93346c96338624e417ee9732ffd96b28", null ],
     [ "augmento2", "classamimodel.html#abddb278082c1ff018f3b0ef121bba51a", null ],
     [ "augmento2vec", "classamimodel.html#aaed774df1b9efcebe493ae9f499bb8cf", null ],

@@ -67,14 +67,14 @@ Collaboration diagram for amioption\+:\nopagebreak
 \begin{DoxyCompactList}\small\item\em number of expected event occurences per event type \end{DoxyCompactList}\item 
 \+::int \hyperlink{classamioption_a8f60c8102d29fcd525162d02eed4566b}{ss} = 0
 \begin{DoxyCompactList}\small\item\em flag indicating whether steady state sensitivites should be computed \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamioption_aa5d555210685086c19e5d08afca6685b}{ordering} = 1
+\begin{DoxyCompactList}\small\item\em pre-\/ordering scheme for the L\+U decomposition, this only applies if the sparse direct linear solver is used \end{DoxyCompactList}\item 
 \+::double \hyperlink{classamioption_ae40f9a7172d3a41725c151afaec347f7}{sx0} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
 \begin{DoxyCompactList}\small\item\em user provided initialization of sensitivity initial conditions \end{DoxyCompactList}\item 
-\hypertarget{classamioption_aaa61f948de07e22bb723bac762c6bc55}{}matlabtypesubstitute {\bfseries z2event} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})\label{classamioption_aaa61f948de07e22bb723bac762c6bc55}
-
-\item 
-\hypertarget{classamioption_a7caebe2c1b0190ba06b132e00dacfefd}{}matlabtypesubstitute {\bfseries id} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})\label{classamioption_a7caebe2c1b0190ba06b132e00dacfefd}
-
-\end{DoxyCompactItemize}
+matlabtypesubstitute \hyperlink{classamioption_a7a7be015feeb7a346dceccd49e622b4b}{z2event} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em mapping of event outputs to events \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamioption_acf2488b95c97e0378c9bf49de3b50f28}{id} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em index set of states with algebraic constraints \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsubsection{Detailed Description}
@@ -96,11 +96,18 @@ O\+P\+T\+S = \hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amiopt
 
 O\+P\+T\+S = amioption(P\+A\+R\+A\+M, V\+A\+L, ...) creates a set of options with the named parameters altered with the specified values.
 
-O\+P\+T\+S = amioption(O\+L\+D\+O\+P\+T\+S, P\+A\+R\+A\+M, V\+A\+L, ...) creates a copy of O\+L\+D\+O\+P\+T\+S with the named parameters altered with the specified value
+O\+P\+T\+S = amioption(O\+L\+D\+O\+P\+T\+S, P\+A\+R\+A\+M, V\+A\+L, ...) creates a copy of O\+L\+D\+O\+P\+T\+S with the named parameters altered with the specified value. O\+L\+D\+O\+P\+T\+S must not be of type amioption but can be a struct with the same fields
 
-Note to see the parameters, check the documentation page for amioptions 
+Note to see the parameters, check the documentation page for \hyperlink{classamioption}{amioption}
 
-Definition at line 195 of file amioption.\+m.
+
+\begin{DoxyParams}{Parameters}
+{\em varargin} & specification of non-\/default fields \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 222 of file amioption.\+m.
 
 
 
@@ -259,11 +266,45 @@ Definition at line 160 of file amioption.\+m.
 
 Definition at line 168 of file amioption.\+m.
 
+\hypertarget{classamioption_aa5d555210685086c19e5d08afca6685b}{}\index{amioption@{amioption}!ordering@{ordering}}
+\index{ordering@{ordering}!amioption@{amioption}}
+\paragraph[{ordering}]{\setlength{\rightskip}{0pt plus 5cm}ordering = 1}\label{classamioption_aa5d555210685086c19e5d08afca6685b}
+~\newline
+{\bfseries Default\+:} 1 
+
+Definition at line 176 of file amioption.\+m.
+
 \hypertarget{classamioption_ae40f9a7172d3a41725c151afaec347f7}{}\index{amioption@{amioption}!sx0@{sx0}}
 \index{sx0@{sx0}!amioption@{amioption}}
 \paragraph[{sx0}]{\setlength{\rightskip}{0pt plus 5cm}sx0 = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_ae40f9a7172d3a41725c151afaec347f7}
 ~\newline
 {\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
 
-Definition at line 176 of file amioption.\+m.
+Definition at line 185 of file amioption.\+m.
+
+\hypertarget{classamioption_a7a7be015feeb7a346dceccd49e622b4b}{}\index{amioption@{amioption}!z2event@{z2event}}
+\index{z2event@{z2event}!amioption@{amioption}}
+\paragraph[{z2event}]{\setlength{\rightskip}{0pt plus 5cm}z2event = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_a7a7be015feeb7a346dceccd49e622b4b}
+\begin{DoxyNote}{Note}
+This property has the M\+A\+T\+L\+A\+B attribute {\ttfamily Hidden} set to true. 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 197 of file amioption.\+m.
+
+\hypertarget{classamioption_acf2488b95c97e0378c9bf49de3b50f28}{}\index{amioption@{amioption}!id@{id}}
+\index{id@{id}!amioption@{amioption}}
+\paragraph[{id}]{\setlength{\rightskip}{0pt plus 5cm}id = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_acf2488b95c97e0378c9bf49de3b50f28}
+\begin{DoxyNote}{Note}
+This property has the M\+A\+T\+L\+A\+B attribute {\ttfamily Hidden} set to true. 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 208 of file amioption.\+m.
 

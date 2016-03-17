@@ -52,11 +52,20 @@ classdef SBMLode < handle
     
     methods
         function model = SBMLode(filename)
+            % constructor of the SBMLode class. This takes the name of an
+            % SBML definition file and constructs an SBMLode object based
+            % on the parsed model
+            % 
+            % Parameters:
+            %  filename: SBML definition file @type char
+            %
+            % Return values:
+            %  out: optimized expression @type SBMLode
             model.importSBML(filename);
         end
         
-        
         importSBML(this,filename)
+        
         writeAMICI(this,modelname)
     end
     

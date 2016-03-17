@@ -1,6 +1,7 @@
 var searchData=
 [
   ['model_20definition_20_26_20simulation',['Model Definition &amp; Simulation',['../def_simu.html',1,'']]],
+  ['m_5fpi',['M_PI',['../amiwrap_8c.html#ae71449b1cc6e6250b91f539153a7a0d3',1,'M_PI():&#160;amiwrap.c'],['../amici_8c.html#ae71449b1cc6e6250b91f539153a7a0d3',1,'M_PI():&#160;amici.c']]],
   ['makeevents',['makeEvents',['../classamimodel.html#a4d4b20c81af6d7ed977b6b818c7b22db',1,'amimodel']]],
   ['makesyms',['makeSyms',['../classamimodel.html#a5aba9155145df4b3f70bfec887c25af9',1,'amimodel']]],
   ['maxflag',['maxflag',['../classamimodel.html#a1a65e7157ae2262cfa11a783b018364f',1,'amimodel']]],

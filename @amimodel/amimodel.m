@@ -12,7 +12,7 @@ classdef amimodel < handle
         fun;
         % struct which stores information for which functions c code needs
         % to be generated @type *amievent
-        event;
+        event = amievent.empty();
         % name of the model @type string
         modelname;
         % struct that contains hash values for the symbolic model definitions @type struct
@@ -23,15 +23,18 @@ classdef amimodel < handle
         rtol = 1e-8;
         % default maximal number of integration steps @type int
         maxsteps = 1e4;
-        % flag indicating whether debugging symbols should be compiled @type bool
+        % flag indicating whether debugging symbols should be compiled
+        % @type logical
         debug = false;
-        % flag indicating whether adjoint sensitivities should be enabled @type bool
+        % flag indicating whether adjoint sensitivities should be enabled
+        % @type logical
         adjoint = true;
-        % flag indicating whether forward sensitivities should be enabled @type bool
+        % flag indicating whether forward sensitivities should be enabled
+        % @type logical
         forward = true;
         % default initial time @type double
         t0 = 0;
-        % type of wrapper (cvodes/idas) @type string
+        % type of wrapper (cvodes/idas) @type char
         wtype;
         % number of states @type int
         nx;
@@ -71,9 +74,9 @@ classdef amimodel < handle
         rowvalsB;
         % columnindexes of sparse Jacobian @type *int
         colptrsB;
-        % cell array of functions to be compiled @type *cell
+        % cell array of functions to be compiled @type cell
         funs;
-        % optimisation flag for compilation @type string
+        % optimisation flag for compilation @type char
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
@@ -187,6 +190,13 @@ classdef amimodel < handle
         end
         
         function updateRHS(this,xdot)
+            % updateRHS updates the right hand side of the model
+            %
+            % Parameters:
+            %  xdot: new right hand side @type sym
+            %
+            % Return values:
+            %  this: udpated model definition object @type amimodel
             this.fun.xdot.sym = xdot;
         end
         

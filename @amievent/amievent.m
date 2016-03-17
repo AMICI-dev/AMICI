@@ -14,7 +14,7 @@ classdef amievent
         % output function for the event @type symbolic
         z = sym([]);
         % flag indicating that a heaviside function is present, this helps
-        % to speed up symbolic computations
+        % to speed up symbolic computations @type logical
         hflag = logical([]);
     end
     

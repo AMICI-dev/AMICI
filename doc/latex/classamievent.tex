@@ -10,7 +10,7 @@ the amievent class defines the prototype for all events which later on will be t
 \item 
 \hyperlink{classamievent_aa89b0efd53c33a18acf04c1dda76842c}{amievent} (\+::symbolic \hyperlink{classamievent_ae194cb817eae4085f8023885100c68dd}{trigger},\+::symbolic \hyperlink{classamievent_ab9227561ac246ee4b70f9e65c25ffda7}{bolus},\+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z})
 \begin{DoxyCompactList}\small\item\em constructor of the amievent class. this function constructs an event object based on the provided trigger function, bolus function and output function \end{DoxyCompactList}\item 
-mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}{set\+Hflag} (matlabtypesubstitute \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag})
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamievent_aef1933f186f69e58e2aa1b00d01f75e7}{set\+Hflag} (\+::double \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag})
 \begin{DoxyCompactList}\small\item\em gethflag sets the hflag property. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
@@ -21,7 +21,7 @@ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamievent_ac3b640f
 \begin{DoxyCompactList}\small\item\em the bolus function defines the change in states that is applied on every event occurence \end{DoxyCompactList}\item 
 \+::symbolic \hyperlink{classamievent_a25ed1bcb423b0b7200f485fc5ff71c8e}{z} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
 \begin{DoxyCompactList}\small\item\em output function for the event \end{DoxyCompactList}\item 
-matlabtypesubstitute \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag} = logical(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\+::logical \hyperlink{classamievent_ab98347b5ce6fbe7bd007030346b88575}{hflag} = logical(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
 \begin{DoxyCompactList}\small\item\em flag indicating that a heaviside function is present, this helps to speed up symbolic computations \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
@@ -58,16 +58,16 @@ Definition at line 75 of file amievent.\+m.
 
 
 \subsubsection{Member Function Documentation}
-\hypertarget{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}{}\index{amievent@{amievent}!set\+Hflag@{set\+Hflag}}
+\hypertarget{classamievent_aef1933f186f69e58e2aa1b00d01f75e7}{}\index{amievent@{amievent}!set\+Hflag@{set\+Hflag}}
 \index{set\+Hflag@{set\+Hflag}!amievent@{amievent}}
-\paragraph[{set\+Hflag(matlabtypesubstitute hflag)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amievent} $>$ set\+Hflag (
+\paragraph[{set\+Hflag(\+::double hflag)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::{\bf amievent} $>$ set\+Hflag (
 \begin{DoxyParamCaption}
-\item[{matlabtypesubstitute}]{hflag}
+\item[{\+::double}]{hflag}
 \end{DoxyParamCaption}
-)}\label{classamievent_ac3b640fb9f5aa45290aab37bec8d070f}
+)}\label{classamievent_aef1933f186f69e58e2aa1b00d01f75e7}
 
 \begin{DoxyParams}{Parameters}
-{\em hlfag} & value for the hflag property\\
+{\em hflag} & value for the hflag property\\
 \hline
 \end{DoxyParams}
 
@@ -85,7 +85,7 @@ Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=289pt]{classamievent_ac3b640fb9f5aa45290aab37bec8d070f_icgraph}
+\includegraphics[width=289pt]{classamievent_aef1933f186f69e58e2aa1b00d01f75e7_icgraph}
 \end{center}
 \end{figure}
 

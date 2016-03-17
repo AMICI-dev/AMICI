@@ -23,10 +23,10 @@ classdef amifun
         fargstr;
         % dependencies on other functions @type cell
         deps;
-        % nvec dependencies
+        % nvec dependencies @type cell
         nvecs;
         % indicates whether the function is a sensitivity or derivative
-        % with respect to parameters
+        % with respect to parameters @type logical
         sensiflag;
     end
     

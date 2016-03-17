@@ -26,16 +26,52 @@ Collaboration diagram for optsym\+:\nopagebreak
 \subsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classoptsym_aea5ddc9b81eaa00597d9705e74bc5e41}{}{\bfseries optsym} (matlabtypesubstitute symbol)\label{classoptsym_aea5ddc9b81eaa00597d9705e74bc5e41}
-
-\item 
-\hypertarget{classoptsym_ae3e46f44f77b6a05a46950c431cb1664}{}mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ {\bfseries getoptimized} ()\label{classoptsym_ae3e46f44f77b6a05a46950c431cb1664}
-
-\end{DoxyCompactItemize}
+\hyperlink{classoptsym_afe9ab2368d1b1705d6a38ae4ed7dcb37}{optsym} (\+::sym symbol)
+\begin{DoxyCompactList}\small\item\em optsym creates an optsym object from the symbolic expression symbol \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classoptsym_a430971a3ef5e621a861eaf84d7192b90}{getoptimized} ()
+\begin{DoxyCompactList}\small\item\em getoptimized generates an optimized formulation of the expression of the symbolic expression obj. this optimized formulation identifies frequently employed expressions and subsitutes them by placeholder variables to avoid repeated evaluation \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsubsection{Detailed Description}
 
 
 Definition at line 17 of file optsym.\+m.
+
+
+
+\subsubsection{Constructor \& Destructor Documentation}
+\hypertarget{classoptsym_afe9ab2368d1b1705d6a38ae4ed7dcb37}{}\index{optsym@{optsym}!optsym@{optsym}}
+\index{optsym@{optsym}!optsym@{optsym}}
+\paragraph[{optsym(\+::sym symbol)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf optsym} (
+\begin{DoxyParamCaption}
+\item[{\+::sym}]{symbol}
+\end{DoxyParamCaption}
+)}\label{classoptsym_afe9ab2368d1b1705d6a38ae4ed7dcb37}
+
+\begin{DoxyParams}{Parameters}
+{\em symbol} & symbolic expression \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 30 of file optsym.\+m.
+
+
+
+\subsubsection{Member Function Documentation}
+\hypertarget{classoptsym_a430971a3ef5e621a861eaf84d7192b90}{}\index{optsym@{optsym}!getoptimized@{getoptimized}}
+\index{getoptimized@{getoptimized}!optsym@{optsym}}
+\paragraph[{getoptimized()}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ getoptimized (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{classoptsym_a430971a3ef5e621a861eaf84d7192b90}
+
+\begin{DoxyRetVals}{Return values}
+{\em out} & optimized expression \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 41 of file optsym.\+m.
 

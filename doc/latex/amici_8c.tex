@@ -22,21 +22,19 @@ Include dependency graph for amici.\+c\+:\nopagebreak
 \subsubsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
-\#define \hyperlink{amici_8c_a525335710b53cb064ca56b936120431e}{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}~/$\ast$ M\+S definition of P\+I and other constants $\ast$/
+\#define \hyperlink{amici_8c_a525335710b53cb064ca56b936120431e}{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}
 \item 
-\hypertarget{amici_8c_ae71449b1cc6e6250b91f539153a7a0d3}{}\#define {\bfseries M\+\_\+\+P\+I}~3.\+14159265358979323846\label{amici_8c_ae71449b1cc6e6250b91f539153a7a0d3}
-
+\#define \hyperlink{amici_8c_ae71449b1cc6e6250b91f539153a7a0d3}{M\+\_\+\+P\+I}~3.\+14159265358979323846
 \item 
-\#define {\bfseries init\+Field2}(F\+I\+E\+L\+D,  D1,  D2)
-\item 
-\#define {\bfseries init\+Field3}(F\+I\+E\+L\+D,  D1,  D2,  D3)
-\item 
-\#define {\bfseries read\+Option\+Scalar}(O\+P\+T\+I\+O\+N,  T\+Y\+P\+E)
-\item 
-\#define {\bfseries read\+Option\+Data}(O\+P\+T\+I\+O\+N)
-\item 
-\hypertarget{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}{}\#define {\bfseries A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}~0\label{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}
-
+\#define \hyperlink{amici_8c_ac4c533f51f538a5742e373cbc82eb3d7}{init\+Field2}(F\+I\+E\+L\+D,  D1,  D2)
+\begin{DoxyCompactList}\small\item\em init\+Field2 initialises an field of mxsol with an empty matrix and attaches F\+I\+E\+L\+Ddata as data pointer \end{DoxyCompactList}\item 
+\#define \hyperlink{amici_8c_aa48a7d7fd17e041b538785b9eaa62e20}{init\+Field3}(F\+I\+E\+L\+D,  D1,  D2,  D3)
+\begin{DoxyCompactList}\small\item\em init\+Field3 initialises an field of mxsol with an empty tensor and attaches F\+I\+E\+L\+Ddata as data pointer \end{DoxyCompactList}\item 
+\#define \hyperlink{amici_8c_abbee0a7c78ee0b090890b8f71651f1ca}{read\+Option\+Scalar}(O\+P\+T\+I\+O\+N,  T\+Y\+P\+E)
+\begin{DoxyCompactList}\small\item\em read\+Option\+Scalar reads the scalar property from the options struct and casts it to the specified type \end{DoxyCompactList}\item 
+\#define \hyperlink{amici_8c_a124f0bb9d6f3f3d84262eb359166b64e}{read\+Option\+Data}(O\+P\+T\+I\+O\+N)
+\begin{DoxyCompactList}\small\item\em read\+Option\+Data reads the matrix property from the options struct \end{DoxyCompactList}\item 
+\#define \hyperlink{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}~0
 \end{DoxyCompactItemize}
 \subsubsection*{Functions}
 \begin{DoxyCompactItemize}
@@ -100,10 +98,17 @@ void \hyperlink{amici_8c_a90da28fbc4745516101db3c8d6be9305}{get\+Diagnosis\+B} (
 \subsubsection{Macro Definition Documentation}
 \hypertarget{amici_8c_a525335710b53cb064ca56b936120431e}{}\index{amici.\+c@{amici.\+c}!\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S@{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}}
 \index{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S@{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}!amici.\+c@{amici.\+c}}
-\paragraph[{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}]{\setlength{\rightskip}{0pt plus 5cm}\#define \+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S~/$\ast$ M\+S definition of P\+I and other constants $\ast$/}\label{amici_8c_a525335710b53cb064ca56b936120431e}
-return value indicating successful execution 
+\paragraph[{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}]{\setlength{\rightskip}{0pt plus 5cm}\#define \+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}\label{amici_8c_a525335710b53cb064ca56b936120431e}
+return value indicating successful execution M\+S definition of P\+I and other constants 
 
-Definition at line 11 of file amici.\+c.
+Definition at line 12 of file amici.\+c.
+
+\hypertarget{amici_8c_ae71449b1cc6e6250b91f539153a7a0d3}{}\index{amici.\+c@{amici.\+c}!M\+\_\+\+P\+I@{M\+\_\+\+P\+I}}
+\index{M\+\_\+\+P\+I@{M\+\_\+\+P\+I}!amici.\+c@{amici.\+c}}
+\paragraph[{M\+\_\+\+P\+I}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+\_\+\+P\+I~3.\+14159265358979323846}\label{amici_8c_ae71449b1cc6e6250b91f539153a7a0d3}
+numeric definition of P\+I for settings where the system does not provide one 
+
+Definition at line 16 of file amici.\+c.
 
 \hypertarget{amici_8c_ac4c533f51f538a5742e373cbc82eb3d7}{}\index{amici.\+c@{amici.\+c}!init\+Field2@{init\+Field2}}
 \index{init\+Field2@{init\+Field2}!amici.\+c@{amici.\+c}}
@@ -122,8 +127,20 @@ FIELD ## data = mxGetPr(mx ## FIELD); \(\backslash\)
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 \end{DoxyCode}
 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em F\+I\+E\+L\+D} & name of the field ~\newline
+{\bfseries Type}\+: char \\
+\hline
+\mbox{\tt in}  & {\em D1} & number of rows ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em D2} & number of columns ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\end{DoxyParams}
 
-Definition at line 20 of file amici.\+c.
+
+Definition at line 28 of file amici.\+c.
 
 \hypertarget{amici_8c_aa48a7d7fd17e041b538785b9eaa62e20}{}\index{amici.\+c@{amici.\+c}!init\+Field3@{init\+Field3}}
 \index{init\+Field3@{init\+Field3}!amici.\+c@{amici.\+c}}
@@ -144,8 +161,23 @@ FIELD ## data = mxGetPr(mx ## FIELD); \(\backslash\)
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 \end{DoxyCode}
 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em F\+I\+E\+L\+D} & name of the field ~\newline
+{\bfseries Type}\+: char \\
+\hline
+\mbox{\tt in}  & {\em D1} & number of rows ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em D2} & number of columns ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em D3} & size of third dimension ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\end{DoxyParams}
 
-Definition at line 26 of file amici.\+c.
+
+Definition at line 41 of file amici.\+c.
 
 \hypertarget{amici_8c_abbee0a7c78ee0b090890b8f71651f1ca}{}\index{amici.\+c@{amici.\+c}!read\+Option\+Scalar@{read\+Option\+Scalar}}
 \index{read\+Option\+Scalar@{read\+Option\+Scalar}!amici.\+c@{amici.\+c}}
@@ -165,8 +197,17 @@ Definition at line 26 of file amici.\+c.
 \}
 \end{DoxyCode}
 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em O\+P\+T\+I\+O\+N} & name of the field ~\newline
+{\bfseries Type}\+: char \\
+\hline
+\mbox{\tt in}  & {\em T\+Y\+P\+E} & number of rows ~\newline
+{\bfseries Type}\+: type \\
+\hline
+\end{DoxyParams}
 
-Definition at line 33 of file amici.\+c.
+
+Definition at line 53 of file amici.\+c.
 
 \hypertarget{amici_8c_a124f0bb9d6f3f3d84262eb359166b64e}{}\index{amici.\+c@{amici.\+c}!read\+Option\+Data@{read\+Option\+Data}}
 \index{read\+Option\+Data@{read\+Option\+Data}!amici.\+c@{amici.\+c}}
@@ -185,8 +226,21 @@ Definition at line 33 of file amici.\+c.
 \}
 \end{DoxyCode}
 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em O\+P\+T\+I\+O\+N} & name of the field ~\newline
+{\bfseries Type}\+: char \\
+\hline
+\end{DoxyParams}
 
-Definition at line 41 of file amici.\+c.
+
+Definition at line 65 of file amici.\+c.
+
+\hypertarget{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}{}\index{amici.\+c@{amici.\+c}!A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S@{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}}
+\index{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S@{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}!amici.\+c@{amici.\+c}}
+\paragraph[{A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+M\+I\+\_\+\+S\+U\+C\+C\+E\+S\+S~0}\label{amici_8c_a15c09363d6bdc7162c154ab2a20ec545}
+definition of the return value for successful function evaluations 
+
+Definition at line 74 of file amici.\+c.
 
 
 
@@ -210,7 +264,7 @@ udata\+: struct containing all provided user data ~\newline
 \end{DoxyReturn}
 
 
-Definition at line 52 of file amici.\+c.
+Definition at line 76 of file amici.\+c.
 
 
 
@@ -234,11 +288,14 @@ Here is the caller graph for this function\+:\nopagebreak
 )}\label{amici_8c_adfd73cf87e1ccb40672e8991850dd222}
 setup\+Return\+Data initialises the return data struct 
 \begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em prhs} & user input ~\newline
+\mbox{\tt in}  & {\em plhs} & user input ~\newline
 {\bfseries Type}\+: $\ast$mx\+Array \\
 \hline
 \mbox{\tt in}  & {\em user\+\_\+data} & pointer to the user data struct ~\newline
 {\bfseries Type}\+: \hyperlink{struct_user_data}{User\+Data} \\
+\hline
+\mbox{\tt in}  & {\em pstatus} & pointer to the current status flag ~\newline
+{\bfseries Type}\+: $\ast$double \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -247,7 +304,7 @@ rdata\+: return data struct ~\newline
 \end{DoxyReturn}
 user udata 
 
-Definition at line 196 of file amici.\+c.
+Definition at line 220 of file amici.\+c.
 
 
 
@@ -283,7 +340,7 @@ edata\+: experimental data struct ~\newline
 \end{DoxyReturn}
 user udata 
 
-Definition at line 279 of file amici.\+c.
+Definition at line 304 of file amici.\+c.
 
 
 
@@ -322,7 +379,7 @@ ami\+\_\+mem pointer to the cvodes/idas memory block
 \end{DoxyReturn}
 
 
-Definition at line 381 of file amici.\+c.
+Definition at line 406 of file amici.\+c.
 
 
 
@@ -375,7 +432,7 @@ ami\+\_\+mem pointer to the cvodes/idas memory block for the backward problem
 \end{DoxyReturn}
 
 
-Definition at line 700 of file amici.\+c.
+Definition at line 725 of file amici.\+c.
 
 
 
@@ -432,7 +489,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 895 of file amici.\+c.
+Definition at line 920 of file amici.\+c.
 
 
 
@@ -489,7 +546,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 943 of file amici.\+c.
+Definition at line 968 of file amici.\+c.
 
 
 
@@ -546,7 +603,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 991 of file amici.\+c.
+Definition at line 1016 of file amici.\+c.
 
 
 
@@ -610,7 +667,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1043 of file amici.\+c.
+Definition at line 1068 of file amici.\+c.
 
 
 
@@ -663,7 +720,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1073 of file amici.\+c.
+Definition at line 1098 of file amici.\+c.
 
 
 
@@ -720,7 +777,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1104 of file amici.\+c.
+Definition at line 1129 of file amici.\+c.
 
 
 
@@ -781,7 +838,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1168 of file amici.\+c.
+Definition at line 1193 of file amici.\+c.
 
 
 
@@ -838,7 +895,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1205 of file amici.\+c.
+Definition at line 1230 of file amici.\+c.
 
 
 
@@ -907,7 +964,7 @@ cv\+\_\+status updated status flag ~\newline
 \end{DoxyReturn}
 
 
-Definition at line 1249 of file amici.\+c.
+Definition at line 1274 of file amici.\+c.
 
 
 
@@ -971,7 +1028,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1316 of file amici.\+c.
+Definition at line 1341 of file amici.\+c.
 
 
 
@@ -1039,7 +1096,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1368 of file amici.\+c.
+Definition at line 1393 of file amici.\+c.
 
 
 
@@ -1103,7 +1160,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1433 of file amici.\+c.
+Definition at line 1458 of file amici.\+c.
 
 
 
@@ -1175,7 +1232,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1464 of file amici.\+c.
+Definition at line 1489 of file amici.\+c.
 
 
 
@@ -1236,7 +1293,7 @@ cv\+\_\+status updated status flag ~\newline
 \end{DoxyReturn}
 
 
-Definition at line 1565 of file amici.\+c.
+Definition at line 1590 of file amici.\+c.
 
 
 
@@ -1297,7 +1354,7 @@ tnext next timepoint ~\newline
 \end{DoxyReturn}
 
 
-Definition at line 1623 of file amici.\+c.
+Definition at line 1648 of file amici.\+c.
 
 
 
@@ -1342,7 +1399,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1668 of file amici.\+c.
+Definition at line 1693 of file amici.\+c.
 
 
 
@@ -1387,7 +1444,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1703 of file amici.\+c.
+Definition at line 1728 of file amici.\+c.
 
 
 
@@ -1428,7 +1485,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1741 of file amici.\+c.
+Definition at line 1766 of file amici.\+c.
 
 
 
@@ -1469,7 +1526,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1774 of file amici.\+c.
+Definition at line 1799 of file amici.\+c.
 
 
 
@@ -1514,7 +1571,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1803 of file amici.\+c.
+Definition at line 1828 of file amici.\+c.
 
 
 
@@ -1563,7 +1620,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1833 of file amici.\+c.
+Definition at line 1858 of file amici.\+c.
 
 
 
@@ -1616,7 +1673,7 @@ void
 \end{DoxyReturn}
 
 
-Definition at line 1871 of file amici.\+c.
+Definition at line 1896 of file amici.\+c.
 
 
 

@@ -8,21 +8,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
+/** MS definition of PI and other constants */
+#define _USE_MATH_DEFINES
 #include <math.h>
-#ifndef M_PI /* define PI if we still have no definition */
+#ifndef M_PI 
+/** numeric definition of PI for settings where the system does not provide one */
 #define M_PI 3.14159265358979323846
 #endif
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
+/**
+ * @brief initField2 initialises an field of mxsol with an empty matrix and attaches FIELDdata as data pointer
+ * @param[in] FIELD: name of the field @type char
+ * @param[in] D1: number of rows @type int
+ * @param[in] D2: number of columns @type int
+ */
 #define initField2(FIELD,D1,D2) \
 mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
+/**
+ * @brief initField3 initialises an field of mxsol with an empty tensor and attaches FIELDdata as data pointer
+ * @param[in] FIELD: name of the field @type char
+ * @param[in] D1: number of rows @type int
+ * @param[in] D2: number of columns @type int
+ * @param[in] D3: size of third dimension @type int
+ */
 #define initField3(FIELD,D1,D2,D3) \
 mxArray *mx ## FIELD; \
 const mwSize dims ## FIELD[]={D1,D2,D3}; \
@@ -30,6 +45,11 @@ mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
+/**
+ * @brief readOptionScalar reads the scalar property from the options struct and casts it to the specified type
+ * @param[in] OPTION: name of the field @type char
+ * @param[in] TYPE: number of rows @type type
+ */
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -38,6 +58,10 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
+/**
+ * @brief readOptionData reads the matrix property from the options struct
+ * @param[in] OPTION: name of the field @type char
+ */
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -46,7 +70,7 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
-
+/** definition of the return value for successful function evaluations */
 #define AMI_SUCCESS               0
 
 UserData setupUserData(const mxArray *prhs[]) {
@@ -196,8 +220,9 @@ UserData setupUserData(const mxArray *prhs[]) {
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
-     * @param[in] prhs user input @type *mxArray
+     * @param[in] plhs user input @type *mxArray
      * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[in] pstatus pointer to the current status flag @type *double
      * @return rdata: return data struct @type ReturnData
      */
     ReturnData rdata; /* returned rdata struct */

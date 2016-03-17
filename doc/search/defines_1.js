@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['false',['FALSE',['../symbolic__functions_8c.html#aa93f0eb578d23995850d61f7d61c55c1',1,'symbolic_functions.c']]]
+  ['ami_5fsuccess',['AMI_SUCCESS',['../amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545',1,'amici.c']]]
 ];

@@ -189,15 +189,18 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a8f60c8102d29fcd525162d02eed4566b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamioption.html#a8f60c8102d29fcd525162d02eed4566b">ss</a> = 0</td></tr>
 <tr class="memdesc:a8f60c8102d29fcd525162d02eed4566b"><td class="mdescLeft">&#160;</td><td class="mdescRight">flag indicating whether steady state sensitivites should be computed  <a href="#a8f60c8102d29fcd525162d02eed4566b">More...</a><br /></td></tr>
 <tr class="separator:a8f60c8102d29fcd525162d02eed4566b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5d555210685086c19e5d08afca6685b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamioption.html#aa5d555210685086c19e5d08afca6685b">ordering</a> = 1</td></tr>
+<tr class="memdesc:aa5d555210685086c19e5d08afca6685b"><td class="mdescLeft">&#160;</td><td class="mdescRight">pre-ordering scheme for the LU decomposition, this only applies if the sparse direct linear solver is used  <a href="#aa5d555210685086c19e5d08afca6685b">More...</a><br /></td></tr>
+<tr class="separator:aa5d555210685086c19e5d08afca6685b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae40f9a7172d3a41725c151afaec347f7"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamioption.html#ae40f9a7172d3a41725c151afaec347f7">sx0</a> = double(&quot;[]&quot;)</td></tr>
 <tr class="memdesc:ae40f9a7172d3a41725c151afaec347f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">user provided initialization of sensitivity initial conditions  <a href="#ae40f9a7172d3a41725c151afaec347f7">More...</a><br /></td></tr>
 <tr class="separator:ae40f9a7172d3a41725c151afaec347f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa61f948de07e22bb723bac762c6bc55"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa61f948de07e22bb723bac762c6bc55"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>z2event</b> = double(&quot;[]&quot;)</td></tr>
-<tr class="separator:aaa61f948de07e22bb723bac762c6bc55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7caebe2c1b0190ba06b132e00dacfefd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7caebe2c1b0190ba06b132e00dacfefd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>id</b> = double(&quot;[]&quot;)</td></tr>
-<tr class="separator:a7caebe2c1b0190ba06b132e00dacfefd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a7be015feeb7a346dceccd49e622b4b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamioption.html#a7a7be015feeb7a346dceccd49e622b4b">z2event</a> = double(&quot;[]&quot;)</td></tr>
+<tr class="memdesc:a7a7be015feeb7a346dceccd49e622b4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">mapping of event outputs to events  <a href="#a7a7be015feeb7a346dceccd49e622b4b">More...</a><br /></td></tr>
+<tr class="separator:a7a7be015feeb7a346dceccd49e622b4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf2488b95c97e0378c9bf49de3b50f28"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamioption.html#acf2488b95c97e0378c9bf49de3b50f28">id</a> = double(&quot;[]&quot;)</td></tr>
+<tr class="memdesc:acf2488b95c97e0378c9bf49de3b50f28"><td class="mdescLeft">&#160;</td><td class="mdescRight">index set of states with algebraic constraints  <a href="#acf2488b95c97e0378c9bf49de3b50f28">More...</a><br /></td></tr>
+<tr class="separator:acf2488b95c97e0378c9bf49de3b50f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
@@ -218,10 +221,16 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>OPTS = <a class="el" href="classamioption.html#a86c655c4010c1c2ddb3e68693a07ef37" title="amioptions Construct a new amioptions object ">amioption()</a> creates a set of options with each option set to its default value.</p>
 <p>OPTS = amioption(PARAM, VAL, ...) creates a set of options with the named parameters altered with the specified values.</p>
-<p>OPTS = amioption(OLDOPTS, PARAM, VAL, ...) creates a copy of OLDOPTS with the named parameters altered with the specified value</p>
-<p>Note to see the parameters, check the documentation page for amioptions </p>
+<p>OPTS = amioption(OLDOPTS, PARAM, VAL, ...) creates a copy of OLDOPTS with the named parameters altered with the specified value. OLDOPTS must not be of type amioption but can be a struct with the same fields</p>
+<p>Note to see the parameters, check the documentation page for <a class="el" href="classamioption.html">amioption</a></p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">varargin</td><td>specification of non-default fields </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p>Definition at line <a class="el" href="amioption_8m_source.html#l00195">195</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
+<p>Definition at line <a class="el" href="amioption_8m_source.html#l00222">222</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
 
 </div>
 </div>
@@ -516,6 +525,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="aa5d555210685086c19e5d08afca6685b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ordering = 1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p><br />
+<b>Default:</b> 1 </p>
+
+<p>Definition at line <a class="el" href="amioption_8m_source.html#l00176">176</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="ae40f9a7172d3a41725c151afaec347f7"></a>
 <div class="memitem">
 <div class="memproto">
@@ -528,7 +553,43 @@ Public Attributes</h2></td></tr>
 <p><br />
 <b>Default:</b> double("[]") </p>
 
-<p>Definition at line <a class="el" href="amioption_8m_source.html#l00176">176</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
+<p>Definition at line <a class="el" href="amioption_8m_source.html#l00185">185</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a7a7be015feeb7a346dceccd49e622b4b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">z2event = double(&quot;[]&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section note"><dt>Note</dt><dd>This property has the MATLAB attribute <code>Hidden</code> set to true. </dd>
+<dd>
+<a href="http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html">Matlab documentation of property attributes.</a> <br />
+<b>Default:</b> double("[]") </dd></dl>
+
+<p>Definition at line <a class="el" href="amioption_8m_source.html#l00197">197</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="acf2488b95c97e0378c9bf49de3b50f28"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">id = double(&quot;[]&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section note"><dt>Note</dt><dd>This property has the MATLAB attribute <code>Hidden</code> set to true. </dd>
+<dd>
+<a href="http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html">Matlab documentation of property attributes.</a> <br />
+<b>Default:</b> double("[]") </dd></dl>
+
+<p>Definition at line <a class="el" href="amioption_8m_source.html#l00208">208</a> of file <a class="el" href="amioption_8m_source.html">amioption.m</a>.</p>
 
 </div>
 </div>
@@ -538,7 +599,7 @@ Public Attributes</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classamioption.html">amioption</a></li>
-    <li class="footer">Generated on Tue Mar 15 2016 18:00:23 for AMICI by
+    <li class="footer">Generated on Thu Mar 17 2016 11:53:30 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

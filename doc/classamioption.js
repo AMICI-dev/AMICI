@@ -19,7 +19,8 @@ var classamioption =
     [ "sensi", "classamioption.html#a7dd31d33463c5a709251bcef0eccaa36", null ],
     [ "nmaxevent", "classamioption.html#a85519d27e7231ac625e5b2deee92165a", null ],
     [ "ss", "classamioption.html#a8f60c8102d29fcd525162d02eed4566b", null ],
+    [ "ordering", "classamioption.html#aa5d555210685086c19e5d08afca6685b", null ],
     [ "sx0", "classamioption.html#ae40f9a7172d3a41725c151afaec347f7", null ],
-    [ "z2event", "classamioption.html#aaa61f948de07e22bb723bac762c6bc55", null ],
-    [ "id", "classamioption.html#a7caebe2c1b0190ba06b132e00dacfefd", null ]
+    [ "z2event", "classamioption.html#a7a7be015feeb7a346dceccd49e622b4b", null ],
+    [ "id", "classamioption.html#acf2488b95c97e0378c9bf49de3b50f28", null ]
 ];

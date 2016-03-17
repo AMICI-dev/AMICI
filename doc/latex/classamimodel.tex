@@ -28,15 +28,16 @@ Collaboration diagram for amimodel\+:\nopagebreak
 \item 
 \hyperlink{classamimodel_a05d52506788717b3d482845748446a60}{amimodel} (\+::string symfun,\+::string \hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname})
 \begin{DoxyCompactList}\small\item\em constructor of the amimodel class. this function initializes the model object based on the provided symfun and modelname \end{DoxyCompactList}\item 
-\hypertarget{classamimodel_aa508c0cd4ac026e464f85cec25678850}{}noret\+::substitute {\bfseries update\+R\+H\+S} (matlabtypesubstitute xdot)\label{classamimodel_aa508c0cd4ac026e464f85cec25678850}
-
-\item 
+noret\+::substitute \hyperlink{classamimodel_abd077fe30143ecfbb165fc2f9a3ded17}{update\+R\+H\+S} (\+::\hyperlink{classamimodel_a3c48fff3d28406486a4f1b5e18da7ca6}{sym} xdot)
+\begin{DoxyCompactList}\small\item\em update\+R\+H\+S updates the right hand side of the model \end{DoxyCompactList}\item 
 \hypertarget{classamimodel_ae4172c2a8fac8b7c434f03274fcac6ac}{}noret\+::substitute \hyperlink{classamimodel_ae4172c2a8fac8b7c434f03274fcac6ac}{parse\+Model} ()\label{classamimodel_ae4172c2a8fac8b7c434f03274fcac6ac}
 
 \begin{DoxyCompactList}\small\item\em parse\+Model parses the model definition and computes all necessary symbolic expressions. \end{DoxyCompactList}\item 
-noret\+::substitute \hyperlink{classamimodel_a73df9b3d523823e7a0105916471f13f5}{generate\+C} ()
+\hypertarget{classamimodel_a73df9b3d523823e7a0105916471f13f5}{}noret\+::substitute \hyperlink{classamimodel_a73df9b3d523823e7a0105916471f13f5}{generate\+C} ()\label{classamimodel_a73df9b3d523823e7a0105916471f13f5}
+
 \begin{DoxyCompactList}\small\item\em generate\+C generates the c files which will be used in the compilation. \end{DoxyCompactList}\item 
-noret\+::substitute \hyperlink{classamimodel_abf720a0c3104977029538e3b19d429bb}{compile\+C} ()
+\hypertarget{classamimodel_abf720a0c3104977029538e3b19d429bb}{}noret\+::substitute \hyperlink{classamimodel_abf720a0c3104977029538e3b19d429bb}{compile\+C} ()\label{classamimodel_abf720a0c3104977029538e3b19d429bb}
+
 \begin{DoxyCompactList}\small\item\em compile\+C compiles the mex simulation file \end{DoxyCompactList}\item 
 noret\+::substitute \hyperlink{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}{generate\+M} (\+::\hyperlink{classamimodel}{amimodel} amimodelo2)
 \begin{DoxyCompactList}\small\item\em generate\+M generates the matlab wrapper for the compiled C files. \end{DoxyCompactList}\item 
@@ -48,7 +49,7 @@ noret\+::substitute \hyperlink{classamimodel_a08d58ae650e5ff9310760f6d3f08015c}{
 \hypertarget{classamimodel_a5aba9155145df4b3f70bfec887c25af9}{}noret\+::substitute \hyperlink{classamimodel_a5aba9155145df4b3f70bfec887c25af9}{make\+Syms} ()\label{classamimodel_a5aba9155145df4b3f70bfec887c25af9}
 
 \begin{DoxyCompactList}\small\item\em make\+Syms extracts symbolic definition from the user provided model and checks them for consistency \end{DoxyCompactList}\item 
-mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b}{check\+Deps} (\+::struct \hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table},\+::cell deps)
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_ad8b3b7be2def1fea709aaa6f02f04137}{check\+Deps} (\+::struct \hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table},\+::cell deps)
 \begin{DoxyCompactList}\small\item\em check\+Deps checks the dependencies of functions and populates sym fields if necessary \end{DoxyCompactList}\item 
 mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_a93346c96338624e417ee9732ffd96b28}{load\+Old\+Hashes} ()
 \begin{DoxyCompactList}\small\item\em load\+Old\+Hashes loads information from a previous compilation of the model. \end{DoxyCompactList}\item 
@@ -63,7 +64,7 @@ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_aaed774d
 \begin{DoxyCompactList}\small\item\em symbolic definition struct \end{DoxyCompactList}\item 
 \+::struct \hyperlink{classamimodel_a743fa290dbc0a67a3843d5ab0426e9b4}{fun}
 \begin{DoxyCompactList}\small\item\em struct which stores information for which functions c code needs to be generated \end{DoxyCompactList}\item 
-\+::$\ast$\hyperlink{classamievent}{amievent} \hyperlink{classamimodel_a3b65133bb9997cd1ccf311af0927fc9e}{event}
+\+::$\ast$\hyperlink{classamievent}{amievent} \hyperlink{classamimodel_a3b65133bb9997cd1ccf311af0927fc9e}{event} = amievent.\+empty(\char`\"{}\char`\"{})
 \begin{DoxyCompactList}\small\item\em struct which stores information for which functions c code needs to be generated \end{DoxyCompactList}\item 
 \+::string \hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname}
 \begin{DoxyCompactList}\small\item\em name of the model \end{DoxyCompactList}\item 
@@ -75,15 +76,15 @@ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_aaed774d
 \begin{DoxyCompactList}\small\item\em default relative tolerance \end{DoxyCompactList}\item 
 \+::int \hyperlink{classamimodel_ac37622882dacee1f11688d4941ccb45e}{maxsteps} = 1e4
 \begin{DoxyCompactList}\small\item\em default maximal number of integration steps \end{DoxyCompactList}\item 
-\+::bool \hyperlink{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{debug} = false
+\+::logical \hyperlink{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{debug} = false
 \begin{DoxyCompactList}\small\item\em flag indicating whether debugging symbols should be compiled \end{DoxyCompactList}\item 
-\+::bool \hyperlink{classamimodel_ab6d500b41cf50693452415caca31d32e}{adjoint} = true
+\+::logical \hyperlink{classamimodel_ab6d500b41cf50693452415caca31d32e}{adjoint} = true
 \begin{DoxyCompactList}\small\item\em flag indicating whether adjoint sensitivities should be enabled \end{DoxyCompactList}\item 
-\+::bool \hyperlink{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}{forward} = true
+\+::logical \hyperlink{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}{forward} = true
 \begin{DoxyCompactList}\small\item\em flag indicating whether forward sensitivities should be enabled \end{DoxyCompactList}\item 
 \+::double \hyperlink{classamimodel_abdb5a42ffee3ca622484b53a322f1004}{t0} = 0
 \begin{DoxyCompactList}\small\item\em default initial time \end{DoxyCompactList}\item 
-\+::string \hyperlink{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}{wtype}
+\+::char \hyperlink{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}{wtype}
 \begin{DoxyCompactList}\small\item\em type of wrapper (cvodes/idas) \end{DoxyCompactList}\item 
 \+::int \hyperlink{classamimodel_a84e4236f07668a770c27567f1f9615ff}{nx}
 \begin{DoxyCompactList}\small\item\em number of states \end{DoxyCompactList}\item 
@@ -123,9 +124,9 @@ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \hyperlink{classamimodel_aaed774d
 \begin{DoxyCompactList}\small\item\em rowindexes of sparse Jacobian \end{DoxyCompactList}\item 
 \+::$\ast$int \hyperlink{classamimodel_a3a4891c5565b544dd7d4362dbbfaadf7}{colptrs\+B}
 \begin{DoxyCompactList}\small\item\em columnindexes of sparse Jacobian \end{DoxyCompactList}\item 
-\+::$\ast$cell \hyperlink{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}{funs}
+\+::cell \hyperlink{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}{funs}
 \begin{DoxyCompactList}\small\item\em cell array of functions to be compiled \end{DoxyCompactList}\item 
-\+::string \hyperlink{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}{coptim} = \char`\"{}-\/O3\char`\"{}
+\+::char \hyperlink{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}{coptim} = \char`\"{}-\/O3\char`\"{}
 \begin{DoxyCompactList}\small\item\em optimisation flag for compilation \end{DoxyCompactList}\item 
 \+::string \hyperlink{classamimodel_a51f20d6b1b54a2eee3be0e8adc96a0ae}{param} = \char`\"{}lin\char`\"{}
 \begin{DoxyCompactList}\small\item\em default parametrisation \end{DoxyCompactList}\item 
@@ -180,7 +181,7 @@ Definition at line 17 of file amimodel.\+m.
 \end{DoxyParams}
 
 
-Definition at line 513 of file amimodel.\+m.
+Definition at line 517 of file amimodel.\+m.
 
 
 
@@ -196,37 +197,37 @@ Here is the caller graph for this function\+:\nopagebreak
 
 
 \subsubsection{Member Function Documentation}
-\hypertarget{classamimodel_a73df9b3d523823e7a0105916471f13f5}{}\index{amimodel@{amimodel}!generate\+C@{generate\+C}}
-\index{generate\+C@{generate\+C}!amimodel@{amimodel}}
-\paragraph[{generate\+C()}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute generate\+C (
+\hypertarget{classamimodel_abd077fe30143ecfbb165fc2f9a3ded17}{}\index{amimodel@{amimodel}!update\+R\+H\+S@{update\+R\+H\+S}}
+\index{update\+R\+H\+S@{update\+R\+H\+S}!amimodel@{amimodel}}
+\paragraph[{update\+R\+H\+S(\+::sym xdot)}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute update\+R\+H\+S (
 \begin{DoxyParamCaption}
-{}
+\item[{\+::{\bf sym}}]{xdot}
 \end{DoxyParamCaption}
-)}\label{classamimodel_a73df9b3d523823e7a0105916471f13f5}
+)}\label{classamimodel_abd077fe30143ecfbb165fc2f9a3ded17}
+
+\begin{DoxyParams}{Parameters}
+{\em xdot} & new right hand side\\
+\hline
+\end{DoxyParams}
 
 \begin{DoxyRetVals}{Return values}
-{\em this} & model definition object \\
+{\em this} & udpated model definition object \\
 \hline
 \end{DoxyRetVals}
 
 
-Definition at line 18 of file generate\+C.\+m.
-
-\hypertarget{classamimodel_abf720a0c3104977029538e3b19d429bb}{}\index{amimodel@{amimodel}!compile\+C@{compile\+C}}
-\index{compile\+C@{compile\+C}!amimodel@{amimodel}}
-\paragraph[{compile\+C()}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute compile\+C (
-\begin{DoxyParamCaption}
-{}
-\end{DoxyParamCaption}
-)}\label{classamimodel_abf720a0c3104977029538e3b19d429bb}
-
-\begin{DoxyRetVals}{Return values}
-{\em this} & model definition object \\
-\hline
-\end{DoxyRetVals}
+Definition at line 591 of file amimodel.\+m.
 
 
-Definition at line 18 of file compile\+C.\+m.
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{classamimodel_abd077fe30143ecfbb165fc2f9a3ded17_icgraph}
+\end{center}
+\end{figure}
+
 
 \hypertarget{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}{}\index{amimodel@{amimodel}!generate\+M@{generate\+M}}
 \index{generate\+M@{generate\+M}!amimodel@{amimodel}}
@@ -237,14 +238,9 @@ Definition at line 18 of file compile\+C.\+m.
 )}\label{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}
 
 \begin{DoxyParams}{Parameters}
-{\em amimodelo2} & this struct must contain all necessary symbolic definitions for second order sensivities\\
+{\em amimodelo2} & this struct must contain all necessary symbolic definitions for second order sensivities \\
 \hline
 \end{DoxyParams}
-
-\begin{DoxyRetVals}{Return values}
-{\em this} & model definition object \\
-\hline
-\end{DoxyRetVals}
 
 
 Definition at line 18 of file generate\+M.\+m.
@@ -270,7 +266,8 @@ Definition at line 18 of file get\+Fun.\+m.
 
 
 
-Here is the call graph for this function\+:\nopagebreak
+Here is the call graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -281,7 +278,8 @@ Here is the call graph for this function\+:\nopagebreak
 
 
 
-Here is the caller graph for this function\+:\nopagebreak
+Here is the caller graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -290,14 +288,14 @@ Here is the caller graph for this function\+:\nopagebreak
 \end{figure}
 
 
-\hypertarget{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b}{}\index{amimodel@{amimodel}!check\+Deps@{check\+Deps}}
+\hypertarget{classamimodel_ad8b3b7be2def1fea709aaa6f02f04137}{}\index{amimodel@{amimodel}!check\+Deps@{check\+Deps}}
 \index{check\+Deps@{check\+Deps}!amimodel@{amimodel}}
-\paragraph[{check\+Deps(\+::struct H\+Table,\+::cell deps)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::bool $>$ check\+Deps (
+\paragraph[{check\+Deps(\+::struct H\+Table,\+::cell deps)}]{\setlength{\rightskip}{0pt plus 5cm}mlhs\+Inner\+Subst$<$\+::logical $>$ check\+Deps (
 \begin{DoxyParamCaption}
 \item[{\+::struct}]{H\+Table, }
 \item[{\+::cell}]{deps}
 \end{DoxyParamCaption}
-)}\label{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b}
+)}\label{classamimodel_ad8b3b7be2def1fea709aaa6f02f04137}
 
 \begin{DoxyParams}{Parameters}
 {\em H\+Table} & struct with reference hashes of functions in its fields\\
@@ -316,22 +314,24 @@ Definition at line 18 of file check\+Deps.\+m.
 
 
 
-Here is the call graph for this function\+:\nopagebreak
+Here is the call graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=229pt]{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b_cgraph}
+\includegraphics[width=229pt]{classamimodel_ad8b3b7be2def1fea709aaa6f02f04137_cgraph}
 \end{center}
 \end{figure}
 
 
 
 
-Here is the caller graph for this function\+:\nopagebreak
+Here is the caller graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=346pt]{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b_icgraph}
+\includegraphics[width=346pt]{classamimodel_ad8b3b7be2def1fea709aaa6f02f04137_icgraph}
 \end{center}
 \end{figure}
 
@@ -381,7 +381,8 @@ Definition at line 18 of file augmento2.\+m.
 
 
 
-Here is the call graph for this function\+:\nopagebreak
+Here is the call graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -408,7 +409,8 @@ Definition at line 18 of file augmento2vec.\+m.
 
 
 
-Here is the call graph for this function\+:\nopagebreak
+Here is the call graph for this function\+:
+\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -446,11 +448,12 @@ Definition at line 37 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a3b65133bb9997cd1ccf311af0927fc9e}{}\index{amimodel@{amimodel}!event@{event}}
 \index{event@{event}!amimodel@{amimodel}}
-\paragraph[{event}]{\setlength{\rightskip}{0pt plus 5cm}event}\label{classamimodel_a3b65133bb9997cd1ccf311af0927fc9e}
+\paragraph[{event}]{\setlength{\rightskip}{0pt plus 5cm}event = amievent.\+empty(\char`\"{}\char`\"{})}\label{classamimodel_a3b65133bb9997cd1ccf311af0927fc9e}
 \begin{DoxyNote}{Note}
 This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 
 
-\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} 
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} amievent.\+empty(\char`\"{}\char`\"{}) 
 \end{DoxyNote}
 
 
@@ -466,7 +469,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 58 of file amimodel.\+m.
+Definition at line 59 of file amimodel.\+m.
 
 \hypertarget{classamimodel_aafe6335df413dd688a2f44efba012cf1}{}\index{amimodel@{amimodel}!H\+Table@{H\+Table}}
 \index{H\+Table@{H\+Table}!amimodel@{amimodel}}
@@ -478,7 +481,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 68 of file amimodel.\+m.
+Definition at line 69 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a0c5f3dcf809a17b895fe12fc91272349}{}\index{amimodel@{amimodel}!atol@{atol}}
 \index{atol@{atol}!amimodel@{amimodel}}
@@ -491,7 +494,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 78 of file amimodel.\+m.
+Definition at line 79 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a7978e9a4674f869e6b2950e2f6262ca5}{}\index{amimodel@{amimodel}!rtol@{rtol}}
 \index{rtol@{rtol}!amimodel@{amimodel}}
@@ -504,7 +507,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 89 of file amimodel.\+m.
+Definition at line 90 of file amimodel.\+m.
 
 \hypertarget{classamimodel_ac37622882dacee1f11688d4941ccb45e}{}\index{amimodel@{amimodel}!maxsteps@{maxsteps}}
 \index{maxsteps@{maxsteps}!amimodel@{amimodel}}
@@ -517,7 +520,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 100 of file amimodel.\+m.
+Definition at line 101 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{}\index{amimodel@{amimodel}!debug@{debug}}
 \index{debug@{debug}!amimodel@{amimodel}}
@@ -530,7 +533,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 111 of file amimodel.\+m.
+Definition at line 112 of file amimodel.\+m.
 
 \hypertarget{classamimodel_ab6d500b41cf50693452415caca31d32e}{}\index{amimodel@{amimodel}!adjoint@{adjoint}}
 \index{adjoint@{adjoint}!amimodel@{amimodel}}
@@ -543,7 +546,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 122 of file amimodel.\+m.
+Definition at line 124 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a81e42e48c9c72814166c8f7cd414ce24}{}\index{amimodel@{amimodel}!forward@{forward}}
 \index{forward@{forward}!amimodel@{amimodel}}
@@ -556,7 +559,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 133 of file amimodel.\+m.
+Definition at line 136 of file amimodel.\+m.
 
 \hypertarget{classamimodel_abdb5a42ffee3ca622484b53a322f1004}{}\index{amimodel@{amimodel}!t0@{t0}}
 \index{t0@{t0}!amimodel@{amimodel}}
@@ -569,7 +572,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 144 of file amimodel.\+m.
+Definition at line 148 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a5376250224ce32fb558d88aa0b5a93ff}{}\index{amimodel@{amimodel}!wtype@{wtype}}
 \index{wtype@{wtype}!amimodel@{amimodel}}
@@ -581,7 +584,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 155 of file amimodel.\+m.
+Definition at line 159 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a84e4236f07668a770c27567f1f9615ff}{}\index{amimodel@{amimodel}!nx@{nx}}
 \index{nx@{nx}!amimodel@{amimodel}}
@@ -593,7 +596,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 165 of file amimodel.\+m.
+Definition at line 169 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a49c476de14a021114feb8c95da04952a}{}\index{amimodel@{amimodel}!nxtrue@{nxtrue}}
 \index{nxtrue@{nxtrue}!amimodel@{amimodel}}
@@ -606,7 +609,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 175 of file amimodel.\+m.
+Definition at line 179 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a289ca425eb368f1d582b6be2be0d3dfc}{}\index{amimodel@{amimodel}!ny@{ny}}
 \index{ny@{ny}!amimodel@{amimodel}}
@@ -618,7 +621,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 186 of file amimodel.\+m.
+Definition at line 190 of file amimodel.\+m.
 
 \hypertarget{classamimodel_ac91d7b36031ec122abc9f739692b02e8}{}\index{amimodel@{amimodel}!nytrue@{nytrue}}
 \index{nytrue@{nytrue}!amimodel@{amimodel}}
@@ -631,7 +634,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 196 of file amimodel.\+m.
+Definition at line 200 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a6f6e2fe71b05c4c2f2d967ce9ca02dfd}{}\index{amimodel@{amimodel}!np@{np}}
 \index{np@{np}!amimodel@{amimodel}}
@@ -643,7 +646,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 207 of file amimodel.\+m.
+Definition at line 211 of file amimodel.\+m.
 
 \hypertarget{classamimodel_afd6bea572754e0c3c320664bdccf0200}{}\index{amimodel@{amimodel}!nk@{nk}}
 \index{nk@{nk}!amimodel@{amimodel}}
@@ -655,7 +658,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 217 of file amimodel.\+m.
+Definition at line 221 of file amimodel.\+m.
 
 \hypertarget{classamimodel_aab5c7f06273122b68624eb3bca6a9b6e}{}\index{amimodel@{amimodel}!nevent@{nevent}}
 \index{nevent@{nevent}!amimodel@{amimodel}}
@@ -667,7 +670,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 227 of file amimodel.\+m.
+Definition at line 231 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a79f11413e5bfe18a0e71e17574399ad5}{}\index{amimodel@{amimodel}!nz@{nz}}
 \index{nz@{nz}!amimodel@{amimodel}}
@@ -679,7 +682,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 237 of file amimodel.\+m.
+Definition at line 241 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a364ecd990baeeefd1de3e6795cd50a58}{}\index{amimodel@{amimodel}!nztrue@{nztrue}}
 \index{nztrue@{nztrue}!amimodel@{amimodel}}
@@ -691,7 +694,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 247 of file amimodel.\+m.
+Definition at line 251 of file amimodel.\+m.
 
 \hypertarget{classamimodel_acf2488b95c97e0378c9bf49de3b50f28}{}\index{amimodel@{amimodel}!id@{id}}
 \index{id@{id}!amimodel@{amimodel}}
@@ -703,7 +706,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 257 of file amimodel.\+m.
+Definition at line 261 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a955c9d10635afed4ebc04c60010e5d40}{}\index{amimodel@{amimodel}!ubw@{ubw}}
 \index{ubw@{ubw}!amimodel@{amimodel}}
@@ -715,7 +718,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 267 of file amimodel.\+m.
+Definition at line 271 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a784f5fb2b8eda576179be087c2a09a39}{}\index{amimodel@{amimodel}!lbw@{lbw}}
 \index{lbw@{lbw}!amimodel@{amimodel}}
@@ -727,7 +730,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 277 of file amimodel.\+m.
+Definition at line 281 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a825ec588729c090ff51ea3473dcbc6b9}{}\index{amimodel@{amimodel}!nnz@{nnz}}
 \index{nnz@{nnz}!amimodel@{amimodel}}
@@ -739,7 +742,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 287 of file amimodel.\+m.
+Definition at line 291 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a6ffb112eda9ff756e17104210981b30b}{}\index{amimodel@{amimodel}!sparseidx@{sparseidx}}
 \index{sparseidx@{sparseidx}!amimodel@{amimodel}}
@@ -751,7 +754,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 297 of file amimodel.\+m.
+Definition at line 301 of file amimodel.\+m.
 
 \hypertarget{classamimodel_aa0abea3560da3f409a28567f42d52872}{}\index{amimodel@{amimodel}!rowvals@{rowvals}}
 \index{rowvals@{rowvals}!amimodel@{amimodel}}
@@ -763,7 +766,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 307 of file amimodel.\+m.
+Definition at line 311 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a887e8a11654afa197d040d8bb10cbb38}{}\index{amimodel@{amimodel}!colptrs@{colptrs}}
 \index{colptrs@{colptrs}!amimodel@{amimodel}}
@@ -775,7 +778,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 317 of file amimodel.\+m.
+Definition at line 321 of file amimodel.\+m.
 
 \hypertarget{classamimodel_adcfae93a688a66f1954d0832f51e4cc0}{}\index{amimodel@{amimodel}!sparseidx\+B@{sparseidx\+B}}
 \index{sparseidx\+B@{sparseidx\+B}!amimodel@{amimodel}}
@@ -787,7 +790,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 327 of file amimodel.\+m.
+Definition at line 331 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a1ba81ee0e28fe7c7576911973c82be70}{}\index{amimodel@{amimodel}!rowvals\+B@{rowvals\+B}}
 \index{rowvals\+B@{rowvals\+B}!amimodel@{amimodel}}
@@ -799,7 +802,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 337 of file amimodel.\+m.
+Definition at line 341 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a3a4891c5565b544dd7d4362dbbfaadf7}{}\index{amimodel@{amimodel}!colptrs\+B@{colptrs\+B}}
 \index{colptrs\+B@{colptrs\+B}!amimodel@{amimodel}}
@@ -811,7 +814,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 347 of file amimodel.\+m.
+Definition at line 351 of file amimodel.\+m.
 
 \hypertarget{classamimodel_af80b2560853c3df2b09fef2a198cf5b8}{}\index{amimodel@{amimodel}!funs@{funs}}
 \index{funs@{funs}!amimodel@{amimodel}}
@@ -823,7 +826,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 357 of file amimodel.\+m.
+Definition at line 361 of file amimodel.\+m.
 
 \hypertarget{classamimodel_ad99abcd270ac97546c46292ebc6c2e0a}{}\index{amimodel@{amimodel}!coptim@{coptim}}
 \index{coptim@{coptim}!amimodel@{amimodel}}
@@ -836,7 +839,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 367 of file amimodel.\+m.
+Definition at line 371 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a51f20d6b1b54a2eee3be0e8adc96a0ae}{}\index{amimodel@{amimodel}!param@{param}}
 \index{param@{param}!amimodel@{amimodel}}
@@ -849,7 +852,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 378 of file amimodel.\+m.
+Definition at line 382 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a0b316a20054ba282555674d939a82406}{}\index{amimodel@{amimodel}!wrap\+\_\+path@{wrap\+\_\+path}}
 \index{wrap\+\_\+path@{wrap\+\_\+path}!amimodel@{amimodel}}
@@ -861,7 +864,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 389 of file amimodel.\+m.
+Definition at line 393 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a8d2e824e03e32034b634a7c48f2a26c6}{}\index{amimodel@{amimodel}!recompile@{recompile}}
 \index{recompile@{recompile}!amimodel@{amimodel}}
@@ -874,7 +877,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 399 of file amimodel.\+m.
+Definition at line 403 of file amimodel.\+m.
 
 \hypertarget{classamimodel_afec809c626a350367485aa6aaea6b585}{}\index{amimodel@{amimodel}!cfun@{cfun}}
 \index{cfun@{cfun}!amimodel@{amimodel}}
@@ -887,7 +890,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 410 of file amimodel.\+m.
+Definition at line 414 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a2b89e3b4e249878a2d436ee337952c4f}{}\index{amimodel@{amimodel}!o2flag@{o2flag}}
 \index{o2flag@{o2flag}!amimodel@{amimodel}}
@@ -900,7 +903,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 422 of file amimodel.\+m.
+Definition at line 426 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a0a9e4caf628a02e6db68e91c2de6f382}{}\index{amimodel@{amimodel}!compver@{compver}}
 \index{compver@{compver}!amimodel@{amimodel}}
@@ -913,7 +916,7 @@ This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = P
 \end{DoxyNote}
 
 
-Definition at line 438 of file amimodel.\+m.
+Definition at line 442 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a7a7be015feeb7a346dceccd49e622b4b}{}\index{amimodel@{amimodel}!z2event@{z2event}}
 \index{z2event@{z2event}!amimodel@{amimodel}}
@@ -921,7 +924,7 @@ Definition at line 438 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
 
-Definition at line 453 of file amimodel.\+m.
+Definition at line 457 of file amimodel.\+m.
 
 \hypertarget{classamimodel_abea45d67286ebbf35dcbc12e335ffd51}{}\index{amimodel@{amimodel}!splineflag@{splineflag}}
 \index{splineflag@{splineflag}!amimodel@{amimodel}}
@@ -929,7 +932,7 @@ Definition at line 453 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} false 
 
-Definition at line 461 of file amimodel.\+m.
+Definition at line 465 of file amimodel.\+m.
 
 \hypertarget{classamimodel_affead4b7a87bc135fea91fd5aada78a8}{}\index{amimodel@{amimodel}!minflag@{minflag}}
 \index{minflag@{minflag}!amimodel@{amimodel}}
@@ -937,7 +940,7 @@ Definition at line 461 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} false 
 
-Definition at line 469 of file amimodel.\+m.
+Definition at line 473 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a1a65e7157ae2262cfa11a783b018364f}{}\index{amimodel@{amimodel}!maxflag@{maxflag}}
 \index{maxflag@{maxflag}!amimodel@{amimodel}}
@@ -945,7 +948,7 @@ Definition at line 469 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} false 
 
-Definition at line 477 of file amimodel.\+m.
+Definition at line 481 of file amimodel.\+m.
 
 \hypertarget{classamimodel_a371815f74d602ff1338376abbd1278e4}{}\index{amimodel@{amimodel}!nw@{nw}}
 \index{nw@{nw}!amimodel@{amimodel}}
@@ -953,7 +956,7 @@ Definition at line 477 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} 0 
 
-Definition at line 485 of file amimodel.\+m.
+Definition at line 489 of file amimodel.\+m.
 
 \hypertarget{classamimodel_ae6c1afb5529f1cc0ff56552f94e7a2b5}{}\index{amimodel@{amimodel}!ndwdx@{ndwdx}}
 \index{ndwdx@{ndwdx}!amimodel@{amimodel}}
@@ -961,7 +964,7 @@ Definition at line 485 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} 0 
 
-Definition at line 494 of file amimodel.\+m.
+Definition at line 498 of file amimodel.\+m.
 
 \hypertarget{classamimodel_aa8af9048cd0280059bed9ef8999ecffb}{}\index{amimodel@{amimodel}!ndwdp@{ndwdp}}
 \index{ndwdp@{ndwdp}!amimodel@{amimodel}}
@@ -969,5 +972,5 @@ Definition at line 494 of file amimodel.\+m.
 ~\newline
 {\bfseries Default\+:} 0 
 
-Definition at line 502 of file amimodel.\+m.
+Definition at line 506 of file amimodel.\+m.
 

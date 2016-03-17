@@ -20,6 +20,7 @@ var searchData=
   ['getfargs',['getFArgs',['../classamifun.html#aa1f074dbf83e821bc999eb2d701fd9ed',1,'amifun']]],
   ['getfun',['getFun',['../classamimodel.html#a08d58ae650e5ff9310760f6d3f08015c',1,'amimodel']]],
   ['getnvecs',['getNVecs',['../classamifun.html#a3ae210044df5eb51e2f9280d03b86c3c',1,'amifun']]],
+  ['getoptimized',['getoptimized',['../classoptsym.html#a430971a3ef5e621a861eaf84d7192b90',1,'optsym']]],
   ['getsensiflag',['getSensiFlag',['../classamifun.html#ac60147b051aa541057d0da18a78582a8',1,'amifun']]],
   ['getsyms',['getSyms',['../classamifun.html#a44e49602645d85f94841f38e4673fa1a',1,'amifun']]],
   ['gettnext',['getTnext',['../amici_8c.html#a1827b26efff0f0bf3b7b84e45b273c49',1,'amici.c']]]

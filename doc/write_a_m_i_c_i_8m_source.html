@@ -125,91 +125,85 @@ $(document).ready(function(){initNavTree('write_a_m_i_c_i_8m_source.html','');})
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * However, the line numbers most likely do not correspond to the line numbers in the original MATLAB source files.</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> */</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;function  SBMLode.writeAMICI(modelname) {</div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="class_s_b_m_lode.html#af2ebf8afc99040060a0af5b3ec3632a7">   18</a></span>&#160;function  <a class="code" href="class_s_b_m_lode.html#af2ebf8afc99040060a0af5b3ec3632a7">SBMLode.writeAMICI</a>(modelname) {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    fprintf(<span class="stringliteral">&quot; writing file ...\n &quot;</span>)</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    fid = fopen([modelname &quot; _syms.m &quot;],&quot; w &quot;);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    fid = fopen([modelname <span class="stringliteral">&quot; _syms.m &quot;</span>],<span class="stringliteral">&quot; w &quot;</span>);</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    fprintf(fid,[&quot; function model =  &quot; modelname &quot; _syms()\n &quot;]);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    if(strcmp(this.<a class="code" href="class_s_b_m_lode.html#ac38903669f208bc49c971c7a69f62225">time_symbol</a>,))</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        fprintf(fid,&quot; t = sym( &quot;&quot; t &quot;&quot; );\n &quot;);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    else</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        fprintf(fid,[this.time_symbol &quot;  = sym( &quot;&quot; t &quot;&quot; );\n &quot;]);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; function model =  &quot;</span> modelname <span class="stringliteral">&quot; _syms()\n &quot;</span>]);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordflow">if</span>(strcmp(this.<a class="code" href="class_s_b_m_lode.html#ac38903669f208bc49c971c7a69f62225">time_symbol</a>,))</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        fprintf(fid,<span class="stringliteral">&quot; t = sym( &quot;</span><span class="stringliteral">&quot; t &quot;</span><span class="stringliteral">&quot; );\n &quot;</span>);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        fprintf(fid,[this.<a class="code" href="class_s_b_m_lode.html#ac38903669f208bc49c971c7a69f62225">time_symbol</a> <span class="stringliteral">&quot;  = sym( &quot;</span><span class="stringliteral">&quot; t &quot;</span><span class="stringliteral">&quot; );\n &quot;</span>]);</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    end</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    writeDefinition(&quot; STATES &quot;,&quot; x &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#adc6e5733fc3c22f0a7b2914188c49c90">state</a> &quot;,this,fid)</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    writeDefinition(&quot; PARAMETERS &quot;,&quot; p &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#a0d71b5c1dcca8d3fee88d6a11d3e2071">parameter</a> &quot;,this,fid)</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    writeDefinition(&quot; CONDITIONS &quot;,&quot; k &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#a4824b91cc0e6b5f112bdd8049af4d7d6">condition</a> &quot;,this,fid)</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    writeDerived(&quot; DYNAMICS &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#a914ee05b8f01d45602316710ca4b8a43">xdot</a> &quot;,&quot; xdot &quot;,this,fid)</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    writeDerived(&quot; INITIALIZATION &quot;,&quot; x0 &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#a67d068407e71cba6ca16f3f6b6d1794c">initState</a> &quot;,this,fid)</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    writeDerived(&quot; OBSERVABLES &quot;,&quot; y &quot;,&quot; <a class="code" href="class_s_b_m_lode.html#a072b6f6192ac4f40e74b69f901ecdfef">observable</a> &quot;,this,fid)</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    fprintf(fid,[&quot; % EVENTS\n &quot;]);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    for ievent = 1:length(this.<a class="code" href="class_s_b_m_lode.html#ae194cb817eae4085f8023885100c68dd">trigger</a>)</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        fprintf(fid,[&quot; model.sym.event( &quot; num2str(ievent) &quot; ) = amivent( &quot; ...</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordtype">char</span>(this.<a class="code" href="class_s_b_m_lode.html#ae194cb817eae4085f8023885100c68dd">trigger</a>(ievent)) &quot; , ...\n &quot; ...</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            &quot; [ &quot; strjoin(cellfun(@<span class="keywordtype">char</span>,[this.<a class="code" href="class_s_b_m_lode.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>(:,ievent)],&quot; UniformOutput &quot;,false),&quot; , &quot;) &quot; ], ...\n &quot; ...</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            &quot; []);\n &quot;]);</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    writeDefinition(<span class="stringliteral">&quot; STATES &quot;</span>,<span class="stringliteral">&quot; x &quot;</span>,<span class="stringliteral">&quot; state &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    writeDefinition(<span class="stringliteral">&quot; PARAMETERS &quot;</span>,<span class="stringliteral">&quot; p &quot;</span>,<span class="stringliteral">&quot; parameter &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    writeDefinition(<span class="stringliteral">&quot; CONDITIONS &quot;</span>,<span class="stringliteral">&quot; k &quot;</span>,<span class="stringliteral">&quot; condition &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    writeDerived(<span class="stringliteral">&quot; DYNAMICS &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>,<span class="stringliteral">&quot; xdot &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    writeDerived(<span class="stringliteral">&quot; INITIALIZATION &quot;</span>,<span class="stringliteral">&quot; x0 &quot;</span>,<span class="stringliteral">&quot; initState &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    writeDerived(<span class="stringliteral">&quot; OBSERVABLES &quot;</span>,<span class="stringliteral">&quot; y &quot;</span>,<span class="stringliteral">&quot; observable &quot;</span>,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; % EVENTS\n &quot;</span>]);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">for</span> ievent = 1:length(this.<a class="code" href="class_s_b_m_lode.html#ae194cb817eae4085f8023885100c68dd">trigger</a>)</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        fprintf(fid,[<span class="stringliteral">&quot; model.sym.event( &quot;</span> num2str(ievent) <span class="stringliteral">&quot; ) = amivent( &quot;</span> ...</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordtype">char</span>(this.<a class="code" href="class_s_b_m_lode.html#ae194cb817eae4085f8023885100c68dd">trigger</a>(ievent)) <span class="stringliteral">&quot; , ...\n &quot;</span> ...</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            <span class="stringliteral">&quot; [ &quot;</span> strjoin(cellfun(@<span class="keywordtype">char</span>,[this.<a class="code" href="class_s_b_m_lode.html#ab9227561ac246ee4b70f9e65c25ffda7">bolus</a>(:,ievent)],<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>),<span class="stringliteral">&quot; , &quot;</span>) <span class="stringliteral">&quot; ], ...\n &quot;</span> ...</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            <span class="stringliteral">&quot; []);\n &quot;</span>]);</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    end</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    fprintf(fid,&quot; end\n &quot;);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    fprintf(fid,&quot; function r = pow(x,y)\n &quot;);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    fprintf(fid,&quot;     r = x^y;\n &quot;);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    fprintf(fid,&quot; end\n &quot;);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    fprintf(fid,&quot; function r = power(x,y)\n &quot;);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    fprintf(fid,&quot;     r = x^y;\n &quot;);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    fprintf(fid,&quot; end\n &quot;);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; end\n &quot;</span>);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; function r = pow(x,y)\n &quot;</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    fprintf(fid,<span class="stringliteral">&quot;     r = x^y;\n &quot;</span>);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; end\n &quot;</span>);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; function r = power(x,y)\n &quot;</span>);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    fprintf(fid,<span class="stringliteral">&quot;     r = x^y;\n &quot;</span>);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; end\n &quot;</span>);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    for ifun = 1:length(this.<a class="code" href="class_s_b_m_lode.html#a9c1cb6154a226c993c60010300a62e34">funmath</a>)</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        fprintf(fid,[&quot; function r =  &quot; this.<a class="code" href="class_s_b_m_lode.html#ae492d28f363cbbf0c960cab4e8911761">funarg</a>[ifun] &quot; \n &quot;]);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        fprintf(fid,[&quot;     r =  &quot; this.<a class="code" href="class_s_b_m_lode.html#a9c1cb6154a226c993c60010300a62e34">funmath</a>[ifun] &quot; ;\n &quot;]);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        fprintf(fid,&quot; end\n &quot;);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        fprintf(fid,&quot; \n &quot;);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordflow">for</span> ifun = 1:length(this.<a class="code" href="class_s_b_m_lode.html#a9c1cb6154a226c993c60010300a62e34">funmath</a>)</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        fprintf(fid,[<span class="stringliteral">&quot; function r =  &quot;</span> this.<a class="code" href="class_s_b_m_lode.html#ae492d28f363cbbf0c960cab4e8911761">funarg</a>[ifun] <span class="stringliteral">&quot; \n &quot;</span>]);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        fprintf(fid,[<span class="stringliteral">&quot;     r =  &quot;</span> this.<a class="code" href="class_s_b_m_lode.html#a9c1cb6154a226c993c60010300a62e34">funmath</a>[ifun] <span class="stringliteral">&quot; ;\n &quot;</span>]);</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        fprintf(fid,<span class="stringliteral">&quot; end\n &quot;</span>);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    end</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    fclose(fid);</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;end</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;function writeDefinition(header,identifier,field,this,fid)</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    fprintf(fid,[&quot; %%%%\n%%  &quot; header &quot; \n &quot;]);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    fprintf(fid,[&quot; syms  &quot; strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),&quot; UniformOutput &quot;,false)) &quot; \n &quot;]);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    fprintf(fid,[&quot; model.sym. &quot; identifier &quot;  = [ &quot; strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),&quot; UniformOutput &quot;,false),&quot; , &quot;) &quot; ];\n &quot;]);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">function</span> writeDefinition(header,identifier,field,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; %%%%\n%%  &quot;</span> header <span class="stringliteral">&quot; \n &quot;</span>]);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; syms  &quot;</span> strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>)) <span class="stringliteral">&quot; \n &quot;</span>]);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; model.sym. &quot;</span> identifier <span class="stringliteral">&quot;  = [ &quot;</span> strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>),<span class="stringliteral">&quot; , &quot;</span>) <span class="stringliteral">&quot; ];\n &quot;</span>]);</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;end</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;function writeDerived(header,identifier,field,this,fid)</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    fprintf(fid,[&quot; %%%%\n%%  &quot; header &quot; \n &quot;]);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    fprintf(fid,&quot; \n &quot;);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    if(strcmp(header,&quot; OBSERVABLES &quot;))</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        fprintf(fid,[&quot; %%  &quot; strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.<a class="code" href="class_s_b_m_lode.html#a6e638e3379dc2d099b3cf3083246fbe0">observable_name</a>),&quot; UniformOutput &quot;,false),&quot; \n%%  &quot;)  &quot; \n &quot;]);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">function</span> writeDerived(header,identifier,field,<span class="keyword">this</span>,fid)</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; %%%%\n%%  &quot;</span> header <span class="stringliteral">&quot; \n &quot;</span>]);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordflow">if</span>(strcmp(header,<span class="stringliteral">&quot; OBSERVABLES &quot;</span>))</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        fprintf(fid,[<span class="stringliteral">&quot; %%  &quot;</span> strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.<a class="code" href="class_s_b_m_lode.html#a6e638e3379dc2d099b3cf3083246fbe0">observable_name</a>),<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>),<span class="stringliteral">&quot; \n%%  &quot;</span>)  <span class="stringliteral">&quot; \n &quot;</span>]);</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    end</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    fprintf(fid,[&quot; model.sym. &quot; identifier &quot;  = [ &quot; strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),&quot; UniformOutput &quot;,false),&quot; , ...\n &quot;) &quot; ]; &quot;]);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    fprintf(fid,[<span class="stringliteral">&quot; model.sym. &quot;</span> identifier <span class="stringliteral">&quot;  = [ &quot;</span> strjoin(cellfun(@<span class="keywordtype">char</span>,num2cell(this.(field)),<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>),<span class="stringliteral">&quot; , ...\n &quot;</span>) <span class="stringliteral">&quot; ]; &quot;</span>]);</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;end</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;}</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
 <div class="ttc" id="class_s_b_m_lode_html_ac38903669f208bc49c971c7a69f62225"><div class="ttname"><a href="class_s_b_m_lode.html#ac38903669f208bc49c971c7a69f62225">SBMLode.time_symbol</a></div><div class="ttdeci">char time_symbol</div><div class="ttdoc">expression for time in the model </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00165">SBMLode.m:165</a></div></div>
 <div class="ttc" id="class_s_b_m_lode_html_a9c1cb6154a226c993c60010300a62e34"><div class="ttname"><a href="class_s_b_m_lode.html#a9c1cb6154a226c993c60010300a62e34">SBMLode.funmath</a></div><div class="ttdeci">cell funmath</div><div class="ttdoc">cell array containing the function definition </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00149">SBMLode.m:149</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_a4824b91cc0e6b5f112bdd8049af4d7d6"><div class="ttname"><a href="class_s_b_m_lode.html#a4824b91cc0e6b5f112bdd8049af4d7d6">SBMLode.condition</a></div><div class="ttdeci">symbolic condition</div><div class="ttdoc">vector of boundary condition states which are not constant </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00101">SBMLode.m:101</a></div></div>
+<div class="ttc" id="class_s_b_m_lode_html_af2ebf8afc99040060a0af5b3ec3632a7"><div class="ttname"><a href="class_s_b_m_lode.html#af2ebf8afc99040060a0af5b3ec3632a7">SBMLode.writeAMICI</a></div><div class="ttdeci">function  writeAMICI(modelname)</div><div class="ttdoc">importSBML writes the information stored in the SBMLode object into an AMICI model definition file ...</div><div class="ttdef"><b>Definition:</b> <a href="write_a_m_i_c_i_8m_source.html#l00018">writeAMICI.m:18</a></div></div>
 <div class="ttc" id="class_s_b_m_lode_html_ab9227561ac246ee4b70f9e65c25ffda7"><div class="ttname"><a href="class_s_b_m_lode.html#ab9227561ac246ee4b70f9e65c25ffda7">SBMLode.bolus</a></div><div class="ttdeci">symbolic bolus</div><div class="ttdoc">matrix of event bolus </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00141">SBMLode.m:141</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_a67d068407e71cba6ca16f3f6b6d1794c"><div class="ttname"><a href="class_s_b_m_lode.html#a67d068407e71cba6ca16f3f6b6d1794c">SBMLode.initState</a></div><div class="ttdeci">symbolic initState</div><div class="ttdoc">vector of initial values for non-constant and non-boundary states </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00093">SBMLode.m:93</a></div></div>
 <div class="ttc" id="class_s_b_m_lode_html_ae492d28f363cbbf0c960cab4e8911761"><div class="ttname"><a href="class_s_b_m_lode.html#ae492d28f363cbbf0c960cab4e8911761">SBMLode.funarg</a></div><div class="ttdeci">cell funarg</div><div class="ttdoc">cell array containing the function arguments </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00157">SBMLode.m:157</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_adc6e5733fc3c22f0a7b2914188c49c90"><div class="ttname"><a href="class_s_b_m_lode.html#adc6e5733fc3c22f0a7b2914188c49c90">SBMLode.state</a></div><div class="ttdeci">symbolic state</div><div class="ttdoc">vector of non-constant and non-boundary states </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00029">SBMLode.m:29</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_a914ee05b8f01d45602316710ca4b8a43"><div class="ttname"><a href="class_s_b_m_lode.html#a914ee05b8f01d45602316710ca4b8a43">SBMLode.xdot</a></div><div class="ttdeci">symbolic xdot</div><div class="ttdoc">right hand side of differential equation for states </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00125">SBMLode.m:125</a></div></div>
 <div class="ttc" id="class_s_b_m_lode_html_a6e638e3379dc2d099b3cf3083246fbe0"><div class="ttname"><a href="class_s_b_m_lode.html#a6e638e3379dc2d099b3cf3083246fbe0">SBMLode.observable_name</a></div><div class="ttdeci">symbolic observable_name</div><div class="ttdoc">vector of guessed observable names </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00045">SBMLode.m:45</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_a072b6f6192ac4f40e74b69f901ecdfef"><div class="ttname"><a href="class_s_b_m_lode.html#a072b6f6192ac4f40e74b69f901ecdfef">SBMLode.observable</a></div><div class="ttdeci">symbolic observable</div><div class="ttdoc">vector of guessed observables </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00037">SBMLode.m:37</a></div></div>
-<div class="ttc" id="class_s_b_m_lode_html_a0d71b5c1dcca8d3fee88d6a11d3e2071"><div class="ttname"><a href="class_s_b_m_lode.html#a0d71b5c1dcca8d3fee88d6a11d3e2071">SBMLode.parameter</a></div><div class="ttdeci">symbolic parameter</div><div class="ttdoc">vector of amimodel parameters </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00061">SBMLode.m:61</a></div></div>
 <div class="ttc" id="class_s_b_m_lode_html_ae194cb817eae4085f8023885100c68dd"><div class="ttname"><a href="class_s_b_m_lode.html#ae194cb817eae4085f8023885100c68dd">SBMLode.trigger</a></div><div class="ttdeci">symbolic trigger</div><div class="ttdoc">vector of trigger functions for events </div><div class="ttdef"><b>Definition:</b> <a href="_s_b_m_lode_8m_source.html#l00133">SBMLode.m:133</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
@@ -217,7 +211,7 @@ $(document).ready(function(){initNavTree('write_a_m_i_c_i_8m_source.html','');})
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_421f9f97eba4fc5f7298a73fff503d0c.html">@SBMLode</a></li><li class="navelem"><b>writeAMICI.m</b></li>
-    <li class="footer">Generated on Tue Mar 15 2016 18:00:22 for AMICI by
+    <li class="footer">Generated on Thu Mar 17 2016 11:53:30 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>
   </ul>

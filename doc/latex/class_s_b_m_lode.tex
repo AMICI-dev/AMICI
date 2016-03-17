@@ -26,12 +26,12 @@ Collaboration diagram for S\+B\+M\+Lode\+:\nopagebreak
 \subsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{class_s_b_m_lode_a2cd0d930d07eaf96753131799d7bdc9c}{}{\bfseries S\+B\+M\+Lode} (matlabtypesubstitute filename)\label{class_s_b_m_lode_a2cd0d930d07eaf96753131799d7bdc9c}
-
-\item 
-\hypertarget{class_s_b_m_lode_acec53dca9922c09c88e57eb531571c07}{}noret\+::substitute {\bfseries write\+A\+M\+I\+C\+I} (matlabtypesubstitute filename, matlabtypesubstitute this, matlabtypesubstitute modelname)\label{class_s_b_m_lode_acec53dca9922c09c88e57eb531571c07}
-
-\end{DoxyCompactItemize}
+\hyperlink{class_s_b_m_lode_aafa39f9b845012c546a0e21d38a40582}{S\+B\+M\+Lode} (\+::char filename)
+\begin{DoxyCompactList}\small\item\em constructor of the \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} class. This takes the name of an S\+B\+M\+L definition file and constructs an \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} object based on the parsed model \end{DoxyCompactList}\item 
+noret\+::substitute \hyperlink{class_s_b_m_lode_a2265567db5a6aafd85729c20e9d2b631}{import\+S\+B\+M\+L} (matlabtypesubstitute filename)
+\begin{DoxyCompactList}\small\item\em import\+S\+B\+M\+L parses the S\+B\+M\+L document and initialises the respective \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} object accordingly \end{DoxyCompactList}\item 
+noret\+::substitute \hyperlink{class_s_b_m_lode_af2ebf8afc99040060a0af5b3ec3632a7}{write\+A\+M\+I\+C\+I} (matlabtypesubstitute modelname)
+\begin{DoxyCompactList}\small\item\em import\+S\+B\+M\+L writes the information stored in the \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} object into an A\+M\+I\+C\+I model definition file \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -81,6 +81,81 @@ Collaboration diagram for S\+B\+M\+Lode\+:\nopagebreak
 
 
 Definition at line 17 of file S\+B\+M\+Lode.\+m.
+
+
+
+\subsubsection{Constructor \& Destructor Documentation}
+\hypertarget{class_s_b_m_lode_aafa39f9b845012c546a0e21d38a40582}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{S\+B\+M\+Lode(\+::char filename)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf S\+B\+M\+Lode} (
+\begin{DoxyParamCaption}
+\item[{\+::char}]{filename}
+\end{DoxyParamCaption}
+)}\label{class_s_b_m_lode_aafa39f9b845012c546a0e21d38a40582}
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & S\+B\+M\+L definition file \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 192 of file S\+B\+M\+Lode.\+m.
+
+
+
+\subsubsection{Member Function Documentation}
+\hypertarget{class_s_b_m_lode_a2265567db5a6aafd85729c20e9d2b631}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!import\+S\+B\+M\+L@{import\+S\+B\+M\+L}}
+\index{import\+S\+B\+M\+L@{import\+S\+B\+M\+L}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{import\+S\+B\+M\+L(matlabtypesubstitute filename)}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute import\+S\+B\+M\+L (
+\begin{DoxyParamCaption}
+\item[{matlabtypesubstitute}]{modelname}
+\end{DoxyParamCaption}
+)}\label{class_s_b_m_lode_a2265567db5a6aafd85729c20e9d2b631}
+
+\begin{DoxyParams}{Parameters}
+{\em modelname} & name of the sbml model file, without extension\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & initialised \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} object object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file import\+S\+B\+M\+L.\+m.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=245pt]{class_s_b_m_lode_a2265567db5a6aafd85729c20e9d2b631_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{class_s_b_m_lode_af2ebf8afc99040060a0af5b3ec3632a7}{}\index{S\+B\+M\+Lode@{S\+B\+M\+Lode}!write\+A\+M\+I\+C\+I@{write\+A\+M\+I\+C\+I}}
+\index{write\+A\+M\+I\+C\+I@{write\+A\+M\+I\+C\+I}!S\+B\+M\+Lode@{S\+B\+M\+Lode}}
+\paragraph[{write\+A\+M\+I\+C\+I(matlabtypesubstitute modelname)}]{\setlength{\rightskip}{0pt plus 5cm}noret\+::substitute write\+A\+M\+I\+C\+I (
+\begin{DoxyParamCaption}
+\item[{matlabtypesubstitute}]{modelname}
+\end{DoxyParamCaption}
+)}\label{class_s_b_m_lode_af2ebf8afc99040060a0af5b3ec3632a7}
+
+\begin{DoxyParams}{Parameters}
+{\em modelname} & target name of the A\+M\+I\+C\+I model definition file, \+\_\+syms will be appended\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & initialised \hyperlink{class_s_b_m_lode}{S\+B\+M\+Lode} object object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+A\+M\+I\+C\+I.\+m.
 
 
 

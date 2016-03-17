@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
+/** MS definition of PI and other constants */
+#define _USE_MATH_DEFINES
 #include <math.h>
-#ifndef M_PI /* define PI if we still have no definition */
+#ifndef M_PI
+/** numeric definition of PI for settings where the system does not provide one */
 #define M_PI 3.14159265358979323846
 #endif
 #include <mex.h>

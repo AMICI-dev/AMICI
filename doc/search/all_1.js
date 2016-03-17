@@ -159,6 +159,7 @@ var searchData=
   ['am_5fzdata',['am_zdata',['../struct_return_data.html#ab9982c7bbb81e3d54ab0a2f8b6e1ccec',1,'ReturnData']]],
   ['am_5fzsdata',['am_zSdata',['../struct_return_data.html#a7da81862a5c66dcc9da19fbf34b1bae3',1,'ReturnData']]],
   ['am_5fzsigma',['am_zsigma',['../struct_exp_data.html#a806c9883d66f002acdcceaeda3e57fb2',1,'ExpData']]],
+  ['ami_5fsuccess',['AMI_SUCCESS',['../amici_8c.html#a15c09363d6bdc7162c154ab2a20ec545',1,'amici.c']]],
   ['amici_2ec',['amici.c',['../amici_8c.html',1,'']]],
   ['amidata',['amidata',['../classamidata.html',1,'amidata'],['../classamidata.html#a28c05d6ebaf7baa45ff8b2465ce07b3f',1,'amidata::amidata()']]],
   ['amievent',['amievent',['../classamievent.html',1,'amievent'],['../classamievent.html#aa89b0efd53c33a18acf04c1dda76842c',1,'amievent::amievent()']]],

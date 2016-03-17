@@ -56,7 +56,9 @@ classdef amioption < matlab.mixin.SetGet
     end
     
     properties (Hidden)
+        % mapping of event outputs to events
         z2event = double([]);
+        % index set of states with algebraic constraints
         id = double([]);
     end
     
@@ -71,10 +73,18 @@ classdef amioption < matlab.mixin.SetGet
             %   parameters altered with the specified values.
             %
             %   OPTS = amioption(OLDOPTS, PARAM, VAL, ...) creates a copy of OLDOPTS with
-            %   the named parameters altered with the specified value
+            %   the named parameters altered with the specified value.
+            %   OLDOPTS must not be of type amioption but can be a struct
+            %   with the same fields
             %
             %   Note to see the parameters, check the
-            %   documentation page for amioptions
+            %   documentation page for \ref amioption
+            %
+            % Parameters:
+            %  varargin: specification of non-default fields
+            % 
+            % Return values:
+            %  AM: model definition object
             
             % adapted from SolverOptions
             

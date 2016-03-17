@@ -1,7 +1,8 @@
 var class_s_b_m_lode =
 [
-    [ "SBMLode", "class_s_b_m_lode.html#a2cd0d930d07eaf96753131799d7bdc9c", null ],
-    [ "writeAMICI", "class_s_b_m_lode.html#acec53dca9922c09c88e57eb531571c07", null ],
+    [ "SBMLode", "class_s_b_m_lode.html#aafa39f9b845012c546a0e21d38a40582", null ],
+    [ "importSBML", "class_s_b_m_lode.html#a2265567db5a6aafd85729c20e9d2b631", null ],
+    [ "writeAMICI", "class_s_b_m_lode.html#af2ebf8afc99040060a0af5b3ec3632a7", null ],
     [ "state", "class_s_b_m_lode.html#adc6e5733fc3c22f0a7b2914188c49c90", null ],
     [ "observable", "class_s_b_m_lode.html#a072b6f6192ac4f40e74b69f901ecdfef", null ],
     [ "observable_name", "class_s_b_m_lode.html#a6e638e3379dc2d099b3cf3083246fbe0", null ],
