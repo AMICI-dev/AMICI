@@ -1,0 +1,256 @@
+\hypertarget{spline_8c}{}\subsection{src/spline.c File Reference}
+\label{spline_8c}\index{src/spline.\+c@{src/spline.\+c}}
+
+
+definition of spline functions  
+
+
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{spline_8c__dep__incl}
+\end{center}
+\end{figure}
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline} (int n, int end1, int end2, double slope1, double slope2, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+\item 
+static double \hyperlink{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{seval} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+\item 
+static double \hyperlink{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}{deriv} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+\item 
+static double \hyperlink{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}{sinteg} (int n, double u, double x\mbox{[}$\,$\mbox{]}, double y\mbox{[}$\,$\mbox{]}, double b\mbox{[}$\,$\mbox{]}, double c\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+\begin{DoxyAuthor}{Author}
+Peter \& Nigel, Design Software, 42 Gubberley St, Kenmore, 4069, Australia. 
+\end{DoxyAuthor}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{spline_8c_a46804aa218bd46034f2da928e5602a08}{}\index{spline.\+c@{spline.\+c}!spline@{spline}}
+\index{spline@{spline}!spline.\+c@{spline.\+c}}
+\paragraph[{spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static int spline (
+\begin{DoxyParamCaption}
+\item[{int}]{n, }
+\item[{int}]{end1, }
+\item[{int}]{end2, }
+\item[{double}]{slope1, }
+\item[{double}]{slope2, }
+\item[{double}]{x\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{y\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{b\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{c\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{d\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a46804aa218bd46034f2da928e5602a08}
+Evaluate the coefficients b\mbox{[}i\mbox{]}, c\mbox{[}i\mbox{]}, d\mbox{[}i\mbox{]}, i = 0, 1, .. n-\/1 for a cubic interpolating spline
+
+S(xx) = Y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = xx -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= xx $<$= x\mbox{[}i+1\mbox{]}
+
+The n supplied data points are x\mbox{[}i\mbox{]}, y\mbox{[}i\mbox{]}, i = 0 ... n-\/1.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n} & The number of data points or knots (n $>$= 2) \\
+\hline
+\mbox{\tt in}  & {\em end1} & 0\+: default condition 1\+: specify the slopes at x\mbox{[}0\mbox{]} \\
+\hline
+\mbox{\tt in}  & {\em end2} & 0\+: default condition 1\+: specify the slopes at x\mbox{[}n-\/1\mbox{]} \\
+\hline
+\mbox{\tt in}  & {\em slope1} & slope at x\mbox{[}0\mbox{]} \\
+\hline
+\mbox{\tt in}  & {\em slope2} & slope at x\mbox{[}n-\/1\mbox{]} \\
+\hline
+\mbox{\tt in}  & {\em x\mbox{[}$\,$\mbox{]}} & the abscissas of the knots in strictly increasing order \\
+\hline
+\mbox{\tt in}  & {\em y\mbox{[}$\,$\mbox{]}} & the ordinates of the knots \\
+\hline
+\mbox{\tt out}  & {\em b\mbox{[}$\,$\mbox{]}} & array of spline coefficients \\
+\hline
+\mbox{\tt out}  & {\em c\mbox{[}$\,$\mbox{]}} & array of spline coefficients \\
+\hline
+\mbox{\tt out}  & {\em d\mbox{[}$\,$\mbox{]}} & array of spline coefficients\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em 0} & normal return \\
+\hline
+{\em 1} & less than two data points; cannot interpolate \\
+\hline
+{\em 2} & x\mbox{[}\mbox{]} are not in ascending order\\
+\hline
+\end{DoxyRetVals}
+\paragraph*{Notes }
+
+
+\begin{DoxyItemize}
+\item The accompanying function \hyperlink{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{seval()} may be used to evaluate the spline while deriv will provide the first derivative.
+\item Using p to denote differentiation y\mbox{[}i\mbox{]} = S(\+X\mbox{[}i\mbox{]}) b\mbox{[}i\mbox{]} = Sp(\+X\mbox{[}i\mbox{]}) c\mbox{[}i\mbox{]} = Spp(\+X\mbox{[}i\mbox{]})/2 d\mbox{[}i\mbox{]} = Sppp(\+X\mbox{[}i\mbox{]})/6 ( Derivative from the right )
+\item Since the zero elements of the arrays A\+R\+E N\+O\+W used here, all arrays to be passed from the main program should be dimensioned at least \mbox{[}n\mbox{]}. These routines will use elements \mbox{[}0 .. n-\/1\mbox{]}.
+\item Adapted from the text Forsythe, G.\+E., Malcolm, M.\+A. and Moler, C.\+B. (1977) \char`\"{}\+Computer Methods for Mathematical Computations\char`\"{} Prentice Hall
+\item Note that although there are only n-\/1 polynomial segments, n elements are requird in b, c, d. The elements b\mbox{[}n-\/1\mbox{]}, c\mbox{[}n-\/1\mbox{]} and d\mbox{[}n-\/1\mbox{]} are set to continue the last segment past x\mbox{[}n-\/1\mbox{]}. 
+\end{DoxyItemize}
+
+Definition at line 66 of file spline.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{spline_8c_a46804aa218bd46034f2da928e5602a08_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}{}\index{spline.\+c@{spline.\+c}!seval@{seval}}
+\index{seval@{seval}!spline.\+c@{spline.\+c}}
+\paragraph[{seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double seval (
+\begin{DoxyParamCaption}
+\item[{int}]{n, }
+\item[{double}]{u, }
+\item[{double}]{x\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{y\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{b\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{c\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{d\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a}
+Evaluate the cubic spline function
+
+S(xx) = y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = u -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= u $<$= x\mbox{[}i+1\mbox{]} Note that Horner\textquotesingle{}s rule is used. If u $<$ x\mbox{[}0\mbox{]} then i = 0 is used. If u $>$ x\mbox{[}n-\/1\mbox{]} then i = n-\/1 is used.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n} & The number of data points or knots (n $>$= 2) \\
+\hline
+\mbox{\tt in}  & {\em u} & the abscissa at which the spline is to be evaluated \\
+\hline
+\mbox{\tt in}  & {\em x\mbox{[}$\,$\mbox{]}} & the abscissas of the knots in strictly increasing order \\
+\hline
+\mbox{\tt in}  & {\em y\mbox{[}$\,$\mbox{]}} & the ordinates of the knots \\
+\hline
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
+\hline
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
+\hline
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the value of the spline function at u
+\end{DoxyReturn}
+Notes
+\begin{DoxyItemize}
+\item If u is not in the same interval as the previous call then a binary search is performed to determine the proper interval. 
+\end{DoxyItemize}
+
+Definition at line 208 of file spline.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=348pt]{spline_8c_a71fd4956d49f5f12c5018a8d7890c20a_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}{}\index{spline.\+c@{spline.\+c}!deriv@{deriv}}
+\index{deriv@{deriv}!spline.\+c@{spline.\+c}}
+\paragraph[{deriv(int n, double u, double x[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double deriv (
+\begin{DoxyParamCaption}
+\item[{int}]{n, }
+\item[{double}]{u, }
+\item[{double}]{x\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{b\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{c\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{d\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a93a9f0123f360ba443ceb6efb5e7223d}
+Evaluate the derivative of the cubic spline function
+
+S(x) = B\mbox{[}i\mbox{]} + 2.\+0 $\ast$ C\mbox{[}i\mbox{]} $\ast$ w + 3.\+0 $\ast$ D\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 where w = u -\/ X\mbox{[}i\mbox{]} and X\mbox{[}i\mbox{]} $<$= u $<$= X\mbox{[}i+1\mbox{]} Note that Horner\textquotesingle{}s rule is used. If U $<$ X\mbox{[}0\mbox{]} then i = 0 is used. If U $>$ X\mbox{[}n-\/1\mbox{]} then i = n-\/1 is used.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n} & the number of data points or knots (n $>$= 2) \\
+\hline
+\mbox{\tt in}  & {\em u} & the abscissa at which the derivative is to be evaluated \\
+\hline
+\mbox{\tt in}  & {\em x} & the abscissas of the knots in strictly increasing order \\
+\hline
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()} \\
+\hline
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()} \\
+\hline
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the value of the derivative of the spline function at u
+\end{DoxyReturn}
+Notes
+\begin{DoxyItemize}
+\item If u is not in the same interval as the previous call then a binary search is performed to determine the proper interval. 
+\end{DoxyItemize}
+
+Definition at line 264 of file spline.\+c.
+
+\hypertarget{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}{}\index{spline.\+c@{spline.\+c}!sinteg@{sinteg}}
+\index{sinteg@{sinteg}!spline.\+c@{spline.\+c}}
+\paragraph[{sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}]{\setlength{\rightskip}{0pt plus 5cm}static double sinteg (
+\begin{DoxyParamCaption}
+\item[{int}]{n, }
+\item[{double}]{u, }
+\item[{double}]{x\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{y\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{b\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{c\mbox{[}$\,$\mbox{]}, }
+\item[{double}]{d\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{spline_8c_a5738bb8177d038a9a55fe487a9d79d82}
+Integrate the cubic spline function
+
+S(xx) = y\mbox{[}i\mbox{]} + b\mbox{[}i\mbox{]} $\ast$ w + c\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$2 + d\mbox{[}i\mbox{]} $\ast$ w$\ast$$\ast$3 where w = u -\/ x\mbox{[}i\mbox{]} and x\mbox{[}i\mbox{]} $<$= u $<$= x\mbox{[}i+1\mbox{]}
+
+The integral is zero at u = x\mbox{[}0\mbox{]}.
+
+If u $<$ x\mbox{[}0\mbox{]} then i = 0 segment is extrapolated. If u $>$ x\mbox{[}n-\/1\mbox{]} then i = n-\/1 segment is extrapolated.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n} & the number of data points or knots (n $>$= 2) \\
+\hline
+\mbox{\tt in}  & {\em u} & the abscissa at which the spline is to be evaluated \\
+\hline
+\mbox{\tt in}  & {\em x\mbox{[}$\,$\mbox{]}} & the abscissas of the knots in strictly increasing order \\
+\hline
+\mbox{\tt in}  & {\em y\mbox{[}$\,$\mbox{]}} & the ordinates of the knots \\
+\hline
+\mbox{\tt in}  & {\em b} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
+\hline
+\mbox{\tt in}  & {\em c} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}. \\
+\hline
+\mbox{\tt in}  & {\em d} & array of spline coefficients computed by \hyperlink{spline_8c_a46804aa218bd46034f2da928e5602a08}{spline()}.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the value of the spline function at u
+\end{DoxyReturn}
+Notes
+\begin{DoxyItemize}
+\item If u is not in the same interval as the previous call then a binary search is performed to determine the proper interval. 
+\end{DoxyItemize}
+
+Definition at line 324 of file spline.\+c.
+

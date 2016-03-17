@@ -7,83 +7,86 @@ classdef amimodel < handle
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
-        sym@struct;
+        sym;
         % struct which stores information for which functions c code needs to be generated @type struct
-        fun@struct;
+        fun;
         % struct which stores information for which functions c code needs
-        % to be generated @type amievent
-        event@amievent;
+        % to be generated @type *amievent
+        event = amievent.empty();
         % name of the model @type string
-        modelname@char;
+        modelname;
         % struct that contains hash values for the symbolic model definitions @type struct
-        HTable@struct;
+        HTable;
         % default absolute tolerance @type double
         atol = 1e-8;
         % default relative tolerance @type double
         rtol = 1e-8;
         % default maximal number of integration steps @type int
         maxsteps = 1e4;
-        % flag indicating whether debugging symbols should be compiled @type bool
+        % flag indicating whether debugging symbols should be compiled
+        % @type logical
         debug = false;
-        % flag indicating whether adjoint sensitivities should be enabled @type bool
+        % flag indicating whether adjoint sensitivities should be enabled
+        % @type logical
         adjoint = true;
-        % flag indicating whether forward sensitivities should be enabled @type bool
+        % flag indicating whether forward sensitivities should be enabled
+        % @type logical
         forward = true;
         % default initial time @type double
         t0 = 0;
-        % type of wrapper (cvodes/idas) @type string
-        wtype@char;
+        % type of wrapper (cvodes/idas) @type char
+        wtype;
         % number of states @type int
-        nx@double;
+        nx;
         % number of original states for second order sensitivities @type int
         nxtrue = 0;
         % number of observables @type int
-        ny@double;
+        ny;
         % number of original observables for second order sensitivities @type int
         nytrue = 0;
         % number of parameters @type int
-        np@double;
+        np;
         % number of constants @type int
-        nk@double;
+        nk;
         % number of events @type int
-        nevent@double;
+        nevent;
         % number of event outputs @type int
-        nz@double;
+        nz;
         % number of original event outputs for second order sensitivities @type int
-        nztrue@double;
+        nztrue;
         % flag for DAEs @type *int
-        id@double;
+        id;
         % upper Jacobian bandwidth @type int
-        ubw@double;
+        ubw;
         % lower Jacobian bandwidth @type int
-        lbw@double;
+        lbw;
         % number of nonzero entries in Jacobian @type int
-        nnz@double;
+        nnz;
         % dataindexes of sparse Jacobian @type *int
-        sparseidx@double;
+        sparseidx;
         % rowindexes of sparse Jacobian @type *int
-        rowvals@double;
+        rowvals;
         % columnindexes of sparse Jacobian @type *int
-        colptrs@double;
+        colptrs;
         % dataindexes of sparse Jacobian @type *int
-        sparseidxB@double;
+        sparseidxB;
         % rowindexes of sparse Jacobian @type *int
-        rowvalsB@double;
+        rowvalsB;
         % columnindexes of sparse Jacobian @type *int
-        colptrsB@double;
-        % cell array of functions to be compiled @type *cell
-        funs@cell;
-        % optimisation flag for compilation @type string
+        colptrsB;
+        % cell array of functions to be compiled @type cell
+        funs;
+        % optimisation flag for compilation @type char
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
         % path to wrapper
-        wrap_path@char;
+        wrap_path;
         % flag to enforce recompilation of the model
         recompile = false;
         % storage for flags determining recompilation of individual
         % functions
-        cfun@struct;
+        cfun = struct([]);
         % flag which identifies augmented models 
         %  0 indicates no augmentation
         %  1 indicates augmentation by first order sensitivities (yields
@@ -91,7 +94,6 @@ classdef amimodel < handle
         %  2 indicates augmentation by one linear combination of first
         %  order sensitivities (yields hessian-vector product)
         o2flag = 0;
-
         % counter that allows enforcing of recompilation of models after
         % code changes
         compver = 6;
@@ -99,7 +101,7 @@ classdef amimodel < handle
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
-        z2event@double;
+        z2event = double([]);
         % flag indicating whether the model contains spline functions
         splineflag = false;
         % flag indicating whether the model contains min functions
@@ -188,6 +190,13 @@ classdef amimodel < handle
         end
         
         function updateRHS(this,xdot)
+            % updateRHS updates the right hand side of the model
+            %
+            % Parameters:
+            %  xdot: new right hand side @type sym
+            %
+            % Return values:
+            %  this: udpated model definition object @type amimodel
             this.fun.xdot.sym = xdot;
         end
         

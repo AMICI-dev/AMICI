@@ -1,0 +1,5 @@
+<map id="heaviside" name="heaviside">
+<area shape="rect" id="node2" href="$class_s_b_m_lode.html#a2265567db5a6aafd85729c20e9d2b631" title="importSBML parses the SBML document and initialises the respective SBMLode object accordingly ..." alt="" coords="131,5,292,33"/>
+<area shape="rect" id="node3" href="$am__if_8m.html#a1bdd44661355eee1bbb92fe82b0e7b54" title="syms x y z f = symfun(sym(cw_if(x,y,z)),[x y z]); fun = f(condition, truepart, falsepart); ..." alt="" coords="184,56,238,83"/>
+<area shape="rect" id="node4" href="$am__stepfun_8m.html#a17bfed411e62b2feef34aa3107b3e60c" title="syms x y f = symfun(sym(am_min(x,y)),[x y]); fun = f(a,b); " alt="" coords="166,107,257,134"/>
+</map>

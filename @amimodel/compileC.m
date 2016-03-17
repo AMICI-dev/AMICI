@@ -1,8 +1,7 @@
 function compileC(this)
     % compileC compiles the mex simulation file
     %
-    % Return values:
-    %  this: model definition object @type amimodel
+
     
     sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
     sundials_ver = '2.6.2.1';

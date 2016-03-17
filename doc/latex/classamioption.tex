@@ -1,0 +1,310 @@
+\hypertarget{classamioption}{}\subsection{amioption Class Reference}
+\label{classamioption}\index{amioption@{amioption}}
+
+
+A\+M\+I\+O\+P\+T\+I\+O\+N provides an option container to pass simulation parameters to the simulation routine.  
+
+
+
+
+Inheritance diagram for amioption\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=139pt]{classamioption__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for amioption\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=139pt]{classamioption__coll__graph}
+\end{center}
+\end{figure}
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amioption} (matlabtypesubstitute varargin)
+\begin{DoxyCompactList}\small\item\em amioptions Construct a new amioptions object \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\+::double \hyperlink{classamioption_a0c5f3dcf809a17b895fe12fc91272349}{atol} = 1e-\/16
+\begin{DoxyCompactList}\small\item\em absolute integration tolerance \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_a7978e9a4674f869e6b2950e2f6262ca5}{rtol} = 1e-\/8
+\begin{DoxyCompactList}\small\item\em relative integration tolerance \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_ac37622882dacee1f11688d4941ccb45e}{maxsteps} = 1e4
+\begin{DoxyCompactList}\small\item\em maximum number of steps for forward simulation \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_a0505783cf66f362672cbe3320d47a94d}{sens\+\_\+ind} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em parameter index set for which sensitivies will be computed \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_a8938c19fd7067f4780be8255764210b7}{qpositivex} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em state index set for which positivity will be enforced (E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+A\+L F\+E\+A\+T\+U\+R\+E, U\+S\+E W\+I\+T\+H C\+A\+R\+E) \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_a18a69d8713604897ca9ee705d9d4fc4a}{tstart} = 0
+\begin{DoxyCompactList}\small\item\em timepoint at which the optimization starts \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a6f4b21b13e0c8c531c452c70b43fc96a}{lmm} = 2
+\begin{DoxyCompactList}\small\item\em linear multistep method for forward problem \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a1fc3ae6bd5c6a80e9b81b27fc7b7a11a}{iter} = 2
+\begin{DoxyCompactList}\small\item\em iteration method for linear multistep for forward problem \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a06749b49eaa313f4d00f0115d3a7a7f3}{linsol} = 9
+\begin{DoxyCompactList}\small\item\em linear solver \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a202e02f7d8c1a87b1c675bcc1acf1c8e}{stldet} = true
+\begin{DoxyCompactList}\small\item\em flag to activate stability limit detection \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_ad06cc805fa18b06ac937fd98a9eba0e7}{interp\+Type} = 1
+\begin{DoxyCompactList}\small\item\em type of interpolation of forward solution in adjoint problem \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_afbc60e75d11740bf27f5a7fc5706fd44}{lmm\+B} = 2
+\begin{DoxyCompactList}\small\item\em linear multistep method for adjoint problem \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_ae6a49cec21ffe790217be29b0fced832}{iter\+B} = 2
+\begin{DoxyCompactList}\small\item\em iteration method for linear multistep for adjoint problem \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_aada9d6834569ad5c542cb8dc6b26ea46}{ism} = 1
+\begin{DoxyCompactList}\small\item\em method for forward sensitivity computation, this will only have an effect if forward sensitivities are requested \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_ab31e219eb42bc06629c3f247a01b9906}{sensi\+\_\+meth} = 1
+\begin{DoxyCompactList}\small\item\em sensitivity method \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a7dd31d33463c5a709251bcef0eccaa36}{sensi} = 0
+\begin{DoxyCompactList}\small\item\em number of orders for which sensitivities are requested, this will only have an effect if the appropriate code was compiled \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a85519d27e7231ac625e5b2deee92165a}{nmaxevent} = 10
+\begin{DoxyCompactList}\small\item\em number of expected event occurences per event type \end{DoxyCompactList}\item 
+\+::int \hyperlink{classamioption_a8f60c8102d29fcd525162d02eed4566b}{ss} = 0
+\begin{DoxyCompactList}\small\item\em flag indicating whether steady state sensitivites should be computed \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamioption_aa5d555210685086c19e5d08afca6685b}{ordering} = 1
+\begin{DoxyCompactList}\small\item\em pre-\/ordering scheme for the L\+U decomposition, this only applies if the sparse direct linear solver is used \end{DoxyCompactList}\item 
+\+::double \hyperlink{classamioption_ae40f9a7172d3a41725c151afaec347f7}{sx0} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em user provided initialization of sensitivity initial conditions \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamioption_a7a7be015feeb7a346dceccd49e622b4b}{z2event} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em mapping of event outputs to events \end{DoxyCompactList}\item 
+matlabtypesubstitute \hyperlink{classamioption_acf2488b95c97e0378c9bf49de3b50f28}{id} = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em index set of states with algebraic constraints \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+
+
+Definition at line 17 of file amioption.\+m.
+
+
+
+\subsubsection{Constructor \& Destructor Documentation}
+\hypertarget{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{}\index{amioption@{amioption}!amioption@{amioption}}
+\index{amioption@{amioption}!amioption@{amioption}}
+\paragraph[{amioption(matlabtypesubstitute varargin)}]{\setlength{\rightskip}{0pt plus 5cm}{\bf amioption} (
+\begin{DoxyParamCaption}
+\item[{matlabtypesubstitute}]{varargin}
+\end{DoxyParamCaption}
+)}\label{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}
+O\+P\+T\+S = \hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amioption()} creates a set of options with each option set to its default value.
+
+O\+P\+T\+S = amioption(P\+A\+R\+A\+M, V\+A\+L, ...) creates a set of options with the named parameters altered with the specified values.
+
+O\+P\+T\+S = amioption(O\+L\+D\+O\+P\+T\+S, P\+A\+R\+A\+M, V\+A\+L, ...) creates a copy of O\+L\+D\+O\+P\+T\+S with the named parameters altered with the specified value. O\+L\+D\+O\+P\+T\+S must not be of type amioption but can be a struct with the same fields
+
+Note to see the parameters, check the documentation page for \hyperlink{classamioption}{amioption}
+
+
+\begin{DoxyParams}{Parameters}
+{\em varargin} & specification of non-\/default fields \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 222 of file amioption.\+m.
+
+
+
+\subsubsection{Member Data Documentation}
+\hypertarget{classamioption_a0c5f3dcf809a17b895fe12fc91272349}{}\index{amioption@{amioption}!atol@{atol}}
+\index{atol@{atol}!amioption@{amioption}}
+\paragraph[{atol}]{\setlength{\rightskip}{0pt plus 5cm}atol = 1e-\/16}\label{classamioption_a0c5f3dcf809a17b895fe12fc91272349}
+~\newline
+{\bfseries Default\+:} 1e-\/16 
+
+Definition at line 28 of file amioption.\+m.
+
+\hypertarget{classamioption_a7978e9a4674f869e6b2950e2f6262ca5}{}\index{amioption@{amioption}!rtol@{rtol}}
+\index{rtol@{rtol}!amioption@{amioption}}
+\paragraph[{rtol}]{\setlength{\rightskip}{0pt plus 5cm}rtol = 1e-\/8}\label{classamioption_a7978e9a4674f869e6b2950e2f6262ca5}
+~\newline
+{\bfseries Default\+:} 1e-\/8 
+
+Definition at line 36 of file amioption.\+m.
+
+\hypertarget{classamioption_ac37622882dacee1f11688d4941ccb45e}{}\index{amioption@{amioption}!maxsteps@{maxsteps}}
+\index{maxsteps@{maxsteps}!amioption@{amioption}}
+\paragraph[{maxsteps}]{\setlength{\rightskip}{0pt plus 5cm}maxsteps = 1e4}\label{classamioption_ac37622882dacee1f11688d4941ccb45e}
+~\newline
+{\bfseries Default\+:} 1e4 
+
+Definition at line 44 of file amioption.\+m.
+
+\hypertarget{classamioption_a0505783cf66f362672cbe3320d47a94d}{}\index{amioption@{amioption}!sens\+\_\+ind@{sens\+\_\+ind}}
+\index{sens\+\_\+ind@{sens\+\_\+ind}!amioption@{amioption}}
+\paragraph[{sens\+\_\+ind}]{\setlength{\rightskip}{0pt plus 5cm}sens\+\_\+ind = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_a0505783cf66f362672cbe3320d47a94d}
+~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 52 of file amioption.\+m.
+
+\hypertarget{classamioption_a8938c19fd7067f4780be8255764210b7}{}\index{amioption@{amioption}!qpositivex@{qpositivex}}
+\index{qpositivex@{qpositivex}!amioption@{amioption}}
+\paragraph[{qpositivex}]{\setlength{\rightskip}{0pt plus 5cm}qpositivex = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_a8938c19fd7067f4780be8255764210b7}
+~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 60 of file amioption.\+m.
+
+\hypertarget{classamioption_a18a69d8713604897ca9ee705d9d4fc4a}{}\index{amioption@{amioption}!tstart@{tstart}}
+\index{tstart@{tstart}!amioption@{amioption}}
+\paragraph[{tstart}]{\setlength{\rightskip}{0pt plus 5cm}tstart = 0}\label{classamioption_a18a69d8713604897ca9ee705d9d4fc4a}
+~\newline
+{\bfseries Default\+:} 0 
+
+Definition at line 68 of file amioption.\+m.
+
+\hypertarget{classamioption_a6f4b21b13e0c8c531c452c70b43fc96a}{}\index{amioption@{amioption}!lmm@{lmm}}
+\index{lmm@{lmm}!amioption@{amioption}}
+\paragraph[{lmm}]{\setlength{\rightskip}{0pt plus 5cm}lmm = 2}\label{classamioption_a6f4b21b13e0c8c531c452c70b43fc96a}
+~\newline
+{\bfseries Default\+:} 2 
+
+Definition at line 76 of file amioption.\+m.
+
+\hypertarget{classamioption_a1fc3ae6bd5c6a80e9b81b27fc7b7a11a}{}\index{amioption@{amioption}!iter@{iter}}
+\index{iter@{iter}!amioption@{amioption}}
+\paragraph[{iter}]{\setlength{\rightskip}{0pt plus 5cm}iter = 2}\label{classamioption_a1fc3ae6bd5c6a80e9b81b27fc7b7a11a}
+~\newline
+{\bfseries Default\+:} 2 
+
+Definition at line 84 of file amioption.\+m.
+
+\hypertarget{classamioption_a06749b49eaa313f4d00f0115d3a7a7f3}{}\index{amioption@{amioption}!linsol@{linsol}}
+\index{linsol@{linsol}!amioption@{amioption}}
+\paragraph[{linsol}]{\setlength{\rightskip}{0pt plus 5cm}linsol = 9}\label{classamioption_a06749b49eaa313f4d00f0115d3a7a7f3}
+~\newline
+{\bfseries Default\+:} 9 
+
+Definition at line 93 of file amioption.\+m.
+
+\hypertarget{classamioption_a202e02f7d8c1a87b1c675bcc1acf1c8e}{}\index{amioption@{amioption}!stldet@{stldet}}
+\index{stldet@{stldet}!amioption@{amioption}}
+\paragraph[{stldet}]{\setlength{\rightskip}{0pt plus 5cm}stldet = true}\label{classamioption_a202e02f7d8c1a87b1c675bcc1acf1c8e}
+~\newline
+{\bfseries Default\+:} true 
+
+Definition at line 101 of file amioption.\+m.
+
+\hypertarget{classamioption_ad06cc805fa18b06ac937fd98a9eba0e7}{}\index{amioption@{amioption}!interp\+Type@{interp\+Type}}
+\index{interp\+Type@{interp\+Type}!amioption@{amioption}}
+\paragraph[{interp\+Type}]{\setlength{\rightskip}{0pt plus 5cm}interp\+Type = 1}\label{classamioption_ad06cc805fa18b06ac937fd98a9eba0e7}
+~\newline
+{\bfseries Default\+:} 1 
+
+Definition at line 109 of file amioption.\+m.
+
+\hypertarget{classamioption_afbc60e75d11740bf27f5a7fc5706fd44}{}\index{amioption@{amioption}!lmm\+B@{lmm\+B}}
+\index{lmm\+B@{lmm\+B}!amioption@{amioption}}
+\paragraph[{lmm\+B}]{\setlength{\rightskip}{0pt plus 5cm}lmm\+B = 2}\label{classamioption_afbc60e75d11740bf27f5a7fc5706fd44}
+~\newline
+{\bfseries Default\+:} 2 
+
+Definition at line 117 of file amioption.\+m.
+
+\hypertarget{classamioption_ae6a49cec21ffe790217be29b0fced832}{}\index{amioption@{amioption}!iter\+B@{iter\+B}}
+\index{iter\+B@{iter\+B}!amioption@{amioption}}
+\paragraph[{iter\+B}]{\setlength{\rightskip}{0pt plus 5cm}iter\+B = 2}\label{classamioption_ae6a49cec21ffe790217be29b0fced832}
+~\newline
+{\bfseries Default\+:} 2 
+
+Definition at line 125 of file amioption.\+m.
+
+\hypertarget{classamioption_aada9d6834569ad5c542cb8dc6b26ea46}{}\index{amioption@{amioption}!ism@{ism}}
+\index{ism@{ism}!amioption@{amioption}}
+\paragraph[{ism}]{\setlength{\rightskip}{0pt plus 5cm}ism = 1}\label{classamioption_aada9d6834569ad5c542cb8dc6b26ea46}
+~\newline
+{\bfseries Default\+:} 1 
+
+Definition at line 134 of file amioption.\+m.
+
+\hypertarget{classamioption_ab31e219eb42bc06629c3f247a01b9906}{}\index{amioption@{amioption}!sensi\+\_\+meth@{sensi\+\_\+meth}}
+\index{sensi\+\_\+meth@{sensi\+\_\+meth}!amioption@{amioption}}
+\paragraph[{sensi\+\_\+meth}]{\setlength{\rightskip}{0pt plus 5cm}sensi\+\_\+meth = 1}\label{classamioption_ab31e219eb42bc06629c3f247a01b9906}
+~\newline
+{\bfseries Default\+:} 1
+
+\begin{DoxyNote}{Note}
+This property has custom functionality when its value is changed. 
+\end{DoxyNote}
+
+
+Definition at line 143 of file amioption.\+m.
+
+\hypertarget{classamioption_a7dd31d33463c5a709251bcef0eccaa36}{}\index{amioption@{amioption}!sensi@{sensi}}
+\index{sensi@{sensi}!amioption@{amioption}}
+\paragraph[{sensi}]{\setlength{\rightskip}{0pt plus 5cm}sensi = 0}\label{classamioption_a7dd31d33463c5a709251bcef0eccaa36}
+~\newline
+{\bfseries Default\+:} 0
+
+\begin{DoxyNote}{Note}
+This property has custom functionality when its value is changed. 
+\end{DoxyNote}
+
+
+Definition at line 151 of file amioption.\+m.
+
+\hypertarget{classamioption_a85519d27e7231ac625e5b2deee92165a}{}\index{amioption@{amioption}!nmaxevent@{nmaxevent}}
+\index{nmaxevent@{nmaxevent}!amioption@{amioption}}
+\paragraph[{nmaxevent}]{\setlength{\rightskip}{0pt plus 5cm}nmaxevent = 10}\label{classamioption_a85519d27e7231ac625e5b2deee92165a}
+~\newline
+{\bfseries Default\+:} 10 
+
+Definition at line 160 of file amioption.\+m.
+
+\hypertarget{classamioption_a8f60c8102d29fcd525162d02eed4566b}{}\index{amioption@{amioption}!ss@{ss}}
+\index{ss@{ss}!amioption@{amioption}}
+\paragraph[{ss}]{\setlength{\rightskip}{0pt plus 5cm}ss = 0}\label{classamioption_a8f60c8102d29fcd525162d02eed4566b}
+~\newline
+{\bfseries Default\+:} 0 
+
+Definition at line 168 of file amioption.\+m.
+
+\hypertarget{classamioption_aa5d555210685086c19e5d08afca6685b}{}\index{amioption@{amioption}!ordering@{ordering}}
+\index{ordering@{ordering}!amioption@{amioption}}
+\paragraph[{ordering}]{\setlength{\rightskip}{0pt plus 5cm}ordering = 1}\label{classamioption_aa5d555210685086c19e5d08afca6685b}
+~\newline
+{\bfseries Default\+:} 1 
+
+Definition at line 176 of file amioption.\+m.
+
+\hypertarget{classamioption_ae40f9a7172d3a41725c151afaec347f7}{}\index{amioption@{amioption}!sx0@{sx0}}
+\index{sx0@{sx0}!amioption@{amioption}}
+\paragraph[{sx0}]{\setlength{\rightskip}{0pt plus 5cm}sx0 = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_ae40f9a7172d3a41725c151afaec347f7}
+~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 185 of file amioption.\+m.
+
+\hypertarget{classamioption_a7a7be015feeb7a346dceccd49e622b4b}{}\index{amioption@{amioption}!z2event@{z2event}}
+\index{z2event@{z2event}!amioption@{amioption}}
+\paragraph[{z2event}]{\setlength{\rightskip}{0pt plus 5cm}z2event = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_a7a7be015feeb7a346dceccd49e622b4b}
+\begin{DoxyNote}{Note}
+This property has the M\+A\+T\+L\+A\+B attribute {\ttfamily Hidden} set to true. 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 197 of file amioption.\+m.
+
+\hypertarget{classamioption_acf2488b95c97e0378c9bf49de3b50f28}{}\index{amioption@{amioption}!id@{id}}
+\index{id@{id}!amioption@{amioption}}
+\paragraph[{id}]{\setlength{\rightskip}{0pt plus 5cm}id = double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}\label{classamioption_acf2488b95c97e0378c9bf49de3b50f28}
+\begin{DoxyNote}{Note}
+This property has the M\+A\+T\+L\+A\+B attribute {\ttfamily Hidden} set to true. 
+
+\href{http://www.mathworks.com/help/matlab/matlab_oop/property-attributes.html}{\tt Matlab documentation of property attributes.} ~\newline
+{\bfseries Default\+:} double(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+\end{DoxyNote}
+
+
+Definition at line 208 of file amioption.\+m.
+

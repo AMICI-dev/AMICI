@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="AMICI : Advanced Matlab Interface to CVODES and IDAS">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>AMICI</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/AMICI-developer/AMICI">View on GitHub</a>
+
+          <h1 id="project_title">AMICI</h1>
+          <h2 id="project_tagline">Advanced Matlab Interface to CVODES and IDAS</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/AMICI-developer/AMICI/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/AMICI-developer/AMICI/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>AMICI (<strong>A</strong>dvanced <strong>M</strong>ATLAB <strong>I</strong>nterface for <strong>C</strong>VODES and <strong>I</strong>DAS) is a MATLAB interface for the <a href="https://computation.llnl.gov/casc/sundials/main.html">SUNDIALS</a> solvers <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_cvodes">CVODES</a> (for ordinary differential equations) and <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_idas">IDAS</a> (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the <a href="https://computation.llnl.gov/casc/sundials/description/description.html#descr_stb">SUNDIALSTB</a> interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation. </p>
+
+<p>The compiled .mex simulation files support various sensitivity methods thereby provides routines for efficient gradient computation taylored for parameter estimation of biochemical reaction models. Yet, AMICI is also applicable to a wider range of differential equation constrained optimization problems.</p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>Automated generation of model specific native C code</li>
+<li>Modular structure for efficient compilation of systems with thousands of states and parameters</li>
+<li>First and second order forward sensitivity analysis</li>
+<li>Adjoint sensitivity analysis</li>
+<li>Steady state sensitivity analysis</li>
+<li>Time-to-event sensitivities</li>
+<li>Parameter dependent bolus injections</li>
+</ul>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<p>AMICI is a software package for MATLAB. It requires the Symbolic Math Toolbox and a correctly configured C Compiler.</p>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>The documentation of AMICI is available as <a href="AMICI_guide.pdf">PDF</a> or as <a href="doc/index.html">HTML</a>
+The documentation includes an <a href="doc/index.html#install">Installation Guide</a>, a <a href="doc/def_simu.html">Model Specification Guide</a>, several <a href="doc/examples.html">Examples</a> and a detailed <a href="doc/code.html">Code Overview</a>.</p>
+
+<h2>
+<a id="support" class="anchor" href="#support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support</h2>
+
+<p>Fabian Froehlich - <a href="mailto:fabian.froehlich@helmholtz-muenchen.de">fabian.froehlich@helmholtz-muenchen.de</a></p>
+
+<p>Jan Hasenauer - <a href="mailto:jan.hasenauer@helmholtz-muenchen.de">jan.hasenauer@helmholtz-muenchen.de</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">AMICI maintained by <a href="https://github.com/AMICI-developer">AMICI-developer</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-69732257-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
