@@ -16,7 +16,6 @@ model.param = 'log10';
 %%
 % STATES
 
-
 % create state syms
 syms x1 x2 x3
 

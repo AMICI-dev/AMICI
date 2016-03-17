@@ -8,18 +8,32 @@ classdef amievent
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % the trigger function activates the event on every zero crossing @type symbolic
-        trigger@sym;
+        trigger = sym([]);
         % the bolus function defines the change in states that is applied on every event occurence @type symbolic
-        bolus@sym;
+        bolus = sym([]);
         % output function for the event @type symbolic
-        z@sym;
+        z = sym([]);
         % flag indicating that a heaviside function is present, this helps
-        % to speed up symbolic computations
-        hflag@logical;
+        % to speed up symbolic computations @type logical
+        hflag = logical([]);
     end
     
     methods
         function AE = amievent(trigger,bolus,z)
+            % constructor of the amievent class. this function constructs an event object based on the provided
+            % trigger function, bolus function and output function
+            %
+            % Parameters:
+            %  trigger: trigger fuction, the roots of this function define
+            %  the occurence of the event @type symbolic
+            %  bolus: bolus fuction, this function defines the change in 
+            %  the states on event occurences @type symbolic
+            %  z: output function, this expression is evaluated on event
+            %  occurences and returned by the simulation function @type
+            %  symbolic
+            % 
+            % Return values:
+            %  AM: model definition object
             if(~isa(trigger,'sym'))
                 if(isa(trigger,'double'))
                     AE.trigger = sym(trigger);

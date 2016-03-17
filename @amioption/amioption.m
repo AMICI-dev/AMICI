@@ -7,31 +7,59 @@ classdef amioption < matlab.mixin.SetGet
     %simulation routine.
     
     properties
+        % absolute integration tolerance @type double
         atol = 1e-16;
+        % relative integration tolerance @type double
         rtol = 1e-8;
+        % maximum number of steps for forward simulation @type double
         maxsteps = 1e4;
-        sens_ind@double;
-        qpositivex@double;
+        % parameter index set for which sensitivies will be computed @type double
+        sens_ind = double([]);
+        % state index set for which positivity will be enforced (EXPERIMENTAL FEATURE, USE WITH CARE) @type double
+        qpositivex = double([]);
+        % timepoint at which the optimization starts @type double
         tstart = 0;
+        % linear multistep method for forward problem @type int
         lmm = 2;
+        % iteration method for linear multistep for forward problem @type
+        % int
         iter = 2;
+        % linear solver @type int
         linsol = 9;
+        % flag to activate stability limit detection @type int
         stldet = true;
+        % type of interpolation of forward solution in adjoint problem @type int
         interpType = 1;
+        % linear multistep method for adjoint problem @type int
         lmmB = 2;
+        % iteration method for linear multistep for adjoint problem @type
+        % int
         iterB = 2;
+        % method for forward sensitivity computation, this will only have an effect
+        % if forward sensitivities are requested @type int
         ism = 1;
+        % sensitivity method @type int
         sensi_meth = 1;
+        % number of orders for which sensitivities are requested, this will only 
+        % have an effect if the appropriate code was compiled @type int
         sensi = 0;
+        % number of expected event occurences per event type @type int
         nmaxevent = 10;
-        ordering = 1;
+        % flag indicating whether steady state sensitivites should be computed @type int
         ss = 0;
-        sx0@double;
+        % pre-ordering scheme for the LU decomposition, this only applies
+        % if the sparse direct linear solver is used
+        ordering = 1;
+        % user provided initialization of sensitivity initial conditions
+        % @type double
+        sx0 = double([]);
     end
     
     properties (Hidden)
-        z2event@double;
-        id@double;
+        % mapping of event outputs to events
+        z2event = double([]);
+        % index set of states with algebraic constraints
+        id = double([]);
     end
     
     methods
@@ -45,10 +73,18 @@ classdef amioption < matlab.mixin.SetGet
             %   parameters altered with the specified values.
             %
             %   OPTS = amioption(OLDOPTS, PARAM, VAL, ...) creates a copy of OLDOPTS with
-            %   the named parameters altered with the specified value
+            %   the named parameters altered with the specified value.
+            %   OLDOPTS must not be of type amioption but can be a struct
+            %   with the same fields
             %
             %   Note to see the parameters, check the
-            %   documentation page for amioptions
+            %   documentation page for \ref amioption
+            %
+            % Parameters:
+            %  varargin: specification of non-default fields
+            % 
+            % Return values:
+            %  AM: model definition object
             
             % adapted from SolverOptions
             

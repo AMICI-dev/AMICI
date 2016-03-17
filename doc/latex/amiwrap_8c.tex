@@ -1,0 +1,108 @@
+\hypertarget{amiwrap_8c}{}\subsection{amiwrap.\+c File Reference}
+\label{amiwrap_8c}\index{amiwrap.\+c@{amiwrap.\+c}}
+
+
+core routines for mex interface  
+
+
+{\ttfamily \#include $<$stdio.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$string.\+h$>$}\\*
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$mex.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}wrapfunctions.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$include/amici.\+h$>$}\\*
+Include dependency graph for amiwrap.\+c\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amiwrap_8c__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=153pt]{amiwrap_8c__dep__incl}
+\end{center}
+\end{figure}
+\subsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{amiwrap_8c_a525335710b53cb064ca56b936120431e}{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}
+\item 
+\#define \hyperlink{amiwrap_8c_ae71449b1cc6e6250b91f539153a7a0d3}{M\+\_\+\+P\+I}~3.\+14159265358979323846
+\end{DoxyCompactItemize}
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5}{mex\+Function} (int nlhs, mx\+Array $\ast$plhs\mbox{[}$\,$\mbox{]}, int nrhs, const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+This file defines the fuction mex\+Function which is executed upon calling the mex file from matlab 
+
+\subsubsection{Macro Definition Documentation}
+\hypertarget{amiwrap_8c_a525335710b53cb064ca56b936120431e}{}\index{amiwrap.\+c@{amiwrap.\+c}!\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S@{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}}
+\index{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S@{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}!amiwrap.\+c@{amiwrap.\+c}}
+\paragraph[{\+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}]{\setlength{\rightskip}{0pt plus 5cm}\#define \+\_\+\+U\+S\+E\+\_\+\+M\+A\+T\+H\+\_\+\+D\+E\+F\+I\+N\+E\+S}\label{amiwrap_8c_a525335710b53cb064ca56b936120431e}
+M\+S definition of P\+I and other constants 
+
+Definition at line 12 of file amiwrap.\+c.
+
+\hypertarget{amiwrap_8c_ae71449b1cc6e6250b91f539153a7a0d3}{}\index{amiwrap.\+c@{amiwrap.\+c}!M\+\_\+\+P\+I@{M\+\_\+\+P\+I}}
+\index{M\+\_\+\+P\+I@{M\+\_\+\+P\+I}!amiwrap.\+c@{amiwrap.\+c}}
+\paragraph[{M\+\_\+\+P\+I}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+\_\+\+P\+I~3.\+14159265358979323846}\label{amiwrap_8c_ae71449b1cc6e6250b91f539153a7a0d3}
+numeric definition of P\+I for settings where the system does not provide one 
+
+Definition at line 16 of file amiwrap.\+c.
+
+
+
+\subsubsection{Function Documentation}
+\hypertarget{amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5}{}\index{amiwrap.\+c@{amiwrap.\+c}!mex\+Function@{mex\+Function}}
+\index{mex\+Function@{mex\+Function}!amiwrap.\+c@{amiwrap.\+c}}
+\paragraph[{mex\+Function(int nlhs, mx\+Array $\ast$plhs[], int nrhs, const mx\+Array $\ast$prhs[])}]{\setlength{\rightskip}{0pt plus 5cm}void mex\+Function (
+\begin{DoxyParamCaption}
+\item[{int}]{nlhs, }
+\item[{mx\+Array $\ast$}]{plhs\mbox{[}$\,$\mbox{]}, }
+\item[{int}]{nrhs, }
+\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)}\label{amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5}
+mex\+Function is the main function of the mex simulation file this function carries out all numerical integration and writes results into the sol struct.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em nlhs} & number of output arguments of the matlab call ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt out}  & {\em plhs} & pointer to the array of output arguments ~\newline
+{\bfseries Type}\+: mx\+Array \\
+\hline
+\mbox{\tt in}  & {\em nrhs} & number of input arguments of the matlab call ~\newline
+{\bfseries Type}\+: int \\
+\hline
+\mbox{\tt in}  & {\em prhs} & pointer to the array of input arguments ~\newline
+{\bfseries Type}\+: mx\+Array \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 31 of file amiwrap.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amiwrap_8c_a6a215cbfde54f82a3ce599228fc3fce5_cgraph}
+\end{center}
+\end{figure}
+
+

@@ -1,4 +1,13 @@
 function writeAMICI(this,modelname)
+    % importSBML writes the information stored in the SBMLode object into
+    % an AMICI model definition file
+    %
+    % Parameters:
+    %  modelname: target name of the AMICI model definition file, _syms
+    %  will be appended
+    %
+    % Return values:
+    %  this: initialised SBMLode object object @type SBMLode
     fprintf('writing file ...\n')
     fid = fopen([modelname '_syms.m'],'w');
     

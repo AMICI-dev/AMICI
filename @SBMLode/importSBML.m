@@ -1,4 +1,13 @@
 function importSBML(this,modelname)
+    % importSBML parses the SBML document and initialises the respective
+    % \ref SBMLode object accordingly
+    %
+    % Parameters:
+    %  modelname: name of the sbml model file, without extension
+    %
+    % Return values:
+    %  this: initialised SBMLode object object @type SBMLode
+    
     try
         model = TranslateSBML([modelname '.sbml']);
     catch

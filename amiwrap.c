@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
+/** MS definition of PI and other constants */
+#define _USE_MATH_DEFINES
 #include <math.h>
-#ifndef M_PI /* define PI if we still have no definition */
+#ifndef M_PI
+/** numeric definition of PI for settings where the system does not provide one */
 #define M_PI 3.14159265358979323846
 #endif
 #include <mex.h>
@@ -260,72 +262,74 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
 freturn:
     /* Free memory */
-    if(nx>0) {
-        N_VDestroy_Serial(x);
-        N_VDestroy_Serial(dx);
-        N_VDestroy_Serial(xdot);
-        N_VDestroy_Serial(x_old);
-        N_VDestroy_Serial(dx_old);
-        N_VDestroy_Serial(xdot_old);
-        DestroyMat(Jtmp);
-        DestroySparseMat(tmp_J);
-        if (ne>0) {
-            if(ami_mem) mxFree(rootsfound);
-            if(ami_mem) mxFree(rootvals);
-            if(ami_mem) mxFree(rootidx);
-            if(ami_mem)    mxFree(sigma_z);
-            if(ami_mem)    mxFree(nroots);
-            if(ami_mem)    mxFree(discs);
-            if(ami_mem)    mxFree(h);
-            
-            if(ami_mem)    mxFree(deltax);
-            if(ami_mem)    mxFree(deltasx);
-            if(ami_mem)    mxFree(deltaxB);
-            if(ami_mem)    mxFree(deltaqB);
-        }
-        
-        if(ny>0) {
-            if(sigma_y)    mxFree(sigma_y);
-        }
-        if (sensi >= 1) {
-            if(ami_mem)    mxFree(dydx);
-            if(ami_mem)    mxFree(dydp);
-            if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(sx,np);
+    if(udata) {
+        if(nx>0) {
+            N_VDestroy_Serial(x);
+            N_VDestroy_Serial(dx);
+            N_VDestroy_Serial(xdot);
+            N_VDestroy_Serial(x_old);
+            N_VDestroy_Serial(dx_old);
+            N_VDestroy_Serial(xdot_old);
+            DestroyMat(Jtmp);
+            DestroySparseMat(tmp_J);
+            if (ne>0) {
+                if(ami_mem) mxFree(rootsfound);
+                if(ami_mem) mxFree(rootvals);
+                if(ami_mem) mxFree(rootidx);
+                if(ami_mem)    mxFree(sigma_z);
+                if(ami_mem)    mxFree(nroots);
+                if(ami_mem)    mxFree(discs);
+                if(ami_mem)    mxFree(h);
+                
+                if(ami_mem)    mxFree(deltax);
+                if(ami_mem)    mxFree(deltasx);
+                if(ami_mem)    mxFree(deltaxB);
+                if(ami_mem)    mxFree(deltaqB);
             }
-            if (sensi_meth == AMI_ASA) {
-                if(status == 0) {
+            
+            if(ny>0) {
+                if(sigma_y)    mxFree(sigma_y);
+            }
+            if (sensi >= 1) {
+                if(ami_mem)    mxFree(dydx);
+                if(ami_mem)    mxFree(dydp);
+                if (sensi_meth == AMI_FSA) {
                     N_VDestroyVectorArray_Serial(sx,np);
                 }
-            }
-
-            if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(sdx, np);
-            }
-            if (sensi_meth == AMI_ASA) {
-                if(ami_mem)    mxFree(dgdp);
-                if(ami_mem)    mxFree(dgdx);
-                if(ami_mem)    mxFree(drdp);
-                if(ami_mem)    mxFree(drdx);
-                if (ne>0) {
-                    if(ami_mem)    mxFree(dzdp);
-                    if(ami_mem)    mxFree(dzdx);
+                if (sensi_meth == AMI_ASA) {
+                    if(status == 0) {
+                        N_VDestroyVectorArray_Serial(sx,np);
+                    }
                 }
-                if(ami_mem)     mxFree(llhS0);
-                if(ami_mem)    mxFree(dsigma_ydp);
-                if (ne>0) {
-                    if(ami_mem)    mxFree(dsigma_zdp);
+                
+                if (sensi_meth == AMI_FSA) {
+                    N_VDestroyVectorArray_Serial(sdx, np);
                 }
-                if(setupBdone)      N_VDestroy_Serial(dxB);
-                if(setupBdone)      N_VDestroy_Serial(xB);
-                if(setupBdone)     N_VDestroy_Serial(xB_old);
-                if(setupBdone)      N_VDestroy_Serial(xQB);
-                if(setupBdone)      N_VDestroy_Serial(xQB_old);
+                if (sensi_meth == AMI_ASA) {
+                    if(ami_mem)    mxFree(dgdp);
+                    if(ami_mem)    mxFree(dgdx);
+                    if(ami_mem)    mxFree(drdp);
+                    if(ami_mem)    mxFree(drdx);
+                    if (ne>0) {
+                        if(ami_mem)    mxFree(dzdp);
+                        if(ami_mem)    mxFree(dzdx);
+                    }
+                    if(ami_mem)     mxFree(llhS0);
+                    if(ami_mem)    mxFree(dsigma_ydp);
+                    if (ne>0) {
+                        if(ami_mem)    mxFree(dsigma_zdp);
+                    }
+                    if(setupBdone)      N_VDestroy_Serial(dxB);
+                    if(setupBdone)      N_VDestroy_Serial(xB);
+                    if(setupBdone)     N_VDestroy_Serial(xB_old);
+                    if(setupBdone)      N_VDestroy_Serial(xQB);
+                    if(setupBdone)      N_VDestroy_Serial(xQB_old);
+                }
+                
             }
-            
+            if(ami_mem)     N_VDestroy_Serial(id);
+            if(ami_mem)     AMIFree(&ami_mem);
         }
-        if(ami_mem)     N_VDestroy_Serial(id);
-        if(ami_mem)     AMIFree(&ami_mem);
     }
     
     if(udata)   mxFree(plist);

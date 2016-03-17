@@ -1,0 +1,464 @@
+\contentsline {section}{\numberline {1}AMICI 0.1 General Documentation}{1}{section.1}
+\contentsline {subsection}{\numberline {1.1}Introduction}{1}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}Availability}{1}{subsection.1.2}
+\contentsline {subsubsection}{\numberline {1.2.1}Obtaining AMICI via the GIT versioning system}{2}{subsubsection.1.2.1}
+\contentsline {subsubsection}{\numberline {1.2.2}License Conditions}{2}{subsubsection.1.2.2}
+\contentsline {subsection}{\numberline {1.3}Installation}{2}{subsection.1.3}
+\contentsline {section}{\numberline {2}Model Definition \& Simulation}{3}{section.2}
+\contentsline {subsection}{\numberline {2.1}Model Definition}{3}{subsection.2.1}
+\contentsline {subsubsection}{\numberline {2.1.1}Header}{3}{subsubsection.2.1.1}
+\contentsline {subsubsection}{\numberline {2.1.2}Options}{3}{subsubsection.2.1.2}
+\contentsline {subsubsection}{\numberline {2.1.3}States}{3}{subsubsection.2.1.3}
+\contentsline {subsubsection}{\numberline {2.1.4}Parameters}{4}{subsubsection.2.1.4}
+\contentsline {subsubsection}{\numberline {2.1.5}Constants}{4}{subsubsection.2.1.5}
+\contentsline {subsubsection}{\numberline {2.1.6}Differential Equation}{4}{subsubsection.2.1.6}
+\contentsline {subsubsection}{\numberline {2.1.7}Initial Conditions}{5}{subsubsection.2.1.7}
+\contentsline {subsubsection}{\numberline {2.1.8}Observables}{5}{subsubsection.2.1.8}
+\contentsline {subsubsection}{\numberline {2.1.9}Events}{5}{subsubsection.2.1.9}
+\contentsline {subsubsection}{\numberline {2.1.10}Standard Deviation}{5}{subsubsection.2.1.10}
+\contentsline {subsubsection}{\numberline {2.1.11}Attach to Model Struct}{6}{subsubsection.2.1.11}
+\contentsline {subsection}{\numberline {2.2}Model Compilation}{6}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}Model Simulation}{6}{subsection.2.3}
+\contentsline {subsubsection}{\numberline {2.3.1}Integration}{6}{subsubsection.2.3.1}
+\contentsline {subsubsection}{\numberline {2.3.2}Forward Sensitivities}{7}{subsubsection.2.3.2}
+\contentsline {subsubsection}{\numberline {2.3.3}Adjoint Sensitivities}{8}{subsubsection.2.3.3}
+\contentsline {subsubsection}{\numberline {2.3.4}Steady State Sensitivities}{8}{subsubsection.2.3.4}
+\contentsline {section}{\numberline {3}Examples}{9}{section.3}
+\contentsline {subsection}{\numberline {3.1}Example 1}{9}{subsection.3.1}
+\contentsline {subsubsection}{\numberline {3.1.1}Model Definition}{9}{subsubsection.3.1.1}
+\contentsline {subsubsection}{\numberline {3.1.2}Simulation}{11}{subsubsection.3.1.2}
+\contentsline {subsection}{\numberline {3.2}Example 2}{13}{subsection.3.2}
+\contentsline {subsubsection}{\numberline {3.2.1}Model Definition}{13}{subsubsection.3.2.1}
+\contentsline {subsubsection}{\numberline {3.2.2}Simulation}{14}{subsubsection.3.2.2}
+\contentsline {subsection}{\numberline {3.3}Example 3}{17}{subsection.3.3}
+\contentsline {subsubsection}{\numberline {3.3.1}Model Definition}{17}{subsubsection.3.3.1}
+\contentsline {subsubsection}{\numberline {3.3.2}Simulation}{19}{subsubsection.3.3.2}
+\contentsline {subsection}{\numberline {3.4}Example 4}{22}{subsection.3.4}
+\contentsline {subsubsection}{\numberline {3.4.1}Model Definition}{22}{subsubsection.3.4.1}
+\contentsline {subsubsection}{\numberline {3.4.2}Simulation}{23}{subsubsection.3.4.2}
+\contentsline {subsection}{\numberline {3.5}Example 5}{25}{subsection.3.5}
+\contentsline {subsubsection}{\numberline {3.5.1}Model Definition}{25}{subsubsection.3.5.1}
+\contentsline {subsubsection}{\numberline {3.5.2}Simulation}{26}{subsubsection.3.5.2}
+\contentsline {subsection}{\numberline {3.6}Example 6}{28}{subsection.3.6}
+\contentsline {subsubsection}{\numberline {3.6.1}Model Definition}{28}{subsubsection.3.6.1}
+\contentsline {subsubsection}{\numberline {3.6.2}Simulation}{29}{subsubsection.3.6.2}
+\contentsline {section}{\numberline {4}Code Organization}{32}{section.4}
+\contentsline {section}{\numberline {5}Hierarchical Index}{32}{section.5}
+\contentsline {subsection}{\numberline {5.1}Class Hierarchy}{32}{subsection.5.1}
+\contentsline {section}{\numberline {6}Class Index}{33}{section.6}
+\contentsline {subsection}{\numberline {6.1}Class List}{33}{subsection.6.1}
+\contentsline {section}{\numberline {7}Class Documentation}{34}{section.7}
+\contentsline {subsection}{\numberline {7.1}amidata Class Reference}{34}{subsection.7.1}
+\contentsline {subsubsection}{\numberline {7.1.1}Detailed Description}{35}{subsubsection.7.1.1}
+\contentsline {subsubsection}{\numberline {7.1.2}Member Data Documentation}{35}{subsubsection.7.1.2}
+\contentsline {paragraph}{\numberline {7.1.2.1}nt}{35}{paragraph.7.1.2.1}
+\contentsline {paragraph}{\numberline {7.1.2.2}ny}{35}{paragraph.7.1.2.2}
+\contentsline {paragraph}{\numberline {7.1.2.3}nz}{35}{paragraph.7.1.2.3}
+\contentsline {paragraph}{\numberline {7.1.2.4}ne}{36}{paragraph.7.1.2.4}
+\contentsline {paragraph}{\numberline {7.1.2.5}nk}{36}{paragraph.7.1.2.5}
+\contentsline {paragraph}{\numberline {7.1.2.6}t}{36}{paragraph.7.1.2.6}
+\contentsline {paragraph}{\numberline {7.1.2.7}Y}{36}{paragraph.7.1.2.7}
+\contentsline {paragraph}{\numberline {7.1.2.8}Sigma\_Y}{36}{paragraph.7.1.2.8}
+\contentsline {paragraph}{\numberline {7.1.2.9}Z}{36}{paragraph.7.1.2.9}
+\contentsline {paragraph}{\numberline {7.1.2.10}Sigma\_Z}{37}{paragraph.7.1.2.10}
+\contentsline {paragraph}{\numberline {7.1.2.11}condition}{37}{paragraph.7.1.2.11}
+\contentsline {subsection}{\numberline {7.2}amievent Class Reference}{37}{subsection.7.2}
+\contentsline {subsubsection}{\numberline {7.2.1}Detailed Description}{37}{subsubsection.7.2.1}
+\contentsline {subsubsection}{\numberline {7.2.2}Constructor \& Destructor Documentation}{37}{subsubsection.7.2.2}
+\contentsline {paragraph}{\numberline {7.2.2.1}amievent(::symbolic trigger,::symbolic bolus,::symbolic z)}{37}{paragraph.7.2.2.1}
+\contentsline {subsubsection}{\numberline {7.2.3}Member Function Documentation}{38}{subsubsection.7.2.3}
+\contentsline {paragraph}{\numberline {7.2.3.1}setHflag(::double hflag)}{38}{paragraph.7.2.3.1}
+\contentsline {subsubsection}{\numberline {7.2.4}Member Data Documentation}{38}{subsubsection.7.2.4}
+\contentsline {paragraph}{\numberline {7.2.4.1}trigger}{38}{paragraph.7.2.4.1}
+\contentsline {paragraph}{\numberline {7.2.4.2}bolus}{38}{paragraph.7.2.4.2}
+\contentsline {paragraph}{\numberline {7.2.4.3}z}{38}{paragraph.7.2.4.3}
+\contentsline {paragraph}{\numberline {7.2.4.4}hflag}{39}{paragraph.7.2.4.4}
+\contentsline {subsection}{\numberline {7.3}amifun Class Reference}{39}{subsection.7.3}
+\contentsline {subsubsection}{\numberline {7.3.1}Detailed Description}{40}{subsubsection.7.3.1}
+\contentsline {subsubsection}{\numberline {7.3.2}Constructor \& Destructor Documentation}{40}{subsubsection.7.3.2}
+\contentsline {paragraph}{\numberline {7.3.2.1}amifun(::string funstr,::amimodel model)}{40}{paragraph.7.3.2.1}
+\contentsline {subsubsection}{\numberline {7.3.3}Member Function Documentation}{40}{subsubsection.7.3.3}
+\contentsline {paragraph}{\numberline {7.3.3.1}printLocalVars(::amimodel model,::fileid fid)}{40}{paragraph.7.3.3.1}
+\contentsline {paragraph}{\numberline {7.3.3.2}writeCcode\_sensi(::amimodel model,::fileid fid)}{40}{paragraph.7.3.3.2}
+\contentsline {paragraph}{\numberline {7.3.3.3}writeCcode(::amimodel model,::fileid fid)}{41}{paragraph.7.3.3.3}
+\contentsline {paragraph}{\numberline {7.3.3.4}gccode(::amimodel model,::fileid fid)}{41}{paragraph.7.3.3.4}
+\contentsline {paragraph}{\numberline {7.3.3.5}getDeps(::amimodel model)}{42}{paragraph.7.3.3.5}
+\contentsline {paragraph}{\numberline {7.3.3.6}getArgs(::amimodel model)}{43}{paragraph.7.3.3.6}
+\contentsline {paragraph}{\numberline {7.3.3.7}getFArgs(::amimodel model)}{43}{paragraph.7.3.3.7}
+\contentsline {paragraph}{\numberline {7.3.3.8}getNVecs()}{43}{paragraph.7.3.3.8}
+\contentsline {paragraph}{\numberline {7.3.3.9}getCVar()}{43}{paragraph.7.3.3.9}
+\contentsline {paragraph}{\numberline {7.3.3.10}getSyms(::amimodel model)}{43}{paragraph.7.3.3.10}
+\contentsline {paragraph}{\numberline {7.3.3.11}getSensiFlag()}{44}{paragraph.7.3.3.11}
+\contentsline {subsection}{\numberline {7.4}amimodel Class Reference}{44}{subsection.7.4}
+\contentsline {subsubsection}{\numberline {7.4.1}Detailed Description}{47}{subsubsection.7.4.1}
+\contentsline {subsubsection}{\numberline {7.4.2}Constructor \& Destructor Documentation}{48}{subsubsection.7.4.2}
+\contentsline {paragraph}{\numberline {7.4.2.1}amimodel(::string symfun,::string modelname)}{48}{paragraph.7.4.2.1}
+\contentsline {subsubsection}{\numberline {7.4.3}Member Function Documentation}{48}{subsubsection.7.4.3}
+\contentsline {paragraph}{\numberline {7.4.3.1}updateRHS(::sym xdot)}{48}{paragraph.7.4.3.1}
+\contentsline {paragraph}{\numberline {7.4.3.2}generateM(::amimodel amimodelo2)}{48}{paragraph.7.4.3.2}
+\contentsline {paragraph}{\numberline {7.4.3.3}getFun(::struct HTable,::string funstr)}{49}{paragraph.7.4.3.3}
+\contentsline {paragraph}{\numberline {7.4.3.4}checkDeps(::struct HTable,::cell deps)}{49}{paragraph.7.4.3.4}
+\contentsline {paragraph}{\numberline {7.4.3.5}loadOldHashes()}{50}{paragraph.7.4.3.5}
+\contentsline {paragraph}{\numberline {7.4.3.6}augmento2()}{51}{paragraph.7.4.3.6}
+\contentsline {paragraph}{\numberline {7.4.3.7}augmento2vec()}{52}{paragraph.7.4.3.7}
+\contentsline {subsubsection}{\numberline {7.4.4}Member Data Documentation}{52}{subsubsection.7.4.4}
+\contentsline {paragraph}{\numberline {7.4.4.1}sym}{52}{paragraph.7.4.4.1}
+\contentsline {paragraph}{\numberline {7.4.4.2}fun}{52}{paragraph.7.4.4.2}
+\contentsline {paragraph}{\numberline {7.4.4.3}event}{53}{paragraph.7.4.4.3}
+\contentsline {paragraph}{\numberline {7.4.4.4}modelname}{53}{paragraph.7.4.4.4}
+\contentsline {paragraph}{\numberline {7.4.4.5}HTable}{53}{paragraph.7.4.4.5}
+\contentsline {paragraph}{\numberline {7.4.4.6}atol}{53}{paragraph.7.4.4.6}
+\contentsline {paragraph}{\numberline {7.4.4.7}rtol}{53}{paragraph.7.4.4.7}
+\contentsline {paragraph}{\numberline {7.4.4.8}maxsteps}{53}{paragraph.7.4.4.8}
+\contentsline {paragraph}{\numberline {7.4.4.9}debug}{54}{paragraph.7.4.4.9}
+\contentsline {paragraph}{\numberline {7.4.4.10}adjoint}{54}{paragraph.7.4.4.10}
+\contentsline {paragraph}{\numberline {7.4.4.11}forward}{54}{paragraph.7.4.4.11}
+\contentsline {paragraph}{\numberline {7.4.4.12}t0}{54}{paragraph.7.4.4.12}
+\contentsline {paragraph}{\numberline {7.4.4.13}wtype}{54}{paragraph.7.4.4.13}
+\contentsline {paragraph}{\numberline {7.4.4.14}nx}{55}{paragraph.7.4.4.14}
+\contentsline {paragraph}{\numberline {7.4.4.15}nxtrue}{55}{paragraph.7.4.4.15}
+\contentsline {paragraph}{\numberline {7.4.4.16}ny}{55}{paragraph.7.4.4.16}
+\contentsline {paragraph}{\numberline {7.4.4.17}nytrue}{55}{paragraph.7.4.4.17}
+\contentsline {paragraph}{\numberline {7.4.4.18}np}{55}{paragraph.7.4.4.18}
+\contentsline {paragraph}{\numberline {7.4.4.19}nk}{55}{paragraph.7.4.4.19}
+\contentsline {paragraph}{\numberline {7.4.4.20}nevent}{55}{paragraph.7.4.4.20}
+\contentsline {paragraph}{\numberline {7.4.4.21}nz}{56}{paragraph.7.4.4.21}
+\contentsline {paragraph}{\numberline {7.4.4.22}nztrue}{56}{paragraph.7.4.4.22}
+\contentsline {paragraph}{\numberline {7.4.4.23}id}{56}{paragraph.7.4.4.23}
+\contentsline {paragraph}{\numberline {7.4.4.24}ubw}{56}{paragraph.7.4.4.24}
+\contentsline {paragraph}{\numberline {7.4.4.25}lbw}{56}{paragraph.7.4.4.25}
+\contentsline {paragraph}{\numberline {7.4.4.26}nnz}{56}{paragraph.7.4.4.26}
+\contentsline {paragraph}{\numberline {7.4.4.27}sparseidx}{57}{paragraph.7.4.4.27}
+\contentsline {paragraph}{\numberline {7.4.4.28}rowvals}{57}{paragraph.7.4.4.28}
+\contentsline {paragraph}{\numberline {7.4.4.29}colptrs}{57}{paragraph.7.4.4.29}
+\contentsline {paragraph}{\numberline {7.4.4.30}sparseidxB}{57}{paragraph.7.4.4.30}
+\contentsline {paragraph}{\numberline {7.4.4.31}rowvalsB}{57}{paragraph.7.4.4.31}
+\contentsline {paragraph}{\numberline {7.4.4.32}colptrsB}{57}{paragraph.7.4.4.32}
+\contentsline {paragraph}{\numberline {7.4.4.33}funs}{57}{paragraph.7.4.4.33}
+\contentsline {paragraph}{\numberline {7.4.4.34}coptim}{58}{paragraph.7.4.4.34}
+\contentsline {paragraph}{\numberline {7.4.4.35}param}{58}{paragraph.7.4.4.35}
+\contentsline {paragraph}{\numberline {7.4.4.36}wrap\_path}{58}{paragraph.7.4.4.36}
+\contentsline {paragraph}{\numberline {7.4.4.37}recompile}{58}{paragraph.7.4.4.37}
+\contentsline {paragraph}{\numberline {7.4.4.38}cfun}{58}{paragraph.7.4.4.38}
+\contentsline {paragraph}{\numberline {7.4.4.39}o2flag}{59}{paragraph.7.4.4.39}
+\contentsline {paragraph}{\numberline {7.4.4.40}compver}{59}{paragraph.7.4.4.40}
+\contentsline {paragraph}{\numberline {7.4.4.41}z2event}{59}{paragraph.7.4.4.41}
+\contentsline {paragraph}{\numberline {7.4.4.42}splineflag}{59}{paragraph.7.4.4.42}
+\contentsline {paragraph}{\numberline {7.4.4.43}minflag}{59}{paragraph.7.4.4.43}
+\contentsline {paragraph}{\numberline {7.4.4.44}maxflag}{59}{paragraph.7.4.4.44}
+\contentsline {paragraph}{\numberline {7.4.4.45}nw}{59}{paragraph.7.4.4.45}
+\contentsline {paragraph}{\numberline {7.4.4.46}ndwdx}{59}{paragraph.7.4.4.46}
+\contentsline {paragraph}{\numberline {7.4.4.47}ndwdp}{60}{paragraph.7.4.4.47}
+\contentsline {subsection}{\numberline {7.5}amioption Class Reference}{60}{subsection.7.5}
+\contentsline {subsubsection}{\numberline {7.5.1}Detailed Description}{61}{subsubsection.7.5.1}
+\contentsline {subsubsection}{\numberline {7.5.2}Constructor \& Destructor Documentation}{62}{subsubsection.7.5.2}
+\contentsline {paragraph}{\numberline {7.5.2.1}amioption(matlabtypesubstitute varargin)}{62}{paragraph.7.5.2.1}
+\contentsline {subsubsection}{\numberline {7.5.3}Member Data Documentation}{62}{subsubsection.7.5.3}
+\contentsline {paragraph}{\numberline {7.5.3.1}atol}{62}{paragraph.7.5.3.1}
+\contentsline {paragraph}{\numberline {7.5.3.2}rtol}{62}{paragraph.7.5.3.2}
+\contentsline {paragraph}{\numberline {7.5.3.3}maxsteps}{62}{paragraph.7.5.3.3}
+\contentsline {paragraph}{\numberline {7.5.3.4}sens\_ind}{62}{paragraph.7.5.3.4}
+\contentsline {paragraph}{\numberline {7.5.3.5}qpositivex}{62}{paragraph.7.5.3.5}
+\contentsline {paragraph}{\numberline {7.5.3.6}tstart}{62}{paragraph.7.5.3.6}
+\contentsline {paragraph}{\numberline {7.5.3.7}lmm}{63}{paragraph.7.5.3.7}
+\contentsline {paragraph}{\numberline {7.5.3.8}iter}{63}{paragraph.7.5.3.8}
+\contentsline {paragraph}{\numberline {7.5.3.9}linsol}{63}{paragraph.7.5.3.9}
+\contentsline {paragraph}{\numberline {7.5.3.10}stldet}{63}{paragraph.7.5.3.10}
+\contentsline {paragraph}{\numberline {7.5.3.11}interpType}{63}{paragraph.7.5.3.11}
+\contentsline {paragraph}{\numberline {7.5.3.12}lmmB}{63}{paragraph.7.5.3.12}
+\contentsline {paragraph}{\numberline {7.5.3.13}iterB}{63}{paragraph.7.5.3.13}
+\contentsline {paragraph}{\numberline {7.5.3.14}ism}{63}{paragraph.7.5.3.14}
+\contentsline {paragraph}{\numberline {7.5.3.15}sensi\_meth}{63}{paragraph.7.5.3.15}
+\contentsline {paragraph}{\numberline {7.5.3.16}sensi}{64}{paragraph.7.5.3.16}
+\contentsline {paragraph}{\numberline {7.5.3.17}nmaxevent}{64}{paragraph.7.5.3.17}
+\contentsline {paragraph}{\numberline {7.5.3.18}ss}{64}{paragraph.7.5.3.18}
+\contentsline {paragraph}{\numberline {7.5.3.19}ordering}{64}{paragraph.7.5.3.19}
+\contentsline {paragraph}{\numberline {7.5.3.20}sx0}{64}{paragraph.7.5.3.20}
+\contentsline {paragraph}{\numberline {7.5.3.21}z2event}{64}{paragraph.7.5.3.21}
+\contentsline {paragraph}{\numberline {7.5.3.22}id}{64}{paragraph.7.5.3.22}
+\contentsline {subsection}{\numberline {7.6}ExpData Struct Reference}{64}{subsection.7.6}
+\contentsline {subsubsection}{\numberline {7.6.1}Detailed Description}{65}{subsubsection.7.6.1}
+\contentsline {subsubsection}{\numberline {7.6.2}Member Data Documentation}{65}{subsubsection.7.6.2}
+\contentsline {paragraph}{\numberline {7.6.2.1}am\_my}{65}{paragraph.7.6.2.1}
+\contentsline {paragraph}{\numberline {7.6.2.2}am\_ysigma}{65}{paragraph.7.6.2.2}
+\contentsline {paragraph}{\numberline {7.6.2.3}am\_mz}{65}{paragraph.7.6.2.3}
+\contentsline {paragraph}{\numberline {7.6.2.4}am\_zsigma}{65}{paragraph.7.6.2.4}
+\contentsline {subsection}{\numberline {7.7}funTest Class Reference}{65}{subsection.7.7}
+\contentsline {subsubsection}{\numberline {7.7.1}Detailed Description}{65}{subsubsection.7.7.1}
+\contentsline {subsection}{\numberline {7.8}modelTest Class Reference}{65}{subsection.7.8}
+\contentsline {subsubsection}{\numberline {7.8.1}Detailed Description}{65}{subsubsection.7.8.1}
+\contentsline {subsection}{\numberline {7.9}optsym Class Reference}{66}{subsection.7.9}
+\contentsline {subsubsection}{\numberline {7.9.1}Detailed Description}{66}{subsubsection.7.9.1}
+\contentsline {subsubsection}{\numberline {7.9.2}Constructor \& Destructor Documentation}{66}{subsubsection.7.9.2}
+\contentsline {paragraph}{\numberline {7.9.2.1}optsym(::sym symbol)}{66}{paragraph.7.9.2.1}
+\contentsline {subsubsection}{\numberline {7.9.3}Member Function Documentation}{67}{subsubsection.7.9.3}
+\contentsline {paragraph}{\numberline {7.9.3.1}getoptimized()}{67}{paragraph.7.9.3.1}
+\contentsline {subsection}{\numberline {7.10}ReturnData Struct Reference}{67}{subsection.7.10}
+\contentsline {subsubsection}{\numberline {7.10.1}Detailed Description}{67}{subsubsection.7.10.1}
+\contentsline {subsubsection}{\numberline {7.10.2}Member Data Documentation}{67}{subsubsection.7.10.2}
+\contentsline {paragraph}{\numberline {7.10.2.1}am\_tsdata}{67}{paragraph.7.10.2.1}
+\contentsline {paragraph}{\numberline {7.10.2.2}am\_xdotdata}{68}{paragraph.7.10.2.2}
+\contentsline {paragraph}{\numberline {7.10.2.3}am\_dxdotdpdata}{68}{paragraph.7.10.2.3}
+\contentsline {paragraph}{\numberline {7.10.2.4}am\_dydxdata}{68}{paragraph.7.10.2.4}
+\contentsline {paragraph}{\numberline {7.10.2.5}am\_dydpdata}{68}{paragraph.7.10.2.5}
+\contentsline {paragraph}{\numberline {7.10.2.6}am\_Jdata}{68}{paragraph.7.10.2.6}
+\contentsline {paragraph}{\numberline {7.10.2.7}am\_zdata}{68}{paragraph.7.10.2.7}
+\contentsline {paragraph}{\numberline {7.10.2.8}am\_zSdata}{68}{paragraph.7.10.2.8}
+\contentsline {paragraph}{\numberline {7.10.2.9}am\_xdata}{68}{paragraph.7.10.2.9}
+\contentsline {paragraph}{\numberline {7.10.2.10}am\_xSdata}{68}{paragraph.7.10.2.10}
+\contentsline {paragraph}{\numberline {7.10.2.11}am\_ydata}{68}{paragraph.7.10.2.11}
+\contentsline {paragraph}{\numberline {7.10.2.12}am\_ySdata}{68}{paragraph.7.10.2.12}
+\contentsline {paragraph}{\numberline {7.10.2.13}am\_numstepsdata}{69}{paragraph.7.10.2.13}
+\contentsline {paragraph}{\numberline {7.10.2.14}am\_numstepsSdata}{69}{paragraph.7.10.2.14}
+\contentsline {paragraph}{\numberline {7.10.2.15}am\_numrhsevalsdata}{69}{paragraph.7.10.2.15}
+\contentsline {paragraph}{\numberline {7.10.2.16}am\_numrhsevalsSdata}{69}{paragraph.7.10.2.16}
+\contentsline {paragraph}{\numberline {7.10.2.17}am\_orderdata}{69}{paragraph.7.10.2.17}
+\contentsline {paragraph}{\numberline {7.10.2.18}am\_llhdata}{69}{paragraph.7.10.2.18}
+\contentsline {paragraph}{\numberline {7.10.2.19}am\_chi2data}{69}{paragraph.7.10.2.19}
+\contentsline {paragraph}{\numberline {7.10.2.20}am\_llhSdata}{69}{paragraph.7.10.2.20}
+\contentsline {paragraph}{\numberline {7.10.2.21}am\_llhS2data}{69}{paragraph.7.10.2.21}
+\contentsline {subsection}{\numberline {7.11}SBMLode Class Reference}{69}{subsection.7.11}
+\contentsline {subsubsection}{\numberline {7.11.1}Detailed Description}{71}{subsubsection.7.11.1}
+\contentsline {subsubsection}{\numberline {7.11.2}Constructor \& Destructor Documentation}{71}{subsubsection.7.11.2}
+\contentsline {paragraph}{\numberline {7.11.2.1}SBMLode(::char filename)}{71}{paragraph.7.11.2.1}
+\contentsline {subsubsection}{\numberline {7.11.3}Member Function Documentation}{71}{subsubsection.7.11.3}
+\contentsline {paragraph}{\numberline {7.11.3.1}importSBML(matlabtypesubstitute filename)}{71}{paragraph.7.11.3.1}
+\contentsline {paragraph}{\numberline {7.11.3.2}writeAMICI(matlabtypesubstitute modelname)}{72}{paragraph.7.11.3.2}
+\contentsline {subsubsection}{\numberline {7.11.4}Member Data Documentation}{72}{subsubsection.7.11.4}
+\contentsline {paragraph}{\numberline {7.11.4.1}state}{72}{paragraph.7.11.4.1}
+\contentsline {paragraph}{\numberline {7.11.4.2}observable}{72}{paragraph.7.11.4.2}
+\contentsline {paragraph}{\numberline {7.11.4.3}observable\_name}{72}{paragraph.7.11.4.3}
+\contentsline {paragraph}{\numberline {7.11.4.4}param}{72}{paragraph.7.11.4.4}
+\contentsline {paragraph}{\numberline {7.11.4.5}parameter}{73}{paragraph.7.11.4.5}
+\contentsline {paragraph}{\numberline {7.11.4.6}constant}{73}{paragraph.7.11.4.6}
+\contentsline {paragraph}{\numberline {7.11.4.7}compartment}{73}{paragraph.7.11.4.7}
+\contentsline {paragraph}{\numberline {7.11.4.8}volume}{73}{paragraph.7.11.4.8}
+\contentsline {paragraph}{\numberline {7.11.4.9}initState}{73}{paragraph.7.11.4.9}
+\contentsline {paragraph}{\numberline {7.11.4.10}condition}{73}{paragraph.7.11.4.10}
+\contentsline {paragraph}{\numberline {7.11.4.11}flux}{73}{paragraph.7.11.4.11}
+\contentsline {paragraph}{\numberline {7.11.4.12}stochiometry}{73}{paragraph.7.11.4.12}
+\contentsline {paragraph}{\numberline {7.11.4.13}xdot}{73}{paragraph.7.11.4.13}
+\contentsline {paragraph}{\numberline {7.11.4.14}trigger}{74}{paragraph.7.11.4.14}
+\contentsline {paragraph}{\numberline {7.11.4.15}bolus}{74}{paragraph.7.11.4.15}
+\contentsline {paragraph}{\numberline {7.11.4.16}funmath}{74}{paragraph.7.11.4.16}
+\contentsline {paragraph}{\numberline {7.11.4.17}funarg}{74}{paragraph.7.11.4.17}
+\contentsline {paragraph}{\numberline {7.11.4.18}time\_symbol}{74}{paragraph.7.11.4.18}
+\contentsline {paragraph}{\numberline {7.11.4.19}pnom}{74}{paragraph.7.11.4.19}
+\contentsline {paragraph}{\numberline {7.11.4.20}knom}{74}{paragraph.7.11.4.20}
+\contentsline {subsection}{\numberline {7.12}TempData Struct Reference}{74}{subsection.7.12}
+\contentsline {subsubsection}{\numberline {7.12.1}Detailed Description}{76}{subsubsection.7.12.1}
+\contentsline {subsubsection}{\numberline {7.12.2}Member Data Documentation}{76}{subsubsection.7.12.2}
+\contentsline {paragraph}{\numberline {7.12.2.1}am\_t}{76}{paragraph.7.12.2.1}
+\contentsline {paragraph}{\numberline {7.12.2.2}am\_x}{76}{paragraph.7.12.2.2}
+\contentsline {paragraph}{\numberline {7.12.2.3}am\_x\_old}{76}{paragraph.7.12.2.3}
+\contentsline {paragraph}{\numberline {7.12.2.4}am\_x\_disc}{76}{paragraph.7.12.2.4}
+\contentsline {paragraph}{\numberline {7.12.2.5}am\_xdot\_disc}{76}{paragraph.7.12.2.5}
+\contentsline {paragraph}{\numberline {7.12.2.6}am\_xdot\_old\_disc}{76}{paragraph.7.12.2.6}
+\contentsline {paragraph}{\numberline {7.12.2.7}am\_dx}{76}{paragraph.7.12.2.7}
+\contentsline {paragraph}{\numberline {7.12.2.8}am\_dx\_old}{76}{paragraph.7.12.2.8}
+\contentsline {paragraph}{\numberline {7.12.2.9}am\_xdot}{76}{paragraph.7.12.2.9}
+\contentsline {paragraph}{\numberline {7.12.2.10}am\_xdot\_old}{76}{paragraph.7.12.2.10}
+\contentsline {paragraph}{\numberline {7.12.2.11}am\_xB}{77}{paragraph.7.12.2.11}
+\contentsline {paragraph}{\numberline {7.12.2.12}am\_xB\_old}{77}{paragraph.7.12.2.12}
+\contentsline {paragraph}{\numberline {7.12.2.13}am\_dxB}{77}{paragraph.7.12.2.13}
+\contentsline {paragraph}{\numberline {7.12.2.14}am\_xQB}{77}{paragraph.7.12.2.14}
+\contentsline {paragraph}{\numberline {7.12.2.15}am\_xQB\_old}{77}{paragraph.7.12.2.15}
+\contentsline {paragraph}{\numberline {7.12.2.16}am\_sx}{77}{paragraph.7.12.2.16}
+\contentsline {paragraph}{\numberline {7.12.2.17}am\_sdx}{77}{paragraph.7.12.2.17}
+\contentsline {paragraph}{\numberline {7.12.2.18}am\_id}{77}{paragraph.7.12.2.18}
+\contentsline {paragraph}{\numberline {7.12.2.19}am\_Jtmp}{77}{paragraph.7.12.2.19}
+\contentsline {paragraph}{\numberline {7.12.2.20}am\_llhS0}{77}{paragraph.7.12.2.20}
+\contentsline {paragraph}{\numberline {7.12.2.21}am\_g}{77}{paragraph.7.12.2.21}
+\contentsline {paragraph}{\numberline {7.12.2.22}am\_dgdp}{78}{paragraph.7.12.2.22}
+\contentsline {paragraph}{\numberline {7.12.2.23}am\_dgdx}{78}{paragraph.7.12.2.23}
+\contentsline {paragraph}{\numberline {7.12.2.24}am\_r}{78}{paragraph.7.12.2.24}
+\contentsline {paragraph}{\numberline {7.12.2.25}am\_drdp}{78}{paragraph.7.12.2.25}
+\contentsline {paragraph}{\numberline {7.12.2.26}am\_drdx}{78}{paragraph.7.12.2.26}
+\contentsline {paragraph}{\numberline {7.12.2.27}am\_rval}{78}{paragraph.7.12.2.27}
+\contentsline {paragraph}{\numberline {7.12.2.28}am\_drvaldp}{78}{paragraph.7.12.2.28}
+\contentsline {paragraph}{\numberline {7.12.2.29}am\_drvaldx}{78}{paragraph.7.12.2.29}
+\contentsline {paragraph}{\numberline {7.12.2.30}am\_dzdx}{78}{paragraph.7.12.2.30}
+\contentsline {paragraph}{\numberline {7.12.2.31}am\_dzdp}{78}{paragraph.7.12.2.31}
+\contentsline {paragraph}{\numberline {7.12.2.32}am\_dydp}{78}{paragraph.7.12.2.32}
+\contentsline {paragraph}{\numberline {7.12.2.33}am\_dydx}{79}{paragraph.7.12.2.33}
+\contentsline {paragraph}{\numberline {7.12.2.34}am\_yS0}{79}{paragraph.7.12.2.34}
+\contentsline {paragraph}{\numberline {7.12.2.35}am\_sigma\_y}{79}{paragraph.7.12.2.35}
+\contentsline {paragraph}{\numberline {7.12.2.36}am\_dsigma\_ydp}{79}{paragraph.7.12.2.36}
+\contentsline {paragraph}{\numberline {7.12.2.37}am\_sigma\_z}{79}{paragraph.7.12.2.37}
+\contentsline {paragraph}{\numberline {7.12.2.38}am\_dsigma\_zdp}{79}{paragraph.7.12.2.38}
+\contentsline {paragraph}{\numberline {7.12.2.39}am\_x\_tmp}{79}{paragraph.7.12.2.39}
+\contentsline {paragraph}{\numberline {7.12.2.40}am\_sx\_tmp}{79}{paragraph.7.12.2.40}
+\contentsline {paragraph}{\numberline {7.12.2.41}am\_dx\_tmp}{79}{paragraph.7.12.2.41}
+\contentsline {paragraph}{\numberline {7.12.2.42}am\_sdx\_tmp}{79}{paragraph.7.12.2.42}
+\contentsline {paragraph}{\numberline {7.12.2.43}am\_xdot\_tmp}{79}{paragraph.7.12.2.43}
+\contentsline {paragraph}{\numberline {7.12.2.44}am\_xB\_tmp}{80}{paragraph.7.12.2.44}
+\contentsline {paragraph}{\numberline {7.12.2.45}am\_xQB\_tmp}{80}{paragraph.7.12.2.45}
+\contentsline {paragraph}{\numberline {7.12.2.46}am\_dxB\_tmp}{80}{paragraph.7.12.2.46}
+\contentsline {paragraph}{\numberline {7.12.2.47}am\_id\_tmp}{80}{paragraph.7.12.2.47}
+\contentsline {paragraph}{\numberline {7.12.2.48}am\_rootsfound}{80}{paragraph.7.12.2.48}
+\contentsline {paragraph}{\numberline {7.12.2.49}am\_rootidx}{80}{paragraph.7.12.2.49}
+\contentsline {paragraph}{\numberline {7.12.2.50}am\_nroots}{80}{paragraph.7.12.2.50}
+\contentsline {paragraph}{\numberline {7.12.2.51}am\_rootvals}{80}{paragraph.7.12.2.51}
+\contentsline {paragraph}{\numberline {7.12.2.52}am\_deltax}{80}{paragraph.7.12.2.52}
+\contentsline {paragraph}{\numberline {7.12.2.53}am\_deltasx}{80}{paragraph.7.12.2.53}
+\contentsline {paragraph}{\numberline {7.12.2.54}am\_deltaxB}{80}{paragraph.7.12.2.54}
+\contentsline {paragraph}{\numberline {7.12.2.55}am\_deltaqB}{81}{paragraph.7.12.2.55}
+\contentsline {paragraph}{\numberline {7.12.2.56}am\_which}{81}{paragraph.7.12.2.56}
+\contentsline {paragraph}{\numberline {7.12.2.57}am\_discs}{81}{paragraph.7.12.2.57}
+\contentsline {paragraph}{\numberline {7.12.2.58}am\_irdiscs}{81}{paragraph.7.12.2.58}
+\contentsline {subsection}{\numberline {7.13}UserData Struct Reference}{81}{subsection.7.13}
+\contentsline {subsubsection}{\numberline {7.13.1}Detailed Description}{82}{subsubsection.7.13.1}
+\contentsline {subsubsection}{\numberline {7.13.2}Member Data Documentation}{82}{subsubsection.7.13.2}
+\contentsline {paragraph}{\numberline {7.13.2.1}am\_qpositivex}{82}{paragraph.7.13.2.1}
+\contentsline {paragraph}{\numberline {7.13.2.2}am\_plist}{82}{paragraph.7.13.2.2}
+\contentsline {paragraph}{\numberline {7.13.2.3}am\_np}{82}{paragraph.7.13.2.3}
+\contentsline {paragraph}{\numberline {7.13.2.4}am\_ny}{83}{paragraph.7.13.2.4}
+\contentsline {paragraph}{\numberline {7.13.2.5}am\_nytrue}{83}{paragraph.7.13.2.5}
+\contentsline {paragraph}{\numberline {7.13.2.6}am\_nx}{83}{paragraph.7.13.2.6}
+\contentsline {paragraph}{\numberline {7.13.2.7}am\_nz}{83}{paragraph.7.13.2.7}
+\contentsline {paragraph}{\numberline {7.13.2.8}am\_nztrue}{83}{paragraph.7.13.2.8}
+\contentsline {paragraph}{\numberline {7.13.2.9}am\_ne}{83}{paragraph.7.13.2.9}
+\contentsline {paragraph}{\numberline {7.13.2.10}am\_nt}{83}{paragraph.7.13.2.10}
+\contentsline {paragraph}{\numberline {7.13.2.11}am\_nw}{83}{paragraph.7.13.2.11}
+\contentsline {paragraph}{\numberline {7.13.2.12}am\_ndwdx}{83}{paragraph.7.13.2.12}
+\contentsline {paragraph}{\numberline {7.13.2.13}am\_ndwdp}{83}{paragraph.7.13.2.13}
+\contentsline {paragraph}{\numberline {7.13.2.14}am\_nnz}{83}{paragraph.7.13.2.14}
+\contentsline {paragraph}{\numberline {7.13.2.15}am\_nmaxevent}{84}{paragraph.7.13.2.15}
+\contentsline {paragraph}{\numberline {7.13.2.16}am\_p}{84}{paragraph.7.13.2.16}
+\contentsline {paragraph}{\numberline {7.13.2.17}am\_k}{84}{paragraph.7.13.2.17}
+\contentsline {paragraph}{\numberline {7.13.2.18}am\_tstart}{84}{paragraph.7.13.2.18}
+\contentsline {paragraph}{\numberline {7.13.2.19}am\_ts}{84}{paragraph.7.13.2.19}
+\contentsline {paragraph}{\numberline {7.13.2.20}am\_pbar}{84}{paragraph.7.13.2.20}
+\contentsline {paragraph}{\numberline {7.13.2.21}am\_xbar}{84}{paragraph.7.13.2.21}
+\contentsline {paragraph}{\numberline {7.13.2.22}am\_idlist}{84}{paragraph.7.13.2.22}
+\contentsline {paragraph}{\numberline {7.13.2.23}am\_sensi}{84}{paragraph.7.13.2.23}
+\contentsline {paragraph}{\numberline {7.13.2.24}am\_atol}{84}{paragraph.7.13.2.24}
+\contentsline {paragraph}{\numberline {7.13.2.25}am\_rtol}{84}{paragraph.7.13.2.25}
+\contentsline {paragraph}{\numberline {7.13.2.26}am\_maxsteps}{85}{paragraph.7.13.2.26}
+\contentsline {paragraph}{\numberline {7.13.2.27}am\_ism}{85}{paragraph.7.13.2.27}
+\contentsline {paragraph}{\numberline {7.13.2.28}am\_sensi\_meth}{85}{paragraph.7.13.2.28}
+\contentsline {paragraph}{\numberline {7.13.2.29}am\_linsol}{85}{paragraph.7.13.2.29}
+\contentsline {paragraph}{\numberline {7.13.2.30}am\_interpType}{85}{paragraph.7.13.2.30}
+\contentsline {paragraph}{\numberline {7.13.2.31}am\_lmm}{85}{paragraph.7.13.2.31}
+\contentsline {paragraph}{\numberline {7.13.2.32}am\_iter}{85}{paragraph.7.13.2.32}
+\contentsline {paragraph}{\numberline {7.13.2.33}am\_stldet}{85}{paragraph.7.13.2.33}
+\contentsline {paragraph}{\numberline {7.13.2.34}am\_ubw}{85}{paragraph.7.13.2.34}
+\contentsline {paragraph}{\numberline {7.13.2.35}am\_lbw}{86}{paragraph.7.13.2.35}
+\contentsline {paragraph}{\numberline {7.13.2.36}am\_bsx0}{86}{paragraph.7.13.2.36}
+\contentsline {paragraph}{\numberline {7.13.2.37}am\_sx0data}{86}{paragraph.7.13.2.37}
+\contentsline {paragraph}{\numberline {7.13.2.38}am\_event\_model}{86}{paragraph.7.13.2.38}
+\contentsline {paragraph}{\numberline {7.13.2.39}am\_data\_model}{86}{paragraph.7.13.2.39}
+\contentsline {paragraph}{\numberline {7.13.2.40}am\_ordering}{86}{paragraph.7.13.2.40}
+\contentsline {paragraph}{\numberline {7.13.2.41}am\_z2event}{86}{paragraph.7.13.2.41}
+\contentsline {paragraph}{\numberline {7.13.2.42}am\_h}{86}{paragraph.7.13.2.42}
+\contentsline {paragraph}{\numberline {7.13.2.43}am\_J}{86}{paragraph.7.13.2.43}
+\contentsline {paragraph}{\numberline {7.13.2.44}am\_dxdotdp}{86}{paragraph.7.13.2.44}
+\contentsline {paragraph}{\numberline {7.13.2.45}am\_w}{86}{paragraph.7.13.2.45}
+\contentsline {paragraph}{\numberline {7.13.2.46}am\_dwdx}{87}{paragraph.7.13.2.46}
+\contentsline {paragraph}{\numberline {7.13.2.47}am\_dwdp}{87}{paragraph.7.13.2.47}
+\contentsline {paragraph}{\numberline {7.13.2.48}am\_M}{87}{paragraph.7.13.2.48}
+\contentsline {paragraph}{\numberline {7.13.2.49}am\_dfdx}{87}{paragraph.7.13.2.49}
+\contentsline {paragraph}{\numberline {7.13.2.50}am\_nan\_dxdotdp}{87}{paragraph.7.13.2.50}
+\contentsline {paragraph}{\numberline {7.13.2.51}am\_nan\_J}{87}{paragraph.7.13.2.51}
+\contentsline {paragraph}{\numberline {7.13.2.52}am\_nan\_JSparse}{87}{paragraph.7.13.2.52}
+\contentsline {paragraph}{\numberline {7.13.2.53}am\_nan\_xdot}{87}{paragraph.7.13.2.53}
+\contentsline {paragraph}{\numberline {7.13.2.54}am\_nan\_xBdot}{87}{paragraph.7.13.2.54}
+\contentsline {paragraph}{\numberline {7.13.2.55}am\_nan\_qBdot}{87}{paragraph.7.13.2.55}
+\contentsline {section}{\numberline {8}File Documentation}{87}{section.8}
+\contentsline {subsection}{\numberline {8.1}amiwrap.c File Reference}{88}{subsection.8.1}
+\contentsline {subsubsection}{\numberline {8.1.1}Detailed Description}{88}{subsubsection.8.1.1}
+\contentsline {subsubsection}{\numberline {8.1.2}Macro Definition Documentation}{88}{subsubsection.8.1.2}
+\contentsline {paragraph}{\numberline {8.1.2.1}\_USE\_MATH\_DEFINES}{89}{paragraph.8.1.2.1}
+\contentsline {paragraph}{\numberline {8.1.2.2}M\_PI}{89}{paragraph.8.1.2.2}
+\contentsline {subsubsection}{\numberline {8.1.3}Function Documentation}{89}{subsubsection.8.1.3}
+\contentsline {paragraph}{\numberline {8.1.3.1}mexFunction(int nlhs, mxArray $\ast $plhs[], int nrhs, const mxArray $\ast $prhs[])}{89}{paragraph.8.1.3.1}
+\contentsline {subsection}{\numberline {8.2}amiwrap.m File Reference}{90}{subsection.8.2}
+\contentsline {subsubsection}{\numberline {8.2.1}Function Documentation}{90}{subsubsection.8.2.1}
+\contentsline {paragraph}{\numberline {8.2.1.1}amiwrap(matlabtypesubstitute varargin)}{91}{paragraph.8.2.1.1}
+\contentsline {subsection}{\numberline {8.3}SBML2AMICI.m File Reference}{91}{subsection.8.3}
+\contentsline {subsubsection}{\numberline {8.3.1}Function Documentation}{91}{subsubsection.8.3.1}
+\contentsline {paragraph}{\numberline {8.3.1.1}SBML2AMICI(matlabtypesubstitute filename, matlabtypesubstitute modelname)}{91}{paragraph.8.3.1.1}
+\contentsline {subsection}{\numberline {8.4}src/amici.c File Reference}{91}{subsection.8.4}
+\contentsline {subsubsection}{\numberline {8.4.1}Macro Definition Documentation}{93}{subsubsection.8.4.1}
+\contentsline {paragraph}{\numberline {8.4.1.1}\_USE\_MATH\_DEFINES}{93}{paragraph.8.4.1.1}
+\contentsline {paragraph}{\numberline {8.4.1.2}M\_PI}{93}{paragraph.8.4.1.2}
+\contentsline {paragraph}{\numberline {8.4.1.3}initField2}{93}{paragraph.8.4.1.3}
+\contentsline {paragraph}{\numberline {8.4.1.4}initField3}{93}{paragraph.8.4.1.4}
+\contentsline {paragraph}{\numberline {8.4.1.5}readOptionScalar}{94}{paragraph.8.4.1.5}
+\contentsline {paragraph}{\numberline {8.4.1.6}readOptionData}{94}{paragraph.8.4.1.6}
+\contentsline {paragraph}{\numberline {8.4.1.7}AMI\_SUCCESS}{94}{paragraph.8.4.1.7}
+\contentsline {subsubsection}{\numberline {8.4.2}Function Documentation}{94}{subsubsection.8.4.2}
+\contentsline {paragraph}{\numberline {8.4.2.1}setupUserData(const mxArray $\ast $prhs[])}{95}{paragraph.8.4.2.1}
+\contentsline {paragraph}{\numberline {8.4.2.2}setupReturnData(mxArray $\ast $plhs[], void $\ast $user\_data, double $\ast $pstatus)}{96}{paragraph.8.4.2.2}
+\contentsline {paragraph}{\numberline {8.4.2.3}setupExpData(const mxArray $\ast $prhs[], void $\ast $user\_data)}{97}{paragraph.8.4.2.3}
+\contentsline {paragraph}{\numberline {8.4.2.4}setupAMI(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{98}{paragraph.8.4.2.4}
+\contentsline {paragraph}{\numberline {8.4.2.5}setupAMIB(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{99}{paragraph.8.4.2.5}
+\contentsline {paragraph}{\numberline {8.4.2.6}getDataSensisFSA(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{99}{paragraph.8.4.2.6}
+\contentsline {paragraph}{\numberline {8.4.2.7}getDataSensisASA(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{100}{paragraph.8.4.2.7}
+\contentsline {paragraph}{\numberline {8.4.2.8}getDataOutput(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{101}{paragraph.8.4.2.8}
+\contentsline {paragraph}{\numberline {8.4.2.9}getEventSensisFSA(int $\ast $status, int ie, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{102}{paragraph.8.4.2.9}
+\contentsline {paragraph}{\numberline {8.4.2.10}getEventSensisFSA\_tf(int $\ast $status, int ie, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{102}{paragraph.8.4.2.10}
+\contentsline {paragraph}{\numberline {8.4.2.11}getEventSensisASA(int $\ast $status, int ie, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{103}{paragraph.8.4.2.11}
+\contentsline {paragraph}{\numberline {8.4.2.12}getEventSigma(int $\ast $status, int ie, int iz, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{104}{paragraph.8.4.2.12}
+\contentsline {paragraph}{\numberline {8.4.2.13}getEventObjective(int $\ast $status, int ie, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{104}{paragraph.8.4.2.13}
+\contentsline {paragraph}{\numberline {8.4.2.14}getEventOutput(int $\ast $status, realtype $\ast $tlastroot, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{105}{paragraph.8.4.2.14}
+\contentsline {paragraph}{\numberline {8.4.2.15}fillEventOutput(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{106}{paragraph.8.4.2.15}
+\contentsline {paragraph}{\numberline {8.4.2.16}handleDataPoint(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{107}{paragraph.8.4.2.16}
+\contentsline {paragraph}{\numberline {8.4.2.17}handleDataPointB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{108}{paragraph.8.4.2.17}
+\contentsline {paragraph}{\numberline {8.4.2.18}handleEvent(int $\ast $status, int iroot, realtype $\ast $tlastroot, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $exp\_data, void $\ast $temp\_data)}{109}{paragraph.8.4.2.18}
+\contentsline {paragraph}{\numberline {8.4.2.19}handleEventB(int $\ast $status, int iroot, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{110}{paragraph.8.4.2.19}
+\contentsline {paragraph}{\numberline {8.4.2.20}getTnext(realtype $\ast $troot, int iroot, realtype $\ast $tdata, int it, void $\ast $user\_data)}{111}{paragraph.8.4.2.20}
+\contentsline {paragraph}{\numberline {8.4.2.21}applyEventBolus(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{112}{paragraph.8.4.2.21}
+\contentsline {paragraph}{\numberline {8.4.2.22}applyEventSensiBolusFSA(int $\ast $status, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $temp\_data)}{113}{paragraph.8.4.2.22}
+\contentsline {paragraph}{\numberline {8.4.2.23}initHeaviside(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{113}{paragraph.8.4.2.23}
+\contentsline {paragraph}{\numberline {8.4.2.24}updateHeaviside(int $\ast $status, void $\ast $user\_data, void $\ast $temp\_data)}{114}{paragraph.8.4.2.24}
+\contentsline {paragraph}{\numberline {8.4.2.25}updateHeavisideB(int $\ast $status, int iroot, void $\ast $user\_data, void $\ast $temp\_data)}{114}{paragraph.8.4.2.25}
+\contentsline {paragraph}{\numberline {8.4.2.26}getDiagnosis(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data)}{115}{paragraph.8.4.2.26}
+\contentsline {paragraph}{\numberline {8.4.2.27}getDiagnosisB(int $\ast $status, int it, void $\ast $ami\_mem, void $\ast $user\_data, void $\ast $return\_data, void $\ast $temp\_data)}{116}{paragraph.8.4.2.27}
+\contentsline {subsection}{\numberline {8.5}src/spline.c File Reference}{117}{subsection.8.5}
+\contentsline {subsubsection}{\numberline {8.5.1}Detailed Description}{118}{subsubsection.8.5.1}
+\contentsline {subsubsection}{\numberline {8.5.2}Function Documentation}{118}{subsubsection.8.5.2}
+\contentsline {paragraph}{\numberline {8.5.2.1}spline(int n, int end1, int end2, double slope1, double slope2, double x[], double y[], double b[], double c[], double d[])}{118}{paragraph.8.5.2.1}
+\contentsline {paragraph}{\numberline {8.5.2.2}seval(int n, double u, double x[], double y[], double b[], double c[], double d[])}{119}{paragraph.8.5.2.2}
+\contentsline {paragraph}{\numberline {8.5.2.3}deriv(int n, double u, double x[], double b[], double c[], double d[])}{121}{paragraph.8.5.2.3}
+\contentsline {paragraph}{\numberline {8.5.2.4}sinteg(int n, double u, double x[], double y[], double b[], double c[], double d[])}{122}{paragraph.8.5.2.4}
+\contentsline {subsection}{\numberline {8.6}src/symbolic\_functions.c File Reference}{122}{subsection.8.6}
+\contentsline {subsubsection}{\numberline {8.6.1}Detailed Description}{124}{subsubsection.8.6.1}
+\contentsline {subsubsection}{\numberline {8.6.2}Macro Definition Documentation}{124}{subsubsection.8.6.2}
+\contentsline {paragraph}{\numberline {8.6.2.1}TRUE}{124}{paragraph.8.6.2.1}
+\contentsline {paragraph}{\numberline {8.6.2.2}FALSE}{124}{paragraph.8.6.2.2}
+\contentsline {subsubsection}{\numberline {8.6.3}Function Documentation}{124}{subsubsection.8.6.3}
+\contentsline {paragraph}{\numberline {8.6.3.1}amilog(double x)}{124}{paragraph.8.6.3.1}
+\contentsline {paragraph}{\numberline {8.6.3.2}heaviside(double x)}{124}{paragraph.8.6.3.2}
+\contentsline {paragraph}{\numberline {8.6.3.3}sign(double x)}{125}{paragraph.8.6.3.3}
+\contentsline {paragraph}{\numberline {8.6.3.4}am\_min(double a, double b)}{125}{paragraph.8.6.3.4}
+\contentsline {paragraph}{\numberline {8.6.3.5}Dam\_min(int id, double a, double b)}{126}{paragraph.8.6.3.5}
+\contentsline {paragraph}{\numberline {8.6.3.6}am\_max(double a, double b)}{127}{paragraph.8.6.3.6}
+\contentsline {paragraph}{\numberline {8.6.3.7}Dam\_max(int id, double a, double b)}{127}{paragraph.8.6.3.7}
+\contentsline {paragraph}{\numberline {8.6.3.8}spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{127}{paragraph.8.6.3.8}
+\contentsline {paragraph}{\numberline {8.6.3.9}spline\_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{128}{paragraph.8.6.3.9}
+\contentsline {paragraph}{\numberline {8.6.3.10}spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{129}{paragraph.8.6.3.10}
+\contentsline {paragraph}{\numberline {8.6.3.11}spline\_pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{130}{paragraph.8.6.3.11}
+\contentsline {paragraph}{\numberline {8.6.3.12}spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{131}{paragraph.8.6.3.12}
+\contentsline {paragraph}{\numberline {8.6.3.13}spline\_pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{131}{paragraph.8.6.3.13}
+\contentsline {paragraph}{\numberline {8.6.3.14}spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{132}{paragraph.8.6.3.14}
+\contentsline {paragraph}{\numberline {8.6.3.15}spline\_pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{133}{paragraph.8.6.3.15}
+\contentsline {paragraph}{\numberline {8.6.3.16}Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{135}{paragraph.8.6.3.16}
+\contentsline {paragraph}{\numberline {8.6.3.17}Dspline\_pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}{135}{paragraph.8.6.3.17}
+\contentsline {paragraph}{\numberline {8.6.3.18}Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{136}{paragraph.8.6.3.18}
+\contentsline {paragraph}{\numberline {8.6.3.19}Dspline\_pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}{137}{paragraph.8.6.3.19}
+\contentsline {paragraph}{\numberline {8.6.3.20}Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{138}{paragraph.8.6.3.20}
+\contentsline {paragraph}{\numberline {8.6.3.21}Dspline\_pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}{139}{paragraph.8.6.3.21}
+\contentsline {paragraph}{\numberline {8.6.3.22}Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{140}{paragraph.8.6.3.22}
+\contentsline {paragraph}{\numberline {8.6.3.23}Dspline\_pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}{141}{paragraph.8.6.3.23}
+\contentsline {subsection}{\numberline {8.7}symbolic/am\_and.m File Reference}{142}{subsection.8.7}
+\contentsline {subsection}{\numberline {8.8}symbolic/am\_ge.m File Reference}{142}{subsection.8.8}
+\contentsline {subsection}{\numberline {8.9}symbolic/am\_gt.m File Reference}{143}{subsection.8.9}
+\contentsline {subsection}{\numberline {8.10}symbolic/am\_if.m File Reference}{143}{subsection.8.10}
+\contentsline {subsection}{\numberline {8.11}symbolic/am\_le.m File Reference}{143}{subsection.8.11}
+\contentsline {subsection}{\numberline {8.12}symbolic/am\_lt.m File Reference}{143}{subsection.8.12}
+\contentsline {subsection}{\numberline {8.13}symbolic/am\_max.m File Reference}{143}{subsection.8.13}
+\contentsline {subsection}{\numberline {8.14}symbolic/am\_min.m File Reference}{144}{subsection.8.14}
+\contentsline {subsection}{\numberline {8.15}symbolic/am\_or.m File Reference}{144}{subsection.8.15}
+\contentsline {subsection}{\numberline {8.16}symbolic/am\_stepfun.m File Reference}{144}{subsection.8.16}
+\contentsline {section}{Index}{145}{section*.39}
