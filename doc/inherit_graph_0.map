@@ -1,5 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node2" href="$classamidata.html" title="AMIDATA provides a data container to pass experimental data to the simulation routine for likelihood ..." alt="" coords="120,5,189,33"/>
-<area shape="rect" id="node3" href="$classamimodel.html" title="amimodel is the object in which all model definitions are stored " alt="" coords="115,56,194,83"/>
-<area shape="rect" id="node4" href="$class_s_b_m_lode.html" title="SBMLODE carries all information about the differential equation defined by a SBML model definition fi..." alt="" coords="115,107,195,134"/>
-</map>

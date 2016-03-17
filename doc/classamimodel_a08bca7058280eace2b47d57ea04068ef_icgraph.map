@@ -1,5 +1,0 @@
-<map id="getFunSVar" name="getFunSVar">
-<area shape="rect" id="node2" href="$classamimodel.html#a874862825ea3346f977f518072dec051" title="writeCcode is a wrapper for this.gccode which initialises data and reduces overhead by check nonzero ..." alt="" coords="145,5,233,33"/>
-<area shape="rect" id="node3" href="$classamimodel.html#af2ce5001c2320c95471ecb8c3d73bdbb" title="generateC generates the c files which will be used in the compilation. " alt="" coords="455,5,539,33"/>
-<area shape="rect" id="node4" href="$classamimodel.html#a65b30e6d951ff694d40d45b0625742c7" title="writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces overhead by chec..." alt="" coords="281,31,407,58"/>
-</map>

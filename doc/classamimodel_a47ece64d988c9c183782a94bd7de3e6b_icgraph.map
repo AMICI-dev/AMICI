@@ -1,6 +1,0 @@
-<map id="getFunArgs" name="getFunArgs">
-<area shape="rect" id="node2" href="$classamimodel.html#aca8ccaf522a4aadb4ce12b7b636570b2" title="gccode transforms symbolic expressions into c code and writes the respective expression into a specif..." alt="" coords="144,23,208,50"/>
-<area shape="rect" id="node4" href="$classamimodel.html#af2ce5001c2320c95471ecb8c3d73bdbb" title="generateC generates the c files which will be used in the compilation. " alt="" coords="567,23,650,50"/>
-<area shape="rect" id="node3" href="$classamimodel.html#a874862825ea3346f977f518072dec051" title="writeCcode is a wrapper for this.gccode which initialises data and reduces overhead by check nonzero ..." alt="" coords="256,23,344,50"/>
-<area shape="rect" id="node5" href="$classamimodel.html#a65b30e6d951ff694d40d45b0625742c7" title="writeCcode_sensi is a wrapper for writeCcode which loops over parameters and reduces overhead by chec..." alt="" coords="392,23,519,50"/>
-</map>

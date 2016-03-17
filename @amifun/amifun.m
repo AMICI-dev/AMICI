@@ -8,39 +8,30 @@ classdef amifun
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
-        sym;
+        sym@sym;
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
-        strsym;
+        strsym@sym;
         % short symbolic string which can be used for the reuse of old values @type symbolic
-        strsym_old;
+        strsym_old@sym;
         % name of the model @type char
-        funstr;
+        funstr@char;
         % name of the c variable @type char
-        cvar;
+        cvar@char;
         % argument string (solver specific) @type char
-        argstr;
+        argstr@char;
         % argument string (solver unspecific) @type char
-        fargstr;
+        fargstr@char;
         % dependencies on other functions @type cell
-        deps;
-        % nvec dependencies @type cell
-        nvecs;
+        deps@cell;
+        % nvec dependencies
+        nvecs@cell;
         % indicates whether the function is a sensitivity or derivative
-        % with respect to parameters @type logical
-        sensiflag;
+        % with respect to parameters
+        sensiflag@logical;
     end
     
     methods
         function AF = amifun(funstr,model)
-            % constructor of the amifun class. this function initializes the function object based on the provided
-            % function name funstr and model definition object model
-            %
-            % Parameters:
-            %  funstr: name of the function @type string
-            %  model: model definition object @type amimodel
-            % 
-            % Return values:
-            %  AM: model definition object
             AF.funstr = funstr;
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
@@ -49,7 +40,7 @@ classdef amifun
             AF = AF.getCVar();
             AF = AF.getSensiFlag();
         end
-        
+
         printLocalVars(this,model,fid)
         
         writeCcode_sensi(this,model,fid)
@@ -62,15 +53,13 @@ classdef amifun
         
         [ this ] = getArgs(this,model)
         
-        [ this ] = getFArgs(this,model)
-        
         [ this ] = getNVecs(this)
         
         [ this ] = getCVar(this)
         
-        [ this ] = getSyms(this,model)
-        
         [ this ] = getSensiFlag(this)
+        
+        [ this ] = checkDeps(this)
     end
 end
 
