@@ -1,3 +1,0 @@
-\form#0:$ \dot{x} = f $
-\form#1:$ M \cdot \dot{x} = f $
-\form#2:$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
