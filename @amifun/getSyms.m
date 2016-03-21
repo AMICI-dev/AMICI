@@ -69,12 +69,10 @@ function [this,model] = getSyms(this,model)
             sxs = cell(nx,np);
             % fill cell array
             for j = 1:nx
-                for i = 1:np
-                    sxs{j,i} = sprintf('sx_%i', j-1);
-                end
+                sxs{j} = sprintf('sx_%i', j-1);
             end
             % transform into symbolic expression
-            this.sym = sym(sxs);
+            this.sym = repmat(sym(sxs),[1,np]);
             sx = this.sym;
             
         case 'sdx'
