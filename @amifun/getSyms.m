@@ -222,7 +222,7 @@ function [this,model] = getSyms(this,model)
             
         case 'w'
             optimize = getoptimized(optsym(model.fun.xdot.sym));
-            tmpxdot = children(optimize(end));
+            tmpxdot = sym(char(optimize(end)));
             nw = (length(optimize)-1);
             model.nw = nw;
             if(nw>0)
