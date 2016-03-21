@@ -755,7 +755,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     if(*status != AMI_SUCCESS) return;
     
     /* Number of maximal internal steps */
-    *status = AMISetMaxNumStepsB(ami_mem, which, maxsteps);
+    *status = AMISetMaxNumStepsB(ami_mem, which, 100*maxsteps);
     if(*status != AMI_SUCCESS) return;
     
     switch (linsol) {
