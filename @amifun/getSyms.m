@@ -270,17 +270,17 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacx));
             if(numel(idx_w)>0)
+                this.strsym = sym.zeros(size(jacx));
                 for iw = 1:length(idx_w)
                     this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
                 end
+                model.ndwdx = length(idx_w);
+                % update dwdx with simplified expressions, here we can exploit
+                % the proper ordering of w to ensure correctness of expressions
+                tmp = jacx + jacw*this.strsym;
+                this.sym = tmp(idx_w);
             end
-            model.ndwdx = length(idx_w);
-            % update dwdx with simplified expressions, here we can exploit
-            % the proper ordering of w to ensure correctness of expressions
-            tmp = jacx + jacw*this.strsym;
-            this.sym = tmp(idx_w);
             
         case 'dwdp'
             jacp = jacobian(model.fun.w.sym,p);
@@ -290,17 +290,17 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacp));
             if(numel(idx_w)>0)
+                this.strsym = sym.zeros(size(jacp));
                 for iw = 1:length(idx_w)
                     this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
                 end
+                model.ndwdp = length(idx_w);
+                % update dwdx with simplified expressions, here we can exploit
+                % the proper ordering of w to ensure correctness of expressions
+                tmp = jacp + jacw*this.strsym;
+                this.sym = tmp(idx_w);
             end
-            model.ndwdp = length(idx_w);
-            % update dwdx with simplified expressions, here we can exploit
-            % the proper ordering of w to ensure correctness of expressions
-            tmp = jacp + jacw*this.strsym;
-            this.sym = tmp(idx_w);
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
@@ -311,7 +311,11 @@ function [this,model] = getSyms(this,model)
                 syms cj
                 this.sym = model.fun.dfdx.sym - cj*model.fun.M.sym;
             else
-                this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+                if(~isempty(w))
+                    this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+                else
+                    this.sym = jacobian(model.fun.xdot.sym,x);
+                end
             end
             
             %%
@@ -334,7 +338,11 @@ function [this,model] = getSyms(this,model)
             this.sym=-transpose(model.fun.J.sym);
             
         case 'dxdotdp'
-            this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
+            if(~isempty(w))
+                this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
+            else
+                this.sym=jacobian(model.fun.xdot.sym,p);
+            end
             
             %%
             % build short strings for reuse of dxdotdp
