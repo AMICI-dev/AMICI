@@ -71,6 +71,8 @@ function [modelo2] = augmento2(this)
     augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
     augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
     augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
+    augmodel.sym.p = this.sym.p;
+    augmodel.sym.k = this.sym.k;
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;
