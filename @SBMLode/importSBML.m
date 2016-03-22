@@ -155,12 +155,16 @@ function importSBML(this,modelname)
     % species index of the reactant
     reactant_sidx = double(subs(cat(2,reactants{:}),species_sym,species_idx));
     % reaction index
-    reactant_ridx = cumsum(cell2mat(cellfun(@(x) [ones(1,min(length(x),1)),zeros(1,max(length(x)-1,0))],reactants,'UniformOutput',false)));
+    tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],reactants,'UniformOutput',false)));
+    wreact = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],reactants,'UniformOutput',false));
+    reactant_ridx = tmp(logical(wreact));
     products = cellfun(@(x) {x.species},{model.reaction.product},'UniformOutput',false);
     % species index of the product
     product_sidx = double(subs(cat(2,products{:}),species_sym,species_idx));
     % reaction index
-    product_ridx = cumsum(cell2mat(cellfun(@(x) [ones(1,min(length(x),1)),zeros(1,max(length(x)-1,0))],products,'UniformOutput',false)));
+    tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],products,'UniformOutput',false)));
+    wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
+    product_ridx = tmp(logical(wprod));
     reactant_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.reactant},'UniformOutput',false);
     product_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.product},'UniformOutput',false);
     eS = sym(zeros(nx,nr));

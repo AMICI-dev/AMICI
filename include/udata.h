@@ -56,7 +56,6 @@
 #define sx0data udata->am_sx0data
 
 #define event_model udata->am_event_model
-#define data_model udata->am_data_model
 
 #define ordering udata->am_ordering
 
@@ -185,8 +184,6 @@ typedef struct {
     
     /** error model for events */
     int am_event_model;
-    /** error model for udata */
-    int am_data_model;
     
     /** state ordering */
     int am_ordering;
