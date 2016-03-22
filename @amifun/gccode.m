@@ -33,7 +33,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(numel(this.sym)>1)
-            if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB'))
+            if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx') || strcmp(this.funstr,'dydx') || strcmp(this.funstr,'sJy') )
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1*' num2str(model.nx) '+$2]']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);
