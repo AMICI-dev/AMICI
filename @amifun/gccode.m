@@ -34,7 +34,7 @@ function this = gccode(this,model,fid)
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
             if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx') || strcmp(this.funstr,'dydx') || strcmp(this.funstr,'sJy') )
-                cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1*' num2str(model.nx) '+$2]']);
+                cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(model.nx) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);
                 cstr = regexprep(cstr,'T\[0\]\[([0-9]*)\]',[this.cvar '[$1]']);
