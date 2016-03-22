@@ -66,15 +66,13 @@ function [this,model] = getSyms(this,model)
             
         case 'sx'
             % create cell array of same size
-            sxs = cell(nx,np);
+            sxs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                for i = 1:np
-                    sxs{j,i} = sprintf('sx_%i', j-1);
-                end
+                sxs{j} = sprintf('sx_%i', j-1);
             end
             % transform into symbolic expression
-            this.sym = sym(sxs);
+            this.sym = repmat(sym(sxs),[1,np]);
             sx = this.sym;
             
         case 'sdx'
@@ -222,7 +220,7 @@ function [this,model] = getSyms(this,model)
             
         case 'w'
             optimize = getoptimized(optsym(model.fun.xdot.sym));
-            tmpxdot = children(optimize(end));
+            tmpxdot = sym(char(optimize(end)));
             nw = (length(optimize)-1);
             model.nw = nw;
             if(nw>0)
@@ -272,16 +270,13 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            dwdxs = cell(model.nw,nx);
-            [dwdxs{:}] = deal('0');
+            this.strsym = sym.zeros(size(jacx));
             if(numel(idx_w)>0)
                 for iw = 1:length(idx_w)
-                    dwdxs{idx_w(iw)} = sprintf('dwdx_%i', iw-1);
+                    this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
                 end
             end
             model.ndwdx = length(idx_w);
-            % transform into symbolic expression
-            this.strsym = sym(dwdxs);
             % update dwdx with simplified expressions, here we can exploit
             % the proper ordering of w to ensure correctness of expressions
             tmp = jacx + jacw*this.strsym;
@@ -295,16 +290,13 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            dwdps = cell(model.nw,np);
-            [dwdps{:}] = deal('0');
-            if numel(idx_w)>0
+            this.strsym = sym.zeros(size(jacp));
+            if(numel(idx_w)>0)
                 for iw = 1:length(idx_w)
-                    dwdps{idx_w(iw)} = sprintf('dwdp_%i', iw-1);
+                    this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
                 end
             end
             model.ndwdp = length(idx_w);
-            % transform into symbolic expression
-            this.strsym = sym(dwdps);
             % update dwdx with simplified expressions, here we can exploit
             % the proper ordering of w to ensure correctness of expressions
             tmp = jacp + jacw*this.strsym;
