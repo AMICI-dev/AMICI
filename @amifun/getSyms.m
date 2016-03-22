@@ -66,7 +66,7 @@ function [this,model] = getSyms(this,model)
             
         case 'sx'
             % create cell array of same size
-            sxs = cell(nx,np);
+            sxs = cell(nx,1);
             % fill cell array
             for j = 1:nx
                 sxs{j} = sprintf('sx_%i', j-1);
