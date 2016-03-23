@@ -685,7 +685,7 @@ function [this,model] = getSyms(this,model)
             %do nothing
             
         case 'Jy'
-            this.sym = model.sym.Jy(:);
+            this.sym = model.sym.Jy;
         case 'dJydy'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.y.strsym);
             this = makeStrSyms(this);
