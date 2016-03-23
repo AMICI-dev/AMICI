@@ -52,14 +52,14 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
     end
 elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx'))
     nonzero = this.sym ~=0;
+    tmpfun = this;
     if(any(any(nonzero)))
-        fprintf(fid,'int iy;\n');
-        fprintf(fid,['for(iy=0;iy<' num2str(model.nytrue) ';iy++){\n']);
-        fprintf(fid,'    if(mxIsNaN(my[iy*nt+it])){\n');
-        fprintf(fid,'        my[iy*nt+it] = y[iy*nt+it];\n');
-        fprintf(fid,'    }\n');
+        for iy = 1:model.nytrue
+        fprintf(fid,['if(!mxIsNaN(my[' num2str(iy-1) '*nt+it])){\n']);
+        tmpfun.sym = this.sym(iy,:);
+        tmpfun.gccode(model,fid);
         fprintf(fid,'}\n');
-        this.gccode(model,fid);
+        end
     end
 else
     nonzero = this.sym ~=0;
