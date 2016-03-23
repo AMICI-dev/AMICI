@@ -23,6 +23,16 @@ images/*
 
 *.mexmaci64
 
+*.mexa64
+
+*.mexw64
+
+*.mexmaci32
+
+*.mexa32
+
+*.mexw32
+
 *.eps
 
 *.js

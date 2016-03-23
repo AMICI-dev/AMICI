@@ -107,9 +107,9 @@ function makeSyms( this )
     end
     
     if(~isfield(this.sym,'Jy'))
-        this.sym.Jy = sym(0);
+        this.sym.Jy = sym(zeros(numel(this.sym.y),1));
         for iy = 1:length(this.sym.y)
-            this.sym.Jy = this.sym.Jy + sym(['0.5*log(2*pi*sdy_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sdy_' num2str(iy-1) ')^2']);
+            this.sym.Jy(iy) = sym(['0.5*log(2*pi*sdy_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sdy_' num2str(iy-1) ')^2']);
         end
     end
     
