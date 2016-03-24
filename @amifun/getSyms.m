@@ -371,36 +371,28 @@ function [this,model] = getSyms(this,model)
         case 'dydx'
             this.sym=jacobian(model.fun.y.sym,x);
             % create cell array of same sizex
-            dydxs = cell(ny,nx);
+            this.strsym = sym(zeros(ny,nx));
             % fill cell array
             for j = 1:ny
                 for i = 1:nx
                     if(this.sym(j,i)~=0)
-                        dydxs{j,i} = sprintf('dydx_%i', j-1 + (i-1)*ny);
-                    else
-                        dydxs{j,i} = sprintf('0');
+                        this.strsym(j,i) = sym(sprintf('dydx_%i', j-1 + (i-1)*ny));
                     end
                 end
             end
-            % transform into symbolic expression
-            this.strsym = sym(dydxs);
             
         case 'dydp'
             this.sym=jacobian(model.fun.y.sym,p);
             % create cell array of same size
-            dydps = cell(ny,np);
+            this.strsym = sym(zeros(ny,np));
             % fill cell array
             for j = 1:ny
                 for i = 1:np
                     if(this.sym(j,i)~=0)
-                        dydps{j,i} = sprintf('dydp_%i', j-1 + (i-1)*ny);
-                    else
-                        dydps{j,i} = sprintf('0');
+                        this.strsym (j,i) = sym(sprintf('dydp_%i', j-1 + (i-1)*ny));
                     end
                 end
             end
-            % transform into symbolic expression
-            this.strsym = sym(dydps);
             
         case 'sy'
             this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
