@@ -3,7 +3,7 @@ clear
 amiwrap('model_example_7','example_model_7_syms',exdir)
 
 t = linspace(0,10,100);
-theta = rand(8,1);
+theta = [0.3;0.3;10;1;4;1;0.015;1;0;1;1e-10];
 
 options.sensi = 1; 
 options.maxsteps = 1e5; 
