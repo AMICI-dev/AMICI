@@ -19,9 +19,9 @@ p_y_1_0, p_y_0_1, mu_1_y_1_0, mu_2_y_1_0, C_1_1_y_1_0, C_1_2_y_1_0, C_2_2_y_1_0,
 %%
 % PARAMETERS
 
-syms tau_on tau_off k_m gamma_m k_p gamma_p tau_on_p Omega 
+syms tau_on tau_off k_m gamma_m k_p gamma_p tau_on_p scaleP offsetP Omega r0 
 
-p = [tau_on,tau_off,k_m,gamma_m,k_p,gamma_p,tau_on_p,Omega];
+p = [tau_on,tau_off,k_m,gamma_m,k_p,gamma_p,tau_on_p,scaleP,offsetP,Omega,r0];
 
 %%
 % INPUT 
@@ -51,51 +51,39 @@ M = diag(sym([[1], [1], [p_y_1_0], [p_y_1_0], [p_y_1_0], [p_y_1_0], [p_y_1_0], [
 
 x0 = sym(zeros(size(x)));
 
-x0(1) = 1;
+x0(1) = r0;
 x0(2) = 0;
-x0(3) = 4;
-x0(4) = 10;
+x0(3) = 1;
+x0(4) = 0;
 x0(5) = 0;
 x0(6) = 0;
 x0(7) = 0;
-x0(8) = 4;
-x0(9) = 10;
+x0(8) = 0;
+x0(9) = 0;
 x0(10) = 0;
 x0(11) = 0;
 x0(12) = 0;
 dx0 = sym(zeros(size(x)));
-dx0(1) = - tau_on - 10*tau_on_p;
-dx0(2) = tau_on  + 10*tau_on_p;
-dx0(3) = - 4*gamma_m ;
-dx0(4) = 4*k_p - 10*gamma_p ;
-dx0(5) = (gamma_m);
+dx0(1) = - tau_on;
+dx0(2) = tau_on;
+dx0(3) = - r0*gamma_m ;
+dx0(4) = r0*k_p ;
+dx0(5) = r0*gamma_m;
 dx0(6) = 0;
-dx0(7) = (gamma_p) + (4*k_p);
-dx0(8) = k_m - 4*gamma_m + tau_on_p;
-dx0(9) = 4*k_p - 10*gamma_p + tau_on_p;
-dx0(10) = (4*gamma_m) + k_m;
+dx0(7) = r0*k_p;
+dx0(8) = r0*tau_on;
+dx0(9) = 0;
+dx0(10) = r0^2*tau_on;
 dx0(11) = 0;
-dx0(12) = (gamma_p) + (4*k_p);
+dx0(12) = 0;
 
 %%
 % OBSERVABLES
 
-y = sym(zeros(14,1));
+y = sym(zeros(2,1));
 
-y(1) = p_y_1_0;
-y(2) = p_y_0_1;
-y(3) = mu_1_y_0_1*p_y_0_1 + mu_1_y_1_0*p_y_1_0;
-y(4) = mu_2_y_0_1*p_y_0_1 + mu_2_y_1_0*p_y_1_0;
-y(5) = p_y_0_1*p_y_1_0^2 + p_y_1_0*(p_y_1_0 - 1)^2;
-y(6) = p_y_0_1*p_y_1_0*(p_y_0_1 + p_y_1_0 - 2);
-y(7) = p_y_1_0*(p_y_1_0 - 1)*(mu_1_y_0_1*p_y_0_1 - mu_1_y_1_0 + mu_1_y_1_0*p_y_1_0) + p_y_0_1*p_y_1_0*(mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y_1_0);
-y(8) = p_y_1_0*(p_y_1_0 - 1)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0) + p_y_0_1*p_y_1_0*(mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0);
-y(9) = p_y_0_1^2*p_y_1_0 + p_y_0_1*(p_y_0_1 - 1)^2;
-y(10) = p_y_0_1*(p_y_0_1 - 1)*(mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y_1_0) + p_y_0_1*p_y_1_0*(mu_1_y_0_1*p_y_0_1 - mu_1_y_1_0 + mu_1_y_1_0*p_y_1_0);
-y(11) = p_y_0_1*(p_y_0_1 - 1)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0) + p_y_0_1*p_y_1_0*(mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0);
-y(12) = p_y_0_1*(C_1_1_y_0_1 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y_1_0)^2) + p_y_1_0*(C_1_1_y_1_0 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_1_0 + mu_1_y_1_0*p_y_1_0)^2);
-y(13) = p_y_0_1*(C_1_2_y_0_1 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_0_1 + mu_1_y_1_0*p_y_1_0)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0)) + p_y_1_0*(C_1_2_y_1_0 + (mu_1_y_0_1*p_y_0_1 - mu_1_y_1_0 + mu_1_y_1_0*p_y_1_0)*(mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0));
-y(14) = p_y_0_1*(C_2_2_y_0_1 + (mu_2_y_0_1*p_y_0_1 - mu_2_y_0_1 + mu_2_y_1_0*p_y_1_0)^2) + p_y_1_0*(C_2_2_y_1_0 + (mu_2_y_0_1*p_y_0_1 - mu_2_y_1_0 + mu_2_y_1_0*p_y_1_0)^2);
+y(1) = offsetP + mu_2_y_1_0*scaleP;
+y(2) = C_2_2_y_0_1*scaleP^2;
 
 %%
 % SYSTEM STRUCT
