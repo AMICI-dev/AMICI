@@ -1,4 +1,4 @@
-clear
+function example_dirac()
 %%
 % COMPILATION
 
@@ -14,8 +14,9 @@ t = linspace(0,3,1001);
 p = [1;0.5;2;3];
 k = [];
 
-options.sensi = 0;
-options.maxsteps = 1e4;
+options = amioption('sensi',0,...
+    'maxsteps',1e4);
+
 % load mex into memory
 [msg] = which('simulate_model_example_2'); % fix for inaccessability problems
 sol = simulate_model_example_2(t,log10(p),k,[],options);
@@ -33,7 +34,7 @@ delta_num = @(tau) exp(-1/2*(tau/sig).^2)/(sqrt(2*pi)*sig);
 ode_system = @(t,x,p,k) [-p(1)*x(1)+delta_num(t-p(2));
     +p(3)*x(1) - p(4)*x(2)];
 
-options_ode45 = odeset('RelTol',1e-8,'AbsTol',1e-8,'MaxStep',1e4);
+options_ode45 = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
 
 tic
 [~, X_ode45] = ode45(@(t,x) ode_system(t,x,p,k),t,[0;0],options_ode45);
@@ -165,6 +166,7 @@ for ip = 1:4
 end
 set(gcf,'Position',[100 300 1200 500])
 
+end
 
 
 

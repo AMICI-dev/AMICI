@@ -17,12 +17,6 @@ classdef amimodel < handle
         modelname@char;
         % struct that contains hash values for the symbolic model definitions @type struct
         HTable@struct;
-        % default absolute tolerance @type double
-        atol = 1e-8;
-        % default relative tolerance @type double
-        rtol = 1e-8;
-        % default maximal number of integration steps @type int
-        maxsteps = 1e4;
         % flag indicating whether debugging symbols should be compiled @type bool
         debug = false;
         % flag indicating whether adjoint sensitivities should be enabled @type bool
