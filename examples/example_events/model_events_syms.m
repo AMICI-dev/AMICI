@@ -76,7 +76,7 @@ model.sym.y(1) = p4 * (x1+x2+x3);
 syms t
 
 % events fire when there is a zero crossing of the root function
-model.sym.event(1) = amievent(x3-x2,0,t);
-model.sym.event(2) = amievent(x3-x1,0,t);
+model.event(1) = amievent(x3-x2,0,t);
+model.event(2) = amievent(x3-x1,0,t);
 
 end

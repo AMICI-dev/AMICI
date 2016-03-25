@@ -335,22 +335,22 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     }
     
     if (nmyt != nt) {
-        sprintf(errmsg,"Number of time-points in data matrix does not match provided time vector",nmyt,nt);
+        sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
         mexErrMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
     }
     
     if (nysigmat != nt) {
-        sprintf(errmsg,"Number of time-points in data-sigma matrix does not match provided time vector",nysigmat,nt);
+        sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
         mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
     }
     
     if (nmyy != nytrue) {
-        sprintf(errmsg,"Number of observables in data matrix does not match model ny",nmyy,nytrue);
+        sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
     }
     
     if (nysigmay != nytrue) {
-        sprintf(errmsg,"Number of observables in data-sigma matrix does not match model ny",nysigmay,nytrue);
+        sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
     }
     

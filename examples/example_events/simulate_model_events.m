@@ -133,7 +133,7 @@ if(isempty(options_ami.sens_ind))
 end
 options_ami.id = transpose([0  0  0]);
 
-options_ami.z2event = []; % MUST NOT CHANGE THIS VALUE
+options_ami.z2event = [1  2]; % MUST NOT CHANGE THIS VALUE
 if(nargout>1)
     if(nargout>4)
         options_ami.sensi = 1;
@@ -164,12 +164,12 @@ end
 plist = options_ami.sens_ind-1;
 if(nargin>=4)
     if(isempty(varargin{4}));
-        data=amidata(length(tout),1,0,options_ami.nmaxevent,length(kappa));
+        data=amidata(length(tout),1,2,options_ami.nmaxevent,length(kappa));
     else
         data=amidata(varargin{4});
     end
 else
-    data=amidata(length(tout),1,0,options_ami.nmaxevent,length(kappa));
+    data=amidata(length(tout),1,2,options_ami.nmaxevent,length(kappa));
 end
 if(data.ne>0);
     options_ami.nmaxevent = data.ne;
