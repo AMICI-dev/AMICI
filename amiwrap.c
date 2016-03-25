@@ -259,6 +259,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     goto freturn;
     
 freturn:
+    
+    /* store current Jacobian and derivative */
+    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+    
     /* Free memory */
     if(nx>0) {
         N_VDestroy_Serial(x);
