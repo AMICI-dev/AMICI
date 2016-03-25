@@ -13,7 +13,7 @@ function example_dirac_secondorder_vectmult()
     t = linspace(0,3,1001);
     p = [1;0.5;2;3];
     k = [];
-    v = [0.7;3.4;2.8;0.1];
+    v = [0.7;0.3;1.4;0.1];
     
     options = amioption('sensi',0,...
         'maxsteps',1e4);
