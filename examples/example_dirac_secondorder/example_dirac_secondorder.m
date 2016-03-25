@@ -40,8 +40,8 @@ function example_dirac_secondorder()
         xip = xi;
         xip(ip) = xip(ip) + eps;
         solp = simulate_model_dirac_secondorder(t,xip,k,[],options);
-        s2x_fd(:,:,ip,:) = (solp.sx - sol.sx)/eps;
-        s2y_fd(:,:,ip,:) = (solp.sy - sol.sy)/eps;
+        s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
+        s2y_fd(:,:,:,ip) = (solp.sy - sol.sy)/eps;
     end
     
     %%
@@ -56,7 +56,7 @@ function example_dirac_secondorder()
                 plot(t,sol.s2x(:,ix,ip,jp),'.-','Color',c_x(ix,:))
                 plot(t,s2x_fd(:,ix,ip,jp),'--','Color',c_x(ix,:))
             end
-            ylim([-2,2])
+            ylim([-10,10])
             legend('x1','x1_{fd}','x2','x2_{fd}','Location','NorthEastOutside')
             legend boxoff
             title(['state sensitivity for p' num2str(ip) '/p' num2str(jp)])

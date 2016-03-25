@@ -1,6 +1,4 @@
 function [model] = model_dirac_secondorder_syms()
-
-model.debug =true;    
     
 %%
 % STATES
