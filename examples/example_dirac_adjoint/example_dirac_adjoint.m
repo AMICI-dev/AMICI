@@ -1,9 +1,9 @@
 clear
 %%
 % COMPILATION
-[exdir,~,~]=fileparts(which('example_model_5.m'));
+[exdir,~,~]=fileparts(which('example_dirac_adjoint.m'));
 % compile the model
-amiwrap('model_example_5','example_model_5_syms',exdir)
+amiwrap('model_dirac_adjoint','model_dirac_adjoint_syms',exdir)
 
 %%
 % SIMULATION
@@ -30,9 +30,9 @@ D.Sigma_Y = 0.01*ones(size(D.Y));
 options.sensi = 1;
 options.sensi_meth = 'adjoint';
 options.maxsteps = 1e5;
-sol = simulate_model_example_5(tout,log10(p),k,D,options);
+sol = simulate_model_dirac_adjoint(tout,log10(p),k,D,options);
 options.sensi = 0;
-solfine = simulate_model_example_5(tfine,log10(p),k,[],options);
+solfine = simulate_model_dirac_adjoint(tfine,log10(p),k,[],options);
 figure
 errorbar(tout,D.Y,D.Sigma_Y)
 hold on
@@ -53,11 +53,11 @@ for ip = 1:4;
     options.sensi = 0;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solpf = simulate_model_example_5(tout,xip,k,D,options);
+    solpf = simulate_model_dirac_adjoint(tout,xip,k,D,options);
     grad_fd_f(ip,1) = (solpf.llh-sol.llh)/eps;
     xip = xi;
     xip(ip) = xip(ip) - eps;
-    solpb = simulate_model_example_5(tout,xip,k,D,options);
+    solpb = simulate_model_dirac_adjoint(tout,xip,k,D,options);
     grad_fd_b(ip,1) = -(solpb.llh-sol.llh)/eps;
 end
 

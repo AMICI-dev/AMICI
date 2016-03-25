@@ -1,4 +1,4 @@
-function [model] = example_model_5_syms()
+function [model] = model_dirac_adjoint_syms()
 
 
 %%
@@ -8,7 +8,7 @@ function [model] = example_model_5_syms()
 syms x1 x2
 
 % create state vector
-x = [ x1 x2 ];
+model.sym.x = [ x1 x2 ];
 
 %%
 % PARAMETERS ( for these sensitivities will be computed )
@@ -29,34 +29,26 @@ model.param = 'log10';
 % create symbolic variable for time
 syms t
 
-xdot = sym(zeros(size(x)));
+model.sym.xdot = sym(zeros(size(model.sym.x)));
 
 % piecewise defined function
-xdot(1) = -p1*x1 + dirac(t-p2);
+model.sym.xdot(1) = -p1*x1 + dirac(t-p2);
 % inhomogeneous
-xdot(2) = p3*x1 - p4*x2 ;
+model.sym.xdot(2) = p3*x1 - p4*x2 ;
 
 %%
 % INITIAL CONDITIONS
 
-x0 = sym(zeros(size(x)));
+model.sym.x0 = sym(zeros(size(model.sym.x)));
 
-x0(1) = 0;
-x0(2) = 0;
+model.sym.x0(1) = 0;
+model.sym.x0(2) = 0;
 
 %%
 % OBSERVALES
 
-y = sym(zeros(1,1));
+model.sym.y = sym(zeros(1,1));
 
-y(1) = x2;
+model.sym.y(1) = x2;
 
-%%
-% SYSTEM STRUCT
-
-model.sym.x = x;
-model.sym.xdot = xdot;
-model.sym.p = p;
-model.sym.x0 = x0;
-model.sym.y = y;
 end

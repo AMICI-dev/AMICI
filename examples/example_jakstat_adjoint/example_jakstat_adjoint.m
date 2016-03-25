@@ -12,9 +12,6 @@ D.Y = num(:,[2,4,6]);
 D.Sigma_Y = NaN(size(D.Y));
 D = amidata(D);
 
-
-
-
 xi =  [0.60
     3
     -0.95
@@ -85,6 +82,3 @@ plot([1e-2,1e2],[1e-2,1e2],'k:')
 xlabel('adjoint sensitivity absolute value of gradient element')
 ylabel('finite difference absolute value of gradient element')
 set(gcf,'Position',[100 300 1200 500])
-
-
-

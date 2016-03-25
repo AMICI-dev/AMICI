@@ -1,10 +1,11 @@
-clear
+function example_adjoint()
+
 %%
 % COMPILATION
 
-[exdir,~,~]=fileparts(which('example_model_6.m'));
+[exdir,~,~]=fileparts(which('example_adjoint.m'));
 % compile the model
-amiwrap('model_example_6','example_model_6_syms',exdir)
+amiwrap('model_adjoint','model_adjoint_syms',exdir)
 
 %%
 % SIMULATION
@@ -29,8 +30,8 @@ options.maxsteps = 1e4;
 options.rtol = 1e-12;
 options.atol = 1e-12;
 % load mex into memory
-[msg] = which('simulate_model_example_6'); % fix for inaccessability problems
-sol = simulate_model_example_6(t,log10(p),k,D,options);
+[~] = which('simulate_model_adjoint'); % fix for inaccessability problems
+sol = simulate_model_adjoint(t,log10(p),k,D,options);
 
 %%
 % Plot
@@ -97,11 +98,11 @@ for ip = 1:3;
     options.sensi = 0;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solp = simulate_model_example_6(t,xip,k,D,options);
+    solp = simulate_model_adjoint(t,xip,k,D,options);
     grad_fd_f(ip,1) = (solp.llh-sol.llh)/eps;
     xip = xi;
     xip(ip) = xip(ip) - eps;
-    solp = simulate_model_example_6(t,xip,k,D,options);
+    solp = simulate_model_adjoint(t,xip,k,D,options);
     grad_fd_b(ip,1) = -(solp.llh-sol.llh)/eps;
 end
 
@@ -120,4 +121,4 @@ xlabel('analytic absolute value of gradient element')
 ylabel('computed absolute value of gradient element')
 set(gcf,'Position',[100 300 1200 500])
 
-
+end
