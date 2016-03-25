@@ -1,17 +1,5 @@
 function [model] = example_model_5_syms()
 
-%%
-% CVODES OPTIONS
-
-% set the default absolute tolerance
-model.atol = 1e-8; 
-% set the default relative tolerance
-model.rtol = 1e-8; 
-% set the default maximum number of integration steps
-model.maxsteps = 1e4; 
-% set the parametrisation of the problem options are 'log', 'log10' and
-% 'lin' (default).
-model.param = 'log10';
 
 %%
 % STATES
@@ -29,7 +17,11 @@ x = [ x1 x2 ];
 syms p1 p2 p3 p4
 
 % create parameter vector 
-p = [p1,p2,p3,p4];
+model.sym.p = [p1,p2,p3,p4];
+
+% set the parametrisation of the problem options are 'log', 'log10' and
+% 'lin' (default).
+model.param = 'log10';
 
 %%
 % SYSTEM EQUATIONS

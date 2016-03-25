@@ -1,12 +1,10 @@
-clear
+function example_steadystate
 %%
 % COMPILATION
 
-[exdir,~,~]=fileparts(which('example_model_3.m'));
+[exdir,~,~]=fileparts(which('example_steadystate.m'));
 % compile the model
-amiwrap('model_example_3','example_model_3_syms',exdir)
-% add the model to the path
-addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_3']))
+amiwrap('model_steadystate','model_steadystate_syms',exdir)
 
 %%
 % SIMULATION
@@ -16,13 +14,13 @@ t = linspace(0,300,20);
 p = [1;0.5;0.4;2;0.1];
 k = [0.1,0.4,0.7,1];
 
-options.sensi = 0;
-options.maxsteps = 1e4;
+options = amioption('sensi',0,...
+    'maxsteps',1e4);
 % load mex into memory
-sol = simulate_model_example_3(t,log10(p),k,[],options);
+sol = simulate_model_steadystate(t,log10(p),k,[],options);
 
 tic
-sol = simulate_model_example_3(t,log10(p),k,[],options);
+sol = simulate_model_steadystate(t,log10(p),k,[],options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
 %%
@@ -31,7 +29,7 @@ disp(['Time elapsed with cvodes: ' num2str(toc) ])
 ode_system = @(t,x,p,k) [-2*p(1)*x(1)^2 - p(2)*x(1)*x(2) + 2*p(3)*x(2) + p(4)*x(3) + p(5);
     + p(1)*x(1)^2 - p(2)*x(1)*x(2) - p(3)*x(2) + p(4)*x(3);
     + p(2)*x(1)*x(2) - p(4)*x(3) - k(4)*x(3)];
-options_ode15s = odeset('RelTol',1e-8,'AbsTol',1e-8,'MaxStep',1e4);
+options_ode15s = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
 
 tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
@@ -66,7 +64,7 @@ set(gcf,'Position',[100 300 1200 500])
 options.sensi = 1;
 options.sens_ind = [3,1,2,4];
 
-sol = simulate_model_example_3(t,log10(p),k,[],options);
+sol = simulate_model_steadystate(t,log10(p),k,[],options);
 
 %%
 % FINITE DIFFERENCES
@@ -77,7 +75,7 @@ xi = log10(p);
 for ip = 1:4;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solp = simulate_model_example_3(t,xip,k,[],options);
+    solp = simulate_model_steadystate(t,xip,k,[],options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 end
@@ -119,7 +117,7 @@ sssens = NaN(size(sol.sx));
 for it = 2:length(t)
     tt = [0,t(it)];
     options.sensi_meth = 'ss';
-    solss = simulate_model_example_3(tt,log10(p),k,[],options);
+    solss = simulate_model_steadystate(tt,log10(p),k,[],options);
     sssens(it,:,:) = solss.sx;
     ssxdot(it,:) = solss.xdot;
 end
@@ -167,5 +165,7 @@ ylabel('error steady state approximation')
 set(gca,'FontSize',15)
 set(gca,'LineWidth',1.5)
 set(gcf,'Position',[100 300 1200 500])
+
+end
 
 

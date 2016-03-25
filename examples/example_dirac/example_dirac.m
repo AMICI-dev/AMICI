@@ -2,9 +2,9 @@ function example_dirac()
 %%
 % COMPILATION
 
-[exdir,~,~]=fileparts(which('example_model_2.m'));
+[exdir,~,~]=fileparts(which('example_dirac.m'));
 % compile the model
-amiwrap('model_example_2','example_model_2_syms',exdir)
+amiwrap('model_dirac','model_dirac_syms',exdir)
 
 %%
 % SIMULATION
@@ -18,11 +18,11 @@ options = amioption('sensi',0,...
     'maxsteps',1e4);
 
 % load mex into memory
-[msg] = which('simulate_model_example_2'); % fix for inaccessability problems
-sol = simulate_model_example_2(t,log10(p),k,[],options);
+[msg] = which('simulate_model_dirac'); % fix for inaccessability problems
+sol = simulate_model_dirac(t,log10(p),k,[],options);
 
 tic
-sol = simulate_model_example_2(t,log10(p),k,[],options);
+sol = simulate_model_dirac(t,log10(p),k,[],options);
 disp(['Time elapsed with amiwrap: ' num2str(toc) ])
 
 %%
@@ -91,7 +91,7 @@ set(gcf,'Position',[100 300 1200 500])
 
 options.sensi = 1;
 
-sol = simulate_model_example_2(t,log10(p),k,[],options);
+sol = simulate_model_dirac(t,log10(p),k,[],options);
 
 %%
 % FINITE DIFFERENCES
@@ -101,7 +101,7 @@ xi = log10(p);
 for ip = 1:4;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solp = simulate_model_example_2(t,xip,k,[],options);
+    solp = simulate_model_dirac(t,xip,k,[],options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
 end

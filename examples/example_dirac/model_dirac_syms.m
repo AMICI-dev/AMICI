@@ -28,7 +28,7 @@ model.param = 'log10';
 % create symbolic variable for time
 syms t
 
-model.sym.xdot = sym(zeros(size(x)));
+model.sym.xdot = sym(zeros(size(model.sym.x)));
 
 % piecewise defined function
 model.sym.xdot(1) = -p1*x1 + dirac(t-p2);
@@ -38,7 +38,7 @@ model.sym.xdot(2) = p3*x1 - p4*x2 ;
 %%
 % INITIAL CONDITIONS
 
-model.sym.x0 = sym(zeros(size(x)));
+model.sym.x0 = sym(zeros(size(model.sym.x)));
 
 model.sym.x0(1) = 0;
 model.sym.x0(2) = 0;

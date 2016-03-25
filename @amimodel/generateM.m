@@ -168,9 +168,6 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(length(theta)<' num2str(np) ')\n']);
     fprintf(fid,'    error(''provided parameter vector is too short'');\n');
     fprintf(fid,'end\n');
-    fprintf(fid,['if(length(kappa)<' num2str(nk) ')\n']);
-    fprintf(fid,'    error(''provided constant vector is too short'');\n');
-    fprintf(fid,'end\n');
     fprintf(fid,'\n');
     
     fprintf(fid,'\n');
@@ -278,9 +275,21 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(isempty(kappa))\n']);
     fprintf(fid,['    kappa = data.condition;\n']);
     fprintf(fid,['end\n']);
+    fprintf(fid,['if(isempty(tout))\n']);
+    fprintf(fid,['    tout = data.t;\n']);
+    fprintf(fid,['end\n']);
+    fprintf(fid,['if(~all(tout==sort(tout)))\n']);
+    fprintf(fid,['    error(''Provided time vector is not monotonically increasing!'');\n']);
+    fprintf(fid,['end\n']);
+    fprintf(fid,['if(not(length(tout)==length(unique(tout))))\n']);
+    fprintf(fid,['    error(''Provided time vector has non-unique entries!!'');\n']);
+    fprintf(fid,['end\n']);
     fprintf(fid,['if(max(options_ami.sens_ind)>' num2str(np) ')\n']);
     fprintf(fid,['    error(''Sensitivity index exceeds parameter dimension!'')\n']);
     fprintf(fid,['end\n']);
+    fprintf(fid,['if(length(kappa)<' num2str(nk) ')\n']);
+    fprintf(fid,'    error(''provided condition vector is too short'');\n');
+    fprintf(fid,'end\n');
     
     switch(this.param)
         case 'log'
