@@ -45,7 +45,9 @@ function [modelo2vec] = augmento2vec(this)
     for ievent = 1:this.nevent;
         Sz = jacobian(this.event(ievent).z,this.sym.x)*sv+jacobian(this.event(ievent).z,this.sym.p)*vec;
         znew = [this.event(ievent).z,Sz];
-        bolusnew = [this.event(ievent).bolus;squeeze(this.fun.deltasx.sym(:,:,ievent))*vec];
+        tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
+        tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
+        bolusnew = [this.event(ievent).bolus;tmp*vec];
         % replace sx by augmented x
         bolusnew(this.nxtrue+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue+(1:this.nxtrue)), this.fun.sx.sym(:,1),sv);
 
