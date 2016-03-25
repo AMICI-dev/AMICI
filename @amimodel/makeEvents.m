@@ -150,7 +150,7 @@ function makeEvents( this )
             if(any(double(bolus{ievent}~=0)))
                 for ix = 1:nx
                     if(~hflags(ix,ievent))
-                        for j = find(double(bolus{ievent}~=0))
+                        for j = transpose(find(double(bolus{ievent}~=0)))
                             if(ismember(this.sym.x(j),symvar(this.sym.xdot(ix))))
                                 hflags(ix,ievent) = 1;
                             end

@@ -19,6 +19,7 @@ function example_dirac_secondorder()
     
     % load mex into memory
     [msg] = which('simulate_model_secondorder_dirac'); % fix for inaccessability problems
+    options.sensi = 2;
     sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
     
     %%
@@ -39,13 +40,14 @@ function example_dirac_secondorder()
         xip = xi;
         xip(ip) = xip(ip) + eps;
         solp = simulate_model_dirac_secondorder(t,xip,k,[],options);
-        s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
-        s2y_fd(:,:,:,ip) = (solp.sy - sol.sy)/eps;
+        s2x_fd(:,:,ip,:) = (solp.sx - sol.sx)/eps;
+        s2y_fd(:,:,ip,:) = (solp.sy - sol.sy)/eps;
     end
     
     %%
     % PLOTTING
     figure
+    c_x = get(gca,'ColorOrder');
     for ip = 1:4
         for jp = 1:4
             subplot(4,4,(ip-1)*4+jp)
@@ -57,12 +59,13 @@ function example_dirac_secondorder()
             ylim([-2,2])
             legend('x1','x1_{fd}','x2','x2_{fd}','Location','NorthEastOutside')
             legend boxoff
-            title(['state sensitivity for p' num2str(ip)])
+            title(['state sensitivity for p' num2str(ip) '/p' num2str(jp)])
             xlabel('time t')
             ylabel('x')
             box on
         end
     end
+    set(gcf,'Position',[100 300 1200 500])
     figure
     for ip = 1:4
         for jp = 1:4
@@ -70,7 +73,7 @@ function example_dirac_secondorder()
             plot(t,abs(sol.s2x(:,:,ip,jp)-s2x_fd(:,:,ip,jp)),'r--')
             legend('error x1','error x2','Location','NorthEastOutside')
             legend boxoff
-            title(['state sensitivity for p' num2str(ip)])
+            title(['state sensitivity for p' num2str(ip) '/p' num2str(jp)])
             xlabel('time t')
             ylabel('error')
             ylim([1e-12,1e0])
