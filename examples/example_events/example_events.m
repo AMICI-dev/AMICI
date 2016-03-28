@@ -1,14 +1,10 @@
-clear
-close all
-clc
+function example_events()
 %%
 % COMPILATION
 
-[exdir,~,~]=fileparts(which('example_model_1.m'));
+[exdir,~,~]=fileparts(which('example_events.m'));
 % compile the model
-amiwrap('model_example_1','example_model_1_syms',exdir)
-% add the model to the path
-addpath(genpath([strrep(which('amiwrap.m'),'amiwrap.m','') 'models/model_example_1']))
+amiwrap('model_events','model_events_syms',exdir)
 
 %%
 % SIMULATION
@@ -23,10 +19,11 @@ options = amioption('sensi',0,...
     'nmaxevent', 2);
 D = amidata(length(t),1,2,2,4);
 % load mex into memory
-sol = simulate_model_example_1(t,log10(p),k,D,options);
+[~] = which('simulate_model_events'); % fix for inaccessability problems
+sol = simulate_model_events(t,log10(p),k,D,options);
 
 tic
-sol = simulate_model_example_1(t,log10(p),k,D,options);
+sol = simulate_model_events(t,log10(p),k,D,options);
 disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
 %%
@@ -38,7 +35,7 @@ ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
 % event_fn = @(t,x) [x(3) - x(2);
 %     x(3) - x(1)];
 % 'Events',event_fn
-options_ode15s = odeset('RelTol',1e-8,'AbsTol',1e-8,'MaxStep',1e4);
+options_ode15s = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
 
 tic
 [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
@@ -96,7 +93,7 @@ set(gcf,'Position',[100 300 1200 500])
 
 options.sensi = 1;
 
-sol = simulate_model_example_1(t,log10(p),k,D,options);
+sol = simulate_model_events(t,log10(p),k,D,options);
 
 %%
 % FINITE DIFFERENCES
@@ -106,7 +103,7 @@ xi = log10(p);
 for ip = 1:4;
     xip = xi;
     xip(ip) = xip(ip) + eps;
-    solp = simulate_model_example_1(t,xip,k,D,options);
+    solp = simulate_model_events(t,xip,k,D,options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
     sz_fd(:,:,ip) = (solp.z - sol.z)/eps;
@@ -192,5 +189,5 @@ box on
 end
 set(gcf,'Position',[100 300 1200 500])
 
-
-
+drawnow
+end

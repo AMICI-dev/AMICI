@@ -188,7 +188,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* we still need to integrate from first datapoint to tstart */
-                
                 if (t>tstart) {
                     if(status == 0) {
                         if (nx>0) {
@@ -205,14 +204,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* evaluate initial values */
-                sx = N_VCloneVectorArray_Serial(np,x);
-                if (sx == NULL) goto freturn;
+                NVsx = N_VCloneVectorArray_Serial(np,x);
+                if (NVsx == NULL) goto freturn;
                 
                 status = fx0(x,udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 status = fdx0(x,dx,udata);
                 if (status != AMI_SUCCESS) goto freturn;
-                status = fsx0(sx, x, dx, udata);
+                status = fsx0(NVsx, x, dx, udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 
                 if(status == 0) {
@@ -221,7 +220,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     
                     for (ip=0; ip<np; ip++) {
                         llhS0[ip] = 0.0;
-                        sx_tmp = NV_DATA_S(sx[ip]);
+                        sx_tmp = NV_DATA_S(NVsx[ip]);
                         for (ix = 0; ix < nx; ix++) {
                             llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                         }
@@ -230,23 +229,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     xQB_tmp = NV_DATA_S(xQB);
                     
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                        sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
                         if (ny>0) {
-                            llhSdata[ip] -= dgdp[ip];
+                            sllhdata[ip] -= dgdp[ip];
                         }
                         if (nz>0) {
-                            llhSdata[ip] -= drdp[ip];
+                            sllhdata[ip] -= drdp[ip];
                         }
                     }
                     
                 } else {
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = mxGetNaN();
+                        sllhdata[ip] = mxGetNaN();
                     }
                 }
             } else {
                 for(ip=0; ip < np; ip++) {
-                    llhSdata[ip] = mxGetNaN();
+                    sllhdata[ip] = mxGetNaN();
                 }
             }
         }
@@ -259,6 +258,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     goto freturn;
     
 freturn:
+    
+    /* store current Jacobian and derivative */
+    if(udata) {
+        if(tdata) {
+            fxdot(t,x,dx,xdot,udata);
+            xdot_tmp = NV_DATA_S(xdot);
+            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+        }
+    }
+    if(udata) {
+        fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+        memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+    }
+    
     /* Free memory */
     if(nx>0) {
         N_VDestroy_Serial(x);
@@ -291,11 +304,11 @@ freturn:
             if(ami_mem)    mxFree(dydx);
             if(ami_mem)    mxFree(dydp);
             if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(sx,np);
+                N_VDestroyVectorArray_Serial(NVsx,np);
             }
             if (sensi_meth == AMI_ASA) {
                 if(status == 0) {
-                    N_VDestroyVectorArray_Serial(sx,np);
+                    N_VDestroyVectorArray_Serial(NVsx,np);
                 }
             }
 
