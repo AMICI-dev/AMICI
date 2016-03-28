@@ -212,7 +212,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sz","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
     mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
     
@@ -605,19 +605,19 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 /* allocate some more temporary storage */
                 
-                sx = N_VCloneVectorArray_Serial(np, x);
+                NVsx = N_VCloneVectorArray_Serial(np, x);
                 sdx = N_VCloneVectorArray_Serial(np, x);
-                if (sx == NULL) return(NULL);
+                if (NVsx == NULL) return(NULL);
                 if (sdx == NULL) return(NULL);
                 
                 /* initialise sensitivities, this can either be user provided or come from the model definition */
                 
                 if(!b_sx0) {
-                    *status = fsx0(sx, x, dx, udata);
+                    *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return(NULL);
                 } else {
                     for (ip=0; ip<np; ip++) {
-                        sx_tmp = NV_DATA_S(sx[plist[ip]]);
+                        sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                         for (ix=0; ix<nx; ix++) {
                             sx_tmp[ix] = sx0data[ix + nx*plist[ip]];
                         }
@@ -628,7 +628,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 /* Activate sensitivity calculations */
                 
-                *status = wrap_SensInit1(ami_mem, sx, sdx, udata);
+                *status = wrap_SensInit1(ami_mem, NVsx, sdx, udata);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
                 /* Set sensitivity analysis optional inputs */
@@ -930,11 +930,11 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
     for(ip=0; ip < np; ip++) {
         if(nx>0) {
             if(ts[it] > tstart) {
-                *status = AMIGetSens(ami_mem, &t, sx);
+                *status = AMIGetSens(ami_mem, &t, NVsx);
                 if (*status != AMI_SUCCESS) return;
             }
             
-            sx_tmp = NV_DATA_S(sx[ip]);
+            sx_tmp = NV_DATA_S(NVsx[ip]);
             for(ix=0; ix < nx; ix++) {
                 sxdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
             }
@@ -942,7 +942,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
     }
     fdydx(ts[it],it,dydx,x,udata);
     fdydp(ts[it],it,dydp,x,udata);
-    fsy(ts[it],it,sydata,dydx,dydp,sx,udata);
+    fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1070,7 +1070,7 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
 
-    *status = fsz(t,ie,nroots,szdata,x,sx,udata);
+    *status = fsz(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
 
 }
@@ -1101,7 +1101,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
     
-    *status = fsz_tf(t,ie,nroots,szdata,x,sx,udata);
+    *status = fsz_tf(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
     
 }
@@ -1505,7 +1505,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
-            *status = AMIGetSens(ami_mem, &t, sx);
+            *status = AMIGetSens(ami_mem, &t, NVsx);
             if (*status != AMI_SUCCESS) return;
         }
     }
@@ -1557,7 +1557,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
             
             if(sensi >= 1){
                 if (sensi_meth == AMI_FSA) {
-                    *status = AMISensReInit(ami_mem, ism, sx, sdx);
+                    *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
                     if (*status != AMI_SUCCESS) return;
                 }
             }
@@ -1731,10 +1731,10 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void 
     
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,sx,user_data);
+            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,user_data);
             
             for (ip=0; ip<np; ip++) {
-                sx_tmp = NV_DATA_S(sx[plist[ip]]);
+                sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                 for (ix=0; ix<nx; ix++) {
                     sx_tmp[ix] += deltasx[ix + nx*ip];
                 }

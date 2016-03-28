@@ -205,14 +205,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* evaluate initial values */
-                sx = N_VCloneVectorArray_Serial(np,x);
-                if (sx == NULL) goto freturn;
+                NVsx = N_VCloneVectorArray_Serial(np,x);
+                if (NVsx == NULL) goto freturn;
                 
                 status = fx0(x,udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 status = fdx0(x,dx,udata);
                 if (status != AMI_SUCCESS) goto freturn;
-                status = fsx0(sx, x, dx, udata);
+                status = fsx0(NVsx, x, dx, udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 
                 if(status == 0) {
@@ -221,7 +221,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     
                     for (ip=0; ip<np; ip++) {
                         llhS0[ip] = 0.0;
-                        sx_tmp = NV_DATA_S(sx[ip]);
+                        sx_tmp = NV_DATA_S(NVsx[ip]);
                         for (ix = 0; ix < nx; ix++) {
                             llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                         }
@@ -261,8 +261,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 freturn:
     
     /* store current Jacobian and derivative */
-    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+    if(tdata) {
+        xdot_tmp = NV_DATA_S(xdot);
+        memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+    }
+    if(udata) {
+        memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+    }
     
     /* Free memory */
     if(nx>0) {
@@ -296,11 +301,11 @@ freturn:
             if(ami_mem)    mxFree(dydx);
             if(ami_mem)    mxFree(dydp);
             if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(sx,np);
+                N_VDestroyVectorArray_Serial(NVsx,np);
             }
             if (sensi_meth == AMI_ASA) {
                 if(status == 0) {
-                    N_VDestroyVectorArray_Serial(sx,np);
+                    N_VDestroyVectorArray_Serial(NVsx,np);
                 }
             }
 
