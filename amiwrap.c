@@ -230,23 +230,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     xQB_tmp = NV_DATA_S(xQB);
                     
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                        sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
                         if (ny>0) {
-                            llhSdata[ip] -= dgdp[ip];
+                            sllhdata[ip] -= dgdp[ip];
                         }
                         if (nz>0) {
-                            llhSdata[ip] -= drdp[ip];
+                            sllhdata[ip] -= drdp[ip];
                         }
                     }
                     
                 } else {
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = mxGetNaN();
+                        sllhdata[ip] = mxGetNaN();
                     }
                 }
             } else {
                 for(ip=0; ip < np; ip++) {
-                    llhSdata[ip] = mxGetNaN();
+                    sllhdata[ip] = mxGetNaN();
                 }
             }
         }

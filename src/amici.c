@@ -212,7 +212,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
     mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
     
@@ -256,7 +256,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
         initField2(dxdotdp,nx,np);
     }
     if(sensi>0) {
-        initField2(llhS,np,1);
+        initField2(sllh,np,1);
         if (sensi_meth == AMI_FSA) {
             initField3(sx,nt,nx,np);
             if(ny>0) {
@@ -269,7 +269,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             }
         }
         if(sensi>1) {
-            initField2(llhS2,np,np);
+            initField2(s2llh,np,np);
         }
     }
     

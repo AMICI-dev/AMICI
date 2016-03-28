@@ -23,8 +23,8 @@
 #define numrhsevalsSdata rdata->am_numrhsevalsSdata
 
 #define llhdata rdata->am_llhdata
-#define llhSdata rdata->am_llhSdata
-#define llhS2data rdata->am_llhS2data
+#define sllhdata rdata->am_sllhdata
+#define s2llhdata rdata->am_s2llhdata
 #define chi2data rdata->am_chi2data
 
 
@@ -90,9 +90,9 @@ typedef struct {
     /** chi2 value */
     double *am_chi2data;
     /** parameter derivative of likelihood */
-    double *am_llhSdata;
+    double *am_sllhdata;
     /** second order parameter derivative of likelihood */
-    double *am_llhS2data; 
+    double *am_s2llhdata;
     
 	} *ReturnData;
 #endif /* _MY_RDATA */
