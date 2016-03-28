@@ -251,9 +251,11 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     if(ny>0) {
         initField2(y,nt,ny);
         initField2(sigmay,nt,ny);
-        initField2(dydp,ny,np);
-        initField2(dydx,ny,nx);
-        initField2(dxdotdp,nx,np);
+        if (sensi_meth == AMI_SS) {
+            initField2(dydp,ny,np);
+            initField2(dydx,ny,nx);
+            initField2(dxdotdp,nx,np);
+        }
     }
     if(sensi>0) {
         initField2(sllh,np,1);
@@ -265,6 +267,14 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             }
             if(nz>0 & ne>0){
                 initField3(sz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if (sensi_meth == AMI_ASA) {
+            if(ny>0) {
+                initField3(ssigmay,nt,ny,np);
+            }
+            if(nz>0 & ne>0){
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
@@ -1209,13 +1219,15 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data,
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
+    /* extract the value for the standard deviation, if the data value is NaN, use
+     the parameter value. Store this value in the return struct */
     if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
         *status = fsigma_z(t,ie,sigma_z,udata);
         if (*status != AMI_SUCCESS) return;
     } else {
         sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
     }
-    
+    sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
     
 }
 
@@ -1236,7 +1248,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    int iz;
+    int iz,ip;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1249,10 +1261,8 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     
     for (iz=0; iz<nz; iz++) {
         if(z2event[iz] == ie) {
+            getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
-                
-                getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
-                
                 if (event_model == AMI_NORMAL) {
                     r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                     *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);

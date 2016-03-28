@@ -337,11 +337,15 @@ function generateM(this, amimodelo2)
             fprintf(fid,['    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
             fprintf(fid,['    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
             fprintf(fid,['    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+            fprintf(fid,['    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+            fprintf(fid,['    sol.ssigmaz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
         case 'log10'
             fprintf(fid,['    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);\n']);
             fprintf(fid,['    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
             fprintf(fid,['    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
             fprintf(fid,['    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+            fprintf(fid,['    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+            fprintf(fid,['    sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
         otherwise
     end
     fprintf(fid,'end\n');

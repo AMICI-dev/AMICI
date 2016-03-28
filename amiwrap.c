@@ -188,7 +188,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* we still need to integrate from first datapoint to tstart */
-                
                 if (t>tstart) {
                     if(status == 0) {
                         if (nx>0) {
