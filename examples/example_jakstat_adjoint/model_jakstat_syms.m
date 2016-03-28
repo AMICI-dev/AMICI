@@ -1,7 +1,5 @@
 function [model] = model_jakstat_syms()
     
-    model.debug = true;
-    
     %%
     % STATES
     
