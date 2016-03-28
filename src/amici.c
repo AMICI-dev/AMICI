@@ -988,6 +988,9 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
                 dsigma_ydp[ip*ny+iy] = 0;
             }
         }
+        for (ip=0; ip<np; ip++) {
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
+        }
     }
     fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
     fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
@@ -1155,11 +1158,14 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     if (*status != AMI_SUCCESS) return;
                 } else {
                     for (ip=0; ip<np; ip++) {
-                        dsigma_zdp[ip +np*iz] = 0;
+                        dsigma_zdp[iz+nz*ip] = 0;
                     }
                     sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
                 }
                 sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
+                for (ip=0; ip<np; ip++) {
+                    ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
+                }
                 
                 for (ip=0; ip<np; ip++) {
                     if(event_model == AMI_NORMAL) {
