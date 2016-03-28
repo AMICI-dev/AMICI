@@ -1,5 +1,4 @@
 function example_events()
-clc
 %%
 % COMPILATION
 

@@ -1407,16 +1407,6 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
     
     if (it == nt-1) {
         if( sensi_meth == AMI_SS) {
-            *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-            xdot_tmp = NV_DATA_S(xdot);
-            
-            *status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            if (*status != AMI_SUCCESS) return;
-            
-            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
             
             *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
             if (*status != AMI_SUCCESS) return;
