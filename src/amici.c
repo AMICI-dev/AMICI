@@ -936,13 +936,13 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             
             sx_tmp = NV_DATA_S(sx[ip]);
             for(ix=0; ix < nx; ix++) {
-                xSdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
+                sxdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
             }
         }
     }
     fdydx(ts[it],it,dydx,x,udata);
     fdydp(ts[it],it,dydp,x,udata);
-    fsy(ts[it],it,ySdata,dydx,dydp,sx,udata);
+    fsy(ts[it],it,sydata,dydx,dydp,sx,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1070,7 +1070,7 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
 
-    *status = fsz(t,ie,nroots,zSdata,x,sx,udata);
+    *status = fsz(t,ie,nroots,szdata,x,sx,udata);
     if (*status != AMI_SUCCESS) return;
 
 }
@@ -1101,7 +1101,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
     
-    *status = fsz_tf(t,ie,nroots,zSdata,x,sx,udata);
+    *status = fsz_tf(t,ie,nroots,szdata,x,sx,udata);
     if (*status != AMI_SUCCESS) return;
     
 }

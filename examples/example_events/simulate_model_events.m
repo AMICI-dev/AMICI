@@ -115,9 +115,6 @@ theta = 10.^(phi(:));
 if(length(theta)<4)
     error('provided parameter vector is too short');
 end
-if(length(kappa)<4)
-    error('provided constant vector is too short');
-end
 
 
 pbar = ones(size(theta));
@@ -179,8 +176,20 @@ end
 if(isempty(kappa))
     kappa = data.condition;
 end
+if(isempty(tout))
+    tout = data.t;
+end
+if(~all(tout==sort(tout)))
+    error('Provided time vector is not monotonically increasing!');
+end
+if(not(length(tout)==length(unique(tout))))
+    error('Provided time vector has non-unique entries!!');
+end
 if(max(options_ami.sens_ind)>4)
     error('Sensitivity index exceeds parameter dimension!')
+end
+if(length(kappa)<4)
+    error('provided condition vector is too short');
 end
 if(~isempty(options_ami.sx0))
     if(size(options_ami.sx0,2)~=np)
