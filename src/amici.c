@@ -212,9 +212,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","zS","xS","yS","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sz","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
-    mxsol = mxCreateStructMatrix(1,1,22,field_names_sol);
+    mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
     
     plhs[0] = mxsol;
     
@@ -241,6 +241,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(nz>0 & ne>0){
         initField2(z,nmaxevent,nz);
+        initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
         initField2(x,nt,nx);
@@ -249,6 +250,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(ny>0) {
         initField2(y,nt,ny);
+        initField2(sigmay,nt,ny);
         initField2(dydp,ny,np);
         initField2(dydx,ny,nx);
         initField2(dxdotdp,nx,np);
@@ -256,12 +258,14 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     if(sensi>0) {
         initField2(llhS,np,1);
         if (sensi_meth == AMI_FSA) {
-            initField3(xS,nt,nx,np);
+            initField3(sx,nt,nx,np);
             if(ny>0) {
-                initField3(yS,nt,ny,np);
+                initField3(sy,nt,ny,np);
+                initField3(ssigmay,nt,ny,np);
             }
             if(nz>0 & ne>0){
-                initField3(zS,nmaxevent,nz,np);
+                initField3(sz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
         if(sensi>1) {
