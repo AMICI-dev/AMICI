@@ -202,10 +202,10 @@ if(~isempty(options_ami.sx0))
 end
 sol = ami_model_adjoint(tout,theta(1:3),kappa(1:0),options_ami,plist,pbar,xscale,data);
 if(options_ami.sensi==1)
-    sol.sllh = sol.llhS.*theta(options_ami.sens_ind)*log(10);
-    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
+    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
 if(options_ami.sensi_meth == 3)
     sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));

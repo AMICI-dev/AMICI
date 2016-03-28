@@ -47,7 +47,7 @@ function example_dirac_secondorder_vectmult()
     
     %%
     % PLOTTING
-
+    
     figure
     c_x = get(gca,'ColorOrder');
     for ip = 1:4
@@ -107,8 +107,6 @@ function example_dirac_secondorder_vectmult()
     end
     set(gcf,'Position',[100 300 1200 500])
     
+    drawnow
     
 end
-
-
-

@@ -218,19 +218,19 @@ else
 sol = ami_model_dirac_secondorder_vectmult_o2vec(tout,theta(1:4),kappa(1:4),options_ami,plist,pbar,xscale,data);
 end
 if(options_ami.sensi==1)
-    sol.sllh = sol.llhS.*theta(options_ami.sens_ind)*log(10);
-    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
+    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
 if(options_ami.sensi == 2)
-    sx = sol.xS(:,1:2,:);
-    sy = sol.yS(:,1:1,:);
+    sx = sol.sx(:,1:2,:);
+    sy = sol.sy(:,1:1,:);
     for iz = 1:0
-        sz(:,iz,:) = sol.zS(:,2*iz-1,:);
+        sz(:,iz,:) = sol.sz(:,2*iz-1,:);
     end
-    s2x = sol.xS(:,3:end,:);
-    s2y = sol.yS(:,2:end,:);
+    s2x = sol.sx(:,3:end,:);
+    s2y = sol.sy(:,2:end,:);
     for iz = 1:0
         s2z= [];
     end

@@ -209,21 +209,21 @@ else
 sol = ami_model_dirac_secondorder_o2(tout,theta(1:4),kappa(1:0),options_ami,plist,pbar,xscale,data);
 end
 if(options_ami.sensi==1)
-    sol.sllh = sol.llhS.*theta(options_ami.sens_ind)*log(10);
-    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
+    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
 if(options_ami.sensi == 2)
-    sx = sol.xS(:,1:2,:);
-    sy = sol.yS(:,1:1,:);
+    sx = sol.sx(:,1:2,:);
+    sy = sol.sy(:,1:1,:);
     for iz = 1:0
-        sz(:,iz,:) = sol.zS(:,2*iz-1,:);
+        sz(:,iz,:) = sol.sz(:,2*iz-1,:);
     end
-    s2x = reshape(sol.xS(:,3:end,:),length(tout),2,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
-    s2y = reshape(sol.yS(:,2:end,:),length(tout),1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
+    s2x = reshape(sol.sx(:,3:end,:),length(tout),2,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
+    s2y = reshape(sol.sy(:,2:end,:),length(tout),1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
     for iz = 1:0
-        s2z(:,iz,:,:) = reshape(sol.zS(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
+        s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));
     end
     sol.x = sol.x(:,1:2);
     sol.y = sol.y(:,1:1);

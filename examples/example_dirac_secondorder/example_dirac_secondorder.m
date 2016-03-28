@@ -83,7 +83,6 @@ function example_dirac_secondorder()
     end
     set(gcf,'Position',[100 300 1200 500])
     
+    drawnow
+    
 end
-
-
-

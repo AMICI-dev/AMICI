@@ -118,9 +118,6 @@ end
 if(length(theta)<4)
     error('provided parameter vector is too short');
 end
-if(length(kappa)<0)
-    error('provided constant vector is too short');
-end
 
 
 pbar = ones(size(theta));
@@ -182,8 +179,20 @@ end
 if(isempty(kappa))
     kappa = data.condition;
 end
+if(isempty(tout))
+    tout = data.t;
+end
+if(~all(tout==sort(tout)))
+    error('Provided time vector is not monotonically increasing!');
+end
+if(not(length(tout)==length(unique(tout))))
+    error('Provided time vector has non-unique entries!!');
+end
 if(max(options_ami.sens_ind)>4)
     error('Sensitivity index exceeds parameter dimension!')
+end
+if(length(kappa)<0)
+    error('provided condition vector is too short');
 end
 if(~isempty(options_ami.sx0))
     if(size(options_ami.sx0,2)~=np)
@@ -193,10 +202,10 @@ if(~isempty(options_ami.sx0))
 end
 sol = ami_model_dirac(tout,theta(1:4),kappa(1:0),options_ami,plist,pbar,xscale,data);
 if(options_ami.sensi==1)
-    sol.sllh = sol.llhS.*theta(options_ami.sens_ind)*log(10);
-    sol.sx = bsxfun(@times,sol.xS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sy = bsxfun(@times,sol.yS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-    sol.sz = bsxfun(@times,sol.zS,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
+    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
 if(options_ami.sensi_meth == 3)
     sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
