@@ -1,14 +1,5 @@
-function [model] = example_model_1_syms()
+function [model] = model_events_syms()
 
-%%
-% CVODES OPTIONS
-
-% set the default absolute tolerance
-model.atol = 1e-8; 
-% set the default relative tolerance
-model.rtol = 1e-8; 
-% set the default maximum number of integration steps
-model.maxsteps = 1e4; 
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10';
@@ -21,7 +12,7 @@ model.param = 'log10';
 syms x1 x2 x3
 
 % create state vector
-x = [
+model.sym.x = [
 x1 x2 x3
 ];
 
@@ -32,7 +23,11 @@ x1 x2 x3
 syms p1 p2 p3 p4
 
 % create parameter vector 
-p = [p1,p2,p3,p4];
+model.sym.p = [p1,p2,p3,p4];
+
+% set the parametrisation of the problem options are 'log', 'log10' and
+% 'lin' (default).
+model.param = 'log10'; 
 
 %%
 % CONSTANTS ( for these no sensitivities will be computed )
@@ -42,7 +37,7 @@ p = [p1,p2,p3,p4];
 syms k1 k2 k3 k4
 
 % create parameter vector 
-k = [k1 k2 k3 k4];
+model.sym.k = [k1 k2 k3 k4];
 
 %%
 % SYSTEM EQUATIONS
@@ -50,29 +45,29 @@ k = [k1 k2 k3 k4];
 % create symbolic variable for time
 syms t
 
-xdot = sym(zeros(size(x)));
+model.sym.xdot = sym(zeros(size(model.sym.x)));
 
 % piecewise defined function
-xdot(1) = -p1*heaviside(t-p4)*x1;
+model.sym.xdot(1) = -p1*heaviside(t-p4)*x1;
 % inhomogeneous
-xdot(2) = +p2*x1*exp(-0.1*t)-p3*x2 ;
-xdot(3) = -1.5*x3;
+model.sym.xdot(2) = +p2*x1*exp(-0.1*t)-p3*x2 ;
+model.sym.xdot(3) = -1.5*x3;
 
 %%
 % INITIAL CONDITIONS
 
-x0 = sym(zeros(size(x)));
+model.sym.x0 = sym(zeros(size(model.sym.x)));
 
-x0(1) = k1;
-x0(2) = k2;
-x0(3) = k3;
+model.sym.x0(1) = k1;
+model.sym.x0(2) = k2;
+model.sym.x0(3) = k3;
 
 %%
 % OBSERVALES
 
-y = sym(zeros(1,1));
+model.sym.y = sym(zeros(1,1));
 
-y(1) = p4 * (x1+x2+x3);
+model.sym.y(1) = p4 * (x1+x2+x3);
 
 
 %%
@@ -81,17 +76,7 @@ y(1) = p4 * (x1+x2+x3);
 syms t
 
 % events fire when there is a zero crossing of the root function
-event(1) = amievent(x3-x2,0,t);
-event(2) = amievent(x3-x1,0,t);
+model.event(1) = amievent(x3-x2,0,t);
+model.event(2) = amievent(x3-x1,0,t);
 
-%%
-% SYSTEM STRUCT
-
-model.sym.x = x;
-model.sym.k = k;
-model.sym.xdot = xdot;
-model.sym.p = p;
-model.sym.x0 = x0;
-model.sym.y = y;
-model.event = event;
 end

@@ -102,3 +102,9 @@ examples/geneExpression/simulate_geneExpression.m
 *.m~
 
 *.plist
+
+examples/example_events/simulate_model_events.m
+
+examples/example_steadystate/simulate_model_steadystate.m
+
+test/constant_events.m

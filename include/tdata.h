@@ -14,7 +14,7 @@
 #define dxB tdata->am_dxB
 #define xQB tdata->am_xQB
 #define xQB_old tdata->am_xQB_old
-#define sx tdata->am_sx
+#define NVsx tdata->am_sx
 #define sdx tdata->am_sdx
 #define Jtmp tdata->am_Jtmp
 #define id tdata->am_id
