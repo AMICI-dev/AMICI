@@ -373,39 +373,17 @@ function [this,model] = getSyms(this,model)
             % create cell array of same sizex
             this.strsym = sym(zeros(ny,nx));
             % fill cell array
-            for j = 1:ny
-                for i = 1:nx
-                    if(this.sym(j,i)~=0)
-                        this.strsym(j,i) = sym(sprintf('dydx_%i', j-1 + (i-1)*ny));
-                    end
-                end
-            end
+            this = makeStrSyms(this);
             
         case 'dydp'
             this.sym=jacobian(model.fun.y.sym,p);
             % create cell array of same size
-            this.strsym = sym(zeros(ny,np));
-            % fill cell array
-            for j = 1:ny
-                for i = 1:np
-                    if(this.sym(j,i)~=0)
-                        this.strsym (j,i) = sym(sprintf('dydp_%i', j-1 + (i-1)*ny));
-                    end
-                end
-            end
+            this = makeStrSyms(this);
             
         case 'sy'
             this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
             % create cell array of same size
-            sys = cell(ny,np);
-            % fill cell array
-            for j = 1:ny
-                for i = 1:np
-                    sys{j,i} = sprintf('sy_%i', j-1);
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(sys);
+            this = makeStrSyms(this);
             
         case 'Jv'
             % create cell array of same size
@@ -732,23 +710,19 @@ function this = unifySyms(this,model)
 end
 
 function this = makeStrSyms(this)
-    strsym = cell(size(this.sym));
-    [strsym{:}] = deal('0');
+    this.strsym = sym(zeros(size(this.sym)));
     idx = find(logical(this.sym~=0));
     idx = transpose(idx(:));
-    for icell = idx
-        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    for isym = idx
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
-    this.strsym = sym(strsym);
 end
 
 function this = makeStrSymsfull(this)
-    strsym = cell(size(this.sym));
-    [strsym{:}] = deal('0');
-    for icell = 1:numel(strsym)
-        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    this.strsym = sym(zeros(size(this.sym)));
+    for isym = 1:numel(this.strsym)
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
-    this.strsym = sym(strsym);
 end
 
 function out = mysubs(in, old, new)
