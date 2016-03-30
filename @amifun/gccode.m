@@ -10,7 +10,7 @@ function this = gccode(this,model,fid)
     %  this: function definition object @type amifun
     
     
-    if(any(any(any(this.sym~=0))))
+    if(any(any(any(this.sym~=0)))&&~strcmp(this.cvar,'sJy'))
         
         % replace unknown partial derivatives
         if(model.maxflag)
@@ -30,6 +30,7 @@ function this = gccode(this,model,fid)
                 end
             end
         end
+        
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
