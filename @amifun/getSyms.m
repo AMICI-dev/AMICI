@@ -299,7 +299,21 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
-            this = makeStrSyms(this);
+            %%
+            % build short strings for reuse of jacobian
+            
+            % find nonzero entries
+            idx = find(logical(this.sym~=0));
+            % create cell array of same size
+            Js = sym(zeros(length(idx),1));
+            % fill cells with strings
+            for iJ = 1:length(idx)
+                Js(iJ) = sym(sprintf('tmp_J%i',iJ-1));
+            end
+            % create full symbolic matrix
+            this.strsym = sym(zeros(nx,nx));
+            % fill nonzero entries
+            this.strsym(idx) = Js;
             
         case 'JB'
             this.sym=-transpose(model.fun.J.sym);
