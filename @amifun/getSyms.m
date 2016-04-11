@@ -111,7 +111,7 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.y;
             % replace unify symbolic expression
             this = unifySyms(this,model);
-            this = makeStrSyms(this);
+            this = makeStrSymsFull(this);
             
             
             % activate splines
@@ -641,7 +641,7 @@ function this = makeStrSyms(this)
     end
 end
 
-function this = makeStrSymsfull(this)
+function this = makeStrSymsFull(this)
     this.strsym = sym(zeros(size(this.sym)));
     for isym = 1:numel(this.strsym)
         this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
