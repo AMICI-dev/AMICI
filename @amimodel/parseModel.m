@@ -25,9 +25,11 @@ function parseModel(this)
     nevent = length(this.event);
     this.nevent = nevent;
     
-    % fix z2event 
-    this.fun = rmfield(this.fun,'z');
-    this.getFun([],'z');
+    % fix z2event if z was computed previously
+    if(isfield(this.fun,'z'))
+        this.fun = rmfield(this.fun,'z');
+        this.getFun([],'z');
+    end
     
     nx = length(this.sym.x);
     np = length(this.sym.p);
