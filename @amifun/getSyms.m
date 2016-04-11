@@ -529,7 +529,7 @@ function [this,model] = getSyms(this,model)
                     model.z2event(iz) = ievent;
                 end
             end
-            this = makeStrSyms(this);
+            this = makeStrSymsFull(this);
             
         case 'dzdp'
             this.sym = jacobian(model.fun.z.sym,p);
