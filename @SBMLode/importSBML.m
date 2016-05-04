@@ -1,4 +1,13 @@
 function importSBML(this,modelname)
+    % importSBML parses information from the SBML definition and populates
+    % the SBMLode object from this information.
+    %
+    % Parameters:
+    %  modelname: target name of the model
+    %
+    % Return values:
+    %
+    
     try
         model = TranslateSBML([modelname '.sbml']);
     catch

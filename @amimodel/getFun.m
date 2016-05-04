@@ -6,6 +6,7 @@ function getFun(this,HTable,funstr)
     %  compilation @type struct
     %  funstr: function for which symbolic expressions should be computed @type string
     %
+    % Return values:
     
     [wrap_path,~,~]=fileparts(which('amiwrap.m'));
     

@@ -5,7 +5,6 @@ function this = getFArgs(this)
     % name and have solver independent calls.
     %
     % Parameters:
-    %  model: model definition object @type amimodel
     %
     % Return values:
     %  this: updated function definition object @type amifun
