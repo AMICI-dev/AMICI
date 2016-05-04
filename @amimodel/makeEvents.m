@@ -85,8 +85,10 @@ function makeEvents( this )
                     symchar = strrep(symchar,str_arg_d,'polydirac');
                     % extract coefficient
                     cfp = coeffs(sym(symchar),polydirac);
-                    % add coefficient to bolus
-                    tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(2);
+                    if(length(cfp)>1)
+                        % add coefficient to bolus
+                        tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(2);
+                    end
                     % remove dirac
                     symchar = strrep(symchar,'polydirac','0');
                 end
