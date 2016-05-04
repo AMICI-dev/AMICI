@@ -3,7 +3,6 @@
  * @brief  core routines for integration
  */
 
-/** return value indicating successful execution */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,12 +16,25 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
+/** 
+ * @ brief initialise matrix and attach to the field 
+ * @ param FIELD name of the field to which the matrix will be attached
+ * @ param D1 number of rows in the matrix
+ * @ param D2 number of columns in the matrix
+ */
 #define initField2(FIELD,D1,D2) \
 mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
+/** 
+ * @ brief initialise tensor and attach to the field 
+ * @ param FIELD name of the field to which the tensor will be attached
+ * @ param D1 number of rows in the tensor
+ * @ param D2 number of columns in the tensor
+ * @ param D3 number of elements in the third dimension of the tensor
+ */
 #define initField3(FIELD,D1,D2,D3) \
 mxArray *mx ## FIELD; \
 const mwSize dims ## FIELD[]={D1,D2,D3}; \
@@ -30,6 +42,11 @@ mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
+/** 
+ * @ brief extract information from a property of a matlab class (scalar)
+ * @ param OPTION name of the property
+ * @ param TYPE class to which the information should be cast
+ */
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -38,6 +55,10 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
+/** 
+ * @ brief extract information from a property of a matlab class (matrix)
+ * @ param OPTION name of the property
+ */
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -46,7 +67,7 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
-
+/** return value for successful execution */
 #define AMI_SUCCESS               0
 
 UserData setupUserData(const mxArray *prhs[]) {
@@ -196,8 +217,9 @@ UserData setupUserData(const mxArray *prhs[]) {
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
-     * @param[in] prhs user input @type *mxArray
+     * @param[in] plhs user input @type mxArray
      * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[out] pstatus pointer to the flag indicating the execution status @type double
      * @return rdata: return data struct @type ReturnData
      */
     ReturnData rdata; /* returned rdata struct */

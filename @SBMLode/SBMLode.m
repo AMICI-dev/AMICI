@@ -1,38 +1,68 @@
 classdef SBMLode < handle
-    %SBMLMODEL Summary of this class goes here
-    %   Detailed explanation goes here
+    %SBMLMODEL provides an intermediate container between the SBML
+    %definition and an amimodel object
     
     properties
-        state@sym;
-        observable@sym;
-        observable_name@sym;
-        param@sym;
-        parameter@sym;
-        constant@sym;
-        reaction@sym;
-        compartment@sym;
-        volume@sym;
-        initState@sym;
-        condition@sym;
-        flux@sym;
-        stochiometry@sym;
-        xdot@sym;
-        trigger@sym;
-        bolus@sym;
-        funmath@cell;
-        funarg@cell;
-        time_symbol@char;
-        pnom@double;
-        knom@double;
+        % states
+        state = sym.empty();
+        % observables
+        observable = sym.empty();
+        % names of observables
+        observable_name = sym.empty();
+        % parameter names
+        param = sym.empty();
+        % parameter expressions 
+        parameter = sym.empty();
+        % constants
+        constant = sym.empty();
+        % reactions
+        reaction = sym.empty();
+        % compartments
+        compartment = sym.empty();
+        % compartment volumes
+        volume = sym.empty();
+        % initial condition of states
+        initState = sym.empty();
+        % condition
+        condition = sym.empty();
+        % reaction fluxes
+        flux = sym.empty();
+        % reaction stochiometry
+        stochiometry = sym.empty();
+        % right hand side of reconstructed differential equation
+        xdot = sym.empty();
+        % event triggers
+        trigger = sym.empty();
+        % event boli
+        bolus = sym.empty();
+        % mathematical experessions for function
+        funmath = cell.empty();
+        % function call
+        funarg = cell.empty();
+        % symbol of time
+        time_symbol = char.empty();
+        % nominal parameters
+        pnom = double.empty();
+        % nominal conditions
+        knom = double.empty();
     end
     
     methods
         function model = SBMLode(filename)
+            % SBMLode extracts information from an SBML definition and
+            % stores it in a symbolic format
+            %
+            % Parameters:
+            %  filename: target name of the model (excluding the suffix
+            %  .xml/.sbml)
+            %
+            % Return values:
+            %
             model.importSBML(filename);
         end
         
-        
         importSBML(this,filename)
+        
         writeAMICI(this,modelname)
     end
     
