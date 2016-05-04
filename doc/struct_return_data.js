@@ -1,0 +1,28 @@
+var struct_return_data =
+[
+    [ "am_tsdata", "struct_return_data.html#a577298549da7c9dbe3d93fbf3bc17866", null ],
+    [ "am_xdotdata", "struct_return_data.html#a3ea8fa08fcced0827c1df276b0d253c8", null ],
+    [ "am_dxdotdpdata", "struct_return_data.html#a494b13e9797d95d7fb3c89e09864aa4f", null ],
+    [ "am_dydxdata", "struct_return_data.html#a831cada35b4f407a2c8ad789dfc534e5", null ],
+    [ "am_dydpdata", "struct_return_data.html#a57a7eb2085d8ed5bb6c62331a2aa3af5", null ],
+    [ "am_Jdata", "struct_return_data.html#a82d71415ca06c969ebd22a02e4789b1d", null ],
+    [ "am_zdata", "struct_return_data.html#ab9982c7bbb81e3d54ab0a2f8b6e1ccec", null ],
+    [ "am_sigmazdata", "struct_return_data.html#a66bdea39e20521b851fedec7fca7a30b", null ],
+    [ "am_szdata", "struct_return_data.html#a8191e336c3631c7e32882e1ce560f953", null ],
+    [ "am_ssigmazdata", "struct_return_data.html#aacb72a03b1cb6b4c9e8d4fde06afd109", null ],
+    [ "am_xdata", "struct_return_data.html#ad99b08eb835733c2416a1a0004e4a491", null ],
+    [ "am_sxdata", "struct_return_data.html#a84576ca797cb9aedbbc5a366c52f54c9", null ],
+    [ "am_ydata", "struct_return_data.html#a24568582aa8de699ea1ce53323ff26ca", null ],
+    [ "am_sigmaydata", "struct_return_data.html#a36512c21e11b127a3d0326ff82ed6373", null ],
+    [ "am_sydata", "struct_return_data.html#ad929fcdabf8be8e21427cba880bc7ebb", null ],
+    [ "am_ssigmaydata", "struct_return_data.html#a37d8072bd513f93263203bfad00705ff", null ],
+    [ "am_numstepsdata", "struct_return_data.html#a2ebada170b4bc6a2337794e4ec08d77c", null ],
+    [ "am_numstepsSdata", "struct_return_data.html#a6852d3762d59842903ef737ed511dc43", null ],
+    [ "am_numrhsevalsdata", "struct_return_data.html#a480d4eb0a1a568f64b8e939105a0b627", null ],
+    [ "am_numrhsevalsSdata", "struct_return_data.html#a77e958126968de6f5ee3bd1d22129641", null ],
+    [ "am_orderdata", "struct_return_data.html#af792e4a1c5c23c5232ef9398e25de1a7", null ],
+    [ "am_llhdata", "struct_return_data.html#af95fa143e0e524652f9a818f6288b544", null ],
+    [ "am_chi2data", "struct_return_data.html#ae0fc05ce8c52bdda5c7bff541c79945d", null ],
+    [ "am_sllhdata", "struct_return_data.html#a45bc00583c09b05b35fa1a1874225aff", null ],
+    [ "am_s2llhdata", "struct_return_data.html#ae3b580f13058daf716d947dd7a0e9cd8", null ]
+];

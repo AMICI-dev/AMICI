@@ -1,0 +1,7 @@
+<map id="getEventSigma" name="getEventSigma">
+<area shape="rect" id="node2" href="$amici_8c.html#a253e331f8a34f5b10a9b7ca57aa5ea83" title="getEventObjective" alt="" coords="165,56,295,83"/>
+<area shape="rect" id="node3" href="$amici_8c.html#a1815f9679d16a9472953e70c7842f6a5" title="getEventOutput" alt="" coords="343,5,457,33"/>
+<area shape="rect" id="node6" href="$amici_8c.html#a507f877042aaa296c1a49d1316c3b4ae" title="fillEventOutput" alt="" coords="505,56,613,83"/>
+<area shape="rect" id="node4" href="$amici_8c.html#adc05a02d97b8703d15cf277a437f4b2a" title="handleEvent" alt="" coords="511,5,606,33"/>
+<area shape="rect" id="node5" href="$amiwrap_8c.html#a6a215cbfde54f82a3ce599228fc3fce5" title="mexFunction" alt="" coords="661,31,758,58"/>
+</map>

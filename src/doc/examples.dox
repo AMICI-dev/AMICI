@@ -1,0 +1,158 @@
+/**
+ @page examples Examples
+ 
+ In this section we include multiple examples on defining and simulating models.
+ 
+ \subpage example_events
+ : Forward Sensitivities for model with events and discontinuities.
+ 
+ \subpage example_dirac
+ : Forward Sensitivities for mRNA transfection model with bolus injection.
+ 
+ \subpage example_steadystate
+ : Steady State Sensitivities.
+ 
+ \subpage example_jakstat_adjoint
+ : Adjoint Sensitivities for JAK/STAT model with parametric standard deviation.
+ 
+ \subpage example_dirac_adjoint
+ : Adjoint Sensitivities for mRNA transfection model with bolus injection.
+ 
+ \subpage example_dirac_secondorder
+ : Second order forward sensitivities for mRNA transfection model with bolus injection.
+ 
+ \subpage example_dirac_secondorder_vectmult
+ : Directional second order forward sensitivities for mRNA transfection model with bolus injection.
+ 
+ \subpage example_adjoint
+ : Adjoint Sensitivities for simple model with analytic solution.
+ 
+ */
+
+ //----------------------------------------------------------------
+
+ /*! @page example_adjoint Example Adjoint
+  
+ @section def_adjoint Model Definition
+ 
+ \htmlinclude example_adjoint/html/model_adjoint_syms.html
+ \latexinclude example_adjoint/html/model_adjoint_syms.tex
+ 
+ @section simu_adjoint Simulation
+ 
+ \htmlinclude example_adjoint/html/example_adjoint.html
+ \latexinclude example_adjoint/html/example_adjoint.tex
+ 
+ */
+ 
+ //----------------------------------------------------------------
+
+ /*! @page example_dirac Example Dirac
+  
+ @section def_dirac Model Definition
+ 
+ \htmlinclude example_dirac/html/model_dirac_syms.html
+ \latexinclude example_dirac/html/model_dirac_syms.tex
+ 
+ @section simu_dirac Simulation
+ 
+ \htmlinclude example_dirac/html/example_dirac.html
+ \latexinclude example_dirac/html/example_dirac.tex
+ 
+ */
+ 
+ //----------------------------------------------------------------
+
+ /*! @page example_dirac_adjoint Example Dirac Adjoint
+  
+ @section def_dirac_adjoint Model Definition
+ 
+ \htmlinclude example_dirac_adjoint/html/model_dirac_adjoint_syms.html
+ \latexinclude example_dirac_adjoint/html/model_dirac_adjoint_syms.tex
+ 
+ @section simu_dirac_adjoint Simulation
+ 
+ \htmlinclude example_dirac_adjoint/html/example_dirac_adjoint.html
+ \latexinclude example_dirac_adjoint/html/example_dirac_adjoint.tex
+ 
+ */
+ 
+ //----------------------------------------------------------------
+
+ /*! @page example_dirac_secondorder Example Dirac Second Order Forward
+  
+ @section def_dirac_secondorder Model Definition
+ 
+ \htmlinclude example_dirac_secondorder/html/model_dirac_secondorder_syms.html
+ \latexinclude example_dirac_secondorder/html/model_dirac_secondorder_syms.tex
+ 
+ @section simu_dirac_secondorder Simulation
+ 
+ \htmlinclude example_dirac_secondorder/html/example_dirac_secondorder.html
+ \latexinclude example_dirac_secondorder/html/example_dirac_secondorder.tex
+ 
+ */
+ 
+  //----------------------------------------------------------------
+
+ /*! @page example_dirac_secondorder_vectmult Example Dirac Directional Second Order Forward 
+  
+ @section def_dirac_secondorder_vectmult Model Definition
+ 
+ \htmlinclude example_dirac_secondorder_vectmult/html/model_dirac_secondorder_vectmult_syms.html
+ \latexinclude example_dirac_secondorder_vectmult/html/model_dirac_secondorder_vectmult_syms.tex
+ 
+ @section simu_dirac_secondorder_vectmult Simulation
+ 
+ \htmlinclude example_dirac_secondorder_vectmult/html/example_dirac_secondorder_vectmult.html
+ \latexinclude example_dirac_secondorder_vectmult/html/example_dirac_secondorder_vectmult.tex
+ 
+ */
+ 
+  //----------------------------------------------------------------
+
+ /*! @page example_events Example Events
+  
+ @section def_events Model Definition
+ 
+ \htmlinclude example_events/html/model_events_syms.html
+ \latexinclude example_events/html/model_events_syms.tex
+ 
+ @section simu_events Simulation
+ 
+ \htmlinclude example_events/html/example_events.html
+ \latexinclude example_events/html/example_events.tex
+ 
+ */
+ 
+ //----------------------------------------------------------------
+ 
+ /*! @page example_jakstat_adjoint Example JAK/STAT Adjoint
+  
+ @section def_jakstat_adjoint Model Definition
+ 
+ \htmlinclude example_jakstat_adjoint/html/model_jakstat_adjoint_syms.html
+ \latexinclude example_jakstat_adjoint/html/model_jakstat_adjoint_syms.tex
+ 
+ @section simu_jakstat_adjoint Simulation
+ 
+ \htmlinclude example_jakstat_adjoint/html/example_jakstat_adjoint.html
+ \latexinclude example_jakstat_adjoint/html/example_jakstat_adjoint.tex
+ 
+ */
+ 
+ //----------------------------------------------------------------
+
+ /*! @page example_steadystate Example Steady State
+  
+ @section def_steadystate Model Definition
+ 
+ \htmlinclude example_steadystate/html/model_steadystate_syms.html
+ \latexinclude example_steadystate/html/model_steadystate_syms.tex
+ 
+ @section simu_steadystate Simulation
+ 
+ \htmlinclude example_steadystate/html/example_steadystate.html
+ \latexinclude example_steadystate/html/example_steadystate.tex
+ 
+ */

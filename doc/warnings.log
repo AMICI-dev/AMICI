@@ -1,0 +1,18 @@
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amifun/getFArgs.m:18: warning: documented symbol `mlhsInnerSubst<::amifun > getFArgs' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amifun/getFArgs.m:33: warning: documented symbol `mlhsInnerSubst<::amifun > getFArgs' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amifun/getSyms.m:18: warning: documented symbol `mlhsSubst< mlhsInnerSubst<::amifun >,mlhsInnerSubst<::amimodel > > getSyms' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amifun/getSyms.m:689: warning: documented symbol `mlhsSubst< mlhsInnerSubst<::amifun >,mlhsInnerSubst<::amimodel > > getSyms' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@SBMLode/importSBML.m:18: warning: documented symbol `noret::substitute importSBML' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@SBMLode/importSBML.m:391: warning: documented symbol `noret::substitute importSBML' was not declared or defined.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.c:1: warning: Member _USE_MATH_DEFINES (macro definition) of file amiwrap.c is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/amiwrap.c:1: warning: Member M_PI (macro definition) of file amiwrap.c is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/src/amici.c:1: warning: Member _USE_MATH_DEFINES (macro definition) of file amici.c is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/src/amici.c:1: warning: Member M_PI (macro definition) of file amici.c is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amimodel/amimodel.m:580: warning: return type of member amimodel::updateRHS is not documented
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amimodel/amimodel.m:600: warning: return type of member amimodel::getFun is not documented
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@amioption/amioption.m:217: warning: parameters of member amioption::amioption are not (all) documented
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@SBMLode/SBMLode.m:18: warning: Member funarg (variable) of class SBMLode is not documented.
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@SBMLode/SBMLode.m:207: warning: The following parameters of SBMLode::writeAMICI(matlabtypesubstitute filename, matlabtypesubstitute this, matlabtypesubstitute modelname) are not documented:
+  parameter 'filename'
+  parameter 'this'
+/Users/F.Froehlich/Documents/MATLAB/AMICI/@SBMLode/SBMLode.m:207: warning: return type of member SBMLode::writeAMICI is not documented

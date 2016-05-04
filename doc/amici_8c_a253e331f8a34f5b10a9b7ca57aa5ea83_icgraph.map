@@ -1,0 +1,6 @@
+<map id="getEventObjective" name="getEventObjective">
+<area shape="rect" id="node2" href="$amici_8c.html#a1815f9679d16a9472953e70c7842f6a5" title="getEventOutput" alt="" coords="183,5,297,33"/>
+<area shape="rect" id="node5" href="$amici_8c.html#a507f877042aaa296c1a49d1316c3b4ae" title="fillEventOutput" alt="" coords="345,56,453,83"/>
+<area shape="rect" id="node3" href="$amici_8c.html#adc05a02d97b8703d15cf277a437f4b2a" title="handleEvent" alt="" coords="351,5,447,33"/>
+<area shape="rect" id="node4" href="$amiwrap_8c.html#a6a215cbfde54f82a3ce599228fc3fce5" title="mexFunction" alt="" coords="501,31,599,58"/>
+</map>

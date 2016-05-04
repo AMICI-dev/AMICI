@@ -1,0 +1,4 @@
+<map id="heaviside" name="heaviside">
+<area shape="rect" id="node2" href="$am__if_8m.html#a1bdd44661355eee1bbb92fe82b0e7b54" title="syms x y z f = symfun(sym(am_if(x,y,z)),[x y z]); fun = f(condition, truepart, falsepart); ..." alt="" coords="150,5,203,33"/>
+<area shape="rect" id="node3" href="$am__stepfun_8m.html#a17bfed411e62b2feef34aa3107b3e60c" title="syms x y f = symfun(sym(am_min(x,y)),[x y]); fun = f(a,b); " alt="" coords="131,56,222,83"/>
+</map>

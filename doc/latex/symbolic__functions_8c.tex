@@ -1,0 +1,1540 @@
+\hypertarget{symbolic__functions_8c}{}\subsection{src/symbolic\+\_\+functions.c File Reference}
+\label{symbolic__functions_8c}\index{src/symbolic\+\_\+functions.\+c@{src/symbolic\+\_\+functions.\+c}}
+
+
+definition of symbolic functions  
+
+
+{\ttfamily \#include $<$math.\+h$>$}\\*
+{\ttfamily \#include $<$mex.\+h$>$}\\*
+{\ttfamily \#include $<$float.\+h$>$}\\*
+{\ttfamily \#include $<$include/spline.\+h$>$}\\*
+Include dependency graph for symbolic\+\_\+functions.\+c\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{symbolic__functions_8c__incl}
+\end{center}
+\end{figure}
+\subsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{symbolic__functions_8c_aa8cecfc5c5c054d2875c03e77b7be15d}{T\+R\+U\+E}~1
+\item 
+\#define \hyperlink{symbolic__functions_8c_aa93f0eb578d23995850d61f7d61c55c1}{F\+A\+L\+S\+E}~0
+\end{DoxyCompactItemize}
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \hyperlink{symbolic__functions_8c_a143b9bb0ce28a96b0ec0ed5029baf366}{amilog} (double x)
+\item 
+double \hyperlink{symbolic__functions_8c_a609b523b00064e82442c1f1519f40bdb}{heaviside} (double x)
+\item 
+double \hyperlink{symbolic__functions_8c_a8f3cba07aa75b7320ae8bd6c0aeac498}{sign} (double x)
+\item 
+double \hyperlink{symbolic__functions_8c_a78aac4f87c32224176d7d063046c270f}{am\+\_\+min} (double a, double b)
+\item 
+double \hyperlink{symbolic__functions_8c_a4b372245882cfe08b809c82a1487efec}{Dam\+\_\+min} (int id, double a, double b)
+\item 
+double \hyperlink{symbolic__functions_8c_af7c1bd232d6c32537fd72481926c6d16}{am\+\_\+max} (double a, double b)
+\item 
+double \hyperlink{symbolic__functions_8c_ab737f3f75aad0dffa94e572bf095773e}{Dam\+\_\+max} (int id, double a, double b)
+\item 
+double \hyperlink{symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa}{spline3} (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f}{spline\+\_\+pos3} (double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1}{spline4} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93}{spline\+\_\+pos4} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73}{spline5} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b}{spline\+\_\+pos5} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e}{spline10} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf}{spline\+\_\+pos10} (double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e}{Dspline3} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61}{Dspline\+\_\+pos3} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d}{Dspline4} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a}{Dspline\+\_\+pos4} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29}{Dspline5} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934}{Dspline\+\_\+pos5} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85}{Dspline10} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)
+\item 
+double \hyperlink{symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609}{Dspline\+\_\+pos10} (int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+This file contains definitions of various symbolic functions which 
+
+\subsubsection{Macro Definition Documentation}
+\hypertarget{symbolic__functions_8c_aa8cecfc5c5c054d2875c03e77b7be15d}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!T\+R\+U\+E@{T\+R\+U\+E}}
+\index{T\+R\+U\+E@{T\+R\+U\+E}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{T\+R\+U\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+U\+E~1}\label{symbolic__functions_8c_aa8cecfc5c5c054d2875c03e77b7be15d}
+bool return value true 
+
+Definition at line 16 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_aa93f0eb578d23995850d61f7d61c55c1}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!F\+A\+L\+S\+E@{F\+A\+L\+S\+E}}
+\index{F\+A\+L\+S\+E@{F\+A\+L\+S\+E}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{F\+A\+L\+S\+E}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\+A\+L\+S\+E~0}\label{symbolic__functions_8c_aa93f0eb578d23995850d61f7d61c55c1}
+bool return value false 
+
+Definition at line 18 of file symbolic\+\_\+functions.\+c.
+
+
+
+\subsubsection{Function Documentation}
+\hypertarget{symbolic__functions_8c_a143b9bb0ce28a96b0ec0ed5029baf366}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!amilog@{amilog}}
+\index{amilog@{amilog}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{amilog(double x)}]{\setlength{\rightskip}{0pt plus 5cm}double amilog (
+\begin{DoxyParamCaption}
+\item[{double}]{x}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a143b9bb0ce28a96b0ec0ed5029baf366}
+c implementation of log function, this prevents returning Na\+N values for negative values
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & argument \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+if(x$>$0) then log(x) else -\/\+Inf 
+\end{DoxyReturn}
+
+
+Definition at line 28 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_a609b523b00064e82442c1f1519f40bdb}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!heaviside@{heaviside}}
+\index{heaviside@{heaviside}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{heaviside(double x)}]{\setlength{\rightskip}{0pt plus 5cm}double heaviside (
+\begin{DoxyParamCaption}
+\item[{double}]{x}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a609b523b00064e82442c1f1519f40bdb}
+c implementation of matlab function heaviside
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & argument \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+if(x$>$0) then 1 else 0 
+\end{DoxyReturn}
+
+
+Definition at line 43 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{symbolic__functions_8c_a609b523b00064e82442c1f1519f40bdb_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a8f3cba07aa75b7320ae8bd6c0aeac498}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!sign@{sign}}
+\index{sign@{sign}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{sign(double x)}]{\setlength{\rightskip}{0pt plus 5cm}double sign (
+\begin{DoxyParamCaption}
+\item[{double}]{x}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a8f3cba07aa75b7320ae8bd6c0aeac498}
+c implementation of matlab function sign
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & argument \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 ~\newline
+{\bfseries Type}\+: double 
+\end{DoxyReturn}
+
+
+Definition at line 59 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_a78aac4f87c32224176d7d063046c270f}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+min@{am\+\_\+min}}
+\index{am\+\_\+min@{am\+\_\+min}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{am\+\_\+min(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}double am\+\_\+min (
+\begin{DoxyParamCaption}
+\item[{double}]{a, }
+\item[{double}]{b}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a78aac4f87c32224176d7d063046c270f}
+c implementation of matlab function min
+
+
+\begin{DoxyParams}{Parameters}
+{\em a} & value1 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+{\em b} & value2 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+if(a $<$ b) then a else b ~\newline
+{\bfseries Type}\+: double 
+\end{DoxyReturn}
+
+
+Definition at line 79 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_a4b372245882cfe08b809c82a1487efec}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+min@{Dam\+\_\+min}}
+\index{Dam\+\_\+min@{Dam\+\_\+min}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dam\+\_\+min(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}double Dam\+\_\+min (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{a, }
+\item[{double}]{b}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a4b372245882cfe08b809c82a1487efec}
+parameter derivative of c implementation of matlab function min
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em a} & bool1 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+{\em b} & bool2 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+id == 1\+: if(a $<$ b) then 1 else 0 ~\newline
+{\bfseries Type}\+: double 
+
+id == 2\+: if(a $<$ b) then 0 else 1 ~\newline
+{\bfseries Type}\+: double 
+\end{DoxyReturn}
+
+
+Definition at line 93 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_af7c1bd232d6c32537fd72481926c6d16}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!am\+\_\+max@{am\+\_\+max}}
+\index{am\+\_\+max@{am\+\_\+max}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{am\+\_\+max(double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}double am\+\_\+max (
+\begin{DoxyParamCaption}
+\item[{double}]{a, }
+\item[{double}]{b}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_af7c1bd232d6c32537fd72481926c6d16}
+c implementation of matlab function max
+
+
+\begin{DoxyParams}{Parameters}
+{\em a} & value1 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+{\em b} & value2 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+if(a $>$ b) then a else b ~\newline
+{\bfseries Type}\+: double 
+\end{DoxyReturn}
+
+
+Definition at line 117 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_ab737f3f75aad0dffa94e572bf095773e}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dam\+\_\+max@{Dam\+\_\+max}}
+\index{Dam\+\_\+max@{Dam\+\_\+max}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dam\+\_\+max(int id, double a, double b)}]{\setlength{\rightskip}{0pt plus 5cm}double Dam\+\_\+max (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{a, }
+\item[{double}]{b}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_ab737f3f75aad0dffa94e572bf095773e}
+parameter derivative of c implementation of matlab function max
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em a} & bool1 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+{\em b} & bool2 ~\newline
+{\bfseries Type}\+: double \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+id == 1\+: if(a $>$ b) then 1 else 0 ~\newline
+{\bfseries Type}\+: double 
+
+id == 2\+: if(a $>$ b) then 0 else 1 ~\newline
+{\bfseries Type}\+: double 
+\end{DoxyReturn}
+
+
+Definition at line 131 of file symbolic\+\_\+functions.\+c.
+
+\hypertarget{symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline3@{spline3}}
+\index{spline3@{spline3}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline3 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa}
+spline function with 3 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 164 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{symbolic__functions_8c_aa6e6e221b6ed1a5b42c3625516ae62fa_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline\+\_\+pos3@{spline\+\_\+pos3}}
+\index{spline\+\_\+pos3@{spline\+\_\+pos3}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline\+\_\+pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline\+\_\+pos3 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f}
+positive spline function with 3 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 205 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{symbolic__functions_8c_a34a7ee564e91dab79ce4fe87ef81e30f_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline4@{spline4}}
+\index{spline4@{spline4}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline4 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1}
+spline function with 4 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 253 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{symbolic__functions_8c_a95ad6634f570763a8eddc88bb2feeeb1_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline\+\_\+pos4@{spline\+\_\+pos4}}
+\index{spline\+\_\+pos4@{spline\+\_\+pos4}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline\+\_\+pos4(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline\+\_\+pos4 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93}
+positive spline function with 4 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 297 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{symbolic__functions_8c_a866f6967f6b464c701096b7b3b83ae93_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline5@{spline5}}
+\index{spline5@{spline5}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline5 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73}
+spline function with 5 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 349 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{symbolic__functions_8c_afa04c18aa6bdc6d770a935a86b4b0e73_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline\+\_\+pos5@{spline\+\_\+pos5}}
+\index{spline\+\_\+pos5@{spline\+\_\+pos5}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline\+\_\+pos5(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline\+\_\+pos5 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b}
+positive spline function with 5 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 397 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{symbolic__functions_8c_a41ebd58374fbdc9376a55d227807f98b_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline10@{spline10}}
+\index{spline10@{spline10}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline10 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{double}]{t6, }
+\item[{double}]{p6, }
+\item[{double}]{t7, }
+\item[{double}]{p7, }
+\item[{double}]{t8, }
+\item[{double}]{p8, }
+\item[{double}]{t9, }
+\item[{double}]{p9, }
+\item[{double}]{t10, }
+\item[{double}]{p10, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e}
+spline function with 10 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em t6} & location of node 6 \\
+\hline
+{\em p6} & spline value at node 6 \\
+\hline
+{\em t7} & location of node 7 \\
+\hline
+{\em p7} & spline value at node 7 \\
+\hline
+{\em t8} & location of node 8 \\
+\hline
+{\em p8} & spline value at node 8 \\
+\hline
+{\em t9} & location of node 9 \\
+\hline
+{\em p9} & spline value at node 9 \\
+\hline
+{\em t10} & location of node 10 \\
+\hline
+{\em p10} & spline value at node 10 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 461 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{symbolic__functions_8c_a6f89e150cf66077936f0a5b041a1655e_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!spline\+\_\+pos10@{spline\+\_\+pos10}}
+\index{spline\+\_\+pos10@{spline\+\_\+pos10}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{spline\+\_\+pos10(double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double spline\+\_\+pos10 (
+\begin{DoxyParamCaption}
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{double}]{t6, }
+\item[{double}]{p6, }
+\item[{double}]{t7, }
+\item[{double}]{p7, }
+\item[{double}]{t8, }
+\item[{double}]{p8, }
+\item[{double}]{t9, }
+\item[{double}]{p9, }
+\item[{double}]{t10, }
+\item[{double}]{p10, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf}
+positive spline function with 10 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em t6} & location of node 6 \\
+\hline
+{\em p6} & spline value at node 6 \\
+\hline
+{\em t7} & location of node 7 \\
+\hline
+{\em p7} & spline value at node 7 \\
+\hline
+{\em t8} & location of node 8 \\
+\hline
+{\em p8} & spline value at node 8 \\
+\hline
+{\em t9} & location of node 9 \\
+\hline
+{\em p9} & spline value at node 9 \\
+\hline
+{\em t10} & location of node 10 \\
+\hline
+{\em p10} & spline value at node 10 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+spline(t) 
+\end{DoxyReturn}
+
+
+Definition at line 529 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=233pt]{symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{symbolic__functions_8c_a7bac14600e5a7b75bc4ca0ff1a64ceaf_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline3@{Dspline3}}
+\index{Dspline3@{Dspline3}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline3 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e}
+parameter derivative of spline function with 3 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 590 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=213pt]{symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{symbolic__functions_8c_a883efcebfcb7e66a6e1f76da7aed4b7e_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline\+\_\+pos3@{Dspline\+\_\+pos3}}
+\index{Dspline\+\_\+pos3@{Dspline\+\_\+pos3}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline\+\_\+pos3(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline\+\_\+pos3 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61}
+parameter derivative of positive spline function with 3 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 635 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=340pt]{symbolic__functions_8c_a6e6d82835b091ee76ea447f0b0fd8a61_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline4@{Dspline4}}
+\index{Dspline4@{Dspline4}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline4 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d}
+parameter derivative of spline function with 4 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 678 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=213pt]{symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{symbolic__functions_8c_a7161e35213ed166ccc1804395d697f3d_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline\+\_\+pos4@{Dspline\+\_\+pos4}}
+\index{Dspline\+\_\+pos4@{Dspline\+\_\+pos4}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline\+\_\+pos4(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline\+\_\+pos4 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a}
+parameter derivative of positive spline function with 4 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 727 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=340pt]{symbolic__functions_8c_a1fe37906f0c082b37c3d23ea18dbc37a_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline5@{Dspline5}}
+\index{Dspline5@{Dspline5}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline5 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29}
+parameter derivative of spline function with 5 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 772 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=213pt]{symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{symbolic__functions_8c_a95befe1853ab7bf8ce801c5eee3d9d29_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline\+\_\+pos5@{Dspline\+\_\+pos5}}
+\index{Dspline\+\_\+pos5@{Dspline\+\_\+pos5}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline\+\_\+pos5(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline\+\_\+pos5 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934}
+parameter derivative of positive spline function with 5 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 825 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=340pt]{symbolic__functions_8c_aa0710e8c25f3d878c56d03404d51d934_cgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline10@{Dspline10}}
+\index{Dspline10@{Dspline10}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline10 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{double}]{t6, }
+\item[{double}]{p6, }
+\item[{double}]{t7, }
+\item[{double}]{p7, }
+\item[{double}]{t8, }
+\item[{double}]{p8, }
+\item[{double}]{t9, }
+\item[{double}]{p9, }
+\item[{double}]{t10, }
+\item[{double}]{p10, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85}
+parameter derivative of spline function with 10 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em t6} & location of node 6 \\
+\hline
+{\em p6} & spline value at node 6 \\
+\hline
+{\em t7} & location of node 7 \\
+\hline
+{\em p7} & spline value at node 7 \\
+\hline
+{\em t8} & location of node 8 \\
+\hline
+{\em p8} & spline value at node 8 \\
+\hline
+{\em t9} & location of node 9 \\
+\hline
+{\em p9} & spline value at node 9 \\
+\hline
+{\em t10} & location of node 10 \\
+\hline
+{\em p10} & spline value at node 10 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 881 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{symbolic__functions_8c_ac6a35d8f267a9c9dbbf5c6afc7705e85_icgraph}
+\end{center}
+\end{figure}
+
+
+\hypertarget{symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609}{}\index{symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}!Dspline\+\_\+pos10@{Dspline\+\_\+pos10}}
+\index{Dspline\+\_\+pos10@{Dspline\+\_\+pos10}!symbolic\+\_\+functions.\+c@{symbolic\+\_\+functions.\+c}}
+\paragraph[{Dspline\+\_\+pos10(int id, double t, double t1, double p1, double t2, double p2, double t3, double p3, double t4, double p4, double t5, double p5, double t6, double p6, double t7, double p7, double t8, double p8, double t9, double p9, double t10, double p10, int ss, double dudt)}]{\setlength{\rightskip}{0pt plus 5cm}double Dspline\+\_\+pos10 (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{double}]{t, }
+\item[{double}]{t1, }
+\item[{double}]{p1, }
+\item[{double}]{t2, }
+\item[{double}]{p2, }
+\item[{double}]{t3, }
+\item[{double}]{p3, }
+\item[{double}]{t4, }
+\item[{double}]{p4, }
+\item[{double}]{t5, }
+\item[{double}]{p5, }
+\item[{double}]{t6, }
+\item[{double}]{p6, }
+\item[{double}]{t7, }
+\item[{double}]{p7, }
+\item[{double}]{t8, }
+\item[{double}]{p8, }
+\item[{double}]{t9, }
+\item[{double}]{p9, }
+\item[{double}]{t10, }
+\item[{double}]{p10, }
+\item[{int}]{ss, }
+\item[{double}]{dudt}
+\end{DoxyParamCaption}
+)}\label{symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609}
+parameter derivative of positive spline function with 10 nodes
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & argument index for differentiation \\
+\hline
+{\em t} & point at which the spline should be evaluated \\
+\hline
+{\em t1} & location of node 1 \\
+\hline
+{\em p1} & spline value at node 1 \\
+\hline
+{\em t2} & location of node 2 \\
+\hline
+{\em p2} & spline value at node 2 \\
+\hline
+{\em t3} & location of node 3 \\
+\hline
+{\em p3} & spline value at node 3 \\
+\hline
+{\em t4} & location of node 4 \\
+\hline
+{\em p4} & spline value at node 4 \\
+\hline
+{\em t5} & location of node 5 \\
+\hline
+{\em p5} & spline value at node 5 \\
+\hline
+{\em t6} & location of node 6 \\
+\hline
+{\em p6} & spline value at node 6 \\
+\hline
+{\em t7} & location of node 7 \\
+\hline
+{\em p7} & spline value at node 7 \\
+\hline
+{\em t8} & location of node 8 \\
+\hline
+{\em p8} & spline value at node 8 \\
+\hline
+{\em t9} & location of node 9 \\
+\hline
+{\em p9} & spline value at node 9 \\
+\hline
+{\em t10} & location of node 10 \\
+\hline
+{\em p10} & spline value at node 10 \\
+\hline
+{\em ss} & flag indicating whether slope at first node should be user defined \\
+\hline
+{\em dudt} & user defined slope at first node\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+dspline(t)dp(id) 
+\end{DoxyReturn}
+
+
+Definition at line 954 of file symbolic\+\_\+functions.\+c.
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{symbolic__functions_8c_afae48263cbf04b2399bdc684727b6609_cgraph}
+\end{center}
+\end{figure}
+
+

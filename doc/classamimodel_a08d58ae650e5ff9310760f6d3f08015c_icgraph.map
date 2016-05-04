@@ -1,0 +1,6 @@
+<map id="getFun" name="getFun">
+<area shape="rect" id="node2" href="$classamimodel.html#abddb278082c1ff018f3b0ef121bba51a" title="augmento2 augments the system equation to also include equations for sensitivity equation. This will enable us to compute second order sensitivities in a forward&#45;adjoint or forward&#45;forward apporach later on. " alt="" coords="127,5,215,33"/>
+<area shape="rect" id="node3" href="$classamimodel.html#aaed774df1b9efcebe493ae9f499bb8cf" title="augmento2 augments the system equation to also include equations for sensitivity equation. This will enable us to compute second order sensitivities in a forward&#45;adjoint or forward&#45;forward apporach later on. " alt="" coords="116,56,225,83"/>
+<area shape="rect" id="node4" href="$classamimodel.html#ab566026e57f6cbce21a2a2c72b9f7f2b" title="checkDeps checks the dependencies of functions and populates sym fields if necessary ..." alt="" coords="127,107,214,134"/>
+<area shape="rect" id="node5" href="$classamimodel.html#ae4172c2a8fac8b7c434f03274fcac6ac" title="parseModel parses the model definition and computes all necessary symbolic expressions. " alt="" coords="125,157,216,185"/>
+</map>
