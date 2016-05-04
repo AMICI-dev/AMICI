@@ -18,17 +18,17 @@ classdef amidata < handle
         % number of conditions/constants
         nk=0;
         % timepoints of observations
-        t@double;
+        t = double.empty();
         % observations
-        Y@double;
+        Y = double.empty();
         % standard deviation of observations
-        Sigma_Y@double;
+        Sigma_Y = double.empty();
         % event observations
-        Z@double;
+        Z = double.empty();
         % standard deviation of event observations
-        Sigma_Z@double;
+        Sigma_Z = double.empty();
         % experimental condition
-        condition@double
+        condition = double.empty();
     end
     
     methods

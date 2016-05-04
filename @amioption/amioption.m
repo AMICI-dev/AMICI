@@ -7,31 +7,54 @@ classdef amioption < matlab.mixin.SetGet
     %simulation routine.
     
     properties
+        % absolute integration tolerace
         atol = 1e-16;
+        % relative integration tolerace
         rtol = 1e-8;
+        % maximum number of integration steps
         maxsteps = 1e4;
-        sens_ind@double;
-        qpositivex@double;
+        % index of parameters for which the sensitivities are computed
+        sens_ind = double.empty();
+        % index of states for which positivity should be enforced
+        % (currently this has no effect)
+        qpositivex = double.empty();
+        % starting time of the simulation
         tstart = 0;
+        % linear multistep method.
         lmm = 2;
+        % iteration method for linear multistep.
         iter = 2;
+        % linear solver
         linsol = 9;
+        % stability detection flag
         stldet = true;
+        % interpolation type
         interpType = 1;
+        % linear multistep method (backwards)
         lmmB = 2;
+        % iteration method for linear multistep (backwards).
         iterB = 2;
+        % forward sensitivity mode
         ism = 1;
+        % sensitivity method
         sensi_meth = 1;
+        % sensitivity order
         sensi = 0;
+        % number of reported events
         nmaxevent = 10;
+        % reordering of states
         ordering = 1;
+        % steady state sensitivity flag
         ss = 0;
-        sx0@double;
+        % custom initial sensitivity
+        sx0 = double.empty();
     end
     
     properties (Hidden)
-        z2event@double;
-        id@double;
+        % mapping of event ouputs to events
+        z2event = double.empty();
+        % flag for DAE variables
+        id = double.empty();
     end
     
     methods

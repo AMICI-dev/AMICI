@@ -3,35 +3,46 @@
 % @brief definition of amifun class
 %
 classdef amifun
-    % the amifun class defines the prototype for all functions which later
-    % on will be transformed into C code
+    % AMIFUN defines  functions which later on will be transformed into
+    % appropriate C code
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
-        sym@sym;
+        sym = sym.empty();
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
-        strsym@sym;
+        strsym = sym.empty();
         % short symbolic string which can be used for the reuse of old values @type symbolic
-        strsym_old@sym;
+        strsym_old = sym.empty();
         % name of the model @type char
-        funstr@char;
+        funstr = char.empty();
         % name of the c variable @type char
-        cvar@char;
+        cvar = char.empty();
         % argument string (solver specific) @type char
-        argstr@char;
+        argstr = char.empty();
         % argument string (solver unspecific) @type char
-        fargstr@char;
+        fargstr = char.empty();
         % dependencies on other functions @type cell
-        deps@cell;
+        deps = cell.empty();
         % nvec dependencies
-        nvecs@cell;
+        nvecs = cell.empty();
         % indicates whether the function is a sensitivity or derivative
         % with respect to parameters
-        sensiflag@logical;
+        sensiflag = logical.empty();
     end
     
     methods
         function AF = amifun(funstr,model)
+            % amievent constructs an amifun object from the provided input.
+            %
+            % Parameters:
+            %  funstr: name of the requested function
+            %  model: amimodel object which carries all symbolic
+            %  definitions to construct the funtion
+            %  
+            %
+            % Return values:
+            %  AF: amifun object
+            %
             AF.funstr = funstr;
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
@@ -58,8 +69,6 @@ classdef amifun
         [ this ] = getCVar(this)
         
         [ this ] = getSensiFlag(this)
-        
-        [ this ] = checkDeps(this)
     end
 end
 

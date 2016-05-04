@@ -3,20 +3,20 @@
 % @brief definition of amimodel class
 %
 classdef amimodel < handle
-    % amimodel is the object in which all model definitions are stored
+    % AMIMODEL carries all model definitions including functions and events
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
-        sym@struct;
+        sym = struct.empty();
         % struct which stores information for which functions c code needs to be generated @type struct
-        fun@struct;
+        fun = struct.empty();
         % struct which stores information for which functions c code needs
         % to be generated @type amievent
-        event@amievent;
+        event = amievent.empty();
         % name of the model @type string
-        modelname@char;
+        modelname = char.empty();
         % struct that contains hash values for the symbolic model definitions @type struct
-        HTable@struct;
+        HTable = struct.empty();
         % flag indicating whether debugging symbols should be compiled @type bool
         debug = false;
         % flag indicating whether adjoint sensitivities should be enabled @type bool
@@ -26,58 +26,58 @@ classdef amimodel < handle
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string
-        wtype@char;
+        wtype = char.empty();
         % number of states @type int
-        nx@double;
+        nx = double.empty();
         % number of original states for second order sensitivities @type int
         nxtrue = 0;
         % number of observables @type int
-        ny@double;
+        ny = double.empty();
         % number of original observables for second order sensitivities @type int
         nytrue = 0;
         % number of parameters @type int
-        np@double;
+        np = double.empty();
         % number of constants @type int
-        nk@double;
+        nk = double.empty();
         % number of events @type int
-        nevent@double;
+        nevent = double.empty();
         % number of event outputs @type int
-        nz@double;
+        nz = double.empty();
         % number of original event outputs for second order sensitivities @type int
-        nztrue@double;
+        nztrue = double.empty();
         % flag for DAEs @type *int
-        id@double;
+        id = double.empty();
         % upper Jacobian bandwidth @type int
-        ubw@double;
+        ubw = double.empty();
         % lower Jacobian bandwidth @type int
-        lbw@double;
+        lbw = double.empty();
         % number of nonzero entries in Jacobian @type int
-        nnz@double;
+        nnz = double.empty();
         % dataindexes of sparse Jacobian @type *int
-        sparseidx@double;
+        sparseidx = double.empty();
         % rowindexes of sparse Jacobian @type *int
-        rowvals@double;
+        rowvals = double.empty();
         % columnindexes of sparse Jacobian @type *int
-        colptrs@double;
+        colptrs = double.empty();
         % dataindexes of sparse Jacobian @type *int
-        sparseidxB@double;
+        sparseidxB = double.empty();
         % rowindexes of sparse Jacobian @type *int
-        rowvalsB@double;
+        rowvalsB = double.empty();
         % columnindexes of sparse Jacobian @type *int
-        colptrsB@double;
+        colptrsB = double.empty();
         % cell array of functions to be compiled @type *cell
-        funs@cell;
+        funs = cell.empty();
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
         param = 'lin';
         % path to wrapper
-        wrap_path@char;
+        wrap_path = char.empty();
         % flag to enforce recompilation of the model
         recompile = false;
         % storage for flags determining recompilation of individual
         % functions
-        cfun@struct;
+        cfun = struct.empty();
         % flag which identifies augmented models 
         %  0 indicates no augmentation
         %  1 indicates augmentation by first order sensitivities (yields
@@ -93,7 +93,7 @@ classdef amimodel < handle
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
-        z2event@double;
+        z2event = double.empty();
         % flag indicating whether the model contains spline functions
         splineflag = false;
         % flag indicating whether the model contains min functions
@@ -111,7 +111,7 @@ classdef amimodel < handle
     
     methods
         function AM = amimodel(symfun,modelname)
-            % constructor of the amimodel class. this function initializes the model object based on the provided
+            % amimodel initializes the model object based on the provided
             % symfun and modelname
             %
             % Parameters:
@@ -182,6 +182,13 @@ classdef amimodel < handle
         end
         
         function updateRHS(this,xdot)
+            % updateRHS updates the private fun property .fun.xdot.sym
+            % (right hand side of the differential equation)
+            %
+            % Parameters:
+            %  xdot: new right hand side of the differential equation
+            %
+            % Return values:
             this.fun.xdot.sym = xdot;
         end
         
