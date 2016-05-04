@@ -3,23 +3,36 @@
 % @brief definition of amievent class
 %
 classdef amievent
-    % the amievent class defines the prototype for all events which later
-    % on will be transformed into C code
+    % AMIEVENT defines events which later on will be transformed into appropriate
+    % C code
     
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % the trigger function activates the event on every zero crossing @type symbolic
-        trigger@sym;
+        trigger = sym.empty();
         % the bolus function defines the change in states that is applied on every event occurence @type symbolic
-        bolus@sym;
+        bolus = sym.empty();
         % output function for the event @type symbolic
-        z@sym;
+        z = sym.empty();
         % flag indicating that a heaviside function is present, this helps
         % to speed up symbolic computations
-        hflag@logical;
+        hflag = logical.empty();
     end
     
     methods
         function AE = amievent(trigger,bolus,z)
+            % amievent constructs an amievent object from the provided input.
+            %
+            % Parameters:
+            %  trigger: trigger function, the event will be triggered on
+            %      at all roots of this function
+            %  bolus: the bolus that will be added to all states on every
+            %      occurence of the event
+            %  z: the event output that will be reported on every occurence
+            %      of the event
+            %
+            % Return values:
+            %  AE: amievent object
+            %
             if(~isa(trigger,'sym'))
                 if(isa(trigger,'double'))
                     AE.trigger = sym(trigger);
