@@ -38,14 +38,14 @@ function [modelo2] = augmento2(this)
     for ievent = 1:this.nevent;
         Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
         znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
-        bolusnew = [this.event(ievent).bolus;reshape(this.fun.deltasx.sym(:,:,ievent),[numel(Sx),1])];
+        tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
+        tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
+        bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
         % replace sx by augmented x
         for ip = 1:np
             bolusnew(this.nxtrue*ip+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue*ip+(1:this.nxtrue)), this.fun.sx.sym(:,ip),Sx(:,ip));
         end
-        hflagold = this.event(ievent).hflag;
         augmodel.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
-        augmodel.event(ievent) = augmodel.event(ievent).setHflag([hflagold;zeros([numel(Sx),1])]);
     end
     
     % augment likelihood
@@ -71,6 +71,8 @@ function [modelo2] = augmento2(this)
     augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
     augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
     augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
+    augmodel.sym.p = this.sym.p;
+    augmodel.sym.k = this.sym.k;
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;

@@ -5,11 +5,15 @@
 #define dydpdata rdata->am_dydpdata
 #define Jdata rdata->am_Jdata
 #define zdata rdata->am_zdata
-#define zSdata rdata->am_zSdata
+#define sigmazdata rdata->am_sigmazdata
+#define szdata rdata->am_szdata
+#define ssigmazdata rdata->am_ssigmazdata
 #define xdata rdata->am_xdata
-#define xSdata rdata->am_xSdata
+#define sxdata rdata->am_sxdata
 #define ydata rdata->am_ydata
-#define ySdata rdata->am_ySdata
+#define sigmaydata rdata->am_sigmaydata
+#define sydata rdata->am_sydata
+#define ssigmaydata rdata->am_ssigmaydata
 
 #define numstepsdata rdata->am_numstepsdata
 #define numrhsevalsdata rdata->am_numrhsevalsdata
@@ -19,8 +23,8 @@
 #define numrhsevalsSdata rdata->am_numrhsevalsSdata
 
 #define llhdata rdata->am_llhdata
-#define llhSdata rdata->am_llhSdata
-#define llhS2data rdata->am_llhS2data
+#define sllhdata rdata->am_sllhdata
+#define s2llhdata rdata->am_s2llhdata
 #define chi2data rdata->am_chi2data
 
 
@@ -51,16 +55,24 @@ typedef struct {
     double *am_Jdata; 
     /** event output */
     double *am_zdata;
+    /** event output sigma standard deviation */
+    double *am_sigmazdata;
     /** parameter derivative of event output */
-    double *am_zSdata;
+    double *am_szdata;
+    /** parameter derivative of event output standard deviation */
+    double *am_ssigmazdata;
     /** state */
     double *am_xdata;
     /** parameter derivative of state */
-    double *am_xSdata; 
+    double *am_sxdata;
     /** observable */
     double *am_ydata;
+    /** observable standard deviation */
+    double *am_sigmaydata;
     /** parameter derivative of observable */
-    double *am_ySdata;
+    double *am_sydata;
+    /** parameter derivative of observable standard deviation */
+    double *am_ssigmaydata;
     
     /** number of integration steps forward problem */
     double *am_numstepsdata;
@@ -78,9 +90,9 @@ typedef struct {
     /** chi2 value */
     double *am_chi2data;
     /** parameter derivative of likelihood */
-    double *am_llhSdata;
+    double *am_sllhdata;
     /** second order parameter derivative of likelihood */
-    double *am_llhS2data; 
+    double *am_s2llhdata;
     
 	} *ReturnData;
 #endif /* _MY_RDATA */

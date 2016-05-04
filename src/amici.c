@@ -8,36 +8,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** MS definition of PI and other constants */
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
-#ifndef M_PI 
-/** numeric definition of PI for settings where the system does not provide one */
+#ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
-/**
- * @brief initField2 initialises an field of mxsol with an empty matrix and attaches FIELDdata as data pointer
- * @param[in] FIELD: name of the field @type char
- * @param[in] D1: number of rows @type int
- * @param[in] D2: number of columns @type int
- */
 #define initField2(FIELD,D1,D2) \
 mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
-/**
- * @brief initField3 initialises an field of mxsol with an empty tensor and attaches FIELDdata as data pointer
- * @param[in] FIELD: name of the field @type char
- * @param[in] D1: number of rows @type int
- * @param[in] D2: number of columns @type int
- * @param[in] D3: size of third dimension @type int
- */
 #define initField3(FIELD,D1,D2,D3) \
 mxArray *mx ## FIELD; \
 const mwSize dims ## FIELD[]={D1,D2,D3}; \
@@ -45,11 +30,6 @@ mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
-/**
- * @brief readOptionScalar reads the scalar property from the options struct and casts it to the specified type
- * @param[in] OPTION: name of the field @type char
- * @param[in] TYPE: number of rows @type type
- */
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -58,10 +38,6 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
-/**
- * @brief readOptionData reads the matrix property from the options struct
- * @param[in] OPTION: name of the field @type char
- */
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -70,7 +46,7 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     return(NULL); \
 }
 
-/** definition of the return value for successful function evaluations */
+
 #define AMI_SUCCESS               0
 
 UserData setupUserData(const mxArray *prhs[]) {
@@ -163,8 +139,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
         /* check dimensions */
-        if(mxGetN(mxGetField(prhs[3], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-        if(mxGetM(mxGetField(prhs[3], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
         b_sx0 = TRUE;
     } else {
         b_sx0 = FALSE;
@@ -220,9 +196,8 @@ UserData setupUserData(const mxArray *prhs[]) {
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
-     * @param[in] plhs user input @type *mxArray
+     * @param[in] prhs user input @type *mxArray
      * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[in] pstatus pointer to the current status flag @type *double
      * @return rdata: return data struct @type ReturnData
      */
     ReturnData rdata; /* returned rdata struct */
@@ -237,9 +212,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    const char *field_names_sol[] = {"status","llh","llhS","llhS2","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","zS","xS","yS","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
-    mxsol = mxCreateStructMatrix(1,1,22,field_names_sol);
+    mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
     
     plhs[0] = mxsol;
     
@@ -266,6 +241,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(nz>0 & ne>0){
         initField2(z,nmaxevent,nz);
+        initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
         initField2(x,nt,nx);
@@ -274,23 +250,36 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(ny>0) {
         initField2(y,nt,ny);
-        initField2(dydp,ny,np);
-        initField2(dydx,ny,nx);
-        initField2(dxdotdp,nx,np);
+        initField2(sigmay,nt,ny);
+        if (sensi_meth == AMI_SS) {
+            initField2(dydp,ny,np);
+            initField2(dydx,ny,nx);
+            initField2(dxdotdp,nx,np);
+        }
     }
     if(sensi>0) {
-        initField2(llhS,np,1);
+        initField2(sllh,np,1);
         if (sensi_meth == AMI_FSA) {
-            initField3(xS,nt,nx,np);
+            initField3(sx,nt,nx,np);
             if(ny>0) {
-                initField3(yS,nt,ny,np);
+                initField3(sy,nt,ny,np);
+                initField3(ssigmay,nt,ny,np);
             }
             if(nz>0 & ne>0){
-                initField3(zS,nmaxevent,nz,np);
+                initField3(sz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if (sensi_meth == AMI_ASA) {
+            if(ny>0) {
+                initField3(ssigmay,nt,ny,np);
+            }
+            if(nz>0 & ne>0){
+                initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
         if(sensi>1) {
-            initField2(llhS2,np,np);
+            initField2(s2llh,np,np);
         }
     }
     
@@ -312,8 +301,12 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     int nmyt, nmyy, nysigmat, nysigmay; /* integers with problem dimensionality */
     int nmzt, nmzy, nzsigmat, nzsigmay; /* integers with problem dimensionality */
     
+    char *errmsg;
+    
     ExpData edata; /* returned rdata struct */
     UserData udata; /** user udata */
+    
+    errmsg = (char *)mxMalloc(200*sizeof(char));
     
     udata = (UserData) user_data;
     
@@ -321,81 +314,82 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     edata = (ExpData) mxMalloc(sizeof *edata);
     if (edata == NULL) return(NULL);
     
-    if (data_model == AMI_ONEOUTPUT) {
-        if ( (ny>1) | (nt>1) ) {
-            mexErrMsgIdAndTxt("AMICI:mex:datamodel","Data model AMI_ONEOUTPUT not allowed for more than one time-point or more than one observable!");
-        }
+    if (!prhs[7]) {
+        mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
+    }
+    if (mxGetProperty(prhs[7], 0 ,"Y")) {
+        my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
+        nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
+        nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
     } else {
-        
-        if (!prhs[7]) {
-            mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
-        }
-        if (mxGetProperty(prhs[7], 0 ,"Y")) {
-            my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
-            nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
-            nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
-        } else {
-            mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
-        }
-        
-        if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
-            ysigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
-            nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
-            nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
-        } else {
-            mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
-        }
-        if (mxGetProperty(prhs[7], 0 ,"Z")) {
-            mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
-            nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
-            nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
-        } else {
-            mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
-        }
-        
-        if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
-            zsigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
-            nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
-            nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
-        } else {
-            mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
-        }
-        
-        if (nmyt != nt) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nty","Number of time-points in data matrix does not match provided time vector");
-        }
-        
-        if (nysigmat != nt) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy","Number of time-points in data-sigma matrix does not match provided time vector");
-        }
-        
-        if (nmyy != nytrue) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nyy","Number of observables in data matrix does not match model ny");
-        }
-        
-        if (nysigmay != nytrue) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nysdy","Number of observables in data-sigma matrix does not match model ny");
-        }
-        
-        if (nmzt != nmaxevent) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz","Number of time-points in event matrix does not match provided nmaxevent");
-        }
-        
-        if (nzsigmat != nmaxevent) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz","Number of time-points in event-sigma matrix does not match provided nmaxevent");
-        }
-        
-        if (nmzy != nztrue) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nenz","Number of events in event matrix does not match model nz");
-        }
-        
-        if (nzsigmay != nztrue) {
-            mexErrMsgIdAndTxt("AMICI:mex:data:nensdz","Number of events in event-sigma matrix does not match model nz");
-        }
-        
+        mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
+    }
+    
+    if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
+        ysigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+        nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+        nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+    } else {
+        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
+    }
+    if (mxGetProperty(prhs[7], 0 ,"Z")) {
+        mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
+        nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
+        nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
+    } else {
+        mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
+    }
+    
+    if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
+        zsigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+        nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+        nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+    } else {
+        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
+    }
+    
+    if (nmyt != nt) {
+        sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
+    }
+    
+    if (nysigmat != nt) {
+        sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
+        mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
+    }
+    
+    if (nmyy != nytrue) {
+        sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
+    }
+    
+    if (nysigmay != nytrue) {
+        sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
+    }
+    
+    if (nmzt != nmaxevent) {
+        sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
+    }
+    
+    if (nzsigmat != nmaxevent) {
+        sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
+    }
+    
+    if (nmzy != nztrue) {
+        sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
+    }
+    
+    if (nzsigmay != nztrue) {
+        sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
+        mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
     
     
+                
     return(edata);
 }
 
@@ -615,25 +609,30 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         dydp = mxMalloc(ny*np*sizeof(realtype));
         memset(dydp,0,ny*np*sizeof(realtype));
         
+        dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
+        memset(dsigma_ydp,0,ny*np*sizeof(realtype));
+        if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
+        if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
+        
         if (sensi_meth == AMI_FSA) {
             
             if(nx>0) {
                 
                 /* allocate some more temporary storage */
                 
-                sx = N_VCloneVectorArray_Serial(np, x);
+                NVsx = N_VCloneVectorArray_Serial(np, x);
                 sdx = N_VCloneVectorArray_Serial(np, x);
-                if (sx == NULL) return(NULL);
+                if (NVsx == NULL) return(NULL);
                 if (sdx == NULL) return(NULL);
                 
                 /* initialise sensitivities, this can either be user provided or come from the model definition */
                 
                 if(!b_sx0) {
-                    *status = fsx0(sx, x, dx, udata);
+                    *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return(NULL);
                 } else {
                     for (ip=0; ip<np; ip++) {
-                        sx_tmp = NV_DATA_S(sx[plist[ip]]);
+                        sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                         for (ix=0; ix<nx; ix++) {
                             sx_tmp[ix] = sx0data[ix + nx*plist[ip]];
                         }
@@ -644,7 +643,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 /* Activate sensitivity calculations */
                 
-                *status = wrap_SensInit1(ami_mem, sx, sdx, udata);
+                *status = wrap_SensInit1(ami_mem, NVsx, sdx, udata);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
                 /* Set sensitivity analysis optional inputs */
@@ -693,10 +692,6 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 memset(drdp,0,np*nz*nmaxevent*sizeof(realtype));
                 drdx = mxMalloc(nx*nz*nmaxevent*sizeof(realtype));
                 memset(drdx,0,nx*nz*nmaxevent*sizeof(realtype));
-                dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
-                memset(dsigma_ydp,0,ny*np*sizeof(realtype));
-                if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
-                if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
             }
         }
         
@@ -788,7 +783,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     if(*status != AMI_SUCCESS) return;
     
     /* Number of maximal internal steps */
-    *status = AMISetMaxNumStepsB(ami_mem, which, maxsteps);
+    *status = AMISetMaxNumStepsB(ami_mem, which, 100*maxsteps);
     if(*status != AMI_SUCCESS) return;
     
     switch (linsol) {
@@ -932,6 +927,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
      */
     
     int ip;
+    int iy;
     int ix;
     
     UserData udata; /* user udata */
@@ -946,19 +942,32 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
     for(ip=0; ip < np; ip++) {
         if(nx>0) {
             if(ts[it] > tstart) {
-                *status = AMIGetSens(ami_mem, &t, sx);
+                *status = AMIGetSens(ami_mem, &t, NVsx);
                 if (*status != AMI_SUCCESS) return;
             }
             
-            sx_tmp = NV_DATA_S(sx[ip]);
+            sx_tmp = NV_DATA_S(NVsx[ip]);
             for(ix=0; ix < nx; ix++) {
-                xSdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
+                sxdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
             }
+        }
+    }
+    for (iy=0; iy<ny; iy++) {
+        if (mxIsNaN(ysigma[iy*nt+it])) {
+            *status = fdsigma_ydp(t,dsigma_ydp,udata);
+            if (*status != AMI_SUCCESS) return;
+        } else {
+            for (ip=0; ip<np; ip++) {
+                dsigma_ydp[ip*ny+iy] = 0;
+            }
+        }
+        for (ip=0; ip<np; ip++) {
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
         }
     }
     fdydx(ts[it],it,dydx,x,udata);
     fdydp(ts[it],it,dydp,x,udata);
-    fsy(ts[it],it,ySdata,dydx,dydp,sx,udata);
+    fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1004,6 +1013,9 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
                 dsigma_ydp[ip*ny+iy] = 0;
             }
         }
+        for (ip=0; ip<np; ip++) {
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
+        }
     }
     fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
     fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
@@ -1042,6 +1054,8 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
     if (*status != AMI_SUCCESS) return;
     
     for (iy=0; iy<ny; iy++) {
+        /* extract the value for the standard deviation, if the data value is NaN, use
+         the parameter value. Store this value in the return struct */
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status =fsigma_y(t,sigma_y,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1049,6 +1063,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
         } else {
             sigma_y[iy] = ysigma[iy*nt+it];
         }
+        sigmaydata[iy*nt+it] = sigma_y[iy];
     }
     fJy(t,it,&g,ydata,x,my,sigma_y,udata);
     if (sensi >= 1) {
@@ -1086,7 +1101,7 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
 
-    *status = fsz(t,ie,nroots,zSdata,x,sx,udata);
+    *status = fsz(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
 
 }
@@ -1117,7 +1132,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
     rdata = (ReturnData) return_data;
     tdata = (TempData) temp_data;
     
-    *status = fsz_tf(t,ie,nroots,zSdata,x,sx,udata);
+    *status = fsz_tf(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
     
 }
@@ -1159,6 +1174,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                 if (*status != AMI_SUCCESS) return;
                 *status = fdzdx(t,ie,dzdx,x,udata);
                 if (*status != AMI_SUCCESS) return;
+                /* extract the value for the standard deviation, if the data value is NaN, use
+                 the parameter value. Store this value in the return struct */
                 if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
                     *status = fsigma_z(t,ie,sigma_z,udata);
                     if (*status != AMI_SUCCESS) return;
@@ -1166,9 +1183,13 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     if (*status != AMI_SUCCESS) return;
                 } else {
                     for (ip=0; ip<np; ip++) {
-                        dsigma_zdp[ip +np*iz] = 0;
+                        dsigma_zdp[iz+nz*ip] = 0;
                     }
                     sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
+                }
+                sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
+                for (ip=0; ip<np; ip++) {
+                    ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
                 for (ip=0; ip<np; ip++) {
@@ -1213,13 +1234,15 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data,
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
+    /* extract the value for the standard deviation, if the data value is NaN, use
+     the parameter value. Store this value in the return struct */
     if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
         *status = fsigma_z(t,ie,sigma_z,udata);
         if (*status != AMI_SUCCESS) return;
     } else {
         sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
     }
-    
+    sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
     
 }
 
@@ -1240,7 +1263,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
      * @param[out] temp_data pointer to the temporary data struct @type TempData
      * @return void
      */
-    int iz;
+    int iz,ip;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1253,10 +1276,8 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     
     for (iz=0; iz<nz; iz++) {
         if(z2event[iz] == ie) {
+            getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
-                
-                getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
-                
                 if (event_model == AMI_NORMAL) {
                     r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                     *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
@@ -1282,7 +1303,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
      * @param[out] return_data pointer to the return data struct @type ReturnData
      * @param[in] exp_data pointer to the experimental data struct @type ExpData
      * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return cv_status updated status flag @type int
+     * @return void
      */
     int iz;
     int ie;
@@ -1316,6 +1337,9 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                         if (*status != AMI_SUCCESS) return;
                     }
                 }
+
+                getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+                if (*status != AMI_SUCCESS) return;                
                 
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
@@ -1423,16 +1447,6 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
     
     if (it == nt-1) {
         if( sensi_meth == AMI_SS) {
-            *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-            xdot_tmp = NV_DATA_S(xdot);
-            
-            *status = fJ(nx,ts[it],0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            if (*status != AMI_SUCCESS) return;
-            
-            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
-            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
             
             *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1521,7 +1535,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
-            *status = AMIGetSens(ami_mem, &t, sx);
+            *status = AMIGetSens(ami_mem, &t, NVsx);
             if (*status != AMI_SUCCESS) return;
         }
     }
@@ -1573,7 +1587,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
             
             if(sensi >= 1){
                 if (sensi_meth == AMI_FSA) {
-                    *status = AMISensReInit(ami_mem, ism, sx, sdx);
+                    *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
                     if (*status != AMI_SUCCESS) return;
                 }
             }
@@ -1747,10 +1761,10 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void 
     
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,sx,user_data);
+            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,user_data);
             
             for (ip=0; ip<np; ip++) {
-                sx_tmp = NV_DATA_S(sx[plist[ip]]);
+                sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                 for (ix=0; ix<nx; ix++) {
                     sx_tmp[ix] += deltasx[ix + nx*ip];
                 }

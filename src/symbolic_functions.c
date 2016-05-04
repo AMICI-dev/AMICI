@@ -48,6 +48,7 @@ double heaviside(double x) {
     }
 }
 
+
 /**
  *  c implementation of matlab function sign
  *
@@ -142,6 +143,7 @@ double Dam_max(int id,double a, double b) {
         }
     }
 }
+
 
 /**
  * spline function with 3 nodes

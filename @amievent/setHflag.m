@@ -2,7 +2,7 @@ function this = setHflag(this,hflag)
     % gethflag sets the hflag property.
     %
     % Parameters:
-    %  hflag: value for the hflag property @type double
+    %  hlfag: value for the hflag property @type double
     %
     % Return values:
     %  this: updated event definition object @type amievent

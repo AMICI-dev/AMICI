@@ -1,13 +1,53 @@
 
+*.o
+
+doc/*
+
+debug_amici/*
+
 models/*
+
+doc/*
+
+fonts/*
+
+mtoc/*
+
+src/doc/*
+
+stylesheets/*
+
+images/*
+
+*.eps
 
 *.mexmaci64
 
-*.o
+*.mexa64
+
+*.mexw64
+
+*.mexmaci32
+
+*.mexa32
+
+*.mexw32
+
+*.eps
+
+*.js
 
 *.md5
 
-mtoc/config/Doxyfile
+*.template
+
+*.dox
+
+*.json
+
+index.html
+
+AMICI.mlappinstall
 
 examples/example_1/simulate_model_example_1.m
 
@@ -21,26 +61,50 @@ examples/example_5/simulate_model_example_5.m
 
 examples/example_6/simulate_model_example_6.m
 
+examples/geneExpression/simulate_geneExpression.m
+
+examples/example_1/html/*
+
+examples/example_2/html/*
+
+examples/example_3/html/*
+
+examples/example_4/html/*
+
+examples/example_5/html/*
+
+examples/example_6/html/*
+
 *.mat
 
+mtoc/makeExampleDoc.m
+
+mtoc/makeDocumentation.m
+
 examples/example_5/example_model_5_paper.m
+
+mtoc/makeDocumentation.m
+
+mtoc/makeDocumentation.m
+
+index.html
+
+*.js
+
+*.template
+
+*.dox
+
+*.json
+
+examples/geneExpression/simulate_geneExpression.m
 
 *.m~
 
 *.plist
 
-*.pbxproj
+examples/example_events/simulate_model_events.m
 
-*.xcworkspacedata
+examples/example_steadystate/simulate_model_steadystate.m
 
-*.xcuserstate
-
-*.xcsettings
-
-*.xcbkptlist
-
-*.xcscheme
-
-*.xccheckout
-
-*.plist
+test/constant_events.m

@@ -1,9 +1,0 @@
-<map id="handleEvent" name="handleEvent">
-<area shape="rect" id="node2" href="$amici_8c.html#a1815f9679d16a9472953e70c7842f6a5" title="getEventOutput" alt="" coords="182,56,296,83"/>
-<area shape="rect" id="node6" href="$amici_8c.html#a4a2138c2065d8a952778dcbc649a9191" title="updateHeaviside" alt="" coords="178,107,299,134"/>
-<area shape="rect" id="node7" href="$amici_8c.html#ac5e6fcc60245e134da55f6e840aadbe0" title="applyEventBolus" alt="" coords="178,157,299,185"/>
-<area shape="rect" id="node8" href="$amici_8c.html#a0795c299b2e92f899f4a67d417d92aed" title="applyEventSensiBolusFSA" alt="" coords="149,208,329,235"/>
-<area shape="rect" id="node3" href="$amici_8c.html#a794797be954ca7feb5a6a8aa3249843c" title="getEventSigma" alt="" coords="391,5,503,33"/>
-<area shape="rect" id="node4" href="$amici_8c.html#a93b461a8130ea160b431d9f16b649228" title="getEventSensisASA" alt="" coords="377,56,517,83"/>
-<area shape="rect" id="node5" href="$amici_8c.html#ad300419eafb91e86a19ca56acf7de799" title="getEventSensisFSA" alt="" coords="377,107,517,134"/>
-</map>

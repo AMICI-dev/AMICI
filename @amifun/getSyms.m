@@ -66,15 +66,13 @@ function [this,model] = getSyms(this,model)
             
         case 'sx'
             % create cell array of same size
-            sxs = cell(nx,np);
+            sxs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                for i = 1:np
-                    sxs{j,i} = sprintf('sx_%i', j-1);
-                end
+                sxs{j} = sprintf('sx_%i', j-1);
             end
             % transform into symbolic expression
-            this.sym = sym(sxs);
+            this.sym = repmat(sym(sxs),[1,np]);
             sx = this.sym;
             
         case 'sdx'
@@ -113,14 +111,7 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.y;
             % replace unify symbolic expression
             this = unifySyms(this,model);
-            % create cell array of same size
-            ys = cell(ny,1);
-            % fill cell array
-            for j = 1:ny
-                ys{j} = sprintf('y_%i', j-1);
-            end
-            % transform into symbolic expression
-            this.strsym = sym(ys);
+            this = makeStrSymsFull(this);
             
             
             % activate splines
@@ -152,25 +143,13 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_y'
             this.sym = model.sym.sigma_y;
-            sdys = cell(model.nytrue,1);
-            % fill cell array
-            for j=1:model.nytrue
-                sdys{j} = sprintf('sdy_%i',j-1);
-            end
-            % transform into symbolic expression
-            this.strsym = sym(sdys);
+            this = makeStrSyms(this);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
         case 'sigma_z'
             this.sym = model.sym.sigma_z;
-            sdzs = cell(model.nztrue,1);
-            % fill cell array
-            for j=1:model.nztrue
-                sdzs{j} = sprintf('sdz_%i',j-1);
-            end
-            % transform into symbolic expression
-            this.strsym = sym(sdzs);
+            this = makeStrSyms(this);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -222,7 +201,7 @@ function [this,model] = getSyms(this,model)
             
         case 'w'
             optimize = getoptimized(optsym(model.fun.xdot.sym));
-            tmpxdot = children(optimize(end));
+            tmpxdot = sym(char(optimize(end)));
             nw = (length(optimize)-1);
             model.nw = nw;
             if(nw>0)
@@ -272,20 +251,17 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            dwdxs = cell(model.nw,nx);
-            [dwdxs{:}] = deal('0');
             if(numel(idx_w)>0)
+                this.strsym = sym.zeros(size(jacx));
                 for iw = 1:length(idx_w)
-                    dwdxs{idx_w(iw)} = sprintf('dwdx_%i', iw-1);
+                    this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
                 end
+                model.ndwdx = length(idx_w);
+                % update dwdx with simplified expressions, here we can exploit
+                % the proper ordering of w to ensure correctness of expressions
+                tmp = jacx + jacw*this.strsym;
+                this.sym = tmp(idx_w);
             end
-            model.ndwdx = length(idx_w);
-            % transform into symbolic expression
-            this.strsym = sym(dwdxs);
-            % update dwdx with simplified expressions, here we can exploit
-            % the proper ordering of w to ensure correctness of expressions
-            tmp = jacx + jacw*this.strsym;
-            this.sym = tmp(idx_w);
             
         case 'dwdp'
             jacp = jacobian(model.fun.w.sym,p);
@@ -295,20 +271,17 @@ function [this,model] = getSyms(this,model)
             end
             % fill cell array
             idx_w = find(logical(this.sym~=0));
-            dwdps = cell(model.nw,np);
-            [dwdps{:}] = deal('0');
-            if numel(idx_w)>0
+            if(numel(idx_w)>0)
+                this.strsym = sym.zeros(size(jacp));
                 for iw = 1:length(idx_w)
-                    dwdps{idx_w(iw)} = sprintf('dwdp_%i', iw-1);
+                    this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
                 end
+                model.ndwdp = length(idx_w);
+                % update dwdx with simplified expressions, here we can exploit
+                % the proper ordering of w to ensure correctness of expressions
+                tmp = jacp + jacw*this.strsym;
+                this.sym = tmp(idx_w);
             end
-            model.ndwdp = length(idx_w);
-            % transform into symbolic expression
-            this.strsym = sym(dwdps);
-            % update dwdx with simplified expressions, here we can exploit
-            % the proper ordering of w to ensure correctness of expressions
-            tmp = jacp + jacw*this.strsym;
-            this.sym = tmp(idx_w);
             
         case 'dfdx'
             this.sym=jacobian(model.fun.xdot.sym,x) + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
@@ -319,7 +292,11 @@ function [this,model] = getSyms(this,model)
                 syms cj
                 this.sym = model.fun.dfdx.sym - cj*model.fun.M.sym;
             else
-                this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+                if(~isempty(w))
+                    this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+                else
+                    this.sym = jacobian(model.fun.xdot.sym,x);
+                end
             end
             
             %%
@@ -328,21 +305,25 @@ function [this,model] = getSyms(this,model)
             % find nonzero entries
             idx = find(logical(this.sym~=0));
             % create cell array of same size
-            Js = cell(length(idx),1);
+            Js = sym(zeros(length(idx),1));
             % fill cells with strings
             for iJ = 1:length(idx)
-                Js{iJ} = sprintf('tmp_J%i',iJ-1);
+                Js(iJ) = sym(sprintf('tmp_J%i',iJ-1));
             end
             % create full symbolic matrix
             this.strsym = sym(zeros(nx,nx));
             % fill nonzero entries
-            this.strsym(idx) = sym(Js);
+            this.strsym(idx) = Js;
             
         case 'JB'
             this.sym=-transpose(model.fun.J.sym);
             
         case 'dxdotdp'
-            this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
+            if(~isempty(w))
+                this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
+            else
+                this.sym=jacobian(model.fun.xdot.sym,p);
+            end
             
             %%
             % build short strings for reuse of dxdotdp
@@ -371,49 +352,19 @@ function [this,model] = getSyms(this,model)
         case 'dydx'
             this.sym=jacobian(model.fun.y.sym,x);
             % create cell array of same sizex
-            dydxs = cell(ny,nx);
+            this.strsym = sym(zeros(ny,nx));
             % fill cell array
-            for j = 1:ny
-                for i = 1:nx
-                    if(this.sym(j,i)~=0)
-                        dydxs{j,i} = sprintf('dydx_%i', j-1 + (i-1)*ny);
-                    else
-                        dydxs{j,i} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dydxs);
+            this = makeStrSyms(this);
             
         case 'dydp'
             this.sym=jacobian(model.fun.y.sym,p);
             % create cell array of same size
-            dydps = cell(ny,np);
-            % fill cell array
-            for j = 1:ny
-                for i = 1:np
-                    if(this.sym(j,i)~=0)
-                        dydps{j,i} = sprintf('dydp_%i', j-1 + (i-1)*ny);
-                    else
-                        dydps{j,i} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dydps);
+            this = makeStrSyms(this);
             
         case 'sy'
             this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
             % create cell array of same size
-            sys = cell(ny,np);
-            % fill cell array
-            for j = 1:ny
-                for i = 1:np
-                    sys{j,i} = sprintf('sy_%i', j-1);
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(sys);
+            this = makeStrSyms(this);
             
         case 'Jv'
             % create cell array of same size
@@ -452,20 +403,7 @@ function [this,model] = getSyms(this,model)
             
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);
-            % create cell array of same size
-            dsdydps = cell(model.nytrue,np);
-            % fill cell array
-            for iy = 1:model.nytrue
-                for ip = 1:np
-                    if(this.sym(iy,ip)~=0)
-                        dsdydps{iy,ip} = sprintf('dsdydp_%i', iy-1 + (ip-1)*ny);
-                    else
-                        dsdydps{iy,ip} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dsdydps);
+            this = makeStrSyms(this);
             
         case 'dsigma_zdp'
             if(nz>0)
@@ -473,20 +411,7 @@ function [this,model] = getSyms(this,model)
             else
                 this.sym = sym(zeros(model.nztrue,np));
             end
-            % create cell array of same size
-            dsdydps = cell(model.nztrue,np);
-            % fill cell array
-            for j = 1:model.nztrue
-                for i = 1:np
-                    if(this.sym(j,i)~=0)
-                        dsdydps{j,i} = sprintf('dsdzdp_%i', j-1 + (i-1)*nz);
-                    else
-                        dsdydps{j,i} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dsdydps);
+            this = makeStrSyms(this);
             
         case 'root'
             if(nevent>0)
@@ -604,48 +529,16 @@ function [this,model] = getSyms(this,model)
                     model.z2event(iz) = ievent;
                 end
             end
-            % create cell array of same size
-            zs = cell(nz,1);
-            % fill cell array
-            for j = 1:nz
-                zs{j} = sprintf('z_%i', j-1);
-            end
-            % transform into symbolic expression
-            this.strsym = sym(zs);
+            this = makeStrSymsFull(this);
             
         case 'dzdp'
             this.sym = jacobian(model.fun.z.sym,p);
             % create cell array of same size
-            dzdps = cell(nz,np);
-            % fill cell array
-            for j = 1:nz
-                for i = 1:np
-                    if(this.sym(j,i)~=0)
-                        dzdps{j,i} = sprintf('dzdp_%i', j-1 + (i-1)*nz);
-                    else
-                        dzdps{j,i} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dzdps);
+            this = makeStrSyms(this);
             
         case 'dzdx'
             this.sym = jacobian(model.fun.z.sym,x);
-            % create cell array of same size
-            dzdxs = cell(nz,nx);
-            % fill cell array
-            for j = 1:nz
-                for i = 1:nx
-                    if(this.sym(j,i)~=0)
-                        dzdxs{j,i} = sprintf('dzdx_%i', j-1 + (i-1)*nz);
-                    else
-                        dzdxs{j,i} = sprintf('0');
-                    end
-                end
-            end
-            % transform into symbolic expression
-            this.strsym = sym(dzdxs);
+            this = makeStrSyms(this);
             
         case 'dzdt'
             this.sym = diag(diff(model.fun.z.sym,'t'));
@@ -685,7 +578,7 @@ function [this,model] = getSyms(this,model)
             %do nothing
             
         case 'Jy'
-            this.sym = model.sym.Jy(:);
+            this.sym = model.sym.Jy;
         case 'dJydy'
             this.sym = jacobian(model.fun.Jy.sym,model.fun.y.strsym);
             this = makeStrSyms(this);
@@ -740,23 +633,19 @@ function this = unifySyms(this,model)
 end
 
 function this = makeStrSyms(this)
-    strsym = cell(size(this.sym));
-    [strsym{:}] = deal('0');
+    this.strsym = sym(zeros(size(this.sym)));
     idx = find(logical(this.sym~=0));
     idx = transpose(idx(:));
-    for icell = idx
-        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+    for isym = idx
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
-    this.strsym = sym(strsym);
 end
 
-function this = makeStrSymsfull(this)
-    strsym = cell(size(this.sym));
-    [strsym{:}] = deal('0');
-    for icell = 1:numel(strsym)
-        strsym{icell} = sprintf([this.cvar '_%i'], icell-1);
+function this = makeStrSymsFull(this)
+    this.strsym = sym(zeros(size(this.sym)));
+    for isym = 1:numel(this.strsym)
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
-    this.strsym = sym(strsym);
 end
 
 function out = mysubs(in, old, new)

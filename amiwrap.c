@@ -8,11 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** MS definition of PI and other constants */
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
-#ifndef M_PI
-/** numeric definition of PI for settings where the system does not provide one */
+#ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
 #include <mex.h>
@@ -190,7 +188,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* we still need to integrate from first datapoint to tstart */
-                
                 if (t>tstart) {
                     if(status == 0) {
                         if (nx>0) {
@@ -207,14 +204,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 /* evaluate initial values */
-                sx = N_VCloneVectorArray_Serial(np,x);
-                if (sx == NULL) goto freturn;
+                NVsx = N_VCloneVectorArray_Serial(np,x);
+                if (NVsx == NULL) goto freturn;
                 
                 status = fx0(x,udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 status = fdx0(x,dx,udata);
                 if (status != AMI_SUCCESS) goto freturn;
-                status = fsx0(sx, x, dx, udata);
+                status = fsx0(NVsx, x, dx, udata);
                 if (status != AMI_SUCCESS) goto freturn;
                 
                 if(status == 0) {
@@ -223,7 +220,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     
                     for (ip=0; ip<np; ip++) {
                         llhS0[ip] = 0.0;
-                        sx_tmp = NV_DATA_S(sx[ip]);
+                        sx_tmp = NV_DATA_S(NVsx[ip]);
                         for (ix = 0; ix < nx; ix++) {
                             llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                         }
@@ -232,23 +229,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     xQB_tmp = NV_DATA_S(xQB);
                     
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                        sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
                         if (ny>0) {
-                            llhSdata[ip] -= dgdp[ip];
+                            sllhdata[ip] -= dgdp[ip];
                         }
                         if (nz>0) {
-                            llhSdata[ip] -= drdp[ip];
+                            sllhdata[ip] -= drdp[ip];
                         }
                     }
                     
                 } else {
                     for(ip=0; ip < np; ip++) {
-                        llhSdata[ip] = mxGetNaN();
+                        sllhdata[ip] = mxGetNaN();
                     }
                 }
             } else {
                 for(ip=0; ip < np; ip++) {
-                    llhSdata[ip] = mxGetNaN();
+                    sllhdata[ip] = mxGetNaN();
                 }
             }
         }
@@ -261,75 +258,87 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     goto freturn;
     
 freturn:
-    /* Free memory */
+    
+    /* store current Jacobian and derivative */
     if(udata) {
-        if(nx>0) {
-            N_VDestroy_Serial(x);
-            N_VDestroy_Serial(dx);
-            N_VDestroy_Serial(xdot);
-            N_VDestroy_Serial(x_old);
-            N_VDestroy_Serial(dx_old);
-            N_VDestroy_Serial(xdot_old);
-            DestroyMat(Jtmp);
-            DestroySparseMat(tmp_J);
-            if (ne>0) {
-                if(ami_mem) mxFree(rootsfound);
-                if(ami_mem) mxFree(rootvals);
-                if(ami_mem) mxFree(rootidx);
-                if(ami_mem)    mxFree(sigma_z);
-                if(ami_mem)    mxFree(nroots);
-                if(ami_mem)    mxFree(discs);
-                if(ami_mem)    mxFree(h);
-                
-                if(ami_mem)    mxFree(deltax);
-                if(ami_mem)    mxFree(deltasx);
-                if(ami_mem)    mxFree(deltaxB);
-                if(ami_mem)    mxFree(deltaqB);
+        if(tdata) {
+            fxdot(t,x,dx,xdot,udata);
+            xdot_tmp = NV_DATA_S(xdot);
+            memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+        }
+    }
+    if(udata) {
+        fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+        memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+    }
+    
+    /* Free memory */
+    if(nx>0) {
+        N_VDestroy_Serial(x);
+        N_VDestroy_Serial(dx);
+        N_VDestroy_Serial(xdot);
+        N_VDestroy_Serial(x_old);
+        N_VDestroy_Serial(dx_old);
+        N_VDestroy_Serial(xdot_old);
+        DestroyMat(Jtmp);
+        DestroySparseMat(tmp_J);
+        if (ne>0) {
+            if(ami_mem) mxFree(rootsfound);
+            if(ami_mem) mxFree(rootvals);
+            if(ami_mem) mxFree(rootidx);
+            if(ami_mem)    mxFree(sigma_z);
+            if(ami_mem)    mxFree(nroots);
+            if(ami_mem)    mxFree(discs);
+            if(ami_mem)    mxFree(h);
+            
+            if(ami_mem)    mxFree(deltax);
+            if(ami_mem)    mxFree(deltasx);
+            if(ami_mem)    mxFree(deltaxB);
+            if(ami_mem)    mxFree(deltaqB);
+        }
+        
+        if(ny>0) {
+            if(sigma_y)    mxFree(sigma_y);
+        }
+        if (sensi >= 1) {
+            if(ami_mem)    mxFree(dydx);
+            if(ami_mem)    mxFree(dydp);
+            if (sensi_meth == AMI_FSA) {
+                N_VDestroyVectorArray_Serial(NVsx,np);
+            }
+            if (sensi_meth == AMI_ASA) {
+                if(status == 0) {
+                    N_VDestroyVectorArray_Serial(NVsx,np);
+                }
+            }
+
+            if (sensi_meth == AMI_FSA) {
+                N_VDestroyVectorArray_Serial(sdx, np);
+            }
+            if (sensi_meth == AMI_ASA) {
+                if(ami_mem)    mxFree(dgdp);
+                if(ami_mem)    mxFree(dgdx);
+                if(ami_mem)    mxFree(drdp);
+                if(ami_mem)    mxFree(drdx);
+                if (ne>0) {
+                    if(ami_mem)    mxFree(dzdp);
+                    if(ami_mem)    mxFree(dzdx);
+                }
+                if(ami_mem)     mxFree(llhS0);
+                if(ami_mem)    mxFree(dsigma_ydp);
+                if (ne>0) {
+                    if(ami_mem)    mxFree(dsigma_zdp);
+                }
+                if(setupBdone)      N_VDestroy_Serial(dxB);
+                if(setupBdone)      N_VDestroy_Serial(xB);
+                if(setupBdone)     N_VDestroy_Serial(xB_old);
+                if(setupBdone)      N_VDestroy_Serial(xQB);
+                if(setupBdone)      N_VDestroy_Serial(xQB_old);
             }
             
-            if(ny>0) {
-                if(sigma_y)    mxFree(sigma_y);
-            }
-            if (sensi >= 1) {
-                if(ami_mem)    mxFree(dydx);
-                if(ami_mem)    mxFree(dydp);
-                if (sensi_meth == AMI_FSA) {
-                    N_VDestroyVectorArray_Serial(sx,np);
-                }
-                if (sensi_meth == AMI_ASA) {
-                    if(status == 0) {
-                        N_VDestroyVectorArray_Serial(sx,np);
-                    }
-                }
-                
-                if (sensi_meth == AMI_FSA) {
-                    N_VDestroyVectorArray_Serial(sdx, np);
-                }
-                if (sensi_meth == AMI_ASA) {
-                    if(ami_mem)    mxFree(dgdp);
-                    if(ami_mem)    mxFree(dgdx);
-                    if(ami_mem)    mxFree(drdp);
-                    if(ami_mem)    mxFree(drdx);
-                    if (ne>0) {
-                        if(ami_mem)    mxFree(dzdp);
-                        if(ami_mem)    mxFree(dzdx);
-                    }
-                    if(ami_mem)     mxFree(llhS0);
-                    if(ami_mem)    mxFree(dsigma_ydp);
-                    if (ne>0) {
-                        if(ami_mem)    mxFree(dsigma_zdp);
-                    }
-                    if(setupBdone)      N_VDestroy_Serial(dxB);
-                    if(setupBdone)      N_VDestroy_Serial(xB);
-                    if(setupBdone)     N_VDestroy_Serial(xB_old);
-                    if(setupBdone)      N_VDestroy_Serial(xQB);
-                    if(setupBdone)      N_VDestroy_Serial(xQB_old);
-                }
-                
-            }
-            if(ami_mem)     N_VDestroy_Serial(id);
-            if(ami_mem)     AMIFree(&ami_mem);
         }
+        if(ami_mem)     N_VDestroy_Serial(id);
+        if(ami_mem)     AMIFree(&ami_mem);
     }
     
     if(udata)   mxFree(plist);
