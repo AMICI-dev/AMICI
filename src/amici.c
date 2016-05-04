@@ -1303,7 +1303,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
      * @param[out] return_data pointer to the return data struct @type ReturnData
      * @param[in] exp_data pointer to the experimental data struct @type ExpData
      * @param[out] temp_data pointer to the temporary data struct @type TempData
-     * @return cv_status updated status flag @type int
+     * @return void
      */
     int iz;
     int ie;
@@ -1337,6 +1337,9 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                         if (*status != AMI_SUCCESS) return;
                     }
                 }
+
+                getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+                if (*status != AMI_SUCCESS) return;                
                 
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {

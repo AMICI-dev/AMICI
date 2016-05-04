@@ -22,6 +22,15 @@ function parseModel(this)
     % load old hashes
     HTable = this.loadOldHashes();
     
+    nevent = length(this.event);
+    this.nevent = nevent;
+    
+    % fix z2event if z was computed previously
+    if(isfield(this.fun,'z'))
+        this.fun = rmfield(this.fun,'z');
+        this.getFun([],'z');
+    end
+    
     nx = length(this.sym.x);
     np = length(this.sym.p);
     nk = length(this.sym.k);
@@ -36,7 +45,6 @@ function parseModel(this)
         this.nztrue = nztrue;
     end
     
-    nevent = length(this.event);
     %check zero trigger events
     for ievent = 1:nevent
         if(isequaln(this.event(ievent).trigger,sym(0)))
@@ -46,7 +54,6 @@ function parseModel(this)
     
     this.nx = nx;
     this.ny = ny;
-    this.nevent = nevent;
     this.nz = nz;
     this.np = np;
     this.nk = nk;
