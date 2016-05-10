@@ -226,6 +226,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     UserData udata; /** user udata */
     
     mxArray *mxsol;
+
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -233,8 +236,6 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     /* Return rdata structure */
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
-    
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
     mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
     
