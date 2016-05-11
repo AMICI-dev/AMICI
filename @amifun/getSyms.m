@@ -411,7 +411,7 @@ function [this,model] = getSyms(this,model)
             if(nz>0)
                 this.sym = jacobian(model.fun.sigma_z.sym,p);
             else
-                this.sym = sym(zeros(model.nztrue,np));
+                this.sym = sym(zeros(model.nz,np));
             end
             this = makeStrSyms(this);
             
@@ -531,7 +531,7 @@ function [this,model] = getSyms(this,model)
             end
             % construct the event identifyer, this is a vector which maps
             % events to outputs z
-            model.z2event = zeros(nz,1);
+            model.z2event = zeros(length(this.sym),1);
             iz = 0;
             for ievent = 1:nevent
                 for jz = 1:length(model.event(ievent).z)
