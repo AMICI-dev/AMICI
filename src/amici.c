@@ -242,7 +242,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     mxArray *mxsol;
 
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","r","z","x","y","sr","sz","sx","sy","s2r","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
     
     /* this casting is necessary to ensure availability of accessor macros */
