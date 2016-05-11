@@ -8,6 +8,9 @@
 #define sigmazdata rdata->am_sigmazdata
 #define szdata rdata->am_szdata
 #define ssigmazdata rdata->am_ssigmazdata
+#define rzdata rdata->am_rzdata
+#define srzdata rdata->am_srzdata
+#define s2rzdata rdata->am_s2rzdata
 #define xdata rdata->am_xdata
 #define sxdata rdata->am_sxdata
 #define ydata rdata->am_ydata
@@ -61,6 +64,12 @@ typedef struct {
     double *am_szdata;
     /** parameter derivative of event output standard deviation */
     double *am_ssigmazdata;
+    /** event trigger output */
+    double *am_rzdata;
+    /** parameter derivative of event trigger output */
+    double *am_srzdata;
+    /** second order parameter derivative of event trigger output */
+    double *am_s2rzdata;
     /** state */
     double *am_xdata;
     /** parameter derivative of state */

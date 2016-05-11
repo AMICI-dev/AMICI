@@ -42,6 +42,21 @@ mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
+/**
+ * @ brief initialise tensor and attach to the field
+ * @ param FIELD name of the field to which the tensor will be attached
+ * @ param D1 number of rows in the tensor
+ * @ param D2 number of columns in the tensor
+ * @ param D3 number of elements in the third dimension of the tensor
+ * @ param D4 number of elements in the fourth dimension of the tensor
+ */
+#define initField4(FIELD,D1,D2,D3,D4) \
+mxArray *mx ## FIELD; \
+const mwSize dims ## FIELD[]={D1,D2,D3,D4}; \
+mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+FIELD ## data = mxGetPr(mx ## FIELD); \
+mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+
 /** 
  * @ brief extract information from a property of a matlab class (scalar)
  * @ param OPTION name of the property
@@ -227,7 +242,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     mxArray *mxsol;
 
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","r","z","x","y","sr","sz","sx","sy","s2r","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     
     
     /* this casting is necessary to ensure availability of accessor macros */
@@ -237,7 +252,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    mxsol = mxCreateStructMatrix(1,1,26,field_names_sol);
+    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
     
     plhs[0] = mxsol;
     
@@ -264,6 +279,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(nz>0 & ne>0){
         initField2(z,nmaxevent,nz);
+        initField2(rz,nmaxevent,nz);
         initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
@@ -289,6 +305,10 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(ssigmay,nt,ny,np);
             }
             if(nz>0 & ne>0){
+                initField3(srz,nmaxevent,nz,np);
+                if(sensi>1){
+                    initField4(s2rz,nmaxevent,nz,np,np);
+                }
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
