@@ -85,10 +85,13 @@ function parseModel(this)
     funs = {'xdot','w','dwdx','dwdp','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','dJydx','dJydp','sJy','Jz','dJzdx','dJzdp','sJz'};
     
     if(this.forward)
-        funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau'};
+        funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot'};
     end
     if(this.adjoint)
         funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','sigma_y','sigma_z','dsigma_ydp','dsigma_zdp','sx0'};
+    end
+    if(this.o2flag)
+        funs = {funs{:},'s2root'};
     end
     
     if(strcmp(this.wtype,'iw'))

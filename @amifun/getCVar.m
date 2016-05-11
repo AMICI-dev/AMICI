@@ -9,8 +9,6 @@ function [ this ] = getCVar(this)
     switch(this.funstr)
         case 'J'
             this.cvar =  'Jdata';
-        case 'rootval'
-            this.cvar =  'rootval';
         case 'JSparse'
             this.cvar =  'Jdata';
         case 'JB'

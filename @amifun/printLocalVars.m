@@ -119,6 +119,10 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'root'
             % nothing
+        case 'sroot'
+            % nothing
+        case 's2root'
+            % nothing
         case 'sigma_y'
             fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);
         case 'dsigma_ydp'

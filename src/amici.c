@@ -1178,6 +1178,14 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
     *status = fsz_tf(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
     
+    *status = fsroot(t,ie,nroots,srzdata,x,NVsx,udata);
+    if (*status != AMI_SUCCESS) return;
+    
+    if(sensi>1) {
+        *status = fs2root(t,ie,nroots,s2rzdata,x,NVsx,udata);
+        if (*status != AMI_SUCCESS) return;
+    }
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1429,11 +1437,17 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
+    froot(t,x,dx,rootvals,user_data);
+    
+    
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
             *status = fz(t,ie,nroots,zdata,x,udata);
             if (*status != AMI_SUCCESS) return;
+            
+            rzdata[nroots[ie]+ie] = rootvals[ie];
+            
 
             getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
             if (*status != AMI_SUCCESS) return;

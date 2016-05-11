@@ -434,7 +434,15 @@ function [this,model] = getSyms(this,model)
             
         case 'sroot'
             this.sym = model.fun.drootdp.sym + model.fun.drootdx.sym*sx;
-            
+          
+        case 's2root'
+            s2x = reshape(sx((model.nxtrue+1):end,:),[model.nxtrue,np,np]);
+            for ievent = 1:nevent
+                this.sym(ievent,:,:) = jacobian(model.fun.sroot.sym(ievent,:),p) + jacobian(model.fun.sroot.sym(ievent,:),x(1:model.nxtrue))*sx(1:model.nxtrue,:) + jacobian(model.fun.sroot.sym(ievent,:),x(1:model.nxtrue))*sx(1:model.nxtrue,:);
+                for ix = 1:model.nxtrue
+                    this.sym(ievent,:,:) = this.sym(ievent,:,:) + model.fun.drootdx.sym(ievent,ix)*s2x(ix,:,:);
+                end
+            end
         case 'dtaudp'
             this.sym = sym(zeros(nevent,np));
             for ievent = 1:nevent
