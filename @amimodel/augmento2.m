@@ -76,6 +76,9 @@ function [modelo2] = augmento2(this)
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;
+    modelo2.debug = this.debug;
+    modelo2.forward = this.forward;
+    modelo2.adjoint = this.adjoint;
 end
 
 

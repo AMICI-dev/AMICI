@@ -315,7 +315,6 @@ function generateM(this, amimodelo2)
             fprintf(fid,['end\n']);
     end
     
-    
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi<2)\n');
         fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
@@ -355,9 +354,11 @@ function generateM(this, amimodelo2)
         fprintf(fid,'if(options_ami.sensi == 2)\n');
         fprintf(fid,['    sx = sol.sx(:,1:' num2str(nxtrue) ',:);\n']);
         fprintf(fid,['    sy = sol.sy(:,1:' num2str(nytrue) ',:);\n']);
+        fprintf(fid,['    sz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         fprintf(fid,['        sz(:,iz,:) = sol.sz(:,2*iz-1,:);\n']);
         fprintf(fid,['    end\n']);
+        fprintf(fid,['    srz = sol.srz;\n']);
         switch(o2flag)
             case 1
                 fprintf(fid,['    s2x = reshape(sol.sx(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
@@ -366,6 +367,7 @@ function generateM(this, amimodelo2)
                 fprintf(fid,['    s2x = sol.sx(:,' num2str(nxtrue+1) ':end,:);\n']);
                 fprintf(fid,['    s2y = sol.sy(:,' num2str(nytrue+1) ':end,:);\n']);
         end
+        fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         switch(o2flag)
             case 1
@@ -375,6 +377,7 @@ function generateM(this, amimodelo2)
                 %TBD
         end
         fprintf(fid,['    end\n']);
+        fprintf(fid,['    s2rz = sol.s2rz;\n']);
         fprintf(fid,['    sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
         fprintf(fid,['    sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
         fprintf(fid,['    sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
@@ -389,11 +392,13 @@ function generateM(this, amimodelo2)
                     case 1
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sx,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sy,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                        %fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind)),[4,3,2,1])) + bsxfun(@times,srz,permute(diag(theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                     case 2
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sx,permute(v,[3,2,1]));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sy,permute(v,[3,2,1]));\n']);
-                        %fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 end
             case 'log10'
                 fprintf(fid,['    sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
@@ -405,11 +410,13 @@ function generateM(this, amimodelo2)
                     case 1
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sx,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sy,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
-                        %fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,sz,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))*(log(10)^2),[4,3,2,1])) + bsxfun(@times,srz,permute(diag(log(10)^2*theta(options_ami.sens_ind).*ones(length(theta(options_ami.sens_ind)),1)),[4,3,2,1]));\n']);
                     case 2
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sx,permute(v,[3,2,1])*log(10));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sy,permute(v,[3,2,1])*log(10));\n']);
-                        %fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)*log(10));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)*log(10));\n']);
+                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)*log(10));\n']);
                 end
             case 'lin'
                 fprintf(fid,'    sol.sx = sx;\n');

@@ -29,7 +29,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /** 
- * @ brief initialise tensor and attach to the field 
+ * @ brief initialise 3D tensor and attach to the field 
  * @ param FIELD name of the field to which the tensor will be attached
  * @ param D1 number of rows in the tensor
  * @ param D2 number of columns in the tensor
@@ -43,7 +43,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /**
- * @ brief initialise tensor and attach to the field
+ * @ brief initialise 4D tensor and attach to the field
  * @ param FIELD name of the field to which the tensor will be attached
  * @ param D1 number of rows in the tensor
  * @ param D2 number of columns in the tensor
@@ -279,7 +279,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if(nz>0 & ne>0){
         initField2(z,nmaxevent,nz);
-        initField2(rz,nmaxevent,nz);
+        initField2(rz,nmaxevent,nztrue);
         initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
@@ -305,9 +305,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(ssigmay,nt,ny,np);
             }
             if(nz>0 & ne>0){
-                initField3(srz,nmaxevent,nz,np);
+                initField3(srz,nmaxevent,nztrue,np);
                 if(sensi>1){
-                    initField4(s2rz,nmaxevent,nz,np,np);
+                    initField4(s2rz,nmaxevent,nztrue,np,np);
                 }
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
@@ -1218,7 +1218,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
-    for (iz=0; iz<nz; iz++) {
+    for (iz=0; iz<nztrue; iz++) {
         if( z2event[iz] == ie ){
             if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 *status = fdzdp(t,ie,dzdp,x,udata);
@@ -1325,7 +1325,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
-    for (iz=0; iz<nz; iz++) {
+    for (iz=0; iz<nztrue; iz++) {
         if(z2event[iz] == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
@@ -1382,7 +1382,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
-                for (iz=0; iz<nz; iz++) {
+                for (iz=0; iz<nztrue; iz++) {
                     if(z2event[iz] == ie) {
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
                         if (*status != AMI_SUCCESS) return;

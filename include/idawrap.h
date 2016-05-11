@@ -19,8 +19,8 @@
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
     char buffer[250];
-    sprintf(buffer,"AMICI ERROR: in module %s in function %s : %s ",module,function,msg);
     char buffid[250];
+    sprintf(buffer,"AMICI ERROR: in module %s in function %s : %s ",module,function,msg);
     switch (error_code) {
         case 99:
             sprintf(buffid,"AMICI:mex:%s:%s:CV_WARNING",module,function);
