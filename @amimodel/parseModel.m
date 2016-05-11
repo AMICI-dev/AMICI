@@ -25,6 +25,7 @@ function parseModel(this)
     nevent = length(this.event);
     this.nevent = nevent;
     
+    nz = length([this.event.z]);
     % fix z2event if z was computed previously
     if(isfield(this.fun,'z'))
         this.fun = rmfield(this.fun,'z');
@@ -35,7 +36,6 @@ function parseModel(this)
     np = length(this.sym.p);
     nk = length(this.sym.k);
     ny = length(this.sym.y);
-    nz = length([this.event.z]);
     if(this.nytrue == 0) % only set this if it still has the default value, if 0 is already the non default value it does not matter anyways
         nytrue = length(this.sym.sigma_y);
         this.nytrue = nytrue;
