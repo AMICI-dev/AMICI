@@ -35,6 +35,9 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
 mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -227,7 +230,6 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     mxArray *mxstatus;
     mxArray *mxllh;
-    mxArray *mxllh;
     mxArray *mxsllh;
     mxArray *mxs2llh;
     mxArray *mxchi2;
@@ -253,8 +255,15 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxdydx;
     mxArray *mxdxdotdp;
 
-    mxArray *mxstatus;
     mxArray *mxts;
+
+    mwSize dimssx[] = {0,0,0};
+    mwSize dimssy[] = {0,0,0};
+    mwSize dimssz[] = {0,0,0};
+    mwSize dimssigmay[] = {0,0,0};
+    mwSize dimssigmaz[] = {0,0,0};
+    mwSize dimsssigmay[] = {0,0,0};
+    mwSize dimsssigmaz[] = {0,0,0};
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -287,7 +296,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
         initField2(numstepsS,nt,1);
         initField2(numrhsevalsS,nt,1);
     }
-    if(nz>0 & ne>0){
+    if((nz>0) & (ne>0)){
         initField2(z,nmaxevent,nz);
         initField2(sigmaz,nmaxevent,nz);
     }
@@ -313,7 +322,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(sy,nt,ny,np);
                 initField3(ssigmay,nt,ny,np);
             }
-            if((nz>0) & (ne>0){
+            if((nz>0) & (ne>0)){
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
@@ -322,7 +331,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             if(ny>0) {
                 initField3(ssigmay,nt,ny,np);
             }
-            if((nz>0) & (ne>0){
+            if((nz>0) & (ne>0)){
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
