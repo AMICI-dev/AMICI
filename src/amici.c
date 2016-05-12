@@ -252,6 +252,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxdydp;
     mxArray *mxdydx;
     mxArray *mxdxdotdp;
+
+    mxArray *mxstatus;
+    mxArray *mxts;
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -264,7 +267,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     plhs[0] = mxsol;
     
-    mxArray *mxstatus;
+    
     mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     
     mxSetPr(mxstatus,pstatus);
@@ -272,8 +275,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     initField2(llh,1,1);
     initField2(chi2,1,1);
-    
-    mxArray *mxts;
+     
     mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
@@ -311,7 +313,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(sy,nt,ny,np);
                 initField3(ssigmay,nt,ny,np);
             }
-            if(nz>0 & ne>0){
+            if((nz>0) & (ne>0){
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
@@ -320,7 +322,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             if(ny>0) {
                 initField3(ssigmay,nt,ny,np);
             }
-            if(nz>0 & ne>0){
+            if((nz>0) & (ne>0){
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
@@ -434,8 +436,6 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
     
-    
-                
     return(edata);
 }
 
@@ -453,13 +453,14 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
+    int ip;
+    int ix;
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* user udata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
-    int ip;
-    int ix;
+
     
     t = tstart;
     
@@ -773,12 +774,13 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
     /* this casting is necessary to ensure availability of accessor macros */
+    int ix;
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     
-    int ix;
+
     
     xB = N_VNew_Serial(nx);
     xB_old = N_VNew_Serial(nx);
