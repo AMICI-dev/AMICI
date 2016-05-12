@@ -248,13 +248,22 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(np == 0)\n']);
     fprintf(fid,['    options_ami.sensi = 0;\n']);
     fprintf(fid,['end\n']);
+    if(o2flag)
+        fprintf(fid,['if(options_ami.sensi > 1)\n']);
+        fprintf(fid,['    nxfull = ' num2str(amimodelo2.nx) ';\n']);
+        fprintf(fid,['else\n']);
+        fprintf(fid,['    nxfull = ' num2str(nxtrue) ';\n']);
+        fprintf(fid,['end\n']);
+    else
+        fprintf(fid,['nxfull = ' num2str(nx) ';\n']);
+    end
     fprintf(fid,['if(isempty(options_ami.qpositivex))\n']);
-    fprintf(fid,['    options_ami.qpositivex = zeros(' num2str(this.nx) ',1);\n']);
+    fprintf(fid,['    options_ami.qpositivex = zeros(nxfull,1);\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    if(numel(options_ami.qpositivex)==' num2str(this.nx) ')\n']);
+    fprintf(fid,['    if(numel(options_ami.qpositivex)==nxfull)\n']);
     fprintf(fid,['        options_ami.qpositivex = options_ami.qpositivex(:);\n']);
     fprintf(fid,['    else\n']);
-    fprintf(fid,['        error(''Number of elements in options_ami.qpositivex does not match number of states ' num2str(this.nx) ''');\n']);
+    fprintf(fid,['        error([''Number of elements in options_ami.qpositivex does not match number of states '' num2str(nxfull) ]);\n']);
     fprintf(fid,['    end\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
