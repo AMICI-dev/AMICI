@@ -23,7 +23,6 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -36,8 +35,6 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-mxArray *mx ## FIELD; \
-const mwSize dims ## FIELD[]={D1,D2,D3}; \
 mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -228,7 +225,33 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxsol;
 
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","z","x","y","sz","sx","sy","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-    
+    mxArray *mxstatus;
+    mxArray *mxllh;
+    mxArray *mxllh;
+    mxArray *mxsllh;
+    mxArray *mxs2llh;
+    mxArray *mxchi2;
+    mxArray *mxt;
+    mxArray *mxnumsteps;
+    mxArray *mxnumrhsevals;
+    mxArray *mxorder;
+    mxArray *mxnumstepsS;
+    mxArray *mxnumrhsevalsS;
+    mxArray *mxz;
+    mxArray *mxx;
+    mxArray *mxy;
+    mxArray *mxsz;
+    mxArray *mxsx;
+    mxArray *mxsy;
+    mxArray *mxsigmay;
+    mxArray *mxssigmay;
+    mxArray *mxsigmaz;
+    mxArray *mxssigmaz;
+    mxArray *mxxdot;
+    mxArray *mxJ;
+    mxArray *mxdydp;
+    mxArray *mxdydx;
+    mxArray *mxdxdotdp;
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
