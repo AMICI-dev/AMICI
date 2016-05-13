@@ -1585,8 +1585,10 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     *status = AMIGetRootInfo(ami_mem, rootsfound);
     if (*status != AMI_SUCCESS) return;
     
-    for (ie=0; ie<ne; ie++) {
-        rootidx[iroot*ne + ie] = rootsfound[ie];
+    if (iroot<nmaxevent*ne) {
+        for (ie=0; ie<ne; ie++) {
+            rootidx[iroot*ne + ie] = rootsfound[ie];
+        }
     }
     
     
