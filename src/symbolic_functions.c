@@ -5,6 +5,14 @@
  * This file contains definitions of various symbolic functions which
  */
 
+
+#if (_MSC_VER >= 1000)
+#include <iostream>
+#include <algorithm>
+#define fmax(a,b) std::max(a,b)
+#define fmin(a,b) std::min(a,b)
+#endif
+
 #include <math.h>
 #include <mex.h>
 #include <float.h>
@@ -77,7 +85,7 @@ double sign(double x) {
  *
  */
 double am_min(double a, double b) {
-    return(fmin(a,b));
+    return(min(a,b));
 }
 
 /**
@@ -115,7 +123,7 @@ double Dam_min(int id,double a, double b) {
  *
  */
 double am_max(double a, double b) {
-    return(fmax(a,b));
+    return(max(a,b));
 }
 
 /**
