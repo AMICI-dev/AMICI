@@ -36,8 +36,12 @@ function [modelo2] = augmento2(this)
     % generate deltasx
     this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
-        Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
-        znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
+        if(numel(this.event(ievent).z)>0)
+            Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
+            znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
+        else
+            znew = this.event(ievent).z;
+        end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
         bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
