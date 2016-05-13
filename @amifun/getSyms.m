@@ -244,45 +244,55 @@ function [this,model] = getSyms(this,model)
             w = this.strsym;
 
         case 'dwdx'
-            jacx = jacobian(model.fun.w.sym,x);
-            this.sym = jacx;
-            for idw = 1:ndw
-                this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
-            end
-            % fill cell array
-            idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacx));
-            if(numel(idx_w)>0)
-                for iw = 1:length(idx_w)
-                    this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
+            if(length(model.fun.w.sym)>0)
+                jacx = jacobian(model.fun.w.sym,x);
+                this.sym = jacx;
+                for idw = 1:ndw
+                    this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
                 end
-                model.ndwdx = length(idx_w);
-                % update dwdx with simplified expressions, here we can exploit
-                % the proper ordering of w to ensure correctness of expressions
-                tmp = jacx + jacw*this.strsym;
-                this.sym = tmp(idx_w);
-            else
+                % fill cell array
+                idx_w = find(logical(this.sym~=0));
                 this.strsym = sym.zeros(size(jacx));
+                if(numel(idx_w)>0)
+                    for iw = 1:length(idx_w)
+                        this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
+                    end
+                    model.ndwdx = length(idx_w);
+                    % update dwdx with simplified expressions, here we can exploit
+                    % the proper ordering of w to ensure correctness of expressions
+                    tmp = jacx + jacw*this.strsym;
+                    this.sym = tmp(idx_w);
+                else
+                    this.strsym = sym.zeros(size(jacx));
+                end
+            else
+                this.sym = sym(zeros(0,nx));
+                this.strsym = sym(zeros(0,nx));
             end
             
         case 'dwdp'
-            jacp = jacobian(model.fun.w.sym,p);
-            this.sym = jacp;
-            for idw = 1:ndw
-                this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
-            end
-            % fill cell array
-            idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacp));
-            if(numel(idx_w)>0)
-                for iw = 1:length(idx_w)
-                    this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
+            if(length(model.fun.w.sym)>0)
+                jacp = jacobian(model.fun.w.sym,p);
+                this.sym = jacp;
+                for idw = 1:ndw
+                    this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
                 end
-                model.ndwdp = length(idx_w);
-                % update dwdx with simplified expressions, here we can exploit
-                % the proper ordering of w to ensure correctness of expressions
-                tmp = jacp + jacw*this.strsym;
-                this.sym = tmp(idx_w);
+                % fill cell array
+                idx_w = find(logical(this.sym~=0));
+                this.strsym = sym.zeros(size(jacp));
+                if(numel(idx_w)>0)
+                    for iw = 1:length(idx_w)
+                        this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
+                    end
+                    model.ndwdp = length(idx_w);
+                    % update dwdx with simplified expressions, here we can exploit
+                    % the proper ordering of w to ensure correctness of expressions
+                    tmp = jacp + jacw*this.strsym;
+                    this.sym = tmp(idx_w);
+                end
+            else
+                this.sym = sym(zeros(0,nx));
+                this.strsym = sym(zeros(0,nx));
             end
             
         case 'dfdx'
