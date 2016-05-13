@@ -137,12 +137,17 @@ classdef amimodel < handle
             
             
             
-            props = properties(AM);
+            props = fields(model);
             
             for j = 1:length(props)
                 if(~strcmp(props{j},'sym')) % we already checked for the sym field
                     if(isfield(model,props{j}))
+                        try
                         AM.(props{j}) = model.(props{j});
+                        catch
+                            error(['The provided model struct or the struct created by the provided model function has the field ' props{j} ' which is not a valid property of ' ...
+                                'the amimodel class. Please check your model definition.']);
+                        end
                     end
                 else
                     AM.makeSyms();
