@@ -1446,7 +1446,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
             *status = fz(t,ie,nroots,zdata,x,udata);
             if (*status != AMI_SUCCESS) return;
             
-            if (iroot<nmaxevent*ne) {
+            if (nztrue>0) {
                 rzdata[nroots[ie]+ie] = rootvals[ie];
             }
             
