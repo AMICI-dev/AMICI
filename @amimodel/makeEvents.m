@@ -120,14 +120,8 @@ function makeEvents( this )
                         % am_max and am_min?
                         try
                             [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
-                            if(length(cfp)>1)
-                                if(length(char(cfp(2)/trigger{ievent}))<length(char(cfp(2))))
-                                    hflags(ix,ievent) = 0;
-                                else
-                                    hflags(ix,ievent) = 1;
-                                end
-                            elseif(logical(tfp==sym(['h_' num2str(ievent-1) ])))
-                                if(length(char(cfp(1)/trigger{ievent}))<length(char(cfp(1))))
+                            if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
+                                if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
                                     hflags(ix,ievent) = 0;
                                 else
                                     hflags(ix,ievent) = 1;
