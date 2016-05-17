@@ -481,6 +481,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) memset(nroots,0,ne*sizeof(int));
         if(ne>0) discs = mxMalloc(nmaxevent*ne*sizeof(realtype));
         if(ne>0) h = mxMalloc(ne*sizeof(realtype));
+        if(ne>0) h_tmp = mxMalloc(ne*sizeof(realtype));
         
         if(ne>0) deltax = mxMalloc(nx*sizeof(realtype));
         if(ne>0) deltasx = mxMalloc(nx*np*sizeof(realtype));
@@ -1368,12 +1369,6 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
-    if (t == *tlastroot) {
-        /* we are stuck in a root => turn off rootfinding */
-        /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
-        AMIRootInit(ami_mem, 0, NULL);
-    }
-    *tlastroot = t;
     
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
@@ -1441,29 +1436,31 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
     
     
     /* EVENT OUTPUT */
-    for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-        if (nroots[ie]<nmaxevent) {
-            *status = fz(t,ie,nroots,zdata,x,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-            if (nztrue>0) {
+    if (nztrue>0) {
+        for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
+            if (nroots[ie]<nmaxevent) {
+                *status = fz(t,ie,nroots,zdata,x,udata);
+                if (*status != AMI_SUCCESS) return;
+                
+                
                 rzdata[nroots[ie]+ie] = rootvals[ie];
-            }
-            
-            getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
-            if (*status != AMI_SUCCESS) return;
-            
-            if (sensi >= 1) {
-                if(sensi_meth == AMI_ASA) {
-                    getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
-                    if (*status != AMI_SUCCESS) return;
-                } else {
-                    getEventSensisFSA_tf(status, ie, ami_mem, udata, rdata, tdata);
-                    if (*status != AMI_SUCCESS) return;
+                
+                
+                getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+                if (*status != AMI_SUCCESS) return;
+                
+                if (sensi >= 1) {
+                    if(sensi_meth == AMI_ASA) {
+                        getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
+                        if (*status != AMI_SUCCESS) return;
+                    } else {
+                        getEventSensisFSA_tf(status, ie, ami_mem, udata, rdata, tdata);
+                        if (*status != AMI_SUCCESS) return;
+                    }
                 }
+                
+                nroots[ie]++;
             }
-            
-            nroots[ie]++;
         }
     }
 }
@@ -1558,7 +1555,7 @@ void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data, int seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -1573,6 +1570,7 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
      * @return void
      */
     int ie;
+    int secondevent = 0;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1583,21 +1581,41 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
-    *status = AMIGetRootInfo(ami_mem, rootsfound);
-    if (*status != AMI_SUCCESS) return;
+    /* store heaviside information at event occurence */
+    froot(t,x,dx,rootvals,user_data);
+    for (ie = 0; ie<ne; ie++) {
+        h_tmp[ie] = rootvals[ie];
+    }
     
-    if (iroot<nmaxevent*ne) {
+    if (seflag == 0) {
+        *status = AMIGetRootInfo(ami_mem, rootsfound);
+        if (*status != AMI_SUCCESS) return;
+    }
+    
+    if (*iroot<nmaxevent*ne) {
         for (ie=0; ie<ne; ie++) {
-            rootidx[iroot*ne + ie] = rootsfound[ie];
+            rootidx[*iroot*ne + ie] = rootsfound[ie];
         }
     }
     
-    
-    if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
-            *status = AMIGetSens(ami_mem, &t, NVsx);
-            if (*status != AMI_SUCCESS) return;
+    /* only extract in the first event fired */
+    if (seflag == 0) {
+        if(sensi >= 1){
+            if (sensi_meth == AMI_FSA) {
+                *status = AMIGetSens(ami_mem, &t, NVsx);
+                if (*status != AMI_SUCCESS) return;
+            }
         }
+    }
+    
+    /* only check this in the first event fired, otherwise this will always be true */
+    if (seflag == 0) {
+        if (t == *tlastroot) {
+            /* we are stuck in a root => turn off rootfinding */
+            /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
+            AMIRootInit(ami_mem, 0, NULL);
+        }
+        *tlastroot = t;
     }
     
     getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
@@ -1616,9 +1634,9 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
         
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
-            N_VScale(1.0,x,x_disc[iroot]);
-            N_VScale(1.0,xdot,xdot_disc[iroot]);
-            N_VScale(1.0,xdot_old,xdot_old_disc[iroot]);
+            N_VScale(1.0,x,x_disc[*iroot]);
+            N_VScale(1.0,xdot,xdot_disc[*iroot]);
+            N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
         }
     }
     
@@ -1628,12 +1646,42 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
     applyEventBolus(status, ami_mem, udata, tdata);
     if (*status != AMI_SUCCESS) return;
     
-    *status = AMIReInit(ami_mem, t, x, dx);
-    if (*status != AMI_SUCCESS) return;
+    if (*iroot<nmaxevent*ne) {
+        discs[*iroot] = t;
+        (*iroot)++;
+    } else {
+        mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
+        *status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
+    }
     
-    /* make time derivative consistent */
-    *status = AMICalcIC(ami_mem, t);
-    if (*status != AMI_SUCCESS) return;
+    /* check whether we need to fire a secondary event */
+    froot(t,x,dx,rootvals,user_data);
+    for (ie = 0; ie<ne; ie++) {
+        if(h_tmp[ie] != rootvals[ie]) {
+            if (h_tmp[ie]<rootvals[ie]) {
+                rootsfound[ie] = 1;
+            } else {
+                rootsfound[ie] = -1;
+            }
+            secondevent++;
+        } else {
+            rootsfound[ie] = 0;
+        }
+    }
+    /* fire the secondary event */
+    if(secondevent>0) {
+        handleEvent(status, iroot, tlastroot, ami_mem, udata, rdata, edata, tdata, secondevent);
+    }
+    
+    /* only reinitialise in the first event fired */
+    if (seflag == 0) {
+        *status = AMIReInit(ami_mem, t, x, dx);
+        if (*status != AMI_SUCCESS) return;
+        
+        /* make time derivative consistent */
+        *status = AMICalcIC(ami_mem, t);
+        if (*status != AMI_SUCCESS) return;
+    }
     
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
@@ -1647,12 +1695,15 @@ void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, voi
             
             if(sensi >= 1){
                 if (sensi_meth == AMI_FSA) {
-                    *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
-                    if (*status != AMI_SUCCESS) return;
+                    if (seflag == 0) {
+                        *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
+                        if (*status != AMI_SUCCESS) return;
+                    }
                 }
             }
         }
     }
+    
     return;
     
 }
