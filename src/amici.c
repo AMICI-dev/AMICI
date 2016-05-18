@@ -1646,6 +1646,19 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     } else {
         mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
         *status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
+        return;
+    }
+    
+    if(sensi >= 1){
+        if (sensi_meth == AMI_FSA) {
+            
+            /* compute the new xdot  */
+            *status = fxdot(t,x,dx,xdot,udata);
+            if (*status != AMI_SUCCESS) return;
+            
+            applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
+            if (*status != AMI_SUCCESS) return;
+        }
     }
     
     /* check whether we need to fire a secondary event */
@@ -1679,14 +1692,6 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
-            
-            /* compute the new xdot  */
-            *status = fxdot(t,x,dx,xdot,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-            applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
-            if (*status != AMI_SUCCESS) return;
-            
             if(sensi >= 1){
                 if (sensi_meth == AMI_FSA) {
                     if (seflag == 0) {
