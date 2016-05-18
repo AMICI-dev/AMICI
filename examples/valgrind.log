@@ -1,0 +1,895 @@
+==27895== Memcheck, a memory error detector
+==27895== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==27895== Using Valgrind-3.9.0 and LibVEX; rerun with -h for copyright info
+==27895== Command: /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB -nosplash -c /usr/local/icbscripts/compiler_license.lic -nojvm
+==27895== Parent PID: 23958
+==27895== 
+--27895-- 
+--27895-- Valgrind options:
+--27895--    --error-limit=no
+--27895--    --tool=memcheck
+--27895--    -v
+--27895--    --log-file=valgrind.log
+--27895-- Contents of /proc/version:
+--27895--   Linux version 3.19.8-100.fc20.x86_64 (mockbuild@bkernel01.phx2.fedoraproject.org) (gcc version 4.8.3 20140911 (Red Hat 4.8.3-7) (GCC) ) #1 SMP Tue May 12 17:08:50 UTC 2015
+--27895-- Arch and hwcaps: AMD64, amd64-cx16-lzcnt-rdtscp-sse3-avx
+--27895-- Page sizes: currently 4096, max supported 4096
+--27895-- Valgrind library directory: /usr/lib64/valgrind
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/valgrind/memcheck-amd64-linux
+--27895--    object doesn't have a symbol table
+--27895--    object doesn't have a dynamic symbol table
+--27895-- Reading syms from /usr/lib64/ld-2.18.so
+--27895-- Scheduler: using generic scheduler lock implementation.
+--27895-- Reading suppressions file: /usr/lib64/valgrind/default.supp
+==27895== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-27895-by-fabian.froehlich-on-fonsi.scidom.de
+==27895== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-27895-by-fabian.froehlich-on-fonsi.scidom.de
+==27895== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-27895-by-fabian.froehlich-on-fonsi.scidom.de
+==27895== 
+==27895== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==27895== don't want to do, unless you know exactly what you're doing,
+==27895== or are doing some strange experiment):
+==27895==   /usr/lib64/valgrind/../../bin/vgdb --pid=27895 ...command...
+==27895== 
+==27895== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==27895==   /path/to/gdb /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB
+==27895== and then give GDB the following command
+==27895==   target remote | /usr/lib64/valgrind/../../bin/vgdb --pid=27895
+==27895== --pid is optional if only one valgrind process is running
+==27895== 
+--27895-- REDIR: 0x39904183f0 (strlen) redirected to 0x380673f1 (???)
+--27895-- Reading syms from /usr/lib64/valgrind/vgpreload_core-amd64-linux.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x3990418340 (index) redirected to 0x4a08f60 (index)
+--27895-- REDIR: 0x39904183c0 (strcmp) redirected to 0x4a0a040 (strcmp)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwfl.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwservices.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcr.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcpp11compat.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libstdc++.so.6.0.17
+--27895-- Reading syms from /usr/lib64/libm-2.18.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libgcc_s.so.1
+--27895-- Reading syms from /usr/lib64/libpthread-2.18.so
+--27895-- Reading syms from /usr/lib64/libc-2.18.so
+--27895-- REDIR: 0x3990419260 (stpcpy) redirected to 0x4a0b500 (stpcpy)
+--27895-- Reading syms from /usr/lib64/librt-2.18.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwresource_core.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libdl-2.18.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_date_time.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_system.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_thread.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_log.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_log_setup.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libexpat.so.1.5.0
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libicudata.so.49.1.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libicuuc.so.49.1.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libicui18n.so.49.1.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libicuio.so.49.1.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libtbb.so.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libtbbmalloc.so.2
+--27895-- Reading syms from /usr/lib64/libcrypt-2.18.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMATLAB_res.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_chrono.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_filesystem.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_regex.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_serialization.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_signals.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libunwind.so.8.0.0
+--27895-- Reading syms from /usr/lib64/libz.so.1.2.8
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwregexp.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmpath.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmlutil.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwsettingscore.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwms.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMATLAB_settings_res.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwnativedisplay.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwopccore.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwopcmodel.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwopczippackage.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwopcmwservices.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_iostreams.so.1.49.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0
+--27895-- Reading syms from /usr/lib64/libncurses.so.5.9
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwiqm.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbridge.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_parser.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcos.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwgui.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_ir.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwnativedialogs.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwuix.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libfreebl3.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwxmlcore.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libminizip.so
+--27895-- Reading syms from /usr/lib64/libtinfo.so.5.9
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwudd.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwtabcompletion.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwir_xfmr.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmtok.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwgraphics_util.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmat.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwprofiler.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathutil.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathrng.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_pcodeio.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_pcodegen.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwspmatrix.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmlib.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwplatform_res.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwjmi.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwhardcopy.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwuinone.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libXm.so.3.0.2
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libpng12.so.0.39.0
+--27895-- Reading syms from /usr/lib64/libXext.so.6.4.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXt.so.6.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libX11.so.6.3.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libtex_base.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libhdf5_hl.so.6.0.5
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libhdf5.so.6.0.5
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmfl_rng.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathcore.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwnativejava_services.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXmu.so.6.2.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libSM.so.6.0.1
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libICE.so.6.3.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libxcb.so.1.1.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcholmod.so
+--27895-- Reading syms from /usr/lib64/libuuid.so.1.3.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXau.so.6.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwamd.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcolamd.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwlapack.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x39908898e0 (strcasecmp) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x399088bbd0 (strncasecmp) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x39908890b0 (memcpy@GLIBC_2.2.5) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990888ae0 (bcmp) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990888090 (__GI_strrchr) redirected to 0x4a08d80 (__GI_strrchr)
+--27895-- REDIR: 0x3990886340 (strlen) redirected to 0x4a092f0 (strlen)
+--27895-- REDIR: 0x39908848e0 (strcmp) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x399093c170 (__strcmp_ssse3) redirected to 0x4a09fa0 (strcmp)
+--27895-- REDIR: 0x3990880670 (calloc) redirected to 0x4a0813e (calloc)
+--27895-- REDIR: 0x399087fca0 (malloc) redirected to 0x4a063d6 (malloc)
+--27895-- REDIR: 0x6775a50 (operator new(unsigned long)) redirected to 0x4a068de (operator new(unsigned long))
+--27895-- REDIR: 0x399094c000 (__memmove_ssse3_back) redirected to 0x4a0a160 (memcpy@GLIBC_2.2.5)
+--27895-- REDIR: 0x6773d00 (operator delete(void*)) redirected to 0x4a0790a (operator delete(void*))
+--27895-- REDIR: 0x39908867b0 (__GI_strncmp) redirected to 0x4a09800 (__GI_strncmp)
+--27895-- REDIR: 0x399095bfd0 (__memcmp_sse4_1) redirected to 0x4a0b1e0 (bcmp)
+--27895-- REDIR: 0x3990884810 (index) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990884860 (__GI_strchr) redirected to 0x4a08e60 (__GI_strchr)
+--27895-- REDIR: 0x39908800c0 (free) redirected to 0x4a074f0 (free)
+--27895-- REDIR: 0x3990885d80 (strcpy) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990898840 (__strcpy_sse2_unaligned) redirected to 0x4a09330 (strcpy)
+--27895-- REDIR: 0x3990889140 (memset) redirected to 0x4a0b730 (memset)
+--27895-- REDIR: 0x6775b60 (operator new[](unsigned long)) redirected to 0x4a06f83 (operator new[](unsigned long))
+--27895-- REDIR: 0x6773d30 (operator delete[](void*)) redirected to 0x4a07dba (operator delete[](void*))
+--27895-- REDIR: 0x3990884930 (__GI_strcmp) redirected to 0x4a09ff0 (__GI_strcmp)
+--27895-- REDIR: 0x3990888790 (memchr) redirected to 0x4a0a0e0 (memchr)
+--27895-- REDIR: 0x399088fb90 (strchrnul) redirected to 0x4a0bd30 (strchrnul)
+--27895-- REDIR: 0x39908801a0 (realloc) redirected to 0x4a082e0 (realloc)
+--27895-- REDIR: 0x3990889950 (__GI___strcasecmp_l) redirected to 0x4a09c10 (__GI___strcasecmp_l)
+--27895-- REDIR: 0x3990886500 (strnlen) redirected to 0x4a09290 (strnlen)
+--27895-- REDIR: 0x3990889770 (__GI_stpcpy) redirected to 0x4a0b340 (__GI_stpcpy)
+--27895-- REDIR: 0x3990885dc0 (__GI_strcpy) redirected to 0x4a09410 (__GI_strcpy)
+--27895-- REDIR: 0x3990838d50 (unsetenv) redirected to 0x4a0c640 (unsetenv)
+--27895-- REDIR: 0x3990838cf0 (setenv) redirected to 0x4a0c6e0 (setenv)
+--27895-- REDIR: 0x3990888130 (strpbrk) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990938f10 (__strpbrk_sse42) redirected to 0x4a0c1d0 (strpbrk)
+--27895-- REDIR: 0x3990888040 (rindex) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990888000 (strncpy) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990898e70 (__strncpy_sse2_unaligned) redirected to 0x4a094f0 (strncpy)
+--27895-- REDIR: 0xffffffffff600000 (???) redirected to 0x380673d3 (???)
+--27895-- REDIR: 0x399093a7c0 (__strncasecmp_avx) redirected to 0x4a09950 (strncasecmp)
+--27895-- REDIR: 0x3990939150 (__strcasecmp_avx) redirected to 0x4a09870 (strcasecmp)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMVMLocal.so
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x399088f980 (__GI___rawmemchr) redirected to 0x4a0bd90 (__GI___rawmemchr)
+--27895-- REDIR: 0x3990886720 (strncat) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x399089bf50 (__strncat_sse2_unaligned) redirected to 0x4a09180 (strncat)
+--27895-- REDIR: 0x399089d9a0 (strstr) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990932d80 (__strstr_sse42) redirected to 0x4a0c140 (strstr)
+--27895-- REDIR: 0x3990886760 (strncmp) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x399093d3d0 (__strncmp_ssse3) redirected to 0x4a09790 (strncmp)
+--27895-- REDIR: 0xffffffffff600400 (???) redirected to 0x380673dd (???)
+--27895-- REDIR: 0x3990888f20 (__GI_memmove) redirected to 0x4a0ba10 (__GI_memmove)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwudd_mi.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libnss_files-2.18.so
+--27895-- Reading syms from /usr/lib64/libnss_sss.so.2
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x399088e2b0 (memcpy@@GLIBC_2.14) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990893c80 (__memcpy_sse2_unaligned) redirected to 0x4a0a390 (memcpy@@GLIBC_2.14)
+--27895-- REDIR: 0x3990884610 (strcat) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x399089b660 (__strcat_sse2_unaligned) redirected to 0x4a08fa0 (strcat)
+--27895-- REDIR: 0x3990885ea0 (strcspn) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990938dd0 (__strcspn_sse42) redirected to 0x4a0c230 (strcspn)
+--27895-- REDIR: 0x3990889240 (mempcpy) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990949530 (__mempcpy_ssse3_back) redirected to 0x4a0be50 (mempcpy)
+==27895== Thread 3:
+==27895== Conditional jump or move depends on uninitialised value(s)
+==27895==    at 0xD96C3C4: xercesc_2_7::XMLUTF8Transcoder::transcodeFrom(unsigned char const*, unsigned int, char16_t*, unsigned int, unsigned int&, unsigned char*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3248: xercesc_2_7::XMLReader::xcodeMoreChars(char16_t*, unsigned char*, unsigned int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3428: xercesc_2_7::XMLReader::refreshCharBuffer() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD92BD80: xercesc_2_7::ReaderMgr::peekNextChar() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94B696: xercesc_2_7::XMLScanner::scanProlog() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1C7E: xercesc_2_7::IGXMLScanner::scanDocument(xercesc_2_7::InputSource const&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94CF25: xercesc_2_7::XMLScanner::scanDocument(char16_t const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94D239: xercesc_2_7::XMLScanner::scanDocument(char const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD9707AA: xercesc_2_7::SAX2XMLReaderImpl::parse(char const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xEE19C17: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895==    by 0xEE0E104: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895==    by 0xEE2EC37: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895== 
+==27895== Conditional jump or move depends on uninitialised value(s)
+==27895==    at 0xD96C3C4: xercesc_2_7::XMLUTF8Transcoder::transcodeFrom(unsigned char const*, unsigned int, char16_t*, unsigned int, unsigned int&, unsigned char*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3248: xercesc_2_7::XMLReader::xcodeMoreChars(char16_t*, unsigned char*, unsigned int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3428: xercesc_2_7::XMLReader::refreshCharBuffer() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3EA4: xercesc_2_7::XMLReader::skipSpaces(bool&, bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD92BC56: xercesc_2_7::ReaderMgr::skipPastSpaces(bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94ABC8: xercesc_2_7::XMLScanner::scanEq(bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD89CE3E: xercesc_2_7::IGXMLScanner::rawAttrScan(char16_t const*, xercesc_2_7::RefVectorOf<xercesc_2_7::KVStringPair>&, bool&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD89EC52: xercesc_2_7::IGXMLScanner::scanStartTagNS(bool&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1B2C: xercesc_2_7::IGXMLScanner::scanContent() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1CA1: xercesc_2_7::IGXMLScanner::scanDocument(xercesc_2_7::InputSource const&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94CF25: xercesc_2_7::XMLScanner::scanDocument(char16_t const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD94D239: xercesc_2_7::XMLScanner::scanDocument(char const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895== 
+--27895-- REDIR: 0x3990903c80 (__strcpy_chk) redirected to 0x4a0bdb0 (__strcpy_chk)
+--27895-- REDIR: 0x39908884c0 (strspn) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990939030 (__strspn_sse42) redirected to 0x4a0c2a0 (strspn)
+--27895-- REDIR: 0x6775ae0 (operator new(unsigned long, std::nothrow_t const&)) redirected to 0x4a06b93 (operator new(unsigned long, std::nothrow_t const&))
+--27895-- memcheck GC: 1000 nodes, 525 survivors ( 52.5%)
+--27895-- memcheck GC: 1414 new table size (stepup)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmlintrospect.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwPathNameResolver.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathelem.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathxps.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwsysintrospect.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwstrfun.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxmlxrcsc.so
+--27895--    object doesn't have a symbol table
+==27895== Conditional jump or move depends on uninitialised value(s)
+==27895==    at 0xD96C3C4: xercesc_2_7::XMLUTF8Transcoder::transcodeFrom(unsigned char const*, unsigned int, char16_t*, unsigned int, unsigned int&, unsigned char*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3248: xercesc_2_7::XMLReader::xcodeMoreChars(char16_t*, unsigned char*, unsigned int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C3428: xercesc_2_7::XMLReader::refreshCharBuffer() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8C37CC: xercesc_2_7::XMLReader::getQName(xercesc_2_7::XMLBuffer&, int*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD89EB9B: xercesc_2_7::IGXMLScanner::scanStartTagNS(bool&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1B2C: xercesc_2_7::IGXMLScanner::scanContent() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1CA1: xercesc_2_7::IGXMLScanner::scanDocument(xercesc_2_7::InputSource const&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8BC2C0: xercesc_2_7::AbstractDOMParser::parse(xercesc_2_7::InputSource const&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8CA9BF: xercesc_2_7::IGXMLScanner::resolveSchemaGrammar(char16_t const*, char16_t const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8CAFFA: xercesc_2_7::IGXMLScanner::parseSchemaLocation(char16_t const*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD89EE26: xercesc_2_7::IGXMLScanner::scanStartTagNS(bool&) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895==    by 0xD8A1B2C: xercesc_2_7::IGXMLScanner::scanContent() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libxerces-c.so.27.0)
+==27895== 
+--27895-- memcheck GC: 1414 nodes, 755 survivors ( 53.3%)
+--27895-- memcheck GC: 1999 new table size (stepup)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwdisplay.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwdiagnostic.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwtimefun.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwfileio.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwhgbuiltins.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libuij.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwhgdatatypes.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwhg.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwhgutils.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwgbtutils.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwgbt.so
+--27895--    object doesn't have a symbol table
+--27895-- memcheck GC: 1999 nodes, 1631 survivors ( 81.5%)
+--27895-- memcheck GC: 2827 new table size (stepup)
+--27895-- memcheck GC: 2827 nodes, 2084 survivors ( 73.7%)
+--27895-- memcheck GC: 3997 new table size (stepup)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwwkspintrospect.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwtypeconversion.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwapplyfuns.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwtypevalidation.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmlregexp.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/mex_builtin.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmexcmd.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libboost_graph.so.1.49.0
+--27895--    object doesn't have a symbol table
+==27956== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-27956-by-fabian.froehlich-on-fonsi.scidom.de
+==27956== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-27956-by-fabian.froehlich-on-fonsi.scidom.de
+==27956== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-27956-by-fabian.froehlich-on-fonsi.scidom.de
+==27956== 
+==27956== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==27956== don't want to do, unless you know exactly what you're doing,
+==27956== or are doing some strange experiment):
+==27956==   /usr/lib64/valgrind/../../bin/vgdb --pid=27956 ...command...
+==27956== 
+==27956== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==27956==   /path/to/gdb /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB
+==27956== and then give GDB the following command
+==27956==   target remote | /usr/lib64/valgrind/../../bin/vgdb --pid=27956
+==27956== --pid is optional if only one valgrind process is running
+==27956== 
+==27956== Warning: invalid file descriptor 1024 in syscall close()
+==27956==    at 0x3990C0E85D: ??? (in /usr/lib64/libpthread-2.18.so)
+==27956==    by 0x29D0EA16: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0x29D0F3D2: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0x29D0F6C4: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0x29D0F785: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0x29D10916: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0x29D10EEE: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcommandfuns.so)
+==27956==    by 0xEE0DDE2: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27956==    by 0xEDFA873: Mfh_MATLAB_fn::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27956==    by 0xFAE135F: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27956==    by 0xFAE0328: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27956==    by 0xFA55455: inCallFcnWithTrap (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+--27895-- memcheck GC: 3997 nodes, 2154 survivors ( 53.8%)
+--27895-- memcheck GC: 5652 new table size (stepup)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwumfpack_api.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcsparse.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwma57.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwrookfastbp.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwspqr.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwumfpack.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libgfortran.so.3.0.0
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libquadmath.so.0.0.0
+--27895-- REDIR: 0x399088f940 (rawmemchr) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/toolbox/matlab/randfun/@RandStream/private/create_mex.mexa64
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/toolbox/matlab/randfun/@RandStream/randi.mexa64
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x39908387a0 (putenv) redirected to 0x4a0c5a0 (putenv)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/toolbox/matlab/randfun/@RandStream/delete.mexa64
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/toolbox/symbolic/symbolic/mupadmex.mexa64
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmut.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmupcomkernel.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtCore.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtGui.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtXml.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtXmlPatterns.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtSql.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtOpenGL.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtNetwork.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtSvg.so.4.8.4
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libQtWebKit.so.4.9.3
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libfreetype.so.6.10.2
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXrender.so.1.3.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXrandr.so.2.2.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXfixes.so.3.1.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libfontconfig.so.1.8.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libGL.so.1.2.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libpng16.so.16.6.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libglapi.so.0.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libselinux.so.1
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXdamage.so.1.1.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libX11-xcb.so.1.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libxcb-glx.so.0.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libxcb-dri2.so.0.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libXxf86vm.so.1.0.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libdrm.so.2.4.0
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/libpcre.so.1.2.1
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /usr/lib64/liblzma.so.5.0.99
+--27895--    object doesn't have a symbol table
+--27895-- REDIR: 0x3990903840 (__memcpy_chk) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- REDIR: 0x3990889730 (stpcpy) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/toolbox/symbolic/symbolic/mupadmexunloader.mexa64
+--27895--    object doesn't have a symbol table
+--27895-- memcheck GC: 5652 nodes, 3299 survivors ( 58.3%)
+--27895-- memcheck GC: 7993 new table size (stepup)
+--27895-- Reading syms from /home/icb/fabian.froehlich/MATLAB/AMICI/auxiliary/CalcMD5/CalcMD5.mexa64
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwsaveload.so
+--27895--    object doesn't have a symbol table
+--27895-- memcheck GC: 7993 nodes, 3532 survivors ( 44.1%)
+--27895-- memcheck GC: 8112 new table size (driftup)
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwcodetools.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmlint.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwCodeAnalyzer_res.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/icb/fabian.froehlich/MATLAB/AMICI/examples/example_events/ami_model_events.mexa64
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmltiming.so
+--27895--    object doesn't have a symbol table
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/mkl.so
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so
+--27895-- REDIR: 0x399089e4a0 (strcasestr) redirected to 0x4801716 (_vgnU_ifunc_wrapper)
+==27895== Invalid read of size 16
+==27895==    at 0x37376CFC: __intel_sse2_strrchr (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37355CB5: __kmp::init_dl_data() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37355BEA: __sti__$E (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373815C5: ??? (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x372EB7CA: ??? (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==  Address 0x23fdb0b0 is 64 bytes inside a block of size 78 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990405A5D: open_path (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399040885D: _dl_map_object (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399040C941: openaux (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399040F163: _dl_catch_error (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399040D041: _dl_map_object_deps (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399041376B: dl_open_worker (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399040F163: _dl_catch_error (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399041306A: _dl_open (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399100102A: dlopen_doit (in /usr/lib64/libdl-2.18.so)
+==27895==    by 0x399040F163: _dl_catch_error (in /usr/lib64/ld-2.18.so)
+==27895==    by 0x399100162C: _dlerror_run (in /usr/lib64/libdl-2.18.so)
+==27895== 
+--27895-- Reading syms from /home/software/icb/MATLAB/R2014a/bin/glnxa64/mklcompat.so
+--27895--    object doesn't have a symbol table
+==27895== Invalid read of size 16
+==27895==    at 0x37376298: __intel_sse2_strlen (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373211F2: __kmp_env_get (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733AF76: __kmp_register_library_startup() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C6B9: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x20912f40 is 48 bytes inside a block of size 59 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x37321333: __kmp_env_set (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733AF6E: __kmp_register_library_startup() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C6B9: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37321739: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3734929B: __kmp_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C925: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==    by 0x2B7A331F: mfMatrixMult(mxArray_tag*, mxArray_tag*, mxArray_tag*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x15f26060 is 0 bytes inside a block of size 11 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5C581B6: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58241: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58B23: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C59499: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5A5E7: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5BDB1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C60150: fl::i18n::initLcMgmtSystem() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x4C7ACB8: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895==    by 0x4C7AD46: fl::i18n::init__mllc_init(int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37376298: __intel_sse2_strlen (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37321755: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3734929B: __kmp_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C925: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x160759a0 is 16 bytes inside a block of size 23 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5EF9302: mcr_initialize_main(MATLAB_MODE, bool, std::vector<std::string, std::allocator<std::string> > const&, bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcr.so)
+==27895==    by 0x1C7284E4: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMVMLocal.so)
+==27895==    by 0x62A1FDB: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A04E1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A0A68: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x405094: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB)
+==27895==    by 0x3990821D64: (below main) (in /usr/lib64/libc-2.18.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x373217DB: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3734929B: __kmp_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C925: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==    by 0x2B7A331F: mfMatrixMult(mxArray_tag*, mxArray_tag*, mxArray_tag*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x15f26060 is 0 bytes inside a block of size 11 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5C581B6: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58241: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58B23: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C59499: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5A5E7: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5BDB1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C60150: fl::i18n::initLcMgmtSystem() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x4C7ACB8: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895==    by 0x4C7AD46: fl::i18n::init__mllc_init(int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37376298: __intel_sse2_strlen (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373217F7: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3734929B: __kmp_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C925: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x160759a0 is 16 bytes inside a block of size 23 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5EF9302: mcr_initialize_main(MATLAB_MODE, bool, std::vector<std::string, std::allocator<std::string> > const&, bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcr.so)
+==27895==    by 0x1C7284E4: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMVMLocal.so)
+==27895==    by 0x62A1FDB: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A04E1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A0A68: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x405094: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB)
+==27895==    by 0x3990821D64: (below main) (in /usr/lib64/libc-2.18.so)
+==27895== 
+==27895== Syscall param sched_setaffinity(mask) points to unaddressable byte(s)
+==27895==    at 0x39908EF649: syscall (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x3735E2C8: __kmp_affinity_determine_capable (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3734985E: __kmp_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C925: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37321739: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37348B03: __kmp_asat_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C9A3: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==    by 0x2B7A331F: mfMatrixMult(mxArray_tag*, mxArray_tag*, mxArray_tag*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x15f26060 is 0 bytes inside a block of size 11 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5C581B6: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58241: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58B23: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C59499: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5A5E7: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5BDB1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C60150: fl::i18n::initLcMgmtSystem() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x4C7ACB8: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895==    by 0x4C7AD46: fl::i18n::init__mllc_init(int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37376298: __intel_sse2_strlen (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37321755: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37348B03: __kmp_asat_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C9A3: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x160759a0 is 16 bytes inside a block of size 23 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5EF9302: mcr_initialize_main(MATLAB_MODE, bool, std::vector<std::string, std::allocator<std::string> > const&, bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcr.so)
+==27895==    by 0x1C7284E4: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMVMLocal.so)
+==27895==    by 0x62A1FDB: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A04E1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A0A68: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x405094: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB)
+==27895==    by 0x3990821D64: (below main) (in /usr/lib64/libc-2.18.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x373217DB: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37348B03: __kmp_asat_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C9A3: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==    by 0x2B7A331F: mfMatrixMult(mxArray_tag*, mxArray_tag*, mxArray_tag*) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x15f26060 is 0 bytes inside a block of size 11 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5C581B6: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58241: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C58B23: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C59499: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5A5E7: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C5BDB1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x5C60150: fl::i18n::initLcMgmtSystem() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwi18n.so)
+==27895==    by 0x4C7ACB8: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895==    by 0x4C7AD46: fl::i18n::init__mllc_init(int) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libut.so)
+==27895== 
+==27895== Invalid read of size 16
+==27895==    at 0x37376298: __intel_sse2_strlen (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373217F7: __kmp_env_blk_init (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x37348B03: __kmp_asat_env_initialize(char const*) (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C9A3: __kmp_do_serial_initialize() (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733C62D: __kmp_serial_initialize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x3733A456: __kmp_aux_set_stacksize (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x373228A8: kmp_set_stacksize_s (in /home/software/icb/MATLAB/R2014a/sys/os/glnxa64/libiomp5.so)
+==27895==    by 0x15B164C3: ompwrapper::init() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwompwrapper.so)
+==27895==    by 0x154548DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x159125F1: Binder::_load_and_resolve() (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwbinder.so)
+==27895==    by 0x154532A3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwblas.so)
+==27895==    by 0x2B7A3E63: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmathlinalg.so)
+==27895==  Address 0x160759a0 is 16 bytes inside a block of size 23 alloc'd
+==27895==    at 0x4A0645D: malloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x3990838AE9: __add_to_environ (in /usr/lib64/libc-2.18.so)
+==27895==    by 0x4A0C7FF: setenv (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x5EF9302: mcr_initialize_main(MATLAB_MODE, bool, std::vector<std::string, std::allocator<std::string> > const&, bool) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmcr.so)
+==27895==    by 0x1C7284E4: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwMVMLocal.so)
+==27895==    by 0x62A1FDB: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A04E1: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x62A0A68: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwmvm.so)
+==27895==    by 0x405094: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/MATLAB)
+==27895==    by 0x3990821D64: (below main) (in /usr/lib64/libc-2.18.so)
+==27895== 
+--27895-- REDIR: 0x6775b90 (operator new[](unsigned long, std::nothrow_t const&)) redirected to 0x4a07238 (operator new[](unsigned long, std::nothrow_t const&))
+==27895== Invalid write of size 8
+==27895==    at 0x33946EC3: sroot_model_events (model_events_sroot.c:86)
+==27895==    by 0x33962BAA: fsroot (wrapfunctions.c:91)
+==27895==    by 0x3395F229: getEventSensisFSA_tf (amici.c:1182)
+==27895==    by 0x3396049A: fillEventOutput (amici.c:1451)
+==27895==    by 0x338BDB36: mexFunction (amiwrap.c:124)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895==    by 0xFAFC20D: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB71CF: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB91E9: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==  Address 0x2aa46a48 is 8 bytes after a block of size 160 alloc'd
+==27895==    at 0x4A081D4: calloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x50113DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwfl.so)
+==27895==    by 0x531D4AC: matrix::detail::create_numeric(unsigned long, unsigned long, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E127: matrix::detail::create_numeric(unsigned long, unsigned long const*, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E72D: matrix::detail::noninlined::mx_array_api::mxCreateNumericArray(unsigned long, unsigned long const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x534A70B: matrix::detail::noninlined::mx_array_compat_32_api::mxCreateNumericArray(int, int const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x3395C31F: setupReturnData (amici.c:308)
+==27895==    by 0x338BD7FF: mexFunction (amiwrap.c:65)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895== 
+==27895== Invalid write of size 8
+==27895==    at 0x33946F67: sroot_model_events (model_events_sroot.c:92)
+==27895==    by 0x33962BAA: fsroot (wrapfunctions.c:91)
+==27895==    by 0x3395F229: getEventSensisFSA_tf (amici.c:1182)
+==27895==    by 0x3396049A: fillEventOutput (amici.c:1451)
+==27895==    by 0x338BDB36: mexFunction (amiwrap.c:124)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895==    by 0xFAFC20D: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB71CF: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB91E9: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==  Address 0x2aa46a48 is 8 bytes after a block of size 160 alloc'd
+==27895==    at 0x4A081D4: calloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x50113DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwfl.so)
+==27895==    by 0x531D4AC: matrix::detail::create_numeric(unsigned long, unsigned long, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E127: matrix::detail::create_numeric(unsigned long, unsigned long const*, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E72D: matrix::detail::noninlined::mx_array_api::mxCreateNumericArray(unsigned long, unsigned long const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x534A70B: matrix::detail::noninlined::mx_array_compat_32_api::mxCreateNumericArray(int, int const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x3395C31F: setupReturnData (amici.c:308)
+==27895==    by 0x338BD7FF: mexFunction (amiwrap.c:65)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895== 
+==27895== Invalid write of size 8
+==27895==    at 0x33946FB1: sroot_model_events (model_events_sroot.c:97)
+==27895==    by 0x33962BAA: fsroot (wrapfunctions.c:91)
+==27895==    by 0x3395F229: getEventSensisFSA_tf (amici.c:1182)
+==27895==    by 0x3396049A: fillEventOutput (amici.c:1451)
+==27895==    by 0x338BDB36: mexFunction (amiwrap.c:124)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895==    by 0xFAFC20D: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB71CF: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==    by 0xFAB91E9: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_interpreter.so)
+==27895==  Address 0x2aa46a48 is 8 bytes after a block of size 160 alloc'd
+==27895==    at 0x4A081D4: calloc (in /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so)
+==27895==    by 0x50113DC: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwfl.so)
+==27895==    by 0x531D4AC: matrix::detail::create_numeric(unsigned long, unsigned long, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E127: matrix::detail::create_numeric(unsigned long, unsigned long const*, mxClassID, mxComplexity, int, mxArray_tag const**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x531E72D: matrix::detail::noninlined::mx_array_api::mxCreateNumericArray(unsigned long, unsigned long const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x534A70B: matrix::detail::noninlined::mx_array_compat_32_api::mxCreateNumericArray(int, int const*, mxClassID, mxComplexity) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmx.so)
+==27895==    by 0x3395C31F: setupReturnData (amici.c:308)
+==27895==    by 0x338BD7FF: mexFunction (amiwrap.c:65)
+==27895==    by 0xE1E4729: mexRunMexFile (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E0A93: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xE1E1FB3: ??? (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmex.so)
+==27895==    by 0xEE4BAD8: Mfh_file::dispatch_fh(int, mxArray_tag**, int, mxArray_tag**) (in /home/software/icb/MATLAB/R2014a/bin/glnxa64/libmwm_dispatcher.so)
+==27895== 
+--27895-- memcheck GC: 8112 nodes, 3660 survivors ( 45.1%)
+--27895-- memcheck GC: 8233 new table size (driftup)
