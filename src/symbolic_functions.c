@@ -7,8 +7,8 @@
 
 
 #if (_MSC_VER >= 1000)
-#include <iostream>
-#include <algorithm>
+#include <iostream.h>
+#include <algorithm.h>
 #define fmax(a,b) std::max(a,b)
 #define fmin(a,b) std::min(a,b)
 #endif
