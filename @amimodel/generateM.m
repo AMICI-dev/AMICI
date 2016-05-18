@@ -371,13 +371,18 @@ function generateM(this, amimodelo2)
                 fprintf(fid,['    s2x = sol.sx(:,' num2str(nxtrue+1) ':end,:);\n']);
                 fprintf(fid,['    s2y = sol.sy(:,' num2str(nytrue+1) ':end,:);\n']);
         end
-        fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+        switch(o2flag)
+            case 1
+                fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+            case 2
+                fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
+        end
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         switch(o2flag)
             case 1
                 fprintf(fid,['        s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             case 2
-                fprintf(fid,['        s2z= [];\n']);
+                fprintf(fid,['        s2z(:,iz,:) = reshape(sol.sz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
                 %TBD
         end
         fprintf(fid,['    end\n']);
@@ -401,8 +406,8 @@ function generateM(this, amimodelo2)
                     case 2
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sx,permute(v,[3,2,1]));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sy,permute(v,[3,2,1]));\n']);
-                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sz,permute(v,[3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,srz,permute(v,[3,2,1]));\n']);
                 end
             case 'log10'
                 fprintf(fid,['    sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
@@ -419,8 +424,8 @@ function generateM(this, amimodelo2)
                     case 2
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sx,permute(v,[3,2,1])*log(10));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sy,permute(v,[3,2,1])*log(10));\n']);
-                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)*log(10));\n']);
-                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)*log(10));\n']);
+                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sz,permute(v,[3,2,1])*log(10));\n']);
+                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,srz,permute(v,[3,2,1])*log(10));\n']);
                 end
             case 'lin'
                 fprintf(fid,'    sol.sx = sx;\n');

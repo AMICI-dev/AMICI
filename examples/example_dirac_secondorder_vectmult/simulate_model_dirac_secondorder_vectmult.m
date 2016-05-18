@@ -70,11 +70,6 @@
 %    .interpType   ... only available for sensi_meth == 2. Interpolation method for forward solution.
 %        1: Hermite (DEFAULT for problems without discontinuities)
 %        2: Polynomial (DEFAULT for problems with discontinuities)
-%    .data_model   ... noise model for data.
-%        1: Normal (DEFAULT)
-%        2: Lognormal 
-%    .event_model   ... noise model for events.
-%        1: Normal (DEFAULT)
 %    .ordering   ... online state reordering.
 %        0: AMD reordering
 %        1: COLAMD reordering (default)
@@ -164,13 +159,18 @@ np = length(options_ami.sens_ind); % MUST NOT CHANGE THIS VALUE
 if(np == 0)
     options_ami.sensi = 0;
 end
-if(isempty(options_ami.qpositivex))
-    options_ami.qpositivex = zeros(2,1);
+if(options_ami.sensi > 1)
+    nxfull = 4;
 else
-    if(numel(options_ami.qpositivex)==2)
+    nxfull = 2;
+end
+if(isempty(options_ami.qpositivex))
+    options_ami.qpositivex = zeros(nxfull,1);
+else
+    if(numel(options_ami.qpositivex)>=nxfull)
         options_ami.qpositivex = options_ami.qpositivex(:);
     else
-        error('Number of elements in options_ami.qpositivex does not match number of states 2');
+        error(['Number of elements in options_ami.qpositivex does not match number of states ' num2str(nxfull) ]);
     end
 end
 plist = options_ami.sens_ind-1;
@@ -222,20 +222,25 @@ if(options_ami.sensi==1)
     sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.srz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
 if(options_ami.sensi == 2)
     sx = sol.sx(:,1:2,:);
     sy = sol.sy(:,1:1,:);
+    sz = zeros(size(sol.z,1),0,length(theta(options_ami.sens_ind)));
     for iz = 1:0
         sz(:,iz,:) = sol.sz(:,2*iz-1,:);
     end
+    srz = sol.srz;
     s2x = sol.sx(:,3:end,:);
     s2y = sol.sy(:,2:end,:);
+    s2z = zeros(size(sol.z,1),0,length(theta(options_ami.sens_ind)));
     for iz = 1:0
-        s2z= [];
+        s2z(:,iz,:) = reshape(sol.sz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));
     end
+    s2rz = sol.s2rz;
     sol.x = sol.x(:,1:2);
     sol.y = sol.y(:,1:1);
     sol.z = sol.z(:,1:0);
@@ -243,6 +248,8 @@ if(options_ami.sensi == 2)
     sol.sy = bsxfun(@times,sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sx,permute(v,[3,2,1])*log(10));
     sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sy,permute(v,[3,2,1])*log(10));
+    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,sz,permute(v,[3,2,1])*log(10));
+    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10)) + bsxfun(@times,srz,permute(v,[3,2,1])*log(10));
 end
 if(options_ami.sensi_meth == 3)
     sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
