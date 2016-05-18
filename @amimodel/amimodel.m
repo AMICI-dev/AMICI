@@ -152,11 +152,15 @@ classdef amimodel < handle
                 else
                     AM.makeSyms();
                     AM.nx = length(AM.sym.x);
-                    AM.nxtrue = AM.nx;
+                    if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
+                        AM.nxtrue = AM.nx;
+                    end
                     AM.np = length(AM.sym.p);
                     AM.nk = length(AM.sym.k);
                     AM.ny = length(AM.sym.y);
-                    AM.nytrue = AM.ny;
+                    if(isempty(AM.nytrue)) % if its not empty we are dealing with an augmented model
+                        AM.nytrue = AM.ny;
+                    end
                 end
             end
             
