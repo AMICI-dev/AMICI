@@ -103,16 +103,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     }
                     
                     if (status==AMI_ROOT_RETURN) {
-                        handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata);
+                        handleEvent(&status, &iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
                         if (status != AMI_SUCCESS) goto freturn;
                         
-                        if (iroot<nmaxevent*ne) {
-                            discs[iroot] = t;
-                            iroot++;
-                        } else {
-                            mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
-                            status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
-                        }
                     }
                 }
             }

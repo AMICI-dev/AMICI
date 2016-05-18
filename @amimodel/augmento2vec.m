@@ -85,6 +85,9 @@ function [modelo2vec] = augmento2vec(this)
     
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
     modelo2vec.o2flag = 2;
+    modelo2vec.debug = this.debug;
+    modelo2vec.forward = this.forward;
+    modelo2vec.adjoint = this.adjoint;
 end
 
 

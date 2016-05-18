@@ -70,11 +70,6 @@
 %    .interpType   ... only available for sensi_meth == 2. Interpolation method for forward solution.
 %        1: Hermite (DEFAULT for problems without discontinuities)
 %        2: Polynomial (DEFAULT for problems with discontinuities)
-%    .data_model   ... noise model for data.
-%        1: Normal (DEFAULT)
-%        2: Lognormal 
-%    .event_model   ... noise model for events.
-%        1: Normal (DEFAULT)
 %    .ordering   ... online state reordering.
 %        0: AMD reordering
 %        1: COLAMD reordering (default)
@@ -149,13 +144,14 @@ np = length(options_ami.sens_ind); % MUST NOT CHANGE THIS VALUE
 if(np == 0)
     options_ami.sensi = 0;
 end
+nxfull = 9;
 if(isempty(options_ami.qpositivex))
-    options_ami.qpositivex = zeros(9,1);
+    options_ami.qpositivex = zeros(nxfull,1);
 else
-    if(numel(options_ami.qpositivex)==9)
+    if(numel(options_ami.qpositivex)>=nxfull)
         options_ami.qpositivex = options_ami.qpositivex(:);
     else
-        error('Number of elements in options_ami.qpositivex does not match number of states 9');
+        error(['Number of elements in options_ami.qpositivex does not match number of states ' num2str(nxfull) ]);
     end
 end
 plist = options_ami.sens_ind-1;
@@ -203,6 +199,7 @@ if(options_ami.sensi==1)
     sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.srz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end

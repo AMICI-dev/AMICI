@@ -244,45 +244,55 @@ function [this,model] = getSyms(this,model)
             w = this.strsym;
 
         case 'dwdx'
-            jacx = jacobian(model.fun.w.sym,x);
-            this.sym = jacx;
-            for idw = 1:ndw
-                this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
-            end
-            % fill cell array
-            idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacx));
-            if(numel(idx_w)>0)
-                for iw = 1:length(idx_w)
-                    this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
+            if(length(model.fun.w.sym)>0)
+                jacx = jacobian(model.fun.w.sym,x);
+                this.sym = jacx;
+                for idw = 1:ndw
+                    this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
                 end
-                model.ndwdx = length(idx_w);
-                % update dwdx with simplified expressions, here we can exploit
-                % the proper ordering of w to ensure correctness of expressions
-                tmp = jacx + jacw*this.strsym;
-                this.sym = tmp(idx_w);
-            else
+                % fill cell array
+                idx_w = find(logical(this.sym~=0));
                 this.strsym = sym.zeros(size(jacx));
+                if(numel(idx_w)>0)
+                    for iw = 1:length(idx_w)
+                        this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
+                    end
+                    model.ndwdx = length(idx_w);
+                    % update dwdx with simplified expressions, here we can exploit
+                    % the proper ordering of w to ensure correctness of expressions
+                    tmp = jacx + jacw*this.strsym;
+                    this.sym = tmp(idx_w);
+                else
+                    this.strsym = sym.zeros(size(jacx));
+                end
+            else
+                this.sym = sym(zeros(0,nx));
+                this.strsym = sym(zeros(0,nx));
             end
             
         case 'dwdp'
-            jacp = jacobian(model.fun.w.sym,p);
-            this.sym = jacp;
-            for idw = 1:ndw
-                this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
-            end
-            % fill cell array
-            idx_w = find(logical(this.sym~=0));
-            this.strsym = sym.zeros(size(jacp));
-            if(numel(idx_w)>0)
-                for iw = 1:length(idx_w)
-                    this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
+            if(length(model.fun.w.sym)>0)
+                jacp = jacobian(model.fun.w.sym,p);
+                this.sym = jacp;
+                for idw = 1:ndw
+                    this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
                 end
-                model.ndwdp = length(idx_w);
-                % update dwdx with simplified expressions, here we can exploit
-                % the proper ordering of w to ensure correctness of expressions
-                tmp = jacp + jacw*this.strsym;
-                this.sym = tmp(idx_w);
+                % fill cell array
+                idx_w = find(logical(this.sym~=0));
+                this.strsym = sym.zeros(size(jacp));
+                if(numel(idx_w)>0)
+                    for iw = 1:length(idx_w)
+                        this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
+                    end
+                    model.ndwdp = length(idx_w);
+                    % update dwdx with simplified expressions, here we can exploit
+                    % the proper ordering of w to ensure correctness of expressions
+                    tmp = jacp + jacw*this.strsym;
+                    this.sym = tmp(idx_w);
+                end
+            else
+                this.sym = sym(zeros(0,nx));
+                this.strsym = sym(zeros(0,nx));
             end
             
         case 'dfdx'
@@ -411,7 +421,7 @@ function [this,model] = getSyms(this,model)
             if(nz>0)
                 this.sym = jacobian(model.fun.sigma_z.sym,p);
             else
-                this.sym = sym(zeros(model.nztrue,np));
+                this.sym = sym(zeros(model.nz,np));
             end
             this = makeStrSyms(this);
             
@@ -434,7 +444,23 @@ function [this,model] = getSyms(this,model)
             
         case 'sroot'
             this.sym = model.fun.drootdp.sym + model.fun.drootdx.sym*sx;
-            
+          
+        case 's2root'
+            switch(model.o2flag)
+                case 1
+                    s2x = reshape(sx((model.nxtrue+1):end,:),[model.nxtrue,np,np]);
+                    vec = sym(eye(np));
+                case 2
+                    s2x = reshape(sx((model.nxtrue+1):end,:),[model.nxtrue,np,1]);
+                    vec = model.sym.k((end-np+1):end);
+            end
+            for ievent = 1:nevent
+                
+                this.sym(ievent,:,:) = (jacobian(model.fun.sroot.sym(ievent,:),p) + jacobian(model.fun.sroot.sym(ievent,:),x(1:model.nxtrue))*sx(1:model.nxtrue,:) + jacobian(model.fun.sroot.sym(ievent,:),x(1:model.nxtrue))*sx(1:model.nxtrue,:))*vec;
+                for ix = 1:model.nxtrue
+                    this.sym(ievent,:,:) = this.sym(ievent,:,:) + model.fun.drootdx.sym(ievent,ix)*s2x(ix,:,:);
+                end
+            end
         case 'dtaudp'
             this.sym = sym(zeros(nevent,np));
             for ievent = 1:nevent
@@ -523,7 +549,7 @@ function [this,model] = getSyms(this,model)
             end
             % construct the event identifyer, this is a vector which maps
             % events to outputs z
-            model.z2event = zeros(nz,1);
+            model.z2event = zeros(length(this.sym),1);
             iz = 0;
             for ievent = 1:nevent
                 for jz = 1:length(model.event(ievent).z)
