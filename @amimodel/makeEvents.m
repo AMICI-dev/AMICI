@@ -84,10 +84,9 @@ function makeEvents( this )
                     % replace event specific functions by "polydirac" variable
                     symchar = strrep(symchar,str_arg_d,'polydirac');
                     % extract coefficient
-                    cfp = coeffs(sym(symchar),polydirac,'all');
-                    if(length(cfp)>1)
-                        % add coefficient to bolus
-                        tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(1);
+                    [cfp,t] = coeffs(sym(symchar),polydirac);
+                    if(any(double(t==sym('polydirac'))))
+                        tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
                     end
                     % remove dirac
                     symchar = strrep(symchar,'polydirac','0');
@@ -121,14 +120,8 @@ function makeEvents( this )
                         % am_max and am_min?
                         try
                             [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
-                            if(length(cfp)>1)
-                                if(length(char(cfp(2)/trigger{ievent}))<length(char(cfp(2))))
-                                    hflags(ix,ievent) = 0;
-                                else
-                                    hflags(ix,ievent) = 1;
-                                end
-                            elseif(logical(tfp==sym(['h_' num2str(ievent-1) ])))
-                                if(length(char(cfp(1)/trigger{ievent}))<length(char(cfp(1))))
+                            if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
+                                if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
                                     hflags(ix,ievent) = 0;
                                 else
                                     hflags(ix,ievent) = 1;

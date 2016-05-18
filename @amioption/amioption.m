@@ -2,7 +2,7 @@
 % @file amioption
 % @brief definition of amioption class
 %
-classdef amioption < matlab.mixin.SetGet
+classdef amioption < hgsetget
     %AMIOPTION provides an option container to pass simulation parameters to the
     %simulation routine.
     

@@ -33,7 +33,7 @@ function importSBML(this,modelname)
     setInitialAssignment(this,model,'compartment',initAssignemnts_sym,initAssignemnts_math)
     
     % extract compartment sizes, default to 1
-    this.compartment = subs(this.compartment,compartments_sym([model.compartment.isSetSize]),sym([model.compartment.size]));
+    this.compartment = subs(this.compartment,compartments_sym(logical([model.compartment.isSetSize])),sym([model.compartment.size]));
     
     % set remaining ones to default value 1
     this.compartment = subs(this.compartment,compartments_sym,sym(ones(size(compartments_sym))));

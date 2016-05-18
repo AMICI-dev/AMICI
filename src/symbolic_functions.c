@@ -5,6 +5,18 @@
  * This file contains definitions of various symbolic functions which
  */
 
+
+#if (_MSC_VER >= 1000)
+#define fmax(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define fmin(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+#endif
+
 #include <math.h>
 #include <mex.h>
 #include <float.h>

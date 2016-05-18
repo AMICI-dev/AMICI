@@ -89,8 +89,10 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[it+nt*\(($1)+ip*' num2str(model.ny) '\)\]']);
             elseif(strcmp(this.cvar,'z'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*($1)\]']);
-            elseif(strcmp(this.cvar,'sz'))
+            elseif(strcmp(this.cvar,'sz') || strcmp(this.cvar,'sroot'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) ')\]']);
+            elseif(strcmp(this.cvar,'s2root'))
+                cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) '*np)\]']);
             elseif(strcmp(this.cvar,'dxdotdp'))
                 cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]',['dxdotdp[\($1+ip*' num2str(model.nx) '\)\]']);
             elseif(strcmp(this.cvar,'Jdata'))

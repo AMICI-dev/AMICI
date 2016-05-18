@@ -106,7 +106,6 @@ function generateC(this)
                         this.fun.(ifun{1}).writeCcode(this,fid);
                     end
                 elseif( strcmp(ifun{1},'qBdot') )
-                    fprintf(fid,'int ip;\n');
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     fprintf(fid,'switch (plist[ip]) {\n');
@@ -114,7 +113,6 @@ function generateC(this)
                     fprintf(fid,'}\n');
                     fprintf(fid,'}\n');
                 elseif(this.fun.(ifun{1}).sensiflag)
-                    fprintf(fid,'int ip;\n');
                     if( strcmp(ifun{1},'dxdotdp'))
                         fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     end
@@ -141,7 +139,6 @@ function generateC(this)
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end
                 if(strcmp(ifun{1},'dxdotdp'))
-                    fprintf(fid,'int ix;\n');
                     fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                     fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,['       if(mxIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
@@ -159,7 +156,6 @@ function generateC(this)
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'xdot'))
-                    fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xdot_tmp[ix])) {\n');
                     fprintf(fid,'       xdot_tmp[ix] = 0;\n');
@@ -178,7 +174,6 @@ function generateC(this)
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'JSparse'))
-                    fprintf(fid,'int inz;\n');
                     fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[inz])) {\n');
                     fprintf(fid,'       J->data[inz] = 0;\n');
@@ -194,7 +189,6 @@ function generateC(this)
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'J'))
-                    fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(J->data[ix])) {\n');
                     fprintf(fid,'       J->data[ix] = 0;\n');
@@ -210,7 +204,6 @@ function generateC(this)
                     fprintf(fid,'}\n');
                 end
                 if(strcmp(ifun{1},'xBdot'))
-                    fprintf(fid,'int ix;\n');
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(mxIsNaN(xBdot_tmp[ix])) {\n');
                     fprintf(fid,'       xBdot_tmp[ix] = 0;');
@@ -434,7 +427,7 @@ function generateC(this)
     end
     fprintf(fid,'                }\n');
     
-    ffuns = {'x0','dx0','sx0','sdx0','J','JB','root',...
+    ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','sroot','s2root',...
         'y','sy','dydp','dydx','z','sz','sz_tf','dzdp','dzdx',...
         'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
         'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...

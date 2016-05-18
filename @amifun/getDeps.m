@@ -227,6 +227,9 @@ function [ this ] = getDeps(this, model)
             this.deps = {'w','p'};
         case 'dwdx'
             this.deps = {'w','x'};
+            
+        case 's2root'
+            this.deps = {'sroot'};
 
         otherwise
             error(['unknown function string: ' this.funstr ])

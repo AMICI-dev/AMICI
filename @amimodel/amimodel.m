@@ -88,7 +88,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 9;
+        compver = 10;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -137,21 +137,30 @@ classdef amimodel < handle
             
             
             
-            props = properties(AM);
+            props = fields(model);
             
             for j = 1:length(props)
                 if(~strcmp(props{j},'sym')) % we already checked for the sym field
                     if(isfield(model,props{j}))
+                        try
                         AM.(props{j}) = model.(props{j});
+                        catch
+                            error(['The provided model struct or the struct created by the provided model function has the field ' props{j} ' which is not a valid property of ' ...
+                                'the amimodel class. Please check your model definition.']);
+                        end
                     end
                 else
                     AM.makeSyms();
                     AM.nx = length(AM.sym.x);
-                    AM.nxtrue = AM.nx;
+                    if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
+                        AM.nxtrue = AM.nx;
+                    end
                     AM.np = length(AM.sym.p);
                     AM.nk = length(AM.sym.k);
                     AM.ny = length(AM.sym.y);
-                    AM.nytrue = AM.ny;
+                    if(isempty(AM.nytrue)) % if its not empty we are dealing with an augmented model
+                        AM.nytrue = AM.ny;
+                    end
                 end
             end
             
