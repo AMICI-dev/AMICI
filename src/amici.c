@@ -23,7 +23,6 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -36,8 +35,9 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-mxArray *mx ## FIELD; \
-const mwSize dims ## FIELD[]={D1,D2,D3}; \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
 mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -51,8 +51,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-mxArray *mx ## FIELD; \
-const mwSize dims ## FIELD[]={D1,D2,D3,D4}; \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
+dims ## FIELD[3]=D4; \
 mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -243,7 +245,46 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxsol;
 
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-    
+    mxArray *mxstatus;
+    mxArray *mxllh;
+    mxArray *mxsllh;
+    mxArray *mxs2llh;
+    mxArray *mxchi2;
+    mxArray *mxt;
+    mxArray *mxnumsteps;
+    mxArray *mxnumrhsevals;
+    mxArray *mxorder;
+    mxArray *mxnumstepsS;
+    mxArray *mxnumrhsevalsS;
+    mxArray *mrz;
+    mxArray *mxz;
+    mxArray *mxx;
+    mxArray *mxy;
+    mxArray *mxsrz;
+    mxArray *mxsz;
+    mxArray *mxsx;
+    mxArray *mxsy;
+    mxArray *mxsigmay;
+    mxArray *mxssigmay;
+    mxArray *mxsigmaz;
+    mxArray *mxssigmaz;
+    mxArray *mxxdot;
+    mxArray *mxJ;
+    mxArray *mxdydp;
+    mxArray *mxdydx;
+    mxArray *mxdxdotdp;
+
+    mxArray *mxts;
+
+    mwSize dimssx[] = {0,0,0};
+    mwSize dimssy[] = {0,0,0};
+    mwSize dimssz[] = {0,0,0};
+    mwSize dimssrz[] = {0,0,0};
+    mwSize dimss2rz[] = {0,0,0,0};
+    mwSize dimssigmay[] = {0,0,0};
+    mwSize dimssigmaz[] = {0,0,0};
+    mwSize dimsssigmay[] = {0,0,0};
+    mwSize dimsssigmaz[] = {0,0,0};
     
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
@@ -256,7 +297,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     plhs[0] = mxsol;
     
-    mxArray *mxstatus;
+    
     mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     
     mxSetPr(mxstatus,pstatus);
@@ -264,8 +305,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     initField2(llh,1,1);
     initField2(chi2,1,1);
-    
-    mxArray *mxts;
+     
     mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
@@ -277,7 +317,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
         initField2(numstepsS,nt,1);
         initField2(numrhsevalsS,nt,1);
     }
-    if(nz>0 & ne>0){
+    if((nz>0) & (ne>0)){
         initField2(z,nmaxevent,nz);
         initField2(rz,nmaxevent,nztrue);
         initField2(sigmaz,nmaxevent,nz);
@@ -304,7 +344,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(sy,nt,ny,np);
                 initField3(ssigmay,nt,ny,np);
             }
-            if(nz>0 & ne>0){
+            if((nz>0) & (ne>0)){
                 initField3(srz,nmaxevent,nztrue,np);
                 if(sensi>1){
                     initField4(s2rz,nmaxevent,nztrue,np,np);
@@ -317,7 +357,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             if(ny>0) {
                 initField3(ssigmay,nt,ny,np);
             }
-            if(nz>0 & ne>0){
+            if((nz>0) & (ne>0)){
                 initField3(ssigmaz,nmaxevent,nz,np);
             }
         }
@@ -431,8 +471,6 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
     
-    
-                
     return(edata);
 }
 
@@ -450,13 +488,14 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
+    int ip;
+    int ix;
     /* this casting is necessary to ensure availability of accessor macros */
     UserData udata; /* user udata */
     TempData tdata; /* user udata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
-    int ip;
-    int ix;
+
     
     t = tstart;
     
@@ -771,12 +810,13 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
     /* this casting is necessary to ensure availability of accessor macros */
+    int ix;
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     
-    int ix;
+
     
     xB = N_VNew_Serial(nx);
     xB_old = N_VNew_Serial(nx);
