@@ -1325,7 +1325,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     for (iz=0; iz<nztrue; iz++) {
         if(z2event[iz] == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
-            if(!mxIsNaN(mz[ie*nmaxevent+nroots[ie]])) {
+            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                 *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
             }
