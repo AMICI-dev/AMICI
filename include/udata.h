@@ -55,8 +55,6 @@
 #define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 
-#define event_model udata->am_event_model
-
 #define ordering udata->am_ordering
 
 #define tmp_J udata->am_J
@@ -182,8 +180,6 @@ typedef struct {
     /** sensitivity initialisation */
     double *am_sx0data;
     
-    /** error model for events */
-    int am_event_model;
     
     /** state ordering */
     int am_ordering;
