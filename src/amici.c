@@ -256,7 +256,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxorder;
     mxArray *mxnumstepsS;
     mxArray *mxnumrhsevalsS;
-    mxArray *mrz;
+    mxArray *mxrz;
     mxArray *mxz;
     mxArray *mxx;
     mxArray *mxy;
@@ -264,6 +264,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     mxArray *mxsz;
     mxArray *mxsx;
     mxArray *mxsy;
+    mxArray *mxs2rz;
     mxArray *mxsigmay;
     mxArray *mxssigmay;
     mxArray *mxsigmaz;
