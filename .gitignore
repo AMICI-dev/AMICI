@@ -114,3 +114,7 @@ examples/example_dirac/simulate_model_dirac.m
 examples/example_dirac_secondorder/simulate_model_dirac_secondorder.m
 
 examples/example_dirac_adjoint/simulate_model_dirac_adjoint.m
+
+examples/example_adjoint/simulate_model_adjoint.m
+
+examples/example_adjoint/simulate_model_adjoint.m
