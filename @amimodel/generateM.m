@@ -255,7 +255,7 @@ function generateM(this, amimodelo2)
     fprintf(fid,['if(isempty(options_ami.qpositivex))\n']);
     fprintf(fid,['    options_ami.qpositivex = zeros(nxfull,1);\n']);
     fprintf(fid,['else\n']);
-    fprintf(fid,['    if(numel(options_ami.qpositivex)==nxfull)\n']);
+    fprintf(fid,['    if(numel(options_ami.qpositivex)>=nxfull)\n']);
     fprintf(fid,['        options_ami.qpositivex = options_ami.qpositivex(:);\n']);
     fprintf(fid,['    else\n']);
     fprintf(fid,['        error([''Number of elements in options_ami.qpositivex does not match number of states '' num2str(nxfull) ]);\n']);
