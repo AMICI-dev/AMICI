@@ -45,7 +45,7 @@ elseif(strcmp(this.funstr,'s2root'))
         for ip=1:np
             if(any(any(any(nonzero(:,:,ip)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                tmpfun.sym = squeeze(this.sym(:,:,ip));
+                tmpfun.sym = squeeze(this.sym(model.z2event,:,ip));
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
@@ -62,7 +62,11 @@ else
                 if(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'sz') || strcmp(this.funstr,'sy'))
                     fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
-                tmpfun.sym = this.sym(:,ip);
+                if(strcmp(this.funstr,'sroot'))
+                    tmpfun.sym = this.sym(model.z2event,ip);
+                else
+                    tmpfun.sym = this.sym(:,ip);
+                end
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
