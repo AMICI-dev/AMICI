@@ -7,10 +7,14 @@
 
 
 #if (_MSC_VER >= 1000)
-#include <iostream.h>
-#include <algorithm.h>
-#define fmax(a,b) std::max(a,b)
-#define fmin(a,b) std::min(a,b)
+#define fmax(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define fmin(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
 #endif
 
 #include <math.h>
