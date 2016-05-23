@@ -30,11 +30,11 @@ classdef amimodel < handle
         % number of states @type int
         nx = double.empty();
         % number of original states for second order sensitivities @type int
-        nxtrue = 0;
+        nxtrue = double.empty();
         % number of observables @type int
         ny = double.empty();
         % number of original observables for second order sensitivities @type int
-        nytrue = 0;
+        nytrue = double.empty();
         % number of parameters @type int
         np = double.empty();
         % number of constants @type int
@@ -88,7 +88,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 10;
+        compver = 11;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )

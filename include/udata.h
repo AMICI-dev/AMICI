@@ -64,6 +64,7 @@
 #define dwdp_tmp udata->am_dwdp
 #define M_tmp udata->am_M
 #define dfdx_tmp udata->am_dfdx
+#define stau_tmp udata->am_stau
 
 #define z2event udata->am_z2event
 #define h udata->am_h
@@ -204,7 +205,9 @@ typedef struct {
     realtype *am_M;
     /** tempory storage of dfdx data across functions */
     realtype *am_dfdx;
-    
+    /** tempory storage of stau data across functions */
+    realtype *am_stau;
+
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */

@@ -113,7 +113,7 @@ function printLocalVars(this,model,fid)
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'
-            % nothing
+            fprintf(fid,['memset(stau,0,sizeof(realtype)*np);\n']);
         case 'dxdotdp'
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);

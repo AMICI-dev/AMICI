@@ -207,8 +207,12 @@ UserData setupUserData(const mxArray *prhs[]) {
         dfdx_tmp = mxMalloc(nx*nx*sizeof(realtype));
     }
     if (sensi>0) {
-        /* initialise temporary jacobian storage */
+        /* initialise temporary dxdotdp storage */
         tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+    }
+    if (ne>0) {
+        /* initialise temporary stau storage */
+        stau_tmp = mxMalloc(np*sizeof(realtype));
     }
     
     if (nw>0) {
@@ -1665,6 +1669,15 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             *status = fxdot(t,x,dx,xdot,udata);
             N_VScale(1.0,xdot,xdot_old);
             N_VScale(1.0,dx,dx_old);
+            
+            /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
+            if (seflag == 0) {
+                for (ie = 0; ie<ne; ie++) {
+                    if(rootsfound[ie] != 0) {
+                        fstau(t,ie,stau_tmp,x,NVsx,user_data);
+                    }
+                }
+            }
         }
         
         if (sensi_meth == AMI_ASA) {
