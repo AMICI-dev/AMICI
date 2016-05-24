@@ -120,3 +120,5 @@ examples/example_adjoint/simulate_model_adjoint.m
 examples/example_adjoint/simulate_model_adjoint.m
 
 *.log
+
+examples/example_nested_events/simulate_model_nested_events.m
