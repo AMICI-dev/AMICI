@@ -532,10 +532,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) deltaxB = mxMalloc(nx*sizeof(realtype));
         if(ne>0) deltaqB = mxMalloc(np*sizeof(realtype));
         
-        if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
-        if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
-        if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
-        if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
+        if(ny>0) sigma_y = mxMalloc(nytrue*sizeof(realtype));
+        if(ny>0) memset(sigma_y,0,nytrue*sizeof(realtype));
+        if(ne>0) sigma_z = mxMalloc(nztrue*sizeof(realtype));
+        if(ne>0) memset(sigma_z,0,nztrue*sizeof(realtype));
         
         
         /* initialise states */
@@ -697,10 +697,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         dydp = mxMalloc(ny*np*sizeof(realtype));
         memset(dydp,0,ny*np*sizeof(realtype));
         
-        dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
-        memset(dsigma_ydp,0,ny*np*sizeof(realtype));
-        if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
-        if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
+        dsigma_ydp = mxMalloc(nytrue*np*sizeof(realtype));
+        memset(dsigma_ydp,0,nytrue*np*sizeof(realtype));
+        if(ne>0) dsigma_zdp = mxMalloc(nztrue*np*sizeof(realtype));
+        if(ne>0) memset(dsigma_zdp,0,nztrue*np*sizeof(realtype));
         
         if (sensi_meth == AMI_FSA) {
             
@@ -1041,7 +1041,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1093,7 +1093,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     if (*status != AMI_SUCCESS) return;
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1142,7 +1142,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
     *status = fy(ts[it],it,ydata,x,udata);
     if (*status != AMI_SUCCESS) return;
     
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         /* extract the value for the standard deviation, if the data value is NaN, use
          the parameter value. Store this value in the return struct */
         if (mxIsNaN(ysigma[iy*nt+it])) {
