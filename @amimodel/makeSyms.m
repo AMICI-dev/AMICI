@@ -93,12 +93,12 @@ function makeSyms( this )
         error('The definition of events via a root function is deprecated and no longer supported. Please update the model definition syntax!')
     end
     if(~isfield(this.sym,'sigma_y'))
-        this.sym.sigma_y = sym(ones(size(this.sym.y)));
+        this.sym.sigma_y = sym(ones(this.nytrue,1));
     end
     if(numel(this.sym.sigma_y) == 1)
-        this.sym.sigma_y = this.sym.sigma_y*sym(ones(size(this.sym.y)));
+        this.sym.sigma_y = this.sym.sigma_y*sym(ones(this.nytrue,1));
     end
-    if(numel(this.sym.sigma_y)~=numel(this.sym.y))
+    if(numel(this.sym.sigma_y)~=this.nytrue)
         error('Size of model.sym.y and model.sym.sigma_ygit does not agree.')
     end
     
