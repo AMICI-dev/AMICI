@@ -178,9 +178,11 @@ function generateM(this, amimodelo2)
     fprintf(fid,['    options_ami.sens_ind = 1:' num2str(np) ';\n']);
     fprintf(fid,['end\n']);
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n\n']);
-    fprintf(fid,'else\n');
-    fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(amimodelo2.id))) ']);\n\n']);
+    fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n']);
+    if(o2flag > 0)
+        fprintf(fid,'else\n');
+        fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(amimodelo2.id))) ']);\n']);
+    end
     fprintf(fid,'end\n');
     fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
     
