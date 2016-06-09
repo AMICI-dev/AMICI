@@ -365,10 +365,11 @@ function generateM(this, amimodelo2)
         fprintf(fid,['    sx = sol.sx(:,1:' num2str(nxtrue) ',:);\n']);
         fprintf(fid,['    sy = sol.sy(:,1:' num2str(nytrue) ',:);\n']);
         fprintf(fid,['    sz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
+        fprintf(fid,['    srz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         fprintf(fid,['        sz(:,iz,:) = sol.sz(:,2*iz-1,:);\n']);
+        fprintf(fid,['        srz(:,iz,:) = sol.srz(:,2*iz-1,:);\n']);
         fprintf(fid,['    end\n']);
-        fprintf(fid,['    srz = sol.srz;\n']);
         switch(o2flag)
             case 1
                 fprintf(fid,['    s2x = reshape(sol.sx(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
