@@ -381,19 +381,22 @@ function generateM(this, amimodelo2)
         switch(o2flag)
             case 1
                 fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+                fprintf(fid,['    s2rz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             case 2
                 fprintf(fid,['    s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
+                fprintf(fid,['    s2rz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
         end
         fprintf(fid,['    for iz = 1:' num2str(nztrue) '\n']);
         switch(o2flag)
             case 1
                 fprintf(fid,['        s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+                fprintf(fid,['        s2rz(:,iz,:,:) = reshape(sol.srz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
             case 2
                 fprintf(fid,['        s2z(:,iz,:) = reshape(sol.sz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
+                fprintf(fid,['        s2rz(:,iz,:) = reshape(sol.srz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
                 %TBD
         end
         fprintf(fid,['    end\n']);
-        fprintf(fid,['    s2rz = sol.s2rz;\n']);
         fprintf(fid,['    sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
         fprintf(fid,['    sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
         fprintf(fid,['    sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
