@@ -324,7 +324,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if((nz>0) & (ne>0)){
         initField2(z,nmaxevent,nz);
-        initField2(rz,nmaxevent,nztrue);
+        initField2(rz,nmaxevent,nz);
         initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
@@ -350,9 +350,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(ssigmay,nt,ny,np);
             }
             if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nztrue,np);
+                initField3(srz,nmaxevent,nz,np);
                 if(sensi>1){
-                    initField4(s2rz,nmaxevent,nztrue,np,np);
+                    initField4(s2rz,nmaxevent,nz,np,np);
                 }
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
