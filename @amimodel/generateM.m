@@ -406,6 +406,7 @@ function generateM(this, amimodelo2)
                 fprintf(fid,['    sol.sy = bsxfun(@times,sy,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 if(nztrue>0)
                     fprintf(fid,['    sol.sz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                    fprintf(fid,['    sol.srz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 end
                 switch(o2flag)
                     case 1
@@ -417,13 +418,14 @@ function generateM(this, amimodelo2)
                         fprintf(fid,['    sol.s2x = bsxfun(@times,s2x,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sx,permute(v,[3,2,1]));\n']);
                         fprintf(fid,['    sol.s2y = bsxfun(@times,s2y,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sy,permute(v,[3,2,1]));\n']);
                         fprintf(fid,['    sol.s2z = bsxfun(@times,s2z,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,sz,permute(v,[3,2,1]));\n']);
-                        fprintf(fid,['    sol.s2z = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,srz,permute(v,[3,2,1]));\n']);
+                        fprintf(fid,['    sol.s2rz = bsxfun(@times,s2rz,permute(theta(options_ami.sens_ind),[3,2,1])) + bsxfun(@times,srz,permute(v,[3,2,1]));\n']);
                 end
             case 'log10'
                 fprintf(fid,['    sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 fprintf(fid,['    sol.sy = bsxfun(@times,sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 if(nztrue>0)
                     fprintf(fid,['    sol.sz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+                    fprintf(fid,['    sol.srz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 end
                 switch(o2flag)
                     case 1
@@ -444,7 +446,9 @@ function generateM(this, amimodelo2)
                 fprintf(fid,'    sol.s2y = s2y;\n');
                 if(nztrue>0)
                     fprintf(fid,'    sol.sz = sz;\n');
+                    fprintf(fid,'    sol.srz = srz;\n');
                     fprintf(fid,'    sol.s2z = s2z;\n');
+                    fprintf(fid,'    sol.s2rz = s2rz;\n');
                 end
             otherwise
                 fprintf(fid,'    sol.sx = sx;\n');
@@ -453,7 +457,9 @@ function generateM(this, amimodelo2)
                 fprintf(fid,'    sol.s2y = s2y;\n');
                 if(nztrue>0)
                     fprintf(fid,'    sol.sz = sz;\n');
+                    fprintf(fid,'    sol.srz = srz;\n');
                     fprintf(fid,'    sol.s2z = s2z;\n');
+                    fprintf(fid,'    sol.sr2z = sr2z;\n');
                 end
         end
         fprintf(fid,'end\n');
