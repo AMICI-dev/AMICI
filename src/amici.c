@@ -1477,7 +1477,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
     /* EVENT OUTPUT */
     if (nztrue>0) {
         for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-            if (nroots[ie]<nmaxevent) {
+            while (nroots[ie]<nmaxevent) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
