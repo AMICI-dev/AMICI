@@ -1718,15 +1718,19 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     /* check whether we need to fire a secondary event */
     froot(t,x,dx,rootvals,user_data);
     for (ie = 0; ie<ne; ie++) {
-        if(h_tmp[ie] != rootvals[ie]) {
-            if (h_tmp[ie]<rootvals[ie]) {
-                rootsfound[ie] = 1;
+        /* the same event should not trigger itself */
+        if (rootsfound[ie] == 0 ) {
+            /* check whether there was a zero-crossing */
+            if( 0 > h_tmp[ie]*rootvals[ie]) {
+                if (h_tmp[ie]<rootvals[ie]) {
+                    rootsfound[ie] = 1;
+                } else {
+                    rootsfound[ie] = -1;
+                }
+                secondevent++;
             } else {
-                rootsfound[ie] = -1;
+                rootsfound[ie] = 0;
             }
-            secondevent++;
-        } else {
-            rootsfound[ie] = 0;
         }
     }
     /* fire the secondary event */
