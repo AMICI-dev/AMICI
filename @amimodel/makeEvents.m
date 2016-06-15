@@ -191,10 +191,10 @@ function makeEvents( this )
     end
     
     if(~isfield(this.sym,'sigma_z'))
-        this.sym.sigma_z = sym(ones(this.nztrue,1));
+        this.sym.sigma_z = sym(ones(length([this.event.z]),1));
     end
     if(numel(this.sym.sigma_z) == 1)
-        this.sym.sigma_z = this.sym.sigma_z*sym(ones(this.nztrue,1));
+        this.sym.sigma_z = this.sym.sigma_z*sym(ones(length([this.event.z]),1));
     end
     
     if(~isfield(this.sym,'Jz'))
