@@ -407,7 +407,7 @@ function compileC(this)
     
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS=''$CLIBS -lrt''';
+            CLIBS = 'CLIBS="\$CLIBS -lrt "';
         else
             CLIBS = [];
         end
