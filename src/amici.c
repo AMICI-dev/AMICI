@@ -1731,6 +1731,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             } else {
                 rootsfound[ie] = 0;
             }
+        } else {
+            /* don't fire the same event again */
+            rootsfound[ie] = 0;
         }
     }
     /* fire the secondary event */
