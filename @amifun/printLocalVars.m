@@ -113,7 +113,7 @@ function printLocalVars(this,model,fid)
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'
-            % nothing
+            fprintf(fid,['memset(stau,0,sizeof(realtype)*np);\n']);
         case 'dxdotdp'
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
@@ -124,9 +124,9 @@ function printLocalVars(this,model,fid)
         case 's2root'
             % nothing
         case 'sigma_y'
-            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);
+            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(model.ny) ');\n']);
         case 'dsigma_ydp'
-            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
+            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(model.ny) '*np);\n']);
         case 'sigma_z'
             fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*' num2str(model.nz) ');\n']);
         case 'dsigma_zdp'

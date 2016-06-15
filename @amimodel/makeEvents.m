@@ -9,7 +9,7 @@ function makeEvents( this )
     for ievent = 1:nevent
         trigger{ievent} = this.event(ievent).trigger;
         if(length(this.event(ievent).bolus) == nx)
-            bolus{ievent} = this.event(ievent).bolus;
+            bolus{ievent} = this.event(ievent).bolus(:);
         elseif(numel(this.event(ievent).bolus) == 1)
             bolus{ievent} = this.event(ievent).bolus*ones(nx,1);
         else
@@ -191,10 +191,10 @@ function makeEvents( this )
     end
     
     if(~isfield(this.sym,'sigma_z'))
-        this.sym.sigma_z = sym(ones(size([this.event.z])));
+        this.sym.sigma_z = sym(ones(length([this.event.z]),1));
     end
     if(numel(this.sym.sigma_z) == 1)
-        this.sym.sigma_z = this.sym.sigma_z*sym.ones(size([this.event.z]));
+        this.sym.sigma_z = this.sym.sigma_z*sym(ones(length([this.event.z]),1));
     end
     
     if(~isfield(this.sym,'Jz'))

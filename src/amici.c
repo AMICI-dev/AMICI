@@ -207,8 +207,12 @@ UserData setupUserData(const mxArray *prhs[]) {
         dfdx_tmp = mxMalloc(nx*nx*sizeof(realtype));
     }
     if (sensi>0) {
-        /* initialise temporary jacobian storage */
+        /* initialise temporary dxdotdp storage */
         tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+    }
+    if (ne>0) {
+        /* initialise temporary stau storage */
+        stau_tmp = mxMalloc(np*sizeof(realtype));
     }
     
     if (nw>0) {
@@ -320,7 +324,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     }
     if((nz>0) & (ne>0)){
         initField2(z,nmaxevent,nz);
-        initField2(rz,nmaxevent,nztrue);
+        initField2(rz,nmaxevent,nz);
         initField2(sigmaz,nmaxevent,nz);
     }
     if(nx>0) {
@@ -346,9 +350,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
                 initField3(ssigmay,nt,ny,np);
             }
             if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nztrue,np);
+                initField3(srz,nmaxevent,nz,np);
                 if(sensi>1){
-                    initField4(s2rz,nmaxevent,nztrue,np,np);
+                    initField4(s2rz,nmaxevent,nz,np,np);
                 }
                 initField3(sz,nmaxevent,nz,np);
                 initField3(ssigmaz,nmaxevent,nz,np);
@@ -1037,7 +1041,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
     }
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1089,7 +1093,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     if (*status != AMI_SUCCESS) return;
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
@@ -1138,7 +1142,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
     *status = fy(ts[it],it,ydata,x,udata);
     if (*status != AMI_SUCCESS) return;
     
-    for (iy=0; iy<ny; iy++) {
+    for (iy=0; iy<nytrue; iy++) {
         /* extract the value for the standard deviation, if the data value is NaN, use
          the parameter value. Store this value in the return struct */
         if (mxIsNaN(ysigma[iy*nt+it])) {
@@ -1286,7 +1290,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                 }
                 
                 for (ip=0; ip<np; ip++) {
-                    drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*ne+ie]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[ie] , 2) - dsigma_zdp[ip*ne+ie]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
+                    drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*nz+iz]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2) - dsigma_zdp[ip*nz+iz]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
                 }
                 for (ix=0; ix<nx; ix++) {
                     drdx[nroots[ie] + nmaxevent*ix] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
@@ -1473,7 +1477,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
     /* EVENT OUTPUT */
     if (nztrue>0) {
         for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-            if (nroots[ie]<nmaxevent) {
+            while (nroots[ie]<nmaxevent) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
@@ -1665,6 +1669,15 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             *status = fxdot(t,x,dx,xdot,udata);
             N_VScale(1.0,xdot,xdot_old);
             N_VScale(1.0,dx,dx_old);
+            
+            /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
+            if (seflag == 0) {
+                for (ie = 0; ie<ne; ie++) {
+                    if(rootsfound[ie] != 0) {
+                        fstau(t,ie,stau_tmp,x,NVsx,user_data);
+                    }
+                }
+            }
         }
         
         if (sensi_meth == AMI_ASA) {
@@ -1705,14 +1718,21 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     /* check whether we need to fire a secondary event */
     froot(t,x,dx,rootvals,user_data);
     for (ie = 0; ie<ne; ie++) {
-        if(h_tmp[ie] != rootvals[ie]) {
-            if (h_tmp[ie]<rootvals[ie]) {
-                rootsfound[ie] = 1;
+        /* the same event should not trigger itself */
+        if (rootsfound[ie] == 0 ) {
+            /* check whether there was a zero-crossing */
+            if( 0 > h_tmp[ie]*rootvals[ie]) {
+                if (h_tmp[ie]<rootvals[ie]) {
+                    rootsfound[ie] = 1;
+                } else {
+                    rootsfound[ie] = -1;
+                }
+                secondevent++;
             } else {
-                rootsfound[ie] = -1;
+                rootsfound[ie] = 0;
             }
-            secondevent++;
         } else {
+            /* don't fire the same event again */
             rootsfound[ie] = 0;
         }
     }

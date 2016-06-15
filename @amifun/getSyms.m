@@ -252,7 +252,7 @@ function [this,model] = getSyms(this,model)
                 end
                 % fill cell array
                 idx_w = find(logical(this.sym~=0));
-                this.strsym = sym.zeros(size(jacx));
+                this.strsym = sym(zeros(size(jacx)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
                         this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
@@ -263,7 +263,7 @@ function [this,model] = getSyms(this,model)
                     tmp = jacx + jacw*this.strsym;
                     this.sym = tmp(idx_w);
                 else
-                    this.strsym = sym.zeros(size(jacx));
+                    this.strsym = sym(zeros(size(jacx)));
                 end
             else
                 this.sym = sym(zeros(0,nx));
@@ -279,7 +279,7 @@ function [this,model] = getSyms(this,model)
                 end
                 % fill cell array
                 idx_w = find(logical(this.sym~=0));
-                this.strsym = sym.zeros(size(jacp));
+                this.strsym = sym(zeros(size(jacp)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
                         this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
@@ -472,6 +472,16 @@ function [this,model] = getSyms(this,model)
             for ievent = 1:nevent
                 this.sym(ievent,:) = - model.fun.sroot.sym(ievent,:)/model.fun.drootdt.sym(ievent);
             end
+            % create cell array of same size
+            staus = cell(1,np);
+            % fill cells
+            for j=1:np
+                staus{j} = sprintf('stau_%i',j-1);
+            end
+            % transform to symbolic variable
+            staus = sym(staus);
+            % multiply
+            this.strsym = staus;
             
         case 'deltax'
             if(nevent>0)
@@ -505,7 +515,7 @@ function [this,model] = getSyms(this,model)
                 for ievent = 1:nevent
                     
                     % dtdp  = (1/drdt)*drdp
-                    dtdp = model.fun.stau.sym(ievent,:);
+                    dtdp = model.fun.stau.strsym; % this 1 here is correct, we explicitely do not want ievent here as the actual stau_tmp will only have dimension np
                     
                     % if we are just non-differentiable and but not
                     % discontinuous we can ignore some of the terms!                

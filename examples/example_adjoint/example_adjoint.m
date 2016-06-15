@@ -1,41 +1,41 @@
 function example_adjoint()
-    
-    %%
-    % COMPILATION
-    
-    [exdir,~,~]=fileparts(which('example_adjoint.m'));
-    % compile the model
-    amiwrap('model_adjoint','model_adjoint_syms',exdir)
-    
-    %%
-    % SIMULATION
-    
-    % time vector
-    t = [linspace(0,4,5)];
-    p = [1.1,0.3,1];
-    k = [];
-    
-    D.Y = [     1.0171
-        1.3423
-        1.6585
-        0.9814
-        0.3288];
-    
-    D.Sigma_Y = 0.1*ones(size(D.Y));
-    
-    
-    options.sensi = 1;
-    options.sensi_meth = 'adjoint';
-    options.maxsteps = 1e4;
-    options.rtol = 1e-12;
-    options.atol = 1e-12;
-    % load mex into memory
-    [~] = which('simulate_model_adjoint'); % fix for inaccessability problems
-    sol = simulate_model_adjoint(t,log10(p),k,D,options);
-    
-    %%
-    % Plot
-    
+
+%%
+% COMPILATION
+
+[exdir,~,~]=fileparts(which('example_adjoint.m'));
+% compile the model
+amiwrap('model_adjoint','model_adjoint_syms',exdir)
+
+%%
+% SIMULATION
+
+% time vector
+t = [linspace(0,4,5)];
+p = [1.1,0.3,1];
+k = [];
+
+D.Y = [     1.0171
+    1.3423
+    1.6585
+    0.9814
+    0.3288];
+
+D.Sigma_Y = 0.1*ones(size(D.Y));
+
+
+options.sensi = 1;
+options.sensi_meth = 'adjoint';
+options.maxsteps = 1e4;
+options.rtol = 1e-12;
+options.atol = 1e-12;
+% load mex into memory
+[~] = which('simulate_model_adjoint'); % fix for inaccessability problems
+sol = simulate_model_adjoint(t,log10(p),k,D,options);
+
+%%
+% Plot
+if(usejava('jvm'))
     figure
     subplot(3,1,1)
     errorbar(t,D.Y,D.Sigma_Y)
@@ -86,26 +86,28 @@ function example_adjoint()
     grad(3,1) = -mu(1)*p(3)*log(10);
     
     plot(zeros(3,1),grad,'ko')
-    
-    %%
-    % FD
-    
-    eps = 1e-5;
-    xi = log10(p);
-    grad_fd_f = NaN(3,1);
-    grad_fd_b = NaN(3,1);
-    for ip = 1:3;
-        options.sensi = 0;
-        xip = xi;
-        xip(ip) = xip(ip) + eps;
-        solp = simulate_model_adjoint(t,xip,k,D,options);
-        grad_fd_f(ip,1) = (solp.llh-sol.llh)/eps;
-        xip = xi;
-        xip(ip) = xip(ip) - eps;
-        solp = simulate_model_adjoint(t,xip,k,D,options);
-        grad_fd_b(ip,1) = -(solp.llh-sol.llh)/eps;
-    end
-    
+end
+
+%%
+% FD
+
+eps = 1e-5;
+xi = log10(p);
+grad_fd_f = NaN(3,1);
+grad_fd_b = NaN(3,1);
+for ip = 1:3;
+    options.sensi = 0;
+    xip = xi;
+    xip(ip) = xip(ip) + eps;
+    solp = simulate_model_adjoint(t,xip,k,D,options);
+    grad_fd_f(ip,1) = (solp.llh-sol.llh)/eps;
+    xip = xi;
+    xip(ip) = xip(ip) - eps;
+    solp = simulate_model_adjoint(t,xip,k,D,options);
+    grad_fd_b(ip,1) = -(solp.llh-sol.llh)/eps;
+end
+
+if(usejava('jvm'))
     figure
     plot(abs(grad),abs(grad_fd_f),'o')
     hold on
@@ -122,5 +124,6 @@ function example_adjoint()
     set(gcf,'Position',[100 300 1200 500])
     
     drawnow
-    
+end
+
 end
