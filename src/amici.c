@@ -697,8 +697,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         dydp = mxMalloc(ny*np*sizeof(realtype));
         memset(dydp,0,ny*np*sizeof(realtype));
         
-        dsigma_ydp = mxMalloc(nytrue*np*sizeof(realtype));
-        memset(dsigma_ydp,0,nytrue*np*sizeof(realtype));
+        dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
+        memset(dsigma_ydp,0,ny*np*sizeof(realtype));
         if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
         if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
         
@@ -1047,11 +1047,11 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             if (*status != AMI_SUCCESS) return;
         } else {
             for (ip=0; ip<np; ip++) {
-                dsigma_ydp[ip*nytrue+iy] = 0;
+                dsigma_ydp[ip*ny+iy] = 0;
             }
         }
         for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*nytrue+iy];
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
         }
     }
     fdydx(ts[it],it,dydx,x,udata);
@@ -1103,7 +1103,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
         for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*nytrue+iy];
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
         }
     }
     fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
