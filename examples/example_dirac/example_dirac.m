@@ -1,48 +1,49 @@
 function example_dirac()
-    %%
-    % COMPILATION
-    
-    [exdir,~,~]=fileparts(which('example_dirac.m'));
-    % compile the model
-    amiwrap('model_dirac','model_dirac_syms',exdir)
-    
-    %%
-    % SIMULATION
-    
-    % time vector
-    t = linspace(0,3,1001);
-    p = [1;0.5;2;3];
-    k = [];
-    
-    options = amioption('sensi',0,...
-        'maxsteps',1e4);
-    
-    % load mex into memory
-    [msg] = which('simulate_model_dirac'); % fix for inaccessability problems
-    sol = simulate_model_dirac(t,log10(p),k,[],options);
-    
-    tic
-    sol = simulate_model_dirac(t,log10(p),k,[],options);
-    disp(['Time elapsed with amiwrap: ' num2str(toc) ])
-    
-    %%
-    % ODE15S
-    
-    sig = 1e-2;
-    delta_num = @(tau) exp(-1/2*(tau/sig).^2)/(sqrt(2*pi)*sig);
-    
-    ode_system = @(t,x,p,k) [-p(1)*x(1)+delta_num(t-p(2));
-        +p(3)*x(1) - p(4)*x(2)];
-    
-    options_ode45 = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
-    
-    tic
-    [~, X_ode45] = ode45(@(t,x) ode_system(t,x,p,k),t,[0;0],options_ode45);
-    disp(['Time elapsed with ode45: ' num2str(toc) ])
-    
-    %%
-    % PLOTTING
-    
+%%
+% COMPILATION
+
+[exdir,~,~]=fileparts(which('example_dirac.m'));
+% compile the model
+amiwrap('model_dirac','model_dirac_syms',exdir)
+
+%%
+% SIMULATION
+
+% time vector
+t = linspace(0,3,1001);
+p = [1;0.5;2;3];
+k = [];
+
+options = amioption('sensi',0,...
+    'maxsteps',1e4);
+
+% load mex into memory
+[msg] = which('simulate_model_dirac'); % fix for inaccessability problems
+sol = simulate_model_dirac(t,log10(p),k,[],options);
+
+tic
+sol = simulate_model_dirac(t,log10(p),k,[],options);
+disp(['Time elapsed with amiwrap: ' num2str(toc) ])
+
+%%
+% ODE15S
+
+sig = 1e-2;
+delta_num = @(tau) exp(-1/2*(tau/sig).^2)/(sqrt(2*pi)*sig);
+
+ode_system = @(t,x,p,k) [-p(1)*x(1)+delta_num(t-p(2));
+    +p(3)*x(1) - p(4)*x(2)];
+
+options_ode45 = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
+
+tic
+[~, X_ode45] = ode45(@(t,x) ode_system(t,x,p,k),t,[0;0],options_ode45);
+disp(['Time elapsed with ode45: ' num2str(toc) ])
+
+%%
+% PLOTTING
+
+if(usejava('jvm'))
     figure
     c_x = get(gca,'ColorOrder');
     subplot(2,2,1)
@@ -84,30 +85,32 @@ function example_dirac()
     ylabel('y')
     box on
     set(gcf,'Position',[100 300 1200 500])
-    
-    
-    %%
-    % FORWARD SENSITIVITY ANALYSIS
-    
-    options.sensi = 1;
-    
-    sol = simulate_model_dirac(t,log10(p),k,[],options);
-    
-    %%
-    % FINITE DIFFERENCES
-    
-    eps = 1e-4;
-    xi = log10(p);
-    for ip = 1:4;
-        xip = xi;
-        xip(ip) = xip(ip) + eps;
-        solp = simulate_model_dirac(t,xip,k,[],options);
-        sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
-        sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
-    end
-    
-    %%
-    % PLOTTING
+end
+
+
+%%
+% FORWARD SENSITIVITY ANALYSIS
+
+options.sensi = 1;
+
+sol = simulate_model_dirac(t,log10(p),k,[],options);
+
+%%
+% FINITE DIFFERENCES
+
+eps = 1e-4;
+xi = log10(p);
+for ip = 1:4;
+    xip = xi;
+    xip(ip) = xip(ip) + eps;
+    solp = simulate_model_dirac(t,xip,k,[],options);
+    sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
+    sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
+end
+
+%%
+% PLOTTING
+if(usejava('jvm'))
     figure
     for ip = 1:4
         subplot(4,2,ip*2-1)
@@ -167,5 +170,6 @@ function example_dirac()
     set(gcf,'Position',[100 300 1200 500])
     
     drawnow
-    
+end
+
 end
