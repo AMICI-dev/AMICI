@@ -3,7 +3,6 @@ function [model] = model_nested_events_syms()
 %% CVODES OPTIONS
 % set the parametrisation of the problem options are 'log', 'log10' and 'lin' (default)
 model.param = 'log10';
-model.debug = true;
 
 %% STATE VARIABLES
 % create state variables syms

@@ -71,9 +71,11 @@ function [modelo2vec] = augmento2vec(this)
     this.getFun([],'z');
     
     this.getFun([],'dzdp');
-    SJz = jacobian(this.sym.Jz,this.sym.p) ...
-        + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-        + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+    SJz = jacobian(this.sym.Jz,this.sym.p);
+    if(~isempty(this.fun.sigma_z.strsym))
+        SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
+            + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+    end
     
     S0 = jacobian(this.sym.x0,this.sym.p)*vec;
     

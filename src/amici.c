@@ -532,10 +532,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) deltaxB = mxMalloc(nx*sizeof(realtype));
         if(ne>0) deltaqB = mxMalloc(np*sizeof(realtype));
         
-        if(ny>0) sigma_y = mxMalloc(nytrue*sizeof(realtype));
-        if(ny>0) memset(sigma_y,0,nytrue*sizeof(realtype));
-        if(ne>0) sigma_z = mxMalloc(nztrue*sizeof(realtype));
-        if(ne>0) memset(sigma_z,0,nztrue*sizeof(realtype));
+        if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
+        if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
+        if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
+        if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
         
         
         /* initialise states */
@@ -697,10 +697,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         dydp = mxMalloc(ny*np*sizeof(realtype));
         memset(dydp,0,ny*np*sizeof(realtype));
         
-        dsigma_ydp = mxMalloc(nytrue*np*sizeof(realtype));
-        memset(dsigma_ydp,0,nytrue*np*sizeof(realtype));
-        if(ne>0) dsigma_zdp = mxMalloc(nztrue*np*sizeof(realtype));
-        if(ne>0) memset(dsigma_zdp,0,nztrue*np*sizeof(realtype));
+        dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
+        memset(dsigma_ydp,0,ny*np*sizeof(realtype));
+        if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
+        if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
         
         if (sensi_meth == AMI_FSA) {
             
@@ -1047,11 +1047,11 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
             if (*status != AMI_SUCCESS) return;
         } else {
             for (ip=0; ip<np; ip++) {
-                dsigma_ydp[ip*nytrue+iy] = 0;
+                dsigma_ydp[ip*ny+iy] = 0;
             }
         }
         for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*nytrue+iy];
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
         }
     }
     fdydx(ts[it],it,dydx,x,udata);
@@ -1103,7 +1103,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
             }
         }
         for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*nytrue+iy];
+            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
         }
     }
     fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
@@ -1286,11 +1286,11 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                 }
                 sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
                 for (ip=0; ip<np; ip++) {
-                    ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nztrue*ip];
+                    ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
                 for (ip=0; ip<np; ip++) {
-                    drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*nztrue+iz]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2) - dsigma_zdp[ip*nztrue+iz]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
+                    drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*nz+iz]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2) - dsigma_zdp[ip*nz+iz]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
                 }
                 for (ix=0; ix<nx; ix++) {
                     drdx[nroots[ie] + nmaxevent*ix] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
@@ -1731,6 +1731,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             } else {
                 rootsfound[ie] = 0;
             }
+        } else {
+            /* don't fire the same event again */
+            rootsfound[ie] = 0;
         }
     }
     /* fire the secondary event */

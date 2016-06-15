@@ -252,7 +252,7 @@ function [this,model] = getSyms(this,model)
                 end
                 % fill cell array
                 idx_w = find(logical(this.sym~=0));
-                this.strsym = sym.zeros(size(jacx));
+                this.strsym = sym(zeros(size(jacx)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
                         this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
@@ -263,7 +263,7 @@ function [this,model] = getSyms(this,model)
                     tmp = jacx + jacw*this.strsym;
                     this.sym = tmp(idx_w);
                 else
-                    this.strsym = sym.zeros(size(jacx));
+                    this.strsym = sym(zeros(size(jacx)));
                 end
             else
                 this.sym = sym(zeros(0,nx));
@@ -279,7 +279,7 @@ function [this,model] = getSyms(this,model)
                 end
                 % fill cell array
                 idx_w = find(logical(this.sym~=0));
-                this.strsym = sym.zeros(size(jacp));
+                this.strsym = sym(zeros(size(jacp)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
                         this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
