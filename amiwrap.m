@@ -67,8 +67,10 @@ function amiwrap( varargin )
         case 0 
             % do nothing
         case 1
+            disp('Augmenting to second order ...')
             modelo2 = augmento2(model);
         case 2
+            disp('Augmenting to second order ...')
             modelo2 = augmento2vec(model);
     end
     

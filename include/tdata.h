@@ -45,6 +45,7 @@
 #define sdx_tmp tdata->am_sdx_tmp
 #define xdot_tmp tdata->am_xdot_tmp
 #define id_tmp tdata->am_id_tmp
+#define h_tmp tdata->am_h_tmp
 
 #define rootsfound tdata->am_rootsfound
 #define rootvals tdata->am_rootvals
@@ -174,6 +175,8 @@ typedef struct {
     realtype *am_dxB_tmp;
     /** index indicating DAE equations array */
     realtype *am_id_tmp;
+    /** temporary storage for heaviside flags to check whether a secondary event has fired */
+    realtype *am_h_tmp;
 
     
     /** array of flags indicating which root has beend found */

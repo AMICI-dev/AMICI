@@ -1,53 +1,53 @@
 function example_dirac_secondorder_vectmult()
-    %%
-    % COMPILATION
-    
-    [exdir,~,~]=fileparts(which('example_dirac_secondorder_vectmult.m'));
-    % compile the model
-    amiwrap('model_dirac_secondorder_vectmult','model_dirac_secondorder_vectmult_syms',exdir,2)
-    
-    %%
-    % SIMULATION
-    
-    % time vector
-    t = linspace(0,3,1001);
-    p = [1;0.5;2;3];
-    k = [];
-    v = [0.7;0.3;1.4;0.1];
-    
-    options = amioption('sensi',0,...
-        'maxsteps',1e4);
-    
-    % load mex into memory
-    [msg] = which('model_dirac_secondorder_vectmult'); % fix for inaccessability problems
-    options.sensi = 2;
-    sol = simulate_model_dirac_secondorder_vectmult(t,log10(p),k,[],options,v);
-    
-    %%
-    % FORWARD SENSITIVITY ANALYSIS
-    
-    options.sensi = 2;
-    
-    sol = simulate_model_dirac_secondorder_vectmult(t,log10(p),k,[],options,v);
-    
-    %%
-    % FINITE DIFFERENCES
-    
-    options.sensi = 1;
-    
-    eps = 1e-4;
-    xi = log10(p);
-    for ip = 1:4;
-        xip = xi;
-        xip(ip) = xip(ip) + eps;
-        solp = simulate_model_dirac_secondorder_vectmult(t,xip,k,[],options);
-        s2x_fd(:,:,ip) = sum(bsxfun(@times,(solp.sx - sol.sx)/eps,permute(v,[3,2,1])),3);
-        s2y_fd(:,:,ip) = sum(bsxfun(@times,(solp.sy - sol.sy)/eps,permute(v,[3,2,1])),3);
-    end
-    
-    %%
-    % PLOTTING
-    
+%%
+% COMPILATION
+
+[exdir,~,~]=fileparts(which('example_dirac_secondorder_vectmult.m'));
+% compile the model
+amiwrap('model_dirac_secondorder_vectmult','model_dirac_secondorder_vectmult_syms',exdir,2)
+
+%%
+% SIMULATION
+
+% time vector
+t = linspace(0,3,1001);
+p = [1;0.5;2;3];
+k = [];
+v = [0.7;0.3;1.4;0.1];
+
+options = amioption('sensi',0,...
+    'maxsteps',1e4);
+
+% load mex into memory
+[msg] = which('model_dirac_secondorder_vectmult'); % fix for inaccessability problems
+options.sensi = 2;
+sol = simulate_model_dirac_secondorder_vectmult(t,log10(p),k,[],options,v);
+
+%%
+% FORWARD SENSITIVITY ANALYSIS
+
+options.sensi = 2;
+
+sol = simulate_model_dirac_secondorder_vectmult(t,log10(p),k,[],options,v);
+
+%%
+% FINITE DIFFERENCES
+
+options.sensi = 1;
+
+eps = 1e-4;
+xi = log10(p);
+for ip = 1:4;
+    xip = xi;
+    xip(ip) = xip(ip) + eps;
+    solp = simulate_model_dirac_secondorder_vectmult(t,xip,k,[],options);
+    s2x_fd(:,:,ip) = sum(bsxfun(@times,(solp.sx - sol.sx)/eps,permute(v,[3,2,1])),3);
+    s2y_fd(:,:,ip) = sum(bsxfun(@times,(solp.sy - sol.sy)/eps,permute(v,[3,2,1])),3);
+end
+
+%%
+% PLOTTING
+if(usejava('jvm'))
     figure
     c_x = get(gca,'ColorOrder');
     for ip = 1:4
@@ -108,5 +108,6 @@ function example_dirac_secondorder_vectmult()
     set(gcf,'Position',[100 300 1200 500])
     
     drawnow
-    
+end
+
 end

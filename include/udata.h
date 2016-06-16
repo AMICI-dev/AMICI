@@ -55,8 +55,6 @@
 #define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 
-#define event_model udata->am_event_model
-
 #define ordering udata->am_ordering
 
 #define tmp_J udata->am_J
@@ -66,6 +64,7 @@
 #define dwdp_tmp udata->am_dwdp
 #define M_tmp udata->am_M
 #define dfdx_tmp udata->am_dfdx
+#define stau_tmp udata->am_stau
 
 #define z2event udata->am_z2event
 #define h udata->am_h
@@ -182,8 +181,6 @@ typedef struct {
     /** sensitivity initialisation */
     double *am_sx0data;
     
-    /** error model for events */
-    int am_event_model;
     
     /** state ordering */
     int am_ordering;
@@ -208,7 +205,9 @@ typedef struct {
     realtype *am_M;
     /** tempory storage of dfdx data across functions */
     realtype *am_dfdx;
-    
+    /** tempory storage of stau data across functions */
+    realtype *am_stau;
+
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */

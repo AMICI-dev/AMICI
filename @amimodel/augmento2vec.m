@@ -43,8 +43,12 @@ function [modelo2vec] = augmento2vec(this)
     % generate deltasx
     this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
-        Sz = jacobian(this.event(ievent).z,this.sym.x)*sv+jacobian(this.event(ievent).z,this.sym.p)*vec;
-        znew = [this.event(ievent).z,Sz];
+        if(numel(this.event(ievent).z)>0)
+            Sz = jacobian(this.event(ievent).z,this.sym.x)*sv+jacobian(this.event(ievent).z,this.sym.p)*vec;
+            znew = [this.event(ievent).z,Sz];
+        else
+            znew = this.event(ievent).z;
+        end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
         bolusnew = [this.event(ievent).bolus;tmp*vec];
@@ -67,9 +71,11 @@ function [modelo2vec] = augmento2vec(this)
     this.getFun([],'z');
     
     this.getFun([],'dzdp');
-    SJz = jacobian(this.sym.Jz,this.sym.p) ...
-        + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-        + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+    SJz = jacobian(this.sym.Jz,this.sym.p);
+    if(~isempty(this.fun.sigma_z.strsym))
+        SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
+            + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+    end
     
     S0 = jacobian(this.sym.x0,this.sym.p)*vec;
     
@@ -85,6 +91,9 @@ function [modelo2vec] = augmento2vec(this)
     
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
     modelo2vec.o2flag = 2;
+    modelo2vec.debug = this.debug;
+    modelo2vec.forward = this.forward;
+    modelo2vec.adjoint = this.adjoint;
 end
 
 

@@ -8,11 +8,11 @@ classdef amifun
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
-        sym = sym.empty();
+        sym = sym([]);
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
-        strsym = sym.empty();
+        strsym = sym([]);
         % short symbolic string which can be used for the reuse of old values @type symbolic
-        strsym_old = sym.empty();
+        strsym_old = sym([]);
         % name of the model @type char
         funstr = char.empty();
         % name of the c variable @type char

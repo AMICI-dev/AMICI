@@ -407,13 +407,22 @@ function compileC(this)
     
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS=''\$CLIBS -lrt''';
+            % check ggc version
+            [~,str] = system('gcc -v');
+            t = regexp(str,'gcc version 4.([0-9]*).','tokens');
+            subver = str2double(t{1});
+            if(subver>7) 
+                CLIBS = 'CLIBS="$CLIBS -lrt "';
+            else
+                CLIBS = 'CLIBS="\$CLIBS -lrt "';
+            end
         else
             CLIBS = [];
         end
     else
         CLIBS = [];
     end
+    
     
     if(this.nxtrue ~= this.nx)
         cstr = 'amiwrapo2.c';

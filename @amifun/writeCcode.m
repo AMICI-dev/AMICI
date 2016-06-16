@@ -34,6 +34,38 @@ elseif(strcmp(this.funstr,'z') || strcmp(this.funstr,'sz'))
         end
         fprintf(fid,'    } \n');
     end
+elseif(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'s2root'))
+    nonzero = this.sym ~=0;
+    if(any(nonzero))
+        fprintf(fid,'    switch(ie) { \n');
+        for ievent=1:nevent
+            tmpfun = this;
+            % set all z that do not belong to this event to zero
+            % dont shorten the vector as we need the indices
+            fprintf(fid,['        case ' num2str(ievent-1) ': {\n']);
+            tmpfun.sym(model.z2event~=ievent) = 0;
+            tmpfun.gccode(model,fid);
+            fprintf(fid,'\n');
+            fprintf(fid,'        } break;\n\n');
+        end
+        fprintf(fid,'    } \n');
+    end
+elseif(strcmp(this.funstr,'stau') )
+    nonzero = this.sym ~=0;
+    if(any(nonzero))
+        fprintf(fid,'    switch(ie) { \n');
+        for ievent=1:nevent
+            tmpfun = this;
+            % set all z that do not belong to this event to zero
+            % dont shorten the vector as we need the indices
+            fprintf(fid,['        case ' num2str(ievent-1) ': {\n']);
+            tmpfun.sym = tmpfun.sym(ievent);
+            tmpfun.gccode(model,fid);
+            fprintf(fid,'\n');
+            fprintf(fid,'        } break;\n\n');
+        end
+        fprintf(fid,'    } \n');
+    end
 elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(this.funstr,'deltaxB') || strcmp(this.funstr,'deltaqB'))
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))

@@ -33,6 +33,7 @@ function example_jakstat_adjoint()
     options.sensi = 0;
     sol = simulate_model_jakstat([],xi,[],D,options);
     
+    if(usejava('jvm'))
     figure
     for iy = 1:3
         subplot(2,2,iy)
@@ -52,6 +53,7 @@ function example_jakstat_adjoint()
         ylim([0,1.2])
     end
     set(gcf,'Position',[100 300 1200 500])
+    end
     
     % generate new
     xi_rand = xi + 0.1;
@@ -69,6 +71,7 @@ function example_jakstat_adjoint()
         fd_grad(ip) = (psol.llh-sol.llh)/eps;
     end
     
+    if(usejava('jvm'))
     figure
     scatter(abs(sol.sllh),abs(fd_grad))
     set(gca,'XScale','log')
@@ -82,6 +85,7 @@ function example_jakstat_adjoint()
     xlabel('adjoint sensitivity absolute value of gradient element')
     ylabel('finite difference absolute value of gradient element')
     set(gcf,'Position',[100 300 1200 500])
+    end
     
     
     drawnow

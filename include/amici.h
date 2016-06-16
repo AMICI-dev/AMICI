@@ -51,7 +51,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
 void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 
-void handleEvent(int *status, int iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data, int seflag);
 void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data);
 void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
 void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void *temp_data);

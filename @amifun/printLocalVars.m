@@ -31,10 +31,16 @@ function printLocalVars(this,model,fid)
         end
     end
     
+    if(this.sensiflag && xor(~strcmp(this.funstr,'sxdot'),strcmp(model.wtype,'iw')))    
+        fprintf(fid,'int ip;\n');
+    end
+    
     switch(this.funstr)
         case 'xdot'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'xBdot'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xBdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'qBdot'
             fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np);\n');
@@ -49,8 +55,10 @@ function printLocalVars(this,model,fid)
         case 'JBand'
             % nothing
         case 'J'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(J->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
         case 'JSparse'
+            fprintf(fid,'int inz;\n');
             fprintf(fid,'SlsSetToZero(J);\n');
             for i = 1:length(model.rowvals)
                 fprintf(fid,['J->rowvals[' num2str(i-1) '] = ' num2str(model.rowvals(i)) ';\n']);
@@ -105,16 +113,20 @@ function printLocalVars(this,model,fid)
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'
-            % nothing
+            fprintf(fid,['memset(stau,0,sizeof(realtype)*np);\n']);
         case 'dxdotdp'
-            % nothing
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'root'
             % nothing
+        case 'sroot'
+            % nothing
+        case 's2root'
+            % nothing
         case 'sigma_y'
-            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);
+            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(model.ny) ');\n']);
         case 'dsigma_ydp'
-            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
+            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(model.ny) '*np);\n']);
         case 'sigma_z'
             fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*' num2str(model.nz) ');\n']);
         case 'dsigma_zdp'
