@@ -409,7 +409,7 @@ function compileC(this)
         if(~ismac)
             % check ggc version
             [~,str] = system('gcc --version');
-            t = regexp(str,'([0-9]*).([0-9]*).[0-9]*','tokens');
+            t = regexp(str,'([0-9]*)\.([0-9]*)\.[0-9]*','tokens');
             ver = str2double(t{1}{1});
             subver = str2double(t{1}{2});
             if(subver>7 && ver==4) 
