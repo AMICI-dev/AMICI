@@ -63,7 +63,9 @@ function writeDefinition(header,identifier,field,this,fid)
     fprintf(fid,'\n');
     fprintf(fid,'\n');
     fprintf(fid,['%%%%\n%% ' header '\n']);
-    fprintf(fid,['syms ' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false)) '\n']);
+    if(length(this.(field))>0)
+        fprintf(fid,['syms ' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false)) '\n']);
+    end
     fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),',') '];\n']);
 end
 

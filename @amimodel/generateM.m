@@ -510,9 +510,9 @@ function generateM(this, amimodelo2)
     
     %% Generation of the file which computes the Jacobian
     
-    if (~isempty(this.fun))    
-        generateJacobianFile(this);
-    end
+%     if (~isempty(this.fun))
+%         generateJacobianFile(this);
+%     end
     
 end
 

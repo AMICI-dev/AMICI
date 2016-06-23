@@ -126,3 +126,5 @@ examples/example_nested_events/simulate_model_nested_events.m
 examples/example_dirac_secondorder_vectmult/simulate_model_dirac_secondorder_vectmult.m
 
 examples/example_jakstat_adjoint/simulate_model_jakstat.m
+
+unitTests/CustomSBMLTestsuite/*
