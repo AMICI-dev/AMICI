@@ -9,6 +9,7 @@ function runSBMLTest(iTest)
     cd(fileparts(mfilename('fullpath')))
     curdir = pwd;
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
+    disp([' =================== ' testid ' =================== ']); 
     cd(fullfile(pwd,'CustomSBMLTestsuite',testid))
     SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
     amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
@@ -18,21 +19,19 @@ function runSBMLTest(iTest)
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])
-    maxadev = 0;
-    maxrdev = 0;
+    adev = zeros(size(results{:,2:end}));
+    rdev = zeros(size(results{:,2:end}));
     for ispecies = 2:length(results.Properties.VariableNames)
-        maxadevp = max(abs(sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies}));
-        rdev = abs((sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies})./results{:,ispecies});
-        rdev(isinf(rdev)) = 0;
-        maxrdevp = max(rdev);
-        if(maxadevp > maxadev)
-            maxadev = maxadevp;
-        end
-        if(maxrdevp > maxrdev)
-            maxrdev = maxrdevp;
+        if(any(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))
+            adev(:,ispecies-1) = abs(sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies});
+            rdev(:,ispecies-1) = abs((sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies})./results{:,ispecies});
+        elseif(any(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))
+            adev(:,ispecies-1) = abs(knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies});
+            rdev(:,ispecies-1) = abs((knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies})./results{:,ispecies});
         end
     end
-    assert(not(and(maxadev>options.atol*1000,maxrdev>options.rtol*1000)))
+    rdev(isinf(rdev)) = 0;
+    assert(not(any(any(and(adev>options.atol*1000,rdev>options.rtol*1000)))))
     cd(curdir)
 end
 
