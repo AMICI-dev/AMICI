@@ -144,15 +144,29 @@ function importSBML(this,modelname)
     this.flux = this.flux(:);
     % add local parameters to global parameters, make them global by
     % extending them by the reaction id
-    tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
-    plocal = transpose([tmp{:}]);
-    tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
-    pvallocal = transpose([tmp{:}]);
+    try
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        plocal = transpose([tmp{:}]);
+        tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
+        pvallocal = transpose([tmp{:}]);
+        % replace local parameters by globalized ones
+        tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        this.flux = [tmp{:}];
+        this.flux = this.flux(:);
+        
+    catch
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.localParameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        plocal = transpose([tmp{:}]);
+        tmp = cellfun(@(x) cellfun(@double,{x.localParameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
+        pvallocal = transpose([tmp{:}]);
+        % replace local parameters by globalized ones
+        tmp = cellfun(@(x,y,z) subs(x,sym({y.localParameter.id}),sym(cellfun(@(x) [x '_' z],{y.localParameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        this.flux = [tmp{:}];
+        this.flux = this.flux(:);
+    end
+
     
-    % replace local parameters by globalized ones
-    tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
-    this.flux = [tmp{:}];
-    this.flux = this.flux(:);
+
     
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
@@ -193,13 +207,19 @@ function importSBML(this,modelname)
     
     %extract model conversion factor
     if(isfield(model,'conversionFactor'))
-        conversionfactor = model.conversionFactor*ones(nx,1);
+        if(strcmp(model.conversionFactor,''))
+            conversionfactor = ones(nx,1);
+        else
+            conversionfactor = model.conversionFactor*ones(nx,1);
+        end
     else
         conversionfactor = ones(nx,1);
     end
     
     if(isfield(model.species,'conversionFactor'))
-        conversionfactor(~isnan(model.spevies.conversionFactor)) = model.species.conversionFactor(~isnan(model.species.conversionFactor));
+        if(any(not(strcmp({model.species.conversionFactor},''))))
+            conversionfactor(~isnan({model.species.conversionFactor})) = model.species.conversionFactor(~isnan(model.species.conversionFactor));
+        end
     end
     
     this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)./this.volume;

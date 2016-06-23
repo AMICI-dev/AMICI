@@ -102,6 +102,8 @@ function parseModel(this)
     
     this.funs = funs;
     
+    this.mfuns = {'w','dwdp','dwdx','J','dxdotdp'};
+    
     % compute symbolic expressions
     for ifun = 1:length(funs)
         this.getFun(HTable,funs{ifun});
@@ -190,7 +192,12 @@ function [ubw,lbw] = ami_bandwidth(M)
     % Return values:
     %  ubw: upper matrix bandwidth
     %  lbw: lower matrix bandwidth
-    [i,j] = find(M);
-    ubw = max(max(j-i),0);
-    lbw = max(max(i-j),0);
+    if(isempty(M))
+        ubw = 0;
+        lbw = 0;
+    else
+        [i,j] = find(M);
+        ubw = max(max(j-i),0);
+        lbw = max(max(i-j),0);
+    end
 end
