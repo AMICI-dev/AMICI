@@ -102,6 +102,8 @@ function parseModel(this)
     
     this.funs = funs;
     
+    this.mfuns = {'w','dwdp','dwdx','J','dxdotdp'};
+    
     % compute symbolic expressions
     for ifun = 1:length(funs)
         this.getFun(HTable,funs{ifun});

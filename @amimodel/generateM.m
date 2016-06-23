@@ -519,9 +519,12 @@ fclose(fid);
 
 %% Generation of the file which computes the Jacobian
 
-%     if (~isempty(this.fun))
-%         generateJacobianFile(this);
-%     end
+for fun = this.mfuns
+    if(isfield(this.fun,fun{1}))
+        this.fun.(fun{1}).writeMcode(this);
+    end
+end
+
 
 end
 

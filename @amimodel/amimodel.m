@@ -67,6 +67,8 @@ classdef amimodel < handle
         colptrsB = double.empty();
         % cell array of functions to be compiled @type *cell
         funs = cell.empty();
+        % cell array of matlab functions to be compiled @type *cell
+        mfuns = cell.empty();
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
