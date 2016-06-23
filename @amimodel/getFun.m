@@ -17,7 +17,8 @@ function getFun(this,HTable,funstr)
         if(~all(strcmp(fun.deps,funstr))) % prevent infinite loops
             % check whether the corresponding c file exists, if not we have to
             % force recompilation by passing an empty HTable
-            if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file'))
+            if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.c']),'file') ...
+                    || and(~exist(fullfile(wrap_path,'models',this.modelname,['calc_' funstr  '_' this.modelname '.m'])),ismember(funstr,this.mfuns)))
                 cflag = this.checkDeps([],fun.deps);
             else
                 if(this.recompile)
