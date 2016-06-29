@@ -192,7 +192,7 @@ function [ubw,lbw] = ami_bandwidth(M)
     % Return values:
     %  ubw: upper matrix bandwidth
     %  lbw: lower matrix bandwidth
-    if(isempty(M))
+    if(isempty(M) || isempty(find(M)))
         ubw = 0;
         lbw = 0;
     else
