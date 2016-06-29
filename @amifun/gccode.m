@@ -171,6 +171,9 @@ function this = gccode(this,model,fid)
             if(strcmp(this.funstr,'dJydx'))
                 cstr = strrep(cstr,'ydx_tmp','ydx');
             end
+            if(strcmp(this.funstr,'x0'))
+               cstr = regexprep(cstr,'x_([0-9]+)','x0_tmp\[$1\]'); 
+            end
             
             
             %%

@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 29:1196
+for iTest = 32:1196
     runSBMLTest(iTest)
 end
 end

@@ -38,6 +38,21 @@ this.compartment = subs(this.compartment,compartments_sym(logical([model.compart
 % set remaining ones to default value 1
 this.compartment = subs(this.compartment,compartments_sym,sym(ones(size(compartments_sym))));
 
+%% RULES
+
+fprintf('applying rules ...\n')
+
+rule_types = {model.rule.typecode};
+if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
+    %DAE part TBD
+    error('DAEs currently not supported!');
+end
+
+if(any(strcmp(rule_types,'SBML_RATE_RULE')))
+    %custom reate laws TBD
+    error('Sorry, custom rate laws currently not supported!');
+end
+
 rulevars = sym({model.rule.variable});
 rulemath = sym({model.rule.formula});
 repeat_idx = ismember(rulevars,symvar(rulemath));
@@ -119,20 +134,6 @@ applyRule(this,model,'param',rulevars,rulemath)
 
 np = length(this.param);
 
-%% RULES
-
-fprintf('applying rules ...\n')
-
-rule_types = {model.rule.typecode};
-if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
-    %DAE part TBD
-    error('DAEs currently not supported!');
-end
-
-if(any(strcmp(rule_types,'SBML_RATE_RULE')))
-    %custom reate laws TBD
-    error('custom rate laws currently not supported!');
-end
 
 %% REACTIONS
 
@@ -311,6 +312,8 @@ if(length(this.trigger)>0)
         addToBolus(:,nobolus_idx) = [];
         this.bolus = this.bolus + addToBolus;
     end
+else
+    addToBolus = sym([]);
 end
 
 %% FUNCTIONS
@@ -336,8 +339,6 @@ if(~isempty(lambdas))
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
     this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
-else
-    addToBolus = sym([]);
 end
 
 %% CLEAN-UP
