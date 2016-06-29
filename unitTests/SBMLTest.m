@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 1:1196
+for iTest = 26:1196
     runSBMLTest(iTest)
 end
 end
@@ -15,16 +15,26 @@ function runSBMLTest(iTest)
     amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
-    [t,options] = parseSettings(testid);
+    load(['SBMLTEST_' testid '_vnom.mat'])
+    [t,options,concflag] = parseSettings(testid);
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])
     adev = zeros(size(results{:,2:end}));
     rdev = zeros(size(results{:,2:end}));
     for ispecies = 2:length(results.Properties.VariableNames)
-        if(any(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))
-            adev(:,ispecies-1) = abs(sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies});
-            rdev(:,ispecies-1) = abs((sol.x(:,find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x)))-results{:,ispecies})./results{:,ispecies});
+        ix = find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x));
+        if(~isempty(ix))
+            if(concflag)
+                vol = vnom(ix);
+                vol = subs(vol,model.sym.k(:),sym(knom(:)));
+                vol = subs(vol,model.sym.p(:),sym(pnom(:)));
+                vol = double(vol);
+            else
+                vol = 1;
+            end
+            adev(:,ispecies-1) = abs(sol.x(:,ix)*vol-results{:,ispecies});
+            rdev(:,ispecies-1) = abs((sol.x(:,ix)*vol-results{:,ispecies})./results{:,ispecies});
         elseif(any(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))
             adev(:,ispecies-1) = abs(knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies});
             rdev(:,ispecies-1) = abs((knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies})./results{:,ispecies});
@@ -35,7 +45,7 @@ function runSBMLTest(iTest)
     cd(curdir)
 end
 
-function [t,options] = parseSettings(testid)
+function [t,options,concflag] = parseSettings(testid)
 fid = fopen([testid '-settings.txt']);
 T = textscan(fid,'%s %f');
 t = linspace(T{2}(1),T{2}(2),T{2}(3)+1);
@@ -43,6 +53,12 @@ tline = fgetl(fid);
 T = textscan(fid,'%s %f');
 options.atol = T{2}(1);
 options.rtol = T{2}(2);
+tline = fgetl(fid);
+if(strcmp(tline,''))
+    concflag = false;
+else
+    concflag = true;
+end
 fclose(fid);
 
 end
