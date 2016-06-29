@@ -355,10 +355,14 @@ function [this,model] = getSyms(this,model)
             this.sym=jacobian(model.fun.dx0.sym,p);
             
         case 'sxdot'
-            if(strcmp(model.wtype,'iw'))
-                this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
+            if(np>0)
+                if(strcmp(model.wtype,'iw'))
+                    this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
+                else
+                    this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
+                end
             else
-                this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
+                this.sym = sym(zeros(size(sx,1),0));
             end
             
         case 'dydx'

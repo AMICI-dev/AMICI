@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 26:1196
+for iTest = 29:1196
     runSBMLTest(iTest)
 end
 end
@@ -11,7 +11,12 @@ function runSBMLTest(iTest)
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
     disp([' =================== ' testid ' =================== ']); 
     cd(fullfile(pwd,'CustomSBMLTestsuite',testid))
+    try
     SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
+    catch error_msg
+        warning(['Test ' testid ' failed: ' error_msg.message]);
+       return 
+    end
     amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
