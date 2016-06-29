@@ -507,6 +507,8 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     r = 0;
     g = 0;
     
+    x = N_VNew_Serial(nx);
+    
     if (nx > 0) {
         
         /* allocate temporary objects */
@@ -1533,27 +1535,30 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
     
-    tsdata[it] = ts[it];
-    x_tmp = NV_DATA_S(x);
-    for (ix=0; ix<nx; ix++) {
-        xdata[it+nt*ix] = x_tmp[ix];
-    }
     
-    if (it == nt-1) {
-        if( sensi_meth == AMI_SS) {
-            
-            *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
-            if (*status != AMI_SUCCESS) return;
-            *status = fdydp(ts[it],it,dydpdata,x,udata);
-            if (*status != AMI_SUCCESS) return;
-            *status = fdydx(ts[it],it,dydxdata,x,udata);
+    tsdata[it] = ts[it];
+    if (nx>0) {
+        x_tmp = NV_DATA_S(x);
+        for (ix=0; ix<nx; ix++) {
+            xdata[it+nt*ix] = x_tmp[ix];
+        }
+        
+        if (it == nt-1) {
+            if( sensi_meth == AMI_SS) {
+                
+                *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
+                if (*status != AMI_SUCCESS) return;
+                *status = fdydp(ts[it],it,dydpdata,x,udata);
+                if (*status != AMI_SUCCESS) return;
+                *status = fdydx(ts[it],it,dydxdata,x,udata);
+                if (*status != AMI_SUCCESS) return;
+            }
+        }
+        
+        if(ts[it] > tstart) {
+            getDiagnosis(status, it, ami_mem, udata, rdata);
             if (*status != AMI_SUCCESS) return;
         }
-    }
-    
-    if(ts[it] > tstart) {
-        getDiagnosis(status, it, ami_mem, udata, rdata);
-        if (*status != AMI_SUCCESS) return;
     }
     
     getDataOutput(status, it, ami_mem, udata, rdata, edata, tdata);

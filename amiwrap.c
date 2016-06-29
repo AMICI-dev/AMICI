@@ -59,14 +59,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     tdata = (TempData) mxMalloc(sizeof *tdata);
     if (tdata == NULL) goto freturn;
     
-    ami_mem = setupAMI(&status, udata, tdata);
-    if (ami_mem == NULL) goto freturn;
-    
+    if (nx>0) {
+        ami_mem = setupAMI(&status, udata, tdata);
+        if (ami_mem == NULL) goto freturn;
+    }
+
     rdata = setupReturnData(plhs, udata, pstatus);
     if (rdata == NULL) goto freturn;
     
-    edata = setupExpData(prhs, udata);
-    if (edata == NULL) goto freturn;
+    if (nx>0) {
+        edata = setupExpData(prhs, udata);
+        if (edata == NULL) goto freturn;
+    }
     
     /*******************/
     /* FORWARD PROBLEM */
@@ -87,25 +91,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             if(ts[it] > tstart) {
                 while (t<ts[it]) {
                     if(sensi_meth == AMI_ASA && sensi >= 1) {
-                        status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                        if (nx>0) {
+                            status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                        } else {
+                            t = ts[it];
+                        }
                     } else {
-                        status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                        if (nx>0) {
+                            status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                        } else {
+                            t = ts[it];
+                        }
                     }
-                    x_tmp = NV_DATA_S(x);
-                    if (status == -22) {
-                        /* clustering of roots => turn off rootfinding */
-                        AMIRootInit(ami_mem, 0, NULL);
-                        status = 0;
-                    }
-                    /* integration error occured */
-                    if (status<0) {
-                        goto freturn;
-                    }
-                    
-                    if (status==AMI_ROOT_RETURN) {
-                        handleEvent(&status, &iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                        if (status != AMI_SUCCESS) goto freturn;
+                    if (nx>0) {
+                        x_tmp = NV_DATA_S(x);
+                        if (status == -22) {
+                            /* clustering of roots => turn off rootfinding */
+                            AMIRootInit(ami_mem, 0, NULL);
+                            status = 0;
+                        }
+                        /* integration error occured */
+                        if (status<0) {
+                            goto freturn;
+                        }
                         
+                        if (status==AMI_ROOT_RETURN) {
+                            handleEvent(&status, &iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            
+                        }
                     }
                 }
             }
@@ -128,117 +142,119 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* BACKWARD PROBLEM */
     /********************/
     
-    if (sensi >= 1) {
-        if(sensi_meth == AMI_ASA) {
-            if(status == 0) {
-                setupAMIB(&status, ami_mem, udata, tdata);
-                setupBdone = true;
-                
-                it = nt-2;
-                iroot--;
-                while (it>=0 || iroot>=0) {
+    if (nx>0) {
+        if (sensi >= 1) {
+            if(sensi_meth == AMI_ASA) {
+                if(status == 0) {
+                    setupAMIB(&status, ami_mem, udata, tdata);
+                    setupBdone = true;
                     
-                    /* check if next timepoint is a discontinuity or a data-point */
-                    tnext = getTnext(discs, iroot, ts, it, udata);
-                    
-                    if (tnext<t) {
-                        status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                    it = nt-2;
+                    iroot--;
+                    while (it>=0 || iroot>=0) {
+                        
+                        /* check if next timepoint is a discontinuity or a data-point */
+                        tnext = getTnext(discs, iroot, ts, it, udata);
+                        
+                        if (tnext<t) {
+                            status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            
+                            /* get states only if we actually integrated */
+                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (status != AMI_SUCCESS) goto freturn;
+                        }
+                        
+                        /* handle discontinuity */
+                        
+                        if(ne>0){
+                            if(nmaxevent>0){
+                                if (tnext == discs[iroot]) {
+                                    handleEventB(&status, iroot, ami_mem, udata, tdata);
+                                    iroot--;
+                                }
+                            }
+                        }
+                        
+                        /* handle data-point */
+                        
+                        if (tnext == ts[it]) {
+                            handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
+                            it--;
+                        }
+                        
+                        /* reinit states */
+                        status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                        if (status != AMI_SUCCESS) goto freturn;
+                        status = AMIQuadReInitB(ami_mem, which, xQB);
                         if (status != AMI_SUCCESS) goto freturn;
                         
-                        /* get states only if we actually integrated */
-                        status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                        if (status != AMI_SUCCESS) goto freturn;
-                        status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                        status = AMICalcICB(ami_mem, which, t, xB, dxB);
                         if (status != AMI_SUCCESS) goto freturn;
                     }
                     
-                    /* handle discontinuity */
-                    
-                    if(ne>0){
-                        if(nmaxevent>0){
-                            if (tnext == discs[iroot]) {
-                                handleEventB(&status, iroot, ami_mem, udata, tdata);
-                                iroot--;
+                    /* we still need to integrate from first datapoint to tstart */
+                    if (t>tstart) {
+                        if(status == 0) {
+                            if (nx>0) {
+                                /* solve for backward problems */
+                                status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                
+                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (status != AMI_SUCCESS) goto freturn;
+                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (status != AMI_SUCCESS) goto freturn;
                             }
                         }
                     }
                     
-                    /* handle data-point */
+                    /* evaluate initial values */
+                    NVsx = N_VCloneVectorArray_Serial(np,x);
+                    if (NVsx == NULL) goto freturn;
                     
-                    if (tnext == ts[it]) {
-                        handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
-                        it--;
-                    }
-                    
-                    /* reinit states */
-                    status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                    status = fx0(x,udata);
                     if (status != AMI_SUCCESS) goto freturn;
-                    status = AMIQuadReInitB(ami_mem, which, xQB);
+                    status = fdx0(x,dx,udata);
+                    if (status != AMI_SUCCESS) goto freturn;
+                    status = fsx0(NVsx, x, dx, udata);
                     if (status != AMI_SUCCESS) goto freturn;
                     
-                    status = AMICalcICB(ami_mem, which, t, xB, dxB);
-                    if (status != AMI_SUCCESS) goto freturn;
-                }
-                
-                /* we still need to integrate from first datapoint to tstart */
-                if (t>tstart) {
                     if(status == 0) {
-                        if (nx>0) {
-                            /* solve for backward problems */
-                            status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
-                            if (status != AMI_SUCCESS) goto freturn;
-                            
-                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (status != AMI_SUCCESS) goto freturn;
-                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (status != AMI_SUCCESS) goto freturn;
+                        
+                        xB_tmp = NV_DATA_S(xB);
+                        
+                        for (ip=0; ip<np; ip++) {
+                            llhS0[ip] = 0.0;
+                            sx_tmp = NV_DATA_S(NVsx[ip]);
+                            for (ix = 0; ix < nx; ix++) {
+                                llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                            }
+                        }
+                        
+                        xQB_tmp = NV_DATA_S(xQB);
+                        
+                        for(ip=0; ip < np; ip++) {
+                            sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                            if (ny>0) {
+                                sllhdata[ip] -= dgdp[ip];
+                            }
+                            if (nz>0) {
+                                sllhdata[ip] -= drdp[ip];
+                            }
+                        }
+                        
+                    } else {
+                        for(ip=0; ip < np; ip++) {
+                            sllhdata[ip] = mxGetNaN();
                         }
                     }
-                }
-                
-                /* evaluate initial values */
-                NVsx = N_VCloneVectorArray_Serial(np,x);
-                if (NVsx == NULL) goto freturn;
-                
-                status = fx0(x,udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                status = fdx0(x,dx,udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                status = fsx0(NVsx, x, dx, udata);
-                if (status != AMI_SUCCESS) goto freturn;
-                
-                if(status == 0) {
-                    
-                    xB_tmp = NV_DATA_S(xB);
-                    
-                    for (ip=0; ip<np; ip++) {
-                        llhS0[ip] = 0.0;
-                        sx_tmp = NV_DATA_S(NVsx[ip]);
-                        for (ix = 0; ix < nx; ix++) {
-                            llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
-                        }
-                    }
-                    
-                    xQB_tmp = NV_DATA_S(xQB);
-                    
-                    for(ip=0; ip < np; ip++) {
-                        sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
-                        if (ny>0) {
-                            sllhdata[ip] -= dgdp[ip];
-                        }
-                        if (nz>0) {
-                            sllhdata[ip] -= drdp[ip];
-                        }
-                    }
-                    
                 } else {
                     for(ip=0; ip < np; ip++) {
                         sllhdata[ip] = mxGetNaN();
                     }
-                }
-            } else {
-                for(ip=0; ip < np; ip++) {
-                    sllhdata[ip] = mxGetNaN();
                 }
             }
         }
