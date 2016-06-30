@@ -244,10 +244,14 @@ this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)
 %% EVENTS
 
 fprintf('loading events ...\n')
+
+
 try
-    this.trigger = sym({model.event.trigger});
+    tmp = cellfun(@(x) sym(x),{model.event.trigger},'UniformOutput',false)
+    this.trigger = [tmp{:}];
 catch
-    this.trigger = sym({model.event.trigger.math});
+    tmp = cellfun(@(x) sym(x.math),{model.event.trigger},'UniformOutput',false);
+    this.trigger = [tmp{:}];
 end
 this.trigger = this.trigger(:);
 this.trigger = subs(this.trigger,sym('ge'),sym('am_ge'));
@@ -268,7 +272,7 @@ if(length(this.trigger)>0)
     cond_assign_idx = ismember(assignments,condition_sym);
     bound_assign_idx = ismember(assignments,boundary_sym);
     
-    if(np>0)
+    if(np>0 && sum(param_assign_idx)>0)
         parameter_idx = transpose(sym(1:np));
         assignments_param = assignments(param_assign_idx);
         assignments_param_pidx = double(subs(assignments_param,parameter_sym(1:np),parameter_idx));
@@ -277,7 +281,7 @@ if(length(this.trigger)>0)
         this.param(assignments_param_pidx) = this.param(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
     end
     
-    if(nk>0)
+    if(nk>0 && sum(assignments_cond_tidx)>0)
         condition_idx = transpose(sym(1:nk));
         assignments_cond = assignments(cond_assign_idx);
         assignments_cond_kidx = double(subs(assignments_cond,condition_sym,condition_idx));
@@ -286,7 +290,7 @@ if(length(this.trigger)>0)
         conditions(assignments_cond_kidx) = conditions(assignments_cond_kidx).*heaviside(this.trigger(assignments_cond_tidx));
     end
     
-    if(length(boundaries)>0)
+    if(length(boundaries)>0 && sum(bound_assign_idx)>0)
         boundary_idx = transpose(sym(1:length(boundaries)));
         assignments_bound = assignments(bound_assign_idx);
         assignments_bound_bidx = double(subs(assignments_bound,boundary_sym,boundary_idx));
@@ -295,7 +299,7 @@ if(length(this.trigger)>0)
         boundaries(assignments_bound_bidx) = conditions(assignments_bound_bidx).*heaviside(this.trigger(assignments_bound_tidx));
     end
     
-    if(length(this.state)>0)
+    if(length(this.state)>0 && sum(state_assign_idx)>0)
         this.bolus = sym(zeros([length(this.state),length(this.trigger)]));
         this.bolus(state_assign_idx) = -this.state(state_assign_idx);
         
