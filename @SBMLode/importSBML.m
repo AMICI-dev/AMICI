@@ -89,12 +89,21 @@ setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_
 
 
 % remove conditions species (boundary condition + no initialisation)
-cond_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState)));
-bound_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState)));
-condition_sym = this.state(cond_idx);
-conditions = this.state(cond_idx);
-boundary_sym = this.state(bound_idx);
-boundaries = this.initState(bound_idx);
+if(~isempty(this.state))
+    cond_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState)));
+    bound_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState)));
+    condition_sym = this.state(cond_idx);
+    conditions = this.state(cond_idx);
+    boundary_sym = this.state(bound_idx);
+    boundaries = this.initState(bound_idx);
+else
+    conditions = this.state;
+    cond_idx = [];
+    bound_idx = [];
+    condition_sym = sym([]);
+    boundary_sym = sym([]);
+    boundaries = this.state;
+end
 
 nk = length(conditions);
 
@@ -179,14 +188,8 @@ if(length({model.reaction.id})>0)
         
     end
     
-    
-    
-    
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
-    
-    % convert to macroscopic rates
-    
     
     reactants = cellfun(@(x) {x.species},{model.reaction.reactant},'UniformOutput',false);
     % species index of the reactant
@@ -202,8 +205,18 @@ if(length({model.reaction.id})>0)
     tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],products,'UniformOutput',false)));
     wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
     product_ridx = tmp(logical(wprod));
-    reactant_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.reactant},'UniformOutput',false);
-    product_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.product},'UniformOutput',false);
+    if(model.SBML_level>=3)
+        reactant_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.reactant},'UniformOutput',false);
+        product_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.product},'UniformOutput',false);
+    else
+        % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
+        % the concatenation is necessary because MATLAB does reallly weird things when you apply arrayfuns to fields of
+        % 1x0 structs. Let's pray this works and these bugs are fixed in the future
+        math_expr = @(y) sym(y.math);
+        symbolic_expr = @(x) num2cell([sym(arrayfun(@(y) math_expr(y),[x.stoichiometryMath],'UniformOutput',false)),sym(zeros(1,isempty([x.stoichiometryMath])*length(x)))] + sym(arrayfun(@(y) y.stoichiometry,x))*isempty([x.stoichiometryMath]));
+        reactant_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.reactant},'UniformOutput',false);
+        product_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.product},'UniformOutput',false);
+    end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
     tmp = cat(2,reactant_stochiometry{:});
@@ -247,7 +260,7 @@ fprintf('loading events ...\n')
 
 
 try
-    tmp = cellfun(@(x) sym(x),{model.event.trigger},'UniformOutput',false)
+    tmp = cellfun(@(x) sym(x),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
 catch
     tmp = cellfun(@(x) sym(x.math),{model.event.trigger},'UniformOutput',false);
@@ -259,62 +272,42 @@ this.trigger = subs(this.trigger,sym('gt'),sym('am_gt'));
 this.trigger = subs(this.trigger,sym('le'),sym('am_le'));
 this.trigger = subs(this.trigger,sym('lt'),sym('am_lt'));
 
+this.bolus = sym(zeros([length(this.state),length(this.trigger)]));
 if(length(this.trigger)>0)
-    tmp = cellfun(@(x) {x.variable},{model.event.eventAssignment},'UniformOutput',false);
-    assignments = sym(cat(2,tmp{:}));
-    assignments_tidx = cumsum(cell2mat(cellfun(@(x) [ones(1,min(length(x),1)),zeros(1,max(length(x)-1,0))],tmp,'UniformOutput',false)));
-    
-    tmp = cellfun(@(x) {x.math},{model.event.eventAssignment},'UniformOutput',false);
-    assignments_math = sym(cat(2,tmp{:}));
-    
-    state_assign_idx = ismember(assignments,species_sym(not(any([cond_idx;const_idx;bound_idx]))));
-    param_assign_idx = ismember(assignments,parameter_sym);
-    cond_assign_idx = ismember(assignments,condition_sym);
-    bound_assign_idx = ismember(assignments,boundary_sym);
-    
-    if(np>0 && sum(param_assign_idx)>0)
-        parameter_idx = transpose(sym(1:np));
-        assignments_param = assignments(param_assign_idx);
-        assignments_param_pidx = double(subs(assignments_param,parameter_sym(1:np),parameter_idx));
-        assignments_param_tidx = assignments_tidx(param_assign_idx);
+    for ievent = 1:length(this.trigger)
+        tmp = cellfun(@(x) {x.variable},{model.event(ievent).eventAssignment},'UniformOutput',false);
+        assignments = sym(cat(2,tmp{:}));
         
-        this.param(assignments_param_pidx) = this.param(assignments_param_pidx).*heaviside(this.trigger(assignments_param_tidx));
-    end
-    
-    if(nk>0 && sum(assignments_cond_tidx)>0)
-        condition_idx = transpose(sym(1:nk));
-        assignments_cond = assignments(cond_assign_idx);
-        assignments_cond_kidx = double(subs(assignments_cond,condition_sym,condition_idx));
-        assignments_cond_tidx = assignments_tidx(cond_assign_idx);
+        tmp = cellfun(@(x) {x.math},{model.event(ievent).eventAssignment},'UniformOutput',false);
+        assignments_math = sym(cat(2,tmp{:}));
         
-        conditions(assignments_cond_kidx) = conditions(assignments_cond_kidx).*heaviside(this.trigger(assignments_cond_tidx));
-    end
-    
-    if(length(boundaries)>0 && sum(bound_assign_idx)>0)
-        boundary_idx = transpose(sym(1:length(boundaries)));
-        assignments_bound = assignments(bound_assign_idx);
-        assignments_bound_bidx = double(subs(assignments_bound,boundary_sym,boundary_idx));
-        assignments_bound_tidx = assignments_tidx(bound_assign_idx);
-        
-        boundaries(assignments_bound_bidx) = conditions(assignments_bound_bidx).*heaviside(this.trigger(assignments_bound_tidx));
-    end
-    
-    if(length(this.state)>0 && sum(state_assign_idx)>0)
-        this.bolus = sym(zeros([length(this.state),length(this.trigger)]));
-        this.bolus(state_assign_idx) = -this.state(state_assign_idx);
-        
-        assignments_state = assignments(state_assign_idx);
-        assignments_state_sidx = double(subs(assignments_state,species_sym,species_idx));
-        assignments_state_tidx = assignments_tidx(state_assign_idx);
-        
-        addToBolus = sym(zeros(size(this.bolus)));
-        addToBolus(sub2ind(size(addToBolus),assignments_state_sidx,assignments_state_tidx)) = assignments_math(state_assign_idx);
-        
-        nobolus_idx = not(any(addToBolus~=0));
-        this.bolus(:,nobolus_idx) = [];
-        this.trigger(nobolus_idx) = [];
-        addToBolus(:,nobolus_idx) = [];
-        this.bolus = this.bolus + addToBolus;
+        for iassign = 1:length(assignments)
+            state_assign_idx = find(assignments(iassign)==species_sym);
+            param_assign_idx = find(assignments(iassign)==parameter_sym);
+            cond_assign_idx = find(assignments(iassign)==condition_sym);
+            bound_assign_idx = find(assignments(iassign)==boundary_sym);
+            
+            if(np>0 && ~isempty(param_assign_idx))
+                this.param(assignments_param_idx) = this.param(assignments_param_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+            end
+            
+            if(nk>0 && ~isempty(assignments_cond_tidx))
+                conditions(assignments_cond_idx) = conditions(assignments_cond_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+            end
+            
+            if(length(boundaries)>0 && ~isempty(bound_assign_idx))
+                boundaries(assignments_bound_idx) = conditions(assignments_bound_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+            end
+            
+            if(length(this.state)>0 && ~isempty(state_assign_idx))
+                
+                this.bolus(state_assign_idx,ievent) = -this.state(state_assign_idx);
+                addToBolus = sym(zeros(size(this.bolus(:,ievent))));
+                addToBolus(state_assign_idx) = assignments_math(iassign);
+                
+                this.bolus(:,ievent) = this.bolus(:,ievent) + addToBolus;
+            end
+        end
     end
 else
     addToBolus = sym([]);
@@ -343,6 +336,14 @@ if(~isempty(lambdas))
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
     this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
+    
+    % make functions available in this file
+    
+    for ifun = 1:length(this.funmath)
+        token = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)','tokens');
+        start = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)');
+        eval([this.funarg{ifun}(1:(start{1}-1)) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
+    end
 end
 
 %% CLEAN-UP
@@ -358,10 +359,13 @@ this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 
 % apply rules to dynamics
 for irule = 1:length(rulevars)
+    eval(['syms ' strjoin(arrayfun(@char,rulevars(irule),'UniformOutput',false),' ') ' ' strjoin(arrayfun(@char,symvar(sym(rulemath(irule))),'UniformOutput',false),' ')]);
+    eval(['rule = ' char(rulemath(irule)) ';']);
     rule_idx = find(rulevars(irule)==this.state);
-    this.xdot(rule_idx) = jacobian(rulemath(irule),this.state)*this.xdot;
+    this.xdot(rule_idx) = jacobian(rule,this.state)*this.xdot;
+    this.initState(rule_idx) = rulemath(irule);
     if(~isempty(this.bolus))
-        this.bolus(rule_idx,:) = jacobian(rulemath(irule),this.state)*this.bolus;
+        this.bolus(rule_idx,:) = jacobian(rule,this.state)*this.bolus;
     end
 end
 

@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 39:1196
+for iTest = 174:1196
     runSBMLTest(iTest)
 end
 end
@@ -13,7 +13,11 @@ disp([' =================== ' testid ' =================== ']);
 if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     cd(fullfile(pwd,'CustomSBMLTestsuite',testid))
     try
-        SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
+        if(exist(fullfile(pwd,[testid '-sbml-l3v1.xml']),'file'))
+            SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
+        elseif(exist(fullfile(pwd,[testid '-sbml-l2v4.xml'])))
+            SBML2AMICI([testid '-sbml-l2v4'],['SBMLTEST_' testid])
+        end
     catch error_msg
         warning(['Test ' testid ' failed: ' error_msg.message]);
         return
@@ -28,8 +32,10 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     eval(['model = SBMLTEST_' testid '_syms;'])
     adev = zeros(size(results{:,2:end}));
     rdev = zeros(size(results{:,2:end}));
+    amiresults = results;
     for ispecies = 2:length(results.Properties.VariableNames)
         ix = find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x));
+        ik = find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k));
         if(~isempty(ix))
             if(concflag)
                 vol = vnom(ix);
@@ -39,16 +45,20 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
             else
                 vol = 1;
             end
+            amiresults{:,ispecies} = sol.x(:,ix)*vol;
             adev(:,ispecies-1) = abs(sol.x(:,ix)*vol-results{:,ispecies});
             rdev(:,ispecies-1) = abs((sol.x(:,ix)*vol-results{:,ispecies})./results{:,ispecies});
-        elseif(any(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))
-            adev(:,ispecies-1) = abs(knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies});
-            rdev(:,ispecies-1) = abs((knom(find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k)))-results{:,ispecies})./results{:,ispecies});
+        elseif(~isempty(ik))
+            amiresults{:,ispecies} = results{:,ispecies}*0 + knom(ik);
+            
+            adev(:,ispecies-1) = abs(knom(ik)-results{:,ispecies});
+            rdev(:,ispecies-1) = abs((knom(ik)-results{:,ispecies})./results{:,ispecies});
         end
     end
     rdev(isinf(rdev)) = 0;
     assert(not(any(any(and(adev>options.atol*1000,rdev>options.rtol*1000)))))
     cd(curdir)
+    writetable(amiresults,fullfile(pwd,'SBMLresults',[testid '-results.csv']))
 end
 end
 
