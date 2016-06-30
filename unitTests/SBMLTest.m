@@ -1,21 +1,22 @@
 function runSBMLTests
-for iTest = 32:1196
+for iTest = 39:1196
     runSBMLTest(iTest)
 end
 end
 
 
 function runSBMLTest(iTest)
-    cd(fileparts(mfilename('fullpath')))
-    curdir = pwd;
-    testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
-    disp([' =================== ' testid ' =================== ']); 
+cd(fileparts(mfilename('fullpath')))
+curdir = pwd;
+testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
+disp([' =================== ' testid ' =================== ']);
+if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     cd(fullfile(pwd,'CustomSBMLTestsuite',testid))
     try
-    SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
+        SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
     catch error_msg
         warning(['Test ' testid ' failed: ' error_msg.message]);
-       return 
+        return
     end
     amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
     load(['SBMLTEST_' testid '_knom.mat'])
@@ -48,6 +49,7 @@ function runSBMLTest(iTest)
     rdev(isinf(rdev)) = 0;
     assert(not(any(any(and(adev>options.atol*1000,rdev>options.rtol*1000)))))
     cd(curdir)
+end
 end
 
 function [t,options,concflag] = parseSettings(testid)

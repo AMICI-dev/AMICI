@@ -352,6 +352,15 @@ this.initState(any([cond_idx;const_idx;bound_idx])) = [];
 this.xdot(any([cond_idx;const_idx;bound_idx])) = [];
 this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 
+% apply rules to dynamics
+for irule = 1:length(rulevars)
+    rule_idx = find(rulevars(irule)==this.state);
+    this.xdot(rule_idx) = jacobian(rulemath(irule),this.state)*this.xdot;
+    if(~isempty(this.bolus))
+        this.bolus(rule_idx,:) = jacobian(rulemath(irule),this.state)*this.bolus;
+    end
+end
+
 state_vars = [symvar(this.xdot),symvar(this.initState)];
 event_vars = [symvar(addToBolus),symvar(this.trigger)];
 
