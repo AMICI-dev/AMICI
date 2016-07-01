@@ -11,7 +11,9 @@ function writeCcode_sensi(this,model,fid)
       
 np = model.np;
 
-nonzero = this.sym~=0;
+nonzero_idx = find(this.sym);
+nonzero = zeros(size(this.sym));
+nonzero(nonzero_idx) = 1;
 
 if(strcmp(this.funstr,'deltaqB'))
     if(any(nonzero))

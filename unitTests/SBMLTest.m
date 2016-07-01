@@ -1,6 +1,9 @@
 function runSBMLTests
-for iTest = 174:1196
+for iTest = 1:41
+    try
     runSBMLTest(iTest)
+    catch
+    end
 end
 end
 

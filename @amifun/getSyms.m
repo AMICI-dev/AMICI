@@ -251,7 +251,7 @@ function [this,model] = getSyms(this,model)
                     this.sym = this.sym + (jacw^idw)*jacx; % this part is only to get the right nonzero entries 
                 end
                 % fill cell array
-                idx_w = find(logical(this.sym~=0));
+                idx_w = find(this.sym);
                 this.strsym = sym(zeros(size(jacx)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
@@ -278,7 +278,7 @@ function [this,model] = getSyms(this,model)
                     this.sym = this.sym + (jacw^idw)*jacp; % this part is only to get the right nonzero entries 
                 end
                 % fill cell array
-                idx_w = find(logical(this.sym~=0));
+                idx_w = find(this.sym);
                 this.strsym = sym(zeros(size(jacp)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
@@ -315,7 +315,7 @@ function [this,model] = getSyms(this,model)
             % build short strings for reuse of jacobian
             
             % find nonzero entries
-            idx = find(logical(this.sym~=0));
+            idx = find(this.sym);
             % create cell array of same size
             Js = sym(zeros(length(idx),1));
             % fill cells with strings
@@ -676,7 +676,7 @@ end
 
 function this = makeStrSyms(this)
     this.strsym = sym(zeros(size(this.sym)));
-    idx = find(logical(this.sym~=0));
+    idx = find(this.sym);
     idx = transpose(idx(:));
     for isym = idx
         this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
