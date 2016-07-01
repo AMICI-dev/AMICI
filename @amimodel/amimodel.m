@@ -90,7 +90,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 13;
+        compver = 14;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )

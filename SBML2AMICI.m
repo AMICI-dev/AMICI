@@ -13,9 +13,10 @@ function  SBML2AMICI( filename, modelname )
     ODE.writeAMICI(modelname);
     pnom = ODE.pnom;
     knom = ODE.knom;
+    vnom = ODE.volume;
     save([modelname '_pnom.mat'],'pnom');
     save([modelname '_knom.mat'],'knom');
-    
+    save([modelname '_vnom.mat'],'vnom');
     
 end
 
