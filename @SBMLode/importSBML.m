@@ -237,7 +237,21 @@ end
 
 for irule = 1:length(model.rule)
     if(strcmp(model.rule(irule).typecode,'SBML_RATE_RULE'))
-        this.xdot(find(this.state == sym(model.rule(irule).variable))) = sym(model.rule(irule).formula);
+        state_rate_idx = find(this.state == sym(model.rule(irule).variable));
+        param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
+        if(~isempty(state_rate_idx))
+            this.xdot(fstate_rate_idx) = sym(model.rule(irule).formula);
+        elseif(~isempty(param_rate_idx))
+            this.state = [this.state; this.param(param_rate_idx)];
+            this.xdot = [this.xdot; sym(model.rule(irule).formula)];
+            this.initState = [this.initState; parameter_val(param_rate_idx)];
+            this.volume = [this.volume; 1];
+            nx = nx + 1;
+            parameter_val(param_rate_idx) = [];
+            parameter_sym(param_rate_idx) = [];
+            this.param(param_rate_idx) = [];
+            np = np - 1;
+        end
     end
 end
 %% CONVERSION FACTORS/VOLUMES
@@ -300,7 +314,7 @@ if(length(this.trigger)>0)
                 this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
-            if(nk>0 && ~isempty(assignments_cond_tidx))
+            if(nk>0 && ~isempty(cond_assign_idx))
                 conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
