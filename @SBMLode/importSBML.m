@@ -150,23 +150,9 @@ nr = length(model.reaction);
 
 kLaw = cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false);
 
-if(any(cell2mat(strfind(kLaw,'factorial'))))
-    error('Sorry, factorial functions are not supported at the moment!')
-end
+checkIllegalFunctions(kLaw);
 
-if(any(cell2mat(strfind(kLaw,'ceil'))))
-    error('Sorry, ceil functions are not supported at the moment!')
-end
-
-% replace imcompatible piecewise defintion 
-% execute twice for directly nested calls (overlapping regexp expressions)
-kLaw = regexprep(kLaw,'^piecewise(','am_piecewise(');
-kLaw = regexprep(kLaw,'([\W]+)piecewise(','$1am_piecewise(');
-kLaw = regexprep(kLaw,'([\W]+)piecewise(','$1am_piecewise(');
-for logicalf = {'and','or','lt','gt','ge','le','ge','le','xor'}
-    kLaw = regexprep(kLaw,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
-    kLaw = regexprep(kLaw,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
-end
+kLaw = replaceDiscontinuousFunctions(kLaw);
 
 this.flux = sym(kLaw);
 this.flux = this.flux(:);
@@ -341,13 +327,9 @@ if(~isempty(lambdas))
     tmpfun = cellfun(@(x) ['fun_' num2str(x)],num2cell(1:length(model.functionDefinition)),'UniformOutput',false);
     this.funmath = strrep(this.funmath,{model.functionDefinition.id},tmpfun);
     % replace helper functions
-    this.funmath = strrep(this.funmath,'ge(','am_ge(');
-    this.funmath = strrep(this.funmath,'gt(','am_gt(');
-    this.funmath = strrep(this.funmath,'le(','am_le(');
-    this.funmath = strrep(this.funmath,'lt(','am_lt(');
-    this.funmath = strrep(this.funmath,'piecewise(','am_piecewise(');
-    this.funmath = strrep(this.funmath,'max(','am_max(');
-    this.funmath = strrep(this.funmath,'min(','am_min(');
+    
+    checkIllegalFunctions(this.funmath);
+    this.funmath = replaceDiscontinuousFunctions(this.funmath);
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
     this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
@@ -449,4 +431,30 @@ this.xdot = subs(this.xdot,old,new);
 this.trigger = subs(this.trigger,old,new);
 this.bolus = subs(this.bolus,old,new);
 this.initState = subs(this.initState,old,new);
+end
+
+function checkIllegalFunctions(str)
+
+if(any(cell2mat(strfind(str,'factorial'))))
+    error('Sorry, factorial functions are not supported at the moment!')
+end
+if(any(cell2mat(strfind(str,'ceil'))))
+    error('Sorry, ceil functions are not supported at the moment!')
+end
+if(any(cell2mat(strfind(str,'floor'))))
+    error('Sorry, floor functions are not supported at the moment!')
+end
+end
+
+
+function str = replaceDiscontinuousFunctions(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+str = regexprep(str,'^piecewise(','am_piecewise(');
+str = regexprep(str,'([\W]+)piecewise(','$1am_piecewise(');
+str = regexprep(str,'([\W]+)piecewise(','$1am_piecewise(');
+for logicalf = {'and','or','lt','gt','ge','le','ge','le','xor'}
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+end
 end
