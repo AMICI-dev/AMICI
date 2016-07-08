@@ -158,8 +158,15 @@ if(any(cell2mat(strfind(kLaw,'ceil'))))
     error('Sorry, ceil functions are not supported at the moment!')
 end
 
-% replace imcompatible piecewise defintion (and hope that everything goes well) 
-kLaw = strrep(kLaw,'piecewise(','am_piecewise(');
+% replace imcompatible piecewise defintion 
+% execute twice for directly nested calls (overlapping regexp expressions)
+kLaw = regexprep(kLaw,'^piecewise(','am_piecewise(');
+kLaw = regexprep(kLaw,'([\W]+)piecewise(','$1am_piecewise(');
+kLaw = regexprep(kLaw,'([\W]+)piecewise(','$1am_piecewise(');
+for logicalf = {'and','or','lt','gt','ge','le','ge','le','xor'}
+    kLaw = regexprep(kLaw,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+    kLaw = regexprep(kLaw,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+end
 
 this.flux = sym(kLaw);
 this.flux = this.flux(:);

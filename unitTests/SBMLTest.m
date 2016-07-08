@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 190 :1183
+for iTest = 201:1183
     try
     runSBMLTest(iTest)
     catch
@@ -21,11 +21,11 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
         elseif(exist(fullfile(pwd,[testid '-sbml-l2v4.xml'])))
             SBML2AMICI([testid '-sbml-l2v4'],['SBMLTEST_' testid])
         end
+        amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd);
     catch error_msg
         warning(['Test ' testid ' failed: ' error_msg.message]);
         return
     end
-    amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
     load(['SBMLTEST_' testid '_vnom.mat'])
