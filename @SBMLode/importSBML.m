@@ -158,6 +158,9 @@ if(any(cell2mat(strfind(kLaw,'ceil'))))
     error('Sorry, ceil functions are not supported at the moment!')
 end
 
+% replace imcompatible piecewise defintion (and hope that everything goes well) 
+kLaw = strrep(kLaw,'piecewise(','am_piecewise(');
+
 this.flux = sym(kLaw);
 this.flux = this.flux(:);
 % add local parameters to global parameters, make them global by
@@ -293,15 +296,15 @@ if(length(this.trigger)>0)
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
             
             if(np>0 && ~isempty(param_assign_idx))
-                this.param(assignments_param_idx) = this.param(assignments_param_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
             if(nk>0 && ~isempty(assignments_cond_tidx))
-                conditions(assignments_cond_idx) = conditions(assignments_cond_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
             if(length(boundaries)>0 && ~isempty(bound_assign_idx))
-                boundaries(assignments_bound_idx) = conditions(assignments_bound_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
             if(length(this.state)>0 && ~isempty(state_assign_idx))
@@ -375,7 +378,7 @@ for irule = 1:length(rulevars)
 end
 
 state_vars = [symvar(this.xdot),symvar(this.initState)];
-event_vars = [symvar(addToBolus),symvar(this.trigger)];
+event_vars = [symvar(this.bolus),symvar(this.trigger)];
 
 % substitute with actual expressions
 makeSubs(this,parameter_sym(1:np),this.param);
