@@ -48,13 +48,11 @@ if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
     error('DAEs currently not supported!');
 end
 
-if(any(strcmp(rule_types,'SBML_RATE_RULE')))
-    %custom reate laws TBD
-    error('Sorry, custom rate laws currently not supported!');
-end
-
 rulevars = sym({model.rule.variable});
 rulemath = sym({model.rule.formula});
+% remove rate rules
+rulevars = rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
+rulemath = rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
 repeat_idx = ismember(rulevars,symvar(rulemath));
 while(any(repeat_idx))
     rulemath= subs(rulemath,rulevars,rulemath);
@@ -231,6 +229,13 @@ else
     this.xdot = sym(zeros(size(this.state)));
 end
 
+%% RATE RULES
+
+for irule = 1:length(model.rule)
+    if(strcmp(model.rule(irule).typecode,'SBML_RATE_RULE'))
+        this.xdot(find(this.state == sym(model.rule(irule).variable))) = sym(model.rule(irule).formula);
+    end
+end
 %% CONVERSION FACTORS/VOLUMES
 
 fprintf('converting to concentrations ...\n')
