@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 1:41
+for iTest = 1:1183
     try
     runSBMLTest(iTest)
     catch
@@ -29,7 +29,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
     load(['SBMLTEST_' testid '_vnom.mat'])
-    [t,options,concflag] = parseSettings(testid);
+    [t,settings,concflag] = parseSettings(testid);
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])
@@ -59,7 +59,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
         end
     end
     rdev(isinf(rdev)) = 0;
-    assert(not(any(any(and(adev>options.atol*1000,rdev>options.rtol*1000)))))
+    assert(not(any(any(and(adev>settings.atol,rdev>settings.rtol)))))
     cd(curdir)
     writetable(amiresults,fullfile(pwd,'SBMLresults',[testid '-results.csv']))
 end
