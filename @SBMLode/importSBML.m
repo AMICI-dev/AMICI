@@ -118,12 +118,9 @@ this.initState = subs(this.initState,species_sym(amount_idx),sym(initAmount(amou
 % apply rules
 applyRule(this,model,'initState',rulevars,rulemath)
 
-this.knom = double(this.initState(cond_idx));
-
-% remove constant species
-const_idx = logical([model.species.constant]) & not(cond_idx);
-constant_sym = this.state(const_idx);
-constants = this.initState(const_idx);
+while(any(ismember(symvar(this.initState),this.state)))
+    this.initState = subs(this.initState,this.state,this.initState);
+end
 
 %% PARAMETERS
 
@@ -141,6 +138,16 @@ applyRule(this,model,'param',rulevars,rulemath)
 
 np = length(this.param);
 
+%% CONSTANTS
+
+this.knom = double(subs(this.initState(cond_idx),parameter_sym,parameter_val));
+
+% remove constant species
+const_idx = logical([model.species.constant]) & not(cond_idx);
+constant_sym = this.state(const_idx);
+constants = this.initState(const_idx);
+
+
 
 %% REACTIONS
 
@@ -153,6 +160,7 @@ kLaw = cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false);
 checkIllegalFunctions(kLaw);
 
 kLaw = replaceDiscontinuousFunctions(kLaw);
+kLaw = replaceReservedFunctions(kLaw);
 
 this.flux = sym(kLaw);
 this.flux = this.flux(:);
@@ -280,7 +288,7 @@ if(length(this.trigger)>0)
         assignments = sym(cat(2,tmp{:}));
         
         tmp = cellfun(@(x) {x.math},{model.event(ievent).eventAssignment},'UniformOutput',false);
-        assignments_math = sym(cat(2,tmp{:}));
+        assignments_math = sym(replaceReservedFunctions(cat(2,tmp{:})));
         
         for iassign = 1:length(assignments)
             state_assign_idx = find(assignments(iassign)==species_sym);
@@ -332,14 +340,14 @@ if(~isempty(lambdas))
     this.funmath = replaceDiscontinuousFunctions(this.funmath);
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
-    this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
+    this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,replaceReservedFunctionIDs({model.functionDefinition.id}),'UniformOutput',false);
     
     % make functions available in this file
     
     for ifun = 1:length(this.funmath)
         token = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)','tokens');
         start = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)');
-        eval([this.funarg{ifun}(1:(start{1}-1)) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
+        eval([replaceReservedFunctions(this.funarg{ifun}(1:(start{1}-1))) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
     end
 end
 
@@ -450,11 +458,28 @@ end
 function str = replaceDiscontinuousFunctions(str)
 % replace imcompatible piecewise defintion
 % execute twice for directly nested calls (overlapping regexp expressions)
-str = regexprep(str,'^piecewise(','am_piecewise(');
-str = regexprep(str,'([\W]+)piecewise(','$1am_piecewise(');
-str = regexprep(str,'([\W]+)piecewise(','$1am_piecewise(');
-for logicalf = {'and','or','lt','gt','ge','le','ge','le','xor'}
+for logicalf = {'piecewise','and','or','lt','gt','ge','le','ge','le','xor'}
+    str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
 end
 end
+
+function str = replaceReservedFunctions(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+for logicalf = {'divide'}
+    str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+end
+end
+
+function str = replaceReservedFunctionIDs(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+for logicalf = {'divide'}
+    str = regexprep(str,['^' logicalf{1} '$'],['am_' logicalf{1} '']);
+end
+end
+

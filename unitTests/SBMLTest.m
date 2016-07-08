@@ -1,5 +1,5 @@
 function runSBMLTests
-for iTest = 287:1183
+for iTest = 356:1183
     try
     runSBMLTest(iTest)
     catch
