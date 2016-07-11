@@ -27,9 +27,9 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,['% EVENTS\n']);
     for ievent = 1:length(this.trigger)
-        fprintf(fid,['model.sym.event(' num2str(ievent) ') = amivent(' ...
+        fprintf(fid,['model.event(' num2str(ievent) ') = amievent(' ...
             char(this.trigger(ievent)) ', ...\n' ...
-            '[' strjoin(cellfun(@char,{this.bolus(:,ievent)},'UniformOutput',false),',') '], ...\n' ...
+            '[' strjoin(arrayfun(@char,this.bolus(:,ievent),'UniformOutput',false),',') '], ...\n' ...
             '[]);\n']);
     end
     fprintf(fid,'\n');
@@ -63,7 +63,9 @@ function writeDefinition(header,identifier,field,this,fid)
     fprintf(fid,'\n');
     fprintf(fid,'\n');
     fprintf(fid,['%%%%\n%% ' header '\n']);
-    fprintf(fid,['syms ' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false)) '\n']);
+    if(length(this.(field))>0)
+        fprintf(fid,['syms ' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false)) '\n']);
+    end
     fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),',') '];\n']);
 end
 

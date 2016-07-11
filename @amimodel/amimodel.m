@@ -67,6 +67,8 @@ classdef amimodel < handle
         colptrsB = double.empty();
         % cell array of functions to be compiled @type *cell
         funs = cell.empty();
+        % cell array of matlab functions to be compiled @type *cell
+        mfuns = cell.empty();
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
@@ -88,7 +90,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 13;
+        compver = 14;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
