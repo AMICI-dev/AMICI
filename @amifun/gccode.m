@@ -34,7 +34,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx') || strcmp(this.funstr,'dydx') || strcmp(this.funstr,'sJy') || strcmp(this.funstr,'M') || strcmp(this.funstr,'dfdx') )
+            if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx') || strcmp(this.funstr,'dydx') || strcmp(this.funstr,'dzdx') || strcmp(this.funstr,'sJy') || strcmp(this.funstr,'M') || strcmp(this.funstr,'dfdx') )
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);
@@ -92,7 +92,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[it+nt*\(($1)+ip*' num2str(model.ny) '\)\]']);
             elseif(strcmp(this.cvar,'z'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*($1)\]']);
-            elseif(strcmp(this.cvar,'sz') || strcmp(this.cvar,'sroot'))
+            elseif(strcmp(this.cvar,'sz') || strcmp(this.cvar,'sroot') || strcmp(this.cvar,'sz_tf'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) ')\]']);
             elseif(strcmp(this.cvar,'s2root'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) '*np)\]']);
@@ -117,7 +117,7 @@ function this = gccode(this,model,fid)
             elseif(strcmp(this.cvar,'dJydx'))
                 cstr = regexprep(cstr, [this.cvar '\[([0-9+*]*)\] = '], [ this.cvar '[it+($1)*nt] = ']);
             elseif(strcmp(this.cvar,'dJzdx'))
-                cstr = regexprep(cstr, [this.cvar '\[([0-9+*]*)\] = '], [ this.cvar '[nroots[ie]+($1)*maxevent] = ']);
+                cstr = regexprep(cstr, [this.cvar '\[([0-9+*]*)\] = '], [ this.cvar '[nroots[ie]+($1)*nmaxevent] = ']);
             end
             
             if(strfind(this.cvar,'Jy'))
@@ -156,6 +156,9 @@ function this = gccode(this,model,fid)
             if(strcmp(this.funstr,'dydx'))
                 cstr = strrep(cstr,'dydx_tmp','dydx');
             end
+            if(strcmp(this.funstr,'dzdx'))
+                cstr = strrep(cstr,'dzdx_tmp','dzdx');
+            end
             if(strcmp(this.funstr,'deltax'))
                 cstr = strrep(cstr,'deltax_tmp','deltax');
             end
@@ -170,6 +173,9 @@ function this = gccode(this,model,fid)
             end
             if(strcmp(this.funstr,'dJydx'))
                 cstr = strrep(cstr,'ydx_tmp','ydx');
+            end
+            if(strcmp(this.funstr,'dJzdx'))
+                cstr = strrep(cstr,'zdx_tmp','zdx');
             end
             if(strcmp(this.funstr,'x0'))
                cstr = regexprep(cstr,'x_([0-9]+)','x0_tmp\[$1\]'); 
