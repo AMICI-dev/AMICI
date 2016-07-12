@@ -1,8 +1,9 @@
 function runSBMLTests
-for iTest = 396:1183
+for iTest = 21:1183
     try
     runSBMLTest(iTest)
-    catch
+    catch error_msg
+        
     end
 end
 end
@@ -30,6 +31,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     load(['SBMLTEST_' testid '_pnom.mat'])
     load(['SBMLTEST_' testid '_vnom.mat'])
     [t,settings,concflag] = parseSettings(testid);
+    options.sensi = 0;
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])
@@ -62,6 +64,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     assert(not(any(any(and(adev>settings.atol,rdev>settings.rtol)))))
     cd(curdir)
     writetable(amiresults,fullfile(pwd,'SBMLresults',[testid '-results.csv']))
+    clear all
 end
 end
 
