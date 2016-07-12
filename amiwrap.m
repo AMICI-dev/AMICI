@@ -109,12 +109,11 @@ function amiwrap( varargin )
         [odewrap_path,~,~]=fileparts(which('amiwrap.m'));
         movefile(fullfile(odewrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
         movefile(fullfile(odewrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
-        if (~isempty(model.fun))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_w_' modelname '.m']),fullfile(tdir,['calc_w_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_dwdp_' modelname '.m']),fullfile(tdir,['calc_dwdp_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_dwdx_' modelname '.m']),fullfile(tdir,['calc_dwdx_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['eval_jacobian_' modelname '.m']),fullfile(tdir,['eval_jacobian_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['eval_dxdotdp_' modelname '.m']),fullfile(tdir,['eval_dxdotdp_' modelname '.m']))
+        jacfiles = {'calc_w_', 'calc_dwdp_', 'calc_dwdx_', 'eval_J_', 'eval_dxdotdp_'};
+        for jacfile = jacfiles
+            if(exist(fullfile(odewrap_path,'models',modelname,strcat(jacfile{1}, modelname, '.m')), 'file') == 2)
+                copyfile(fullfile(odewrap_path,'models',modelname,strcat(jacfile{1}, modelname, '.m')),fullfile(tdir,strcat(jacfile{1}, modelname, '.m')));
+            end
         end
         % clear .m and .mex files from memory
         switch(o2flag)
