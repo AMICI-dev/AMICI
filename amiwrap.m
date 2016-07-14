@@ -109,12 +109,8 @@ function amiwrap( varargin )
         [odewrap_path,~,~]=fileparts(which('amiwrap.m'));
         movefile(fullfile(odewrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
         movefile(fullfile(odewrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
-        if (~isempty(model.fun))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_w_' modelname '.m']),fullfile(tdir,['calc_w_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_dwdp_' modelname '.m']),fullfile(tdir,['calc_dwdp_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['calc_dwdx_' modelname '.m']),fullfile(tdir,['calc_dwdx_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['eval_jacobian_' modelname '.m']),fullfile(tdir,['eval_jacobian_' modelname '.m']))
-            copyfile(fullfile(odewrap_path,'models',modelname,['eval_dxdotdp_' modelname '.m']),fullfile(tdir,['eval_dxdotdp_' modelname '.m']))
+        for fun = model.mfuns
+            copyfile(fullfile(odewrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']))
         end
         % clear .m and .mex files from memory
         switch(o2flag)
