@@ -21,10 +21,10 @@ end
     
 
 if(strcmp(this.funstr,'w') || strcmp(this.funstr,'dwdp') || strcmp(this.funstr,'dwdx'))
-    fid = fopen(fullfile(model.wrap_path,'models',model.modelname,['calc_' this.funstr '_',model.modelname,'.m']), 'w');
-    fprintf(fid,['%% calc_' this.funstr  '_' model.modelname '.m is an additional matlab file to\n'...
+    fid = fopen(fullfile(model.wrap_path,'models',model.modelname,[ this.funstr '_',model.modelname,'.m']), 'w');
+    fprintf(fid,['%% ' this.funstr  '_' model.modelname '.m is an additional matlab file to\n'...
         '%% compute helping variables for the jacobian with AMICI.\n\n']);
-    fprintf(fid, ['function ' this.funstr ' = calc_' this.funstr  '_' model.modelname '(p, x, k, t)\n\n']);
+    fprintf(fid, ['function ' this.funstr ' = ' this.funstr  '_' model.modelname '(p, x, k, t)\n\n']);
     
     % Assignment of inputs
     for l = 1 : numel(model.sym.p)
@@ -35,6 +35,11 @@ if(strcmp(this.funstr,'w') || strcmp(this.funstr,'dwdp') || strcmp(this.funstr,'
     end
     for l = 1 : numel(model.sym.k)
         fprintf(fid, ['k_' num2str(l-1) ' = k(' num2str(l) ');\n']);
+    end
+    if(~strcmp(this.funstr,'w'))
+        for l = 1 : numel(model.fun.w.sym)
+            fprintf(fid, ['w_' num2str(l-1) ' = w(' num2str(l) ');\n']);
+        end
     end
     fprintf(fid, '\n');
 
@@ -57,12 +62,26 @@ if(strcmp(this.funstr,'w') || strcmp(this.funstr,'dwdp') || strcmp(this.funstr,'
     fprintf(fid, 'end');
     fclose(fid);
 else
+    if(and(ismember('dwdp',model.fun.(this.funstr).deps),ismember('dwdx',model.fun.(this.funstr).deps)))
     mfun(this.sym, 'file', fullfile(model.wrap_path,'models',...
-        model.modelname,['eval_' this.funstr '_',model.modelname,'.m']), ...
+        model.modelname,[ this.funstr '_',model.modelname,'.m']), ...
         'vars', {model.fun.p.sym, model.fun.x.sym, model.fun.k.sym, ...
         model.fun.w.strsym(find(model.fun.w.strsym)), ...
         model.fun.dwdp.strsym(find(model.fun.dwdp.strsym)), ...
         model.fun.dwdx.strsym(find(model.fun.dwdx.strsym)), 't'});
+    elseif(ismember('dwdp',model.fun.(this.funstr).deps))
+        mfun(this.sym, 'file', fullfile(model.wrap_path,'models',...
+        model.modelname,[ this.funstr '_',model.modelname,'.m']), ...
+        'vars', {model.fun.p.sym, model.fun.x.sym, model.fun.k.sym, ...
+        model.fun.w.strsym(find(model.fun.w.strsym)), ...
+        model.fun.dwdp.strsym(find(model.fun.dwdp.strsym)), 't'});
+    elseif(ismember('dwdx',model.fun.(this.funstr).deps))
+        mfun(this.sym, 'file', fullfile(model.wrap_path,'models',...
+        model.modelname,[ this.funstr '_',model.modelname,'.m']), ...
+        'vars', {model.fun.p.sym, model.fun.x.sym, model.fun.k.sym, ...
+        model.fun.w.strsym(find(model.fun.w.strsym)), ...
+        model.fun.dwdx.strsym(find(model.fun.dwdx.strsym)), 't'});
+    end
 end
 
 

@@ -48,13 +48,11 @@ if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
     error('DAEs currently not supported!');
 end
 
-if(any(strcmp(rule_types,'SBML_RATE_RULE')))
-    %custom reate laws TBD
-    error('Sorry, custom rate laws currently not supported!');
-end
-
 rulevars = sym({model.rule.variable});
 rulemath = sym({model.rule.formula});
+% remove rate rules
+rulevars = rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
+rulemath = rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
 repeat_idx = ismember(rulevars,symvar(rulemath));
 while(any(repeat_idx))
     rulemath= subs(rulemath,rulevars,rulemath);
@@ -120,12 +118,9 @@ this.initState = subs(this.initState,species_sym(amount_idx),sym(initAmount(amou
 % apply rules
 applyRule(this,model,'initState',rulevars,rulemath)
 
-this.knom = double(this.initState(cond_idx));
-
-% remove constant species
-const_idx = logical([model.species.constant]) & not(cond_idx);
-constant_sym = this.state(const_idx);
-constants = this.initState(const_idx);
+while(any(ismember(symvar(this.initState),this.state)))
+    this.initState = subs(this.initState,this.state,this.initState);
+end
 
 %% PARAMETERS
 
@@ -143,6 +138,16 @@ applyRule(this,model,'param',rulevars,rulemath)
 
 np = length(this.param);
 
+%% CONSTANTS
+
+this.knom = double(subs(this.initState(cond_idx),parameter_sym,parameter_val));
+
+% remove constant species
+const_idx = logical([model.species.constant]) & not(cond_idx);
+constant_sym = this.state(const_idx);
+constants = this.initState(const_idx);
+
+
 
 %% REACTIONS
 
@@ -152,13 +157,10 @@ nr = length(model.reaction);
 
 kLaw = cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false);
 
-if(any(cell2mat(strfind(kLaw,'factorial'))))
-    error('Sorry, factorial functions are not supported at the moment!')
-end
+checkIllegalFunctions(kLaw);
 
-if(any(cell2mat(strfind(kLaw,'ceil'))))
-    error('Sorry, ceil functions are not supported at the moment!')
-end
+kLaw = replaceDiscontinuousFunctions(kLaw);
+kLaw = replaceReservedFunctions(kLaw);
 
 this.flux = sym(kLaw);
 this.flux = this.flux(:);
@@ -231,6 +233,27 @@ else
     this.xdot = sym(zeros(size(this.state)));
 end
 
+%% RATE RULES
+
+for irule = 1:length(model.rule)
+    if(strcmp(model.rule(irule).typecode,'SBML_RATE_RULE'))
+        state_rate_idx = find(this.state == sym(model.rule(irule).variable));
+        param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
+        if(~isempty(state_rate_idx))
+            this.xdot(fstate_rate_idx) = sym(model.rule(irule).formula);
+        elseif(~isempty(param_rate_idx))
+            this.state = [this.state; this.param(param_rate_idx)];
+            this.xdot = [this.xdot; sym(model.rule(irule).formula)];
+            this.initState = [this.initState; parameter_val(param_rate_idx)];
+            this.volume = [this.volume; 1];
+            nx = nx + 1;
+            parameter_val(param_rate_idx) = [];
+            parameter_sym(param_rate_idx) = [];
+            this.param(param_rate_idx) = [];
+            np = np - 1;
+        end
+    end
+end
 %% CONVERSION FACTORS/VOLUMES
 
 fprintf('converting to concentrations ...\n')
@@ -279,7 +302,7 @@ if(length(this.trigger)>0)
         assignments = sym(cat(2,tmp{:}));
         
         tmp = cellfun(@(x) {x.math},{model.event(ievent).eventAssignment},'UniformOutput',false);
-        assignments_math = sym(cat(2,tmp{:}));
+        assignments_math = sym(replaceReservedFunctions(cat(2,tmp{:})));
         
         for iassign = 1:length(assignments)
             state_assign_idx = find(assignments(iassign)==species_sym);
@@ -288,15 +311,15 @@ if(length(this.trigger)>0)
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
             
             if(np>0 && ~isempty(param_assign_idx))
-                this.param(assignments_param_idx) = this.param(assignments_param_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
-            if(nk>0 && ~isempty(assignments_cond_tidx))
-                conditions(assignments_cond_idx) = conditions(assignments_cond_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+            if(nk>0 && ~isempty(cond_assign_idx))
+                conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
             if(length(boundaries)>0 && ~isempty(bound_assign_idx))
-                boundaries(assignments_bound_idx) = conditions(assignments_bound_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
             if(length(this.state)>0 && ~isempty(state_assign_idx))
@@ -326,23 +349,19 @@ if(~isempty(lambdas))
     tmpfun = cellfun(@(x) ['fun_' num2str(x)],num2cell(1:length(model.functionDefinition)),'UniformOutput',false);
     this.funmath = strrep(this.funmath,{model.functionDefinition.id},tmpfun);
     % replace helper functions
-    this.funmath = strrep(this.funmath,'ge(','am_ge(');
-    this.funmath = strrep(this.funmath,'gt(','am_gt(');
-    this.funmath = strrep(this.funmath,'le(','am_le(');
-    this.funmath = strrep(this.funmath,'lt(','am_lt(');
-    this.funmath = strrep(this.funmath,'piecewise(','am_piecewise(');
-    this.funmath = strrep(this.funmath,'max(','am_max(');
-    this.funmath = strrep(this.funmath,'min(','am_min(');
+    
+    checkIllegalFunctions(this.funmath);
+    this.funmath = replaceDiscontinuousFunctions(this.funmath);
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
-    this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,{model.functionDefinition.id},'UniformOutput',false);
+    this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,replaceReservedFunctionIDs({model.functionDefinition.id}),'UniformOutput',false);
     
     % make functions available in this file
     
     for ifun = 1:length(this.funmath)
         token = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)','tokens');
         start = regexp(this.funarg(ifun),'\(([0-9\w\,]*)\)');
-        eval([this.funarg{ifun}(1:(start{1}-1)) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
+        eval([replaceReservedFunctions(this.funarg{ifun}(1:(start{1}-1))) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
     end
 end
 
@@ -370,7 +389,7 @@ for irule = 1:length(rulevars)
 end
 
 state_vars = [symvar(this.xdot),symvar(this.initState)];
-event_vars = [symvar(addToBolus),symvar(this.trigger)];
+event_vars = [symvar(this.bolus),symvar(this.trigger)];
 
 % substitute with actual expressions
 makeSubs(this,parameter_sym(1:np),this.param);
@@ -435,3 +454,46 @@ this.trigger = subs(this.trigger,old,new);
 this.bolus = subs(this.bolus,old,new);
 this.initState = subs(this.initState,old,new);
 end
+
+function checkIllegalFunctions(str)
+
+if(any(cell2mat(strfind(str,'factorial'))))
+    error('Sorry, factorial functions are not supported at the moment!')
+end
+if(any(cell2mat(strfind(str,'ceil'))))
+    error('Sorry, ceil functions are not supported at the moment!')
+end
+if(any(cell2mat(strfind(str,'floor'))))
+    error('Sorry, floor functions are not supported at the moment!')
+end
+end
+
+
+function str = replaceDiscontinuousFunctions(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+for logicalf = {'piecewise','and','or','lt','gt','ge','le','ge','le','xor'}
+    str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+end
+end
+
+function str = replaceReservedFunctions(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+for logicalf = {'divide'}
+    str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+    str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
+end
+end
+
+function str = replaceReservedFunctionIDs(str)
+% replace imcompatible piecewise defintion
+% execute twice for directly nested calls (overlapping regexp expressions)
+for logicalf = {'divide'}
+    str = regexprep(str,['^' logicalf{1} '$'],['am_' logicalf{1} '']);
+end
+end
+

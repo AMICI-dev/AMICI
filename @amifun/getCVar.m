@@ -25,6 +25,8 @@ function [ this ] = getCVar(this)
             this.cvar =  'M_tmp';
         case 'dfdx'
             this.cvar =  'dfdx_tmp';
+        case 'sz_tf'
+            this.cvar =  'sz';
         otherwise
             this.cvar = this.funstr;
     end
