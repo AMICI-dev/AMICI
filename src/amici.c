@@ -1462,7 +1462,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
     
-    int ie;
+    int ie,iz;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
