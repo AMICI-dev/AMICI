@@ -2844,7 +2844,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
    * -------------------------------------------------------
    */
 
-  if (nst > 0) {
+  if (!reinit) {
 
     /* Estimate an infinitesimal time interval to be used as
        a roundoff for time quantities (based on current time 
