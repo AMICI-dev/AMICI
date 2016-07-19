@@ -55,14 +55,8 @@ varnames = format(inputs);
 if ~isempty(opts.file)
     file = normalize(opts.file,'.m');
 %     body = renameFileInputs(vars,inputs,funvars);
-    body = '';    
-    for k = 1:length(inputs)
-        for j = 1:length(vars{k});
-            body = [body char(vars{k}(j)) '= in' num2str(k) '(' num2str(j) ');\n'];
-        end
-    end
     clear(char(file)); % necessary to avoid problems in for-loops
-    g = writeMATLAB(funs,file,varnames,body);
+    g = writeMATLAB(funs,file,varnames);
     tmp = exist(char(file),'file'); %#ok
                                     % necessary to make the function available
                                     % on the PATH right away
@@ -152,7 +146,7 @@ end
 % varnames is the formatted input variables
 % outputs is the cell array of output names
 % mapping is string with input to variable mapping
-function g = writeMATLAB(f,file,varnames,mapping)
+function g = writeMATLAB(f,file,varnames)
 [fid,msg] = fopen(file,'wt');
 if fid == -1
     error(message('symbolic:sym:matlabFunction:FileError', file, msg));
@@ -161,9 +155,6 @@ tmp = onCleanup(@()fclose(fid));
 % [f,tvalues,tnames] = optimize(f);
 [~,fname] = fileparts(file);
 writeHeader(fid,fname,varnames);
-if ~isempty(mapping)
-    fprintf(fid,mapping);
-end
 writeOutput(fid,f);
 g = str2func(fname);
 
@@ -183,18 +174,21 @@ fprintf(fid,'%%    %s\n\n',datestr(now));
 
 % write the assignments to the output variables
 function writeOutput(fid,expr)
-% expr looks something like
-% array(1..1, 1..2, (1,1) = array(1..1, 1..2, (1,1) = sin(t5), (1,2) = cos(t)), (1,2) = cos(t5))
-% which is an array of arrays (or scalars). each array element is an output.
-% We need to deal the elements of expr to outputs
-% Note if length(outputs) == 1 then expr has length 2 to keep indexing the
-% same as in the array case. This is ok since we never index expr(2).
-fprintf(fid,['out = zeros(' num2str(numel(expr)) ',1);\n']); % initialise with zero values
 idx = find(expr); % find nonzero entries
+fprintf(fid,['out = sparse([],[],[],' num2str(size(expr,1)) ',' num2str(size(expr,2)) ',' num2str(length(idx)) ');\n']); % initialise with zero values
+
 for k = 1:length(idx)
-    fprintf(fid,['out(' num2str(idx(k)) ') = ' char(expr(idx(k))) ';\n']);
+    str = char(expr(idx(k)));
+    for var = {'p','x','k'}
+        t = regexp(str,[var{1} '_([0-9]*)'],'tokens');
+        ts = cellfun(@(x) [var{1} '_' x{1} ],t,'UniformOutput',false);
+        td = cellfun(@(x) [var{1} '(' num2str(str2double(x)+1) ')'],t,'UniformOutput',false);
+        for it = 1:length(ts)
+            str = strrep(str,ts{it},td{it});
+        end
+    end
+    fprintf(fid,['out(' num2str(idx(k)) ') = ' str ';\n']);
 end
-fprintf(fid,['out = reshape(out,[' num2str(size(expr)) ']);']);
 
 % validator for variable parameter
 function t = isVars(x)
