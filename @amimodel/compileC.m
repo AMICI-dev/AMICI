@@ -5,7 +5,7 @@ function compileC(this)
     %  this: model definition object @type amimodel
     
     sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    sundials_ver = '2.6.2.1';
+    sundials_ver = '2.6.2.2';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
     ssparse_ver = '4.4.4';
@@ -459,8 +459,10 @@ function result = isnewer(ver1str,ver2str)
         result = ver2Parts(1) < ver1Parts(1);
     elseif ver2Parts(2) ~= ver1Parts(2) % minor version
         result = ver2Parts(2) < ver1Parts(2);
-    else                                  % revision version
+    elseif ver2Parts(3) ~= ver1Parts(3) % revision version
         result = ver2Parts(3) < ver1Parts(3);
+    else
+        result = ver2Parts(4) < ver1Parts(4);
     end
     
 function parts = getParts(V)
@@ -473,10 +475,15 @@ function parts = getParts(V)
     % Return values:
     %  parts: array containing the version numbers @type double
     
-    parts = sscanf(V, '%d.%d.%d')';
+    parts = sscanf(V, '%d.%d.%d.%d')';
     if length(parts) < 3
         parts(3) = 0; % zero-fills to 3 elements
     end
+    if length(parts) < 4
+        parts(4) = 0; % zero-fills to 3 elements
+    end
+    
+    
     
 function hash = getFileHash(file)
     % getFileHash computed the md5hash of a given file
