@@ -1462,7 +1462,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
     
-    int ie;
+    int ie,iz;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1483,9 +1483,11 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
-                
-                rzdata[nroots[ie]+ie] = rootvals[ie];
-                
+                for (iz=0; iz<nztrue; iz++) {
+                    if(z2event[iz] == ie) {
+                        rzdata[nroots[ie] + nmaxevent*iz] = rootvals[ie];
+                    }
+                }
                 
                 getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
                 if (*status != AMI_SUCCESS) return;
@@ -1655,9 +1657,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     /* only check this in the first event fired, otherwise this will always be true */
     if (seflag == 0) {
         if (t == *tlastroot) {
-            /* we are stuck in a root => turn off rootfinding */
-            /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
-            AMIRootInit(ami_mem, 0, NULL);
+            mexWarnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
+            *status = -99;
+            return;
         }
         *tlastroot = t;
     }
