@@ -1,8 +1,9 @@
 function runSBMLTests
-for iTest = 1:41
+for iTest = 21:1183
     try
     runSBMLTest(iTest)
-    catch
+    catch error_msg
+        
     end
 end
 end
@@ -21,15 +22,16 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
         elseif(exist(fullfile(pwd,[testid '-sbml-l2v4.xml'])))
             SBML2AMICI([testid '-sbml-l2v4'],['SBMLTEST_' testid])
         end
+        amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd);
     catch error_msg
         warning(['Test ' testid ' failed: ' error_msg.message]);
         return
     end
-    amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd)
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
     load(['SBMLTEST_' testid '_vnom.mat'])
-    [t,options,concflag] = parseSettings(testid);
+    [t,settings,concflag] = parseSettings(testid);
+    options.sensi = 0;
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])
@@ -59,9 +61,10 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
         end
     end
     rdev(isinf(rdev)) = 0;
-    assert(not(any(any(and(adev>options.atol*1000,rdev>options.rtol*1000)))))
+    assert(not(any(any(and(adev>settings.atol,rdev>settings.rtol)))))
     cd(curdir)
     writetable(amiresults,fullfile(pwd,'SBMLresults',[testid '-results.csv']))
+    clear all
 end
 end
 

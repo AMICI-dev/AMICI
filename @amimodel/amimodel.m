@@ -90,7 +90,7 @@ classdef amimodel < handle
 
         % counter that allows enforcing of recompilation of models after
         % code changes
-        compver = 14;
+        compver = 15;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -200,6 +200,7 @@ classdef amimodel < handle
             %  xdot: new right hand side of the differential equation
             %
             % Return values:
+            this.fun.xdot.sym_noopt = this.fun.xdot.sym;
             this.fun.xdot.sym = xdot;
         end
         

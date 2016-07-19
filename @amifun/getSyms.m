@@ -306,6 +306,7 @@ function [this,model] = getSyms(this,model)
             else
                 if(~isempty(w))
                     this.sym = jacobian(model.fun.xdot.sym,x)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym;
+                    this.sym_noopt = jacobian(model.fun.xdot.sym_noopt,x);
                 else
                     this.sym = jacobian(model.fun.xdot.sym,x);
                 end
@@ -333,6 +334,7 @@ function [this,model] = getSyms(this,model)
         case 'dxdotdp'
             if(~isempty(w))
                 this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
+                this.sym_noopt = jacobian(model.fun.xdot.sym_noopt,p);
             else
                 this.sym=jacobian(model.fun.xdot.sym,p);
             end

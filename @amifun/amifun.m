@@ -9,6 +9,8 @@ classdef amifun
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
         sym = sym([]);
+        % symbolic definition which was not optimized (no dependencies on w) @type symbolic
+        sym_noopt = sym([]);
         % short symbolic string which can be used for the reuse of precomputed values @type symbolic
         strsym = sym([]);
         % short symbolic string which can be used for the reuse of old values @type symbolic
