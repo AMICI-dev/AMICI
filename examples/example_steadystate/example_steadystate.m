@@ -172,6 +172,9 @@ function example_steadystate
     drawnow
     end
     
+    J_m = J_model_steadystate(t(end),sol.x(end,:),p,k);
+    dxdotdp_m = dxdotdp_model_steadystate(t(end),sol.x(end,:),p,k);
+     
 end
 
 
