@@ -48,8 +48,7 @@ opts = getOptions(args);
 % compute non-trivial defaults and verify inputs
 funvars = getFunVars(funs);
 vars = checkVars(funvars,opts);
-inputs = getInputs(vars);
-varnames = format(inputs);
+varnames = format(opts.varnames);
 
 % generate anonymous function or file
 if ~isempty(opts.file)
@@ -210,10 +209,12 @@ if(str2double(verMAT.Version)>=8.2)
     ip.addParameter('vars',{},@isVars);
     ip.addParameter('file','',@isFunc);
     ip.addParameter('outputs',{},@iscellstr);
+    ip.addParameter('varnames',{},@iscellstr);
 else
     ip.addParamValue('vars',{},@isVars);
     ip.addParamValue('file','',@isFunc);
     ip.addParamValue('outputs',{},@iscellstr);
+    ip.addParamValue('varnames',{},@iscellstr);
 end
 ip.parse(args{:});
 opts = ip.Results;

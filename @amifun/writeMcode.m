@@ -23,5 +23,5 @@ end
     
 ami_mfun(this.sym_noopt, 'file', fullfile(model.wrap_path,'models',...
     model.modelname,[ this.funstr '_',model.modelname,'.m']), ...
-    'vars', {'t',model.fun.x.sym,model.fun.p.sym,model.fun.k.sym});
+    'vars', {'t',model.fun.x.sym,model.fun.p.sym,model.fun.k.sym},'varnames',{'t','x','p','k'});
 end
