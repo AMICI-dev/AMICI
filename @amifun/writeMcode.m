@@ -18,10 +18,10 @@ if(~isempty(model.event))
     for ievent = 1:length(model.event)
         h_rep(ievent) = heaviside(model.fun.root.sym(ievent));
     end
-    this.sym = subs(this.sym,h_vars,h_rep);
+    this.sym_noopt = subs(this.sym_noopt,h_vars,h_rep);
 end
     
-mfun(this.sym_noopt, 'file', fullfile(model.wrap_path,'models',...
+ami_mfun(this.sym_noopt, 'file', fullfile(model.wrap_path,'models',...
     model.modelname,[ this.funstr '_',model.modelname,'.m']), ...
-    'vars', {'t',model.fun.x.sym,model.fun.p.sym,model.fun.k.sym});
+    'vars', {'t',model.fun.x.sym,model.fun.p.sym,model.fun.k.sym},'varnames',{'t','x','p','k'});
 end

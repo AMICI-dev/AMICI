@@ -309,6 +309,7 @@ function [this,model] = getSyms(this,model)
                     this.sym_noopt = jacobian(model.fun.xdot.sym_noopt,x);
                 else
                     this.sym = jacobian(model.fun.xdot.sym,x);
+                    this.sym_noopt = this.sym;
                 end
             end
             
@@ -337,6 +338,7 @@ function [this,model] = getSyms(this,model)
                 this.sym_noopt = jacobian(model.fun.xdot.sym_noopt,p);
             else
                 this.sym=jacobian(model.fun.xdot.sym,p);
+                this.sym_noopt = this.sym;
             end
             
             %%
