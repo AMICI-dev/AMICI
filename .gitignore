@@ -134,3 +134,7 @@ sed-ml/*
 unitTests/SBMLresults/00144-results.csv
 
 *.csv
+
+examples/example_events/dxdotdp_model_events.m
+
+examples/example_events/J_model_events.m

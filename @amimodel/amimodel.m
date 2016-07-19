@@ -200,6 +200,7 @@ classdef amimodel < handle
             %  xdot: new right hand side of the differential equation
             %
             % Return values:
+            this.fun.xdot.sym_noopt = this.fun.xdot.sym;
             this.fun.xdot.sym = xdot;
         end
         
