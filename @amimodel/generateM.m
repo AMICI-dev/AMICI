@@ -25,7 +25,21 @@ else
     o2flag = this.o2flag;
 end
 
-
+try
+    fid = fopen(fullfile(this.wrap_path,'.git','FETCH_HEAD'));
+    str = fgetl(fid);
+    fclose(fid);
+    t_hash = regexp(str,'^([\w]*)','tokens');
+    commit_hash = t_hash{1}{1};
+    t_branch = regexp(str,'branch ''([\w]*)''','tokens');
+    branch = t_branch{1}{1};
+    idx_url = strfind(str,'https://github.com');
+    url = str(idx_url:end);
+catch
+    commit_hash = '#';
+    branch = 'unknown branch';
+    url = 'unknown repository';
+end
 
 if(o2flag)
     nxtrue = amimodelo2.nxtrue;
@@ -38,6 +52,7 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,['simulate_',this.mo
 fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cvodes mex\n'...
     '%%   which simulates the ordinary differential equation and respective\n'...
     '%%   sensitivities according to user specifications.\n'...
+    '%%   this routine was generated using AMICI commit ' commit_hash ' in branch ' branch ' in repo ' url '.\n'...
     '%%\n'...
     '%% USAGE:\n'...
     '%% ======\n'...
