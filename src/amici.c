@@ -215,11 +215,11 @@ UserData setupUserData(const mxArray *prhs[]) {
         stau_tmp = mxMalloc(np*sizeof(realtype));
     }
     
-    if (nw>0) {
-        w_tmp = mxMalloc(nw*sizeof(realtype));
-        dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
-        dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
-    }
+
+    w_tmp = mxMalloc(nw*sizeof(realtype));
+    dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
+    dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
+
     
     udata->am_nan_dxdotdp = FALSE;
     udata->am_nan_J = FALSE;
