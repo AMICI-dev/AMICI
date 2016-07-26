@@ -46,6 +46,21 @@ double amilog(double x) {
 }
 
 /**
+ * c implementation of matlab function dirac
+ *
+ * @param x argument
+ * @return if(x==0) then INF else 0
+ *
+ */
+double dirac(double x) {
+    if (x == 0) {
+        return(DBL_MAX);
+    } else {
+        return(0);
+    }
+}
+
+/**
  * c implementation of matlab function heaviside
  *
  * @param x argument
@@ -59,6 +74,7 @@ double heaviside(double x) {
         return(1);
     }
 }
+
 
 
 /**

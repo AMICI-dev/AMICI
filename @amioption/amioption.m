@@ -43,7 +43,7 @@ classdef amioption < hgsetget
         % number of reported events
         nmaxevent = 10;
         % reordering of states
-        ordering = 1;
+        ordering = 0;
         % steady state sensitivity flag
         ss = 0;
         % custom initial sensitivity
