@@ -2962,7 +2962,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     next_q = q;
     
     /* Reset and check ewt, ewtQ, ewtS */   
-    if (nst > 0) {
+    if (!reinit) {
 
       ier = efun(zn[0], ewt, e_data);
       if(ier != 0) {
@@ -5113,7 +5113,7 @@ static int cvStep(CVodeMem cv_mem)
 
   /* If needed, adjust method parameters */
 
-  if ((nst > 0) && (hprime != h)) cvAdjustParams(cv_mem);
+  if ((!reinit) && (hprime != h)) cvAdjustParams(cv_mem);
 
   /* Looping point for attempts to take a step */
 
@@ -5670,7 +5670,7 @@ static void cvSet(CVodeMem cv_mem)
   rl1 = ONE / l[1];
   gamma = h * rl1;
   if (reinit) gammap = gamma;
-  gamrat = (nst > 0) ? gamma / gammap : ONE;  /* protect x / x != 1.0 */
+  gamrat = (!reinit) ? gamma / gammap : ONE;  /* protect x / x != 1.0 */
 }
 
 /*
