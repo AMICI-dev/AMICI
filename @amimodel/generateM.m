@@ -536,6 +536,7 @@ fclose(fid);
 
 for fun = this.mfuns
     if(isfield(this.fun,fun{1}))
+        fprintf([fun{1} ' | ']);
         this.fun.(fun{1}).writeMcode(this);
     end
 end

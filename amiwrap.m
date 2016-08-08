@@ -96,6 +96,7 @@ function amiwrap( varargin )
     end
     
     % generate the matlab wrapper
+    disp('Generating M code ...')
     if(o2flag)
         model.generateM(modelo2);
     else
