@@ -182,6 +182,11 @@ for k = 1:length(idx)
         t = regexp(str,[var{1} '_([0-9]*)'],'tokens');
         ts = cellfun(@(x) [var{1} '_' x{1} ],t,'UniformOutput',false);
         td = cellfun(@(x) [var{1} '(' num2str(str2double(x)+1) ')'],t,'UniformOutput',false);
+        ts = unique(ts);
+        td = unique(td);
+        [~,idx_ts] = sort(cellfun(@(x) length(x),ts),'descend')
+        ts = ts(idx_ts);
+        td = ts(idx_ts);
         for it = 1:length(ts)
             str = strrep(str,ts{it},td{it});
         end

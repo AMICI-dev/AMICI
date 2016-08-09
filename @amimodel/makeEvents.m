@@ -93,6 +93,49 @@ if(nevent>0)
     end
     triggeridx = logical(dtriggerdt~=0);
     
+    
+    event_dependency = zeros(nevent);
+    for ievent = 1:nevent
+        symchar = char(trigger{ievent});
+        for jevent = 1:nevent
+            % remove the heaviside function and replace by h
+            % variable which is update on event occurrence in the
+            % solver
+            triggerchar = char(trigger{jevent});
+            str_arg_h = ['heaviside(' triggerchar ')' ];
+            event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
+            mtriggerchar = char(-trigger{jevent});
+            str_arg_h = ['heaviside(' mtriggerchar ')' ];
+            event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
+        end
+    end
+    
+    % check for loops
+    if(any(any(event_dependency^(size(event_dependency,1)))))
+        error('Found loop in trigger dependency. This can lead to the simulation getting stuck and is thus currently not supported. Please check your model definition!')
+    end
+    
+    P = 1:size(event_dependency,1);
+    
+    % make matrix upper triangular, this is to ensure that we dont end
+    % up with partially replaced trigger functions that we no longer recognise
+    while(~isempty(find(triu(event_dependency(P,P))-event_dependency(P,P))))
+        for ip = 1:length(P)
+            jp = ip+find(event_dependency(P(ip+1:end),P(ip)),1,'first');
+            while ~isempty(jp)
+                pp = P(ip);
+                P(ip) = P(jp);
+                P(jp) = pp;
+                jp = ip+find(event_dependency(P(ip+1:end),P(ip)),1,'first');
+            end
+        end
+    end
+    trigger = trigger(P);
+    bolus = bolus(P);
+    z = z(P);
+    
+    
+    
     for ix = 1:nx
         symchar = char(this.sym.xdot(ix));
         if(strfind(symchar,'dirac'))
@@ -114,9 +157,9 @@ if(nevent>0)
         end
         if(strfind(symchar,'heaviside'))
             
-            for ievent = find(triggeridx)
+            for ievent = 1:nevent
                 % remove the heaviside function and replace by h
-                % variable which is update on event occurrence in the
+                % variable which is updated upon event occurrence in the
                 % solver
                 triggerchar = char(trigger{ievent});
                 str_arg_h = ['heaviside(' triggerchar ')' ];
@@ -126,35 +169,34 @@ if(nevent>0)
                 symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
                 % set hflag
                 
-%                 % we can check whether dividing cfp(2) by
-%                 % trigger{ievent} reduced the length of the symbolic
-%                 % expression. If it does, this suggests that
-%                 % trigger{ievent} is a factor of cfp(2), which will be
-%                 % the case for min/max functions. in that case we do
-%                 % not need a hflag as there is no discontinuity in the
-%                 % right hand side. This is not a perfect fix, in the
-%                 % long run one should maybe go back to the old syntax for
-%                 % am_max and am_min?
-%                 try
-%                     [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
-%                     if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
-%                         if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
-%                             hflags(ix,ievent) = 0;
-%                         else
-%                             hflags(ix,ievent) = 1;
-%                         end
-%                     else
-%                         hflags(ix,ievent) = 0;
-%                     end
-%                 catch
-%                     hflags(ix,ievent) = 1;
-%                 end
+                % we can check whether dividing cfp(2) by
+                % trigger{ievent} reduced the length of the symbolic
+                % expression. If it does, this suggests that
+                % trigger{ievent} is a factor of cfp(2), which will be
+                % the case for min/max functions. in that case we do
+                % not need a hflag as there is no discontinuity in the
+                % right hand side. This is not a perfect fix, in the
+                % long run one should maybe go back to the old syntax for
+                % am_max and am_min?
+                try
+                    [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
+                    if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
+                        if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
+                            hflags(ix,ievent) = 0;
+                        else
+                            hflags(ix,ievent) = 1;
+                        end
+                    else
+                        hflags(ix,ievent) = 0;
+                    end
+                catch
+                    hflags(ix,ievent) = 1;
+                end
             end
         end
         % update xdot
         this.sym.xdot(ix) = sym(symchar);
     end
-    
     
     % loop until we no longer found any dynamic heaviside functions in the triggers in the previous loop
     nheavy = 1;
@@ -162,7 +204,7 @@ if(nevent>0)
         nheavy = 0;
         for ievent = 1:nevent
             symchar = char(trigger{ievent});
-            for jevent = find(triggeridx)
+            for jevent = 1:nevent
                 % remove the heaviside function and replace by h
                 % variable which is update on event occurrence in the
                 % solver
@@ -179,31 +221,30 @@ if(nevent>0)
             trigger{ievent} = sym(symchar);
         end
     end
-    
 
+    % update to prevent dirac functions.
+    for ievent = 1:nevent
+        dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
+    end
+    
     % multiply by the dtriggerdt factor, this should stay here as we
     % want the xdot to be cleaned of any dirac functions
     ievent = 1;
-    while ievent <= length(trigger)
-        dtriggerdt = diff(trigger{ievent},'t') + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
-        if(dtriggerdt == 0)
-            trigger(ievent) = [];
+    for ievent = 1:nevent
+        if(not(triggeridx(ievent)))
             if(any(bolus{ievent}~=0))
-                warning(['Event ' num2str(ievent) ' has a constant trigger function but non-zero bolus.' ...
-                    ' This event will be ommited in the model. Please check your model definition!'])
+                error(['Event ' num2str(ievent) ' has a constant trigger function but non-zero bolus.' ...
+                    ' Please check your model definition!'])
             end
-            bolus(ievent) = [];
             if(~isempty(z{ievent}))
-                warning(['Event ' num2str(ievent) ' has a constant trigger function but non-empty output.' ...
-                    ' This event will be ommited in the model. Please check your model definition!'])
+                error(['Event ' num2str(ievent) ' has a constant trigger function but non-empty output.' ...
+                    ' Please check your model definition!'])
             end
-            z(ievent) = [];
         else
-            bolus{ievent} = bolus{ievent} + tmp_bolus{ievent}/abs(dtriggerdt);
+            bolus{ievent} = bolus{ievent} + tmp_bolus{ievent}/abs(dtriggerdt(ievent));
             ievent = ievent+1;
         end
     end
-    nevent = length(trigger);
     
     % update hflags according to bolus
     for ievent = 1:nevent
