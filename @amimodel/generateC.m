@@ -447,6 +447,7 @@ for iffun = ffuns
     % if the function was generated, we can return it, otherwise return
     % an error
     if(ismember(iffun{1},this.funs))
+        fprintf(fid,['                    mexWarnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");';\n']);
         fprintf(fid,['                    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
     else
         if(strcmp(iffun{1},'sx0') || strcmp(iffun{1},'dx0') || strcmp(iffun{1},'sdx0'))
