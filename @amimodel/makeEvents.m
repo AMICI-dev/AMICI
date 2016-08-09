@@ -65,7 +65,7 @@ for itrigger = 1:length(utriggers)
     if(regexp(utriggers{itrigger},'^abs('))
         utriggers{itrigger} = utriggers{itrigger}(5:end-1);
     end
-    trigger{ievent} = sym(arg);
+    trigger{ievent} = sym(utriggers{itrigger});
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
@@ -89,7 +89,7 @@ if(nevent>0)
     hflags = zeros([nx,nevent]);
     
     for ievent = 1:nevent
-        dtriggerdt(ievent) = diff(trigger{ievent},'t') + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:)
+        dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
     end
     triggeridx = logical(dtriggerdt~=0);
     
@@ -155,19 +155,25 @@ if(nevent>0)
         this.sym.xdot(ix) = sym(symchar);
     end
     
-    while ~isempty(strfind(char([trigger{triggeridx}]),'heaviside'))
-        for ievent = find(triggeridx)
+    
+    % loop until we no longer found any dynamic heaviside functions in the triggers in the previous loop
+    nheavy = 1;
+    while nheavy>0
+        nheavy = 0;
+        for ievent = 1:nevent
             symchar = char(trigger{ievent});
-            for ievent = find(triggeridx)
+            for jevent = find(triggeridx)
                 % remove the heaviside function and replace by h
                 % variable which is update on event occurrence in the
                 % solver
-                triggerchar = char(trigger{ievent});
+                triggerchar = char(trigger{jevent});
                 str_arg_h = ['heaviside(' triggerchar ')' ];
-                symchar = strrep(symchar,str_arg_h,['h_' num2str(ievent-1)]);
-                mtriggerchar = char(-trigger{ievent});
+                nheavy = nheavy + length(strfind(symchar,str_arg_h));
+                symchar = strrep(symchar,str_arg_h,['h_' num2str(jevent-1)]);
+                mtriggerchar = char(-trigger{jevent});
                 str_arg_h = ['heaviside(' mtriggerchar ')' ];
-                symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
+                nheavy = nheavy + length(strfind(symchar,str_arg_h));
+                symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(jevent-1) ')']);
                 % set hflag
             end
             trigger{ievent} = sym(symchar);
