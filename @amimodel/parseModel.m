@@ -102,7 +102,8 @@ function parseModel(this)
     
     this.funs = funs;
     
-    this.mfuns = {'J','dxdotdp'};
+    %this.mfuns = {'J','dxdotdp'};
+    this.mfuns = {};
     
     % compute symbolic expressions
     for ifun = 1:length(funs)
