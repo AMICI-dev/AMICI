@@ -221,7 +221,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<np*ng; ip++) {\n');
                 fprintf(fid,'   if(mxIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
@@ -336,7 +336,6 @@ else
     one = '1';
 end
 
-
 fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
 fprintf(fid,'                \n');
@@ -345,11 +344,13 @@ fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(void *user_data){\n');
 fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
+fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
 fprintf(fid,['                   nytrue = ' num2str(this.nytrue) ';\n']);
 fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
 fprintf(fid,['                   nztrue = ' num2str(this.nztrue) ';\n']);
 fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
+fprintf(fid,['                   ng = ' num2str(this.ng) ';\n']);
 fprintf(fid,['                   nw = ' num2str(this.nw) ';\n']);
 fprintf(fid,['                   ndwdx = ' num2str(this.ndwdx) ';\n']);
 fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);

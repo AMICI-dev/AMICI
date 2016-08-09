@@ -83,7 +83,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'xdotdp([0-9]+)',['xdotdp\[$1 + ip*' num2str(model.nx) '\]']);
             
             if(strcmp(this.cvar,'qBdot'))
-                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
+                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip+np*$1]');
             elseif(strcmp(this.cvar,'stau'))
                 cstr = regexprep(cstr,'stau\[([0-9]*)\]','stau\[ip]');
             elseif(strcmp(this.cvar,'y'))

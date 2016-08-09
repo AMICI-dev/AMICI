@@ -151,6 +151,15 @@ function parseModel(this)
         this.id = zeros(nx,1);
     end
 
+    switch(this.o2flag)
+        case 1
+            this.ng = this.np + 1;
+        case 2
+            this.ng = 2;
+        otherwise
+            this.ng = 1;
+    end    
+    
     % save hashtable
     HTable = this.HTable;
     nxtrue = this.nxtrue;
@@ -160,6 +169,7 @@ function parseModel(this)
     np = this.np;
     nk = this.nk;
     nz = this.nz;
+    ng = this.ng;
     nw = this.nw;
     ndwdx = this.ndwdx;
     ndwdp = this.ndwdp;

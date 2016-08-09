@@ -58,14 +58,14 @@ function [modelo2] = augmento2(this)
     this.getFun([],'dydp');
     SJy = jacobian(this.sym.Jy,this.sym.p) ...
         + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
-        + jacobian(this.sym.Jy,this.fun.y.strsym)*this.fun.dydp.sym;
+        + jacobian(this.sym.Jy,this.fun.y.strsym)*Sy;
     this.getFun([],'dsigma_zdp');
     this.getFun([],'z');
-    this.getFun([],'dzdp');
+    this.getFun([],'dzdp');   
     SJz = jacobian(this.sym.Jz,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
         SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-         + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;   
+         + jacobian(this.sym.Jz,this.fun.z.strsym)*Sz;   
     end
     
     S0 = jacobian(this.sym.x0,this.sym.p);
@@ -75,8 +75,8 @@ function [modelo2] = augmento2(this)
     augmodel.sym.f = augmodel.sym.xdot;
     augmodel.sym.y = [this.sym.y;reshape(Sy,[numel(Sy),1])];
     augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
-    augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
-    augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
+    augmodel.sym.Jy = [this.sym.Jy,SJy];
+    augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
     

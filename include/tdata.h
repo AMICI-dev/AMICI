@@ -121,13 +121,13 @@ typedef struct {
     /** parameter derivative of likelihood array */
     realtype *am_llhS0;
     /** data likelihood */
-    realtype am_g;
+    realtype *am_g;
     /** parameter derivative of data likelihood */
     realtype *am_dgdp;
     /** state derivative of data likelihood */
     realtype *am_dgdx;
     /** event likelihood */
-    realtype am_r;
+    realtype *am_r;
     /** parameter derivative of event likelihood */
     realtype *am_drdp;
     /** state derivative of event likelihood */
