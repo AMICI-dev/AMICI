@@ -415,7 +415,7 @@ function [this,model] = getSyms(this,model)
             % transform to symbolic variable
             vs = sym(vs);
             % multiply
-            this.sym = -model.fun.JB.sym*vs;
+            this.sym = model.fun.JB.sym*vs;
             
         case 'xBdot'
             if(strcmp(model.wtype,'iw'))
@@ -434,7 +434,7 @@ function [this,model] = getSyms(this,model)
                         end
                     end
                 else
-                    this.sym = transpose(model.fun.J.sym) * model.fun.xB.sym;
+                    this.sym = -transpose(model.fun.J.sym) * model.fun.xB.sym;
                 end
             end
             
@@ -544,7 +544,7 @@ function [this,model] = getSyms(this,model)
             for ievent = 1:nevent
                 this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),x);
             end
-            
+             
         case 'ddeltaxdt'
             this.sym = diff(model.fun.deltax.sym,'t');
             
@@ -586,7 +586,10 @@ function [this,model] = getSyms(this,model)
             end
             
             for ievent = 1:nevent
-                this.sym(:,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+                this.sym(1:np,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+                % This is just a very quick fix. Events in adjoint systems
+                % have to be implemented in a way more rigorous way later
+                % on... Some day...
             end
             
         case 'deltaxB'
