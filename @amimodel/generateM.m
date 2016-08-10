@@ -329,13 +329,13 @@ end
 
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
         case 2
-            fprintf(fid,['sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,data);\n']);
     end
     fprintf(fid,'end\n');
 else
@@ -363,13 +363,14 @@ fprintf(fid,'end\n');
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi == 2)\n');
     fprintf(fid, '    if(options_ami.sensi_meth==2)\n');
-    switch(this.param)
-        case 'log'
-            fprintf(fid,'        sol.sllh = sol.sllh.*theta(options_ami.sens_ind);\n');
+    fprintf(fid,'        sol.sllh = sol.sllh.*theta(options_ami.sens_ind);\n');
+    switch(o2flag)
+        case 1
             fprintf(fid,'        sol.s2llh = sol.s2llh.*(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))) + diag(sol.sllh);\n');
-        case 'log10'
-            fprintf(fid,'        sol.sllh = sol.sllh.*theta(options_ami.sens_ind);\n');
-            fprintf(fid,'        sol.s2llh = sol.s2llh.*(theta(options_ami.sens_ind)*transpose(theta(options_ami.sens_ind))) + diag(sol.sllh);\n');
+            fprintf(fid,['        sol.sx = permute(reshape(transpose(sol.x(:,', num2str(nxtrue), '+1:end)), ', num2str(nxtrue), ', ', num2str(np), ', data.nt), [3,1,2]);\n']);
+            fprintf(fid,['        sol.sy = permute(reshape(transpose(sol.y(:,', num2str(nytrue), '+1:end)), ', num2str(nytrue), ', ', num2str(np), ', data.nt), [3,1,2]);\n']);
+        case 2
+            fprintf(fid,'        sol.s2llh = sol.s2llh.*theta(options_ami.sens_ind) + (sol.sllh).^2;\n');
     end
     fprintf(fid,['        sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['        sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
