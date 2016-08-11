@@ -36,36 +36,18 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = sym(arg);
-%             if(ievent>0)
-%                 %check whether we already had this trigger function
-%                 if(isempty(strfind(triggerstr,char(abs(sym(arg))))))
-%                     ievent = ievent + 1;
-%                     trigger{ievent} = sym(arg);
-%                     bolus{ievent} = sym(zeros(nx,1));
-%                     z{ievent} = sym.empty([0,0]);
-%                     triggerstr = char(abs([trigger{:}]));
-%                 else
-%                 end
-%             else
-%                 ievent = ievent + 1;
-%                 trigger{ievent} = sym(arg);
-%                 bolus{ievent} = sym(zeros(nx,1));
-%                 z{ievent} = sym.empty([0,0]);
-%                 triggerstr = char(abs([trigger{:}]));
-%             end
         end
     end
 end
 
 % select the unique ones
-utriggers = unique(cellfun(@(x) char(abs(x)),triggers,'UniformOutput',false));
+abstriggers = cellfun(@(x) char(abs(x)),triggers,'UniformOutput',false);
+utriggers = unique(abstriggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
-    % strip the abs
-    if(regexp(utriggers{itrigger},'^abs('))
-        utriggers{itrigger} = utriggers{itrigger}(5:end-1);
-    end
-    trigger{ievent} = sym(utriggers{itrigger});
+    % find the original one
+    % transform to char once to get the right ordering
+    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},abstriggers),1)}));
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
@@ -138,21 +120,19 @@ if(nevent>0)
     
     for ix = 1:nx
         symchar = char(this.sym.xdot(ix));
+        symvar = this.sym.xdot(ix);
         if(strfind(symchar,'dirac'))
             for ievent = 1:nevent
                 % remove the dirac function and replace by adding
                 % respective bolus
-                triggerchar = char(trigger{ievent});
-                str_arg_d = ['dirac(' triggerchar ')' ];
-                % replace event specific functions by "polydirac" variable
-                symchar = strrep(symchar,str_arg_d,'polydirac');
+                symvar = subs(symvar,dirac(trigger{ievent}),sym('polydirac'));
                 % extract coefficient
-                [cfp,t] = coeffs(sym(symchar),polydirac);
+                [cfp,t] = coeffs(symvar,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
                 end
                 % remove dirac
-                symchar = strrep(symchar,'polydirac','0');
+                symvar = subs(symvar,sym('polydirac'),sym('0'));
             end
         end
         if(strfind(symchar,'heaviside'))
@@ -161,12 +141,8 @@ if(nevent>0)
                 % remove the heaviside function and replace by h
                 % variable which is updated upon event occurrence in the
                 % solver
-                triggerchar = char(trigger{ievent});
-                str_arg_h = ['heaviside(' triggerchar ')' ];
-                symchar = strrep(symchar,str_arg_h,['h_' num2str(ievent-1)]);
-                mtriggerchar = char(-trigger{ievent});
-                str_arg_h = ['heaviside(' mtriggerchar ')' ];
-                symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(ievent-1) ')']);
+                symvar = subs(symvar,heaviside( trigger{ievent}),sym(['h_'        num2str(ievent-1)]));
+                symvar = subs(symvar,heaviside(-trigger{ievent}),sym(['(1-h_' num2str(ievent-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
@@ -179,7 +155,7 @@ if(nevent>0)
                 % long run one should maybe go back to the old syntax for
                 % am_max and am_min?
                 try
-                    [cfp,tfp] = coeffs(sym(symchar),sym(['h_' num2str(ievent-1) ]));
+                    [cfp,tfp] = coeffs(symvar,sym(['h_' num2str(ievent-1) ]));
                     if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
                         if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
                             hflags(ix,ievent) = 0;
@@ -194,8 +170,11 @@ if(nevent>0)
                 end
             end
         end
+        if(strfind(char(symvar),'heaviside'))
+            warning(['Missed heaviside function in state ' num2str(ix) '. AMICI will continue and produce a running model, but this should be fixed!'])
+        end
         % update xdot
-        this.sym.xdot(ix) = sym(symchar);
+        this.sym.xdot(ix) = symvar;
     end
     
     % loop until we no longer found any dynamic heaviside functions in the triggers in the previous loop
