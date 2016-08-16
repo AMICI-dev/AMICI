@@ -833,7 +833,6 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
      */
     /* this casting is necessary to ensure availability of accessor macros */
     int ix;
-    //int ig;
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
     udata = (UserData) user_data;
