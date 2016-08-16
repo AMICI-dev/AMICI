@@ -7,3 +7,6 @@ example_adjoint
 example_jakstat_adjoint
 example_steadystate
 example_nested_events
+example_adjoint_hessian
+example_dirac_hessVecProd
+
