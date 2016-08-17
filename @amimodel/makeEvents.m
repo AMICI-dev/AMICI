@@ -120,19 +120,19 @@ if(nevent>0)
     
     for ix = 1:nx
         symchar = char(this.sym.xdot(ix));
-        symvar = this.sym.xdot(ix);
+        symvariable = this.sym.xdot(ix);
         if(strfind(symchar,'dirac'))
             for ievent = 1:nevent
                 % remove the dirac function and replace by adding
                 % respective bolus
-                symvar = subs(symvar,dirac(trigger{ievent}),sym('polydirac'));
+                symvariable = subs(symvariable,dirac(trigger{ievent}),sym('polydirac'));
                 % extract coefficient
-                [cfp,t] = coeffs(symvar,polydirac);
+                [cfp,t] = coeffs(symvariable,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
                 end
                 % remove dirac
-                symvar = subs(symvar,sym('polydirac'),sym('0'));
+                symvariable = subs(symvariable,sym('polydirac'),sym('0'));
             end
         end
         if(strfind(symchar,'heaviside'))
@@ -141,8 +141,8 @@ if(nevent>0)
                 % remove the heaviside function and replace by h
                 % variable which is updated upon event occurrence in the
                 % solver
-                symvar = subs(symvar,heaviside( trigger{ievent}),sym(['h_'        num2str(ievent-1)]));
-                symvar = subs(symvar,heaviside(-trigger{ievent}),sym(['(1-h_' num2str(ievent-1) ')']));
+                symvariable = subs(symvariable,heaviside( trigger{ievent}),sym(['h_'        num2str(ievent-1)]));
+                symvariable = subs(symvariable,heaviside(-trigger{ievent}),sym(['(1-h_' num2str(ievent-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
@@ -155,7 +155,7 @@ if(nevent>0)
                 % long run one should maybe go back to the old syntax for
                 % am_max and am_min?
                 try
-                    [cfp,tfp] = coeffs(symvar,sym(['h_' num2str(ievent-1) ]));
+                    [cfp,tfp] = coeffs(symvariable,sym(['h_' num2str(ievent-1) ]));
                     if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
                         if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
                             hflags(ix,ievent) = 0;
@@ -170,11 +170,11 @@ if(nevent>0)
                 end
             end
         end
-        if(strfind(char(symvar),'heaviside'))
+        if(strfind(char(symvariable),'heaviside'))
             warning(['Missed heaviside function in state ' num2str(ix) '. AMICI will continue and produce a running model, but this should be fixed!'])
         end
         % update xdot
-        this.sym.xdot(ix) = symvar;
+        this.sym.xdot(ix) = symvariable;
     end
     
     % loop until we no longer found any dynamic heaviside functions in the triggers in the previous loop
