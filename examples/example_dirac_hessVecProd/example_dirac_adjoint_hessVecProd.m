@@ -41,6 +41,9 @@ vNorm = v / sqrt(sum(v.^2));
 options.sensi = 2;
 sol = simulate_model_dirac_adjoint_hessVecProd(tout,log10(p),k,D,options,v);
 ASA_HVP = sol.s2llh;
+format long;
+fprintf('2nd order Adjoints, HVP: \n');
+disp(ASA_HVP);
 
 % Verification using Finite Differences
 delta = 1e-7;
@@ -50,9 +53,7 @@ sol_m = simulate_model_dirac_adjoint_hessVecProd(tout, log10(p) - delta * v, k, 
 FD_HVP = (sol_p.sllh - sol_m.sllh)/(2*delta);
 
 % Output of results
-format long;
-fprintf('2nd order Adjoints, HVP: \n');
-disp(ASA_HVP);
+
 fprintf('Finite differences, HVP: \n');
 disp(FD_HVP);
 

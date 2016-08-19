@@ -521,7 +521,7 @@ function [this,model] = getSyms(this,model)
             staus = sym(staus);
             % multiply
             this.strsym = staus;
-            
+                
         case 'deltax'
             if(nevent>0)
                 this.sym = [model.event.bolus];
@@ -666,7 +666,7 @@ function [this,model] = getSyms(this,model)
         case 'Jy'
             this.sym = model.sym.Jy;
             % replace unify symbolic expression
-            this.sym = subs(this.sym,model.sym.y,model.fun.y.strsym);
+            this.sym = mysubs(this.sym,model.sym.y,model.fun.y.strsym);
         case 'dJydy'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
             for iy = 1 : model.nytrue
