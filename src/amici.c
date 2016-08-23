@@ -2160,3 +2160,214 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
     numrhsevalsSdata[it] = (realtype)numrhsevals;
     
 }
+
+
+#ifdef AMICI_WITHOUT_MATLAB
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *iroot) {
+    int status = *_status;
+
+    /*******************/
+    /* FORWARD PROBLEM */
+    /*******************/
+    int ix, it;
+    int ncheck = 0; /* the number of (internal) checkpoints stored so far */
+
+    realtype tlastroot = 0; /* storage for last found root */
+
+    /* loop over timepoints */
+    for (it=0; it < nt; it++) {
+        if(sensi_meth == AMI_FSA && sensi >= 1) {
+            status = AMISetStopTime(ami_mem, ts[it]);
+        }
+        if (status == 0) {
+            /* only integrate if no errors occured */
+            if(ts[it] > tstart) {
+                while (t<ts[it]) {
+                    if(sensi_meth == AMI_ASA && sensi >= 1) {
+                        if (nx>0) {
+                            status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                        } else {
+                            t = ts[it];
+                        }
+                    } else {
+                        if (nx>0) {
+                            status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                        } else {
+                            t = ts[it];
+                        }
+                    }
+                    if (nx>0) {
+                        x_tmp = NV_DATA_S(x);
+                        if (status == -22) {
+                            /* clustering of roots => turn off rootfinding */
+                            AMIRootInit(ami_mem, 0, NULL);
+                            status = 0;
+                        }
+                        /* integration error occured */
+                        if (status<0) {
+                            return 1;
+                        }
+
+                        if (status==AMI_ROOT_RETURN) {
+                            handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
+                            if (status != AMI_SUCCESS) return 1;
+
+                        }
+                    }
+                }
+            }
+
+            handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
+            if (status != AMI_SUCCESS) return 1;
+
+        } else {
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = NAN;
+        }
+    }
+
+    /* fill events */
+    if (ne>0) {
+        fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
+    }
+
+    return 0;
+}
+
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone) {
+    int status = *_status;
+    int iroot = *_iroot;
+    booleantype setupBdone = *_setupBdone;
+
+    /********************/
+    /* BACKWARD PROBLEM */
+    /********************/
+    int ix, it;
+    int ip;
+
+    double tnext;
+
+    if (nx>0) {
+        if (sensi >= 1) {
+            if(sensi_meth == AMI_ASA) {
+                if(status == 0) {
+                    setupAMIB(&status, ami_mem, udata, tdata);
+                    setupBdone = true;
+
+                    it = nt-2;
+                    iroot--;
+                    while (it>=0 || iroot>=0) {
+
+                        /* check if next timepoint is a discontinuity or a data-point */
+                        tnext = getTnext(discs, iroot, ts, it, udata);
+
+                        if (tnext<t) {
+                            status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                            if (status != AMI_SUCCESS) return 1;;
+
+                            /* get states only if we actually integrated */
+                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            if (status != AMI_SUCCESS) return 1;;
+                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (status != AMI_SUCCESS) return 1;;
+                        }
+
+                        /* handle discontinuity */
+
+                        if(ne>0){
+                            if(nmaxevent>0){
+                                if (tnext == discs[iroot]) {
+                                    handleEventB(&status, iroot, ami_mem, udata, tdata);
+                                    iroot--;
+                                }
+                            }
+                        }
+
+                        /* handle data-point */
+
+                        if (tnext == ts[it]) {
+                            handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
+                            it--;
+                        }
+
+                        /* reinit states */
+                        status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                        if (status != AMI_SUCCESS) return 1;;
+                        status = AMIQuadReInitB(ami_mem, which, xQB);
+                        if (status != AMI_SUCCESS) return 1;;
+
+                        status = AMICalcICB(ami_mem, which, t, xB, dxB);
+                        if (status != AMI_SUCCESS) return 1;;
+                    }
+
+                    /* we still need to integrate from first datapoint to tstart */
+                    if (t>tstart) {
+                        if(status == 0) {
+                            if (nx>0) {
+                                /* solve for backward problems */
+                                status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
+                                if (status != AMI_SUCCESS) return 1;;
+
+                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (status != AMI_SUCCESS) return 1;;
+                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (status != AMI_SUCCESS) return 1;;
+                            }
+                        }
+                    }
+
+                    /* evaluate initial values */
+                    NVsx = N_VCloneVectorArray_Serial(np,x);
+                    if (NVsx == NULL) return 1;;
+
+                    status = fx0(x,udata);
+                    if (status != AMI_SUCCESS) return 1;;
+                    status = fdx0(x,dx,udata);
+                    if (status != AMI_SUCCESS) return 1;;
+                    status = fsx0(NVsx, x, dx, udata);
+                    if (status != AMI_SUCCESS) return 1;;
+
+                    if(status == 0) {
+
+                        xB_tmp = NV_DATA_S(xB);
+
+                        for (ip=0; ip<np; ip++) {
+                            llhS0[ip] = 0.0;
+                            sx_tmp = NV_DATA_S(NVsx[ip]);
+                            for (ix = 0; ix < nx; ix++) {
+                                llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                            }
+                        }
+
+                        xQB_tmp = NV_DATA_S(xQB);
+
+                        for(ip=0; ip < np; ip++) {
+                            sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                            if (ny>0) {
+                                sllhdata[ip] -= dgdp[ip];
+                            }
+                            if (nz>0) {
+                                sllhdata[ip] -= drdp[ip];
+                            }
+                        }
+
+                    } else {
+                        for(ip=0; ip < np; ip++) {
+                            sllhdata[ip] = amiGetNaN();
+                        }
+                    }
+                } else {
+                    for(ip=0; ip < np; ip++) {
+                        sllhdata[ip] = amiGetNaN();
+                    }
+                }
+            }
+        }
+    }
+
+    /* evaluate likelihood */
+
+    *llhdata = - g - r;
+
+    return 0;
+}
+#endif

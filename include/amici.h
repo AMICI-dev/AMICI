@@ -4,6 +4,7 @@
 #include <include/rdata.h>
 #include <include/edata.h>
 #include <include/tdata.h>
+#include <stdbool.h>
 
 /* sensitivity method */
 #define AMI_FSA 1
@@ -35,6 +36,11 @@
 UserData setupUserData(const mxArray *prhs[]);
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
+#endif
+
+#ifdef AMICI_WITHOUT_MATLAB
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* _status, void *ami_mem, int* iroot);
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone);
 #endif
 
 void *setupAMI(int *status, void *user_data, void *temp_data);
