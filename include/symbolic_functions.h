@@ -11,6 +11,10 @@ double Dam_min(int id,double a, double b);
 double am_max(double a, double b);
 double Dam_max(int id,double a, double b);
 
+int amiIsNaN(double what);
+int amiIsInf(double what);
+double amiGetNaN();
+
 /* sign */
 double sign(double x);
 

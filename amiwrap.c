@@ -129,7 +129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
             
         } else {
-            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = amiGetNaN();
         }
     }
 
@@ -248,12 +248,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         
                     } else {
                         for(ip=0; ip < np; ip++) {
-                            sllhdata[ip] = mxGetNaN();
+                            sllhdata[ip] = amiGetNaN();
                         }
                     }
                 } else {
                     for(ip=0; ip < np; ip++) {
-                        sllhdata[ip] = mxGetNaN();
+                        sllhdata[ip] = amiGetNaN();
                     }
                 }
             }

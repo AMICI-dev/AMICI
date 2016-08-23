@@ -18,7 +18,9 @@
 #endif
 
 #include <math.h>
-#include <mex.h>
+#ifndef AMICI_WITHOUT_MATLAB
+    #include <mex.h>
+#endif
 #include <float.h>
 #include <include/spline.h>
 
@@ -29,6 +31,30 @@
 /*! bool return value false */
 #define FALSE 0
 
+
+int amiIsNaN(double what) {
+    #ifdef mex_h
+    return mxIsNaN(what);
+    #else
+    return what == NAN;
+    #endif
+}
+
+int amiIsInf(double what) {
+    #ifdef mex_h
+    return mxIsInf(what);
+    #else
+    return what == INFINITY;
+    #endif
+}
+
+double amiGetNaN() {
+#ifdef mex_h
+    return mxGetNaN();
+#else
+    return INFINITY;
+#endif
+}
 
 /**
  * c implementation of log function, this prevents returning NaN values for negative values

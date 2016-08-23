@@ -1044,7 +1044,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
         }
     }
     for (iy=0; iy<nytrue; iy++) {
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
         } else {
@@ -1096,7 +1096,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
     for (iy=0; iy<nytrue; iy++) {
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
         } else {
@@ -1147,7 +1147,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
     for (iy=0; iy<nytrue; iy++) {
         /* extract the value for the standard deviation, if the data value is NaN, use
          the parameter value. Store this value in the return struct */
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status =fsigma_y(t,sigma_y,udata);
             if (*status != AMI_SUCCESS) return;
             
@@ -1268,14 +1268,14 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     
     for (iz=0; iz<nztrue; iz++) {
         if( z2event[iz] == ie ){
-            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
+            if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 *status = fdzdp(t,ie,dzdp,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 *status = fdzdx(t,ie,dzdx,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 /* extract the value for the standard deviation, if the data value is NaN, use
                  the parameter value. Store this value in the return struct */
-                if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+                if (amiIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
                     *status = fsigma_z(t,ie,sigma_z,udata);
                     if (*status != AMI_SUCCESS) return;
                     *status = fdsigma_zdp(t,ie,dsigma_zdp,udata);
@@ -1331,7 +1331,7 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data,
     
     /* extract the value for the standard deviation, if the data value is NaN, use
      the parameter value. Store this value in the return struct */
-    if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+    if (amiIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
         *status = fsigma_z(t,ie,sigma_z,udata);
         if (*status != AMI_SUCCESS) return;
     } else {
@@ -1372,7 +1372,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     for (iz=0; iz<nztrue; iz++) {
         if(z2event[iz] == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
-            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
+            if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                 *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
             }
