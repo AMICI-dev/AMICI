@@ -22,10 +22,16 @@
  * @ param D1 number of rows in the matrix
  * @ param D2 number of columns in the matrix
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField2(FIELD,D1,D2) \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField2(FIELD,D1,D2) \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2); \
+FIELD ## data = mx ## FIELD;
+#endif
 
 /** 
  * @ brief initialise 3D tensor and attach to the field 
@@ -34,6 +40,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D2 number of columns in the tensor
  * @ param D3 number of elements in the third dimension of the tensor
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField3(FIELD,D1,D2,D3) \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
@@ -41,6 +48,14 @@ dims ## FIELD[2]=D3; \
 mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField3(FIELD,D1,D2,D3) \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3); \
+FIELD ## data = mx ## FIELD;
+#endif
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -50,6 +65,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField4(FIELD,D1,D2,D3,D4) \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
@@ -58,12 +74,22 @@ dims ## FIELD[3]=D4; \
 mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField4(FIELD,D1,D2,D3,D4) \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
+dims ## FIELD[3]=D4; \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3 * D4); \
+FIELD ## data = mx ## FIELD; \
+#endif
 
 /** 
  * @ brief extract information from a property of a matlab class (scalar)
  * @ param OPTION name of the property
  * @ param TYPE class to which the information should be cast
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -71,11 +97,13 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
     return(NULL); \
 }
+#endif
 
 /** 
  * @ brief extract information from a property of a matlab class (matrix)
  * @ param OPTION name of the property
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
@@ -83,6 +111,11 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
     warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
     return(NULL); \
 }
+#endif
+
+#ifdef AMICI_WITHOUT_MATLAB
+   typedef mxArray double;
+#endif
 
 /** return value for successful execution */
 #define AMI_SUCCESS               0
