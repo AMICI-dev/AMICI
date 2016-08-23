@@ -12,7 +12,7 @@
 #ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
-#include <mex.h>
+
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
@@ -81,7 +81,7 @@ dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
 dims ## FIELD[3]=D4; \
 mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3 * D4); \
-FIELD ## data = mx ## FIELD; \
+FIELD ## data = mx ## FIELD;
 #endif
 
 /** 
@@ -114,7 +114,8 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
 #endif
 
 #ifdef AMICI_WITHOUT_MATLAB
-   typedef mxArray double;
+    typedef double mxArray;
+    #define mxMalloc malloc
 #endif
 
 /** return value for successful execution */
@@ -145,7 +146,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* time */
     
     if (!prhs[0]) {
-        mexErrMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
+        errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
     }
     ts = mxGetPr(prhs[0]);
     
@@ -154,26 +155,26 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* parameters */
     
     if (!prhs[1]) {
-        mexErrMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
+        errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
     }
     p = mxGetPr(prhs[1]);
     
     /* constants */
     
     if (!prhs[2]) {
-        mexErrMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
+        errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
     }
     k = mxGetPr(prhs[2]);
     
     if (!prhs[3]) {
-        mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
+        errMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
     np = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
     
     /* plist */
     if (!prhs[4]) {
-        mexErrMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
+        errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     }
     
     if(prhs[4]) {
@@ -199,7 +200,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetProperty(prhs[3],0,"id")){ \
         idlist = mxGetData(mxGetProperty(prhs[3],0,"id")); \
     } else { \
-        mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
         return(NULL); \
     }
     
@@ -213,8 +214,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
         /* check dimensions */
-        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
         b_sx0 = TRUE;
     } else {
         b_sx0 = FALSE;
@@ -224,14 +225,14 @@ UserData setupUserData(const mxArray *prhs[]) {
     
     /* pbar */
     if (!prhs[5]) {
-        mexErrMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
+        errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
     }
     
     pbar = mxGetPr(prhs[5]);
     
     /* xscale */
     if (!prhs[6]) {
-        mexErrMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
+        errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
     }
     
     xbar = mxGetPr(prhs[6]);
@@ -443,14 +444,14 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     if (edata == NULL) return(NULL);
     
     if (!prhs[7]) {
-        mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
+        errMsgIdAndTxt("AMICI:mex:data","No data provided!");
     }
     if (mxGetProperty(prhs[7], 0 ,"Y")) {
         my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
         nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
         nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
     }
     
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
@@ -458,14 +459,14 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
         nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
     }
     if (mxGetProperty(prhs[7], 0 ,"Z")) {
         mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
         nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
         nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
     }
     
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
@@ -473,47 +474,47 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
         nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
         nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
     }
     
     if (nmyt != nt) {
         sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
     }
     
     if (nysigmat != nt) {
         sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
-        mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
     }
     
     if (nmyy != nytrue) {
         sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
     }
     
     if (nysigmay != nytrue) {
         sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
     }
     
     if (nmzt != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
     }
     
     if (nzsigmat != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
     }
     
     if (nmzy != nztrue) {
         sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
     }
     
     if (nzsigmay != nztrue) {
         sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
     
     return(edata);
@@ -596,10 +597,10 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     /* Create AMIS object */
     if (lmm>2||lmm<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
+        errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
+        errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     ami_mem = AMICreate(lmm, iter);
     if (ami_mem == NULL) return(NULL);
@@ -658,7 +659,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             break;
             
         case AMI_LAPACKDENSE:
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackDense(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -669,7 +670,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             
         case AMI_LAPACKBAND:
             
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackBand(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -728,7 +729,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
             break;
             
         default:
-            mexErrMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
+            errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
             break;
     }
     
@@ -891,10 +892,10 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
+        errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
+        errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     /* allocate memory for the backward problem */
     *status = AMICreateB(ami_mem, lmm, iter, &which);
@@ -948,7 +949,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
              *status = wrap_SetDenseJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             
@@ -962,7 +963,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
              *status = wrap_SetBandJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             break;
@@ -1697,7 +1698,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     /* only check this in the first event fired, otherwise this will always be true */
     if (seflag == 0) {
         if (t == *tlastroot) {
-            mexWarnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
+            warnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
             *status = -99;
             return;
         }
@@ -1745,7 +1746,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         discs[*iroot] = t;
         (*iroot)++;
     } else {
-        mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
+        warnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
         *status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
         return;
     }
@@ -2163,6 +2164,122 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
 
 
 #ifdef AMICI_WITHOUT_MATLAB
+
+void initUserDataFields(UserData* user_data, ReturnData rdata, double *pstatus) {
+    UserData udata; /** user udata */
+
+    double *mxstatus;
+    double *mxllh;
+    double *mxsllh;
+    double *mxs2llh;
+    double *mxchi2;
+    double *mxnumsteps;
+    double *mxnumrhsevals;
+    double *mxorder;
+    double *mxnumstepsS;
+    double *mxnumrhsevalsS;
+    double *mxrz;
+    double *mxz;
+    double *mxx;
+    double *mxy;
+    double *mxsrz;
+    double *mxsz;
+    double *mxsx;
+    double *mxsy;
+    double *mxs2rz;
+    double *mxsigmay;
+    double *mxssigmay;
+    double *mxsigmaz;
+    double *mxssigmaz;
+    double *mxxdot;
+    double *mxJ;
+    double *mxdydp;
+    double *mxdydx;
+    double *mxdxdotdp;
+    double *mxts;
+
+    size_t dimssx[] = {0,0,0};
+    size_t dimssy[] = {0,0,0};
+    size_t dimssz[] = {0,0,0};
+    size_t dimssrz[] = {0,0,0};
+    size_t dimss2rz[] = {0,0,0,0};
+    size_t dimssigmay[] = {0,0,0};
+    size_t dimssigmaz[] = {0,0,0};
+    size_t dimsssigmay[] = {0,0,0};
+    size_t dimsssigmaz[] = {0,0,0};
+
+    /* this casting is necessary to ensure availability of accessor macros */
+    udata = (UserData) user_data;
+
+    // TODO need to free all of that
+
+    mxstatus = malloc(sizeof(double));
+    pstatus = mxstatus;
+
+    initField2(llh,1,1);
+    initField2(chi2,1,1);
+
+    mxts = malloc(sizeof(double) * nt);
+    tsdata = mxts;
+
+    initField2(numsteps,nt,1);
+    initField2(numrhsevals,nt,1);
+    initField2(order,nt,1);
+    if(sensi>0){
+        initField2(numstepsS,nt,1);
+        initField2(numrhsevalsS,nt,1);
+    }
+    if((nz>0) & (ne>0)){
+        initField2(z,nmaxevent,nz);
+        initField2(rz,nmaxevent,nz);
+        initField2(sigmaz,nmaxevent,nz);
+    }
+    if(nx>0) {
+        initField2(x,nt,nx);
+        initField2(xdot,1,nx);
+        initField2(J,nx,nx);
+    }
+    if(ny>0) {
+        initField2(y,nt,ny);
+        initField2(sigmay,nt,ny);
+        if (sensi_meth == AMI_SS) {
+            initField2(dydp,ny,np);
+            initField2(dydx,ny,nx);
+            initField2(dxdotdp,nx,np);
+        }
+    }
+    if(sensi>0) {
+        initField2(sllh,np,1);
+        if (sensi_meth == AMI_FSA) {
+            initField3(sx,nt,nx,np);
+            if(ny>0) {
+                initField3(sy,nt,ny,np);
+                initField3(ssigmay,nt,ny,np);
+            }
+            if((nz>0) & (ne>0)){
+                initField3(srz,nmaxevent,nz,np);
+                if(sensi>1){
+                    initField4(s2rz,nmaxevent,nz,np,np);
+                }
+                initField3(sz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if (sensi_meth == AMI_ASA) {
+            if(ny>0) {
+                initField3(ssigmay,nt,ny,np);
+            }
+            if((nz>0) & (ne>0)){
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if(sensi>1) {
+            initField2(s2llh,np,np);
+        }
+    }
+}
+
+
 int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *iroot) {
     int status = *_status;
 

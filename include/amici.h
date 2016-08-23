@@ -6,6 +6,10 @@
 #include <include/tdata.h>
 #include <stdbool.h>
 
+#ifndef AMICI_WITHOUT_MATLAB
+#include <mex.h>
+#endif
+
 /* sensitivity method */
 #define AMI_FSA 1
 #define AMI_ASA 2
