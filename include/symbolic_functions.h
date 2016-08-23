@@ -15,6 +15,19 @@ int amiIsNaN(double what);
 int amiIsInf(double what);
 double amiGetNaN();
 
+
+void errMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
+
+void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
+
 /* sign */
 double sign(double x);
 

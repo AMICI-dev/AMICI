@@ -56,6 +56,30 @@ double amiGetNaN() {
 #endif
 }
 
+void errMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    ) {
+#ifdef AMICI_WITHOUT_MATLAB
+    printf("[Error] %s: %s\n", identifier, err_msg);
+#else
+    mexWarnMsgIdAndTxt(identifier, err_msg);
+#endif
+}
+
+void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    ) {
+#ifdef AMICI_WITHOUT_MATLAB
+    printf("[Warning] %s: %s\n", identifier, err_msg);
+#else
+    mexWarnMsgIdAndTxt(identifier, err_msg);
+#endif
+}
+
 /**
  * c implementation of log function, this prevents returning NaN values for negative values
  *
