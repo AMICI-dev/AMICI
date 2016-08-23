@@ -87,6 +87,7 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
 /** return value for successful execution */
 #define AMI_SUCCESS               0
 
+#ifndef AMICI_WITHOUT_MATLAB
 UserData setupUserData(const mxArray *prhs[]) {
     /**
      * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
@@ -230,11 +231,13 @@ UserData setupUserData(const mxArray *prhs[]) {
     
     return(udata);
 }
+#endif
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+#ifndef AMICI_WITHOUT_MATLAB
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
@@ -373,11 +376,13 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     return(rdata);
 }
+#endif
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+#ifndef AMICI_WITHOUT_MATLAB
 ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     /**
      * setupExpData initialises the experimental data struct
@@ -478,7 +483,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     
     return(edata);
 }
-
+#endif
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */

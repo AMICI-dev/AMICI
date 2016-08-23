@@ -31,9 +31,11 @@
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
 
+#ifndef AMICI_WITHOUT_MATLAB
 UserData setupUserData(const mxArray *prhs[]);
 ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
+#endif
 
 void *setupAMI(int *status, void *user_data, void *temp_data);
 void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data);
