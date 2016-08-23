@@ -68,7 +68,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-    mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+    warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
     return(NULL); \
 }
 
@@ -80,12 +80,14 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
     OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-    mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+    warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
     return(NULL); \
 }
 
 /** return value for successful execution */
 #define AMI_SUCCESS               0
+
+
 
 #ifndef AMICI_WITHOUT_MATLAB
 UserData setupUserData(const mxArray *prhs[]) {
