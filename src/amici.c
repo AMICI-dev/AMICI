@@ -2487,4 +2487,26 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
 
     return 0;
 }
+
 #endif
+
+void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, ReturnData rdata) {
+
+    /* store current Jacobian and derivative */
+    if(udata) {
+        if(tdata) {
+            if(nx>0){
+                fxdot(t,x,dx,xdot,udata);
+                xdot_tmp = NV_DATA_S(xdot);
+                memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+            }
+        }
+    }
+    if(udata) {
+        if(nx>0) {
+            fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
+            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+        }
+    }
+}
+
