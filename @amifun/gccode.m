@@ -25,6 +25,12 @@ function this = gccode(this,model,fid)
         if(model.splineflag)
             for nodes = [3,4,5,10]
                 for ideriv = 1:nodes
+                    if (model.o2flag)
+                        for jderiv = 1:nodes
+                            this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) ', ' num2str(jderiv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'D' num2str(jderiv*2+1) 'spline_pos' num2str(nodes)]));
+                            this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) ', ' num2str(jderiv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'D' num2str(jderiv*2+1) 'spline' num2str(nodes)]));
+                        end
+                    end
                     this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline_pos' num2str(nodes)]));
                     this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline' num2str(nodes)]));
                 end
@@ -46,7 +52,7 @@ function this = gccode(this,model,fid)
         cstr = strrep(cstr,'log','amilog');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
-        cstr = regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,');
+        cstr = regexprep(regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,'),'DD([0-9]*)([\w]*)\(','DD$2\($1,');
         
         
         if(numel(cstr)>1)
