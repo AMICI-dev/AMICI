@@ -15,6 +15,14 @@ int amiIsNaN(double what);
 int amiIsInf(double what);
 double amiGetNaN();
 
+void ones(double *destination, int count);
+void zeros(double *destination, int count);
+void fillArray(double *destination, int count, double value);
+
+void linSpace(double *destination, double from, double to, int numValues);
+double *linSpaceAlloc(double from, double to, int numValues);
+void printArray(double const *array, int numElements);
+void printfArray(double const *array, int numElements, char const *format);
 
 void errMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
