@@ -197,7 +197,6 @@ if(o2flag == 2)
         case 'log10'
             fprintf(fid,'    v = v(:).*theta(options_ami.sens_ind)*log(10);\n');
     end
-    fprintf(fid,'    kappa = [kappa(:);v(:)];\n');
     fprintf(fid,'else\n');
     fprintf(fid,'    if(options_ami.sensi==2)\n');
     fprintf(fid,'        error(''6th argument (multiplication vector is missing'');\n');
@@ -311,6 +310,12 @@ fprintf(fid,['end\n']);
 fprintf(fid,['if(length(kappa)<' num2str(nk) ')\n']);
 fprintf(fid,'    error(''provided condition vector is too short'');\n');
 fprintf(fid,'end\n');
+
+if(o2flag == 2)
+    fprintf(fid,'if(nargin>=6)\n');
+    fprintf(fid,'    kappa = [kappa(:);v(:)];\n');
+    fprintf(fid,'end\n');
+end
 
 switch(this.param)
     case 'log'
