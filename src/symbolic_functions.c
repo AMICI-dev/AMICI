@@ -22,7 +22,9 @@
     #include <mex.h>
 #endif
 #include <float.h>
+#include <stdio.h>
 #include <include/spline.h>
+
 
 #undef ts
 
