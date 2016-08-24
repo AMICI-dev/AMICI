@@ -214,8 +214,6 @@ static double seval (int n, double u,
 int    i, j, k;
 double w;
 
-/*if (i >= n-1) i = 0;
-if (i < 0)  i = 0;*/
     if (u <= x[0]) i = 0;
     if (u >= x[n-1]) i = n-1;
 
