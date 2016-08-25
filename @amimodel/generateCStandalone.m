@@ -687,7 +687,7 @@ function generateMainC(this)
     fprintf(fid, '    /* parameters (theta), matlab: second argument */\n');
     fprintf(fid, '    np = 1; // TODO\n');
     fprintf(fid, '    p = malloc(sizeof(realtype) * np);\n');
-    fprintf(fid, '    // TODO p[0] = 1; // ...\n');
+    fprintf(fid, '    // TODO p[0] = 1;\n');
     fprintf(fid, '\n');
     fprintf(fid, '    /* plist, matlab: fifth argument */\n');
     fprintf(fid, '    // parameter ordering\n');
@@ -702,7 +702,11 @@ function generateMainC(this)
     fprintf(fid, '    // TODO k[0] = 0.1;\n');
     fprintf(fid, '\n');
     fprintf(fid, '    /* Options ; matlab: fourth argument   */\n');
-    fprintf(fid, '    nmaxevent = 10; // ?\n');
+    fprintf(fid, '    nmaxevent = 0; // ?\n');
+    fprintf(fid, '    z2event = malloc(sizeof(realtype) * ne);\n');
+    fprintf(fid, '    for(int i = 0; i < ne; ++i)\n');
+    fprintf(fid, '        z2event[i] = i;\n');
+    fprintf(fid, '\n');
     fprintf(fid, '    tstart = 0;\n');
     fprintf(fid, '    atol = 1E-16;\n');
     fprintf(fid, '    rtol = 1E-8;\n');
@@ -716,7 +720,6 @@ function generateMainC(this)
     fprintf(fid, '    idlist = malloc(sizeof(realtype) * np);\n');
     fprintf(fid, '    for(int i = 0; i < np; ++i)\n');
     fprintf(fid, '        idlist[i] = 0;\n');
-    fprintf(fid, '    z2event = 0; // []\n');
     fprintf(fid, '    qpositivex = malloc(sizeof(realtype) * nx);\n');
     fprintf(fid, '    zeros(qpositivex, nx);\n');
     fprintf(fid, '    sensi = 0;\n');
@@ -788,8 +791,11 @@ function generateMainC(this)
     fprintf(fid, '    fillArray(ysigma, nt * nx, NAN);\n');
     fprintf(fid, '\n');
     fprintf(fid, '    // event observations\n');
-    fprintf(fid, '    mz = 0;\n');
-    fprintf(fid, '    zsigma = 0;\n');
+    fprintf(fid, '    mz = malloc(sizeof(realtype) * nz * nz);\n');
+    fprintf(fid, '    fillArray(mz, nz * nz, NAN);\n');
+    fprintf(fid, '\n');
+    fprintf(fid, '    zsigma =  malloc(sizeof(realtype) * nz * nz);\n');
+    fprintf(fid, '    fillArray(zsigma, nz * nz, NAN);\n');
     fprintf(fid, '\n');
     fprintf(fid, '    return(edata);\n');
     fprintf(fid, '}\n');
