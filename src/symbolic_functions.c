@@ -40,7 +40,7 @@ int amiIsNaN(double what) {
     #ifdef mex_h
     return mxIsNaN(what);
     #else
-    return what == NAN;
+    return isnan(what);
     #endif
 }
 
@@ -48,7 +48,7 @@ int amiIsInf(double what) {
     #ifdef mex_h
     return mxIsInf(what);
     #else
-    return what == INFINITY;
+    return isinf(what);
     #endif
 }
 
