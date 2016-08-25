@@ -69,6 +69,10 @@ function [modelo2] = augmento2(this)
               + jacobian(this.sym.Jz,this.fun.z.strsym)*Sz;   
     end
     
+    % augment sigmas
+    this.getFun([],'sigma_y');
+    this.getFun([],'sigma_z');
+    
     S0 = jacobian(this.sym.x0,this.sym.p);
     
     augmodel.sym.x = [this.sym.x;reshape(Sx,[numel(Sx),1])];
@@ -80,6 +84,8 @@ function [modelo2] = augmento2(this)
     augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
+    augmodel.sym.sigma_y = [this.sym.sigma_y, reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];
+    augmodel.sym.sigma_z = [this.sym.sigma_z, reshape(transpose(this.fun.dsigma_zdp.sym), [1,numel(this.fun.dsigma_zdp.sym)])];
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;

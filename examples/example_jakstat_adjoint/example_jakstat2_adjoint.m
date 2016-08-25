@@ -2,7 +2,7 @@ function example_jakstat2_adjoint()
     
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat2_adjoint.m'));
-    amiwrap('model_jakstat2_adjoint','model_jakstat2_adjoint_syms',exdir,2)
+    % amiwrap('model_jakstat2_adjoint','model_jakstat2_adjoint_syms',exdir,2)
     
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     
@@ -30,14 +30,32 @@ function example_jakstat2_adjoint()
         0
         -0.5];
     xi_rand = xi + 0.1;
-%     options.sensi = 1;
-%     options.sensi_meth = 'adjoint';
-%     presol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
-    v = [-2.6290; 0.0722; 14.2516; -10.8735; 0.0722; -0.2578; -5.3333; -10.5537; -5.2625; -0.0375; -0.9722; -13.7227; -3.1415; -34.3101; 0; 0; 0];
-%     disp(presol.llh);
-%     disp(presol.sllh);
-    options.atol = 1e-12;
-    options.rtol = 1e-12;
+    options.sensi = 1;
+    options.sensi_meth = 'adjoint';
+    presol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
+    % v = [-2.6290; 0.0722; 14.2516; -10.8735; 0.0722; -0.2578; -5.3333; -10.5537; -5.2625; -0.0375; -0.9722; -13.7227; -3.1415; -34.3101; 0; 0; 0];
+    v = presol.sllh;
+    
+    delta = 1e-6;
+    solp  = simulate_model_jakstat([],xi_rand + delta*v,[],D,options);
+    solm  = simulate_model_jakstat([],xi_rand - delta*v,[],D,options);
+    hvp_p = (solp.sllh - presol.sllh)  / delta;
+    hvp_m = (presol.sllh  - solm.sllh) / delta;
+    hvp_c = (hvp_p + hvp_m)  / 2;
+    
+    % Finite Differences
+    fprintf('Finite Differences:\n\n');
+    fprintf('Likelihood:\n');
+    disp(presol.llh);
+    fprintf('Gradient:\n');
+    disp(presol.sllh');
+    fprintf('Hessian vector product (forward):\n');
+    disp(hvp_p');
+    fprintf('Hessian vector product (backward):\n');
+    disp(hvp_m');
+    fprintf('Hessian vector product (centered):\n');
+    disp(hvp_c');
+    
     options.sensi = 2;
     options.sensi_meth = 'adjoint';
     sol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options,v);

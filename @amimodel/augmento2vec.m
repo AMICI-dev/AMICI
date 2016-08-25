@@ -77,6 +77,10 @@ function [modelo2vec] = augmento2vec(this)
         SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
               + jacobian(this.sym.Jz,this.fun.z.strsym)*Sz;
     end
+
+    % augment sigmas
+    this.getFun([],'sigma_y');
+    this.getFun([],'sigma_z');
     
     S0 = jacobian(this.sym.x0,this.sym.p)*vec;
     
@@ -89,6 +93,8 @@ function [modelo2vec] = augmento2vec(this)
     augmodel.sym.Jz = [this.sym.Jz,SJz*vec];
     augmodel.sym.k = [this.sym.k;vec];
     augmodel.sym.p = this.sym.p;
+    augmodel.sym.sigma_y = [this.sym.sigma_y, transpose(this.fun.dsigma_ydp.sym * vec)];
+    augmodel.sym.sigma_z = [this.sym.sigma_z, transpose(this.fun.dsigma_zdp.sym * vec)];
     
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
     modelo2vec.o2flag = 2;
