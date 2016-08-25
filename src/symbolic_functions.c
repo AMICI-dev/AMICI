@@ -24,6 +24,7 @@
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <include/symbolic_functions.h>
 #include <include/spline.h>
 
 
@@ -60,7 +61,8 @@ double amiGetNaN() {
 }
 
 void fillArray(double *destination, int count, double value) {
-    for(int i = 0; i < count; ++i)
+    int i;
+    for(i = 0; i < count; ++i)
         destination[i] = value;
 }
 
@@ -74,7 +76,8 @@ void ones(double *destination, int count) {
 
 void linSpace(double *destination, double from, double to, int numValues) {
     double delta = (to - from) / (numValues - 1);
-    for(int i = 0; i < numValues; ++i) {
+    int i;
+    for(i = 0; i < numValues; ++i) {
         destination[i] = from + i * delta;
     }
 }
@@ -90,7 +93,8 @@ void printArray(double const *array, int numElements) {
 }
 
 void printfArray(double const *array, int numElements, char const *format) {
-    for(int i = 0; i < numElements; ++i) {
+    int i;
+    for(i = 0; i < numElements; ++i) {
         printf(format, array[i]);
     }
 }
