@@ -217,19 +217,21 @@ double w;
     if (u <= x[0]) i = 0;
     if (u >= x[n-1]) i = n-1;
 
-if ((x[i] > u) || (x[i+1] < u))
-  {  /* ---- perform a binary search ---- */
-  i = 0;
-  j = n;
-  do
+    for (i=0; i<n; i++)
     {
-    k = (i + j) / 2;         /* split the domain to search */
-    if (u < x[k])  j = k;    /* move the upper bound */
-    if (u >= x[k]) i = k;    /* move the lower bound */
-    }                        /* there are no more segments to search */
-  while (j > i+1);
-  }
-
+        if ((x[i] > u) || (x[i+1] <= u))
+        {  /* ---- perform a binary search ---- */
+            i = 0;
+            j = n;
+            do
+            {
+                k = (i + j) / 2;         /* split the domain to search */
+                if (u < x[k])  j = k;    /* move the upper bound */
+                if (u >= x[k]) i = k;    /* move the lower bound */
+            }                        /* there are no more segments to search */
+            while (j > i+1);
+        }
+    }
 /* ---- Evaluate the spline ---- */
 w = u - x[i];
 w = y[i] + w * (b[i] + w * (c[i] + w * d[i]));
