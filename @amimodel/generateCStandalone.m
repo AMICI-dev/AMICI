@@ -688,6 +688,7 @@ function generateMainC(this)
     fprintf(fid, '    np = 1; // TODO\n');
     fprintf(fid, '    p = malloc(sizeof(realtype) * np);\n');
     fprintf(fid, '    // TODO p[0] = 1;\n');
+    fprintf(fid, '    //for(int i = 0; i < np; ++i) p[i] = pow10(p[i]);\n');
     fprintf(fid, '\n');
     fprintf(fid, '    /* plist, matlab: fifth argument */\n');
     fprintf(fid, '    // parameter ordering\n');
@@ -696,7 +697,7 @@ function generateMainC(this)
     fprintf(fid, '        plist[i] = i;\n');
     fprintf(fid, '    }\n');
     fprintf(fid, '\n');
-    fprintf(fid, '    /* constants, matlab: third argument */\n');
+    fprintf(fid, '    /* constants, kappa or data.condition, matlab: third argument */\n');
     fprintf(fid, '    const int numK = 0; // TODO\n');
     fprintf(fid, '    k = malloc(sizeof(realtype) * numK);\n');
     fprintf(fid, '    // TODO k[0] = 0.1;\n');
@@ -782,9 +783,9 @@ function generateMainC(this)
     fprintf(fid, '        return(NULL);\n');
     fprintf(fid, '    }\n');
     fprintf(fid, '\n');
-    fprintf(fid, '    // observation np * nt\n');
-    fprintf(fid, '    my = malloc(sizeof(realtype) * nt * nx);\n');
-    fprintf(fid, '    fillArray(my, nt * nx, NAN);\n');
+    fprintf(fid, '    // observation ny * nt\n');
+    fprintf(fid, '    my = malloc(sizeof(realtype) * nt * ny);\n');
+    fprintf(fid, '    fillArray(my, nt * ny, NAN);\n');
     fprintf(fid, '\n');
     fprintf(fid, '    // stdev of Y\n');
     fprintf(fid, '    ysigma =  malloc(sizeof(realtype) * nt * nx);\n');
@@ -986,8 +987,8 @@ function generateMainC(this)
     fprintf(fid, '    printfArray(numrhsevalsdata, nt, "%%.0f ");\n');
     fprintf(fid, '    printf("\\norder: \\t\\t");\n');
     fprintf(fid, '    printfArray(orderdata, nt, "%%.0f ");\n');
-    fprintf(fid, '\n');
     fprintf(fid, '    printf("\\n");\n');
+    fprintf(fid, '    printf("llh: %%e\\n", *llhdata);\n');
     fprintf(fid, '}\n');
     fprintf(fid, '\n');
     fprintf(fid, 'void freeExpData(ExpData edata) {\n');
