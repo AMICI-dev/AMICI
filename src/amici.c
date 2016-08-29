@@ -547,9 +547,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     r = 0;
     g = 0;
-    
-    x = N_VNew_Serial(nx);
-    
+        
     if (nx > 0) {
         
         /* allocate temporary objects */
@@ -2210,8 +2208,6 @@ void initUserDataFields(UserData* user_data, ReturnData rdata, double *pstatus) 
 
     /* this casting is necessary to ensure availability of accessor macros */
     udata = (UserData) user_data;
-
-    // TODO need to free all of that
 
     mxstatus = malloc(sizeof(double));
     pstatus = mxstatus;
