@@ -27,4 +27,9 @@ typedef struct {
     double *am_zsigma; 
     
 	} *ExpData;
+
+#ifdef AMICI_WITHOUT_MATLAB
+void freeExpData(ExpData edata);
+#endif
+
 #endif /* _MY_EDATA */

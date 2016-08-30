@@ -104,4 +104,9 @@ typedef struct {
     double *am_s2llhdata;
     
 	} *ReturnData;
+
+#ifdef AMICI_WITHOUT_MATLAB
+void freeReturnData(ReturnData rdata);
+#endif
+
 #endif /* _MY_RDATA */
