@@ -371,8 +371,8 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
     
-    spline(3, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
-    uspline_pos = exp(seval(3, t, ts, uslog, b, c, d));
+    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
     
     spline(num, ss, 0, dudt, 0.0, ts, sus, b, c, d);
     suspline = seval(num, t, ts, sus, b, c, d);
@@ -501,10 +501,13 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, sus1, b, c, d);
     su1spline = seval(num, t, ts, sus1, b, c, d);
+    
     spline(num, ss, 0, dudt, 0.0, ts, sus2, b, c, d);
     su2spline = seval(num, t, ts, sus2, b, c, d);
+    
     spline(num, ss, 0, dudt, 0.0, ts, ssus, b, c, d);
     ssuspline = seval(num, t, ts, ssus, b, c, d);
+    
     uout = (ssuspline + su1spline * su2spline) * uspline_pos;
     uout = uout / us[did1] / us[did2];
     

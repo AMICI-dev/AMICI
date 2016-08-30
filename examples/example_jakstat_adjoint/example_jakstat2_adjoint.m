@@ -31,8 +31,10 @@ function example_jakstat2_adjoint()
     
     
     % generate new
-    xi_rand = xi + 0.1;
-    runs = 5;
+    xi_rand = xi - 0.1;
+    runs = 100;
+    % options.atol = 1e-12;
+    % options.rtol = 1e-12;
     
     % Get time for simulation
     tic;
@@ -57,7 +59,7 @@ function example_jakstat2_adjoint()
     for i = 1 : runs
         sol2 = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
         v = sol2.sllh;
-        delta = 1e-5;
+        delta = 1e-4;
         solp  = simulate_model_jakstat2_adjoint([],xi_rand + delta*v,[],D,options);
         solm  = simulate_model_jakstat2_adjoint([],xi_rand - delta*v,[],D,options);
         hvp = hvp + (solp.sllh - solm.sllh) / (2*delta);
@@ -74,7 +76,7 @@ function example_jakstat2_adjoint()
         presol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
         v = presol.sllh;
         options.sensi = 2;
-        sol  = simulate_model_jakstat2_adjoint([],xi_rand + delta*v,[],D,options,v);
+        sol  = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options,v);
         hvpasa = hvpasa + sol.s2llh;
     end
     t3 = toc;
