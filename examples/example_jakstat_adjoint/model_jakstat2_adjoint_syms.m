@@ -24,7 +24,7 @@ function [model] = model_jakstat2_adjoint_syms()
     %%
     % INPUT
     syms t
-    u(1) = spline_pos5(t, 0.0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0.0);
+    u(1) = am_spline_pos(t, 5, 0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0);
     
     %%
     % SYSTEM EQUATIONS

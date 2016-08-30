@@ -2,6 +2,7 @@
 #define amici_symbolic_functions_h
 #include <math.h>
 #include <include/spline.h>
+#include <stdarg.h>
 
 double amilog(double x);
 double heaviside(double x);
@@ -15,6 +16,13 @@ double Dam_max(int id,double a, double b);
 double sign(double x);
 
 /* splines */
+
+double am_spline(double t, int num, ...);
+double am_spline_pos(double t, int num, ...);
+double am_Dspline(int id, double t, int num, ...);
+double am_Dspline_pos(int id, double t, int num, ...);
+double am_DDspline(int id1, int id2, double t, int num, ...);
+double am_DDspline_pos(int id1, int id2, double t, int num, ...);
 
 double spline3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt);
 double spline_pos3(double t, double t1, double p1, double t2, double p2, double t3, double p3, int ss, double dudt);

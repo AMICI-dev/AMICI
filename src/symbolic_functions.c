@@ -17,6 +17,7 @@
      _a < _b ? _a : _b; })
 #endif
 
+#include <stdarg.h>
 #include <math.h>
 #include <mex.h>
 #include <float.h>
@@ -158,7 +159,366 @@ double Dam_max(int id,double a, double b) {
 
 
 /**
- * spline function with 3 nodes
+ * spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return spline(t)
+ *
+ */
+double am_spline(double t, int num, ...) {
+    
+    va_list valist;
+    
+    double uout;
+    double ss;
+    double dudt;
+    
+    double ts[num];
+    double us[num];
+    
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    int i;
+    int j;
+    
+     /* Variable list type macro */
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        us[j] = va_arg(valist, double);
+    }
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(3, ss, 0, dudt, 0.0, ts, us, b, c, d);
+    uout = seval(3, t, ts, us, b, c, d);
+    
+    return(uout);
+}
+
+/**
+ * exponentiated spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return spline(t)
+ *
+ */
+double am_spline_pos(double t, int num, ...) {
+    
+    va_list valist;
+    
+    double uout;
+    double ss;
+    double dudt;
+    
+    double ts[num];
+    double us[num];
+    double uslog[num];
+    
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    int i;
+    int j;
+    
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        us[j] = va_arg(valist, double);
+        uslog[j] = log(us[j]);
+    }
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    uout = seval(num, t, ts, uslog, b, c, d);
+    
+    return(exp(uout));
+}
+
+/**
+ * derivation of a spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return dsplinedp(t)
+ *
+ */
+double am_Dspline(int id, double t, int num, ...) {
+    
+    va_list valist;
+    
+    double uout;
+    double ss;
+    double dudt;
+    
+    double ts[num];
+    double us[num];
+    double ps[num];
+    
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    int i;
+    int j;
+    int did;
+    
+    did = id/2 - 2;
+    
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        ps[j] = va_arg(valist, double);
+        us[j] = 0.0;
+    }
+    us[did] = 1.0;
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
+    uout = seval(num, t, ts, us, b, c, d);
+    
+    return(uout);
+}
+
+/**
+ * derivation of an exponentiated spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return dsplinedp(t)
+ *
+ */
+double am_Dspline_pos(int id, double t, int num, ...) {
+    
+    va_list valist;
+    
+    double ts[num];
+    double us[num];
+    double sus[num];
+    double uslog[num];
+
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    double uout;
+    double ss;
+    double dudt;
+    double uspline_pos;
+    double suspline;
+    
+    int i;
+    int j;
+    int did;
+    
+    did = id/2 - 2;
+    
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        us[j] = va_arg(valist, double);
+        uslog[j] = log(us[j]);
+        sus[j] = 0.0;
+    }
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    sus[did] = 1.0;
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(3, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    uspline_pos = exp(seval(3, t, ts, uslog, b, c, d));
+    
+    spline(num, ss, 0, dudt, 0.0, ts, sus, b, c, d);
+    suspline = seval(num, t, ts, sus, b, c, d);
+    uout = suspline * uspline_pos / us[did];
+    
+    return(uout);
+}
+
+/**
+ * second derivation of a spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return spline(t)
+ *
+ */
+double am_DDspline(int id1, int id2, double t, int num, ...) {
+    
+    va_list valist;
+    
+    double uout;
+    double ss;
+    double dudt;
+    
+    double ts[num];
+    double us[num];
+    double ps[num];
+    
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    int i;
+    int j;
+
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        ps[j] = va_arg(valist, double);
+        us[j] = 0.0;
+    }
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
+    uout = seval(num, t, ts, us, b, c, d);
+    
+    return(uout);
+}
+
+/**
+ * derivation of an exponentiated spline function
+ *
+ * @param t point at which the spline should be evaluated
+ * @param ti location of node i
+ * @param pi spline value at node i
+ * @param ss flag indicating whether slope at first node should be user defined
+ * @param dudt user defined slope at first node
+ *
+ * @return spline(t)
+ *
+ */
+double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
+    
+    va_list valist;
+    
+    double ts[num];
+    double us[num];
+    double sus1[num];
+    double sus2[num];
+    double ssus[num];
+    double uslog[num];
+    
+    double b[num];
+    double c[num];
+    double d[num];
+    
+    double uout;
+    double ss;
+    double dudt;
+    double uspline_pos;
+    double su1spline;
+    double su2spline;
+    double ssuspline;
+    
+    int i;
+    int j;
+    int did1;
+    int did2;
+    
+    did1 = id1/2 - 2;
+    did2 = id2/2 - 2;
+    
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+    
+    for (i=0; i<2*num; i+=2) {
+        j = i/2;
+        ts[j] = va_arg(valist, double);
+        us[j] = va_arg(valist, double);
+        uslog[j] = log(us[j]);
+        sus1[j] = 0.0;
+        sus2[j] = 0.0;
+        ssus[j] = 0.0;
+    }
+    ss = va_arg(valist, double);
+    dudt = va_arg(valist, double);
+    sus1[did1] = 1.0;
+    sus2[did2] = 1.0;
+    
+    /* clean memory reserved for valist */
+    va_end(valist);
+    
+    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
+    
+    spline(num, ss, 0, dudt, 0.0, ts, sus1, b, c, d);
+    su1spline = seval(num, t, ts, sus1, b, c, d);
+    spline(num, ss, 0, dudt, 0.0, ts, sus2, b, c, d);
+    su2spline = seval(num, t, ts, sus2, b, c, d);
+    spline(num, ss, 0, dudt, 0.0, ts, ssus, b, c, d);
+    ssuspline = seval(num, t, ts, ssus, b, c, d);
+    uout = (ssuspline + su1spline * su2spline) * uspline_pos;
+    uout = uout / us[did1] / us[did2];
+    
+    return(uout);
+}
+
+
+
+
+
+
+
+/**
+ * exponentiated spline function with 3 nodes
  *
  * @param t point at which the spline should be evaluated
  * @param t1 location of node 1

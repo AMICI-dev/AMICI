@@ -211,16 +211,15 @@ static double seval (int n, double u,
 
 {  /* begin function seval() */
 
-int    i, j, k;
-double w;
+    int    i, j, k;
+    double w;
 
-    if (u <= x[0]) i = 0;
-    if (u >= x[n-1]) i = n-1;
-
-    for (i=0; i<n; i++)
-    {
-        if ((x[i] > u) || (x[i+1] <= u))
-        {  /* ---- perform a binary search ---- */
+    if (u <= x[0]) {
+        i = 0;
+    } else {
+        if (u >= x[n-1]) {
+            i = n-1;
+        } else {
             i = 0;
             j = n;
             do
@@ -232,10 +231,11 @@ double w;
             while (j > i+1);
         }
     }
-/* ---- Evaluate the spline ---- */
-w = u - x[i];
-w = y[i] + w * (b[i] + w * (c[i] + w * d[i]));
-return (w);
+
+    /* ---- Evaluate the spline ---- */
+    w = u - x[i];
+    w = y[i] + w * (b[i] + w * (c[i] + w * d[i]));
+    return (w);
 }
 
 /**

@@ -22,23 +22,35 @@ function this = gccode(this,model,fid)
             this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
         end
 
-        if(model.splineflag)
-            if strfind(char(this.sym), 'spline')
-                for nodes = [3,4,5,10]
-                    for ideriv = 1:nodes
+        % If we have spline, we need to parse them to get derivatives
+        if (model.splineflag)
+            symstr = char(this.sym);
+            if (strfind(symstr, 'spline'))
+                tokens = regexp(symstr, 't\,\s(\w+\.\w+)\,', 'tokens');
+                nNodes = round(str2double(tokens{1}));
+            end
+            if (regexp(symstr, 'D\(\[(\w+|\w+\,\w+)\]\,.am_spline'))
+                isDSpline = true;
+            else
+                isDSpline = false;
+            end
+            
+            if (isDSpline)
+                [~, nCol] = size(this.sym);
+                for iCol = 1 : nCol
+                    for iNode = 1 : nNodes
                         if (model.o2flag)
-                            for jderiv = 1:nodes
-                                this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) ', ' num2str(jderiv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'D' num2str(jderiv*2+1) 'spline_pos' num2str(nodes)]));
-                                this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) ', ' num2str(jderiv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'D' num2str(jderiv*2+1) 'spline' num2str(nodes)]));
+                            for jNode = 1:nNodes
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline_pos']));
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline']));
                             end
                         end
-                        this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline_pos' num2str(nodes)]));
-                        this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline' num2str(nodes)]));
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'am_spline_pos']));
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'am_spline']));
                     end
                 end
-            end 
-        end
-        
+            end
+        end        
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
@@ -55,7 +67,14 @@ function this = gccode(this,model,fid)
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
         cstr = regexprep(regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,'),'DD([0-9]*)([\w]*)\(','DD$2\($1,');
+        cstr = strrep(strrep(cstr, 'DDam_spline', 'am_DDspline'), 'Dam_spline', 'am_Dspline');
         
+        if (model.splineflag)
+            if (strfind(symstr, 'spline'))
+                % The floating numbers after 't' must be converted to integers
+                cstr = regexprep(cstr, 't\,\w+\.\w+\,', ['t\,', num2str(nNodes), '\,']);
+            end
+        end
         
         if(numel(cstr)>1)
             

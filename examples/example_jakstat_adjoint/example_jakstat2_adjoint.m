@@ -3,7 +3,6 @@ function example_jakstat2_adjoint()
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat2_adjoint.m'));
     % amiwrap('model_jakstat2_adjoint','model_jakstat2_adjoint_syms',exdir,2)
-    
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     
     D.t = num(:,1);
@@ -29,94 +28,68 @@ function example_jakstat2_adjoint()
         -0.5
         0
         -0.5];
-    xi_rand = xi + 0.1;
-    options.sensi = 1;
-    options.sensi_meth = 'adjoint';
-    presol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
-    % v = [-2.6290; 0.0722; 14.2516; -10.8735; 0.0722; -0.2578; -5.3333; -10.5537; -5.2625; -0.0375; -0.9722; -13.7227; -3.1415; -34.3101; 0; 0; 0];
-    v = presol.sllh;
     
-    delta = 1e-6;
-    solp  = simulate_model_jakstat([],xi_rand + delta*v,[],D,options);
-    solm  = simulate_model_jakstat([],xi_rand - delta*v,[],D,options);
-    hvp_p = (solp.sllh - presol.sllh)  / delta;
-    hvp_m = (presol.sllh  - solm.sllh) / delta;
-    hvp_c = (hvp_p + hvp_m)  / 2;
-    
-    % Finite Differences
-    fprintf('Finite Differences:\n\n');
-    fprintf('Likelihood:\n');
-    disp(presol.llh);
-    fprintf('Gradient:\n');
-    disp(presol.sllh');
-    fprintf('Hessian vector product (forward):\n');
-    disp(hvp_p');
-    fprintf('Hessian vector product (backward):\n');
-    disp(hvp_m');
-    fprintf('Hessian vector product (centered):\n');
-    disp(hvp_c');
-    
-    options.sensi = 2;
-    options.sensi_meth = 'adjoint';
-    sol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options,v);
-    
-%     options.sensi = 0;
-%     sol = simulate_model_jakstat([],xi,[],D,options);
-%     
-%     if(usejava('jvm'))
-%     figure
-%     for iy = 1:3
-%         subplot(2,2,iy)
-%         plot(D.t,D.Y(:,iy),'rx')
-%         hold on
-%         plot(sol.t,sol.y(:,iy),'.-')
-%         xlim([0,60])
-%         xlabel('t')
-%         switch(iy)
-%             case 1
-%                 ylabel('pStat')
-%             case 2
-%                 ylabel('tStat')
-%             case 3
-%                 ylabel('pEpoR')
-%         end
-%         ylim([0,1.2])
-%     end
-%     set(gcf,'Position',[100 300 1200 500])
-%     end
     
     % generate new
-    disp(sol.llh);
-    disp(sol.sllh);   
-    disp(sol.s2llh);
+    xi_rand = xi + 0.1;
+    runs = 5;
     
-%     options.sensi = 0;
-%     eps = 1e-4;
-%     fd_grad = NaN(length(xi),1);
-%     for ip = 1:length(xi)
-%         xip = xi_rand;
-%         xip(ip) = xip(ip) + eps;
-%         psol = simulate_model_jakstat([],xip,[],D,options);
-%         fd_grad(ip) = (psol.llh-sol.llh)/eps;
-%     end
-%     
-%     if(usejava('jvm'))
-%     figure
-%     scatter(abs(sol.sllh),abs(fd_grad))
-%     set(gca,'XScale','log')
-%     set(gca,'YScale','log')
-%     xlim([1e-2,1e2])
-%     ylim([1e-2,1e2])
-%     box on
-%     hold on
-%     axis square
-%     plot([1e-2,1e2],[1e-2,1e2],'k:')
-%     xlabel('adjoint sensitivity absolute value of gradient element')
-%     ylabel('finite difference absolute value of gradient element')
-%     set(gcf,'Position',[100 300 1200 500])
-%    end
+    % Get time for simulation
+    tic;
+    for i = 1 : runs    
+        options.sensi = 0;
+        sol0 = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
+    end
+    t0 = toc;
     
+    % Get time for usual evaluation
+    tic;
+    for i = 1 : runs    
+        options.sensi = 1;
+        options.sensi_meth = 'adjoint';
+        sol1 = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
+    end
+    t1 = toc;
     
-%    drawnow
+    % Get time for Finite Differences
+    hvp = zeros(17,1);
+    tic;
+    for i = 1 : runs
+        sol2 = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
+        v = sol2.sllh;
+        delta = 1e-5;
+        solp  = simulate_model_jakstat2_adjoint([],xi_rand + delta*v,[],D,options);
+        solm  = simulate_model_jakstat2_adjoint([],xi_rand - delta*v,[],D,options);
+        hvp = hvp + (solp.sllh - solm.sllh) / (2*delta);
+    end
+    t2 = toc;
+    hvp = hvp / runs;
     
+    % Get time for Second order adjoints
+    hvpasa = zeros(17,1);
+    tic;
+    for i = 1 : runs
+        options.sensi = 1;
+        options.sensi_meth = 'adjoint';
+        presol = simulate_model_jakstat2_adjoint([],xi_rand,[],D,options);
+        v = presol.sllh;
+        options.sensi = 2;
+        sol  = simulate_model_jakstat2_adjoint([],xi_rand + delta*v,[],D,options,v);
+        hvpasa = hvpasa + sol.s2llh;
+    end
+    t3 = toc;
+    hvpasa = hvpasa / runs;
+    hvptable = [hvp, hvpasa, abs(hvpasa - hvp) ./ hvp, abs(hvpasa - hvp) ./ hvpasa];
+      
+    fprintf('Time elapsed for %i ODE solves (no sensis): %12.7f \n\n', runs, t0);
+    fprintf('Time elapsed for %i gradient computations:  %12.7f \n\n', runs, t1);
+    fprintf('Time elapsed for %i HVP computations (FD):  %12.7f \n\n', runs, t2);
+    fprintf('Time elapsed for %i HVP computations (ASA): %12.7f \n\n', runs, t3);
+    
+    fprintf('|   HVP from FD   |  HVP from ASA   | rel.Err.b.o.FD  | rel.Err.b.o.ASA |\n');
+    fprintf('|=================|=================|=================|=================|\n');
+    for i = 1 : 17
+       fprintf('| %15.9f | %15.9f | %15.9f | %15.9f |\n', hvptable(i,:));
+    end
+    fprintf('|=======================================================================|\n');
 end
