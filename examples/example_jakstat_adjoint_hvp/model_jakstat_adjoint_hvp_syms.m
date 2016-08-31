@@ -1,4 +1,4 @@
-function [model] = model_jakstat2_adjoint_syms()
+function [model] = model_jakstat_adjoint_hvp_syms()
     
     %%
     % STATES
