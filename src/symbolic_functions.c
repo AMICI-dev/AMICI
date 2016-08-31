@@ -466,7 +466,6 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     double uspline_pos;
     double su1spline;
     double su2spline;
-    double ssuspline;
     
     int i;
     int j;
@@ -504,13 +503,14 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, sus2, b, c, d);
     su2spline = seval(num, t, ts, sus2, b, c, d);
-    
-    spline(num, ss, 0, dudt, 0.0, ts, ssus, b, c, d);
-    ssuspline = seval(num, t, ts, ssus, b, c, d);
-    
-    uout = (ssuspline + su1spline * su2spline) * uspline_pos;
+
+    if (id1 == id2) {
+        uout = (su1spline * su2spline - su1spline) * uspline_pos;
+    }
+    else {
+        uout = su1spline * su2spline * uspline_pos;
+    }
     uout = uout / us[did1] / us[did2];
-    
     return(uout);
 }
 
