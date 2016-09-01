@@ -2,7 +2,7 @@ function example_jakstat_adjoint_hvp()
     
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint_hvp.m'));
-    amiwrap('model_jakstat_adjoint_hvp','model_jakstat_adjoint_hvp_syms',exdir,2)
+    % amiwrap('model_jakstat_adjoint_hvp','model_jakstat_adjoint_hvp_syms',exdir,2)
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     
     D.t = num(:,1);
@@ -87,6 +87,7 @@ function example_jakstat_adjoint_hvp()
     end
     t3 = toc;
     
+%     % Printed output
 %     hvpasa = hvpasa / runs;
 %     hvptable = [hvp, hvp_f, hvp_b, hvpasa, abs(hvpasa - hvp) ./ hvp, abs(hvpasa - hvp) ./ hvpasa];
 %     fprintf('Time elapsed for %i ODE solves (no sensis): %12.7f \n\n', runs, t0);

@@ -41,6 +41,9 @@ for ifun = this.funs
             fprintf(fid,'#undef dzdp\n');
             fprintf(fid,'#undef dzdx\n');
             fprintf(fid,'#undef dx\n');
+            fprintf(fid,'#undef sigma_y\n');
+            fprintf(fid,'#undef sigma_z\n');
+            fprintf(fid,'#undef dsigma_ydp\n');
             fprintf(fid,'#undef dsigma_zdp\n');
         end
         if(strcmp(ifun{1},'JBand'))

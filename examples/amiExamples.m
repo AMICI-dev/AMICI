@@ -8,5 +8,5 @@ example_jakstat_adjoint
 example_steadystate
 example_nested_events
 example_adjoint_hessian
-example_dirac_hessVecProd
-
+example_dirac_adjoint_hessVecProd
+example_jakstat_adjoint_hvp

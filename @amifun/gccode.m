@@ -72,7 +72,9 @@ function this = gccode(this,model,fid)
         if (model.splineflag)
             if (strfind(symstr, 'spline'))
                 % The floating numbers after 't' must be converted to integers
-                cstr = regexprep(cstr, 't\,\w+\.\w+\,', ['t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(spline|spline_pos)\(t\,\w+\.\w+\,', ['$1\(t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,t\,\w+\.\w+\,', ['$1\($2\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
             end
         end
         
@@ -151,7 +153,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
                 cstr = regexprep(cstr,'dydp_([0-9]+)',['dydp\[$1+ip*' num2str(model.ny) ']']);
                 cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');            
-                cstr = regexprep(cstr,'sdy_([0-9]+)','sd_y\[$1\]');
+                cstr = regexprep(cstr,'sigma_y_([0-9]+)','sigma_y\[$1\]');
                 cstr = regexprep(cstr,'dsdydp\[([0-9]*)\]','dsigma_ydp\[$1\]');
                 if(strcmp(this.cvar,'sJy'))
                     cstr = regexprep(cstr,'sy_([0-9]+)','sy\[$1\]');
@@ -168,7 +170,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'dzdp_([0-9]+)',['dzdp\[$1+ip*' num2str(model.nz) ']']);
                 cstr = regexprep(cstr,'mz_([0-9]+)','mz\[nroots[ie]+nmaxevent*$1]');
                 cstr = regexprep(cstr,'sz_([0-9]+)',['sz\[nroots[ie]+nmaxevent*\($1+ip*' num2str(model.nz) '\)\]']);
-                cstr = regexprep(cstr,'sdz_([0-9]+)','sd_z\[$1\]');
+                cstr = regexprep(cstr,'sigma_z_([0-9]+)','sigma_z\[$1\]');
                 cstr = regexprep(cstr,'dsdzdp\[([0-9]*)\]','dsigma_zdp\[$1\]');
                 cstr = regexprep(cstr,'z_([0-9]+)','z\[nroots[ie]+nmaxevent*$1\]');
                 cstr = strrep(cstr,'=','+=');

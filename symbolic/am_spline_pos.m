@@ -8,18 +8,18 @@ function splinefun = am_spline_pos(varargin)
         if (i < n)
             switch class(varargin{i})
                 case 'sym'
-                    str = strcat(strcat(str, char(varargin{i})), ',');
+                    str = strcat(strcat(str, char(vpa(varargin{i}))), ',');
                 case 'double'
-                    str = strcat(strcat(str, num2str(varargin{i})), ',');
+                    str = strcat(strcat(str, char(vpa(sym(varargin{i}))), ','));
                 otherwise
                     error(['Input argument ' num2str(i) ' of the splinefunction seems to be neither a symbolic nor a double. Please check, if it is correctly defined.']);
             end
         else
             switch class(varargin{i})
                 case 'sym'
-                    str = strcat(str, char(varargin{i}));
+                    str = strcat(str, char(vpa(varargin{i})));
                 case 'double'
-                    str = strcat(str, num2str(varargin{i}));
+                    str = strcat(str, char(vpa(sym(varargin{i}))));
                 otherwise
                     error(['Input argument ' num2str(i) ' of the splinefunction seems to be neither a symbolic nor a double. Please check, if it is correctly defined.']);
             end
@@ -28,9 +28,6 @@ function splinefun = am_spline_pos(varargin)
     end
     str = strcat('(',strcat(strcat(str, char(varargin{n})), ')'));
     str = strrep(str, ' ', '');
-    str = regexprep(str,'\,([0-9]*)\,','\,$1\.0\,'); % Black magic of sym
-    str = regexprep(str,'\,([0-9]*)\,','\,$1\.0\,'); % Black magic of sym
-    str = regexprep(str,'\,([0-9]*)\))','\,$1\.0\)'); % Black magic of sym
     
     splinefun = sym(strcat('am_spline_pos', str));
 end
