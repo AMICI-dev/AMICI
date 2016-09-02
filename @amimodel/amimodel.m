@@ -39,6 +39,8 @@ classdef amimodel < handle
         np = double.empty();
         % number of constants @type int
         nk = double.empty();
+        % number of objective functions @type int
+        ng = double.empty();
         % number of events @type int
         nevent = double.empty();
         % number of event outputs @type int
@@ -157,6 +159,7 @@ classdef amimodel < handle
                     if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
                         AM.nxtrue = AM.nx;
                     end
+                    AM.ng = round(AM.nx / AM.nxtrue);
                     AM.np = length(AM.sym.p);
                     AM.nk = length(AM.sym.k);
                     AM.ny = length(AM.sym.y);

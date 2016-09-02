@@ -1,4 +1,4 @@
-function [model] = model_jakstat_syms()
+function [model] = model_jakstat_adjoint_hvp_syms()
     
     %%
     % STATES
@@ -23,8 +23,8 @@ function [model] = model_jakstat_syms()
     %%
     % INPUT
     syms t
-    % u(1) = spline_pos5(t, 0.0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0.0);
-    u(1) = am_spline_pos(t, 5, 0.0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0.0);
+    u(1) = am_spline_pos(t, 5, 0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0);
+    % u(1) = spline_pos5(t, 0, sp1, 5.0, sp2, 10.0, sp3, 20.0, sp4, 60.0, sp5, 0, 0);
     
     %%
     % SYSTEM EQUATIONS
@@ -45,7 +45,7 @@ function [model] = model_jakstat_syms()
     % INITIAL CONDITIONS
     
     model.sym.x0 = sym(zeros(size(model.sym.x)));
-    
+
     model.sym.x0(1) = init_STAT;
     
     %%
