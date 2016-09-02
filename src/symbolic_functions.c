@@ -102,10 +102,11 @@ double sign(double x) {
  *
  * @param a value1 @type double
  * @param b value2 @type double
+ * @param c bogus parameter do ensure correct parsing as a function @type double
  * @return if(a < b) then a else b @type double
  *
  */
-double am_min(double a, double b) {
+double am_min(double a, double b, double c) {
     return(fmin(a,b));
 }
 
@@ -113,13 +114,14 @@ double am_min(double a, double b) {
  * parameter derivative of c implementation of matlab function min
  *
  * @param id argument index for differentiation
- * @param a bool1 @type double
- * @param b bool2 @type double
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @param c bogus parameter do ensure correct parsing as a function @type double
  * @return id == 1:  if(a < b) then 1 else 0 @type double
  * @return id == 2:  if(a < b) then 0 else 1 @type double
  *
  */
-double Dam_min(int id,double a, double b) {
+double Dam_min(int id,double a, double b, double c) {
     if (id == 1) {
         if (a < b) {
             return(1);
@@ -140,10 +142,11 @@ double Dam_min(int id,double a, double b) {
  *
  * @param a value1 @type double
  * @param b value2 @type double
+ * @param c bogus parameter do ensure correct parsing as a function @type double
  * @return if(a > b) then a else b @type double
  *
  */
-double am_max(double a, double b) {
+double am_max(double a, double b, double c) {
     return(fmax(a,b));
 }
 
@@ -151,13 +154,14 @@ double am_max(double a, double b) {
  * parameter derivative of c implementation of matlab function max
  *
  * @param id argument index for differentiation
- * @param a bool1 @type double
- * @param b bool2 @type double
+ * @param a value1 @type double
+ * @param b value2 @type double
+ * @param c bogus parameter do ensure correct parsing as a function @type double
  * @return id == 1:  if(a > b) then 1 else 0 @type double
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
  */
-double Dam_max(int id,double a, double b) {
+double Dam_max(int id,double a, double b, double c) {
     if (id == 1) {
         if (a > b) {
             return(1);

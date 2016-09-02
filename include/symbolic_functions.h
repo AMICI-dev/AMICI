@@ -7,10 +7,10 @@
 double amilog(double x);
 double heaviside(double x);
 
-double am_min(double a, double b);
-double Dam_min(int id,double a, double b);
-double am_max(double a, double b);
-double Dam_max(int id,double a, double b);
+double am_min(double a, double b, double c);
+double Dam_min(int id,double a, double b, double c);
+double am_max(double a, double b, double c);
+double Dam_max(int id,double a, double b, double c);
 
 /* sign */
 double sign(double x);

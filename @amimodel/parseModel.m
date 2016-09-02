@@ -82,13 +82,13 @@ function parseModel(this)
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
-    funs = {'xdot','w','dwdx','dwdp','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','dJydx','dJydp','sJy','Jz','dJzdx','dJzdp','sJz'};
+    funs = {'xdot','w','dwdx','dwdp','J','x0','Jv','JBand','JSparse','y','z','deltax','dydp','dxdotdp','root','Jy','Jz','sigma_y','sigma_z'};
     
     if(this.forward)
-        funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot'};
+        funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot','sJy','sJz'};
     end
     if(this.adjoint)
-        funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','sigma_y','sigma_z','dsigma_ydp','dsigma_zdp','sx0'};
+        funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydx','dJydp','dJzdx','dJzdp'};
     end
     if(this.o2flag)
         funs = {funs{:},'s2root'};
@@ -102,7 +102,8 @@ function parseModel(this)
     
     this.funs = funs;
     
-    this.mfuns = {'J','dxdotdp'};
+    %this.mfuns = {'J','dxdotdp'};
+    this.mfuns = {};
     
     % compute symbolic expressions
     for ifun = 1:length(funs)

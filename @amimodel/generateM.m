@@ -377,6 +377,7 @@ switch(this.param)
         fprintf(fid,'    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
         fprintf(fid,'    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
         fprintf(fid,'    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
+        fprintf(fid,'    sol.srz = bsxfun(@times,sol.srz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
         fprintf(fid,'    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
         fprintf(fid,'    sol.ssigmaz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
     case 'log10'
@@ -384,6 +385,7 @@ switch(this.param)
         fprintf(fid,'    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
         fprintf(fid,'    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
         fprintf(fid,'    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
+        fprintf(fid,'    sol.srz = bsxfun(@times,sol.srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
         fprintf(fid,'    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
         fprintf(fid,'    sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
     otherwise
@@ -581,6 +583,7 @@ fclose(fid);
 
 for fun = this.mfuns
     if(isfield(this.fun,fun{1}))
+        fprintf([fun{1} ' | ']);
         this.fun.(fun{1}).writeMcode(this);
     end
 end

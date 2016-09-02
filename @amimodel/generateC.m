@@ -458,6 +458,7 @@ for iffun = ffuns
             % they should act as placeholders
             fprintf(fid,'                    return(0);\n');
         else
+            fprintf(fid,['                    mexWarnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");\n']);
             fprintf(fid,'                    return(-1);\n');
         end
     end
