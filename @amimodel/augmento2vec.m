@@ -51,6 +51,7 @@ function [modelo2vec] = augmento2vec(this)
         end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
+        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym),this.fun.sx.sym*vec,sv);
         bolusnew = [this.event(ievent).bolus;tmp*vec];
         % replace sx by augmented x
         bolusnew(this.nxtrue+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue+(1:this.nxtrue)), this.fun.sx.sym(:,1),sv);
@@ -64,9 +65,9 @@ function [modelo2vec] = augmento2vec(this)
     this.getFun([],'dsigma_ydp');
     this.getFun([],'y');
     this.getFun([],'dydp');
-    SJy = jacobian(this.sym.Jy,this.sym.p) ...
-        + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
-        + jacobian(this.sym.Jy,this.fun.y.strsym)*this.fun.dydp.sym;
+    SJy = (jacobian(this.sym.Jy,this.sym.p) ...
+        + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym) ...
+        * vec + jacobian(this.sym.Jy,this.fun.y.strsym)*Sy;
     this.getFun([],'dsigma_zdp');
     this.getFun([],'z');
     
@@ -74,8 +75,12 @@ function [modelo2vec] = augmento2vec(this)
     SJz = jacobian(this.sym.Jz,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
         SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-            + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+              + jacobian(this.sym.Jz,this.fun.z.strsym)*Sz;
     end
+
+    % augment sigmas
+    this.getFun([],'sigma_y');
+    this.getFun([],'sigma_z');
     
     S0 = jacobian(this.sym.x0,this.sym.p)*vec;
     
@@ -84,10 +89,12 @@ function [modelo2vec] = augmento2vec(this)
     augmodel.sym.f = augmodel.sym.xdot;
     augmodel.sym.y = [this.sym.y;Sy];
     augmodel.sym.x0 = [this.sym.x0;S0];
-    augmodel.sym.Jy = [this.sym.Jy;SJy*vec];
-    augmodel.sym.Jz = [this.sym.Jz;SJz*vec];
+    augmodel.sym.Jy = [this.sym.Jy,SJy];
+    augmodel.sym.Jz = [this.sym.Jz,SJz*vec];
     augmodel.sym.k = [this.sym.k;vec];
     augmodel.sym.p = this.sym.p;
+    augmodel.sym.sigma_y = [this.sym.sigma_y, transpose(this.fun.dsigma_ydp.sym * vec)];
+    augmodel.sym.sigma_z = [this.sym.sigma_z, transpose(this.fun.dsigma_zdp.sym * vec)];
     
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
     modelo2vec.o2flag = 2;

@@ -22,15 +22,35 @@ function this = gccode(this,model,fid)
             this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
         end
 
-        if(model.splineflag)
-            for nodes = [3,4,5,10]
-                for ideriv = 1:nodes
-                    this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline_pos' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline_pos' num2str(nodes)]));
-                    this.sym = subs(this.sym,sym(['D([' num2str(ideriv*2+1) '], spline' num2str(nodes) ')']),sym(['D' num2str(ideriv*2+1) 'spline' num2str(nodes)]));
+        % If we have spline, we need to parse them to get derivatives
+        if (model.splineflag)
+            symstr = char(this.sym);
+            if (strfind(symstr, 'spline'))
+                tokens = regexp(symstr, 't\,\s(\w+\.\w+)\,', 'tokens');
+                nNodes = round(str2double(tokens{1}));
+            end
+            if (regexp(symstr, 'D\(\[(\w+|\w+\,\w+)\]\,.am_spline'))
+                isDSpline = true;
+            else
+                isDSpline = false;
+            end
+            
+            if (isDSpline)
+                [~, nCol] = size(this.sym);
+                for iCol = 1 : nCol
+                    for iNode = 1 : nNodes
+                        if (model.o2flag)
+                            for jNode = 1:nNodes
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline_pos']));
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline']));
+                            end
+                        end
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'am_spline_pos']));
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'am_spline']));
+                    end
                 end
             end
-        end
-        
+        end        
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
@@ -46,8 +66,17 @@ function this = gccode(this,model,fid)
         cstr = strrep(cstr,'log','amilog');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
-        cstr = regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,');
+        cstr = regexprep(regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,'),'DD([0-9]*)([\w]*)\(','DD$2\($1,');
+        cstr = strrep(strrep(cstr, 'DDam_spline', 'am_DDspline'), 'Dam_spline', 'am_Dspline');
         
+        if (model.splineflag)
+            if (strfind(symstr, 'spline'))
+                % The floating numbers after 't' must be converted to integers
+                cstr = regexprep(cstr, '(spline|spline_pos)\(t\,\w+\.\w+\,', ['$1\(t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,t\,\w+\.\w+\,', ['$1\($2\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
+            end
+        end
         
         if(numel(cstr)>1)
             
@@ -83,7 +112,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'xdotdp([0-9]+)',['xdotdp\[$1 + ip*' num2str(model.nx) '\]']);
             
             if(strcmp(this.cvar,'qBdot'))
-                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip]');
+                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip+np*$1]');
             elseif(strcmp(this.cvar,'stau'))
                 cstr = regexprep(cstr,'stau\[([0-9]*)\]','stau\[ip]');
             elseif(strcmp(this.cvar,'y'))
@@ -124,7 +153,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
                 cstr = regexprep(cstr,'dydp_([0-9]+)',['dydp\[$1+ip*' num2str(model.ny) ']']);
                 cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');            
-                cstr = regexprep(cstr,'sdy_([0-9]+)','sd_y\[$1\]');
+                cstr = regexprep(cstr,'sigma_y_([0-9]+)','sigma_y\[$1\]');
                 cstr = regexprep(cstr,'dsdydp\[([0-9]*)\]','dsigma_ydp\[$1\]');
                 if(strcmp(this.cvar,'sJy'))
                     cstr = regexprep(cstr,'sy_([0-9]+)','sy\[$1\]');
@@ -141,7 +170,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'dzdp_([0-9]+)',['dzdp\[$1+ip*' num2str(model.nz) ']']);
                 cstr = regexprep(cstr,'mz_([0-9]+)','mz\[nroots[ie]+nmaxevent*$1]');
                 cstr = regexprep(cstr,'sz_([0-9]+)',['sz\[nroots[ie]+nmaxevent*\($1+ip*' num2str(model.nz) '\)\]']);
-                cstr = regexprep(cstr,'sdz_([0-9]+)','sd_z\[$1\]');
+                cstr = regexprep(cstr,'sigma_z_([0-9]+)','sigma_z\[$1\]');
                 cstr = regexprep(cstr,'dsdzdp\[([0-9]*)\]','dsigma_zdp\[$1\]');
                 cstr = regexprep(cstr,'z_([0-9]+)','z\[nroots[ie]+nmaxevent*$1\]');
                 cstr = strrep(cstr,'=','+=');
