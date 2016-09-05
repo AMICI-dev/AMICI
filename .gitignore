@@ -49,32 +49,6 @@ index.html
 
 AMICI.mlappinstall
 
-examples/example_1/simulate_model_example_1.m
-
-examples/example_2/simulate_model_example_2.m
-
-examples/example_3/simulate_model_example_3.m
-
-examples/example_4/simulate_model_example_4.m
-
-examples/example_5/simulate_model_example_5.m
-
-examples/example_6/simulate_model_example_6.m
-
-examples/geneExpression/simulate_geneExpression.m
-
-examples/example_1/html/*
-
-examples/example_2/html/*
-
-examples/example_3/html/*
-
-examples/example_4/html/*
-
-examples/example_5/html/*
-
-examples/example_6/html/*
-
 *.mat
 
 mtoc/makeExampleDoc.m
@@ -170,3 +144,9 @@ examples/example_dirac_adjoint/dxdotdp_model_dirac_adjoint.m
 examples/example_adjoint/J_model_adjoint.m
 
 examples/example_adjoint/dxdotdp_model_adjoint.m
+
+examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m
+
+examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecProd.m
+
+examples/example_adjoint_hessian/simulate_model_adjoint_hessian.m

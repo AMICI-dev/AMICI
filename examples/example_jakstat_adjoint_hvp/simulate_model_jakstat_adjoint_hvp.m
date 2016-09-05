@@ -1,6 +1,7 @@
 % simulate_model_jakstat_adjoint_hvp.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
+%   this routine was generated using AMICI commit 8e3f5d50faeacd3f16d95839fea1182ef5417611 in branch stable in repo https://github.com/FFroehlich/AMICI.
 %
 % USAGE:
 % ======
@@ -71,8 +72,8 @@
 %        1: Hermite (DEFAULT for problems without discontinuities)
 %        2: Polynomial (DEFAULT for problems with discontinuities)
 %    .ordering   ... online state reordering.
-%        0: AMD reordering
-%        1: COLAMD reordering (default)
+%        0: AMD reordering (default)
+%        1: COLAMD reordering
 %        2: natural reordering
 %
 % Outputs:
@@ -226,6 +227,7 @@ if(options_ami.sensi==1)
     sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+    sol.srz = bsxfun(@times,sol.srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
     sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
 end
