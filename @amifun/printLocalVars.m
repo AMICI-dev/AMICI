@@ -46,7 +46,7 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xBdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'qBdot'
-            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np);\n');
+            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np*ng);\n');
         case 'x0'
             fprintf(fid,['memset(x0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'dx0'
@@ -112,7 +112,7 @@ function printLocalVars(this,model,fid)
         case 'deltaxB'
             fprintf(fid,['memset(deltaxB,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaqB'
-            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*np);\n']);
+            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*np*ng);\n']);
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'

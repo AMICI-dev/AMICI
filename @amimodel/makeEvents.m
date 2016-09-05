@@ -200,7 +200,7 @@ if(nevent>0)
             trigger{ievent} = sym(symchar);
         end
     end
-
+    
     % update to prevent dirac functions.
     for ievent = 1:nevent
         dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
@@ -244,13 +244,12 @@ if(nevent>0)
     
     % update events
     for ievent = 1:nevent
-        this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
-        % do not add a (:) after z{ievent} this will transform an
-        % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
-        % zero entry if we apply [this.event.z]
-        this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
+            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
+            % do not add a (:) after z{ievent} this will transform an
+            % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
+            % zero entry if we apply [this.event.z]
+            this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
     end
-    
 end
 
 if(~isfield(this.sym,'sigma_z'))
@@ -263,7 +262,7 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(0);
     for iz = 1:length([this.event.z])
-        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sdz_' num2str(iz) '^2) + ((z_' num2str(iz) '-mz_' num2str(iz) ')/sdz_' num2str(iz) ')^2']);
+        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz) '^2) + ((z_' num2str(iz) '-mz_' num2str(iz) ')/sigma_z_' num2str(iz) ')^2']);
     end
 end
 
