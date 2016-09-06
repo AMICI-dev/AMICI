@@ -1710,10 +1710,11 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
-/* Not clear to me, if something should be different here: rather not... */
-            N_VScale(1.0,x,x_disc[*iroot]);
-            N_VScale(1.0,xdot,xdot_disc[*iroot]);
-            N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
+            if (*iroot<nmaxevent*ne) {
+                N_VScale(1.0,x,x_disc[*iroot]);
+                N_VScale(1.0,xdot,xdot_disc[*iroot]);
+                N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
+            }
         }
     }
     
