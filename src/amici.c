@@ -1289,10 +1289,9 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
-
-/* See, if you need to change something here. Not clear to me yet... */       
+    
     for (iz=0; iz<nztrue; iz++) {
-        if( z2event[iz] == ie ){
+        if( z2event[iz]-1 == ie ){
             if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 *status = fdzdp(t,ie,dzdp,x,udata);
                 if (*status != AMI_SUCCESS) return;
@@ -1316,8 +1315,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
-                fdJydp(z2event[iz],iz,drdp,zdata,x,dzdp,my,sigma_z,dsigma_zdp,udata);
-                fdJydx(z2event[iz],iz,drdx,zdata,x,dzdx,my,sigma_z,udata);
+                fdJzdp(z2event[iz]-1,iz,drdp,zdata,x,dzdp,my,sigma_z,dsigma_zdp,udata);
+                fdJzdx(z2event[iz]-1,iz,drdx,zdata,x,dzdx,my,sigma_z,udata);
             }
         }
     }
@@ -1391,7 +1390,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     tdata = (TempData) temp_data;
     
     for (iz=0; iz<nztrue; iz++) {
-        if(z2event[iz] == ie) {
+        if(z2event[iz]-1 == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 
@@ -1441,7 +1440,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                 if (*status != AMI_SUCCESS) return;
                 
                 for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz] == ie) {
+                    if(z2event[iz]-1 == ie) {
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
                         if (*status != AMI_SUCCESS) return;
                     }
