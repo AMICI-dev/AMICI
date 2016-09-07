@@ -2003,7 +2003,7 @@ void initHeaviside(int *status, void  *user_data, void *temp_data) {
     froot(t,x,dx,rootvals,user_data);
     
     for (ie = 0; ie<ne; ie++) {
-        if (rootvals[ie]<0) {
+        if (rootvals[ie]<=0) {
             h[ie] = 0.0;
         } else {
             h[ie] = 1.0;
