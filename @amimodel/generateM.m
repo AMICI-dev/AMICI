@@ -138,7 +138,7 @@ fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cv
     '%% sol.llh ... likelihood value\n'...
     '%% sol.chi2 ... chi2 value\n'...
     '%% sol.sllh ... gradient of likelihood\n'...
-    '%% sol.s2llh ... hessian of likelihood\n'...
+    '%% sol.s2llh ... hessian or hessian-vector-product of likelihood\n'...
     '%% sol.x ... time-resolved state vector\n'...
     '%% sol.y ... time-resolved output vector\n'...
     '%% sol.sx ... time-resolved state sensitivity vector\n'...
@@ -329,6 +329,7 @@ if(o2flag == 2)
     fprintf(fid,'end\n');
 end
 
+fprintf(fid,'init = struct();\n');
 fprintf(fid,'if(~isempty(options_ami.x0))\n');
 fprintf(fid,'    if(size(options_ami.x0,2)~=1)\n');
 fprintf(fid,'        error(''x0 field must be a row vector!'');\n');
@@ -336,14 +337,8 @@ fprintf(fid,'    end\n');
 fprintf(fid,'    if(size(options_ami.x0,1)~=nxfull)\n');
 fprintf(fid,'        error(''Number of columns in x0 field does not agree with number of states!'');\n');
 fprintf(fid,'    end\n');
-switch(this.param)
-    case 'log'
-        fprintf(fid,'    options_ami.x0 = exp(options_ami.x0);\n');
-    case 'log10'
-        fprintf(fid,'    options_ami.x0 = 10.^(options_ami.x0);\n');
-end
+fprintf(fid,'    init.x0 = options_ami.x0;\n');
 fprintf(fid,'end\n');
-
 fprintf(fid,'if(~isempty(options_ami.sx0))\n');
 fprintf(fid,'    if(size(options_ami.sx0,2)~=np)\n');
 fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n');
@@ -351,22 +346,22 @@ fprintf(fid,'    end\n');
 fprintf(fid,'    if(size(options_ami.sx0,1)~=nxfull)\n');
 fprintf(fid,'        error(''Number of columns in sx0 field does not agree with number of states!'');\n');
 fprintf(fid,'    end\n');
-fprintf(fid,'    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor,[2,1]));\n');
+fprintf(fid,'    init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor,[2,1]));\n');
 fprintf(fid,'end\n');
 
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
         case 2
-            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
     end
     fprintf(fid,'end\n');
 else
-    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
 end
 fprintf(fid,'if(options_ami.sensi==1)\n');
 switch(this.param)

@@ -174,27 +174,6 @@ UserData setupUserData(const mxArray *prhs[]) {
     readOptionScalar(sensi_meth,int)
     readOptionScalar(ordering,int)
     
-  
-    if(mxGetProperty(prhs[3], 0 ,"x0")) { x0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"x0"));} else { }
-    if ((mxGetM(mxGetProperty(prhs[3], 0 ,"x0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"x0")))>0) {
-        /* check dimensions */
-        if(mxGetN(mxGetProperty(prhs[3], 0 ,"x0")) != 1) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
-        if(mxGetM(mxGetProperty(prhs[3], 0 ,"x0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
-        b_x0 = TRUE;
-    } else {
-        b_x0 = FALSE;
-    }
-    
-    if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
-    if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
-        /* check dimensions */
-        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
-        b_sx0 = TRUE;
-    } else {
-        b_sx0 = FALSE;
-    }
-    
     
     /* pbar */
     if (!prhs[5]) {
@@ -209,6 +188,41 @@ UserData setupUserData(const mxArray *prhs[]) {
     }
     
     xbar = mxGetPr(prhs[6]);
+    
+    /* Check, if initial states and sensitivities are passed by user or must be calculated */
+    if (!prhs[7]) {
+        b_x0 = FALSE;
+        b_sx0 = FALSE;
+    } else {
+        if(mxGetField(prhs[7], 0 ,"x0")) {
+            x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
+            if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
+                /* check dimensions */
+                if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
+                b_x0 = TRUE;
+            } else {
+                b_x0 = FALSE;
+            }
+        } else {
+            b_x0 = FALSE;
+        }
+        
+        if(mxGetField(prhs[7], 0 ,"sx0")) {
+            sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
+            if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
+                /* check dimensions */
+                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+                b_sx0 = TRUE;
+            } else {
+                b_sx0 = FALSE;
+            }
+        } else {
+            b_sx0 = FALSE;
+        }
+    }
+    
     
     if (nx>0) {
         /* initialise temporary jacobian storage */
@@ -225,7 +239,6 @@ UserData setupUserData(const mxArray *prhs[]) {
         stau_tmp = mxMalloc(np*sizeof(realtype));
     }
     
-
     w_tmp = mxMalloc(nw*sizeof(realtype));
     dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
     dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
@@ -420,36 +433,36 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     edata = (ExpData) mxMalloc(sizeof *edata);
     if (edata == NULL) return(NULL);
     
-    if (!prhs[7]) {
+    if (!prhs[8]) {
         mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
     }
-    if (mxGetProperty(prhs[7], 0 ,"Y")) {
-        my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
-        nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
-        nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
+    if (mxGetProperty(prhs[8], 0 ,"Y")) {
+        my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
+        nmyy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Y"));
+        nmyt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Y"));
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
     }
     
-    if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
-        ysigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
-        nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
-        nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
+    if (mxGetProperty(prhs[8], 0 ,"Sigma_Y")) {
+        ysigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
+        nysigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
+        nysigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
     }
-    if (mxGetProperty(prhs[7], 0 ,"Z")) {
-        mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
-        nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
-        nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
+    if (mxGetProperty(prhs[8], 0 ,"Z")) {
+        mz = mxGetPr(mxGetProperty(prhs[8], 0 ,"Z"));
+        nmzy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Z"));
+        nmzt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Z"));
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
     }
     
-    if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
-        zsigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
-        nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
-        nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
+    if (mxGetProperty(prhs[8], 0 ,"Sigma_Z")) {
+        zsigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
+        nzsigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
+        nzsigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
     }
