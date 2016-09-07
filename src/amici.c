@@ -174,6 +174,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     readOptionScalar(sensi_meth,int)
     readOptionScalar(ordering,int)
     
+  
     if(mxGetProperty(prhs[3], 0 ,"x0")) { x0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"x0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"x0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"x0")))>0) {
         /* check dimensions */
@@ -193,7 +194,6 @@ UserData setupUserData(const mxArray *prhs[]) {
     } else {
         b_sx0 = FALSE;
     }
-    
     
     
     /* pbar */
