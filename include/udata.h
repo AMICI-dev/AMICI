@@ -54,6 +54,8 @@
 #define ubw udata->am_ubw
 #define lbw udata->am_lbw
 
+#define b_x0 udata->am_bx0
+#define x0data udata->am_x0data
 #define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 
@@ -178,11 +180,20 @@ typedef struct {
     /** lower bandwith of the jacobian */
     int am_lbw;
     
+    /** flag for state initialisation */
+    /*!
+     * flag which determines whether analytic state initialisation or provided initialisation should be used
+     */
+    booleantype am_bx0;
+    
     /** flag for sensitivity initialisation */
     /*!
      * flag which determines whether analytic sensitivities initialisation or provided initialisation should be used
      */
     booleantype am_bsx0;
+    
+    /** state initialisation */
+    double *am_x0data;
     
     /** sensitivity initialisation */
     double *am_sx0data;

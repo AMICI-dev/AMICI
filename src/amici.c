@@ -174,6 +174,16 @@ UserData setupUserData(const mxArray *prhs[]) {
     readOptionScalar(sensi_meth,int)
     readOptionScalar(ordering,int)
     
+    if(mxGetProperty(prhs[3], 0 ,"x0")) { x0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"x0"));} else { }
+    if ((mxGetM(mxGetProperty(prhs[3], 0 ,"x0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"x0")))>0) {
+        /* check dimensions */
+        if(mxGetN(mxGetProperty(prhs[3], 0 ,"x0")) != 1) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
+        if(mxGetM(mxGetProperty(prhs[3], 0 ,"x0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
+        b_x0 = TRUE;
+    } else {
+        b_x0 = FALSE;
+    }
+    
     if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
         /* check dimensions */
@@ -556,10 +566,16 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         
         
         /* initialise states */
-        
         if (x == NULL) return(NULL);
-        *status = fx0(x, udata);
-        if (*status != AMI_SUCCESS) return(NULL);
+        if(!b_x0) {
+            *status = fx0(x, udata);
+            if (*status != AMI_SUCCESS) return(NULL);
+        } else {
+            x_tmp = NV_DATA_S(x);
+            for (ix=0; ix<nx; ix++) {
+                x_tmp[ix] = x0data[ix];
+            }
+        }
         *status = fdx0(x, dx, udata); /* only needed for idas */
         if (*status != AMI_SUCCESS) return(NULL);
         
