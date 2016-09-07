@@ -1315,8 +1315,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
-                fdJzdp(z2event[iz]-1,iz,drdp,zdata,x,dzdp,my,sigma_z,dsigma_zdp,udata);
-                fdJzdx(z2event[iz]-1,iz,drdx,zdata,x,dzdx,my,sigma_z,udata);
+                fdJzdp(t,ie,drdp,zdata,x,dzdp,mz,sigma_z,dsigma_zdp,udata,tdata);
+                fdJzdx(t,ie,drdx,zdata,x,dzdx,mz,sigma_z,udata,tdata);
             }
         }
     }
@@ -1834,27 +1834,26 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     for (ie=0; ie<ne; ie++) {
         
         if (rootidx[iroot*ne + ie] != 0) {
+            
             *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
             *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
-
-/* Hier wohl auch ein change nur bis nxtrue... */
+            
             for (ix=0; ix<nx; ix++) {
                 xB_tmp[ix] += deltaxB[ix];
                 if (nz>0) {
                     xB_tmp[ix] += drdx[nroots[ie] + nmaxevent*ix];
                 }
             }
-
-/* Maybe this will need a change */            
+            
             for (ig=0; ig<ng; ig++) {
                 for (ip=0; ip<np; ip++) {
                     xQB_tmp[ig*np+ip] += deltaqB[ig*np+ip];
                 }
             }
-            nroots[ie]--;
             
+            nroots[ie]--;
         }
     }
     

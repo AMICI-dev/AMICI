@@ -262,7 +262,7 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(0);
     for iz = 1:length([this.event.z])
-        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz) '^2) + ((z_' num2str(iz) '-mz_' num2str(iz) ')/sigma_z_' num2str(iz) ')^2']);
+        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
 

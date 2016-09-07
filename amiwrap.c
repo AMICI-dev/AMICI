@@ -255,7 +255,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         
                         xQB_tmp = NV_DATA_S(xQB);
                         
-    /* Does this need one more parameter loop around? */
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < np; ip++) {
                                 if (ig==0) {
@@ -277,7 +276,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 }
                             }
                         }
-/* ... to here, there may be changes necessary... */
                         
                     } else {
                         for(ig=0; ig<ng; ig++) {
@@ -308,12 +306,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* evaluate likelihood */
     
     *llhdata = - g[0] - r[0];
-    /*
-    if (ng>1) {
-        *llhdata = - *g - *r;
-    } else {
-        *llhdata = - *g - *r;
-    }*/
     
     goto freturn;
     
