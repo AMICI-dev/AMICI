@@ -2163,7 +2163,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
 
 #ifdef AMICI_WITHOUT_MATLAB
 
-void initUserDataFields(UserData* user_data, ReturnData rdata, double *pstatus) {
+void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus) {
     UserData udata; /** user udata */
 
     double *mxstatus;
@@ -2195,6 +2195,11 @@ void initUserDataFields(UserData* user_data, ReturnData rdata, double *pstatus) 
     double *mxdydx;
     double *mxdxdotdp;
     double *mxts;
+
+    llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
+            numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
+            sigmaydata = ssigmaydata = sigmazdata = ssigmazdata = xdotdata = Jdata = dydpdata = dydxdata =
+            dxdotdpdata = tsdata = 0;
 
     size_t dimssx[] = {0,0,0};
     size_t dimssy[] = {0,0,0};
@@ -2506,3 +2511,158 @@ void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, Retu
     }
 }
 
+void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleantype setupBdone, int status) {
+
+    /* Free memory */
+    if(nx>0) {
+        N_VDestroy_Serial(x);
+        N_VDestroy_Serial(dx);
+        N_VDestroy_Serial(xdot);
+        N_VDestroy_Serial(x_old);
+        N_VDestroy_Serial(dx_old);
+        N_VDestroy_Serial(xdot_old);
+        DestroyMat(Jtmp);
+        if (ne>0) {
+            if(ami_mem) free(rootsfound);
+            if(ami_mem) free(rootvals);
+            if(ami_mem) free(rootidx);
+            if(ami_mem)    free(sigma_z);
+            if(ami_mem)    free(nroots);
+            if(ami_mem)    free(discs);
+            if(ami_mem)    free(h);
+
+            if(ami_mem)    free(deltax);
+            if(ami_mem)    free(deltasx);
+            if(ami_mem)    free(deltaxB);
+            if(ami_mem)    free(deltaqB);
+        }
+
+        if(ny>0) {
+            if(sigma_y)    free(sigma_y);
+        }
+        if (sensi >= 1) {
+            if(ami_mem)    free(dydx);
+            if(ami_mem)    free(dydp);
+            if (sensi_meth == AMI_FSA) {
+                N_VDestroyVectorArray_Serial(NVsx,np);
+            }
+            if (sensi_meth == AMI_ASA) {
+                if(status == 0) {
+                    N_VDestroyVectorArray_Serial(NVsx,np);
+                }
+            }
+
+            if (sensi_meth == AMI_FSA) {
+                N_VDestroyVectorArray_Serial(sdx, np);
+            }
+            if (sensi_meth == AMI_ASA) {
+                if(ami_mem)    free(dgdp);
+                if(ami_mem)    free(dgdx);
+                if(ami_mem)    free(drdp);
+                if(ami_mem)    free(drdx);
+                if (ne>0) {
+                    if(ami_mem)    free(dzdp);
+                    if(ami_mem)    free(dzdx);
+                }
+                if(ami_mem)     free(llhS0);
+                if(ami_mem)    free(dsigma_ydp);
+                if (ne>0) {
+                    if(ami_mem)    free(dsigma_zdp);
+                }
+                if(setupBdone)      N_VDestroy_Serial(dxB);
+                if(setupBdone)      N_VDestroy_Serial(xB);
+                if(setupBdone)      N_VDestroy_Serial(xB_old);
+                if(setupBdone)      N_VDestroy_Serial(xQB);
+                if(setupBdone)      N_VDestroy_Serial(xQB_old);
+            }
+
+        }
+        if(ami_mem)     N_VDestroy_Serial(id);
+        if(ami_mem)     AMIFree(&ami_mem);
+    }
+
+    // if(udata)   free(plist);
+//    if (sensi >= 1) {
+//        if(udata)   free(tmp_dxdotdp);
+//    }
+
+    if(tdata)    free(tdata);
+}
+
+ReturnData initReturnData(UserData udata, int *pstatus) {
+    ReturnData rdata; /* returned rdata struct */
+
+    /* Return rdata structure */
+    rdata = (ReturnData) malloc(sizeof *rdata);
+    if (rdata == NULL)
+        return(NULL);
+
+    initUserDataFields(udata, rdata, pstatus);
+
+    return(rdata);
+}
+
+ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus) {
+    TempData tdata; /* temporary data */
+    tdata = (TempData) malloc(sizeof *tdata);
+    if (tdata == NULL) goto freturn;
+
+    void *ami_mem = 0; /* pointer to cvodes memory block */
+    if (nx>0) {
+        ami_mem = setupAMI(pstatus, udata, tdata);
+        if (ami_mem == NULL) goto freturn;
+    }
+
+    ReturnData rdata = initReturnData(udata, pstatus);
+    if (rdata == NULL) goto freturn;
+
+    if (nx>0) {
+        if (edata == NULL) goto freturn;
+    }
+
+    int iroot = 0;
+
+    int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
+    if(problem)
+        goto freturn;
+
+    booleantype setupBdone = false;
+    problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
+    if(problem)
+        goto freturn;
+
+freturn:
+    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
+    freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    return rdata;
+}
+
+void processUserData(UserData udata) {
+    if (nx>0) {
+        /* initialise temporary jacobian storage */
+        tmp_J = NewSparseMat(nx,nx,nnz);
+        M_tmp = malloc(nx*nx*sizeof(realtype));
+        dfdx_tmp = malloc(nx*nx*sizeof(realtype));
+    }
+    if (sensi>0) {
+        /* initialise temporary dxdotdp storage */
+        tmp_dxdotdp = malloc(nx*np*sizeof(realtype));
+    }
+    if (ne>0) {
+        /* initialise temporary stau storage */
+        stau_tmp = malloc(np*sizeof(realtype));
+    }
+
+
+    w_tmp = malloc(nw*sizeof(realtype));
+    dwdx_tmp = malloc(ndwdx*sizeof(realtype));
+    dwdp_tmp = malloc(ndwdp*sizeof(realtype));
+
+
+    udata->am_nan_dxdotdp = FALSE;
+    udata->am_nan_J = FALSE;
+    udata->am_nan_JSparse = FALSE;
+    udata->am_nan_xdot = FALSE;
+    udata->am_nan_xBdot = FALSE;
+    udata->am_nan_qBdot = FALSE;
+}
