@@ -24,6 +24,7 @@
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
@@ -66,8 +67,16 @@ void fillArray(double *destination, int count, double value) {
         destination[i] = value;
 }
 
+double sum(double const *array, int numElements) {
+    double sum = 0;
+    for(int i = 0; i < numElements; ++i) {
+        sum += array[i];
+    }
+    return sum;
+}
+
 void zeros(double *destination, int count) {
-    fillArray(destination, count, 0);
+    memset(destination, 0, sizeof(double) * count);
 }
 
 void ones(double *destination, int count) {

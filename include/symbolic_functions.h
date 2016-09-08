@@ -18,7 +18,7 @@ double amiGetNaN();
 void ones(double *destination, int count);
 void zeros(double *destination, int count);
 void fillArray(double *destination, int count, double value);
-
+double sum(double const *array, int numElements);
 void linSpace(double *destination, double from, double to, int numValues);
 double *linSpaceAlloc(double from, double to, int numValues);
 void printArray(double const *array, int numElements);
