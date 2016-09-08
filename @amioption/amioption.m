@@ -46,6 +46,8 @@ classdef amioption < hgsetget
         ordering = 0;
         % steady state sensitivity flag
         ss = 0;
+        % custom initial state
+        x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
     end

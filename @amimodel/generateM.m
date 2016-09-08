@@ -67,7 +67,7 @@ fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cv
     '%%           this corresponds to the specification in model.sym.p\n'...
     '%% kappa ... 1 dimensional parameter vector of parameters for which sensitivities are not desired.\n'...
     '%%           this corresponds to the specification in model.sym.k\n'...
-    '%% data ... struct containing the following fields. Can have the following fields '...
+    '%% data ... struct containing the following fields. Can have the following fields\n'...
     '%%     Y ... 2 dimensional matrix containing data.\n'...
     '%%           columns must correspond to observables and rows to time-points\n'...
     '%%     Sigma_Y ... 2 dimensional matrix containing standard deviation of data.\n'...
@@ -83,8 +83,10 @@ fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cv
     '%%    .tstart    ... start of integration. for all timepoints before this, values will be set to initial value.\n'...
     '%%    .sens_ind ... 1 dimensional vector of indexes for which sensitivities must be computed.\n'...
     '%%           default value is 1:length(theta).\n'...
+    '%%    .x0 ... user-provided state initialisation. This should be a vactor of dimension [#states, 1].\n'...
+    '%%        default is state initialisation based on the model definition.\n'...
     '%%    .sx0 ... user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters].\n'...
-    '%%        default is sensitivity initialisation based on the derivative of the state initialisation.'...
+    '%%        default is sensitivity initialisation based on the derivative of the state initialisation.\n'...
     '%%    .lmm    ... linear multistep method for forward problem.\n'...
     '%%        1: Adams-Bashford\n'...
     '%%        2: BDF (DEFAULT)\n'...
@@ -136,7 +138,7 @@ fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cv
     '%% sol.llh ... likelihood value\n'...
     '%% sol.chi2 ... chi2 value\n'...
     '%% sol.sllh ... gradient of likelihood\n'...
-    '%% sol.s2llh ... hessian of likelihood\n'...
+    '%% sol.s2llh ... hessian or hessian-vector-product of likelihood\n'...
     '%% sol.x ... time-resolved state vector\n'...
     '%% sol.y ... time-resolved output vector\n'...
     '%% sol.sx ... time-resolved state sensitivity vector\n'...
@@ -203,22 +205,6 @@ end
 fprintf(fid,'end\n');
 fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
 
-if(o2flag == 2)
-    fprintf(fid,'if(nargin>=6)\n');
-    fprintf(fid,'    v = varargin{6};\n');
-    switch(this.param)
-        case 'log'
-            fprintf(fid,'    v = v(:).*theta(options_ami.sens_ind);\n');
-        case 'log10'
-            fprintf(fid,'    v = v(:).*theta(options_ami.sens_ind)*log(10);\n');
-    end
-    fprintf(fid,'else\n');
-    fprintf(fid,'    if(options_ami.sensi==2)\n');
-    fprintf(fid,'        error(''6th argument (multiplication vector is missing'');\n');
-    fprintf(fid,'    end\n');
-    fprintf(fid,'end\n');
-end
-
 switch (this.param)
     case 'log'
         fprintf(fid, 'chainRuleFactor = theta(options_ami.sens_ind);\n\n');
@@ -226,6 +212,17 @@ switch (this.param)
         fprintf(fid, 'chainRuleFactor = theta(options_ami.sens_ind)*log(10);\n\n');
     otherwise
         fprintf(fid, 'chainRuleFactor = ones(size(options_ami.sens_ind));\n\n');
+end
+
+if(o2flag == 2)
+    fprintf(fid,'if(nargin>=6)\n');
+    fprintf(fid,'    v = varargin{6};\n');
+    fprintf(fid,'    v = v(:).*chainRuleFactor;\n');
+    fprintf(fid,'else\n');
+    fprintf(fid,'    if(options_ami.sensi==2)\n');
+    fprintf(fid,'        error(''6th argument (multiplication vector is missing'');\n');
+    fprintf(fid,'    end\n');
+    fprintf(fid,'end\n');
 end
 
 if(o2flag)
@@ -332,43 +329,39 @@ if(o2flag == 2)
     fprintf(fid,'end\n');
 end
 
-switch(this.param)
-    case 'log'
-        fprintf(fid,'if(~isempty(options_ami.sx0))\n');
-        fprintf(fid,'    if(size(options_ami.sx0,2)~=np)\n');
-        fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n');
-        fprintf(fid,'    end\n');
-        fprintf(fid,'    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./permute(theta(options_ami.sens_ind),[2,1]));\n');
-        fprintf(fid,'end\n');
-    case 'log10'
-        fprintf(fid,'if(~isempty(options_ami.sx0))\n');
-        fprintf(fid,'    if(size(options_ami.sx0,2)~=np)\n');
-        fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n');
-        fprintf(fid,'    end\n');
-        fprintf(fid,'    options_ami.sx0 = bsxfun(@times,options_ami.sx0,1./(permute(theta(options_ami.sens_ind),[2,1])*log(10)));\n');
-        fprintf(fid,'end\n');
-    otherwise
-        fprintf(fid,'if(~isempty(options_ami.sx0))\n');
-        fprintf(fid,'    if(size(options_ami.sx0,2)~=np)\n');
-        fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n');
-        fprintf(fid,'    end\n');
-        fprintf(fid,'    options_ami.sx0 = options_ami.sx0;\n');
-        fprintf(fid,'end\n');
-end
+fprintf(fid,'init = struct();\n');
+fprintf(fid,'if(~isempty(options_ami.x0))\n');
+fprintf(fid,'    if(size(options_ami.x0,2)~=1)\n');
+fprintf(fid,'        error(''x0 field must be a row vector!'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'    if(size(options_ami.x0,1)~=nxfull)\n');
+fprintf(fid,'        error(''Number of columns in x0 field does not agree with number of states!'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'    init.x0 = options_ami.x0;\n');
+fprintf(fid,'end\n');
+fprintf(fid,'if(~isempty(options_ami.sx0))\n');
+fprintf(fid,'    if(size(options_ami.sx0,2)~=np)\n');
+fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of model parameters!'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'    if(size(options_ami.sx0,1)~=nxfull)\n');
+fprintf(fid,'        error(''Number of columns in sx0 field does not agree with number of states!'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'    init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor,[2,1]));\n');
+fprintf(fid,'end\n');
 
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
         case 2
-            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
     end
     fprintf(fid,'end\n');
 else
-    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,data);\n']);
+    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
 end
 fprintf(fid,'if(options_ami.sensi==1)\n');
 switch(this.param)
