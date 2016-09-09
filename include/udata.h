@@ -12,6 +12,7 @@
 #define ny udata->am_ny
 #define nytrue udata->am_nytrue
 #define nx udata->am_nx
+#define nxtrue udata->am_nxtrue
 #define nz udata->am_nz
 #define nztrue udata->am_nztrue
 #define ne udata->am_ne
@@ -21,6 +22,7 @@
 #define ndwdp udata->am_ndwdp
 #define nnz udata->am_nnz
 #define nmaxevent udata->am_nmaxevent
+#define ng udata->am_ng
 
 #define p udata->am_p
 #define k udata->am_k
@@ -87,6 +89,8 @@ typedef struct {
     int    am_nytrue;
     /** number of states */
     int    am_nx;
+    /** number of states in the unaugmented system */
+    int    am_nxtrue;
     /** number of event outputs */
     int    am_nz;
     /** number of event outputs in the unaugmented system */
@@ -95,6 +99,8 @@ typedef struct {
     int    am_ne;
     /** number of timepoints */
     int    am_nt;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    int    am_ng;    
     /** number of common expressions */
     int    am_nw;
     /** number of derivatives of common expressions wrt x */

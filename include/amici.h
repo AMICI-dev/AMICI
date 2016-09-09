@@ -42,12 +42,6 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus);
 ExpData setupExpData(const mxArray *prhs[], void *user_data);
 #endif
 
-#ifdef AMICI_WITHOUT_MATLAB
-int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* _status, void *ami_mem, int* iroot);
-int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone);
-void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus);
-#endif
-
 void *setupAMI(int *status, void *user_data, void *temp_data);
 void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data);
 
@@ -81,10 +75,16 @@ void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data)
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
 
+#ifdef AMICI_WITHOUT_MATLAB
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* _status, void *ami_mem, int* iroot);
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone);
+void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus);
+
 ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus);
 void processUserData(UserData udata);
 void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, ReturnData rdata);
 void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleantype setupBdone, int status);
 ReturnData initReturnData(UserData udata, int *pstatus);
+#endif
 
 #endif /* amici_symbolic_functions_h */

@@ -28,7 +28,7 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    int ip, ix,  it; /* integers for indexing in loops */
+    int ip, ix, it, ig; /* integers for indexing in loops */
     int ncheck; /* the number of (internal) checkpoints stored so far */
     
     void *ami_mem; /* pointer to cvodes memory block */
@@ -163,6 +163,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             /* get states only if we actually integrated */
                             status = AMIGetB(ami_mem, which, &t, xB, dxB);
                             if (status != AMI_SUCCESS) goto freturn;
+/* Here, the quadrature of the integrals must be changed, or the change
+ should take part in AMIGetQuadB ... AMIGetQuadB */
                             status = AMIGetQuadB(ami_mem, which, &t, xQB);
                             if (status != AMI_SUCCESS) goto freturn;
                         }
@@ -172,6 +174,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         if(ne>0){
                             if(nmaxevent>0){
                                 if (tnext == discs[iroot]) {
+/* Possibly some change here ... */
                                     handleEventB(&status, iroot, ami_mem, udata, tdata);
                                     iroot--;
                                 }
@@ -181,6 +184,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         /* handle data-point */
                         
                         if (tnext == ts[it]) {
+/* Changes inside or outside? */
                             handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
                             it--;
                         }
@@ -188,6 +192,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         /* reinit states */
                         status = AMIReInitB(ami_mem, which, t, xB, dxB);
                         if (status != AMI_SUCCESS) goto freturn;
+/* Maybe, but probably not, this needs to be changed */
                         status = AMIQuadReInitB(ami_mem, which, xQB);
                         if (status != AMI_SUCCESS) goto freturn;
                         
@@ -203,6 +208,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                 status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
                                 if (status != AMI_SUCCESS) goto freturn;
                                 
+/* Here again, Quadrature needs a slight change, but probably inside... */
                                 status = AMIGetQuadB(ami_mem, which, &t, xQB);
                                 if (status != AMI_SUCCESS) goto freturn;
                                 status = AMIGetB(ami_mem, which, &t, xB, dxB);
@@ -223,37 +229,76 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     if (status != AMI_SUCCESS) goto freturn;
                     
                     if(status == 0) {
-                        
+
+/* From here ... */
                         xB_tmp = NV_DATA_S(xB);
                         
-                        for (ip=0; ip<np; ip++) {
-                            llhS0[ip] = 0.0;
-                            sx_tmp = NV_DATA_S(NVsx[ip]);
-                            for (ix = 0; ix < nx; ix++) {
-                                llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                        for (ig=0; ig<ng; ig++) {
+                            if (ig==0) {
+                                for (ip=0; ip<np; ip++) {
+                                    llhS0[ig*np + ip] = 0.0;
+                                    sx_tmp = NV_DATA_S(NVsx[ip]);
+                                    for (ix = 0; ix < nxtrue; ix++) {
+                                        llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                                    }
+                                }
+                            } else {
+                                for (ip=0; ip<np; ip++) {
+                                    llhS0[ig*np + ip] = 0.0;
+                                    sx_tmp = NV_DATA_S(NVsx[ip]);
+                                    for (ix = 0; ix < nxtrue; ix++) {
+                                        llhS0[ig*np + ip] = llhS0[ig*np + ip] + xB_tmp[ig*nxtrue + ix] * sx_tmp[ix] + xB_tmp[ix] * sx_tmp[ig*nxtrue + ix];
+                                    }
+                                }
                             }
                         }
                         
                         xQB_tmp = NV_DATA_S(xQB);
                         
-                        for(ip=0; ip < np; ip++) {
-                            sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
-                            if (ny>0) {
-                                sllhdata[ip] -= dgdp[ip];
-                            }
-                            if (nz>0) {
-                                sllhdata[ip] -= drdp[ip];
+    /* Does this need one more parameter loop around? */
+                        for(ig=0; ig<ng; ig++) {
+                            for(ip=0; ip < np; ip++) {
+                                if (ig==0) {
+                                    sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                                    if (ny>0) {
+                                        sllhdata[ip] -= dgdp[ip];
+                                    }
+                                    if (nz>0) {
+                                        sllhdata[ip] -= drdp[ip];
+                                    }
+                                } else {
+                                    s2llhdata[(ig-1)*np + ip] = - llhS0[ig*np + ip] - xQB_tmp[ig*np + ip];
+                                    if (ny>0) {
+                                        s2llhdata[(ig-1)*np + ip] -= dgdp[ig*np + ip];
+                                    }
+                                    if (nz>0) {
+                                        s2llhdata[(ig-1)*np + ip] -= drdp[ig*np + ip];
+                                    }
+                                }
                             }
                         }
+/* ... to here, there may be changes necessary... */
                         
                     } else {
-                        for(ip=0; ip < np; ip++) {
-                            sllhdata[ip] = amiGetNaN();
+                        for(ig=0; ig<ng; ig++) {
+                            for(ip=0; ip < np; ip++) {
+                                if (ig==0) {
+                                    sllhdata[ip] = amiGetNaN();
+                                } else {
+                                    s2llhdata[(ig-1)*np + ip] = amiGetNaN();
+                                }
+                            }
                         }
                     }
                 } else {
-                    for(ip=0; ip < np; ip++) {
-                        sllhdata[ip] = amiGetNaN();
+                    for(ig=0; ig<ng; ig++) {
+                        for(ip=0; ip < np; ip++) {
+                            if (ig==0) {
+                                sllhdata[ip] = mxGetNaN();
+                            } else {
+                                s2llhdata[(ig-1)*np + ip] = mxGetNaN();
+                            }
+                        }
                     }
                 }
             }
@@ -262,7 +307,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     /* evaluate likelihood */
     
-    *llhdata = - g - r;
+    *llhdata = - g[0] - r[0];
+    /*
+    if (ng>1) {
+        *llhdata = - *g - *r;
+    } else {
+        *llhdata = - *g - *r;
+    }*/
     
     goto freturn;
     

@@ -330,7 +330,14 @@ function [this,model] = getSyms(this,model)
             this.strsym(idx) = Js;
             
         case 'JB'
-            this.sym=-transpose(model.fun.J.sym);
+            this.sym = sym(zeros(model.nx, model.nx));
+            % Augmentation needs a transposition in the submatrices
+            for ix = 1 : model.ng
+                for jx = 1 : model.ng
+                    this.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue) = ...
+                        -transpose(model.fun.J.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue));
+                end
+            end
             
         case 'dxdotdp'
             if(~isempty(w))
@@ -408,19 +415,43 @@ function [this,model] = getSyms(this,model)
             % transform to symbolic variable
             vs = sym(vs);
             % multiply
-            this.sym = -transpose(model.fun.J.sym)*vs;
+            this.sym = model.fun.JB.sym*vs;
             
         case 'xBdot'
             if(strcmp(model.wtype,'iw'))
                 syms t
                 this.sym = diff(transpose(model.fun.M.sym),t)*model.fun.xB.sym + transpose(model.fun.M.sym)*model.fun.dxB.sym - transpose(model.fun.dfdx.sym)*model.fun.xB.sym;
             else
-                this.sym = -transpose(model.fun.J.sym)*model.fun.xB.sym;
+                % Augmenting the system needs transposition of submatrices
+                % I'm sure, there is a more intelligent solution to it...
+                this.sym = sym(zeros(nx,1));
+                if(model.o2flag)
+                    for ix = 1 : model.ng
+                        for jx = 1 : model.ng
+                            this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) = this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) - ...
+                                transpose(model.fun.J.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue , (jx-1)*model.nxtrue+1 : jx*model.nxtrue)) ...
+                                * model.fun.xB.sym((jx-1)*model.nxtrue+1 : jx*model.nxtrue);
+                        end
+                    end
+                else
+                    this.sym = -transpose(model.fun.J.sym) * model.fun.xB.sym;
+                end
             end
             
         case 'qBdot'
-            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
-            
+            % If we do second order adjoints, we have to augment
+            if (model.nxtrue < nx)
+                this.sym = sym(zeros(model.ng, model.np));
+                this.sym(1,:) = -transpose(model.fun.xB.sym(1:model.nxtrue)) * model.fun.dxdotdp.sym(1:model.nxtrue, :);
+                for ig = 2 : model.ng
+                    this.sym(ig,:) = ...
+                        -transpose(model.fun.xB.sym(1:model.nxtrue)) * model.fun.dxdotdp.sym((ig-1)*model.nxtrue+1 : ig*model.nxtrue, :) ...
+                        -transpose(model.fun.xB.sym((ig-1)*model.nxtrue+1 : ig*model.nxtrue)) * model.fun.dxdotdp.sym(1:model.nxtrue, :);
+                end                    
+            else
+                this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
+            end
+
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);
             this = makeStrSyms(this);
@@ -490,7 +521,7 @@ function [this,model] = getSyms(this,model)
             staus = sym(staus);
             % multiply
             this.strsym = staus;
-            
+                
         case 'deltax'
             if(nevent>0)
                 this.sym = [model.event.bolus];
@@ -513,7 +544,7 @@ function [this,model] = getSyms(this,model)
             for ievent = 1:nevent
                 this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),x);
             end
-            
+             
         case 'ddeltaxdt'
             this.sym = diff(model.fun.deltax.sym,'t');
             
@@ -547,9 +578,18 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'deltaqB'
-            this.sym = sym(zeros(np,nevent));
+            if (model.nxtrue < nx)
+                ng_tmp = round(nx / model.nxtrue);
+                this.sym = sym(zeros(np*ng_tmp,nevent));
+            else
+                this.sym = sym(zeros(np,nevent));
+            end
+            
             for ievent = 1:nevent
-                this.sym(:,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+                this.sym(1:np,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+                % This is just a very quick fix. Events in adjoint systems
+                % have to be implemented in a way more rigorous way later
+                % on... Some day...
             end
             
         case 'deltaxB'
@@ -625,19 +665,52 @@ function [this,model] = getSyms(this,model)
             
         case 'Jy'
             this.sym = model.sym.Jy;
+            % replace unify symbolic expression
+            this.sym = mysubs(this.sym,model.sym.y,model.fun.y.strsym);
         case 'dJydy'
-            this.sym = jacobian(model.fun.Jy.sym,model.fun.y.strsym);
+            this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
+            for iy = 1 : model.nytrue
+                this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.y.strsym);
+            end
             this = makeStrSyms(this);
         case 'dJydx'
-            this.sym = model.fun.dJydy.sym*model.fun.dydx.strsym;
+            this.sym = sym(zeros(model.nytrue, model.nxtrue, model.ng)); % Maybe nxtrue is sufficient...
+            dJydy_tmp = sym(zeros(model.ng, model.ny));
+            for iy = 1 : model.nytrue
+                dJydy_tmp(:,:) = model.fun.dJydy.sym(iy,:,:);
+                this.sym(iy,:,:) = transpose(dJydy_tmp * model.fun.dydx.strsym(:,1:model.nxtrue));
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end
+            disp('');
         case 'dJydsigma'
-            this.sym = jacobian(model.fun.Jy.sym,model.fun.sigma_y.strsym);
+            this.sym = sym(zeros(model.nytrue, model.ng, model.nytrue));
+            for iy = 1 : model.nytrue
+                this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.sigma_y.strsym(1:model.nytrue));
+            end
         case 'dJydp'
-            this.sym = model.fun.dJydy.sym*model.fun.dydp.strsym + model.fun.dJydsigma.sym*model.fun.dsigma_ydp.strsym;
+            this.sym = sym(zeros(model.nytrue, model.np, model.ng));
+            dJydy_tmp = sym(zeros(model.ng, model.ny));
+            dJydsigma_tmp = sym(zeros(model.ng, model.nytrue));
+            for iy = 1 : model.nytrue
+                dJydy_tmp(:,:) = model.fun.dJydy.sym(iy,:,:);
+                dJydsigma_tmp(:,:) = model.fun.dJydsigma.sym(iy,:,:);
+                this.sym(iy,:,:) = transpose(dJydy_tmp * model.fun.dydp.strsym ...
+                    + dJydsigma_tmp * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end            
             this = makeStrSyms(this);
         case 'sJy'
-            this.sym = model.fun.dJydy.strsym*model.fun.sy.strsym + model.fun.dJydp.strsym;
-            
+            this.sym = sym(zeros(model.nytrue, model.np, model.ng));
+            dJydy_tmp = sym(zeros(model.ng, model.ny));
+            for iy = 1 : model.nytrue
+                dJydy_tmp(:,:) = model.fun.dJydy.strsym(iy,:,:);
+                this.sym(iy,:,:) = transpose(dJydy_tmp*model.fun.sy.strsym);
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end
+            this.sym = this.sym + model.fun.dJydp.strsym;
         case 'Jz'
             this.sym = model.sym.Jz(:);
         case 'dJzdz'

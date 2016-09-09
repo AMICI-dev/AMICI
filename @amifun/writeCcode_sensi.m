@@ -10,6 +10,7 @@ function writeCcode_sensi(this,model,fid)
 %  void
       
 np = model.np;
+ng = model.ng;
 
 nonzero_idx = find(this.sym);
 nonzero = zeros(size(this.sym));
@@ -18,7 +19,7 @@ nonzero(nonzero_idx) = 1;
 if(strcmp(this.funstr,'deltaqB'))
     if(any(nonzero))
         tmpfun = this;
-        for ip=1:np
+        for ip=1:np*ng
             if(nonzero(ip))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
                 tmpfun.sym = this.sym(ip,:);
@@ -48,6 +49,20 @@ elseif(strcmp(this.funstr,'s2root'))
             if(any(any(any(nonzero(:,:,ip)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
                 tmpfun.sym = squeeze(this.sym(model.z2event(1:model.nztrue),:,ip));
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
+elseif(strcmp(this.funstr,'qBdot'))
+    nonzero = this.sym ~=0;
+    if(any(any(nonzero)))
+        tmpfun = this;
+        for ip=1:np
+            if(any(nonzero(:,ip)))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = this.sym(:,ip);
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');

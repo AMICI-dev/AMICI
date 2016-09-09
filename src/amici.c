@@ -287,12 +287,16 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     mxArray *mxsol;
 
+/* Here, a new field for the Hessian or the HVP must be inserted */
+/* No, this is already done with s2llh */
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     mxArray *mxstatus;
     mxArray *mxllh;
     mxArray *mxsllh;
     mxArray *mxs2llh;
     mxArray *mxchi2;
+    mxArray *mxg;
+    mxArray *mxr;
     mxArray *mxt;
     mxArray *mxnumsteps;
     mxArray *mxnumrhsevals;
@@ -349,6 +353,8 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
     
     initField2(llh,1,1);
     initField2(chi2,1,1);
+    /*initField2(g,ng,1);
+    initField2(r,ng,1);*/
      
     mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
@@ -406,7 +412,9 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             }
         }
         if(sensi>1) {
-            initField2(s2llh,np,np);
+            if (ng>1) {
+                initField2(s2llh,np,(ng-1));
+            }
         }
     }
     
@@ -545,9 +553,18 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     
     t = tstart;
     
-    r = 0;
-    g = 0;
-        
+    /*
+    g = 0.0;
+    r = 0.0;
+    */
+    g = mxMalloc(ng*sizeof(realtype));
+    memset(g,0,ng*sizeof(realtype));
+    r = mxMalloc(ng*sizeof(realtype));
+    memset(r,0,ng*sizeof(realtype));
+
+    
+    x = N_VNew_Serial(nx);
+    
     if (nx > 0) {
         
         /* allocate temporary objects */
@@ -571,7 +588,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         if(ne>0) deltax = mxMalloc(nx*sizeof(realtype));
         if(ne>0) deltasx = mxMalloc(nx*np*sizeof(realtype));
         if(ne>0) deltaxB = mxMalloc(nx*sizeof(realtype));
-        if(ne>0) deltaqB = mxMalloc(np*sizeof(realtype));
+        if(ne>0) deltaqB = mxMalloc(ng*np*sizeof(realtype));
         
         if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
@@ -587,8 +604,7 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         *status = fdx0(x, dx, udata); /* only needed for idas */
         if (*status != AMI_SUCCESS) return(NULL);
         
-        /* initialise heaviside variables */
-        
+        /* initialise heaviside variables */   
         initHeaviside(status,user_data,temp_data);
         
     }
@@ -804,23 +820,24 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
-                
-                llhS0 = mxMalloc(np*sizeof(realtype));
-                memset(llhS0,0,np*sizeof(realtype));
-                dgdp = mxMalloc(np*sizeof(realtype));
-                memset(dgdp,0,np*sizeof(realtype));
-                dgdx = mxMalloc(nx*nt*sizeof(realtype));
-                memset(dgdx,0,nx*nt*sizeof(realtype));
+
+/* Here, some changes may need to be done, but probably not... */
+                llhS0 = mxMalloc(ng*np*sizeof(realtype));
+                memset(llhS0,0,ng*np*sizeof(realtype));
+                dgdp = mxMalloc(ng*np*sizeof(realtype));
+                memset(dgdp,0,ng*np*sizeof(realtype));
+                dgdx = mxMalloc(ng*nxtrue*nt*sizeof(realtype));
+                memset(dgdx,0,ng*nxtrue*nt*sizeof(realtype));
                 if (ne > 0) {
                     dzdp = mxMalloc(nz*np*sizeof(realtype));
                     memset(dzdp,0,nz*np*sizeof(realtype));
                     dzdx = mxMalloc(nz*nx*sizeof(realtype));
                     memset(dzdx,0,nz*nx*sizeof(realtype));
                 }
-                drdp = mxMalloc(np*nz*nmaxevent*sizeof(realtype));
-                memset(drdp,0,np*nz*nmaxevent*sizeof(realtype));
-                drdx = mxMalloc(nx*nz*nmaxevent*sizeof(realtype));
-                memset(drdx,0,nx*nz*nmaxevent*sizeof(realtype));
+                drdp = mxMalloc(ng*np*nztrue*nmaxevent*sizeof(realtype));
+                memset(drdp,0,ng*np*nztrue*nmaxevent*sizeof(realtype));
+                drdx = mxMalloc(ng*nx*nztrue*nmaxevent*sizeof(realtype));
+                memset(drdx,0,ng*nx*nztrue*nmaxevent*sizeof(realtype));
             }
         }
         
@@ -862,15 +879,15 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     
-
-    
     xB = N_VNew_Serial(nx);
     xB_old = N_VNew_Serial(nx);
     
     dxB = N_VNew_Serial(nx);
-    
-    xQB = N_VNew_Serial(np);
-    xQB_old = N_VNew_Serial(np);
+
+/* Hier sollte np*np drinnen stehen.... */    
+    xQB = N_VNew_Serial(ng*np);
+    xQB_old = N_VNew_Serial(ng*np);
+/* Bis hierher...  */
     
     /* write initial conditions */
     if (xB == NULL) return;
@@ -879,6 +896,11 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     for (ix=0; ix<nx; ix++) {
         xB_tmp[ix] += dgdx[nt-1+ix*nt];
     }
+    /*for (ix=0; ix<nxtrue; ix++) {
+        for (ig=0; ig<ng; ig++) {
+            xB_tmp[ix+ig*nxtrue] += dgdx[nt-1+ix*nt+ig*nxtrue*nt];
+        }
+    }*/
     
     if (dxB == NULL) return;
     dxB_tmp = NV_DATA_S(dxB);
@@ -886,7 +908,8 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-    memset(xQB_tmp,0,sizeof(realtype)*np);
+/* Change the allocated space for the integral... */
+    memset(xQB_tmp,0,sizeof(realtype)*ng*np);
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
@@ -895,6 +918,7 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     if (iter>2||iter<1) {
         errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
+/* Does everything stay the same here? */
     /* allocate memory for the backward problem */
     *status = AMICreateB(ami_mem, lmm, iter, &which);
     if (*status != AMI_SUCCESS) return;
@@ -1023,6 +1047,8 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     }
     
     /* Initialise quadrature calculation */
+/* By now, there should be no more changes needed here, right? */
+/* Look up how the following routine works, anyway... */
     *status = wrap_qbinit(ami_mem, which, xQB);
     if (*status != AMI_SUCCESS) return;
     
@@ -1195,7 +1221,7 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
         }
         sigmaydata[iy*nt+it] = sigma_y[iy];
     }
-    fJy(t,it,&g,ydata,x,my,sigma_y,udata);
+    fJy(t,it,g,ydata,x,my,sigma_y,udata);
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -1295,7 +1321,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     int ip;
     int ix;
     int iz;
-    
+
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
     ExpData edata; /* exp edata */
@@ -1304,7 +1330,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
-    
+
+/* See, if you need to change something here. Not clear to me yet... */       
     for (iz=0; iz<nztrue; iz++) {
         if( z2event[iz] == ie ){
             if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
@@ -1330,12 +1357,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
-                for (ip=0; ip<np; ip++) {
-                    drdp[nroots[ie] + nmaxevent*ip] += dsigma_zdp[ip*nz+iz]/sigma_z[iz] + ( dzdp[ip +np*iz]* ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2) - dsigma_zdp[ip*nz+iz]*pow( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ,2)/pow( sigma_z[iz] , 3);
-                }
-                for (ix=0; ix<nx; ix++) {
-                    drdx[nroots[ie] + nmaxevent*ix] += ( dzdx[ip + nx*iz] * ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] ) )/pow( sigma_z[iz] , 2);
-                }
+                fdJydp(z2event[iz],iz,drdp,zdata,x,dzdp,my,sigma_z,dsigma_zdp,udata);
+                fdJydx(z2event[iz],iz,drdx,zdata,x,dzdx,my,sigma_z,udata);
             }
         }
     }
@@ -1412,7 +1435,8 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
         if(z2event[iz] == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
-                r += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                
+                r[0] += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                 *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
             }
         }
@@ -1501,7 +1525,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
     
-    int ie,iz;
+    int ie;
     
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1522,11 +1546,9 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
-                for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz] == ie) {
-                        rzdata[nroots[ie] + nmaxevent*iz] = rootvals[ie];
-                    }
-                }
+                
+                rzdata[nroots[ie]+ie] = rootvals[ie];
+                
                 
                 getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
                 if (*status != AMI_SUCCESS) return;
@@ -1629,8 +1651,10 @@ void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void
     udata = (UserData) user_data;
     tdata = (TempData) temp_data;
     
+/* See, if things need to be changed here... */    
     xB_tmp = NV_DATA_S(xB);
     for (ix=0; ix<nx; ix++) {
+/* Hier muss nur ein erster Teil verwendet werden.... */
         xB_tmp[ix] += dgdx[it+ix*nt];
     }
     getDiagnosisB(status,it,ami_mem,user_data,return_data,temp_data);
@@ -1696,9 +1720,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     /* only check this in the first event fired, otherwise this will always be true */
     if (seflag == 0) {
         if (t == *tlastroot) {
-            warnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
-            *status = -99;
-            return;
+            /* we are stuck in a root => turn off rootfinding */
+            /* at some point we should find a more intelligent solution here, and turn on rootfinding again after some time */
+            AMIRootInit(ami_mem, 0, NULL);
         }
         *tlastroot = t;
     }
@@ -1708,10 +1732,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
     if(sensi >= 1){
+        /* store x and xdot to compute jump in sensitivities */
+        N_VScale(1.0,x,x_old);
         if (sensi_meth == AMI_FSA) {
-            /* store x and xdot to compute jump in sensitivities */
-            N_VScale(1.0,x,x_old);
-            
             *status = fxdot(t,x,dx,xdot,udata);
             N_VScale(1.0,xdot,xdot_old);
             N_VScale(1.0,dx,dx_old);
@@ -1728,6 +1751,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
+/* Not clear to me, if something should be different here: rather not... */
             N_VScale(1.0,x,x_disc[*iroot]);
             N_VScale(1.0,xdot,xdot_disc[*iroot]);
             N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
@@ -1796,7 +1820,8 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         *status = AMICalcIC(ami_mem, t);
         if (*status != AMI_SUCCESS) return;
     }
-    
+
+/* I don't get the meaning of those double if's ... */    
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
             if(sensi >= 1){
@@ -1833,6 +1858,7 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     int ie;
     int ix;
     int ip;
+    int ig;
     
     UserData udata; /* user udata */
     TempData tdata; /* temp tdata */
@@ -1853,16 +1879,20 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
             if (*status != AMI_SUCCESS) return;
             *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
-            
+
+/* Hier wohl auch ein change nur bis nxtrue... */
             for (ix=0; ix<nx; ix++) {
                 xB_tmp[ix] += deltaxB[ix];
                 if (nz>0) {
                     xB_tmp[ix] += drdx[nroots[ie] + nmaxevent*ix];
                 }
             }
-            
-            for (ip=0; ip<np; ip++) {
-                xQB_tmp[ip] += deltaqB[ip];
+
+/* Maybe this will need a change */            
+            for (ig=0; ig<ng; ig++) {
+                for (ip=0; ip<np; ip++) {
+                    xQB_tmp[ig*np+ip] += deltaqB[ig*np+ip];
+                }
             }
             nroots[ie]--;
             
@@ -2279,8 +2309,9 @@ void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus) {
         }
     }
 }
+#endif
 
-
+#ifdef AMICI_WITHOUT_MATLAB
 int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *iroot) {
     int status = *_status;
 
@@ -2327,7 +2358,7 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
                         }
 
                         if (status==AMI_ROOT_RETURN) {
-                            handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
+                            handleEvent(&status, &iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
                             if (status != AMI_SUCCESS) return 1;
 
                         }
@@ -2338,8 +2369,9 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
             handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
             if (status != AMI_SUCCESS) return 1;
 
+
         } else {
-            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = NAN;
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = amiGetNaN();
         }
     }
 
@@ -2380,13 +2412,15 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
 
                         if (tnext<t) {
                             status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
-                            if (status != AMI_SUCCESS) return 1;;
+                            if (status != AMI_SUCCESS) return 1;
 
                             /* get states only if we actually integrated */
                             status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (status != AMI_SUCCESS) return 1;;
+                            if (status != AMI_SUCCESS) return 1;
+/* Here, the quadrature of the integrals must be changed, or the change
+ should take part in AMIGetQuadB ... AMIGetQuadB */
                             status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (status != AMI_SUCCESS) return 1;;
+                            if (status != AMI_SUCCESS) return 1;
                         }
 
                         /* handle discontinuity */
@@ -2394,6 +2428,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                         if(ne>0){
                             if(nmaxevent>0){
                                 if (tnext == discs[iroot]) {
+/* Possibly some change here ... */
                                     handleEventB(&status, iroot, ami_mem, udata, tdata);
                                     iroot--;
                                 }
@@ -2403,18 +2438,20 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                         /* handle data-point */
 
                         if (tnext == ts[it]) {
+/* Changes inside or outside? */
                             handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
                             it--;
                         }
 
                         /* reinit states */
                         status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                        if (status != AMI_SUCCESS) return 1;;
+                        if (status != AMI_SUCCESS) return 1;
+/* Maybe, but probably not, this needs to be changed */
                         status = AMIQuadReInitB(ami_mem, which, xQB);
-                        if (status != AMI_SUCCESS) return 1;;
+                        if (status != AMI_SUCCESS) return 1;
 
                         status = AMICalcICB(ami_mem, which, t, xB, dxB);
-                        if (status != AMI_SUCCESS) return 1;;
+                        if (status != AMI_SUCCESS) return 1;
                     }
 
                     /* we still need to integrate from first datapoint to tstart */
@@ -2423,59 +2460,102 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                             if (nx>0) {
                                 /* solve for backward problems */
                                 status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
-                                if (status != AMI_SUCCESS) return 1;;
+                                if (status != AMI_SUCCESS) return 1;
 
+/* Here again, Quadrature needs a slight change, but probably inside... */
                                 status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (status != AMI_SUCCESS) return 1;;
+                                if (status != AMI_SUCCESS) return 1;
                                 status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (status != AMI_SUCCESS) return 1;;
+                                if (status != AMI_SUCCESS) return 1;
                             }
                         }
                     }
 
                     /* evaluate initial values */
                     NVsx = N_VCloneVectorArray_Serial(np,x);
-                    if (NVsx == NULL) return 1;;
+                    if (NVsx == NULL) return 1;
 
                     status = fx0(x,udata);
-                    if (status != AMI_SUCCESS) return 1;;
+                    if (status != AMI_SUCCESS) return 1;
                     status = fdx0(x,dx,udata);
-                    if (status != AMI_SUCCESS) return 1;;
+                    if (status != AMI_SUCCESS) return 1;
                     status = fsx0(NVsx, x, dx, udata);
-                    if (status != AMI_SUCCESS) return 1;;
+                    if (status != AMI_SUCCESS) return 1;
 
                     if(status == 0) {
 
+/* From here ... */
                         xB_tmp = NV_DATA_S(xB);
 
-                        for (ip=0; ip<np; ip++) {
-                            llhS0[ip] = 0.0;
-                            sx_tmp = NV_DATA_S(NVsx[ip]);
-                            for (ix = 0; ix < nx; ix++) {
-                                llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                        int ig;
+                        for (ig=0; ig<ng; ig++) {
+                            if (ig==0) {
+                                for (ip=0; ip<np; ip++) {
+                                    llhS0[ig*np + ip] = 0.0;
+                                    sx_tmp = NV_DATA_S(NVsx[ip]);
+                                    for (ix = 0; ix < nxtrue; ix++) {
+                                        llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                                    }
+                                }
+                            } else {
+                                for (ip=0; ip<np; ip++) {
+                                    llhS0[ig*np + ip] = 0.0;
+                                    sx_tmp = NV_DATA_S(NVsx[ip]);
+                                    for (ix = 0; ix < nxtrue; ix++) {
+                                        llhS0[ig*np + ip] = llhS0[ig*np + ip] + xB_tmp[ig*nxtrue + ix] * sx_tmp[ix] + xB_tmp[ix] * sx_tmp[ig*nxtrue + ix];
+                                    }
+                                }
                             }
                         }
 
                         xQB_tmp = NV_DATA_S(xQB);
 
-                        for(ip=0; ip < np; ip++) {
-                            sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
-                            if (ny>0) {
-                                sllhdata[ip] -= dgdp[ip];
-                            }
-                            if (nz>0) {
-                                sllhdata[ip] -= drdp[ip];
+    /* Does this need one more parameter loop around? */
+                        for(ig=0; ig<ng; ig++) {
+                            for(ip=0; ip < np; ip++) {
+                                if (ig==0) {
+                                    sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
+                                    if (ny>0) {
+                                        sllhdata[ip] -= dgdp[ip];
+                                    }
+                                    if (nz>0) {
+                                        sllhdata[ip] -= drdp[ip];
+                                    }
+                                } else {
+                                    s2llhdata[(ig-1)*np + ip] = - llhS0[ig*np + ip] - xQB_tmp[ig*np + ip];
+                                    if (ny>0) {
+                                        s2llhdata[(ig-1)*np + ip] -= dgdp[ig*np + ip];
+                                    }
+                                    if (nz>0) {
+                                        s2llhdata[(ig-1)*np + ip] -= drdp[ig*np + ip];
+                                    }
+                                }
                             }
                         }
+/* ... to here, there may be changes necessary... */
 
                     } else {
-                        for(ip=0; ip < np; ip++) {
-                            sllhdata[ip] = amiGetNaN();
+                        int ig;
+                        for(ig=0; ig<ng; ig++) {
+                            for(ip=0; ip < np; ip++) {
+                                if (ig==0) {
+                                    sllhdata[ip] = amiGetNaN();
+                                } else {
+                                    s2llhdata[(ig-1)*np + ip] = amiGetNaN();
+                                }
+                            }
                         }
                     }
                 } else {
-                    for(ip=0; ip < np; ip++) {
-                        sllhdata[ip] = amiGetNaN();
+                    int ig;
+                    for(ig=0; ig<ng; ig++) {
+                        for(ip=0; ip < np; ip++) {
+                            if (ig==0) {
+                                sllhdata[ip] = amiGetNaN();
+                            } else {
+                                s2llhdata[(ig-1)*np + ip] = amiGetNaN();
+                            }
+                        }
                     }
                 }
             }
@@ -2484,7 +2564,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
 
     /* evaluate likelihood */
 
-    *llhdata = - g - r;
+    *llhdata = - g[0] - r[0];
 
     return 0;
 }
@@ -2581,14 +2661,10 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
         if(ami_mem)     AMIFree(&ami_mem);
     }
 
-    // if(udata)   free(plist);
-//    if (sensi >= 1) {
-//        if(udata)   free(tmp_dxdotdp);
-//    }
-
     if(tdata)    free(tdata);
 }
 
+#ifdef AMICI_WITHOUT_MATLAB
 ReturnData initReturnData(UserData udata, int *pstatus) {
     ReturnData rdata; /* returned rdata struct */
 
@@ -2636,7 +2712,7 @@ freturn:
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     return rdata;
 }
-
+#endif
 void processUserData(UserData udata) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
