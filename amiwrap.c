@@ -40,10 +40,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *pstatus; /* return status flag */
     
     realtype tlastroot; /* storage for last found root */
-    int iroot = 0;
+    int iroot;
     double tnext;
-    
     booleantype silent;
+    booleantype setupBdone;
+
+    iroot = 0;
     
     pstatus = mxMalloc(sizeof(double));
     
@@ -75,7 +77,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if(status)
         goto freturn;
 
-    booleantype setupBdone = false;
+    setupBdone = false;
     status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
 
 freturn:
