@@ -31,9 +31,11 @@ for ifun = this.funs
         fprintf(fid,'#include <mex.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
+            fprintf(fid,'#include <include/udata_accessors.h>\n');
         end
         if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
             fprintf(fid,'#include <include/tdata.h>\n');
+            fprintf(fid,'#include <include/tdata_accessors.h>\n');
             % avoid conflicts
             fprintf(fid,'#undef t\n');
             fprintf(fid,'#undef x\n');
@@ -343,6 +345,7 @@ fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
 fprintf(fid,'                \n');
 fprintf(fid,'#include "wrapfunctions.h"\n');
+fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(void *user_data){\n');
 fprintf(fid,'                    UserData udata = (UserData) user_data;\n');

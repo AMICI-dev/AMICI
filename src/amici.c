@@ -16,6 +16,11 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
+#include <include/edata_accessors.h>
+#include <include/udata_accessors.h>
+#include <include/rdata_accessors.h>
+#include <include/tdata_accessors.h>
+
 /** 
  * @ brief initialise matrix and attach to the field 
  * @ param FIELD name of the field to which the matrix will be attached
