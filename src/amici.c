@@ -16,6 +16,11 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 
+#include <include/edata_accessors.h>
+#include <include/udata_accessors.h>
+#include <include/rdata_accessors.h>
+#include <include/tdata_accessors.h>
+
 /** 
  * @ brief initialise matrix and attach to the field 
  * @ param FIELD name of the field to which the matrix will be attached
@@ -1330,10 +1335,9 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
     rdata = (ReturnData) return_data;
     edata = (ExpData) exp_data;
     tdata = (TempData) temp_data;
-
-/* See, if you need to change something here. Not clear to me yet... */       
+    
     for (iz=0; iz<nztrue; iz++) {
-        if( z2event[iz] == ie ){
+        if( z2event[iz]-1 == ie ){
             if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 *status = fdzdp(t,ie,dzdp,x,udata);
                 if (*status != AMI_SUCCESS) return;
@@ -1357,8 +1361,8 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
                     ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
-                fdJydp(z2event[iz],iz,drdp,zdata,x,dzdp,my,sigma_z,dsigma_zdp,udata);
-                fdJydx(z2event[iz],iz,drdx,zdata,x,dzdx,my,sigma_z,udata);
+                fdJzdp(t,ie,drdp,zdata,x,dzdp,mz,sigma_z,dsigma_zdp,udata,tdata);
+                fdJzdx(t,ie,drdx,zdata,x,dzdx,mz,sigma_z,udata,tdata);
             }
         }
     }
@@ -1432,7 +1436,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, voi
     tdata = (TempData) temp_data;
     
     for (iz=0; iz<nztrue; iz++) {
-        if(z2event[iz] == ie) {
+        if(z2event[iz]-1 == ie) {
             getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
             if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 
@@ -1482,7 +1486,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                 if (*status != AMI_SUCCESS) return;
                 
                 for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz] == ie) {
+                    if(z2event[iz]-1 == ie) {
                         getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
                         if (*status != AMI_SUCCESS) return;
                     }
@@ -1751,10 +1755,11 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
-/* Not clear to me, if something should be different here: rather not... */
-            N_VScale(1.0,x,x_disc[*iroot]);
-            N_VScale(1.0,xdot,xdot_disc[*iroot]);
-            N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
+            if (*iroot<nmaxevent*ne) {
+                N_VScale(1.0,x,x_disc[*iroot]);
+                N_VScale(1.0,xdot,xdot_disc[*iroot]);
+                N_VScale(1.0,xdot_old,xdot_old_disc[*iroot]);
+            }
         }
     }
     
@@ -1875,27 +1880,26 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
     for (ie=0; ie<ne; ie++) {
         
         if (rootidx[iroot*ne + ie] != 0) {
+            
             *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
             *status = fdeltaxB(t,ie,deltaxB,x_disc[iroot],xB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
             if (*status != AMI_SUCCESS) return;
-
-/* Hier wohl auch ein change nur bis nxtrue... */
+            
             for (ix=0; ix<nx; ix++) {
                 xB_tmp[ix] += deltaxB[ix];
                 if (nz>0) {
                     xB_tmp[ix] += drdx[nroots[ie] + nmaxevent*ix];
                 }
             }
-
-/* Maybe this will need a change */            
+            
             for (ig=0; ig<ng; ig++) {
                 for (ip=0; ip<np; ip++) {
                     xQB_tmp[ig*np+ip] += deltaqB[ig*np+ip];
                 }
             }
-            nroots[ie]--;
             
+            nroots[ie]--;
         }
     }
     
@@ -2045,7 +2049,7 @@ void initHeaviside(int *status, void  *user_data, void *temp_data) {
     froot(t,x,dx,rootvals,user_data);
     
     for (ie = 0; ie<ne; ie++) {
-        if (rootvals[ie]<0) {
+        if (rootvals[ie]<=0) {
             h[ie] = 0.0;
         } else {
             h[ie] = 1.0;
@@ -2189,7 +2193,6 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
     numrhsevalsSdata[it] = (realtype)numrhsevals;
     
 }
-
 
 #ifdef AMICI_WITHOUT_MATLAB
 

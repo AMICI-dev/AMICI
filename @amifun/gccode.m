@@ -63,6 +63,7 @@ function this = gccode(this,model,fid)
         else
             cstr = strrep(cstr,'t0',[this.cvar '[0]']);
         end
+            
         cstr = strrep(cstr,'log','amilog');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
@@ -199,6 +200,7 @@ function this = gccode(this,model,fid)
             end
             if(strcmp(this.funstr,'deltaqB'))
                 cstr = strrep(cstr,'deltaqB_tmp','deltaqB');
+                cstr = regexprep(cstr,'deltaqB\[([0-9]*)\]','deltaqB\[ip+$1\]');
             end
             if(strcmp(this.funstr,'dJydx'))
                 cstr = strrep(cstr,'ydx_tmp','ydx');
