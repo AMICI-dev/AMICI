@@ -70,7 +70,8 @@ void fillArray(double *destination, int count, double value) {
 
 double sum(double const *array, int numElements) {
     double sum = 0;
-    for(int i = 0; i < numElements; ++i) {
+    int i;
+    for(i = 0; i < numElements; ++i) {
         sum += array[i];
     }
     return sum;
