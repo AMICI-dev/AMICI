@@ -405,12 +405,7 @@ if(o2flag)
             fprintf(fid, '        sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(chainRuleFactor,[3,2,1]));\n');
             fprintf(fid, '        sol.ssigmaz = bsxfun(@times,sol.ssigmaz,permute(chainRuleFactor,[3,2,1]));\n');
         case 2
-            switch(this.param)
-                case 'log10'
-                    fprintf(fid, '        sol.s2llh = sol.s2llh.*chainRuleFactor + (sol.sllh).^2 * log(10);\n');
-                otherwise
-                    fprintf(fid, '        sol.s2llh = sol.s2llh.*chainRuleFactor + (sol.sllh).^2;\n');
-            end
+            fprintf(fid, '        sol.s2llh = sol.s2llh .* chainRuleFactor + (sol.sllh .* v) ./ theta(options_ami.sens_ind);\n');
     end
     fprintf(fid,['        sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['        sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
