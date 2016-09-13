@@ -1,4 +1,5 @@
 #include "include/udata.h"
+#include<include/udata_accessors.h>
 
 void freeUserData(UserData udata) {
     if(udata) {

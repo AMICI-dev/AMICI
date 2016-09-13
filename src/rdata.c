@@ -1,4 +1,5 @@
 #include "include/rdata.h"
+#include<include/rdata_accessors.h>
 
 void freeReturnData(ReturnData rdata) {
     if(tsdata) free(tsdata);
