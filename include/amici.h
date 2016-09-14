@@ -78,7 +78,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
 #ifdef AMICI_WITHOUT_MATLAB
 int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* _status, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone);
-void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus);
+void initUserDataFields(UserData user_data, ReturnData rdata, double *pstatus);
 
 ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus);
 void processUserData(UserData udata);

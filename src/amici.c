@@ -15,6 +15,7 @@
 
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
+#include <include/symbolic_functions.h>
 
 #include <include/edata_accessors.h>
 #include <include/udata_accessors.h>
@@ -2196,7 +2197,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *re
 
 #ifdef AMICI_WITHOUT_MATLAB
 
-void initUserDataFields(UserData* user_data, ReturnData rdata, int *pstatus) {
+void initUserDataFields(UserData user_data, ReturnData rdata, double *pstatus) {
     UserData udata; /** user udata */
 
     double *mxstatus;
@@ -2361,7 +2362,7 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
                         }
 
                         if (status==AMI_ROOT_RETURN) {
-                            handleEvent(&status, &iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
+                            handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
                             if (status != AMI_SUCCESS) return 1;
 
                         }
@@ -2382,6 +2383,7 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
     if (ne>0) {
         fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
     }
+    *_status = status;
 
     return 0;
 }
@@ -2676,7 +2678,9 @@ ReturnData initReturnData(UserData udata, int *pstatus) {
     if (rdata == NULL)
         return(NULL);
 
-    initUserDataFields(udata, rdata, pstatus);
+    double dblstatus;
+    initUserDataFields(udata, rdata, &dblstatus);
+    *pstatus = (int) dblstatus;
 
     return(rdata);
 }
