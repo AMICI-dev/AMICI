@@ -2316,8 +2316,7 @@ void initUserDataFields(UserData user_data, ReturnData rdata, double *pstatus) {
 #endif
 
 #ifdef AMICI_WITHOUT_MATLAB
-int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *iroot) {
-    int status = *_status;
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot) {
 
     /*******************/
     /* FORWARD PROBLEM */
@@ -2330,48 +2329,48 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
         if(sensi_meth == AMI_FSA && sensi >= 1) {
-            status = AMISetStopTime(ami_mem, ts[it]);
+            *status = AMISetStopTime(ami_mem, ts[it]);
         }
-        if (status == 0) {
+        if (*status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
                 while (t<ts[it]) {
                     if(sensi_meth == AMI_ASA && sensi >= 1) {
                         if (nx>0) {
-                            status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
+                            *status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                         } else {
                             t = ts[it];
                         }
                     } else {
                         if (nx>0) {
-                            status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                            *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                         } else {
                             t = ts[it];
                         }
                     }
                     if (nx>0) {
                         x_tmp = NV_DATA_S(x);
-                        if (status == -22) {
+                        if (*status == -22) {
                             /* clustering of roots => turn off rootfinding */
                             AMIRootInit(ami_mem, 0, NULL);
-                            status = 0;
+                            *status = 0;
                         }
                         /* integration error occured */
-                        if (status<0) {
+                        if (*status<0) {
                             return 1;
                         }
 
-                        if (status==AMI_ROOT_RETURN) {
-                            handleEvent(&status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                            if (status != AMI_SUCCESS) return 1;
+                        if (*status==AMI_ROOT_RETURN) {
+                            handleEvent(status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
+                            if (*status != AMI_SUCCESS) return 1;
 
                         }
                     }
                 }
             }
 
-            handleDataPoint(&status, it, ami_mem, udata, rdata, edata, tdata);
-            if (status != AMI_SUCCESS) return 1;
+            handleDataPoint(status, it, ami_mem, udata, rdata, edata, tdata);
+            if (*status != AMI_SUCCESS) return 1;
 
 
         } else {
@@ -2381,17 +2380,13 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
 
     /* fill events */
     if (ne>0) {
-        fillEventOutput(&status, ami_mem, udata, rdata, edata, tdata);
+        fillEventOutput(status, ami_mem, udata, rdata, edata, tdata);
     }
-    *_status = status;
 
     return 0;
 }
 
-int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone) {
-    int status = *_status;
-    int iroot = *_iroot;
-    booleantype setupBdone = *_setupBdone;
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
 
     /********************/
     /* BACKWARD PROBLEM */
@@ -2404,38 +2399,38 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
     if (nx>0) {
         if (sensi >= 1) {
             if(sensi_meth == AMI_ASA) {
-                if(status == 0) {
-                    setupAMIB(&status, ami_mem, udata, tdata);
-                    setupBdone = true;
+                if(*status == 0) {
+                    setupAMIB(status, ami_mem, udata, tdata);
+                    *setupBdone = true;
 
                     it = nt-2;
-                    iroot--;
-                    while (it>=0 || iroot>=0) {
+                    (*iroot)--;
+                    while (it>=0 || *iroot>=0) {
 
                         /* check if next timepoint is a discontinuity or a data-point */
-                        tnext = getTnext(discs, iroot, ts, it, udata);
+                        tnext = getTnext(discs, *iroot, ts, it, udata);
 
                         if (tnext<t) {
-                            status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
-                            if (status != AMI_SUCCESS) return 1;
+                            *status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
+                            if (*status != AMI_SUCCESS) return 1;
 
                             /* get states only if we actually integrated */
-                            status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (status != AMI_SUCCESS) return 1;
+                            *status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                            if (*status != AMI_SUCCESS) return 1;
 /* Here, the quadrature of the integrals must be changed, or the change
  should take part in AMIGetQuadB ... AMIGetQuadB */
-                            status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (status != AMI_SUCCESS) return 1;
+                            *status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                            if (*status != AMI_SUCCESS) return 1;
                         }
 
                         /* handle discontinuity */
 
                         if(ne>0){
                             if(nmaxevent>0){
-                                if (tnext == discs[iroot]) {
+                                if (tnext == discs[*iroot]) {
 /* Possibly some change here ... */
-                                    handleEventB(&status, iroot, ami_mem, udata, tdata);
-                                    iroot--;
+                                    handleEventB(status, *iroot, ami_mem, udata, tdata);
+                                    (*iroot)--;
                                 }
                             }
                         }
@@ -2444,34 +2439,34 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
 
                         if (tnext == ts[it]) {
 /* Changes inside or outside? */
-                            handleDataPointB(&status, it, ami_mem, udata, rdata, tdata);
+                            handleDataPointB(status, it, ami_mem, udata, rdata, tdata);
                             it--;
                         }
 
                         /* reinit states */
-                        status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                        if (status != AMI_SUCCESS) return 1;
+                        *status = AMIReInitB(ami_mem, which, t, xB, dxB);
+                        if (*status != AMI_SUCCESS) return 1;
 /* Maybe, but probably not, this needs to be changed */
-                        status = AMIQuadReInitB(ami_mem, which, xQB);
-                        if (status != AMI_SUCCESS) return 1;
+                        *status = AMIQuadReInitB(ami_mem, which, xQB);
+                        if (*status != AMI_SUCCESS) return 1;
 
-                        status = AMICalcICB(ami_mem, which, t, xB, dxB);
-                        if (status != AMI_SUCCESS) return 1;
+                        *status = AMICalcICB(ami_mem, which, t, xB, dxB);
+                        if (*status != AMI_SUCCESS) return 1;
                     }
 
                     /* we still need to integrate from first datapoint to tstart */
                     if (t>tstart) {
-                        if(status == 0) {
+                        if(*status == 0) {
                             if (nx>0) {
                                 /* solve for backward problems */
-                                status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
-                                if (status != AMI_SUCCESS) return 1;
+                                *status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
+                                if (*status != AMI_SUCCESS) return 1;
 
 /* Here again, Quadrature needs a slight change, but probably inside... */
-                                status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (status != AMI_SUCCESS) return 1;
-                                status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (status != AMI_SUCCESS) return 1;
+                                *status = AMIGetQuadB(ami_mem, which, &t, xQB);
+                                if (*status != AMI_SUCCESS) return 1;
+                                *status = AMIGetB(ami_mem, which, &t, xB, dxB);
+                                if (*status != AMI_SUCCESS) return 1;
                             }
                         }
                     }
@@ -2480,14 +2475,14 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                     NVsx = N_VCloneVectorArray_Serial(np,x);
                     if (NVsx == NULL) return 1;
 
-                    status = fx0(x,udata);
-                    if (status != AMI_SUCCESS) return 1;
-                    status = fdx0(x,dx,udata);
-                    if (status != AMI_SUCCESS) return 1;
-                    status = fsx0(NVsx, x, dx, udata);
-                    if (status != AMI_SUCCESS) return 1;
+                    *status = fx0(x,udata);
+                    if (*status != AMI_SUCCESS) return 1;
+                    *status = fdx0(x,dx,udata);
+                    if (*status != AMI_SUCCESS) return 1;
+                    *status = fsx0(NVsx, x, dx, udata);
+                    if (*status != AMI_SUCCESS) return 1;
 
-                    if(status == 0) {
+                    if(*status == 0) {
 
 /* From here ... */
                         xB_tmp = NV_DATA_S(xB);
@@ -2632,7 +2627,7 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(status == 0) {
+                if(NVsx) {
                     N_VDestroyVectorArray_Serial(NVsx,np);
                 }
             }
@@ -2705,6 +2700,7 @@ ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus) {
 
     int iroot = 0;
 
+    *pstatus = 0;
     int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
     if(problem)
         goto freturn;
