@@ -569,16 +569,23 @@ function generateCMakeFile(this)
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n');
     fprintf(fid, 'set(cmake_build_type Debug)\n');
     fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
-    fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n');
+    fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
+    fprintf(fid, 'set(AMICI_DIR "/home/dweindl/src/AMICI.github/")\n');
+    fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
+    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "/home/dweindl/src/_libs/SuiteSparse/")\n');
+    fprintf(fid, 'set(SUNDIALS_LIB_DIR "/home/dweindl/src/_libs/sundials-2.6.2/build/install/lib/")\n');
+    fprintf(fid, 'set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")\n');
+    fprintf(fid, 'set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")\n');
+
     % sources
     fprintf(fid, '\nset(SRC_LIST\n');
     for f = {'main.c', 'wrapfunctions.c', ...
-            fullfile(this.wrap_path, 'src/symbolic_functions.c'), ...
-            fullfile(this.wrap_path, 'src/amici.c'), ...
-            fullfile(this.wrap_path, 'src/udata.c'), ...
-            fullfile(this.wrap_path, 'src/rdata.c'), ...
-            fullfile(this.wrap_path, 'src/edata.c'), ...
+            '${AMICI_DIR}/src/symbolic_functions.c', ...
+            '${AMICI_DIR}/src/amici.c', ...
+            '${AMICI_DIR}/src/udata.c', ...
+            '${AMICI_DIR}/src/rdata.c', ...
+            '${AMICI_DIR}/src/edata.c', ...
             }
         fprintf(fid, '%s\n', f{1});
     end
@@ -591,17 +598,14 @@ function generateCMakeFile(this)
     fprintf(fid, ')\n\n');
     
     %includes
-    sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
-    
-    includeDirs = {fullfile(this.wrap_path, 'models', this.modelname), ...
-        fullfile(this.wrap_path),  ...
-        fullfile(sundials_path, 'include'),  ...
-        fullfile(ssparse_path, 'KLU', 'Include'), ...
-        fullfile(ssparse_path, 'AMD', 'Include'), ...
-        fullfile(ssparse_path, 'SuiteSparse_config'), ...
-        fullfile(ssparse_path, 'COLAMD', 'Include'), ...
-        fullfile(ssparse_path, 'BTF', 'Include')
+    includeDirs = {'${AMICI_DIR}', ...
+        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
+        '${AMICI_DIR}/sundials-2.6.2/include',  ...
+        '${SUITESPARSE_DIR}/KLU/Include', ...
+        '${SUITESPARSE_DIR}/AMD/Include', ...
+        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
+        '${SUITESPARSE_DIR}/COLAMD/Include', ...
+        '${SUITESPARSE_DIR}/BTF/Include'
     };
     for d = includeDirs
         fprintf(fid, 'include_directories("%s")\n', d{1});
@@ -612,19 +616,21 @@ function generateCMakeFile(this)
 
     %libraries
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
-    sundials_lib_path = '/home/dweindl/src/_libs/sundials-2.6.2/build/';
-    ssparse_lib_path = '/home/dweindl/src/_libs/SuiteSparse/';
     libs = {
-        fullfile(sundials_lib_path, 'install/lib/libsundials_nvecserial.so'), ...
-        fullfile(sundials_lib_path, 'src/cvodes/libsundials_cvodes.so'), ...
-        fullfile(ssparse_lib_path, 'lib/libcolamd.so'), ...
-        fullfile(ssparse_lib_path, 'KLU/Lib/libklu.a'), ...
-        fullfile(ssparse_lib_path, 'BTF/Lib/libbtf.a'), ...
-        fullfile(ssparse_lib_path, 'AMD/Lib/libamd.a'), ...
-        fullfile(ssparse_lib_path, 'COLAMD/Lib/libcolamd.a'), ...
-        fullfile(ssparse_lib_path, 'SuiteSparse_config/libsuitesparseconfig.a'), ...
+        '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
+        '${SUNDIALS_LIB_DIR}/libsundials_cvodes.so', ...
+        '${SUITESPARSE_LIB_DIR}/lib/libcolamd.so', ...
+        '${SUITESPARSE_LIB_DIR}/KLU/Lib/libklu.a', ...
+        '${SUITESPARSE_LIB_DIR}/BTF/Lib/libbtf.a', ...
+        '${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a', ...
+        '${SUITESPARSE_LIB_DIR}/COLAMD/Lib/libcolamd.a', ...
+        '${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a', ...
+        '${HDF_LIB_DIR}/libhdf5_hl.a', ...
+        '${HDF_LIB_DIR}/libhdf5.a', ...
+        % for hdf:
+        '-lpthread -ldl -lz -lsz', ...
         '-lm'
-    };
+        };
     for l = libs
         fprintf(fid, '"%s"\n', l{1});
     end
@@ -644,21 +650,30 @@ function generateMainC(this)
     fprintf(fid, '#include "wrapfunctions.h" /* user functions */\n');
     fprintf(fid, '#include "include/symbolic_functions.h"\n');
     fprintf(fid, '#include <include/amici.h> /* amici functions */\n');
+    fprintf(fid, '#include <src/ami_hdf5.h>\n');
+    fprintf(fid, '#include <include/udata_accessors.h>\n');
+    fprintf(fid, '#include <include/rdata_accessors.h>\n');
     fprintf(fid, '\n');
-    fprintf(fid, 'UserData getUserData();\n');
     fprintf(fid, 'void processUserData(UserData udata);\n');
-    fprintf(fid, 'ExpData getExperimentalData(UserData udata);\n');
     fprintf(fid, 'void processReturnData(ReturnData rdata, UserData udata);\n');
     fprintf(fid, 'void printReturnData(ReturnData rdata, UserData udata);\n');
     fprintf(fid, '\n');
     fprintf(fid, 'int main(int argc, char **argv)\n');
     fprintf(fid, '{  \n');
-    fprintf(fid, '    UserData udata = getUserData();\n');
+    fprintf(fid, '    const char *hdffile;\n\n');
+    fprintf(fid, '    if(argc != 2) {\n');
+    fprintf(fid, '        fprintf(stderr, "Error: must provide input file as first and only argument.\n");\n');
+    fprintf(fid, '        return 1;\n');
+    fprintf(fid, '    } else {\n');
+    fprintf(fid, '        hdffile = argv[1];\n');
+    fprintf(fid, '    }\n');
+    fprintf(fid, '    \n');
+    fprintf(fid, '    UserData udata = readSimulationUserData(hdffile);\n');
     fprintf(fid, '    if (udata == NULL) {\n');
     fprintf(fid, '        return 1;\n');
     fprintf(fid, '    }\n');
     fprintf(fid, '\n');
-    fprintf(fid, '    ExpData edata = getExperimentalData(udata);\n');
+    fprintf(fid, '    ExpData edata = readSimulationExpData(hdffile, udata);\n');
     fprintf(fid, '    if (edata == NULL) {\n');
     fprintf(fid, '        freeUserData(udata);\n');
     fprintf(fid, '        return 1;\n');
@@ -673,6 +688,7 @@ function generateMainC(this)
     fprintf(fid, '    }\n');
     fprintf(fid, '\n');
     fprintf(fid, '    processReturnData(rdata, udata);\n');
+    fprintf(fid, '    writeReturnData(hdffile, rdata, udata);\n');
     fprintf(fid, '\n');
     fprintf(fid, '    freeExpData(edata);\n');
     fprintf(fid, '    freeUserData(udata);\n');
@@ -681,106 +697,6 @@ function generateMainC(this)
     fprintf(fid, '    return 0;\n');
     fprintf(fid, '}\n');
     fprintf(fid, '\n');
-    fprintf(fid, 'UserData getUserData() { // was: udata = setupUserData(prhs);\n');
-    fprintf(fid, '    UserData udata; /* User udata structure */\n');
-    fprintf(fid, '    udata = (UserData) malloc(sizeof *udata);\n');
-    fprintf(fid, '    if (udata == NULL)\n');
-    fprintf(fid, '        return(NULL);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    init_modeldims(udata);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* BEGIN SET USER DATA */\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* time vector, matlab: first argument */\n');
-    fprintf(fid, '    nt = 1; // TODO\n');
-    fprintf(fid, '    ts = linSpaceAlloc(0, 1, nt); // TODO\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* parameters (theta), matlab: second argument */\n');
-    fprintf(fid, '    np = 1; // TODO\n');
-    fprintf(fid, '    p = malloc(sizeof(realtype) * np);\n');
-    fprintf(fid, '    // TODO p[0] = 1;\n');
-    fprintf(fid, '    //for(int i = 0; i < np; ++i) p[i] = pow10(p[i]);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* plist, matlab: fifth argument */\n');
-    fprintf(fid, '    // parameter ordering\n');
-    fprintf(fid, '    plist = malloc(np * sizeof(int));\n');
-    fprintf(fid, '    for (int i = 0; i < np; i++) {\n');
-    fprintf(fid, '        plist[i] = i;\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* constants, kappa or data.condition, matlab: third argument */\n');
-    fprintf(fid, '    const int numK = 0; // TODO\n');
-    fprintf(fid, '    k = malloc(sizeof(realtype) * numK);\n');
-    fprintf(fid, '    // TODO k[0] = 0.1;\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* Options ; matlab: fourth argument   */\n');
-    fprintf(fid, '    nmaxevent = 0; // ?\n');
-    fprintf(fid, '    z2event = malloc(sizeof(realtype) * ne);\n');
-    fprintf(fid, '    for(int i = 0; i < ne; ++i)\n');
-    fprintf(fid, '        z2event[i] = i;\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    tstart = 0;\n');
-    fprintf(fid, '    atol = 1E-16;\n');
-    fprintf(fid, '    rtol = 1E-8;\n');
-    fprintf(fid, '    maxsteps = 1e4;\n');
-    fprintf(fid, '    lmm = CV_BDF;\n');
-    fprintf(fid, '    iter = CV_NEWTON;\n');
-    fprintf(fid, '    interpType = CV_POLYNOMIAL; //?\n');
-    fprintf(fid, '    linsol = 9;\n');
-    fprintf(fid, '    stldet = TRUE;\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    idlist = malloc(sizeof(realtype) * np);\n');
-    fprintf(fid, '    for(int i = 0; i < np; ++i)\n');
-    fprintf(fid, '        idlist[i] = 0;\n');
-    fprintf(fid, '    qpositivex = malloc(sizeof(realtype) * nx);\n');
-    fprintf(fid, '    zeros(qpositivex, nx);\n');
-    fprintf(fid, '    sensi = 0;\n');
-    fprintf(fid, '    ism = 1;\n');
-    fprintf(fid, '    sensi_meth = 1;\n');
-    fprintf(fid, '    ordering = 0;\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation\n');
-    fprintf(fid, '    b_sx0 = FALSE;\n');
-    fprintf(fid, '    sx0data = 0;\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* pbarm parameterscales ; matlab: sixth argument*/\n');
-    fprintf(fid, '    pbar = malloc(sizeof(realtype) * np);\n');
-    fprintf(fid, '    ones(pbar, np);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    //    /* xscale, matlab: seventh argument */\n');
-    fprintf(fid, '    //    xbar = mxGetPr(prhs[6]);\n');
-    fprintf(fid, '    xbar = 0; // xscale\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    /* END SET USER DATA */\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    processUserData(udata);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    return(udata);\n');
-    fprintf(fid, '}\n');
-    fprintf(fid, '\n');
-    fprintf(fid, 'ExpData getExperimentalData(UserData udata) {\n');
-    fprintf(fid, '    ExpData edata = (ExpData) malloc(sizeof *edata);\n');
-    fprintf(fid, '    if (edata == NULL) {\n');
-    fprintf(fid, '        return(NULL);\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    // observation ny * nt\n');
-    fprintf(fid, '    my = malloc(sizeof(realtype) * nt * ny);\n');
-    fprintf(fid, '    fillArray(my, nt * ny, NAN);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    // stdev of Y\n');
-    fprintf(fid, '    ysigma =  malloc(sizeof(realtype) * nt * nx);\n');
-    fprintf(fid, '    fillArray(ysigma, nt * nx, NAN);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    // event observations\n');
-    fprintf(fid, '    mz = malloc(sizeof(realtype) * nz * nz);\n');
-    fprintf(fid, '    fillArray(mz, nz * nz, NAN);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    zsigma =  malloc(sizeof(realtype) * nz * nz);\n');
-    fprintf(fid, '    fillArray(zsigma, nz * nz, NAN);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    return(edata);\n');
-    fprintf(fid, '}\n');
     fprintf(fid, '\n');
     fprintf(fid, 'void processReturnData(ReturnData rdata, UserData udata) {\n');
     fprintf(fid, '    printReturnData(rdata, udata);\n');
