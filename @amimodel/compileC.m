@@ -357,9 +357,11 @@ function compileC(this)
     if(this.cfun(1).JSparse)
         this.cfun(1).sxdot = 1;
     end
-    if(this.cfun(1).dxdotdp)
-        this.cfun(1).sxdot = 1;
-        this.cfun(1).qBdot = 1;
+    if(isfield(this.cfun(1),'dxdotdp'))
+        if(this.cfun(1).dxdotdp)
+            this.cfun(1).sxdot = 1;
+            this.cfun(1).qBdot = 1;
+        end
     end
     if(this.cfun(1).w)
         this.recompile = 1;
