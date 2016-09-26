@@ -1,7 +1,7 @@
 % simulate_model_jakstat_adjoint_hvp.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
-%   this routine was generated using AMICI commit 8e3f5d50faeacd3f16d95839fea1182ef5417611 in branch stable in repo https://github.com/FFroehlich/AMICI.
+%   this routine was generated using AMICI commit eeca53108712256b457a9d8bd2dbd92e08ad6f43 in branch master in repo https://github.com/FFroehlich/AMICI.
 %
 % USAGE:
 % ======

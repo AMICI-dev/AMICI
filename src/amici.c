@@ -2221,7 +2221,7 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
 }
 
 
-int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *_setupBdone) {
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
     /********************/
     /* BACKWARD PROBLEM */
     /********************/
@@ -2238,7 +2238,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                     *setupBdone = true;
 
                     it = nt-2;
-                    *iroot--;
+                    (*iroot)--;
                     while (it>=0 || *iroot>=0) {
 
                         /* check if next timepoint is a discontinuity or a data-point */
@@ -2264,7 +2264,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 if (tnext == discs[*iroot]) {
 /* Possibly some change here ... */
                                     handleEventB(status, *iroot, ami_mem, udata, tdata);
-                                    *iroot--;
+                                    (*iroot)--;
                                 }
                             }
                         }
