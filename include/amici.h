@@ -1,5 +1,6 @@
 #ifndef amici_h
 #define amici_h
+#include <include/symbolic_functions.h>
 #include <include/udata.h>
 #include <include/rdata.h>
 #include <include/edata.h>
@@ -68,6 +69,9 @@ void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data)
 void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data);
 void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data);
 
-
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* _status, void *ami_mem, int* iroot);
+int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *_status, void *ami_mem, int *_iroot, booleantype *_setupBdone);
+void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, ReturnData rdata);
+void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleantype setupBdone, int status);
 
 #endif /* amici_symbolic_functions_h */
