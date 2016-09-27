@@ -664,11 +664,10 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(szs);
             
         case 'sz_tf'
-            % the tau is event specific so mapping from z to events is
-            % necessary here.
+
             this.sym = ...
-                + model.fun.dzdp.sym ...
-                + model.fun.dzdx.sym*sx;
+                + jacobian(model.fun.z.sym,p) ...
+                + jacobian(model.fun.z.sym,x)*sx;
             
         case 'JBand'
             %do nothing
