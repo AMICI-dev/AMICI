@@ -156,3 +156,9 @@ examples/example_adjoint_hessian/simulate_model_adjoint_hessian.m
 examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecProd.m
 
 examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m
+
+examples/example_adjoint_hessian/simulate_model_adjoint_hessian.m
+
+examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecProd.m
+
+examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m

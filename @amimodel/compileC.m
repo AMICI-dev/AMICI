@@ -402,10 +402,15 @@ function compileC(this)
     
 
     fprintf('amici | ');
+    if(this.nxtrue ~= this.nx)
+        cstr = 'amicio2.c';
+    else
+        cstr = 'amici.c';
+    end
     eval(['mex ' DEBUG COPT ...
         ' -c -outdir ' fullfile(this.wrap_path,'src') ...
         includesstr ' ' ...
-        fullfile(this.wrap_path,'src','amici.c')]);
+        fullfile(this.wrap_path,'src',cstr)]);
     
     if(isunix)
         if(~ismac)
