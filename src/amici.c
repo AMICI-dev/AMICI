@@ -1488,7 +1488,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
      * @return void
      */
 
-    int ie;
+    int ie,iz;
 
     UserData udata; /* user udata */
     ReturnData rdata; /* return rdata */
@@ -1510,7 +1510,11 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
                 if (*status != AMI_SUCCESS) return;
 
 
-                rzdata[nroots[ie]+ie] = rootvals[ie];
+                for (iz=0; iz<nztrue; iz++) {
+                    if(z2event[iz] == ie) {
+                        rzdata[nroots[ie] + nmaxevent*iz] = rootvals[ie];
+                    }
+                }
 
 
                 getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
