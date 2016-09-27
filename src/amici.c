@@ -1511,7 +1511,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
 
 
                 for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz] == ie) {
+                    if(z2event[iz]-1 == ie) {
                         rzdata[nroots[ie] + nmaxevent*iz] = rootvals[ie];
                     }
                 }
