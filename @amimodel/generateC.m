@@ -24,7 +24,7 @@ end
 for ifun = this.funs
     if(isfield(this.fun,ifun{1}))
         fprintf([ifun{1} ' | ']);
-        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.c']),'w');
+        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
         fprintf(fid,'#include <string.h>\n');
@@ -253,7 +253,7 @@ end
 %
 %----------------------------------------------------------------
 % this.modelname.h
-% function declarations for this.modelname.c
+% function declarations for this.modelname.cpp
 %----------------------------------------------------------------
 %
 
@@ -282,7 +282,7 @@ fclose(fid);
 %
 %----------------------------------------------------------------
 % funname.h
-% function declarations for funname.c
+% function declarations for funname.cpp
 %----------------------------------------------------------------
 %
 
@@ -304,7 +304,7 @@ for ifun = this.funs
 end
 %
 %----------------------------------------------------------------
-% wrapfunctions.c
+% wrapfunctions.cpp
 % function definitions
 %----------------------------------------------------------------
 %
@@ -342,7 +342,7 @@ else
 end
 
 fprintf('wrapfunctions | ');
-fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
+fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 fprintf(fid,'                \n');
 fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/udata_accessors.h>\n');
@@ -474,7 +474,7 @@ fclose(fid);
 %
 %----------------------------------------------------------------
 % wrapfunctions.h
-% function declarations for wrapfunctions.c
+% function declarations for wrapfunctions.cpp
 %----------------------------------------------------------------
 %
 

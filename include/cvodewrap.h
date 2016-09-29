@@ -126,7 +126,7 @@ static int AMIGetSens(void *mem, realtype *tret, N_Vector *yySout) {
     return CVodeGetSens( mem, tret, yySout);
 };
 
-static int AMIRootInit(void *mem, int nrtfn, void *ptr) {
+static int AMIRootInit(void *mem, int nrtfn, CVRootFn ptr) {
     return CVodeRootInit( mem, nrtfn, ptr);
 };
 

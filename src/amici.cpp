@@ -1,5 +1,5 @@
 /**
- * @file   amici.c
+ * @file   amici.cpp
  * @brief  core routines for integration
  */
 
@@ -21,13 +21,14 @@
 #include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
 
-/** 
- * @ brief initialise matrix and attach to the field 
+/**
+ * @ brief initialise matrix and attach to the field
  * @ param FIELD name of the field to which the matrix will be attached
  * @ param D1 number of rows in the matrix
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
+mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -40,6 +41,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
+mxArray *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -56,6 +58,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
+mxArray *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -71,10 +74,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  */
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
-    OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
+OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-    mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-    return(NULL); \
+mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+return(NULL); \
 }
 
 /**
@@ -83,10 +86,10 @@ if(mxGetProperty(prhs[3],0,#OPTION)){ \
  */
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
-    OPTION = mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
+OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-    mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-    return(NULL); \
+mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+return(NULL); \
 }
 
 /** return value for successful execution */
@@ -98,62 +101,61 @@ UserData setupUserData(const mxArray *prhs[]) {
      * @param[in] prhs: pointer to the array of input arguments @type mxArray
      * @return udata: struct containing all provided user data @type UserData
      */
-
+    
     UserData udata; /* returned udata struct */
     realtype *plistdata; /* input for plist */
-    realtype stldetdata; /* input for stldet */
-
+    
     int ip;
-
+    
     /* User udata structure */
     udata = (UserData) mxMalloc(sizeof *udata);
     if (udata == NULL) return(NULL);
-
+    
     init_modeldims(udata);
-
+    
     /* time */
-
+    
     if (!prhs[0]) {
         mexErrMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
     }
     ts = mxGetPr(prhs[0]);
-
+    
     nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
-
+    
     /* parameters */
-
+    
     if (!prhs[1]) {
         mexErrMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
     }
     p = mxGetPr(prhs[1]);
-
+    
     /* constants */
-
+    
     if (!prhs[2]) {
         mexErrMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
     }
     k = mxGetPr(prhs[2]);
-
+    
     if (!prhs[3]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
-
+    
     np = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
-
+    
     /* plist */
     if (!prhs[4]) {
         mexErrMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     }
-
+    
     if(prhs[4]) {
         plistdata = mxGetPr(prhs[4]);
     }
-
-    plist = mxMalloc(np*sizeof(int));
+    
+    plist = (int *) mxMalloc(np*sizeof(int));
     for (ip=0; ip<np; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
-
+    
     readOptionScalar(nmaxevent,int)
     readOptionScalar(tstart,double)
     readOptionScalar(atol,double)
@@ -164,21 +166,21 @@ UserData setupUserData(const mxArray *prhs[]) {
     readOptionScalar(interpType,int)
     readOptionScalar(linsol,int)
     readOptionScalar(stldet,booleantype)
-
+    
     if(mxGetProperty(prhs[3],0,"id")){ \
-        idlist = mxGetData(mxGetProperty(prhs[3],0,"id")); \
+        idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
     } else { \
         mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
         return(NULL); \
     }
-
+    
     readOptionData(z2event)
     readOptionData(qpositivex)
     readOptionScalar(sensi,int)
     readOptionScalar(ism,int)
     readOptionScalar(sensi_meth,int)
     readOptionScalar(ordering,int)
-
+    
     if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
         /* check dimensions */
@@ -188,51 +190,51 @@ UserData setupUserData(const mxArray *prhs[]) {
     } else {
         b_sx0 = FALSE;
     }
-
-
-
+    
+    
+    
     /* pbar */
     if (!prhs[5]) {
         mexErrMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
     }
-
+    
     pbar = mxGetPr(prhs[5]);
-
+    
     /* xscale */
     if (!prhs[6]) {
         mexErrMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
     }
-
+    
     xbar = mxGetPr(prhs[6]);
-
+    
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
-        M_tmp = mxMalloc(nx*nx*sizeof(realtype));
-        dfdx_tmp = mxMalloc(nx*nx*sizeof(realtype));
+        M_tmp = (realtype *) mxMalloc(nx*nx*sizeof(realtype));
+        dfdx_tmp = (realtype *) mxMalloc(nx*nx*sizeof(realtype));
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = mxMalloc(nx*np*sizeof(realtype));
+        tmp_dxdotdp = (realtype *) mxMalloc(nx*np*sizeof(realtype));
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = mxMalloc(np*sizeof(realtype));
+        stau_tmp = (realtype *) mxMalloc(np*sizeof(realtype));
     }
-
-
-    w_tmp = mxMalloc(nw*sizeof(realtype));
-    dwdx_tmp = mxMalloc(ndwdx*sizeof(realtype));
-    dwdp_tmp = mxMalloc(ndwdp*sizeof(realtype));
-
-
+    
+    
+    w_tmp = (realtype *) mxMalloc(nw*sizeof(realtype));
+    dwdx_tmp = (realtype *) mxMalloc(ndwdx*sizeof(realtype));
+    dwdp_tmp = (realtype *) mxMalloc(ndwdp*sizeof(realtype));
+    
+    
     udata->am_nan_dxdotdp = FALSE;
     udata->am_nan_J = FALSE;
     udata->am_nan_JSparse = FALSE;
     udata->am_nan_xdot = FALSE;
     udata->am_nan_xBdot = FALSE;
     udata->am_nan_qBdot = FALSE;
-
+    
     return(udata);
 }
 
@@ -240,92 +242,57 @@ UserData setupUserData(const mxArray *prhs[]) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
+ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
      * @param[in] plhs user input @type mxArray
-     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] pstatus pointer to the flag indicating the execution status @type double
      * @return rdata: return data struct @type ReturnData
      */
     ReturnData rdata; /* returned rdata struct */
-    UserData udata; /** user udata */
-
+    
     mxArray *mxsol;
-
-/* Here, a new field for the Hessian or the HVP must be inserted */
-/* No, this is already done with s2llh */
+    
+    /* Here, a new field for the Hessian or the HVP must be inserted */
+    /* No, this is already done with s2llh */
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     mxArray *mxstatus;
-    mxArray *mxllh;
-    mxArray *mxsllh;
-    mxArray *mxs2llh;
-    mxArray *mxchi2;
-    mxArray *mxg;
-    mxArray *mxr;
-    mxArray *mxt;
-    mxArray *mxnumsteps;
-    mxArray *mxnumrhsevals;
-    mxArray *mxorder;
-    mxArray *mxnumstepsS;
-    mxArray *mxnumrhsevalsS;
-    mxArray *mxrz;
-    mxArray *mxz;
-    mxArray *mxx;
-    mxArray *mxy;
-    mxArray *mxsrz;
-    mxArray *mxsz;
-    mxArray *mxsx;
-    mxArray *mxsy;
-    mxArray *mxs2rz;
-    mxArray *mxsigmay;
-    mxArray *mxssigmay;
-    mxArray *mxsigmaz;
-    mxArray *mxssigmaz;
-    mxArray *mxxdot;
-    mxArray *mxJ;
-    mxArray *mxdydp;
-    mxArray *mxdydx;
-    mxArray *mxdxdotdp;
-
+    
     mxArray *mxts;
-
+    
     mwSize dimssx[] = {0,0,0};
     mwSize dimssy[] = {0,0,0};
     mwSize dimssz[] = {0,0,0};
     mwSize dimssrz[] = {0,0,0};
     mwSize dimss2rz[] = {0,0,0,0};
-    mwSize dimssigmay[] = {0,0,0};
-    mwSize dimssigmaz[] = {0,0,0};
     mwSize dimsssigmay[] = {0,0,0};
     mwSize dimsssigmaz[] = {0,0,0};
-
-    /* this casting is necessary to ensure availability of accessor macros */
-    udata = (UserData) user_data;
-
+    
+    
     /* Return rdata structure */
     rdata = (ReturnData) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
-
+    
     mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
-
+    
     plhs[0] = mxsol;
-
-
+    
+    
     mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
-
+    
     mxSetPr(mxstatus,pstatus);
     mxSetField(mxsol,0,"status",mxstatus);
-
+    
     initField2(llh,1,1);
     initField2(chi2,1,1);
     /*initField2(g,ng,1);
-    initField2(r,ng,1);*/
-
+     initField2(r,ng,1);*/
+    
     mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
-
+    
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
     initField2(order,nt,1);
@@ -383,7 +350,7 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
             }
         }
     }
-
+    
     return(rdata);
 }
 
@@ -391,30 +358,28 @@ ReturnData setupReturnData(mxArray *plhs[], void *user_data, double *pstatus) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-ExpData setupExpData(const mxArray *prhs[], void *user_data) {
+ExpData setupExpData(const mxArray *prhs[], UserData udata) {
     /**
      * setupExpData initialises the experimental data struct
      * @param[in] prhs user input @type *mxArray
-     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[in] udata pointer to the user data struct @type UserData
      * @return edata: experimental data struct @type ExpData
      */
-
-    int nmyt, nmyy, nysigmat, nysigmay; /* integers with problem dimensionality */
-    int nmzt, nmzy, nzsigmat, nzsigmay; /* integers with problem dimensionality */
-
+    
+    int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
+    int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
+    
     char *errmsg;
-
+    
     ExpData edata; /* returned rdata struct */
-    UserData udata; /** user udata */
-
+    
     errmsg = (char *)mxMalloc(200*sizeof(char));
-
-    udata = (UserData) user_data;
-
+    
+    
     /* Return rdata structure */
     edata = (ExpData) mxMalloc(sizeof *edata);
     if (edata == NULL) return(NULL);
-
+    
     if (!prhs[7]) {
         mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
     }
@@ -425,7 +390,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
     }
-
+    
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
         ysigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
         nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
@@ -440,7 +405,7 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
     }
-
+    
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
         zsigma = mxGetPr(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
         nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
@@ -448,47 +413,47 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
     } else {
         mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
     }
-
+    
     if (nmyt != nt) {
         sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
         mexErrMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
     }
-
+    
     if (nysigmat != nt) {
         sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
         mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
     }
-
+    
     if (nmyy != nytrue) {
         sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
     }
-
+    
     if (nysigmay != nytrue) {
         sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
     }
-
+    
     if (nmzt != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
         mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
     }
-
+    
     if (nzsigmat != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
         mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
     }
-
+    
     if (nmzy != nztrue) {
         sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
     }
-
+    
     if (nzsigmay != nztrue) {
         sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
         mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
-
+    
     return(edata);
 }
 
@@ -496,41 +461,37 @@ ExpData setupExpData(const mxArray *prhs[], void *user_data) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void *setupAMI(int *status, void *user_data, void *temp_data) {
+void *setupAMI(int *status, UserData udata, TempData tdata) {
     /**
      * @brief setupAMIs initialises the ami memory object
      * @param[out] status flag indicating success of execution @type *int
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[in] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
     int ip;
     int ix;
-    /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; /* user udata */
-    TempData tdata; /* user udata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
 
-
+    
+    
     t = tstart;
-
+    
     /*
-    g = 0.0;
-    r = 0.0;
-    */
-    g = mxMalloc(ng*sizeof(realtype));
+     g = 0.0;
+     r = 0.0;
+     */
+    g = (realtype *) mxMalloc(ng*sizeof(realtype));
     memset(g,0,ng*sizeof(realtype));
-    r = mxMalloc(ng*sizeof(realtype));
+    r = (realtype *) mxMalloc(ng*sizeof(realtype));
     memset(r,0,ng*sizeof(realtype));
-
-
+    
+    
     x = N_VNew_Serial(nx);
-
+    
     if (nx > 0) {
-
+        
         /* allocate temporary objects */
         x = N_VNew_Serial(nx);
         x_old = N_VNew_Serial(nx);
@@ -539,40 +500,40 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
         xdot = N_VNew_Serial(nx);
         xdot_old = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
-
-        if(ne>0) rootsfound = mxMalloc(ne*sizeof(int));
-        if(ne>0) rootvals= mxMalloc(ne*sizeof(realtype));
-        if(ne>0) rootidx = mxMalloc(nmaxevent*ne*ne*sizeof(int));
-        if(ne>0) nroots = mxMalloc(ne*sizeof(int));
+        
+        if(ne>0) rootsfound = (int *) mxMalloc(ne*sizeof(int));
+        if(ne>0) rootvals= (realtype *) mxMalloc(ne*sizeof(realtype));
+        if(ne>0) rootidx = (int *) mxMalloc(nmaxevent*ne*ne*sizeof(int));
+        if(ne>0) nroots = (int *) mxMalloc(ne*sizeof(int));
         if(ne>0) memset(nroots,0,ne*sizeof(int));
-        if(ne>0) discs = mxMalloc(nmaxevent*ne*sizeof(realtype));
-        if(ne>0) h = mxMalloc(ne*sizeof(realtype));
-        if(ne>0) h_tmp = mxMalloc(ne*sizeof(realtype));
-
-        if(ne>0) deltax = mxMalloc(nx*sizeof(realtype));
-        if(ne>0) deltasx = mxMalloc(nx*np*sizeof(realtype));
-        if(ne>0) deltaxB = mxMalloc(nx*sizeof(realtype));
-        if(ne>0) deltaqB = mxMalloc(ng*np*sizeof(realtype));
-
-        if(ny>0) sigma_y = mxMalloc(ny*sizeof(realtype));
+        if(ne>0) discs = (realtype *) mxMalloc(nmaxevent*ne*sizeof(realtype));
+        if(ne>0) h = (realtype *) mxMalloc(ne*sizeof(realtype));
+        if(ne>0) h_tmp = (realtype *) mxMalloc(ne*sizeof(realtype));
+        
+        if(ne>0) deltax = (realtype *) mxMalloc(nx*sizeof(realtype));
+        if(ne>0) deltasx = (realtype *) mxMalloc(nx*np*sizeof(realtype));
+        if(ne>0) deltaxB = (realtype *) mxMalloc(nx*sizeof(realtype));
+        if(ne>0) deltaqB = (realtype *) mxMalloc(ng*np*sizeof(realtype));
+        
+        if(ny>0) sigma_y = (realtype *) mxMalloc(ny*sizeof(realtype));
         if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
-        if(ne>0) sigma_z = mxMalloc(nz*sizeof(realtype));
+        if(ne>0) sigma_z = (realtype *) mxMalloc(nz*sizeof(realtype));
         if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
-
-
+        
+        
         /* initialise states */
-
+        
         if (x == NULL) return(NULL);
         *status = fx0(x, udata);
         if (*status != AMI_SUCCESS) return(NULL);
         *status = fdx0(x, dx, udata); /* only needed for idas */
         if (*status != AMI_SUCCESS) return(NULL);
-
+        
         /* initialise heaviside variables */
-        initHeaviside(status,user_data,temp_data);
-
+        initHeaviside(status,udata,tdata);
+        
     }
-
+    
     /* Create AMIS object */
     if (lmm>2||lmm<1) {
         mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
@@ -582,160 +543,160 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
     }
     ami_mem = AMICreate(lmm, iter);
     if (ami_mem == NULL) return(NULL);
-
+    
     /* Initialize AMIS solver*/
     *status = wrap_init(ami_mem, x, dx, tstart);
     if (*status != AMI_SUCCESS) return(NULL);
-
+    
     /* Specify integration tolerances */
     *status = AMISStolerances(ami_mem, RCONST(rtol), RCONST(atol));
     if(*status != AMI_SUCCESS) return(NULL);
-
+    
     /* Set optional inputs */
     *status = AMISetErrHandlerFn(ami_mem);
     if(*status != AMI_SUCCESS) return(NULL);
-
+    
     /* attaches userdata*/
     *status = AMISetUserData(ami_mem, udata);
     if(*status != AMI_SUCCESS) return(NULL);
-
+    
     /* specify maximal number of steps */
     *status = AMISetMaxNumSteps(ami_mem, maxsteps);
     if(*status != AMI_SUCCESS) return(NULL);
-
+    
     /* activates stability limit detection */
     *status = AMISetStabLimDet(ami_mem, stldet);
     if(*status != AMI_SUCCESS) return(NULL);
-
+    
     if (ne>0) {
         /* activates root detection */
         *status = wrap_RootInit(ami_mem, udata);
         if(*status != AMI_SUCCESS) return(NULL);
     }
-
+    
     /* Attach linear solver module */
     switch (linsol) {
-
+            
             /* DIRECT SOLVERS */
-
+            
         case AMI_DENSE:
             *status = AMIDense(ami_mem, nx);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetDenseJacFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
         case AMI_BAND:
             *status = AMIBand(ami_mem, nx, ubw, lbw);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetBandJacFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
         case AMI_LAPACKDENSE:
             mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackDense(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
-
+             
              *status = wrap_SetDenseJacFn(ami_mem);
              if (*status != AMI_SUCCESS) return;
-
+             
              break;*/
-
+            
         case AMI_LAPACKBAND:
-
+            
             mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackBand(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
-
+             
              *status = wrap_SetBandJacFn(ami_mem);
              if (*status != AMI_SUCCESS) return;
-
+             
              break;*/
-
+            
         case AMI_DIAG:
             *status = AMIDiag(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
             /* ITERATIVE SOLVERS */
-
+            
         case AMI_SPGMR:
             *status = AMISpgmr(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetJacTimesVecFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
         case AMI_SPBCG:
             *status = AMISpbcg(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetJacTimesVecFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
         case AMI_SPTFQMR:
             *status = AMISptfqmr(ami_mem, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetJacTimesVecFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
             /* SPARSE SOLVERS */
-
+            
         case AMI_KLU:
             *status = AMIKLU(ami_mem, nx, nnz);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = wrap_SetSparseJacFn(ami_mem);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             *status = AMIKLUSetOrdering(ami_mem, ordering);
             if (*status != AMI_SUCCESS) return(NULL);
-
+            
             break;
-
+            
         default:
             mexErrMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
             break;
     }
-
+    
     if ( sensi >= 1) {
-
-        dydx = mxMalloc(ny*nx*sizeof(realtype));
+        
+        dydx = (realtype *) mxMalloc(ny*nx*sizeof(realtype));
         memset(dydx,0,ny*nx*sizeof(realtype));
-        dydp = mxMalloc(ny*np*sizeof(realtype));
+        dydp = (realtype *) mxMalloc(ny*np*sizeof(realtype));
         memset(dydp,0,ny*np*sizeof(realtype));
-
-        dsigma_ydp = mxMalloc(ny*np*sizeof(realtype));
+        
+        dsigma_ydp = (realtype *) mxMalloc(ny*np*sizeof(realtype));
         memset(dsigma_ydp,0,ny*np*sizeof(realtype));
-        if(ne>0) dsigma_zdp = mxMalloc(nz*np*sizeof(realtype));
+        if(ne>0) dsigma_zdp = (realtype *) mxMalloc(nz*np*sizeof(realtype));
         if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
-
+        
         if (sensi_meth == AMI_FSA) {
-
+            
             if(nx>0) {
-
+                
                 /* allocate some more temporary storage */
-
+                
                 NVsx = N_VCloneVectorArray_Serial(np, x);
                 sdx = N_VCloneVectorArray_Serial(np, x);
                 if (NVsx == NULL) return(NULL);
                 if (sdx == NULL) return(NULL);
-
+                
                 /* initialise sensitivities, this can either be user provided or come from the model definition */
-
+                
                 if(!b_sx0) {
                     *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return(NULL);
@@ -749,77 +710,77 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
                 }
                 *status = fsdx0(sdx, x, dx, udata);
                 if (*status != AMI_SUCCESS) return(NULL);
-
+                
                 /* Activate sensitivity calculations */
-
+                
                 *status = wrap_SensInit1(ami_mem, NVsx, sdx, udata);
                 if (*status != AMI_SUCCESS) return(NULL);
-
+                
                 /* Set sensitivity analysis optional inputs */
                 *status = AMISetSensParams(ami_mem, p, pbar, plist);
                 if (*status != AMI_SUCCESS) return(NULL);
-
+                
                 *status = AMISetSensErrCon(ami_mem, error_corr);
                 if (*status != AMI_SUCCESS) return(NULL);
-
+                
                 *status = AMISensEEtolerances(ami_mem);
                 if (*status != AMI_SUCCESS) return(NULL);
             }
         }
-
+        
         if (sensi_meth == AMI_ASA) {
-
+            
             if(nx>0) {
                 /* Allocate space for the adjoint computation */
-
+                
                 which = 0;
-
+                
                 if(ne>0) x_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 if(ne>0) xdot_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 if(ne>0) xdot_old_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
-
-
+                
+                
                 /* we always want N_d to be equal to the number of maximal steps, this prevents additional forward passes
                  and thus ensures correctness for systems with discontinuous right hand sides */
-
+                
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
-
-/* Here, some changes may need to be done, but probably not... */
-                llhS0 = mxMalloc(ng*np*sizeof(realtype));
+                
+                /* Here, some changes may need to be done, but probably not... */
+                llhS0 = (realtype *) mxMalloc(ng*np*sizeof(realtype));
                 memset(llhS0,0,ng*np*sizeof(realtype));
-                dgdp = mxMalloc(ng*np*sizeof(realtype));
+                dgdp = (realtype *) mxMalloc(ng*np*sizeof(realtype));
                 memset(dgdp,0,ng*np*sizeof(realtype));
-                dgdx = mxMalloc(ng*nxtrue*nt*sizeof(realtype));
+                dgdx = (realtype *) mxMalloc(ng*nxtrue*nt*sizeof(realtype));
                 memset(dgdx,0,ng*nxtrue*nt*sizeof(realtype));
                 if (ne > 0) {
-                    dzdp = mxMalloc(nz*np*sizeof(realtype));
+                    dzdp = (realtype *) mxMalloc(nz*np*sizeof(realtype));
                     memset(dzdp,0,nz*np*sizeof(realtype));
-                    dzdx = mxMalloc(nz*nx*sizeof(realtype));
+                    dzdx = (realtype *) mxMalloc(nz*nx*sizeof(realtype));
                     memset(dzdx,0,nz*nx*sizeof(realtype));
                 }
-                drdp = mxMalloc(ng*np*nztrue*nmaxevent*sizeof(realtype));
+                drdp = (realtype *) mxMalloc(ng*np*nztrue*nmaxevent*sizeof(realtype));
                 memset(drdp,0,ng*np*nztrue*nmaxevent*sizeof(realtype));
-                drdx = mxMalloc(ng*nx*nztrue*nmaxevent*sizeof(realtype));
+                drdx = (realtype *) mxMalloc(ng*nx*nztrue*nmaxevent*sizeof(realtype));
                 memset(drdx,0,ng*nx*nztrue*nmaxevent*sizeof(realtype));
             }
         }
-
-
-
+        
+        
+        
     }
-
+    
     id = N_VNew_Serial(nx);
     id_tmp = NV_DATA_S(id);
     memcpy(id_tmp,idlist,nx*sizeof(realtype));
-
+    
     *status = AMISetId(ami_mem, id);
     if (*status != AMI_SUCCESS) return(NULL);
-
+    
     *status = AMISetSuppressAlg(ami_mem, TRUE);
     if (*status != AMI_SUCCESS) return(NULL);
-
-
+    
+    
     return(ami_mem);
 }
 
@@ -827,32 +788,27 @@ void *setupAMI(int *status, void *user_data, void *temp_data) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
+void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
     /**
      * setupAMIB initialises the AMI memory object for the backwards problem
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ami_mem pointer to the solver memory object of the forward problem
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[in] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
-    /* this casting is necessary to ensure availability of accessor macros */
     int ix;
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
     xB = N_VNew_Serial(nx);
     xB_old = N_VNew_Serial(nx);
-
+    
     dxB = N_VNew_Serial(nx);
-
-/* Hier sollte np*np drinnen stehen.... */
+    
+    /* Hier sollte np*np drinnen stehen.... */
     xQB = N_VNew_Serial(ng*np);
     xQB_old = N_VNew_Serial(ng*np);
-/* Bis hierher...  */
-
+    /* Bis hierher...  */
+    
     /* write initial conditions */
     if (xB == NULL) return;
     xB_tmp = NV_DATA_S(xB);
@@ -861,20 +817,20 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
         xB_tmp[ix] += dgdx[nt-1+ix*nt];
     }
     /*for (ix=0; ix<nxtrue; ix++) {
-        for (ig=0; ig<ng; ig++) {
-            xB_tmp[ix+ig*nxtrue] += dgdx[nt-1+ix*nt+ig*nxtrue*nt];
-        }
-    }*/
-
+     for (ig=0; ig<ng; ig++) {
+     xB_tmp[ix+ig*nxtrue] += dgdx[nt-1+ix*nt+ig*nxtrue*nt];
+     }
+     }*/
+    
     if (dxB == NULL) return;
     dxB_tmp = NV_DATA_S(dxB);
     memset(dxB_tmp,0,sizeof(realtype)*nx);
-
+    
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-/* Change the allocated space for the integral... */
+    /* Change the allocated space for the integral... */
     memset(xQB_tmp,0,sizeof(realtype)*ng*np);
-
+    
     /* create backward problem */
     if (lmm>2||lmm<1) {
         mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
@@ -882,70 +838,70 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
     if (iter>2||iter<1) {
         mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
-/* Does everything stay the same here? */
+    /* Does everything stay the same here? */
     /* allocate memory for the backward problem */
     *status = AMICreateB(ami_mem, lmm, iter, &which);
     if (*status != AMI_SUCCESS) return;
-
-
+    
+    
     /* initialise states */
     *status = wrap_binit(ami_mem, which, xB, dxB, t);
     if (*status != AMI_SUCCESS) return;
-
+    
     /* specify integration tolerances for backward problem */
     *status = AMISStolerancesB(ami_mem, which, RCONST(rtol), RCONST(atol));
     if(*status != AMI_SUCCESS) return;
-
+    
     /* Attach user data */
     *status = AMISetUserDataB(ami_mem, which, udata);
     if(*status != AMI_SUCCESS) return;
-
+    
     /* Number of maximal internal steps */
     *status = AMISetMaxNumStepsB(ami_mem, which, 100*maxsteps);
     if(*status != AMI_SUCCESS) return;
-
+    
     switch (linsol) {
-
+            
             /* DIRECT SOLVERS */
-
+            
         case AMI_DENSE:
             *status = AMIDenseB(ami_mem, which, nx);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetDenseJacFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
         case AMI_BAND:
             *status = AMIBandB(ami_mem, which, nx, ubw, lbw);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetBandJacFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
         case AMI_LAPACKDENSE:
-
+            
             /* #if SUNDIALS_BLAS_LAPACK
              *status = CVLapackDenseB(ami_mem, which, nx);
              if (*status != AMI_SUCCESS) return;
-
+             
              *status = wrap_SetDenseJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
             mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
-
+            
         case AMI_LAPACKBAND:
-
-
+            
+            
             /* #if SUNDIALS_BLAS_LAPACK
              *status = CVLapackBandB(ami_mem, which, nx, ubw, lbw);
              if (*status != AMI_SUCCESS) return;
-
+             
              *status = wrap_SetBandJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
@@ -953,119 +909,110 @@ void setupAMIB(int *status,void *ami_mem, void *user_data, void *temp_data) {
             /* #endif*/
             break;
             break;
-
+            
         case AMI_DIAG:
             *status = AMIDiagB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetDenseJacFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
             /* ITERATIVE SOLVERS */
-
+            
         case AMI_SPGMR:
             *status = AMISpgmrB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetJacTimesVecFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
         case AMI_SPBCG:
             *status = AMISpbcgB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetJacTimesVecFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
         case AMI_SPTFQMR:
             *status = AMISptfqmrB(ami_mem, which, PREC_NONE, 5);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetJacTimesVecFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
             /* SPARSE SOLVERS */
-
+            
         case AMI_KLU:
             *status = AMIKLUB(ami_mem, which, nx, nnz);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = wrap_SetSparseJacFnB(ami_mem, which);
             if (*status != AMI_SUCCESS) return;
-
+            
             *status = AMIKLUSetOrderingB(ami_mem, which, ordering);
             if (*status != AMI_SUCCESS) return;
-
+            
             break;
-
+            
         default:
             break;
     }
-
+    
     /* Initialise quadrature calculation */
-/* By now, there should be no more changes needed here, right? */
-/* Look up how the following routine works, anyway... */
+    /* By now, there should be no more changes needed here, right? */
+    /* Look up how the following routine works, anyway... */
     *status = wrap_qbinit(ami_mem, which, xQB);
     if (*status != AMI_SUCCESS) return;
-
+    
     /* Enable Quadrature Error Control */
     *status = AMISetQuadErrConB(ami_mem, which, TRUE);
     if (*status != AMI_SUCCESS) return;
-
+    
     *status = AMIQuadSStolerancesB(ami_mem, which, RCONST(rtol), RCONST(atol));
     if(*status != AMI_SUCCESS) return;
-
+    
     *status = AMISetStabLimDetB(ami_mem, which, stldet); /* activates stability limit detection */
     if(*status != AMI_SUCCESS) return;
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getDataSensisFSA(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of current timepoint @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ip;
     int iy;
     int ix;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
     for(ip=0; ip < np; ip++) {
         if(nx>0) {
             if(ts[it] > tstart) {
                 *status = AMIGetSens(ami_mem, &t, NVsx);
                 if (*status != AMI_SUCCESS) return;
             }
-
+            
             sx_tmp = NV_DATA_S(NVsx[ip]);
             for(ix=0; ix < nx; ix++) {
                 sxdata[(ip*nx + ix)*nt + it] = sx_tmp[ix];
@@ -1094,32 +1041,24 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, void  *user_data, void
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getDataSensisASA(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getDataSensisASA extracts data information for adjoint sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of current timepoint @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int iy;
     int ip;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     *status = fdydx(ts[it],it,dydx,x,udata);
     if (*status != AMI_SUCCESS) return;
     *status = fdydp(ts[it],it,dydp,x,udata);
@@ -1145,41 +1084,33 @@ void getDataSensisASA(int *status, int it, void *ami_mem, void  *user_data, void
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getDataOutput(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getDataOutput extracts output information for data-points
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of current timepoint @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int iy;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     *status = fy(ts[it],it,ydata,x,udata);
     if (*status != AMI_SUCCESS) return;
-
+    
     for (iy=0; iy<nytrue; iy++) {
         /* extract the value for the standard deviation, if the data value is NaN, use
          the parameter value. Store this value in the return struct */
         if (mxIsNaN(ysigma[iy*nt+it])) {
             *status =fsigma_y(t,sigma_y,udata);
             if (*status != AMI_SUCCESS) return;
-
+            
         } else {
             sigma_y[iy] = ysigma[iy*nt+it];
         }
@@ -1200,37 +1131,30 @@ void getDataOutput(int *status, int it, void *ami_mem, void  *user_data, void *r
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisFSA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+void getEventSensisFSA(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
     /**
      * getEventSensisFSA extracts event information for forward sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type int
      * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
-    /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    TempData tdata; /* temp data */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     *status = fsz(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
     /**
      * getEventSensisFSA_tf extracts event information for forward sensitivity
      *     analysis for events that happen at the end of the considered interval
@@ -1238,63 +1162,47 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, void  *user_data, 
      * @param[out] status flag indicating success of execution @type int
      * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
-    /* this casting is necessary to ensure availability of accessor macros */
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    TempData tdata; /* temp data */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     *status = fsz_tf(t,ie,nroots,szdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
-
+    
     *status = fsroot(t,ie,nroots,srzdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
-
+    
     if(sensi>1) {
         *status = fs2root(t,ie,nroots,s2rzdata,x,NVsx,udata);
         if (*status != AMI_SUCCESS) return;
     }
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventSensisASA(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getEventSensisASA extracts event information for adjoint sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ie index of event type @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
     int ip;
-    int ix;
     int iz;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     for (iz=0; iz<nztrue; iz++) {
         if( z2event[iz]-1 == ie ){
             if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
@@ -1331,7 +1239,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, void  *user_data, voi
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getEventSigma extracts fills sigma_z either from the user defined function or from user input
      *
@@ -1339,21 +1247,13 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data,
      * @param[in] ie event type index @type int
      * @param[in] iz event output index @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
     /* extract the value for the standard deviation, if the data value is NaN, use
      the parameter value. Store this value in the return struct */
     if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
@@ -1363,97 +1263,81 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, void  *user_data,
         sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
     }
     sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventObjective(int *status, int ie, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventObjective(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getEventObjective updates the objective function on the occurence of an event
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ie event type index @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-    int iz,ip;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    int iz;
+    
+    
     for (iz=0; iz<nztrue; iz++) {
         if(z2event[iz]-1 == ie) {
-            getEventSigma(status, ie, iz, ami_mem, user_data, return_data, exp_data, temp_data);
+            getEventSigma(status, ie, iz, ami_mem, udata, rdata, edata, tdata);
             if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
-
+                
                 r[0] += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                 *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
             }
         }
     }
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * getEventOutput extracts output information for events
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] tlastroot timepoint of last occured event @type *realtype
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
     int iz;
     int ie;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
-
+    
+    
+    
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
             if(rootsfound[ie] != 0) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
-
+                
                 for (iz=0; iz<nztrue; iz++) {
                     if(z2event[iz]-1 == ie) {
-                        getEventSigma(status, ie, iz, ami_mem,user_data,return_data,exp_data,temp_data);
+                        getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
                         if (*status != AMI_SUCCESS) return;
                     }
                 }
-
-                getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+                
+                getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
                 if (*status != AMI_SUCCESS) return;
-
+                
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
@@ -1463,7 +1347,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
                         if (*status != AMI_SUCCESS) return;
                     }
                 }
-
+                
                 nroots[ie]++;
             }
         }
@@ -1475,51 +1359,43 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, void  *user
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void fillEventOutput(int *status, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * fillEventOutput fills missing roots at last timepoint
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ie,iz;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
-    froot(t,x,dx,rootvals,user_data);
-
-
+    
+    
+    froot(t,x,dx,rootvals,udata);
+    
+    
     /* EVENT OUTPUT */
     if (nztrue>0) {
         for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
             while (nroots[ie]<nmaxevent) {
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
-
-
+                
+                
                 for (iz=0; iz<nztrue; iz++) {
                     if(z2event[iz]-1 == ie) {
                         rzdata[nroots[ie] + nmaxevent*iz] = rootvals[ie];
                     }
                 }
-
-
-                getEventObjective(status, ie, ami_mem, user_data, return_data, exp_data, temp_data);
+                
+                
+                getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
                 if (*status != AMI_SUCCESS) return;
-
+                
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
@@ -1529,7 +1405,7 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
                         if (*status != AMI_SUCCESS) return;
                     }
                 }
-
+                
                 nroots[ie]++;
             }
         }
@@ -1540,42 +1416,34 @@ void fillEventOutput(int *status, void *ami_mem, void  *user_data, void *return_
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data) {
+void handleDataPoint(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of data point @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ix;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
-
+    
+    
+    
     tsdata[it] = ts[it];
     if (nx>0) {
         x_tmp = NV_DATA_S(x);
         for (ix=0; ix<nx; ix++) {
             xdata[it+nt*ix] = x_tmp[ix];
         }
-
+        
         if (it == nt-1) {
             if( sensi_meth == AMI_SS) {
-
+                
                 *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
                 if (*status != AMI_SUCCESS) return;
                 *status = fdydp(ts[it],it,dydpdata,x,udata);
@@ -1584,13 +1452,13 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
                 if (*status != AMI_SUCCESS) return;
             }
         }
-
+        
         if(ts[it] > tstart) {
             getDiagnosis(status, it, ami_mem, udata, rdata);
             if (*status != AMI_SUCCESS) return;
         }
     }
-
+    
     getDataOutput(status, it, ami_mem, udata, rdata, edata, tdata);
 }
 
@@ -1598,40 +1466,36 @@ void handleDataPoint(int *status, int it, void *ami_mem, void  *user_data, void 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleDataPointB(int *status, int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+void handleDataPointB(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points for the backward problems
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of data point @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ix;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
-/* See, if things need to be changed here... */
+    
+    
+    /* See, if things need to be changed here... */
     xB_tmp = NV_DATA_S(xB);
     for (ix=0; ix<nx; ix++) {
-/* Hier muss nur ein erster Teil verwendet werden.... */
+        /* Hier muss nur ein erster Teil verwendet werden.... */
         xB_tmp[ix] += dgdx[it+ix*nt];
     }
-    getDiagnosisB(status,it,ami_mem,user_data,return_data,temp_data);
+    getDiagnosisB(status,it,ami_mem,udata,rdata,tdata);
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, void  *user_data, void *return_data, void *exp_data, void *temp_data, int seflag) {
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata, int seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -1639,41 +1503,33 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
      * @param[out] iroot index of event @type int
      * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[in] exp_data pointer to the experimental data struct @type ExpData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
     int ie;
     int secondevent = 0;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    ExpData edata; /* exp edata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    edata = (ExpData) exp_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     /* store heaviside information at event occurence */
-    froot(t,x,dx,rootvals,user_data);
+    froot(t,x,dx,rootvals,udata);
     for (ie = 0; ie<ne; ie++) {
         h_tmp[ie] = rootvals[ie];
     }
-
+    
     if (seflag == 0) {
         *status = AMIGetRootInfo(ami_mem, rootsfound);
         if (*status != AMI_SUCCESS) return;
     }
-
+    
     if (*iroot<nmaxevent*ne) {
         for (ie=0; ie<ne; ie++) {
             rootidx[*iroot*ne + ie] = rootsfound[ie];
         }
     }
-
+    
     /* only extract in the first event fired */
     if (seflag == 0) {
         if(sensi >= 1){
@@ -1683,7 +1539,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             }
         }
     }
-
+    
     /* only check this in the first event fired, otherwise this will always be true */
     if (seflag == 0) {
         if (t == *tlastroot) {
@@ -1693,10 +1549,10 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         }
         *tlastroot = t;
     }
-
+    
     getEventOutput(status, tlastroot, ami_mem, udata, rdata, edata, tdata);
     if (*status != AMI_SUCCESS) return;
-
+    
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
     if(sensi >= 1){
         /* store x and xdot to compute jump in sensitivities */
@@ -1705,17 +1561,17 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             *status = fxdot(t,x,dx,xdot,udata);
             N_VScale(1.0,xdot,xdot_old);
             N_VScale(1.0,dx,dx_old);
-
+            
             /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
             if (seflag == 0) {
                 for (ie = 0; ie<ne; ie++) {
                     if(rootsfound[ie] != 0) {
-                        fstau(t,ie,stau_tmp,x,NVsx,user_data);
+                        fstau(t,ie,stau_tmp,x,NVsx,udata);
                     }
                 }
             }
         }
-
+        
         if (sensi_meth == AMI_ASA) {
             /* store x to compute jump in discontinuity */
             if (*iroot<nmaxevent*ne) {
@@ -1725,13 +1581,13 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             }
         }
     }
-
+    
     updateHeaviside(status, udata, tdata);
     if (*status != AMI_SUCCESS) return;
-
+    
     applyEventBolus(status, ami_mem, udata, tdata);
     if (*status != AMI_SUCCESS) return;
-
+    
     if (*iroot<nmaxevent*ne) {
         discs[*iroot] = t;
         (*iroot)++;
@@ -1740,21 +1596,21 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
         *status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
         return;
     }
-
+    
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
-
+            
             /* compute the new xdot  */
             *status = fxdot(t,x,dx,xdot,udata);
             if (*status != AMI_SUCCESS) return;
-
+            
             applyEventSensiBolusFSA(status, ami_mem, udata, tdata);
             if (*status != AMI_SUCCESS) return;
         }
     }
-
+    
     /* check whether we need to fire a secondary event */
-    froot(t,x,dx,rootvals,user_data);
+    froot(t,x,dx,rootvals,udata);
     for (ie = 0; ie<ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound[ie] == 0 ) {
@@ -1778,18 +1634,18 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
     if(secondevent>0) {
         handleEvent(status, iroot, tlastroot, ami_mem, udata, rdata, edata, tdata, secondevent);
     }
-
+    
     /* only reinitialise in the first event fired */
     if (seflag == 0) {
         *status = AMIReInit(ami_mem, t, x, dx);
         if (*status != AMI_SUCCESS) return;
-
+        
         /* make time derivative consistent */
         *status = AMICalcIC(ami_mem, t);
         if (*status != AMI_SUCCESS) return;
     }
-
-/* I don't get the meaning of those double if's ... */
+    
+    /* I don't get the meaning of those double if's ... */
     if(sensi >= 1){
         if (sensi_meth == AMI_FSA) {
             if(sensi >= 1){
@@ -1802,46 +1658,42 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, vo
             }
         }
     }
-
+    
     return;
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void *temp_data) {
+void handleEventB(int *status, int iroot, void *ami_mem, UserData udata, TempData tdata) {
     /**
      * handleEventB executes everything necessary for the handling of events for the backward problem
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[out] iroot index of event @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return cv_status updated status flag @type int
      */
-
+    
     int ie;
     int ix;
     int ip;
     int ig;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     /* store current values */
     N_VScale(1.0,xB,xB_old);
     N_VScale(1.0,xQB,xQB_old);
-
+    
     xB_tmp = NV_DATA_S(xB);
     xQB_tmp = NV_DATA_S(xQB);
-
+    
     for (ie=0; ie<ne; ie++) {
-
+        
         if (rootidx[iroot*ne + ie] != 0) {
             
             *status = fdeltaqB(t,ie,deltaqB,x_disc[iroot],xB_old,xQB_old,xdot_disc[iroot],xdot_old_disc[iroot],udata);
@@ -1855,18 +1707,18 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
                     xB_tmp[ix] += drdx[nroots[ie] + nmaxevent*ix];
                 }
             }
-
+            
             for (ig=0; ig<ng; ig++) {
                 for (ip=0; ip<np; ip++) {
                     xQB_tmp[ig*np+ip] += deltaqB[ig*np+ip];
                 }
             }
-
+            
             
             nroots[ie]--;
         }
     }
-
+    
     updateHeavisideB(status, iroot, udata, tdata);
 }
 
@@ -1874,7 +1726,7 @@ void handleEventB(int *status, int iroot, void *ami_mem, void  *user_data, void 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *user_data) {
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData udata) {
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum of
      * tdata and troot but also takes into account if it<0 or iroot<0 where these expressions
@@ -1884,15 +1736,13 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *use
      * @param[in] iroot index of next event @type int
      * @param[in] tdata timepoint of next data point @type realtype
      * @param[in] it index of next data point @type int
-     * @param[in] user_data pointer to the user data struct @type UserData
+     * @param[in] udata pointer to the user data struct @type UserData
      * @return tnext next timepoint @type realtype
      */
-
+    
     realtype tnext;
-
-    UserData udata; /* user udata */
-    udata = (UserData) user_data;
-
+    
+    
     if (it<0) {
         tnext = troot[iroot];
     } else {
@@ -1910,38 +1760,34 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, void *use
             }
         }
     }
-
+    
     return(tnext);
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_data) {
+void applyEventBolus(int *status, void *ami_mem, UserData udata, TempData tdata) {
     /**
      * applyEventBolus applies the event bolus to the current state
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ix;
     int ie;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,user_data);
-
+            *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,udata);
+            
             x_tmp = NV_DATA_S(x);
             for (ix=0; ix<nx; ix++) {
                 x_tmp[ix] += deltax[ix];
@@ -1954,30 +1800,26 @@ void applyEventBolus(int *status, void *ami_mem, void  *user_data, void *temp_da
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void *temp_data) {
+void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData udata, TempData tdata) {
     /**
      * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ix;
     int ip;
     int ie;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] != 0) {
-            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,user_data);
-
+            *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
+            
             for (ip=0; ip<np; ip++) {
                 sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                 for (ix=0; ix<nx; ix++) {
@@ -1992,26 +1834,22 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, void  *user_data, void 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void initHeaviside(int *status, void  *user_data, void *temp_data) {
+void initHeaviside(int *status, UserData udata, TempData tdata) {
     /**
      * initHeaviside initialises the heaviside variables h at the intial time t0
      * heaviside variables activate/deactivate on event occurences
      *
      * @param[out] status flag indicating success of execution @type *int
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ie;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
-    froot(t,x,dx,rootvals,user_data);
-
+    
+    
+    froot(t,x,dx,rootvals,udata);
+    
     for (ie = 0; ie<ne; ie++) {
         if (rootvals[ie]<=0) {
             h[ie] = 0.0;
@@ -2025,26 +1863,22 @@ void initHeaviside(int *status, void  *user_data, void *temp_data) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void updateHeaviside(int *status, void  *user_data, void *temp_data) {
+void updateHeaviside(int *status, UserData udata, TempData tdata) {
     /**
      * updateHeaviside updates the heaviside variables h on event occurences
      *
      * @param[out] status flag indicating success of execution @type *int
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ie;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     /* rootsfound provides the direction of the zero-crossing, so adding it will give
      the right update to the heaviside variables */
-
+    
     for (ie = 0; ie<ne; ie++) {
         h[ie] += rootsfound[ie];
     }
@@ -2054,27 +1888,23 @@ void updateHeaviside(int *status, void  *user_data, void *temp_data) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data) {
+void updateHeavisideB(int *status, int iroot, UserData udata, TempData tdata) {
     /**
      * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] iroot discontinuity occurance index @type int
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-
+    
     int ie;
-
-    UserData udata; /* user udata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     /* rootsfound provides the direction of the zero-crossing, so adding it will give
      the right update to the heaviside variables */
-
+    
     for (ie = 0; ie<ne; ie++) {
         h[ie] -= rootidx[iroot*ne + ie];
     }
@@ -2084,78 +1914,68 @@ void updateHeavisideB(int *status, int iroot, void  *user_data, void *temp_data)
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDiagnosis(int *status,int it, void *ami_mem, void  *user_data, void *return_data) {
+void getDiagnosis(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata) {
     /**
      * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it time-point index @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
      * @return void
      */
     long int numsteps;
     long int numrhsevals;
     int order;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-
+    
+    
     *status = AMIGetNumSteps(ami_mem, &numsteps);
     if (*status != AMI_SUCCESS) return;
     numstepsdata[it] = (realtype)numsteps;
-
+    
     *status = AMIGetNumRhsEvals(ami_mem, &numrhsevals);
     if (*status != AMI_SUCCESS) return;
     numrhsevalsdata[it] = (realtype)numrhsevals;
-
+    
     *status = AMIGetLastOrder(ami_mem, &order);
     if (*status != AMI_SUCCESS) return;
     orderdata[it] = (realtype)order;
-
+    
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDiagnosisB(int *status,int it, void *ami_mem, void  *user_data, void *return_data, void *temp_data) {
+void getDiagnosisB(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
     /**
      * getDiagnosisB extracts diagnosis information from solver memory block and writes them into the return data struct for the backward problem
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it time-point index @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] user_data pointer to the user data struct @type UserData
-     * @param[out] return_data pointer to the return data struct @type ReturnData
-     * @param[out] temp_data pointer to the temporary data struct @type TempData
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
     long int numsteps;
     long int numrhsevals;
-
+    
     void *ami_memB;
-
-    UserData udata; /* user udata */
-    ReturnData rdata; /* return rdata */
-    TempData tdata; /* temp tdata */
-    udata = (UserData) user_data;
-    rdata = (ReturnData) return_data;
-    tdata = (TempData) temp_data;
-
+    
+    
     ami_memB = AMIGetAdjBmem(ami_mem, which);
-
+    
     *status = AMIGetNumSteps(ami_memB, &numsteps);
     if (*status != AMI_SUCCESS) return;
     numstepsSdata[it] = (realtype)numsteps;
-
+    
     *status = AMIGetNumRhsEvals(ami_memB, &numrhsevals);
     if (*status != AMI_SUCCESS) return;
     numrhsevalsSdata[it] = (realtype)numrhsevals;
-
+    
 }
 
 int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot) {
@@ -2165,10 +1985,10 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
     int ix, it;
     int ncheck; /* the number of (internal) checkpoints stored so far */
     realtype tlastroot; /* storage for last found root */
-
+    
     ncheck = 0;
     tlastroot = 0;
-
+    
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
         if(sensi_meth == AMI_FSA && sensi >= 1) {
@@ -2202,30 +2022,30 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
                         if (*status<0) {
                             return 1;
                         }
-
+                        
                         if (*status==AMI_ROOT_RETURN) {
                             handleEvent(status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
                             if (*status != AMI_SUCCESS) return 1;
-
+                            
                         }
                     }
                 }
             }
-
+            
             handleDataPoint(&*status, it, ami_mem, udata, rdata, edata, tdata);
             if (*status != AMI_SUCCESS) return 1;
-
-
+            
+            
         } else {
             for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
         }
     }
-
+    
     /* fill events */
     if (ne>0) {
         fillEventOutput(&*status, ami_mem, udata, rdata, edata, tdata);
     }
-
+    
     return 0;
 }
 
@@ -2236,67 +2056,67 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
     /********************/
     int ix, it;
     int ip;
-
+    
     double tnext;
-
+    
     if (nx>0) {
         if (sensi >= 1) {
             if(sensi_meth == AMI_ASA) {
                 if(*status == 0) {
                     setupAMIB(status, ami_mem, udata, tdata);
                     *setupBdone = true;
-
+                    
                     it = nt-2;
                     (*iroot)--;
                     while (it>=0 || *iroot>=0) {
-
+                        
                         /* check if next timepoint is a discontinuity or a data-point */
                         tnext = getTnext(discs, *iroot, ts, it, udata);
-
+                        
                         if (tnext<t) {
                             *status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
                             if (*status != AMI_SUCCESS) return 1;
-
+                            
                             /* get states only if we actually integrated */
                             *status = AMIGetB(ami_mem, which, &t, xB, dxB);
                             if (*status != AMI_SUCCESS) return 1;
-/* Here, the quadrature of the integrals must be changed, or the change
- should take part in AMIGetQuadB ... AMIGetQuadB */
+                            /* Here, the quadrature of the integrals must be changed, or the change
+                             should take part in AMIGetQuadB ... AMIGetQuadB */
                             *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                             if (*status != AMI_SUCCESS) return 1;
                         }
-
+                        
                         /* handle discontinuity */
-
+                        
                         if(ne>0){
                             if(nmaxevent>0){
                                 if (tnext == discs[*iroot]) {
-/* Possibly some change here ... */
+                                    /* Possibly some change here ... */
                                     handleEventB(status, *iroot, ami_mem, udata, tdata);
                                     (*iroot)--;
                                 }
                             }
                         }
-
+                        
                         /* handle data-point */
-
+                        
                         if (tnext == ts[it]) {
-/* Changes inside or outside? */
+                            /* Changes inside or outside? */
                             handleDataPointB(status, it, ami_mem, udata, rdata, tdata);
                             it--;
                         }
-
+                        
                         /* reinit states */
                         *status = AMIReInitB(ami_mem, which, t, xB, dxB);
                         if (*status != AMI_SUCCESS) return 1;
-/* Maybe, but probably not, this needs to be changed */
+                        /* Maybe, but probably not, this needs to be changed */
                         *status = AMIQuadReInitB(ami_mem, which, xQB);
                         if (*status != AMI_SUCCESS) return 1;
-
+                        
                         *status = AMICalcICB(ami_mem, which, t, xB, dxB);
                         if (*status != AMI_SUCCESS) return 1;
                     }
-
+                    
                     /* we still need to integrate from first datapoint to tstart */
                     if (t>tstart) {
                         if(*status == 0) {
@@ -2304,8 +2124,8 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 /* solve for backward problems */
                                 *status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
                                 if (*status != AMI_SUCCESS) return 1;
-
-/* Here again, Quadrature needs a slight change, but probably inside... */
+                                
+                                /* Here again, Quadrature needs a slight change, but probably inside... */
                                 *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                                 if (*status != AMI_SUCCESS) return 1;
                                 *status = AMIGetB(ami_mem, which, &t, xB, dxB);
@@ -2313,23 +2133,23 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                             }
                         }
                     }
-
+                    
                     /* evaluate initial values */
                     NVsx = N_VCloneVectorArray_Serial(np,x);
                     if (NVsx == NULL) return 1;
-
+                    
                     *status = fx0(x,udata);
                     if (*status != AMI_SUCCESS) return 1;
                     *status = fdx0(x,dx,udata);
                     if (*status != AMI_SUCCESS) return 1;
                     *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return 1;
-
+                    
                     if(*status == 0) {
-
-/* From here ... */
+                        
+                        /* From here ... */
                         xB_tmp = NV_DATA_S(xB);
-
+                        
                         int ig;
                         for (ig=0; ig<ng; ig++) {
                             if (ig==0) {
@@ -2350,10 +2170,10 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 }
                             }
                         }
-
+                        
                         xQB_tmp = NV_DATA_S(xQB);
-
-    /* Does this need one more parameter loop around? */
+                        
+                        /* Does this need one more parameter loop around? */
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < np; ip++) {
                                 if (ig==0) {
@@ -2375,8 +2195,8 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 }
                             }
                         }
-/* ... to here, there may be changes necessary... */
-
+                        /* ... to here, there may be changes necessary... */
+                        
                     } else {
                         int ig;
                         for(ig=0; ig<ng; ig++) {
@@ -2404,16 +2224,16 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
             }
         }
     }
-
+    
     /* evaluate likelihood */
-
+    
     *llhdata = - g[0] - r[0];
-
+    
     return 0;
 }
 
-void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, ReturnData rdata) {
-
+void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata,  ReturnData rdata) {
+    
     /* store current Jacobian and derivative */
     if(udata) {
         if(tdata) {
@@ -2450,7 +2270,7 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
             if(ami_mem)    mxFree(nroots);
             if(ami_mem)    mxFree(discs);
             if(ami_mem)    mxFree(h);
-
+            
             if(ami_mem)    mxFree(deltax);
             if(ami_mem)    mxFree(deltasx);
             if(ami_mem)    mxFree(deltaxB);
@@ -2470,7 +2290,7 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                     N_VDestroyVectorArray_Serial(NVsx,np);
                 }
             }
-
+            
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
@@ -2494,17 +2314,17 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                 if(setupBdone)      N_VDestroy_Serial(xQB);
                 if(setupBdone)      N_VDestroy_Serial(xQB_old);
             }
-
+            
         }
         if(ami_mem)     N_VDestroy_Serial(id);
         if(ami_mem)     AMIFree(&ami_mem);
     }
-
+    
     if(udata)   mxFree(plist);
     if (sensi >= 1) {
         if(udata)   mxFree(tmp_dxdotdp);
     }
-
+    
     if(udata) mxFree(udata);
     if(tdata) mxFree(tdata);
 }

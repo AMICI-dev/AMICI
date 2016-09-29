@@ -628,7 +628,7 @@ function [this,model] = getSyms(this,model)
             this.sym = jacobian(model.fun.z.sym,p);
                 
             for iz = 1:nz
-                this.sym(iz,:) = diff(model.fun.z.sym,sym('t'))*model.fun.dtaudp.sym(model.z2event(iz),:);
+                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudp.sym(model.z2event(iz),:);
             end
             % create cell array of same size
             this = makeStrSyms(this);
@@ -637,7 +637,7 @@ function [this,model] = getSyms(this,model)
             this.sym = jacobian(model.fun.z.sym,x);
             
             for iz = 1:nz
-                this.sym(iz,:) = diff(model.fun.z.sym,sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
+                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
             end
             
             this = makeStrSyms(this);

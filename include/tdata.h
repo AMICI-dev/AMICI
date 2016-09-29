@@ -9,7 +9,7 @@
 #include <sundials/sundials_config.h>
 
 /** @brief struct that provides temporary storage for different variables */
-typedef struct {
+struct tdata {
     /** current time */
     realtype am_t;
     
@@ -143,5 +143,8 @@ typedef struct {
     /** array containing the index of discontinuities */
     realtype *am_irdiscs; 
 
-	} *TempData;
+	};
+
+typedef tdata* TempData;
+
 #endif /* _MY_TDATA */

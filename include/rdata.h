@@ -1,15 +1,8 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
 
-#include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
-#include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
-#include <sundials/sundials_sparse.h> /* def. of type sparse stuff */
-#include <sundials/sundials_types.h> /* def. of type realtype */
-#include <sundials/sundials_math.h>  /* definition of ABS */
-#include <sundials/sundials_config.h>
-
 /** @brief struct that stores all data which is later returned by the mex function */
-typedef struct {
+typedef struct rdata {
 
     /** timepoints */
     double *am_tsdata; 

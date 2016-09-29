@@ -21,7 +21,7 @@
 #include <math.h>
 #include <mex.h>
 #include <float.h>
-#include <include/spline.h>
+#include <spline.cpp>
 
 #undef ts
 
