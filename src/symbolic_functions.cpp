@@ -94,7 +94,7 @@ void linSpace(double *destination, double from, double to, int numValues) {
 }
 
 double *linSpaceAlloc(double from, double to, int numValues) {
-    double *destination = malloc(sizeof(double) * numValues);
+    double *destination = (double*)malloc(sizeof(double) * numValues);
     linSpace(destination, from, to, numValues);
     return destination;
 }

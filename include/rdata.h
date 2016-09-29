@@ -63,7 +63,7 @@ typedef struct rdata {
     /** second order parameter derivative of likelihood */
     double *am_s2llhdata;
     
-	} *ReturnData;
+	} ReturnData;
 
 #ifdef AMICI_WITHOUT_MATLAB
 void freeReturnData(ReturnData rdata);

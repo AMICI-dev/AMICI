@@ -76,10 +76,10 @@ for ifun = this.funs
             fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
         else
             if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
-                fprintf(fid,'UserData udata = (UserData) user_data;\n');
+                fprintf(fid,'UserData *udata = (UserData*) user_data;\n');
             end
             if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
-                fprintf(fid,'TempData tdata = (TempData) temp_data;\n');
+                fprintf(fid,'TempData *tdata = (TempData*) temp_data;\n');
             end
             this.fun.(ifun{1}).printLocalVars(this,fid);
             if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
@@ -346,8 +346,7 @@ fprintf(fid,'                \n');
 fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
-fprintf(fid,'                void init_modeldims(void *user_data){\n');
-fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+fprintf(fid,'                void init_modeldims(UserData *udata){\n');
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
@@ -382,7 +381,7 @@ end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
-    fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+    fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
     fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
 else
     fprintf(fid,'                    return(-1);\n');
@@ -390,7 +389,7 @@ end
 fprintf(fid,'                }\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data){\n');
-fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
 fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
 fprintf(fid,'                }\n');
 fprintf(fid,'                \n');
@@ -500,7 +499,7 @@ fprintf(fid,'\n');
 fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
-fprintf(fid,'                void init_modeldims(void *user_data);\n');
+fprintf(fid,'                void init_modeldims(UserData *udata);\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
 fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
 fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
@@ -580,19 +579,19 @@ function generateCMakeFile(this)
 
     % sources
     fprintf(fid, '\nset(SRC_LIST\n');
-    for f = {'main.c', 'wrapfunctions.c', ...
-            '${AMICI_DIR}/src/symbolic_functions.c', ...
-            '${AMICI_DIR}/src/amici.c', ...
-            '${AMICI_DIR}/src/udata.c', ...
-            '${AMICI_DIR}/src/rdata.c', ...
-            '${AMICI_DIR}/src/edata.c', ...
+    for f = {'main.cpp', 'wrapfunctions.cpp', ...
+            '${AMICI_DIR}/src/symbolic_functions.cpp', ...
+            '${AMICI_DIR}/src/amici.cpp', ...
+            '${AMICI_DIR}/src/udata.cpp', ...
+            '${AMICI_DIR}/src/rdata.cpp', ...
+            '${AMICI_DIR}/src/edata.cpp', ...
             }
         fprintf(fid, '%s\n', f{1});
     end
     for j=1:length(this.funs)
-        %if(this.cfun(1).(this.funs{j}))
+        %if(this.cppfun(1).(this.funs{j}))
              funcName = this.funs{j};
-             fprintf(fid, '%s_%s.c\n', this.modelname, funcName);
+             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
        % end
     end
     fprintf(fid, ')\n\n');
@@ -638,7 +637,7 @@ function generateCMakeFile(this)
 end
 
 function generateMainC(this)
-    mainFileName = fullfile(this.wrap_path,'models',this.modelname,'main.c');
+    mainFileName = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
     fid = fopen(mainFileName,'w');
     
     fprintf(fid, '#include <stdio.h>\n');

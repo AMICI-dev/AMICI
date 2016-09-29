@@ -13,7 +13,7 @@ typedef struct edata {
     /** standard deviation of observed events */
     double *am_zsigma; 
     
-	} *ExpData;
+	} ExpData;
 
 #ifdef AMICI_WITHOUT_MATLAB
 void freeExpData(ExpData edata);

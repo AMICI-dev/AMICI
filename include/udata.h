@@ -9,7 +9,7 @@
 #define _MY_UDATA
 
 /** @brief struct that stores all user provided data */
-typedef struct {
+typedef struct user_data {
     /** positivity flag */
     double *am_qpositivex;
     
@@ -160,7 +160,7 @@ typedef struct {
     booleantype am_nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype am_nan_qBdot;
-} *UserData;
+} UserData;
 
 #ifdef AMICI_WITHOUT_MATLAB
 void freeUserData(UserData udata);

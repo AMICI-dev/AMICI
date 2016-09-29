@@ -36,14 +36,11 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    int ip, ix, it, ig; /* integers for indexing in loops */
-    int ncheck; /* the number of (internal) checkpoints stored so far */
-    
     void *ami_mem; /* pointer to cvodes memory block */
-    UserData udata; /* user data */
-    ReturnData rdata; /* return data */
-    ExpData edata; /* experimental data */
-    TempData tdata; /* temporary data */
+    UserData *udata; /* user data */
+    ReturnData *rdata; /* return data */
+    ExpData *edata; /* experimental data */
+    TempData *tdata; /* temporary data */
     int status; /* general status flag */
     double *pstatus; /* return status flag */
     
@@ -58,14 +55,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     pstatus = (double *) mxMalloc(sizeof(double));
     
     udata = setupUserData(prhs);
-    if (udata == NULL) goto freturn;
+    if (udata == NULL) {
+        /* goto freturn will fail here */
+        *pstatus = -99;
+        return;
+    }
     
     /* options */
     if (!prhs[3]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
-    tdata = (TempData) mxMalloc(sizeof *tdata);
+    tdata = new TempData();
     if (tdata == NULL) goto freturn;
     
     if (nx>0) {

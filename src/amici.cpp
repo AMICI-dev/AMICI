@@ -36,7 +36,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 #else
 #define initField2(FIELD,D1,D2) \
-mx ## FIELD = malloc(sizeof(double) * D1 * D2); \
+mx ## FIELD = new double[D1 * D2]; \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -61,7 +61,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
-mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3); \
+mx ## FIELD = new double[D1 * D2 * D3]; \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -89,7 +89,7 @@ dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
 dims ## FIELD[3]=D4; \
-mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3 * D4); \
+mx ## FIELD = new double[D1 * D2 * D3 * D4]; \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -124,7 +124,6 @@ return(NULL); \
 
 #ifdef AMICI_WITHOUT_MATLAB
     typedef double mxArray;
-    #define mxMalloc malloc
 #endif
 
 /** return value for successful execution */
@@ -133,21 +132,21 @@ return(NULL); \
 
 
 #ifndef AMICI_WITHOUT_MATLAB
-UserData setupUserData(const mxArray *prhs[]) {
+UserData *setupUserData(const mxArray *prhs[]) {
     /**
      * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
      * @param[in] prhs: pointer to the array of input arguments @type mxArray
      * @return udata: struct containing all provided user data @type UserData
      */
     
-    UserData udata; /* returned udata struct */
+    UserData *udata; /* returned udata *struct */
     realtype *plistdata; /* input for plist */
     
     int ip;
     
     /* User udata structure */
-    udata = (UserData) mxMalloc(sizeof *udata);
-    if (udata == NULL) return(NULL);
+    udata = new UserData();
+    if(udata==NULL) return NULL;
     
     init_modeldims(udata);
     
@@ -189,7 +188,7 @@ UserData setupUserData(const mxArray *prhs[]) {
         plistdata = mxGetPr(prhs[4]);
     }
     
-    plist = (int *) mxMalloc(np*sizeof(int));
+    plist = new int[np];
     for (ip=0; ip<np; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
@@ -229,8 +228,6 @@ UserData setupUserData(const mxArray *prhs[]) {
         b_sx0 = FALSE;
     }
     
-    
-    
     /* pbar */
     if (!prhs[5]) {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
@@ -248,30 +245,21 @@ UserData setupUserData(const mxArray *prhs[]) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
-        M_tmp = (realtype *) mxMalloc(nx*nx*sizeof(realtype));
-        dfdx_tmp = (realtype *) mxMalloc(nx*nx*sizeof(realtype));
+        M_tmp = new realtype[nx*nx];
+        dfdx_tmp = new realtype[nx*nx];
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = (realtype *) mxMalloc(nx*np*sizeof(realtype));
+        tmp_dxdotdp = new realtype[nx*np];
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = (realtype *) mxMalloc(np*sizeof(realtype));
+        stau_tmp = new realtype[np];
     }
-    
-    
-    w_tmp = (realtype *) mxMalloc(nw*sizeof(realtype));
-    dwdx_tmp = (realtype *) mxMalloc(ndwdx*sizeof(realtype));
-    dwdp_tmp = (realtype *) mxMalloc(ndwdp*sizeof(realtype));
-    
-    
-    udata->am_nan_dxdotdp = FALSE;
-    udata->am_nan_J = FALSE;
-    udata->am_nan_JSparse = FALSE;
-    udata->am_nan_xdot = FALSE;
-    udata->am_nan_xBdot = FALSE;
-    udata->am_nan_qBdot = FALSE;
+
+    w_tmp = new realtype[nw];
+    dwdx_tmp = new realtype[ndwdx];
+    dwdp_tmp = new realtype[ndwdp];
     
     return(udata);
 }
@@ -282,7 +270,7 @@ UserData setupUserData(const mxArray *prhs[]) {
 /* ------------------------------------------------------------------------------------- */
 
 #ifndef AMICI_WITHOUT_MATLAB
-ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
+ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
      * @param[in] plhs user input @type mxArray
@@ -290,7 +278,7 @@ ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
      * @param[out] pstatus pointer to the flag indicating the execution status @type double
      * @return rdata: return data struct @type ReturnData
      */
-    ReturnData rdata; /* returned rdata struct */
+    ReturnData *rdata; /* returned rdata struct */
     
     mxArray *mxsol;
     
@@ -311,7 +299,7 @@ ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
     
     
     /* Return rdata structure */
-    rdata = (ReturnData) mxMalloc(sizeof *rdata);
+    rdata = (ReturnData*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
     mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
@@ -400,7 +388,7 @@ ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
 /* ------------------------------------------------------------------------------------- */
 
 #ifndef AMICI_WITHOUT_MATLAB
-ExpData setupExpData(const mxArray *prhs[], UserData udata) {
+ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     /**
      * setupExpData initialises the experimental data struct
      * @param[in] prhs user input @type *mxArray
@@ -413,13 +401,13 @@ ExpData setupExpData(const mxArray *prhs[], UserData udata) {
     
     char *errmsg;
     
-    ExpData edata; /* returned rdata struct */
+    ExpData *edata; /* returned rdata struct */
     
-    errmsg = (char *)mxMalloc(200*sizeof(char));
+    errmsg = new char[200];
     
     
-    /* Return rdata structure */
-    edata = (ExpData) mxMalloc(sizeof *edata);
+    /* Return edata structure */
+    edata = new ExpData();
     if (edata == NULL) return(NULL);
     
     if (!prhs[7]) {
@@ -503,7 +491,7 @@ ExpData setupExpData(const mxArray *prhs[], UserData udata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void *setupAMI(int *status, UserData udata, TempData tdata) {
+void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     /**
      * @brief setupAMIs initialises the ami memory object
      * @param[out] status flag indicating success of execution @type *int
@@ -513,10 +501,6 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
      */
     void *ami_mem; /* pointer to ami memory block */
     bool error_corr = TRUE;
-    int ip;
-    int ix;
-
-    
     
     t = tstart;
     
@@ -524,16 +508,15 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
      g = 0.0;
      r = 0.0;
      */
-    g = (realtype *) mxMalloc(ng*sizeof(realtype));
-    memset(g,0,ng*sizeof(realtype));
-    r = (realtype *) mxMalloc(ng*sizeof(realtype));
-    memset(r,0,ng*sizeof(realtype));
+    g = new realtype[ng];
+    memset(g,0,sizeof(&g));
+    r = new realtype[ng];
+    memset(r,0,sizeof(&r));
     
     
     x = N_VNew_Serial(nx);
     
     if (nx > 0) {
-        
         /* allocate temporary objects */
         x = N_VNew_Serial(nx);
         x_old = N_VNew_Serial(nx);
@@ -543,24 +526,24 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
         xdot_old = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
         
-        if(ne>0) rootsfound = (int *) mxMalloc(ne*sizeof(int));
-        if(ne>0) rootvals= (realtype *) mxMalloc(ne*sizeof(realtype));
-        if(ne>0) rootidx = (int *) mxMalloc(nmaxevent*ne*ne*sizeof(int));
-        if(ne>0) nroots = (int *) mxMalloc(ne*sizeof(int));
-        if(ne>0) memset(nroots,0,ne*sizeof(int));
-        if(ne>0) discs = (realtype *) mxMalloc(nmaxevent*ne*sizeof(realtype));
-        if(ne>0) h = (realtype *) mxMalloc(ne*sizeof(realtype));
-        if(ne>0) h_tmp = (realtype *) mxMalloc(ne*sizeof(realtype));
+        if(ne>0) rootsfound = new int[ne];
+        if(ne>0) rootvals= new realtype[ne];
+        if(ne>0) rootidx = new int[nmaxevent*ne*ne];
+        if(ne>0) nroots = new int[ne];
+        if(ne>0) memset(nroots,0,sizeof(&nroots));
+        if(ne>0) discs = new realtype[nmaxevent*ne];
+        if(ne>0) h = new realtype[ne];
+        if(ne>0) h_tmp = new realtype[ne];
         
-        if(ne>0) deltax = (realtype *) mxMalloc(nx*sizeof(realtype));
-        if(ne>0) deltasx = (realtype *) mxMalloc(nx*np*sizeof(realtype));
-        if(ne>0) deltaxB = (realtype *) mxMalloc(nx*sizeof(realtype));
-        if(ne>0) deltaqB = (realtype *) mxMalloc(ng*np*sizeof(realtype));
+        if(ne>0) deltax = new realtype[nx];
+        if(ne>0) deltasx = new realtype[nx*np];
+        if(ne>0) deltaxB = new realtype[nx];
+        if(ne>0) deltaqB = new realtype[ng*np];
         
-        if(ny>0) sigma_y = (realtype *) mxMalloc(ny*sizeof(realtype));
-        if(ny>0) memset(sigma_y,0,ny*sizeof(realtype));
-        if(ne>0) sigma_z = (realtype *) mxMalloc(nz*sizeof(realtype));
-        if(ne>0) memset(sigma_z,0,nz*sizeof(realtype));
+        if(ny>0) sigma_y = new realtype[ny];
+        if(ny>0) memset(sigma_y,0,sizeof(&sigma_y));
+        if(ne>0) sigma_z = new realtype[nz];
+        if(ne>0) memset(sigma_z,0,sizeof(&sigma_z));
         
         
         /* initialise states */
@@ -716,15 +699,15 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
     
     if ( sensi >= 1) {
         
-        dydx = (realtype *) mxMalloc(ny*nx*sizeof(realtype));
-        memset(dydx,0,ny*nx*sizeof(realtype));
-        dydp = (realtype *) mxMalloc(ny*np*sizeof(realtype));
-        memset(dydp,0,ny*np*sizeof(realtype));
+        dydx = new realtype[ny*nx];
+        memset(dydx,0,sizeof(&dydx));
+        dydp = new realtype[ny*np];
+        memset(dydp,0,sizeof(&dydp));
         
-        dsigma_ydp = (realtype *) mxMalloc(ny*np*sizeof(realtype));
-        memset(dsigma_ydp,0,ny*np*sizeof(realtype));
-        if(ne>0) dsigma_zdp = (realtype *) mxMalloc(nz*np*sizeof(realtype));
-        if(ne>0) memset(dsigma_zdp,0,nz*np*sizeof(realtype));
+        dsigma_ydp = new realtype[ny*np];
+        memset(dsigma_ydp,0,sizeof(&dsigma_ydp));
+        if(ne>0) dsigma_zdp = new realtype[nz*np];
+        if(ne>0) memset(dsigma_zdp,0,sizeof(&dsigma_zdp));
         
         if (sensi_meth == AMI_FSA) {
             
@@ -743,8 +726,10 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
                     *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return(NULL);
                 } else {
+                    int ip;
                     for (ip=0; ip<np; ip++) {
                         sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
+                        int ix;
                         for (ix=0; ix<nx; ix++) {
                             sx_tmp[ix] = sx0data[ix + nx*plist[ip]];
                         }
@@ -781,30 +766,25 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
                 if(ne>0) xdot_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 if(ne>0) xdot_old_disc = N_VCloneVectorArray_Serial(ne*nmaxevent, x);
                 
-                
-                /* we always want N_d to be equal to the number of maximal steps, this prevents additional forward passes
-                 and thus ensures correctness for systems with discontinuous right hand sides */
-                
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
-                /* Here, some changes may need to be done, but probably not... */
-                llhS0 = (realtype *) mxMalloc(ng*np*sizeof(realtype));
-                memset(llhS0,0,ng*np*sizeof(realtype));
-                dgdp = (realtype *) mxMalloc(ng*np*sizeof(realtype));
-                memset(dgdp,0,ng*np*sizeof(realtype));
-                dgdx = (realtype *) mxMalloc(ng*nxtrue*nt*sizeof(realtype));
-                memset(dgdx,0,ng*nxtrue*nt*sizeof(realtype));
+                llhS0 = new realtype[ng*np];
+                memset(llhS0,0,sizeof(&llhS0));
+                dgdp = new realtype[ng*np];
+                memset(dgdp,0,sizeof(&dgdp));
+                dgdx = new realtype[ng*nxtrue*nt];
+                memset(dgdx,0,sizeof(&dgdx));
                 if (ne > 0) {
-                    dzdp = (realtype *) mxMalloc(nz*np*sizeof(realtype));
-                    memset(dzdp,0,nz*np*sizeof(realtype));
-                    dzdx = (realtype *) mxMalloc(nz*nx*sizeof(realtype));
-                    memset(dzdx,0,nz*nx*sizeof(realtype));
+                    dzdp = new realtype[nz*np];
+                    memset(dzdp,0,sizeof(&dzdp));
+                    dzdx = new realtype[nz*nx];
+                    memset(dzdx,0,sizeof(&dzdx));
                 }
-                drdp = (realtype *) mxMalloc(ng*np*nztrue*nmaxevent*sizeof(realtype));
-                memset(drdp,0,ng*np*nztrue*nmaxevent*sizeof(realtype));
-                drdx = (realtype *) mxMalloc(ng*nx*nztrue*nmaxevent*sizeof(realtype));
-                memset(drdx,0,ng*nx*nztrue*nmaxevent*sizeof(realtype));
+                drdp = new realtype[ng*np*nztrue*nmaxevent];
+                memset(drdp,0,sizeof(&drdp));
+                drdx = new realtype[ng*nx*nztrue*nmaxevent];
+                memset(drdx,0,sizeof(&drdx));
             }
         }
         
@@ -814,7 +794,7 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
     
     id = N_VNew_Serial(nx);
     id_tmp = NV_DATA_S(id);
-    memcpy(id_tmp,idlist,nx*sizeof(realtype));
+    memcpy(id_tmp,idlist,sizeof(&idlist));
     
     *status = AMISetId(ami_mem, id);
     if (*status != AMI_SUCCESS) return(NULL);
@@ -830,7 +810,7 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
+void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     /**
      * setupAMIB initialises the AMI memory object for the backwards problem
      * @param[out] status flag indicating success of execution @type *int
@@ -846,15 +826,13 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
     
     dxB = N_VNew_Serial(nx);
     
-    /* Hier sollte np*np drinnen stehen.... */
     xQB = N_VNew_Serial(ng*np);
     xQB_old = N_VNew_Serial(ng*np);
-    /* Bis hierher...  */
     
     /* write initial conditions */
     if (xB == NULL) return;
     xB_tmp = NV_DATA_S(xB);
-    memset(xB_tmp,0,sizeof(realtype)*nx);
+    memset(xB_tmp,0,sizeof(&xB_tmp));
     for (ix=0; ix<nx; ix++) {
         xB_tmp[ix] += dgdx[nt-1+ix*nt];
     }
@@ -866,12 +844,11 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
     
     if (dxB == NULL) return;
     dxB_tmp = NV_DATA_S(dxB);
-    memset(dxB_tmp,0,sizeof(realtype)*nx);
+    memset(dxB_tmp,0,sizeof(&dxB_tmp));
     
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-    /* Change the allocated space for the integral... */
-    memset(xQB_tmp,0,sizeof(realtype)*ng*np);
+    memset(xQB_tmp,0,sizeof(&xQB_tmp));
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
@@ -880,7 +857,7 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
     if (iter>2||iter<1) {
         errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
-    /* Does everything stay the same here? */
+    
     /* allocate memory for the backward problem */
     *status = AMICreateB(ami_mem, lmm, iter, &which);
     if (*status != AMI_SUCCESS) return;
@@ -1030,7 +1007,7 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisFSA(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
      *
@@ -1083,7 +1060,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData udata, Return
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisASA(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getDataSensisASA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getDataSensisASA extracts data information for adjoint sensitivity analysis
      *
@@ -1126,7 +1103,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, UserData udata, Return
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataOutput(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getDataOutput extracts output information for data-points
      *
@@ -1173,7 +1150,7 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData udata, ReturnDat
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisFSA(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
+void getEventSensisFSA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
     /**
      * getEventSensisFSA extracts event information for forward sensitivity analysis
      *
@@ -1196,7 +1173,7 @@ void getEventSensisFSA(int *status, int ie, void *ami_mem, UserData udata, Retur
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
+void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
     /**
      * getEventSensisFSA_tf extracts event information for forward sensitivity
      *     analysis for events that happen at the end of the considered interval
@@ -1228,7 +1205,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData udata, Re
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisASA(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getEventSensisASA extracts event information for adjoint sensitivity analysis
      *
@@ -1281,7 +1258,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, UserData udata, Retur
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getEventSigma extracts fills sigma_z either from the user defined function or from user input
      *
@@ -1312,7 +1289,7 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData udata, R
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventObjective(int *status, int ie, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getEventObjective updates the objective function on the occurence of an event
      *
@@ -1343,7 +1320,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, UserData udata, Retur
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * getEventOutput extracts output information for events
      *
@@ -1399,7 +1376,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData ud
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void fillEventOutput(int *status, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * fillEventOutput fills missing roots at last timepoint
      *
@@ -1456,7 +1433,7 @@ void fillEventOutput(int *status, void *ami_mem, UserData udata, ReturnData rdat
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleDataPoint(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata) {
+void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points
      *
@@ -1506,7 +1483,7 @@ void handleDataPoint(int *status, int it, void *ami_mem, UserData udata, ReturnD
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleDataPointB(int *status, int it, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
+void handleDataPointB(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points for the backward problems
      *
@@ -1535,7 +1512,7 @@ void handleDataPointB(int *status, int it, void *ami_mem, UserData udata, Return
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData udata, ReturnData rdata, ExpData edata, TempData tdata, int seflag) {
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata, int seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -1707,7 +1684,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEventB(int *status, int iroot, void *ami_mem, UserData udata, TempData tdata) {
+void handleEventB(int *status, int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
     /**
      * handleEventB executes everything necessary for the handling of events for the backward problem
      *
@@ -1766,7 +1743,7 @@ void handleEventB(int *status, int iroot, void *ami_mem, UserData udata, TempDat
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData udata) {
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata) {
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum of
      * tdata and troot but also takes into account if it<0 or iroot<0 where these expressions
@@ -1809,7 +1786,7 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void applyEventBolus(int *status, void *ami_mem, UserData udata, TempData tdata) {
+void applyEventBolus(int *status, void *ami_mem, UserData *udata, TempData *tdata) {
     /**
      * applyEventBolus applies the event bolus to the current state
      *
@@ -1840,7 +1817,7 @@ void applyEventBolus(int *status, void *ami_mem, UserData udata, TempData tdata)
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData udata, TempData tdata) {
+void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempData *tdata) {
     /**
      * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
      *
@@ -1874,7 +1851,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData udata, TempDat
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void initHeaviside(int *status, UserData udata, TempData tdata) {
+void initHeaviside(int *status, UserData *udata, TempData *tdata) {
     /**
      * initHeaviside initialises the heaviside variables h at the intial time t0
      * heaviside variables activate/deactivate on event occurences
@@ -1903,7 +1880,7 @@ void initHeaviside(int *status, UserData udata, TempData tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void updateHeaviside(int *status, UserData udata, TempData tdata) {
+void updateHeaviside(int *status, UserData *udata, TempData *tdata) {
     /**
      * updateHeaviside updates the heaviside variables h on event occurences
      *
@@ -1928,7 +1905,7 @@ void updateHeaviside(int *status, UserData udata, TempData tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void updateHeavisideB(int *status, int iroot, UserData udata, TempData tdata) {
+void updateHeavisideB(int *status, int iroot, UserData *udata, TempData *tdata) {
     /**
      * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
      *
@@ -1954,7 +1931,7 @@ void updateHeavisideB(int *status, int iroot, UserData udata, TempData tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDiagnosis(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata) {
+void getDiagnosis(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata) {
     /**
      * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
      *
@@ -1988,7 +1965,7 @@ void getDiagnosis(int *status,int it, void *ami_mem, UserData udata, ReturnData 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDiagnosisB(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata) {
+void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
     /**
      * getDiagnosisB extracts diagnosis information from solver memory block and writes them into the return data struct for the backward problem
      *
@@ -2020,7 +1997,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData udata, ReturnData
 
 #ifdef AMICI_WITHOUT_MATLAB
 
-void initUserDataFields(UserData udata, ReturnData rdata, double *pstatus) {
+void initUserDataFields(UserData *udata, ReturnData *rdata, double *pstatus) {
 
     llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
             numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
@@ -2038,13 +2015,13 @@ void initUserDataFields(UserData udata, ReturnData rdata, double *pstatus) {
     size_t dimsssigmaz[] = {0,0,0};
 
 
-    mxstatus = malloc(sizeof(double));
+    mxstatus = new double;
     pstatus = mxstatus;
 
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
-    mxts = malloc(sizeof(double) * nt);
+    mxts = new double[nt];
     tsdata = mxts;
 
     initField2(numsteps,nt,1);
@@ -2105,8 +2082,8 @@ void initUserDataFields(UserData udata, ReturnData rdata, double *pstatus) {
 }
 #endif
 
-#ifdef AMICI_WITHOUT_MATLAB
-int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot) {
+
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot) {
     /*******************/
     /* FORWARD PROBLEM */
     /*******************/
@@ -2172,7 +2149,7 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
     return 0;
 }
 
-int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
     /********************/
     /* BACKWARD PROBLEM */
     /********************/
@@ -2346,7 +2323,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
     return 0;
 }
 
-void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata,  ReturnData rdata) {
+void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
     
     /* store current Jacobian and derivative */
     if(udata) {
@@ -2354,19 +2331,19 @@ void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata,  Ret
             if(nx>0){
                 fxdot(t,x,dx,xdot,udata);
                 xdot_tmp = NV_DATA_S(xdot);
-                memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                memcpy(xdotdata,xdot_tmp,sizeof(&xdotdata));
             }
         }
     }
     if(udata) {
         if(nx>0) {
             fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+            memcpy(Jdata,Jtmp->data,sizeof(&Jdata));
         }
     }
 }
 
-void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleantype setupBdone, int status) {
+void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status) {
     if(nx>0) {
         N_VDestroy_Serial(x);
         N_VDestroy_Serial(dx);
@@ -2376,26 +2353,26 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
         N_VDestroy_Serial(xdot_old);
         DestroyMat(Jtmp);
         if (ne>0) {
-            if(ami_mem) free(rootsfound);
-            if(ami_mem) free(rootvals);
-            if(ami_mem) free(rootidx);
-            if(ami_mem)    free(sigma_z);
-            if(ami_mem)    free(nroots);
-            if(ami_mem)    free(discs);
-            if(ami_mem)    free(h);
+            if(ami_mem) delete rootsfound;
+            if(ami_mem) delete rootvals;
+            if(ami_mem) delete rootidx;
+            if(ami_mem) delete sigma_z;
+            if(ami_mem) delete nroots;
+            if(ami_mem) delete discs;
+            if(ami_mem) delete h;
 
-            if(ami_mem)    free(deltax);
-            if(ami_mem)    free(deltasx);
-            if(ami_mem)    free(deltaxB);
-            if(ami_mem)    free(deltaqB);
+            if(ami_mem) delete deltax;
+            if(ami_mem) delete deltasx;
+            if(ami_mem) delete deltaxB;
+            if(ami_mem) delete deltaqB;
         }
 
         if(ny>0) {
-            if(sigma_y)    free(sigma_y);
+            if(sigma_y)    delete sigma_y;
         }
         if (sensi >= 1) {
-            if(ami_mem)    free(dydx);
-            if(ami_mem)    free(dydp);
+            if(ami_mem) delete dydx;
+            if(ami_mem) delete dydp;
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
@@ -2409,39 +2386,39 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem)    free(dgdp);
-                if(ami_mem)    free(dgdx);
-                if(ami_mem)    free(drdp);
-                if(ami_mem)    free(drdx);
+                if(ami_mem) delete dgdp;
+                if(ami_mem) delete dgdx;
+                if(ami_mem) delete drdp;
+                if(ami_mem) delete drdx;
                 if (ne>0) {
-                    if(ami_mem)    free(dzdp);
-                    if(ami_mem)    free(dzdx);
+                    if(ami_mem) delete dzdp;
+                    if(ami_mem) delete dzdx;
                 }
-                if(ami_mem)     free(llhS0);
-                if(ami_mem)    free(dsigma_ydp);
+                if(ami_mem) delete llhS0;
+                if(ami_mem) delete dsigma_ydp;
                 if (ne>0) {
-                    if(ami_mem)    free(dsigma_zdp);
+                    if(ami_mem) delete dsigma_zdp;
                 }
-                if(setupBdone)      N_VDestroy_Serial(dxB);
-                if(setupBdone)      N_VDestroy_Serial(xB);
-                if(setupBdone)      N_VDestroy_Serial(xB_old);
-                if(setupBdone)      N_VDestroy_Serial(xQB);
-                if(setupBdone)      N_VDestroy_Serial(xQB_old);
+                if(setupBdone) N_VDestroy_Serial(dxB);
+                if(setupBdone) N_VDestroy_Serial(xB);
+                if(setupBdone) N_VDestroy_Serial(xB_old);
+                if(setupBdone) N_VDestroy_Serial(xQB);
+                if(setupBdone) N_VDestroy_Serial(xQB_old);
             }
         }
-        if(ami_mem)     N_VDestroy_Serial(id);
-        if(ami_mem)     AMIFree(&ami_mem);
+        if(ami_mem) N_VDestroy_Serial(id);
+        if(ami_mem) AMIFree(&ami_mem);
     }
 
-    if(tdata)    free(tdata);
+    if(tdata) delete tdata;
 }
 
 #ifdef AMICI_WITHOUT_MATLAB
-ReturnData initReturnData(UserData udata, int *pstatus) {
-    ReturnData rdata; /* returned rdata struct */
+ReturnData initReturnData(UserData *udata, int *pstatus) {
+    ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
-    rdata = (ReturnData) malloc(sizeof *rdata);
+    rdata = new ReturnData();
     if (rdata == NULL)
         return(NULL);
 
@@ -2452,9 +2429,9 @@ ReturnData initReturnData(UserData udata, int *pstatus) {
     return(rdata);
 }
 
-ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus) {
-    TempData tdata; /* temporary data */
-    tdata = (TempData) malloc(sizeof *tdata);
+ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
+    TempData *tdata; /* temporary data */
+    tdata = new TempData();
     if (tdata == NULL) goto freturn;
 
     void *ami_mem = 0; /* pointer to cvodes memory block */
@@ -2463,7 +2440,7 @@ ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus) {
         if (ami_mem == NULL) goto freturn;
     }
 
-    ReturnData rdata = initReturnData(udata, pstatus);
+    ReturnData *rdata = initReturnData(udata, pstatus);
     if (rdata == NULL) goto freturn;
 
     if (nx>0) {
@@ -2488,32 +2465,24 @@ freturn:
     return rdata;
 }
 #endif
-void processUserData(UserData udata) {
+void processUserData(UserData *udata) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = NewSparseMat(nx,nx,nnz);
-        M_tmp = malloc(nx*nx*sizeof(realtype));
-        dfdx_tmp = malloc(nx*nx*sizeof(realtype));
+        M_tmp = new realtype[nx*nx];
+        dfdx_tmp = new realtype[nx*nx];
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = malloc(nx*np*sizeof(realtype));
+        tmp_dxdotdp = new realtype[nx*np];
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = malloc(np*sizeof(realtype));
+        stau_tmp = new realtype[np];
     }
 
 
-    w_tmp = malloc(nw*sizeof(realtype));
-    dwdx_tmp = malloc(ndwdx*sizeof(realtype));
-    dwdp_tmp = malloc(ndwdp*sizeof(realtype));
-
-
-    udata->am_nan_dxdotdp = FALSE;
-    udata->am_nan_J = FALSE;
-    udata->am_nan_JSparse = FALSE;
-    udata->am_nan_xdot = FALSE;
-    udata->am_nan_xBdot = FALSE;
-    udata->am_nan_qBdot = FALSE;
+    w_tmp = new realtype[nw];
+    dwdx_tmp = new realtype[ndwdx];
+    dwdp_tmp = new realtype[ndwdp];
 }
