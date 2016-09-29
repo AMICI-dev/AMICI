@@ -213,6 +213,8 @@ classdef amimodel < handle
         
         generateC(this)
         
+        generateCStandalone(this)
+        
         compileC(this)
         
         generateM(this,amimodelo2)

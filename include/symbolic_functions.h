@@ -12,6 +12,31 @@ double Dam_min(int id,double a, double b, double c);
 double am_max(double a, double b, double c);
 double Dam_max(int id,double a, double b, double c);
 
+int amiIsNaN(double what);
+int amiIsInf(double what);
+double amiGetNaN();
+
+void ones(double *destination, int count);
+void zeros(double *destination, int count);
+void fillArray(double *destination, int count, double value);
+double sum(double const *array, int numElements);
+void linSpace(double *destination, double from, double to, int numValues);
+double *linSpaceAlloc(double from, double to, int numValues);
+void printArray(double const *array, int numElements);
+void printfArray(double const *array, int numElements, char const *format);
+
+void errMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
+
+void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
+
 /* sign */
 double sign(double x);
 

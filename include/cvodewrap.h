@@ -15,7 +15,14 @@
 #include <amd.h>
 #include <colamd.h>
 #include <btf.h>
+#include <stdbool.h>
 
+
+extern void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
     char buffer[250];
@@ -47,7 +54,7 @@ static void wrap_ErrHandlerFn(int error_code, const char *module, const char *fu
             break;
     }
     
-    mexWarnMsgIdAndTxt(buffid,buffer);
+    warnMsgIdAndTxt(buffid,buffer);
 };
 
 static void *AMICreate(int lmm, int iter) {

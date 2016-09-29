@@ -12,9 +12,10 @@
 #ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
-#include <mex.h>
+
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
+#include <include/symbolic_functions.h>
 
 #include <include/edata_accessors.h>
 #include <include/udata_accessors.h>
@@ -27,11 +28,17 @@
  * @ param D1 number of rows in the matrix
  * @ param D2 number of columns in the matrix
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField2(FIELD,D1,D2) \
 mxArray *mx ## FIELD; \
 mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField2(FIELD,D1,D2) \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2); \
+FIELD ## data = mx ## FIELD;
+#endif
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -40,6 +47,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D2 number of columns in the tensor
  * @ param D3 number of elements in the third dimension of the tensor
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField3(FIELD,D1,D2,D3) \
 mxArray *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
@@ -48,6 +56,14 @@ dims ## FIELD[2]=D3; \
 mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField3(FIELD,D1,D2,D3) \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3); \
+FIELD ## data = mx ## FIELD;
+#endif
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -57,6 +73,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define initField4(FIELD,D1,D2,D3,D4) \
 mxArray *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
@@ -66,35 +83,56 @@ dims ## FIELD[3]=D4; \
 mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
 FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+#else
+#define initField4(FIELD,D1,D2,D3,D4) \
+dims ## FIELD[0]=D1; \
+dims ## FIELD[1]=D2; \
+dims ## FIELD[2]=D3; \
+dims ## FIELD[3]=D4; \
+mx ## FIELD = malloc(sizeof(double) * D1 * D2 * D3 * D4); \
+FIELD ## data = mx ## FIELD;
+#endif
 
 /**
  * @ brief extract information from a property of a matlab class (scalar)
  * @ param OPTION name of the property
  * @ param TYPE class to which the information should be cast
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define readOptionScalar(OPTION,TYPE) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
 OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
 return(NULL); \
 }
+#endif
 
 /**
  * @ brief extract information from a property of a matlab class (matrix)
  * @ param OPTION name of the property
  */
+#ifndef AMICI_WITHOUT_MATLAB
 #define readOptionData(OPTION) \
 if(mxGetProperty(prhs[3],0,#OPTION)){ \
 OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
 } else { \
-mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
 return(NULL); \
 }
+#endif
+
+#ifdef AMICI_WITHOUT_MATLAB
+    typedef double mxArray;
+    #define mxMalloc malloc
+#endif
 
 /** return value for successful execution */
 #define AMI_SUCCESS               0
 
+
+
+#ifndef AMICI_WITHOUT_MATLAB
 UserData setupUserData(const mxArray *prhs[]) {
     /**
      * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
@@ -116,7 +154,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* time */
     
     if (!prhs[0]) {
-        mexErrMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
+        errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
     }
     ts = mxGetPr(prhs[0]);
     
@@ -125,26 +163,26 @@ UserData setupUserData(const mxArray *prhs[]) {
     /* parameters */
     
     if (!prhs[1]) {
-        mexErrMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
+        errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
     }
     p = mxGetPr(prhs[1]);
     
     /* constants */
     
     if (!prhs[2]) {
-        mexErrMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
+        errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
     }
     k = mxGetPr(prhs[2]);
     
     if (!prhs[3]) {
-        mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
+        errMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
     np = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
     
     /* plist */
     if (!prhs[4]) {
-        mexErrMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
+        errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     }
     
     if(prhs[4]) {
@@ -170,7 +208,7 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetProperty(prhs[3],0,"id")){ \
         idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
     } else { \
-        mexWarnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
         return(NULL); \
     }
     
@@ -184,8 +222,8 @@ UserData setupUserData(const mxArray *prhs[]) {
     if(mxGetProperty(prhs[3], 0 ,"sx0")) { sx0data = mxGetPr(mxGetProperty(prhs[3], 0 ,"sx0"));} else { }
     if ((mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) * mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")))>0) {
         /* check dimensions */
-        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { mexErrMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+        if(mxGetN(mxGetProperty(prhs[3], 0 ,"sx0")) != np) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+        if(mxGetM(mxGetProperty(prhs[3], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
         b_sx0 = TRUE;
     } else {
         b_sx0 = FALSE;
@@ -195,14 +233,14 @@ UserData setupUserData(const mxArray *prhs[]) {
     
     /* pbar */
     if (!prhs[5]) {
-        mexErrMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
+        errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
     }
     
     pbar = mxGetPr(prhs[5]);
     
     /* xscale */
     if (!prhs[6]) {
-        mexErrMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
+        errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
     }
     
     xbar = mxGetPr(prhs[6]);
@@ -237,11 +275,13 @@ UserData setupUserData(const mxArray *prhs[]) {
     
     return(udata);
 }
+#endif
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+#ifndef AMICI_WITHOUT_MATLAB
 ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
@@ -353,11 +393,13 @@ ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus) {
     
     return(rdata);
 }
+#endif
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+#ifndef AMICI_WITHOUT_MATLAB
 ExpData setupExpData(const mxArray *prhs[], UserData udata) {
     /**
      * setupExpData initialises the experimental data struct
@@ -381,14 +423,14 @@ ExpData setupExpData(const mxArray *prhs[], UserData udata) {
     if (edata == NULL) return(NULL);
     
     if (!prhs[7]) {
-        mexErrMsgIdAndTxt("AMICI:mex:data","No data provided!");
+        errMsgIdAndTxt("AMICI:mex:data","No data provided!");
     }
     if (mxGetProperty(prhs[7], 0 ,"Y")) {
         my = mxGetPr(mxGetProperty(prhs[7], 0 ,"Y"));
         nmyy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Y"));
         nmyt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Y"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
     }
     
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Y")) {
@@ -396,14 +438,14 @@ ExpData setupExpData(const mxArray *prhs[], UserData udata) {
         nysigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
         nysigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Y"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
     }
     if (mxGetProperty(prhs[7], 0 ,"Z")) {
         mz = mxGetPr(mxGetProperty(prhs[7], 0 ,"Z"));
         nmzy = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Z"));
         nmzt = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Z"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
     }
     
     if (mxGetProperty(prhs[7], 0 ,"Sigma_Z")) {
@@ -411,52 +453,52 @@ ExpData setupExpData(const mxArray *prhs[], UserData udata) {
         nzsigmay = (int) mxGetN(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
         nzsigmat = (int) mxGetM(mxGetProperty(prhs[7], 0 ,"Sigma_Z"));
     } else {
-        mexErrMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
+        errMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
     }
     
     if (nmyt != nt) {
         sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
     }
     
     if (nysigmat != nt) {
         sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
-        mexErrMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
     }
     
     if (nmyy != nytrue) {
         sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
     }
     
     if (nysigmay != nytrue) {
         sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
     }
     
     if (nmzt != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
     }
     
     if (nzsigmat != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
     }
     
     if (nmzy != nztrue) {
         sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
     }
     
     if (nzsigmay != nztrue) {
         sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
-        mexErrMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
+        errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
     }
     
     return(edata);
 }
-
+#endif
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
@@ -536,10 +578,10 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
     
     /* Create AMIS object */
     if (lmm>2||lmm<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
+        errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
+        errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     ami_mem = AMICreate(lmm, iter);
     if (ami_mem == NULL) return(NULL);
@@ -598,7 +640,7 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
             break;
             
         case AMI_LAPACKDENSE:
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackDense(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -609,7 +651,7 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
             
         case AMI_LAPACKBAND:
             
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* *status = CVLapackBand(ami_mem, nx);
              if (*status != AMI_SUCCESS) return;
              
@@ -668,7 +710,7 @@ void *setupAMI(int *status, UserData udata, TempData tdata) {
             break;
             
         default:
-            mexErrMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
+            errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
             break;
     }
     
@@ -833,10 +875,10 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
+        errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
     }
     if (iter>2||iter<1) {
-        mexErrMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
+        errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
     }
     /* Does everything stay the same here? */
     /* allocate memory for the backward problem */
@@ -891,7 +933,7 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
              *status = wrap_SetDenseJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             
@@ -905,7 +947,7 @@ void setupAMIB(int *status,void *ami_mem, UserData udata, TempData tdata) {
              *status = wrap_SetBandJacFnB(ami_mem, which);
              if (*status != AMI_SUCCESS) return;
              #else*/
-            mexErrMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
             break;
@@ -1020,7 +1062,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData udata, Return
         }
     }
     for (iy=0; iy<nytrue; iy++) {
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
         } else {
@@ -1064,7 +1106,7 @@ void getDataSensisASA(int *status, int it, void *ami_mem, UserData udata, Return
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
     for (iy=0; iy<nytrue; iy++) {
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status = fdsigma_ydp(t,dsigma_ydp,udata);
             if (*status != AMI_SUCCESS) return;
         } else {
@@ -1107,7 +1149,7 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData udata, ReturnDat
     for (iy=0; iy<nytrue; iy++) {
         /* extract the value for the standard deviation, if the data value is NaN, use
          the parameter value. Store this value in the return struct */
-        if (mxIsNaN(ysigma[iy*nt+it])) {
+        if (amiIsNaN(ysigma[iy*nt+it])) {
             *status =fsigma_y(t,sigma_y,udata);
             if (*status != AMI_SUCCESS) return;
             
@@ -1205,14 +1247,14 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, UserData udata, Retur
     
     for (iz=0; iz<nztrue; iz++) {
         if( z2event[iz]-1 == ie ){
-            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
+            if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 *status = fdzdp(t,ie,dzdp,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 *status = fdzdx(t,ie,dzdx,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 /* extract the value for the standard deviation, if the data value is NaN, use
                  the parameter value. Store this value in the return struct */
-                if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+                if (amiIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
                     *status = fsigma_z(t,ie,sigma_z,udata);
                     if (*status != AMI_SUCCESS) return;
                     *status = fdsigma_zdp(t,ie,dsigma_zdp,udata);
@@ -1256,7 +1298,7 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData udata, R
     
     /* extract the value for the standard deviation, if the data value is NaN, use
      the parameter value. Store this value in the return struct */
-    if (mxIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
+    if (amiIsNaN(zsigma[nroots[ie] + nmaxevent*iz])) {
         *status = fsigma_z(t,ie,sigma_z,udata);
         if (*status != AMI_SUCCESS) return;
     } else {
@@ -1285,12 +1327,10 @@ void getEventObjective(int *status, int ie, void *ami_mem, UserData udata, Retur
      */
     int iz;
     
-    
     for (iz=0; iz<nztrue; iz++) {
         if(z2event[iz]-1 == ie) {
             getEventSigma(status, ie, iz, ami_mem, udata, rdata, edata, tdata);
-            if(!mxIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
-                
+            if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
                 r[0] += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
                 *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
             }
@@ -1592,7 +1632,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
         discs[*iroot] = t;
         (*iroot)++;
     } else {
-        mexWarnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
+        warnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
         *status = AMIReInit(ami_mem, t, x, dx); /* reinitialise so that we can continue in peace */
         return;
     }
@@ -1978,16 +2018,101 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData udata, ReturnData
     
 }
 
+#ifdef AMICI_WITHOUT_MATLAB
+
+void initUserDataFields(UserData udata, ReturnData rdata, double *pstatus) {
+
+    llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
+            numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
+            sigmaydata = ssigmaydata = sigmazdata = ssigmazdata = xdotdata = Jdata = dydpdata = dydxdata =
+            dxdotdpdata = tsdata = 0;
+
+    size_t dimssx[] = {0,0,0};
+    size_t dimssy[] = {0,0,0};
+    size_t dimssz[] = {0,0,0};
+    size_t dimssrz[] = {0,0,0};
+    size_t dimss2rz[] = {0,0,0,0};
+    size_t dimssigmay[] = {0,0,0};
+    size_t dimssigmaz[] = {0,0,0};
+    size_t dimsssigmay[] = {0,0,0};
+    size_t dimsssigmaz[] = {0,0,0};
+
+
+    mxstatus = malloc(sizeof(double));
+    pstatus = mxstatus;
+
+    initField2(llh,1,1);
+    initField2(chi2,1,1);
+
+    mxts = malloc(sizeof(double) * nt);
+    tsdata = mxts;
+
+    initField2(numsteps,nt,1);
+    initField2(numrhsevals,nt,1);
+    initField2(order,nt,1);
+    if(sensi>0){
+        initField2(numstepsS,nt,1);
+        initField2(numrhsevalsS,nt,1);
+    }
+    if((nz>0) & (ne>0)){
+        initField2(z,nmaxevent,nz);
+        initField2(rz,nmaxevent,nz);
+        initField2(sigmaz,nmaxevent,nz);
+    }
+    if(nx>0) {
+        initField2(x,nt,nx);
+        initField2(xdot,1,nx);
+        initField2(J,nx,nx);
+    }
+    if(ny>0) {
+        initField2(y,nt,ny);
+        initField2(sigmay,nt,ny);
+        if (sensi_meth == AMI_SS) {
+            initField2(dydp,ny,np);
+            initField2(dydx,ny,nx);
+            initField2(dxdotdp,nx,np);
+        }
+    }
+    if(sensi>0) {
+        initField2(sllh,np,1);
+        if (sensi_meth == AMI_FSA) {
+            initField3(sx,nt,nx,np);
+            if(ny>0) {
+                initField3(sy,nt,ny,np);
+                initField3(ssigmay,nt,ny,np);
+            }
+            if((nz>0) & (ne>0)){
+                initField3(srz,nmaxevent,nz,np);
+                if(sensi>1){
+                    initField4(s2rz,nmaxevent,nz,np,np);
+                }
+                initField3(sz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if (sensi_meth == AMI_ASA) {
+            if(ny>0) {
+                initField3(ssigmay,nt,ny,np);
+            }
+            if((nz>0) & (ne>0)){
+                initField3(ssigmaz,nmaxevent,nz,np);
+            }
+        }
+        if(sensi>1) {
+            initField2(s2llh,np,np);
+        }
+    }
+}
+#endif
+
+#ifdef AMICI_WITHOUT_MATLAB
 int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot) {
     /*******************/
     /* FORWARD PROBLEM */
     /*******************/
     int ix, it;
-    int ncheck; /* the number of (internal) checkpoints stored so far */
-    realtype tlastroot; /* storage for last found root */
-    
-    ncheck = 0;
-    tlastroot = 0;
+    int ncheck = 0; /* the number of (internal) checkpoints stored so far */
+    realtype tlastroot = 0; /* storage for last found root */
     
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
@@ -2022,33 +2147,30 @@ int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData
                         if (*status<0) {
                             return 1;
                         }
-                        
                         if (*status==AMI_ROOT_RETURN) {
                             handleEvent(status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
                             if (*status != AMI_SUCCESS) return 1;
-                            
                         }
                     }
                 }
             }
-            
-            handleDataPoint(&*status, it, ami_mem, udata, rdata, edata, tdata);
+
+            handleDataPoint(status, it, ami_mem, udata, rdata, edata, tdata);
             if (*status != AMI_SUCCESS) return 1;
-            
-            
+
+
         } else {
-            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = mxGetNaN();
+            for(ix=0; ix < nx; ix++) xdata[ix*nt+it] = amiGetNaN();
         }
     }
-    
+
     /* fill events */
     if (ne>0) {
-        fillEventOutput(&*status, ami_mem, udata, rdata, edata, tdata);
+        fillEventOutput(status, ami_mem, udata, rdata, edata, tdata);
     }
-    
+
     return 0;
 }
-
 
 int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
     /********************/
@@ -2056,9 +2178,9 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
     /********************/
     int ix, it;
     int ip;
-    
+
     double tnext;
-    
+
     if (nx>0) {
         if (sensi >= 1) {
             if(sensi_meth == AMI_ASA) {
@@ -2077,11 +2199,9 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                             *status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
                             if (*status != AMI_SUCCESS) return 1;
                             
-                            /* get states only if we actually integrated */
+
                             *status = AMIGetB(ami_mem, which, &t, xB, dxB);
                             if (*status != AMI_SUCCESS) return 1;
-                            /* Here, the quadrature of the integrals must be changed, or the change
-                             should take part in AMIGetQuadB ... AMIGetQuadB */
                             *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                             if (*status != AMI_SUCCESS) return 1;
                         }
@@ -2091,7 +2211,6 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                         if(ne>0){
                             if(nmaxevent>0){
                                 if (tnext == discs[*iroot]) {
-                                    /* Possibly some change here ... */
                                     handleEventB(status, *iroot, ami_mem, udata, tdata);
                                     (*iroot)--;
                                 }
@@ -2101,7 +2220,6 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                         /* handle data-point */
                         
                         if (tnext == ts[it]) {
-                            /* Changes inside or outside? */
                             handleDataPointB(status, it, ami_mem, udata, rdata, tdata);
                             it--;
                         }
@@ -2109,7 +2227,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                         /* reinit states */
                         *status = AMIReInitB(ami_mem, which, t, xB, dxB);
                         if (*status != AMI_SUCCESS) return 1;
-                        /* Maybe, but probably not, this needs to be changed */
+
                         *status = AMIQuadReInitB(ami_mem, which, xQB);
                         if (*status != AMI_SUCCESS) return 1;
                         
@@ -2124,8 +2242,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 /* solve for backward problems */
                                 *status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
                                 if (*status != AMI_SUCCESS) return 1;
-                                
-                                /* Here again, Quadrature needs a slight change, but probably inside... */
+
                                 *status = AMIGetQuadB(ami_mem, which, &t, xQB);
                                 if (*status != AMI_SUCCESS) return 1;
                                 *status = AMIGetB(ami_mem, which, &t, xB, dxB);
@@ -2133,7 +2250,7 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                             }
                         }
                     }
-                    
+
                     /* evaluate initial values */
                     NVsx = N_VCloneVectorArray_Serial(np,x);
                     if (NVsx == NULL) return 1;
@@ -2147,7 +2264,6 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                     
                     if(*status == 0) {
                         
-                        /* From here ... */
                         xB_tmp = NV_DATA_S(xB);
                         
                         int ig;
@@ -2170,10 +2286,9 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 }
                             }
                         }
-                        
+
                         xQB_tmp = NV_DATA_S(xQB);
-                        
-                        /* Does this need one more parameter loop around? */
+
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < np; ip++) {
                                 if (ig==0) {
@@ -2195,16 +2310,15 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                                 }
                             }
                         }
-                        /* ... to here, there may be changes necessary... */
-                        
+
                     } else {
                         int ig;
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < np; ip++) {
                                 if (ig==0) {
-                                    sllhdata[ip] = mxGetNaN();
+                                    sllhdata[ip] = amiGetNaN();
                                 } else {
-                                    s2llhdata[(ig-1)*np + ip] = mxGetNaN();
+                                    s2llhdata[(ig-1)*np + ip] = amiGetNaN();
                                 }
                             }
                         }
@@ -2214,9 +2328,9 @@ int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpDat
                     for(ig=0; ig<ng; ig++) {
                         for(ip=0; ip < np; ip++) {
                             if (ig==0) {
-                                sllhdata[ip] = mxGetNaN();
+                                sllhdata[ip] = amiGetNaN();
                             } else {
-                                s2llhdata[(ig-1)*np + ip] = mxGetNaN();
+                                s2llhdata[(ig-1)*np + ip] = amiGetNaN();
                             }
                         }
                     }
@@ -2261,32 +2375,32 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
         N_VDestroy_Serial(dx_old);
         N_VDestroy_Serial(xdot_old);
         DestroyMat(Jtmp);
-        DestroySparseMat(tmp_J);
         if (ne>0) {
-            if(ami_mem) mxFree(rootsfound);
-            if(ami_mem) mxFree(rootvals);
-            if(ami_mem) mxFree(rootidx);
-            if(ami_mem)    mxFree(sigma_z);
-            if(ami_mem)    mxFree(nroots);
-            if(ami_mem)    mxFree(discs);
-            if(ami_mem)    mxFree(h);
-            
-            if(ami_mem)    mxFree(deltax);
-            if(ami_mem)    mxFree(deltasx);
-            if(ami_mem)    mxFree(deltaxB);
-            if(ami_mem)    mxFree(deltaqB);
+            if(ami_mem) free(rootsfound);
+            if(ami_mem) free(rootvals);
+            if(ami_mem) free(rootidx);
+            if(ami_mem)    free(sigma_z);
+            if(ami_mem)    free(nroots);
+            if(ami_mem)    free(discs);
+            if(ami_mem)    free(h);
+
+            if(ami_mem)    free(deltax);
+            if(ami_mem)    free(deltasx);
+            if(ami_mem)    free(deltaxB);
+            if(ami_mem)    free(deltaqB);
         }
+
         if(ny>0) {
-            if(sigma_y)    mxFree(sigma_y);
+            if(sigma_y)    free(sigma_y);
         }
         if (sensi >= 1) {
-            if(ami_mem)    mxFree(dydx);
-            if(ami_mem)    mxFree(dydp);
+            if(ami_mem)    free(dydx);
+            if(ami_mem)    free(dydp);
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(status == 0) {
+                if(NVsx) {
                     N_VDestroyVectorArray_Serial(NVsx,np);
                 }
             }
@@ -2295,18 +2409,18 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem)    mxFree(dgdp);
-                if(ami_mem)    mxFree(dgdx);
-                if(ami_mem)    mxFree(drdp);
-                if(ami_mem)    mxFree(drdx);
+                if(ami_mem)    free(dgdp);
+                if(ami_mem)    free(dgdx);
+                if(ami_mem)    free(drdp);
+                if(ami_mem)    free(drdx);
                 if (ne>0) {
-                    if(ami_mem)    mxFree(dzdp);
-                    if(ami_mem)    mxFree(dzdx);
+                    if(ami_mem)    free(dzdp);
+                    if(ami_mem)    free(dzdx);
                 }
-                if(ami_mem)     mxFree(llhS0);
-                if(ami_mem)    mxFree(dsigma_ydp);
+                if(ami_mem)     free(llhS0);
+                if(ami_mem)    free(dsigma_ydp);
                 if (ne>0) {
-                    if(ami_mem)    mxFree(dsigma_zdp);
+                    if(ami_mem)    free(dsigma_zdp);
                 }
                 if(setupBdone)      N_VDestroy_Serial(dxB);
                 if(setupBdone)      N_VDestroy_Serial(xB);
@@ -2314,17 +2428,92 @@ void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleanty
                 if(setupBdone)      N_VDestroy_Serial(xQB);
                 if(setupBdone)      N_VDestroy_Serial(xQB_old);
             }
-            
         }
         if(ami_mem)     N_VDestroy_Serial(id);
         if(ami_mem)     AMIFree(&ami_mem);
     }
-    
-    if(udata)   mxFree(plist);
-    if (sensi >= 1) {
-        if(udata)   mxFree(tmp_dxdotdp);
+
+    if(tdata)    free(tdata);
+}
+
+#ifdef AMICI_WITHOUT_MATLAB
+ReturnData initReturnData(UserData udata, int *pstatus) {
+    ReturnData rdata; /* returned rdata struct */
+
+    /* Return rdata structure */
+    rdata = (ReturnData) malloc(sizeof *rdata);
+    if (rdata == NULL)
+        return(NULL);
+
+    double dblstatus;
+    initUserDataFields(udata, rdata, &dblstatus);
+    *pstatus = (int) dblstatus;
+
+    return(rdata);
+}
+
+ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus) {
+    TempData tdata; /* temporary data */
+    tdata = (TempData) malloc(sizeof *tdata);
+    if (tdata == NULL) goto freturn;
+
+    void *ami_mem = 0; /* pointer to cvodes memory block */
+    if (nx>0) {
+        ami_mem = setupAMI(pstatus, udata, tdata);
+        if (ami_mem == NULL) goto freturn;
     }
-    
-    if(udata) mxFree(udata);
-    if(tdata) mxFree(tdata);
+
+    ReturnData rdata = initReturnData(udata, pstatus);
+    if (rdata == NULL) goto freturn;
+
+    if (nx>0) {
+        if (edata == NULL) goto freturn;
+    }
+
+    int iroot = 0;
+
+    *pstatus = 0;
+    int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
+    if(problem)
+        goto freturn;
+
+    booleantype setupBdone = false;
+    problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
+    if(problem)
+        goto freturn;
+
+freturn:
+    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
+    freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    return rdata;
+}
+#endif
+void processUserData(UserData udata) {
+    if (nx>0) {
+        /* initialise temporary jacobian storage */
+        tmp_J = NewSparseMat(nx,nx,nnz);
+        M_tmp = malloc(nx*nx*sizeof(realtype));
+        dfdx_tmp = malloc(nx*nx*sizeof(realtype));
+    }
+    if (sensi>0) {
+        /* initialise temporary dxdotdp storage */
+        tmp_dxdotdp = malloc(nx*np*sizeof(realtype));
+    }
+    if (ne>0) {
+        /* initialise temporary stau storage */
+        stau_tmp = malloc(np*sizeof(realtype));
+    }
+
+
+    w_tmp = malloc(nw*sizeof(realtype));
+    dwdx_tmp = malloc(ndwdx*sizeof(realtype));
+    dwdp_tmp = malloc(ndwdp*sizeof(realtype));
+
+
+    udata->am_nan_dxdotdp = FALSE;
+    udata->am_nan_J = FALSE;
+    udata->am_nan_JSparse = FALSE;
+    udata->am_nan_xdot = FALSE;
+    udata->am_nan_xBdot = FALSE;
+    udata->am_nan_qBdot = FALSE;
 }

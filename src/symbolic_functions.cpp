@@ -19,9 +19,16 @@
 
 #include <stdarg.h>
 #include <math.h>
-#include <mex.h>
+#ifndef AMICI_WITHOUT_MATLAB
+    #include <mex.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <float.h>
+#include <include/symbolic_functions.h>
 #include <spline.cpp>
+
 
 #undef ts
 
@@ -30,6 +37,102 @@
 /*! bool return value false */
 #define FALSE 0
 
+
+int amiIsNaN(double what) {
+    #ifdef mex_h
+    return mxIsNaN(what);
+    #else
+    return isnan(what);
+    #endif
+}
+
+int amiIsInf(double what) {
+    #ifdef mex_h
+    return mxIsInf(what);
+    #else
+    return isinf(what);
+    #endif
+}
+
+double amiGetNaN() {
+#ifdef mex_h
+    return mxGetNaN();
+#else
+    return INFINITY;
+#endif
+}
+
+void fillArray(double *destination, int count, double value) {
+    int i;
+    for(i = 0; i < count; ++i)
+        destination[i] = value;
+}
+
+double sum(double const *array, int numElements) {
+    double sum = 0;
+    int i;
+    for(i = 0; i < numElements; ++i) {
+        sum += array[i];
+    }
+    return sum;
+}
+
+void zeros(double *destination, int count) {
+    memset(destination, 0, sizeof(double) * count);
+}
+
+void ones(double *destination, int count) {
+    fillArray(destination, count, 1);
+}
+
+void linSpace(double *destination, double from, double to, int numValues) {
+    double delta = (to - from) / (numValues - 1);
+    int i;
+    for(i = 0; i < numValues; ++i) {
+        destination[i] = from + i * delta;
+    }
+}
+
+double *linSpaceAlloc(double from, double to, int numValues) {
+    double *destination = malloc(sizeof(double) * numValues);
+    linSpace(destination, from, to, numValues);
+    return destination;
+}
+
+void printArray(double const *array, int numElements) {
+    printfArray(array, numElements, "%e\t");
+}
+
+void printfArray(double const *array, int numElements, char const *format) {
+    int i;
+    for(i = 0; i < numElements; ++i) {
+        printf(format, array[i]);
+    }
+}
+
+void errMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    ) {
+#ifdef AMICI_WITHOUT_MATLAB
+    printf("[Error] %s: %s\n", identifier, err_msg);
+#else
+    mexWarnMsgIdAndTxt(identifier, err_msg);
+#endif
+}
+
+void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    ) {
+#ifdef AMICI_WITHOUT_MATLAB
+    printf("[Warning] %s: %s\n", identifier, err_msg);
+#else
+    mexWarnMsgIdAndTxt(identifier, err_msg);
+#endif
+}
 
 /**
  * c implementation of log function, this prevents returning NaN values for negative values

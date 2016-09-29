@@ -5,6 +5,11 @@
 #include <include/rdata.h>
 #include <include/edata.h>
 #include <include/tdata.h>
+#include <stdbool.h>
+
+#ifndef AMICI_WITHOUT_MATLAB
+#include <mex.h>
+#endif
 
 /* sensitivity method */
 #define AMI_FSA 1
@@ -32,9 +37,11 @@
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
 
+#ifndef AMICI_WITHOUT_MATLAB
 UserData setupUserData(const mxArray *prhs[]);
 ReturnData setupReturnData(mxArray *plhs[], UserData udata, double *pstatus);
 ExpData setupExpData(const mxArray *prhs[], UserData udata);
+#endif /* AMICI_WITHOUT_MATLAB */
 
 void *setupAMI(int *status, UserData udata, TempData tdata);
 void setupAMIB(int *status, void *ami_mem, UserData udata, TempData tdata);
@@ -69,9 +76,16 @@ void updateHeavisideB(int *status, int iroot, UserData udata, TempData tdata);
 void getDiagnosis(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata);
 void getDiagnosisB(int *status,int it, void *ami_mem, UserData udata, ReturnData rdata, TempData tdata);
 
-int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot);
+int workForwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int* status, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData udata, TempData tdata, ReturnData rdata, ExpData edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);
-void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata,  ReturnData rdata);
+void storeJacobianAndDerivativeInReturnData(UserData udata, TempData tdata, ReturnData rdata);
 void freeTempDataAmiMem(UserData udata, TempData tdata, void *ami_mem, booleantype setupBdone, int status);
+
+#ifdef AMICI_WITHOUT_MATLAB
+void initUserDataFields(UserData user_data, ReturnData rdata, double *pstatus);
+ReturnData getSimulationResults(UserData udata, ExpData edata, int *pstatus);
+void processUserData(UserData udata);
+ReturnData initReturnData(UserData udata, int *pstatus);
+#endif /* AMICI_WITHOUT_MATLAB */
 
 #endif /* amici_h */

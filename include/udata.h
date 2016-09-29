@@ -160,7 +160,10 @@ typedef struct {
     booleantype am_nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype am_nan_qBdot;
-    
-    
 } *UserData;
+
+#ifdef AMICI_WITHOUT_MATLAB
+void freeUserData(UserData udata);
+#endif
+
 #endif /* _MY_UDATA */
