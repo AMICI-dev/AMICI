@@ -36,7 +36,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 #else
 #define initField2(FIELD,D1,D2) \
-mx ## FIELD = new double[D1 * D2]; \
+mx ## FIELD = new double[D1 * D2](); \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -61,7 +61,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
-mx ## FIELD = new double[D1 * D2 * D3]; \
+mx ## FIELD = new double[D1 * D2 * D3](); \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -89,7 +89,7 @@ dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
 dims ## FIELD[3]=D4; \
-mx ## FIELD = new double[D1 * D2 * D3 * D4]; \
+mx ## FIELD = new double[D1 * D2 * D3 * D4](); \
 FIELD ## data = mx ## FIELD;
 #endif
 
@@ -188,7 +188,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
         plistdata = mxGetPr(prhs[4]);
     }
     
-    plist = new int[np];
+    plist = new int[np]();
     for (ip=0; ip<np; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
@@ -245,21 +245,21 @@ UserData *setupUserData(const mxArray *prhs[]) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);
-        M_tmp = new realtype[nx*nx];
-        dfdx_tmp = new realtype[nx*nx];
+        M_tmp = new realtype[nx*nx]();
+        dfdx_tmp = new realtype[nx*nx]();
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = new realtype[nx*np];
+        tmp_dxdotdp = new realtype[nx*np]();
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = new realtype[np];
+        stau_tmp = new realtype[np]();
     }
 
-    w_tmp = new realtype[nw];
-    dwdx_tmp = new realtype[ndwdx];
-    dwdp_tmp = new realtype[ndwdp];
+    w_tmp = new realtype[nw]();
+    dwdx_tmp = new realtype[ndwdx]();
+    dwdp_tmp = new realtype[ndwdp]();
     
     return(udata);
 }
@@ -403,7 +403,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     
     ExpData *edata; /* returned rdata struct */
     
-    errmsg = new char[200];
+    errmsg = new char[200]();
     
     
     /* Return edata structure */
@@ -504,14 +504,8 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     
     t = tstart;
     
-    /*
-     g = 0.0;
-     r = 0.0;
-     */
-    g = new realtype[ng];
-    memset(g,0,sizeof(&g));
-    r = new realtype[ng];
-    memset(r,0,sizeof(&r));
+    g = new realtype[ng]();
+    r = new realtype[ng]();
     
     
     x = N_VNew_Serial(nx);
@@ -526,24 +520,21 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         xdot_old = N_VNew_Serial(nx);
         Jtmp = NewDenseMat(nx,nx);
         
-        if(ne>0) rootsfound = new int[ne];
-        if(ne>0) rootvals= new realtype[ne];
-        if(ne>0) rootidx = new int[nmaxevent*ne*ne];
-        if(ne>0) nroots = new int[ne];
-        if(ne>0) memset(nroots,0,sizeof(&nroots));
-        if(ne>0) discs = new realtype[nmaxevent*ne];
-        if(ne>0) h = new realtype[ne];
-        if(ne>0) h_tmp = new realtype[ne];
+        if(ne>0) rootsfound = new int[ne]();
+        if(ne>0) rootvals= new realtype[ne]();
+        if(ne>0) rootidx = new int[nmaxevent*ne*ne]();
+        if(ne>0) nroots = new int[ne]();
+        if(ne>0) discs = new realtype[nmaxevent*ne]();
+        if(ne>0) h = new realtype[ne]();
+        if(ne>0) h_tmp = new realtype[ne]();
         
-        if(ne>0) deltax = new realtype[nx];
-        if(ne>0) deltasx = new realtype[nx*np];
-        if(ne>0) deltaxB = new realtype[nx];
-        if(ne>0) deltaqB = new realtype[ng*np];
+        if(ne>0) deltax = new realtype[nx]();
+        if(ne>0) deltasx = new realtype[nx*np]();
+        if(ne>0) deltaxB = new realtype[nx]();
+        if(ne>0) deltaqB = new realtype[ng*np]();
         
-        if(ny>0) sigma_y = new realtype[ny];
-        if(ny>0) memset(sigma_y,0,sizeof(&sigma_y));
-        if(ne>0) sigma_z = new realtype[nz];
-        if(ne>0) memset(sigma_z,0,sizeof(&sigma_z));
+        if(ny>0) sigma_y = new realtype[ny]();
+        if(ne>0) sigma_z = new realtype[nz]();
         
         
         /* initialise states */
@@ -699,15 +690,11 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     
     if ( sensi >= 1) {
         
-        dydx = new realtype[ny*nx];
-        memset(dydx,0,sizeof(&dydx));
-        dydp = new realtype[ny*np];
-        memset(dydp,0,sizeof(&dydp));
+        dydx = new realtype[ny*nx]();
+        dydp = new realtype[ny*np]();
         
-        dsigma_ydp = new realtype[ny*np];
-        memset(dsigma_ydp,0,sizeof(&dsigma_ydp));
-        if(ne>0) dsigma_zdp = new realtype[nz*np];
-        if(ne>0) memset(dsigma_zdp,0,sizeof(&dsigma_zdp));
+        dsigma_ydp = new realtype[ny*np]();
+        if(ne>0) dsigma_zdp = new realtype[nz*np]();
         
         if (sensi_meth == AMI_FSA) {
             
@@ -769,22 +756,15 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
-                llhS0 = new realtype[ng*np];
-                memset(llhS0,0,sizeof(&llhS0));
-                dgdp = new realtype[ng*np];
-                memset(dgdp,0,sizeof(&dgdp));
-                dgdx = new realtype[ng*nxtrue*nt];
-                memset(dgdx,0,sizeof(&dgdx));
+                llhS0 = new realtype[ng*np]();
+                dgdp = new realtype[ng*np]();
+                dgdx = new realtype[ng*nxtrue*nt]();
                 if (ne > 0) {
-                    dzdp = new realtype[nz*np];
-                    memset(dzdp,0,sizeof(&dzdp));
-                    dzdx = new realtype[nz*nx];
-                    memset(dzdx,0,sizeof(&dzdx));
+                    dzdp = new realtype[nz*np]();
+                    dzdx = new realtype[nz*nx]();
                 }
-                drdp = new realtype[ng*np*nztrue*nmaxevent];
-                memset(drdp,0,sizeof(&drdp));
-                drdx = new realtype[ng*nx*nztrue*nmaxevent];
-                memset(drdx,0,sizeof(&drdx));
+                drdp = new realtype[ng*np*nztrue*nmaxevent]();
+                drdx = new realtype[ng*nx*nztrue*nmaxevent]();
             }
         }
         
@@ -2015,13 +1995,13 @@ void initUserDataFields(UserData *udata, ReturnData *rdata, double *pstatus) {
     size_t dimsssigmaz[] = {0,0,0};
 
 
-    mxstatus = new double;
+    mxstatus = new double();
     pstatus = mxstatus;
 
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
-    mxts = new double[nt];
+    mxts = new double[nt]();
     tsdata = mxts;
 
     initField2(numsteps,nt,1);
@@ -2187,9 +2167,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         
                         if(ne>0){
                             if(nmaxevent>0){
-                                if (tnext == discs[*iroot]) {
-                                    handleEventB(status, *iroot, ami_mem, udata, tdata);
-                                    (*iroot)--;
+                                if((*iroot)>=0){
+                                    if (tnext == discs[*iroot]) {
+                                        handleEventB(status, *iroot, ami_mem, udata, tdata);
+                                        (*iroot)--;
+                                    }
                                 }
                             }
                         }
@@ -2469,20 +2451,20 @@ void processUserData(UserData *udata) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);
-        M_tmp = new realtype[nx*nx];
-        dfdx_tmp = new realtype[nx*nx];
+        M_tmp = new realtype[nx*nx]();
+        dfdx_tmp = new realtype[nx*nx]();
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = new realtype[nx*np];
+        tmp_dxdotdp = new realtype[nx*np]();
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = new realtype[np];
+        stau_tmp = new realtype[np]();
     }
 
 
-    w_tmp = new realtype[nw];
-    dwdx_tmp = new realtype[ndwdx];
-    dwdp_tmp = new realtype[ndwdp];
+    w_tmp = new realtype[nw]();
+    dwdx_tmp = new realtype[ndwdx]();
+    dwdp_tmp = new realtype[ndwdp]();
 }
