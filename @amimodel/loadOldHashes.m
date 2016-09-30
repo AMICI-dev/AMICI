@@ -39,12 +39,10 @@ function HTable = loadOldHashes(this)
     end
     DHTable.x = '';
     DHTable.k = '';
-    DHTable.root = '';
 
     DHTable.p = '';
     DHTable.x0 = '';
     DHTable.y = '';
-    DHTable.u = '';
     DHTable.sigma_y = '';
     DHTable.sigma_z = '';
     DHTable.z = '';

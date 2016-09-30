@@ -398,6 +398,10 @@ function compileC(this)
                 includesstr]);
     end
     
+    % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
+    movefile(fullfile(this.wrap_path,'models',this.modelname,'hashes_new.mat'),...
+        fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'f');
+    
 
     fprintf('amici | ');
     if(this.nxtrue ~= this.nx)
@@ -453,6 +457,10 @@ function compileC(this)
         ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"' ...
         includesstr ...
         ])
+    
+    
+    
+    
 
     
 function result = isnewer(ver1str,ver2str)
