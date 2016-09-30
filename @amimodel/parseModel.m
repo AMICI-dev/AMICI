@@ -78,7 +78,28 @@ function parseModel(this)
     end
     this.HTable(1).sigma_y = CalcMD5(char(this.sym.sigma_y));
     this.HTable(1).sigma_z = CalcMD5(char(this.sym.sigma_z));
+    this.HTable(1).Jy = CalcMD5(char(this.sym.Jy));
+    this.HTable(1).Jz = CalcMD5(char(this.sym.Jz));
     
+    % check if Ccode generation changed
+    
+    codegen = {'gccode','getArgs','getCVar','getFArgs',...
+        'getSensiFlag','getSyms','printLocalVars','writeCcode',...
+        'writeCcode_sensi'};
+    for ifile = 1:length(codegen)
+        this.HTable(1).(codegen{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen{ifile} '.m']));
+    end
+    this.HTable(1).generateC = CalcMD5(fullfile(this.wrap_path,'@amimodel','generateC.m'));
+    
+    this.recompile = not(strcmp(this.HTable(1).generateC,HTable.generateC));
+    ifile = 1;
+    while(not(this.recompile) & ifile<=length(codegen))
+        this.recompile = not(strcmp(this.HTable(1).(codegen{ifile}),HTable.(codegen{ifile})));
+        ifile = ifile+1;
+    end
+    if(this.recompile)
+       disp('Code generation routines changed! Recompiling model!') 
+    end
     % compute functions
     
     % do not change the ordering, it is essential for correct dependencies
@@ -190,9 +211,8 @@ function parseModel(this)
     colptrsB = this.colptrsB;
     rowvalsB = this.rowvalsB;
     sparseidxB = this.sparseidxB;
-    compver = this.compver;
 
-    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','compver','ndwdx','ndwdp','nw');
+    save(fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'HTable','nxtrue','nytrue','nx','ny','np','nk','nevent','nz','z2event','nnonzeros','id','ubw','lbw','colptrs','rowvals','sparseidx','colptrsB','rowvalsB','sparseidxB','ndwdx','ndwdp','nw');
 
     fprintf('\r')
 

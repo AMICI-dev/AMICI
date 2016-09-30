@@ -91,10 +91,6 @@ classdef amimodel < handle
         %  2 indicates augmentation by one linear combination of first
         %  order sensitivities (yields hessian-vector product)
         o2flag = 0;
-
-        % counter that allows enforcing of recompilation of models after
-        % code changes
-        compver = 20;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )

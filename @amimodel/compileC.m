@@ -8,7 +8,7 @@ function compileC(this)
     sundials_ver = '2.6.2.3';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
-    ssparse_ver = '4.4.4.1';
+    ssparse_ver = '4.5.3';
     
     lapack_path = fullfile(this.wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
@@ -148,7 +148,6 @@ function compileC(this)
         fullfile('AMD','Source','amd_postorder.c');
         fullfile('AMD','Source','amd_preprocess.c');
         fullfile('AMD','Source','amd_valid.c');
-        fullfile('COLAMD','Source','colamd_global.c');
         fullfile('COLAMD','Source','colamd.c');
         fullfile('BTF','Source','btf_maxtrans.c');
         fullfile('BTF','Source','btf_order.c');
@@ -246,7 +245,6 @@ function compileC(this)
         'amd_postorder.o';
         'amd_preprocess.o';
         'amd_valid.o';
-        'colamd_global.o';
         'colamd.o';
         'btf_maxtrans.o';
         'btf_order.o';
