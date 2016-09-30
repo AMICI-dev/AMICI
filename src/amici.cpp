@@ -812,7 +812,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     /* write initial conditions */
     if (xB == NULL) return;
     xB_tmp = NV_DATA_S(xB);
-    memset(xB_tmp,0,sizeof(&xB_tmp));
+    memset(xB_tmp,0,sizeof(realtype)*nx);
     for (ix=0; ix<nx; ix++) {
         xB_tmp[ix] += dgdx[nt-1+ix*nt];
     }
@@ -824,11 +824,11 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     
     if (dxB == NULL) return;
     dxB_tmp = NV_DATA_S(dxB);
-    memset(dxB_tmp,0,sizeof(&dxB_tmp));
+    memset(dxB_tmp,0,sizeof(realtype)*nx);
     
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-    memset(xQB_tmp,0,sizeof(&xQB_tmp));
+    memset(xQB_tmp,0,ssizeof(realtype)*ng*np);
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
@@ -907,7 +907,6 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
             errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
             /* #endif*/
             break;
-            break;
             
         case AMI_DIAG:
             *status = AMIDiagB(ami_mem, which);
@@ -966,8 +965,6 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     }
     
     /* Initialise quadrature calculation */
-    /* By now, there should be no more changes needed here, right? */
-    /* Look up how the following routine works, anyway... */
     *status = wrap_qbinit(ami_mem, which, xQB);
     if (*status != AMI_SUCCESS) return;
     
@@ -1478,11 +1475,8 @@ void handleDataPointB(int *status, int it, void *ami_mem, UserData *udata, Retur
     
     int ix;
     
-    
-    /* See, if things need to be changed here... */
     xB_tmp = NV_DATA_S(xB);
     for (ix=0; ix<nx; ix++) {
-        /* Hier muss nur ein erster Teil verwendet werden.... */
         xB_tmp[ix] += dgdx[it+ix*nt];
     }
     getDiagnosisB(status,it,ami_mem,udata,rdata,tdata);
