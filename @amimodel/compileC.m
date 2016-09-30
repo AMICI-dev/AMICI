@@ -4,11 +4,11 @@ function compileC(this)
     % Return values:
     %  this: model definition object @type amimodel
     
-    sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    sundials_ver = '2.6.2.2';
+    sundials_path = fullfile(this.wrap_path,'sundials');
+    sundials_ver = '2.7.0';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
-    ssparse_ver = '4.4.4';
+    ssparse_ver = '4.5.3';
     
     lapack_path = fullfile(this.wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
@@ -60,11 +60,6 @@ function compileC(this)
         if(del_lapack)
             display('Newer version of Lapack! Recompiling ...')
         end
-        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
-        fprintf(fid,[sundials_ver '\r']);
-        fprintf(fid,[ssparse_ver '\r']);
-        fprintf(fid,[lapack_ver '\r']);
-        fclose(fid);
     end
     
     sources_sundials = {
@@ -148,7 +143,6 @@ function compileC(this)
         fullfile('AMD','Source','amd_postorder.c');
         fullfile('AMD','Source','amd_preprocess.c');
         fullfile('AMD','Source','amd_valid.c');
-        fullfile('COLAMD','Source','colamd_global.c');
         fullfile('COLAMD','Source','colamd.c');
         fullfile('BTF','Source','btf_maxtrans.c');
         fullfile('BTF','Source','btf_order.c');
@@ -246,7 +240,6 @@ function compileC(this)
         'amd_postorder.o';
         'amd_preprocess.o';
         'amd_valid.o';
-        'colamd_global.o';
         'colamd.o';
         'btf_maxtrans.o';
         'btf_order.o';
@@ -268,19 +261,16 @@ function compileC(this)
         objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,objects_ssparse{j}),'"');
     end
     
+    if(ispc)
+        o_suffix = '.obj';
+    else
+        o_suffix = '.o';
+    end
+    
     for j=1:length(this.funs)
-        if(ispc)
-            o_suffix = '.obj';
-        else
-            o_suffix = '.o';
-        end
         objectsstr = strcat(objectsstr,...
             ' "',fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
     end
-    
-    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]),'"');
-    objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'src',['amici' o_suffix]),'"');
-    
     
     % compile all the sundials objects if we haven't done so yet
     for j=1:length(sources_sundials)
@@ -301,12 +291,19 @@ function compileC(this)
                 fullfile(ssparse_path,sources_ssparse{j})]);
         end
     end
+    
+    % only write versions.txt if we are done compiling 
+    fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
+    fprintf(fid,[sundials_ver '\r']);
+    fprintf(fid,[ssparse_ver '\r']);
+    fprintf(fid,[lapack_ver '\r']);
+    fclose(fid);
       
     
     % generate compile flags for the rest
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'''];
     if(this.debug)
-        DEBUG = '-g';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -324,9 +321,10 @@ function compileC(this)
         fprintf('symbolic_functions | ');
         eval(['mex ' DEBUG COPT ...
             ' -c -outdir ' fullfile(this.wrap_path,'src') ...
-            includesstr ' ' ...
-            fullfile(this.wrap_path,'src','symbolic_functions.c')]);
-        hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.c'));
+            includesstr ' '...
+            ' "',fullfile(this.wrap_path,'src',['spline' o_suffix]),'" ' ...
+            fullfile(this.wrap_path,'src','symbolic_functions.cpp')]);
+        hash = getFileHash(fullfile(this.wrap_path,'src','symbolic_functions.cpp'));
         hash = [hash DEBUG];
         fid = fopen(fullfile(this.wrap_path,'src',['symbolic_functions' '_' mexext '.md5']),'w');
         fprintf(fid,hash);
@@ -357,9 +355,11 @@ function compileC(this)
     if(this.cfun(1).JSparse)
         this.cfun(1).sxdot = 1;
     end
-    if(this.cfun(1).dxdotdp)
-        this.cfun(1).sxdot = 1;
-        this.cfun(1).qBdot = 1;
+    if(isfield(this.cfun(1),'dxdotdp'))
+        if(this.cfun(1).dxdotdp)
+            this.cfun(1).sxdot = 1;
+            this.cfun(1).qBdot = 1;
+        end
     end
     if(this.cfun(1).w)
         this.recompile = 1;
@@ -374,11 +374,11 @@ function compileC(this)
             recompileWrapFunction = true;
             fprintf([this.funs{j} ' | ']);
             eval(['mex ' DEBUG COPT ...
-                ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ...
+                ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
+                fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']) ' ' ...
                 includesstr ...
-                ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '" ' ...
-                fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c'])]);
-            hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']));
+                ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"']);
+            hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']));
             hash = [hash DEBUG];
             fid = fopen(...
                 fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
@@ -393,17 +393,26 @@ function compileC(this)
     if(recompileWrapFunction || ~exist(fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]),'file'))
         fprintf('wrapfunctions | ');
         eval(['mex ' DEBUG COPT ...
-                ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ...
-                includesstr ' '...
-                fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c')]);
+                ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
+                fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp') ' ' ...
+                includesstr]);
     end
+    
+    % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
+    movefile(fullfile(this.wrap_path,'models',this.modelname,'hashes_new.mat'),...
+        fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'f');
     
 
     fprintf('amici | ');
+    if(this.nxtrue ~= this.nx)
+        cstr = 'amicio2.cpp';
+    else
+        cstr = 'amici.cpp';
+    end
     eval(['mex ' DEBUG COPT ...
-        ' -c -outdir ' fullfile(this.wrap_path,'src') ...
-        includesstr ' ' ...
-        fullfile(this.wrap_path,'src','amici.c')]);
+        ' -c -outdir ' fullfile(this.wrap_path,'src') ' ' ...
+        fullfile(this.wrap_path,'src',cstr) ' ' ...
+        includesstr]);
     
     if(isunix)
         if(~ismac)
@@ -426,20 +435,32 @@ function compileC(this)
     
     
     if(this.nxtrue ~= this.nx)
-        cstr = 'amiwrapo2.c';
+        cstr = 'amiwrapo2.cpp';
     else
-        cstr = 'amiwrap.c';
+        cstr = 'amiwrap.cpp';
     end
 
     prefix = 'ami';
     
+    
+    eval(['mex ' DEBUG COPT ...
+        ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
+        fullfile(this.wrap_path,'amiwrap.cpp') ' ' ...
+        includesstr]);
+    
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
         ' -output ' fullfile(this.wrap_path,'models',this.modelname,[prefix '_' this.modelname]) ...
-        ' ' fullfile(this.wrap_path,cstr)  ...
-        includesstr ...
+        ' "' fullfile(this.wrap_path,'models',this.modelname,['amiwrap' o_suffix]) '"' ...
+        ' "' fullfile(this.wrap_path,'src',['amici' o_suffix]) '"' ...
+        ' "' fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]) '"' ...
         objectsstr ...
-        ' "',fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]),'"'
+        ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"' ...
+        includesstr ...
         ])
+    
+    
+    
+    
 
     
 function result = isnewer(ver1str,ver2str)
@@ -498,8 +519,8 @@ function hash = getFileHash(file)
     
     
 function recompile = checkHash(filestr,o_suffix,DEBUG)
-    % checkHash checks whether filestr.c  has already been compiled as
-    % filestr.o and whether the md5 hash of filestr.c matches the one in
+    % checkHash checks whether filestr.cpp  has already been compiled as
+    % filestr.o and whether the md5 hash of filestr.cpp matches the one in
     % filestr.md5
     %
     % Parameters:
@@ -508,7 +529,7 @@ function recompile = checkHash(filestr,o_suffix,DEBUG)
     %  DEBUG: debug flag
     %
     % Return values:
-    %  recompile: flag indicating whether we need to recompile filestr.c
+    %  recompile: flag indicating whether we need to recompile filestr.cpp
     
     if(~exist([filestr o_suffix],'file'))
         % file does not exist, we need to recompile
@@ -518,7 +539,7 @@ function recompile = checkHash(filestr,o_suffix,DEBUG)
             % hash does not exist, we need to recompile
             recompile = 1;
         else
-            hash = getFileHash([filestr '.c']);
+            hash = getFileHash([filestr '.cpp']);
             hash = [hash DEBUG];
             fid = fopen([filestr '_' mexext '.md5']);
             tline = fgetl(fid);

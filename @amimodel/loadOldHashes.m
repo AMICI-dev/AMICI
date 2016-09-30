@@ -9,16 +9,6 @@ function HTable = loadOldHashes(this)
     try
         load(fullfile(wrap_path,'models',this.modelname,['hashes.mat']))
         try
-            if(this.compver>compver)
-                this.recompile = true;
-                error('catchmeifyoucan');
-            end
-        catch
-            disp('Code changes made recompilation of model necessary!')
-            this.recompile = true;
-            error('catchmeifyoucan');
-        end
-        try
             this.nxtrue = nxtrue;
             this.nytrue = nytrue;
             this.nx = nx;
@@ -49,23 +39,33 @@ function HTable = loadOldHashes(this)
     end
     DHTable.x = '';
     DHTable.k = '';
-    DHTable.root = '';
 
     DHTable.p = '';
     DHTable.x0 = '';
     DHTable.y = '';
-    DHTable.u = '';
     DHTable.sigma_y = '';
     DHTable.sigma_z = '';
     DHTable.z = '';
     DHTable.trigger = '';
     DHTable.bolus = '';
+    DHTable.xdot = '';
     if(strcmp(this.wtype,'iw'))
-        DHTable.xdot = '';
         DHTable.dx0 = '';
         DHTable.M = '';
-    else
-        DHTable.xdot = '';
     end
+    DHTable.Jy = '';
+    DHTable.Jz = '';
+    
+    DHTable.generateC = '';
+    DHTable.gccode = '';
+    DHTable.getArgs = '';
+    DHTable.getCVar = '';
+    DHTable.getFArgs = '';
+    DHTable.getSensiFlag = '';
+    DHTable.getSyms = '';
+    DHTable.printLocalVars = '';
+    DHTable.writeCcode = '';
+    DHTable.writeCcode_sensi = '';
+    
     HTable = am_setdefault(HTable,DHTable);
 end

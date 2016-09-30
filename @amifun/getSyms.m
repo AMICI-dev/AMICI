@@ -500,10 +500,17 @@ function [this,model] = getSyms(this,model)
                     this.sym(ievent,:,:) = this.sym(ievent,:,:) + model.fun.drootdx.sym(ievent,ix)*s2x(ix,:,:);
                 end
             end
+            
         case 'dtaudp'
             this.sym = sym(zeros(nevent,np));
             for ievent = 1:nevent
                 this.sym(ievent,:) = - model.fun.drootdp.sym(ievent,:)/model.fun.drootdt.sym(ievent);
+            end
+            
+        case 'dtaudx'
+            this.sym = sym(zeros(nevent,nx));
+            for ievent = 1:nevent
+                this.sym(ievent,:) = - model.fun.drootdx.sym(ievent,:)/model.fun.drootdt.sym(ievent);
             end
             
         case 'stau'
@@ -586,7 +593,7 @@ function [this,model] = getSyms(this,model)
             end
             
             for ievent = 1:nevent
-                this.sym(1:np,ievent) = transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
+                this.sym(1:np,ievent) = -transpose(model.fun.xB.sym)*squeeze(model.fun.ddeltaxdp.sym(:,ievent,:));
                 % This is just a very quick fix. Events in adjoint systems
                 % have to be implemented in a way more rigorous way later
                 % on... Some day...
@@ -595,7 +602,7 @@ function [this,model] = getSyms(this,model)
         case 'deltaxB'
             this.sym = sym(zeros(nx,nevent));
             for ievent = 1:nevent
-                this.sym(:,ievent) = squeeze(model.fun.ddeltaxdx.sym(:,ievent,:))*model.fun.xB.sym;
+                this.sym(:,ievent) = -transpose(squeeze(model.fun.ddeltaxdx.sym(:,ievent,:)))*model.fun.xB.sym;
             end
             
         case 'z'
@@ -619,11 +626,20 @@ function [this,model] = getSyms(this,model)
             
         case 'dzdp'
             this.sym = jacobian(model.fun.z.sym,p);
+                
+            for iz = 1:nz
+                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudp.sym(model.z2event(iz),:);
+            end
             % create cell array of same size
             this = makeStrSyms(this);
             
         case 'dzdx'
             this.sym = jacobian(model.fun.z.sym,x);
+            
+            for iz = 1:nz
+                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
+            end
+            
             this = makeStrSyms(this);
             
         case 'dzdt'
@@ -633,8 +649,8 @@ function [this,model] = getSyms(this,model)
             % the tau is event specific so mapping from z to events is
             % necessary here.
             this.sym = ...
-                + model.fun.dzdp.sym ...
-                + model.fun.dzdx.sym*sx ...
+                + jacobian(model.fun.z.sym,p) ...
+                + jacobian(model.fun.z.sym,x)*sx ...
                 + model.fun.dzdt.sym*model.fun.stau.sym(model.z2event,:);
             % create cell array of same size
             szs = cell(nz,np);
@@ -648,11 +664,10 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(szs);
             
         case 'sz_tf'
-            % the tau is event specific so mapping from z to events is
-            % necessary here.
+
             this.sym = ...
-                + model.fun.dzdp.sym ...
-                + model.fun.dzdx.sym*sx;
+                + jacobian(model.fun.z.sym,p) ...
+                + jacobian(model.fun.z.sym,x)*sx;
             
         case 'JBand'
             %do nothing

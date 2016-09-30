@@ -23,6 +23,8 @@ classdef amimodel < handle
         adjoint = true;
         % flag indicating whether forward sensitivities should be enabled @type bool
         forward = true;
+        % flag indicating whether steady state sensitivities should be enabled @type bool
+        steadystate = true;
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string
@@ -89,10 +91,6 @@ classdef amimodel < handle
         %  2 indicates augmentation by one linear combination of first
         %  order sensitivities (yields hessian-vector product)
         o2flag = 0;
-
-        % counter that allows enforcing of recompilation of models after
-        % code changes
-        compver = 18;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -210,6 +208,8 @@ classdef amimodel < handle
         parseModel(this)
         
         generateC(this)
+        
+        generateCStandalone(this)
         
         compileC(this)
         
