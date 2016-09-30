@@ -774,7 +774,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     
     id = N_VNew_Serial(nx);
     id_tmp = NV_DATA_S(id);
-    memcpy(id_tmp,idlist,sizeof(&idlist));
+    memcpy(id_tmp,idlist,nx*sizeof(realtype));
     
     *status = AMISetId(ami_mem, id);
     if (*status != AMI_SUCCESS) return(NULL);
@@ -2313,14 +2313,14 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  R
             if(nx>0){
                 fxdot(t,x,dx,xdot,udata);
                 xdot_tmp = NV_DATA_S(xdot);
-                memcpy(xdotdata,xdot_tmp,sizeof(&xdotdata));
+                memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
             }
         }
     }
     if(udata) {
         if(nx>0) {
             fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
-            memcpy(Jdata,Jtmp->data,sizeof(&Jdata));
+            memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
         }
     }
 }
