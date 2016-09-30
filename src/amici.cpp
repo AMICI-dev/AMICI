@@ -828,7 +828,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-    memset(xQB_tmp,0,ssizeof(realtype)*ng*np);
+    memset(xQB_tmp,0,sizeof(realtype)*ng*np);
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
