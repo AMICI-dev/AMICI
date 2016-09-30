@@ -86,9 +86,9 @@ codegen = {'gccode','getArgs','getCVar','getFArgs',...
     'getSensiFlag','getSyms','printLocalVars','writeCcode',...
     'writeCcode_sensi'};
 for ifile = 1:length(codegen)
-    this.HTable(1).(codegen{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen{ifile} '.m']));
+    this.HTable(1).(codegen{ifile}) = CalcMD5(which(fullfile(this.wrap_path,'@amifun',[codegen{ifile} '.m'])),'File');
 end
-this.HTable(1).generateC = CalcMD5(fullfile(this.wrap_path,'@amimodel','generateC.m'));
+this.HTable(1).generateC = CalcMD5(which(fullfile(this.wrap_path,'@amimodel','generateC.m')),'File');
 
 this.recompile = not(strcmp(this.HTable(1).generateC,HTable.generateC));
 ifile = 1;
