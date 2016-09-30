@@ -4,8 +4,8 @@ function compileC(this)
     % Return values:
     %  this: model definition object @type amimodel
     
-    sundials_path = fullfile(this.wrap_path,'sundials-2.6.2');
-    sundials_ver = '2.6.2.3';
+    sundials_path = fullfile(this.wrap_path,'sundials');
+    sundials_ver = '2.7.0';
     
     ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
     ssparse_ver = '4.5.3';
@@ -60,11 +60,6 @@ function compileC(this)
         if(del_lapack)
             display('Newer version of Lapack! Recompiling ...')
         end
-        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
-        fprintf(fid,[sundials_ver '\r']);
-        fprintf(fid,[ssparse_ver '\r']);
-        fprintf(fid,[lapack_ver '\r']);
-        fclose(fid);
     end
     
     sources_sundials = {
@@ -296,6 +291,13 @@ function compileC(this)
                 fullfile(ssparse_path,sources_ssparse{j})]);
         end
     end
+    
+    % only write versions.txt if we are done compiling 
+    fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
+    fprintf(fid,[sundials_ver '\r']);
+    fprintf(fid,[ssparse_ver '\r']);
+    fprintf(fid,[lapack_ver '\r']);
+    fclose(fid);
       
     
     % generate compile flags for the rest

@@ -237,8 +237,8 @@ static int AMISptfqmrB(void *mem, int which, int prectype, int maxl) {
     return CVSptfqmrB(mem, which, prectype, maxl);
 };
 
-static int AMIKLU(void *mem, int nx, int nnz) {
-    return CVKLU(mem, nx, nnz);
+static int AMIKLU(void *mem, int nx, int nnz, int sparsetype) {
+    return CVKLU(mem, nx, nnz, sparsetype);
 };
 
 static int AMIKLUSetOrdering(void *mem, int ordering) {
@@ -249,8 +249,8 @@ static int AMIKLUSetOrderingB(void *mem, int which, int ordering) {
     return CVKLUSetOrderingB(mem, which, ordering);
 };
 
-static int AMIKLUB(void *mem, int which, int nx, int nnz) {
-    return CVKLUB(mem, which, nx, nnz);
+static int AMIKLUB(void *mem, int which, int nx, int nnz, int sparsetype) {
+    return CVKLUB(mem, which, nx, nnz, sparsetype);
 };
 
 static int AMIGetNumSteps(void *mem, long int *numsteps) {

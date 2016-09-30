@@ -244,7 +244,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
     
     if (nx>0) {
         /* initialise temporary jacobian storage */
-        tmp_J = NewSparseMat(nx,nx,nnz);
+        tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);
         M_tmp = new realtype[nx*nx];
         dfdx_tmp = new realtype[nx*nx];
     }
@@ -681,7 +681,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
             /* SPARSE SOLVERS */
             
         case AMI_KLU:
-            *status = AMIKLU(ami_mem, nx, nnz);
+            *status = AMIKLU(ami_mem, nx, nnz, CSC_MAT);
             if (*status != AMI_SUCCESS) return(NULL);
             
             *status = wrap_SetSparseJacFn(ami_mem);
@@ -970,7 +970,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
             /* SPARSE SOLVERS */
             
         case AMI_KLU:
-            *status = AMIKLUB(ami_mem, which, nx, nnz);
+            *status = AMIKLUB(ami_mem, which, nx, nnz, CSC_MAT);
             if (*status != AMI_SUCCESS) return;
             
             *status = wrap_SetSparseJacFnB(ami_mem, which);
@@ -2468,7 +2468,7 @@ freturn:
 void processUserData(UserData *udata) {
     if (nx>0) {
         /* initialise temporary jacobian storage */
-        tmp_J = NewSparseMat(nx,nx,nnz);
+        tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);
         M_tmp = new realtype[nx*nx];
         dfdx_tmp = new realtype[nx*nx];
     }
