@@ -21,9 +21,6 @@ install: true
 script: ./scripts/run-tests.sh
 
 notifications:
-  email:
-    on_success: change
-    on_failure: always
   slack: icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI
     on_success: change
     on_failure: always
