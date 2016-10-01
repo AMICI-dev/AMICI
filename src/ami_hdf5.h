@@ -1,8 +1,8 @@
 #ifndef AMI_HDF5_H
 #define AMI_HDF5_H
 
-#include <hdf5.h>
-#include <hdf5_hl.h>
+#include <serial/hdf5.h>
+#include <serial/hdf5_hl.h>
 #include <include/amici.h>
 
 #undef AMI_HDF5_H_DEBUG
