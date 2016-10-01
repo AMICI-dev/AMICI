@@ -24,6 +24,8 @@ cd ./../KLU
 
 make library
 
+
+mkdir ./../../sundials/build/
 cd ./../../sundials/build/
 
 cmake -DCMAKE_INSTALL_PREFIX="./../../build/sundials" \
