@@ -79,6 +79,6 @@ include_directories("${SUITESPARSE_DIR}/BTF/Include")
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread -ldl -lz -lsz -lhdf5 -lhdf5_hl -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial"
+"-lpthread -ldl -lz -lsz -lhdf5_hl -lhdf5 -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial"
 "-lm"
 )
