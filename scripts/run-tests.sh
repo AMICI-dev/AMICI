@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ./../SuiteSparse/SuiteSparse_config
+cd ./SuiteSparse/SuiteSparse_config
 
 make library
 
