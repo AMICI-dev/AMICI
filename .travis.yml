@@ -1,6 +1,14 @@
 language: cpp
+
 compiler:
     - clang
     - gcc
-install: true
+    
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+    
+install: apt-get install libhdf5-serial-dev
+
 script: ./scripts/run-tests.sh
