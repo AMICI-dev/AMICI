@@ -172,7 +172,7 @@ typedef struct user_data {
 } UserData;
 
 #ifdef AMICI_WITHOUT_MATLAB
-void freeUserData(UserData udata);
+void freeUserData(UserData *udata);
 #endif
 
 #endif /* _MY_UDATA */

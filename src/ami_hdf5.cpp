@@ -1,4 +1,3 @@
-#include<hdf5_hl.h>
 #include<assert.h>
 
 #include "ami_hdf5.h"
@@ -9,7 +8,7 @@
 #include "include/edata_accessors.h"
 #include "include/udata_accessors.h"
 
-void storeSimulation(const char* fileName, ReturnData rdata) {
+void storeSimulation(const char* fileName, ReturnData *rdata) {
     hsize_t dims[] = {1};
 
     hid_t dataspace_id = H5Screate_simple(1, dims, NULL);
@@ -23,9 +22,8 @@ void storeSimulation(const char* fileName, ReturnData rdata) {
     status = H5Sclose(dataspace_id);
 }
 
-UserData readSimulationUserData(const char* fileName) {
-    UserData udata; /* User udata structure */
-    udata = (UserData) malloc(sizeof *udata);
+UserData *readSimulationUserData(const char* fileName) {
+    UserData *udata = new UserData();
     if (udata == NULL)
         return(NULL);
 
@@ -74,17 +72,17 @@ UserData readSimulationUserData(const char* fileName) {
 
     /* plist, matlab: fifth argument */
     // parameter ordering
-    plist = malloc(np * sizeof(int));
+    plist = new int[np]();
     for (int i = 0; i < np; i++) {
         plist[i] = i;
     }
 
     /* Options ; matlab: fourth argument   */
-    z2event = malloc(sizeof(realtype) * ne);
+    z2event = new realtype[ne]();
     for(int i = 0; i < ne; ++i)
         z2event[i] = i;
 
-    idlist = malloc(sizeof(realtype) * np);
+    idlist = new realtype[np]();
     for(int i = 0; i < np; ++i)
         idlist[i] = 0;
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
@@ -92,7 +90,7 @@ UserData readSimulationUserData(const char* fileName) {
     sx0data = 0;
 
     /* pbarm parameterscales ; matlab: sixth argument*/
-    pbar = malloc(sizeof(realtype) * np);
+    pbar = new realtype[np]();
     ones(pbar, np);
 
     //    /* xscale, matlab: seventh argument */
@@ -190,8 +188,8 @@ UserData readSimulationUserData(const char* fileName) {
     return(udata);
 }
 
-ExpData readSimulationExpData(const char* hdffile, UserData udata) {
-    ExpData edata = (ExpData) malloc(sizeof *edata);
+ExpData *readSimulationExpData(const char* hdffile, UserData *udata) {
+    ExpData *edata = new ExpData();
     if (edata == NULL) {
         return(NULL);
     }
@@ -218,7 +216,7 @@ ExpData readSimulationExpData(const char* hdffile, UserData udata) {
     return(edata);
 }
 
-void writeReturnData(const char* hdffile, ReturnData rdata, UserData udata) {
+void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDWR, H5P_DEFAULT);
 
     const char* solutionsObject = "/solutions";
@@ -346,7 +344,7 @@ void getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const cha
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);
 #endif
-    *destination = malloc((*length) * sizeof(double)); // vs. type_size
+    *destination = (double*) malloc((*length) * sizeof(double)); // vs. type_size
     H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
 #ifdef AMI_HDF5_H_DEBUG
     printfArray(*destination, *length, "%e ");
@@ -375,7 +373,7 @@ void getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject, const c
         *m = dims[0];
         *n = dims[1];
 
-        *destination = malloc(type_size * (*m) * (*n));
+        *destination = (double*) malloc(type_size * (*m) * (*n));
         H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
 #ifdef AMI_HDF5_H_DEBUG
         printfArray(*destination, (*m) * (*n), "%e ");
@@ -392,7 +390,7 @@ void getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* 
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);
 #endif
-    *destination = malloc(sizeof(int) * (*length));
+    *destination = (int*) malloc(sizeof(int) * (*length));
     H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
 #ifdef AMI_HDF5_H_DEBUG
     printfArray(*destination, *length, "%d ");

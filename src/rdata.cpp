@@ -1,33 +1,33 @@
 #include "include/rdata.h"
 #include<include/rdata_accessors.h>
 
-void freeReturnData(ReturnData rdata) {
-    if(tsdata) free(tsdata);
-    if(xdotdata) free(xdotdata);
-    if(dxdotdpdata) free(dxdotdpdata);
-    if(dydxdata) free(dydxdata);
-    if(dydpdata) free(dydpdata);
-    if(Jdata) free(Jdata);
-    if(zdata) free(zdata);
-    if(sigmazdata) free(sigmazdata);
-    if(szdata) free(szdata);
-    if(ssigmazdata) free(ssigmazdata);
-    if(srzdata) free(srzdata);
-    if(s2rzdata) free(s2rzdata);
-    if(xdata) free(xdata);
-    if(sxdata) free(sxdata);
-    if(ydata) free(ydata);
-    if(sigmaydata) free(sigmaydata);
-    if(sydata) free(sydata);
-    if(ssigmaydata) free(ssigmaydata);
-    if(numstepsdata) free(numstepsdata);
-    if(numrhsevalsdata) free(numrhsevalsdata);
-    if(orderdata) free(orderdata);
-    if(numstepsSdata) free(numstepsSdata);
-    if(numrhsevalsSdata) free(numrhsevalsSdata);
-    if(llhdata) free(llhdata);
-    if(sllhdata) free(sllhdata);
-    if(s2llhdata) free(s2llhdata);
-    if(chi2data) free(chi2data);
-    free(rdata);
+void freeReturnData(ReturnData *rdata) {
+    if(tsdata) delete tsdata;
+    if(xdotdata) delete xdotdata;
+    if(dxdotdpdata) delete dxdotdpdata;
+    if(dydxdata) delete dydxdata;
+    if(dydpdata) delete dydpdata;
+    if(Jdata) delete Jdata;
+    if(zdata) delete zdata;
+    if(sigmazdata) delete sigmazdata;
+    if(szdata) delete szdata;
+    if(ssigmazdata) delete ssigmazdata;
+    if(srzdata) delete srzdata;
+    if(s2rzdata) delete s2rzdata;
+    if(xdata) delete xdata;
+    if(sxdata) delete sxdata;
+    if(ydata) delete ydata;
+    if(sigmaydata) delete sigmaydata;
+    if(sydata) delete sydata;
+    if(ssigmaydata) delete ssigmaydata;
+    if(numstepsdata) delete numstepsdata;
+    if(numrhsevalsdata) delete numrhsevalsdata;
+    if(orderdata) delete orderdata;
+    if(numstepsSdata) delete numstepsSdata;
+    if(numrhsevalsSdata) delete numrhsevalsSdata;
+    if(llhdata) delete llhdata;
+    if(sllhdata) delete sllhdata;
+    if(s2llhdata) delete s2llhdata;
+    if(chi2data) delete chi2data;
+    delete rdata;
 }

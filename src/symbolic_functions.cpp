@@ -27,7 +27,7 @@
 #include <string.h>
 #include <float.h>
 #include <include/symbolic_functions.h>
-#include <spline.cpp>
+#include "spline.cpp"
 
 
 #undef ts

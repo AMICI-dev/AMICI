@@ -1,4 +1,16 @@
 
+SuiteSparse/include/*
+
+SuiteSparse/lib/*
+
+SuiteSparse/share/*
+
+sundials/build/*
+
+CMakeFiles/*
+
+build/*
+
 *.o
 
 doc/*
@@ -6,6 +18,8 @@ doc/*
 debug_amici/*
 
 models/*
+
+!models/model_dirac
 
 doc/*
 
@@ -162,3 +176,21 @@ examples/example_adjoint_hessian/simulate_model_adjoint_hessian.m
 examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecProd.m
 
 examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m
+
+models/model_dirac/.DS_Store
+
+*.o
+
+models/model_dirac/dxdotdp_model_dirac.m
+
+models/model_dirac/J_model_dirac.m
+
+models/model_dirac/wrapfunctions.c
+
+cmake_install.cmake
+
+CMakeCache.txt
+
+*.a
+
+model_dirac

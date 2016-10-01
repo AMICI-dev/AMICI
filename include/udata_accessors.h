@@ -47,6 +47,8 @@
 #define ubw udata->am_ubw
 #define lbw udata->am_lbw
 
+#define b_x0 udata->am_bx0
+#define x0data udata->am_x0data
 #define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 

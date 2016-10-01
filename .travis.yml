@@ -1,0 +1,21 @@
+language: cpp
+
+sudo: required
+
+dist: trusty
+
+compiler:
+    - clang
+    - gcc
+    
+before_script:
+    - sudo apt-get install libhdf5-serial-dev zlib1g-dev
+    
+install: true
+
+script: ./scripts/run-tests.sh
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
