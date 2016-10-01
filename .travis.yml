@@ -9,6 +9,6 @@ addons:
     packages:
       - libhdf5-serial-dev
     
-install: apt-get install libhdf5-serial-dev
+install: true
 
 script: ./scripts/run-tests.sh
