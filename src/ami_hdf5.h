@@ -1,7 +1,6 @@
 #ifndef AMI_HDF5_H
 #define AMI_HDF5_H
 
-#include <H5public.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
 #include <include/amici.h>
