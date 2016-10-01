@@ -21,6 +21,7 @@ install: true
 script: ./scripts/run-tests.sh
 
 notifications:
-  slack: icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI
+  slack: 
+    rooms:
+      - icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI#amici-dev
     on_success: change
-    on_failure: always
