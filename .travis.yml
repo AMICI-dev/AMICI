@@ -1,0 +1,6 @@
+language: cpp
+compiler:
+    - clang
+    - gcc
+install: true
+script: ./scripts/run-tests.sh

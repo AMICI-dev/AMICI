@@ -36,6 +36,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 #else
 #define initField2(FIELD,D1,D2) \
+double *mx ## FIELD; \
 mx ## FIELD = new double[D1 * D2](); \
 FIELD ## data = mx ## FIELD;
 #endif
@@ -58,6 +59,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 #else
 #define initField3(FIELD,D1,D2,D3) \
+double *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -85,6 +87,7 @@ FIELD ## data = mxGetPr(mx ## FIELD); \
 mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 #else
 #define initField4(FIELD,D1,D2,D3,D4) \
+double *mx ## FIELD; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -568,6 +571,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
             *status = fx0(x, udata);
             if (*status != AMI_SUCCESS) return(NULL);
         } else {
+            int ix;
             x_tmp = NV_DATA_S(x);
             for (ix=0; ix<nx; ix++) {
                 x_tmp[ix] = x0data[ix];
@@ -1565,7 +1569,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
     /* only check this in the first event fired, otherwise this will always be true */
     if (seflag == 0) {
         if (t == *tlastroot) {
-            mexWarnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
+            warnMsgIdAndTxt("AMICI:mex:STUCK_EVENT","AMICI is stuck in an event, as the initial step-size after the event is too small. To fix this, increase absolute and relative tolerances!");
             *status = -99;
             return;
         }
@@ -2020,13 +2024,13 @@ void initUserDataFields(UserData *udata, ReturnData *rdata, double *pstatus) {
     size_t dimsssigmaz[] = {0,0,0};
 
 
-    mxstatus = new double();
+    double *mxstatus = new double();
     pstatus = mxstatus;
 
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
-    mxts = new double[nt]();
+    double *mxts = new double[nt]();
     tsdata = mxts;
 
     initField2(numsteps,nt,1);
@@ -2421,7 +2425,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 }
 
 #ifdef AMICI_WITHOUT_MATLAB
-ReturnData initReturnData(UserData *udata, int *pstatus) {
+ReturnData *initReturnData(UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
@@ -2437,31 +2441,35 @@ ReturnData initReturnData(UserData *udata, int *pstatus) {
 }
 
 ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
-    TempData *tdata; /* temporary data */
-    tdata = new TempData();
+    int iroot = 0;
+    booleantype setupBdone = false;
+    *pstatus = 0;
+    int problem;
+    ReturnData *rdata;
+    TempData *tdata = new TempData();
+    void *ami_mem = 0; /* pointer to cvodes memory block */
     if (tdata == NULL) goto freturn;
 
-    void *ami_mem = 0; /* pointer to cvodes memory block */
+    
     if (nx>0) {
         ami_mem = setupAMI(pstatus, udata, tdata);
         if (ami_mem == NULL) goto freturn;
     }
 
-    ReturnData *rdata = initReturnData(udata, pstatus);
+    rdata = initReturnData(udata, pstatus);
     if (rdata == NULL) goto freturn;
 
     if (nx>0) {
         if (edata == NULL) goto freturn;
     }
-
-    int iroot = 0;
-
+    
     *pstatus = 0;
-    int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
+    
+    problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
     if(problem)
         goto freturn;
 
-    booleantype setupBdone = false;
+    
     problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
     if(problem)
         goto freturn;

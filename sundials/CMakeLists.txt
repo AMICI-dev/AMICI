@@ -844,7 +844,7 @@ ENDIF(BUILD_CPODES)
 #  - Don't enable testing if TestRunner if not found.
 #  - There will be no 'make test' target
 
-INCLUDE(SundialsAddTest)
+#INCLUDE(SundialsAddTest)
 HIDE_VARIABLE(TESTRUNNER)
 IF(EXAMPLES_ENABLE)
   IF(TESTRUNNER)

@@ -16,7 +16,7 @@ typedef struct edata {
 	} ExpData;
 
 #ifdef AMICI_WITHOUT_MATLAB
-void freeExpData(ExpData edata);
+void freeExpData(ExpData *edata);
 #endif
 
 #endif /* _MY_EDATA */
