@@ -9,7 +9,7 @@ compiler:
     - gcc
     
 before_script:
-    - sudo apt-get install libhdf5-serial-dev hdf5-tools
+    - sudo apt-get install libhdf5-serial-dev z sz
     
 install: true
 
