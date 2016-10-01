@@ -4,12 +4,14 @@ compiler:
     - clang
     - gcc
     
-addons:
-  apt:
-    packages:
-      - libhdf5-serial-dev
-      - hdf5-tools
+before_script:
+    - sudo apt-get install libhdf5-serial-dev hdf5-tools
     
 install: true
 
 script: ./scripts/run-tests.sh
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
