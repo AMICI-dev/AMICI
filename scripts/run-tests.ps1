@@ -1,26 +1,26 @@
 cd .\SuiteSparse\SuiteSparse_config
 
-mingw64-make library
+mingw32-make library
 
 cd .\..\AMD
 
-mingw64-make library
+mingw32-make library
 
 cd .\..\BTF
 
-mingw64-make library
+mingw32-make library
 
 cd .\..\CAMD
 
-mingw64-make library
+mingw32-make library
 
 cd .\..\COLAMD
 
-mingw64-make library
+mingw32-make library
 
 cd .\..\KLU
 
-mingw64-make library
+mingw32-make library
 
 
 mkdir .\..\..\sundials\build\
