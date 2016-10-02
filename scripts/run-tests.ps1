@@ -1,10 +1,10 @@
 cd .\SuiteSparse\SuiteSparse_config
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC=gcc -c
 
 cd .\..\AMD
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC=gcc -c
 
 cd .\..\BTF
 
