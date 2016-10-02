@@ -1,5 +1,7 @@
 cd .\SuiteSparse\SuiteSparse_config
 
+ls
+
 mingw32-make library
 
 cd .\..\AMD
