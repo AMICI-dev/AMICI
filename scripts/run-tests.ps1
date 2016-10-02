@@ -1,28 +1,26 @@
 cd .\SuiteSparse\SuiteSparse_config
 
-ls
-
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 cd .\..\AMD
 
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 cd .\..\BTF
 
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 cd .\..\CAMD
 
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 cd .\..\COLAMD
 
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 cd .\..\KLU
 
-mingw32-make library
+mingw32-make library -e CC=gcc
 
 
 mkdir .\..\..\sundials\build\
@@ -42,11 +40,10 @@ cmake -DCMAKE_INSTALL_PREFIX=".\..\..\build\sundials" \
 -DKLU_INCLUDE_DIR="$.\..\..\SuiteSparse\include" \
 .. 
 
-make 
+mingw32-make -e CC=gcc
 make install
 
 cd ..\..\
 
 cmake CMakeLists.txt
-make
-#cmake -f .\..\models\model_dirac\CMakeLists.txt
+make -e CC=gcc
