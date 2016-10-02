@@ -11,4 +11,6 @@ before_build:
 
   
 build_script:
-  - ps: scripts\runtests.batch
+  - ps: |
+    cd 
+    runtests.batch
