@@ -11,4 +11,4 @@ before_build:
 
   
 build_script:
-  - ps: .\scripts\runtests.ps1
+  - ps: .\scripts\run-tests.ps1
