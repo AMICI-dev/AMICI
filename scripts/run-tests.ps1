@@ -1,5 +1,3 @@
-#!\bin\bash
-
 cd .\SuiteSparse\SuiteSparse_config
 
 make library
