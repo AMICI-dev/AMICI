@@ -16,6 +16,10 @@ cd .\..\CAMD
 
 mingw32-make library -e CC="gcc" 
 
+set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+
+echo %PATH%
+
 cd .\..\COLAMD
 
 mingw32-make library -e CC="gcc"  
