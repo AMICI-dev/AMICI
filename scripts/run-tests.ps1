@@ -2,25 +2,27 @@ cd .\SuiteSparse\SuiteSparse_config
 
 mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
+set LIBRARY_PATH=%CD%\..\lib;%LIBRARY_PATH%
+
 cd .\..\AMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L .\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L .\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L .\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L .\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\KLU
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L .\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 
 mkdir .\..\..\sundials\build\
@@ -46,4 +48,4 @@ make install
 cd ..\..\
 
 cmake CMakeLists.txt
-make -e CC=gcc
+mingw32-make -e CC=gcc
