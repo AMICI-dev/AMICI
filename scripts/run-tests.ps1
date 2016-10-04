@@ -4,23 +4,25 @@ mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared"
 
 cd .\..\AMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L.\..\lib" 
+ls C:\projects\amici\SuiteSparse\lib
+
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L.\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L.\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L.\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
 
 cd .\..\KLU
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L.\..\lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
 
 
 mkdir .\..\..\sundials\build\

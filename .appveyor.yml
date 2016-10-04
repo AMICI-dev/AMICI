@@ -26,10 +26,6 @@ install:
 
 before_build:
   - set Path=%CD%\%MINGW_DIR%\bin;%Path%
-  - g++ --version
-  - gcc --version
-  - mingw32-make --version
-  - cmake --version
   
 build_script:
   - ps: .\scripts\run-tests.ps1
