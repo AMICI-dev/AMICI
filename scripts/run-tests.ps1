@@ -4,23 +4,25 @@ mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared"
 
 cd .\..\AMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L$SUITESPARSE/lib" 
+$CurrentDir = $(get-location).Path;
+
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L$SUITESPARSE/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L$SUITESPARSE/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L$SUITESPARSE/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
 
 cd .\..\KLU
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L$SUITESPARSE/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
 
 
 mkdir .\..\..\sundials\build\
