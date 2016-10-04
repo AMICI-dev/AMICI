@@ -1,6 +1,6 @@
 cd .\SuiteSparse\SuiteSparse_config
 
-mingw32-make library -e CC=gcc LDFLAGS="$LDFLAGS -lmingw32" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -lmingw32 -Wl,-subsystem,console" 
 
 cd .\..\AMD
 
