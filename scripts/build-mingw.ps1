@@ -1,12 +1,3 @@
-$envPaths = $env:Path -split ';'
-
-if ($envPaths -contains 'C:\Program Files\Git\usr\bin') {
-    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\Program Files\Git\usr\bin' }
-    $env:Path = $envPaths -join ';'
-}
-
-echo $env:PATH
-
 cd .\SuiteSparse\SuiteSparse_config
 
 mingw32-make library -e CC="gcc"
@@ -37,6 +28,13 @@ cd .\..\..\sundials\build\
 
 ls C:\projects\amici\SuiteSparse\lib
 
+$envPaths = $env:Path -split ';'
+
+if ($envPaths -contains 'C:\Program Files\Git\usr\bin') {
+    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\Program Files\Git\usr\bin' }
+    $env:Path = $envPaths -join ';'
+}
+
 cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
@@ -50,6 +48,8 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DKLU_LIBRARY_DIR="C:/projects/amici/SuiteSparse/lib" `
 -DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
 -G "MinGW Makefiles"
+
+
 
 mingw32-make
 mingw32-make install
