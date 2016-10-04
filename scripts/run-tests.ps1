@@ -6,23 +6,23 @@ cd .\..\AMD
 
 ls C:\projects\amici\SuiteSparse\lib
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./../lib" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./..//lib" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./..//lib" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./..//lib" 
 
 cd .\..\KLU
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:/projects/amici/SuiteSparse/lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./../lib" 
 
 
 mkdir .\..\..\sundials\build\
@@ -40,7 +40,7 @@ cmake -DCMAKE_INSTALL_PREFIX=".\..\..\build\sundials" \
 -DKLU_ENABLE=ON \
 -DKLU_LIBRARY_DIR="$.\..\..\SuiteSparse\lib" \
 -DKLU_INCLUDE_DIR="$.\..\..\SuiteSparse\include" \
-.. 
+.\.. 
 
 mingw32-make -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 make install
