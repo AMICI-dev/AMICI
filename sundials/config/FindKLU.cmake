@@ -19,6 +19,7 @@
 # Set library prefixes for Windows
 IF(WIN32)
   set(CMAKE_FIND_LIBRARY_PREFIXES lib ${CMAKE_FIND_LIBRARY_PREFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
 
 ### Find include dir
@@ -39,6 +40,7 @@ else ()
     # find library with user provided directory path
     set(KLU_LIBRARY_NAME klu)
     message(STATUS ${KLU_LIBRARY_DIR})
+    message(STATUS ${CMAKE_FIND_LIBRARY_PREFIXES})
     find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
 endif ()
 mark_as_advanced(KLU_LIBRARY)
