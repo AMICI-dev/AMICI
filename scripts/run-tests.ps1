@@ -1,28 +1,28 @@
 cd .\SuiteSparse\SuiteSparse_config
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
+mingw32-make library -e CC="gcc"
 
 cd .\..\AMD
 
 $CurrentDir = $(get-location).Path;
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
+mingw32-make library -e CC="gcc" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
+mingw32-make library -e CC="gcc" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
+mingw32-make library -e CC="gcc" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
+mingw32-make library -e CC="gcc"  
 
 cd .\..\KLU
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -L../lib" 
+mingw32-make library -e CC="gcc" 
 
 
 mkdir .\..\..\sundials\build\
