@@ -2,7 +2,7 @@ $envPaths = $env:Path -split ';'
 
 if ($envPaths -contains 'C:\Program Files\Git\usr\bin') {
     $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\Program Files\Git\usr\bin' }
-    set $env:Path = $envPaths -join ';'
+    $env:Path = $envPaths -join ';'
 }
 
 echo $env:PATH
