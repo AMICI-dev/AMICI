@@ -4,23 +4,23 @@ mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared"
 
 cd .\..\AMD
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\BTF
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\CAMD
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\COLAMD
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 cd .\..\KLU
 
-mingw32-make library -e CC=gcc
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 
 
 mkdir .\..\..\sundials\build\
@@ -40,7 +40,7 @@ cmake -DCMAKE_INSTALL_PREFIX=".\..\..\build\sundials" \
 -DKLU_INCLUDE_DIR="$.\..\..\SuiteSparse\include" \
 .. 
 
-mingw32-make -e CC=gcc
+mingw32-make -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 make install
 
 cd ..\..\
