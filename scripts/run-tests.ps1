@@ -38,8 +38,8 @@ cmake .. -DCMAKE_INSTALL_PREFIX="$PSScriptRoot\..\build\sundials" `
 -DEXAMPLES_ENABLE=OFF `
 -DEXAMPLES_INSTALL=OFF `
 -DKLU_ENABLE=ON `
--DKLU_LIBRARY_DIR="$PSScriptRoot\..\SuiteSparse/lib" `
--DKLU_INCLUDE_DIR="$PSScriptRoot\..\SuiteSparse/include" `
+-DKLU_LIBRARY_DIR="$PSScriptRoot\..\SuiteSparse\lib" `
+-DKLU_INCLUDE_DIR="$PSScriptRoot\..\SuiteSparse\include" `
 
 msbuild ALL BUILD.vcxproj
 msbuild INSTALL.vcxproj
