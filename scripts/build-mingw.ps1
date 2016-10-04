@@ -42,14 +42,15 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DKLU_ENABLE=ON `
 -DKLU_LIBRARY_DIR="C:/projects/amici/SuiteSparse/lib" `
 -DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
+-G "MinGW Makefiles"
 
-msbuild ALL BUILD.vcxproj
-msbuild INSTALL.vcxproj
+mingw32-make
+mingw32-make install
 
 cd ..\..
 
-cmake CMakeLists.txt
-msbuild model_dirac.vcxproj
+cmake CMakeLists.txt -G "MinGW Makefiles"
+mingw32-make
 
 ls
 
