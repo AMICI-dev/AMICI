@@ -28,6 +28,8 @@ mingw32-make library -e CC="gcc"
 mkdir .\..\..\sundials\build\
 cd .\..\..\sundials\build\
 
+ls C:\projects\amici\SuiteSparse\lib
+
 cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
@@ -46,6 +48,7 @@ msbuild INSTALL.vcxproj
 
 cd ..\..
 
+cmake 
 msbuild model_dirac.vcxproj
 
 ls
