@@ -18,9 +18,9 @@ environment:
 install:
   - if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
   - 7z x -y "%MINGW_ARCHIVE%" > nul
-  
+
 before_build:
-  -ps: set Path=%CD%\%MINGW_DIR%\bin;%Path%
+  - set Path=%CD%\%MINGW_DIR%\bin;%Path%
 
 build_script:
-  -ps: .\scripts\build-mingw.ps1
+  - ps: .\scripts\build-mingw.ps1
