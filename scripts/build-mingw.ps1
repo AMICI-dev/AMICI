@@ -1,10 +1,12 @@
+set $env:PATH=%$env:PATH:C:\Program Files\Git\usr\bin;=%
+
+echo $env:PATH
+
 cd .\SuiteSparse\SuiteSparse_config
 
 mingw32-make library -e CC="gcc"
 
 cd .\..\AMD
-
-$CurrentDir = $(get-location).Path;
 
 mingw32-make library -e CC="gcc" 
 
@@ -15,10 +17,6 @@ mingw32-make library -e CC="gcc"
 cd .\..\CAMD
 
 mingw32-make library -e CC="gcc" 
-
-set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
-
-echo %PATH%
 
 cd .\..\COLAMD
 
