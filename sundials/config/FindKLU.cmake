@@ -38,6 +38,7 @@ if (KLU_LIBRARY)
 else ()
     # find library with user provided directory path
     set(KLU_LIBRARY_NAME klu)
+    message(STATUS ${KLU_LIBRARY_DIR})
     find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
 endif ()
 mark_as_advanced(KLU_LIBRARY)
