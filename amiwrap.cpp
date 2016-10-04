@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int iroot;
     double tnext;
     booleantype silent;
-    booleantype setupBdone;
+    booleantype setupBdone = false;
 
     iroot = 0;
     
@@ -86,7 +86,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if(status)
         goto freturn;
 
-    setupBdone = false;
     status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
 
 freturn:
