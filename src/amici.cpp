@@ -2131,18 +2131,18 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
                         }
                         /* integration error occured */
                         if (*status<0) {
-                            return 1;
+                            return *status;
                         }
                         if (*status==AMI_ROOT_RETURN) {
                             handleEvent(status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                            if (*status != AMI_SUCCESS) return 1;
+                            if (*status != AMI_SUCCESS) return *status;
                         }
                     }
                 }
             }
 
             handleDataPoint(status, it, ami_mem, udata, rdata, edata, tdata);
-            if (*status != AMI_SUCCESS) return 1;
+            if (*status != AMI_SUCCESS) return *status;
 
 
         } else {
@@ -2183,13 +2183,13 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         
                         if (tnext<t) {
                             *status = AMISolveB(ami_mem, tnext, AMI_NORMAL);
-                            if (*status != AMI_SUCCESS) return 1;
+                            if (*status != AMI_SUCCESS) return *status;
                             
 
                             *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                            if (*status != AMI_SUCCESS) return 1;
+                            if (*status != AMI_SUCCESS) return *status;
                             *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                            if (*status != AMI_SUCCESS) return 1;
+                            if (*status != AMI_SUCCESS) return *status;
                         }
                         
                         /* handle discontinuity */
@@ -2214,13 +2214,13 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         
                         /* reinit states */
                         *status = AMIReInitB(ami_mem, which, t, xB, dxB);
-                        if (*status != AMI_SUCCESS) return 1;
+                        if (*status != AMI_SUCCESS) return *status;
 
                         *status = AMIQuadReInitB(ami_mem, which, xQB);
-                        if (*status != AMI_SUCCESS) return 1;
+                        if (*status != AMI_SUCCESS) return *status;
                         
                         *status = AMICalcICB(ami_mem, which, t, xB, dxB);
-                        if (*status != AMI_SUCCESS) return 1;
+                        if (*status != AMI_SUCCESS) return *status;
                     }
                     
                     /* we still need to integrate from first datapoint to tstart */
@@ -2229,26 +2229,26 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                             if (nx>0) {
                                 /* solve for backward problems */
                                 *status = AMISolveB(ami_mem, tstart, AMI_NORMAL);
-                                if (*status != AMI_SUCCESS) return 1;
+                                if (*status != AMI_SUCCESS) return *status;
 
                                 *status = AMIGetQuadB(ami_mem, which, &t, xQB);
-                                if (*status != AMI_SUCCESS) return 1;
+                                if (*status != AMI_SUCCESS) return *status;
                                 *status = AMIGetB(ami_mem, which, &t, xB, dxB);
-                                if (*status != AMI_SUCCESS) return 1;
+                                if (*status != AMI_SUCCESS) return *status;
                             }
                         }
                     }
 
                     /* evaluate initial values */
                     NVsx = N_VCloneVectorArray_Serial(np,x);
-                    if (NVsx == NULL) return 1;
+                    if (NVsx == NULL) return *status;
                     
                     *status = fx0(x,udata);
-                    if (*status != AMI_SUCCESS) return 1;
+                    if (*status != AMI_SUCCESS) return *status;
                     *status = fdx0(x,dx,udata);
-                    if (*status != AMI_SUCCESS) return 1;
+                    if (*status != AMI_SUCCESS) return *status;
                     *status = fsx0(NVsx, x, dx, udata);
-                    if (*status != AMI_SUCCESS) return 1;
+                    if (*status != AMI_SUCCESS) return *status;
                     
                     if(*status == 0) {
                         
