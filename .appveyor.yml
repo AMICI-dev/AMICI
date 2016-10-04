@@ -18,17 +18,11 @@ environment:
     WINDBG_DIR: '%ProgramFiles(x86)%\Windows Kits\8.1\Debuggers\x64'
   
 install:
-  -ps: |
-    if ($env:Compiler -eq "mingw") { 
-        if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
-        7z x -y "%MINGW_ARCHIVE%" > nul
-    }
-
-before_build:
-  -ps: |
-    if ($env:Compiler -eq "mingw") {
-        set Path=%CD%\%MINGW_DIR%\bin;%Path%
-    }
+  - if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
+  - 7z x -y "%MINGW_ARCHIVE%" > nul
   
+before_build:
+  -ps: set Path=%CD%\%MINGW_DIR%\bin;%Path%
+
 build_script:
   - ps: powershell -File ".\scripts\build-mingw.ps1"
