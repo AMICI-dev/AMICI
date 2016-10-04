@@ -1,7 +1,6 @@
 version: '{build}'
 
-os: 
-  - Visual Studio 2015
+os: Visual Studio 2015
 
 cache:
   - x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
@@ -23,4 +22,5 @@ install:
 before_build:
   -ps: set Path=%CD%\%MINGW_DIR%\bin;%Path%
 
-build_script: .\scripts\build-mingw.ps1
+build_script:
+  -ps: .\scripts\build-mingw.ps1
