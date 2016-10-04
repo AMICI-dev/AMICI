@@ -6,7 +6,7 @@ cd .\..\AMD
 
 ls C:\projects\amici\SuiteSparse\lib
 
-mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:./../lib" 
+mingw32-make library -e CC="gcc" LDFLAGS="$LDFLAGS -shared -LC:%CD%/../lib" 
 
 cd .\..\BTF
 
