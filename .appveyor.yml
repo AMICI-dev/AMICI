@@ -1,10 +1,15 @@
 version: '{build}'
 
-os: Visual Studio 2015
+os: 
+  - Visual Studio 2015
+  - Visual Studio 2014
+  - Visual Studio 2013
+  - Visual Studio 2012
+  - Visual Studio 2011
+  - Visual Studio 2010
 
 cache:
   - x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
-  - i686-4.9.2-release-win32-dwarf-rt_v4-rev4.7z
 
 platform:
   - x64
@@ -28,4 +33,4 @@ before_build:
   - set Path=%CD%\%MINGW_DIR%\bin;%Path%
   
 build_script:
-  - ps: .\scripts\run-tests.ps1
+  - ps: .\scripts\build-msvs.ps1

@@ -48,7 +48,7 @@ msbuild INSTALL.vcxproj
 
 cd ..\..
 
-cmake 
+cmake CMakeLists.txt
 msbuild model_dirac.vcxproj
 
 ls
