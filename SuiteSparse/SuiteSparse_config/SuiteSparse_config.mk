@@ -432,7 +432,6 @@ ifeq ($(UNAME),Windows)
     SO_PLAIN  = $(LIBRARY).dll
     SO_MAIN   = $(LIBRARY).$(SO_VERSION).dll
     SO_TARGET = $(LIBRARY).$(VERSION).dll
-    SO_OPTS	 += -Wl,--whole-archive
     SO_INSTALL_NAME = echo
 else
     # Mac or Linux/Unix
