@@ -28,7 +28,7 @@ mingw32-make library -e CC="gcc"
 mkdir .\..\..\sundials\build\
 cd .\..\..\sundials\build\
 
-cmake .. -DCMAKE_INSTALL_PREFIX="$PSScriptRoot\..\build\sundials" `
+cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
 -DBUILD_IDA=OFF `
@@ -38,8 +38,8 @@ cmake .. -DCMAKE_INSTALL_PREFIX="$PSScriptRoot\..\build\sundials" `
 -DEXAMPLES_ENABLE=OFF `
 -DEXAMPLES_INSTALL=OFF `
 -DKLU_ENABLE=ON `
--DKLU_LIBRARY_DIR="$PSScriptRoot\..\SuiteSparse\lib" `
--DKLU_INCLUDE_DIR="$PSScriptRoot\..\SuiteSparse\include" `
+-DKLU_LIBRARY_DIR="C:/projects/amici/SuiteSparse/lib" `
+-DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
 
 msbuild ALL BUILD.vcxproj
 msbuild INSTALL.vcxproj
