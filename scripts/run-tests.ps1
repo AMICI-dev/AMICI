@@ -28,7 +28,7 @@ mingw32-make library -e CC="gcc"
 mkdir .\..\..\sundials\build\
 cd .\..\..\sundials\build\
 
-cmake .. -DCMAKE_INSTALL_PREFIX=".\..\..\build\sundials" `
+cmake .. -DCMAKE_INSTALL_PREFIX="./../../build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
 -DBUILD_IDA=OFF `
@@ -38,8 +38,8 @@ cmake .. -DCMAKE_INSTALL_PREFIX=".\..\..\build\sundials" `
 -DEXAMPLES_ENABLE=OFF `
 -DEXAMPLES_INSTALL=OFF `
 -DKLU_ENABLE=ON `
--DKLU_LIBRARY_DIR=".\..\..\SuiteSparse\lib" `
--DKLU_INCLUDE_DIR=".\..\..\SuiteSparse\include" `
+-DKLU_LIBRARY_DIR="./../../SuiteSparse/lib" `
+-DKLU_INCLUDE_DIR="./../../SuiteSparse/include" `
 
 mingw32-make -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 mingw32-make install
@@ -49,7 +49,7 @@ cd ..\..\
 cmake CMakeLists.txt
 mingw32-make -e CC=gcc
 
-if (Test-Path "main.exe" eq "False")
+if (Test-Path "main.exe" -eq "False")
 {
 	throw "build unsuccessfull"
 }
