@@ -33,7 +33,7 @@ before_build:
 build_script:
   - ps: |
     if ($env:Compiler -eq "mingw") {
-      powershell -File .\scripts\build-mingw.ps1
+      powershell -File ".\scripts\build-mingw.ps1"
     } else {
-      powershell -File .\scripts\build-msvs.ps1
+      powershell -File ".\scripts\build-msvs.ps1"x
     }
