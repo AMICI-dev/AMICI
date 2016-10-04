@@ -28,7 +28,7 @@ mingw32-make library -e CC="gcc"
 mkdir .\..\..\sundials\build\
 cd .\..\..\sundials\build\
 
-cmake .. -DCMAKE_INSTALL_PREFIX="$CMAKE_SOURCE_DIR/../build/sundials" `
+cmake .. -DCMAKE_INSTALL_PREFIX="$PSScriptRoot/../build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
 -DBUILD_IDA=OFF `
@@ -38,22 +38,20 @@ cmake .. -DCMAKE_INSTALL_PREFIX="$CMAKE_SOURCE_DIR/../build/sundials" `
 -DEXAMPLES_ENABLE=OFF `
 -DEXAMPLES_INSTALL=OFF `
 -DKLU_ENABLE=ON `
--DKLU_LIBRARY_DIR="$CMAKE_SOURCE_DIR/../SuiteSparse/lib" `
--DKLU_INCLUDE_DIR="$CMAKE_SOURCE_DIR/../SuiteSparse/include" `
+-DKLU_LIBRARY_DIR="$PSScriptRoot/../SuiteSparse/lib" `
+-DKLU_INCLUDE_DIR="$PSScriptRoot/../SuiteSparse/include" `
 
 msbuild ALL BUILD.vcxproj
 msbuild INSTALL.vcxproj
 
-ls
-
-cd ..
+cd ..\..
 
 cmake CMakeLists.txt
-mingw32-make -e CXX="g++"
+mingw32-make
 
 ls
 
 if ( (Test-Path ".\main.exe") -eq $false)
 {
-	throw "build unsuccessfull"
+	throw "build unsuccessfull, model_dirac failed to compile!"
 }
