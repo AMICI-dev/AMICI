@@ -44,12 +44,14 @@ cmake .. -DCMAKE_INSTALL_PREFIX="./../../build/sundials" `
 mingw32-make -e CC="gcc" LDFLAGS="$LDFLAGS -shared" 
 mingw32-make install
 
-cd ..\..\
+ls
+
+cd ..
 
 cmake CMakeLists.txt
-mingw32-make -e CC=gcc
+mingw32-make -e CXX="g++"
 
-if (Test-Path "main.exe" -eq "False")
+if ( (Test-Path ".\main.exe") -eq $false)
 {
 	throw "build unsuccessfull"
 }
