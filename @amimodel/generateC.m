@@ -570,10 +570,10 @@ function generateCMakeFile(this)
     fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
-    fprintf(fid, 'set(AMICI_DIR "/home/dweindl/src/AMICI.github/")\n');
+    fprintf(fid, 'set(AMICI_DIR "%s")\n', fileparts(fileparts(mfilename('fullpath'))));
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "/home/dweindl/src/_libs/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUNDIALS_LIB_DIR "/home/dweindl/src/_libs/sundials-2.6.2/build/install/lib/")\n');
+    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
+    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")\n');
     fprintf(fid, 'set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")\n');
     fprintf(fid, 'set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")\n');
 
@@ -585,6 +585,7 @@ function generateCMakeFile(this)
             '${AMICI_DIR}/src/udata.cpp', ...
             '${AMICI_DIR}/src/rdata.cpp', ...
             '${AMICI_DIR}/src/edata.cpp', ...
+            '${AMICI_DIR}/src/ami_hdf5.cpp', ...
             }
         fprintf(fid, '%s\n', f{1});
     end
@@ -599,12 +600,13 @@ function generateCMakeFile(this)
     %includes
     includeDirs = {'${AMICI_DIR}', ...
         '${CMAKE_CURRENT_SOURCE_DIR}',  ...
-        '${AMICI_DIR}/sundials-2.6.2/include',  ...
+        '${AMICI_DIR}/sundials/include',  ...
         '${SUITESPARSE_DIR}/KLU/Include', ...
         '${SUITESPARSE_DIR}/AMD/Include', ...
         '${SUITESPARSE_DIR}/SuiteSparse_config', ...
         '${SUITESPARSE_DIR}/COLAMD/Include', ...
-        '${SUITESPARSE_DIR}/BTF/Include'
+        '${SUITESPARSE_DIR}/BTF/Include', ...
+        '/usr/include/hdf5/serial/'
     };
     for d = includeDirs
         fprintf(fid, 'include_directories("%s")\n', d{1});
@@ -637,110 +639,7 @@ function generateCMakeFile(this)
 end
 
 function generateMainC(this)
-    mainFileName = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
-    fid = fopen(mainFileName,'w');
-    
-    fprintf(fid, '#include <stdio.h>\n');
-    fprintf(fid, '#include <stdlib.h>\n');
-    fprintf(fid, '#include <string.h>\n');
-    fprintf(fid, '#include <assert.h>\n');
-    fprintf(fid, '#include <math.h>\n');
-    fprintf(fid, '#include "wrapfunctions.h" /* user functions */\n');
-    fprintf(fid, '#include "include/symbolic_functions.h"\n');
-    fprintf(fid, '#include <include/amici.h> /* amici functions */\n');
-    fprintf(fid, '#include <src/ami_hdf5.h>\n');
-    fprintf(fid, '#include <include/udata_accessors.h>\n');
-    fprintf(fid, '#include <include/rdata_accessors.h>\n');
-    fprintf(fid, '\n');
-    fprintf(fid, 'void processUserData(UserData udata);\n');
-    fprintf(fid, 'void processReturnData(ReturnData rdata, UserData udata);\n');
-    fprintf(fid, 'void printReturnData(ReturnData rdata, UserData udata);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, 'int main(int argc, char **argv)\n');
-    fprintf(fid, '{  \n');
-    fprintf(fid, '    const char *hdffile;\n\n');
-    fprintf(fid, '    if(argc != 2) {\n');
-    fprintf(fid, '        fprintf(stderr, "Error: must provide input file as first and only argument.\n");\n');
-    fprintf(fid, '        return 1;\n');
-    fprintf(fid, '    } else {\n');
-    fprintf(fid, '        hdffile = argv[1];\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '    \n');
-    fprintf(fid, '    UserData udata = readSimulationUserData(hdffile);\n');
-    fprintf(fid, '    if (udata == NULL) {\n');
-    fprintf(fid, '        return 1;\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    ExpData edata = readSimulationExpData(hdffile, udata);\n');
-    fprintf(fid, '    if (edata == NULL) {\n');
-    fprintf(fid, '        freeUserData(udata);\n');
-    fprintf(fid, '        return 1;\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    int status = 0;\n');
-    fprintf(fid, '    ReturnData rdata = getSimulationResults(udata, edata, &status);\n');
-    fprintf(fid, '    if (rdata == NULL) {\n');
-    fprintf(fid, '        freeExpData(edata);\n');
-    fprintf(fid, '        freeUserData(udata);\n');
-    fprintf(fid, '        return 1;\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    processReturnData(rdata, udata);\n');
-    fprintf(fid, '    writeReturnData(hdffile, rdata, udata);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    freeExpData(edata);\n');
-    fprintf(fid, '    freeUserData(udata);\n');
-    fprintf(fid, '    freeReturnData(rdata);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    return 0;\n');
-    fprintf(fid, '}\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '\n');
-    fprintf(fid, 'void processReturnData(ReturnData rdata, UserData udata) {\n');
-    fprintf(fid, '    printReturnData(rdata, udata);\n');
-    fprintf(fid, '}\n');
-    fprintf(fid, '\n');
-    fprintf(fid, 'void printReturnData(ReturnData rdata, UserData udata) {\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("tsdata: ");\n');
-    fprintf(fid, '    printArray(tsdata, nt);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("\\n\\nxdata\\n");\n');
-    fprintf(fid, '    for(int i = 0; i < nx; ++i) {\n');
-    fprintf(fid, '        for(int j = 0; j < nt; ++j)\n');
-    fprintf(fid, '            printf("%%e\\t", rdata->am_xdata[j +  nt * i]);\n');
-    fprintf(fid, '        printf("\\n");\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("\\nydata\\n");\n');
-    fprintf(fid, '    for(int i = 0; i < ny; ++i) {\n');
-    fprintf(fid, '        for(int j = 0; j < nt; ++j)\n');
-    fprintf(fid, '            printf("%%e\\t", rdata->am_ydata[j +  nt * i]);\n');
-    fprintf(fid, '        printf("\\n");\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("\\n\\nxdotdata: ");\n');
-    fprintf(fid, '    for(int i = 0; i < nx; ++i)\n');
-    fprintf(fid, '        printf("%%e\\t", rdata->am_xdotdata[i]);\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("\\njdata\\n");\n');
-    fprintf(fid, '    for(int i = 0; i < nx; ++i) {\n');
-    fprintf(fid, '        for(int j = 0; j < nx; ++j)\n');
-    fprintf(fid, '            printf("%%e\\t", rdata->am_Jdata[i + nx * j]);\n');
-    fprintf(fid, '        printf("\\n");\n');
-    fprintf(fid, '    }\n');
-    fprintf(fid, '\n');
-    fprintf(fid, '    printf("\\nnumsteps: \\t\\t");\n');
-    fprintf(fid, '    printfArray(numstepsdata, nt, "%%.0f ");\n');
-    fprintf(fid, '    printf("\\nnumrhsevalsdata: \\t");\n');
-    fprintf(fid, '    printfArray(numrhsevalsdata, nt, "%%.0f ");\n');
-    fprintf(fid, '    printf("\\norder: \\t\\t");\n');
-    fprintf(fid, '    printfArray(orderdata, nt, "%%.0f ");\n');
-    fprintf(fid, '    printf("\\n");\n');
-    fprintf(fid, '    printf("llh: %%e\\n", *llhdata);\n');
-    fprintf(fid, '}\n');
-    fprintf(fid, '\n');
+    mainFileSource = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/main.template.cpp');
+    mainFileDestination = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
+    copyfile(mainFileSource, mainFileDestination);
 end
