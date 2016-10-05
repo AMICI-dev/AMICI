@@ -534,10 +534,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     
     g = new realtype[ng]();
     r = new realtype[ng]();
-    
-    
-    x = N_VNew_Serial(nx);
-    
+        
     if (nx > 0) {
         /* allocate temporary objects */
         x = N_VNew_Serial(nx);
@@ -2006,7 +2003,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnDat
 
 #ifdef AMICI_WITHOUT_MATLAB
 
-void initUserDataFields(UserData *udata, ReturnData *rdata, double *pstatus) {
+void initUserDataFields(UserData *udata, ReturnData *rdata) {
 
     llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
             numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
@@ -2022,10 +2019,6 @@ void initUserDataFields(UserData *udata, ReturnData *rdata, double *pstatus) {
     size_t dimssigmaz[] = {0,0,0};
     size_t dimsssigmay[] = {0,0,0};
     size_t dimsssigmaz[] = {0,0,0};
-
-
-    double *mxstatus = new double();
-    pstatus = mxstatus;
 
     initField2(llh,1,1);
     initField2(chi2,1,1);
@@ -2362,6 +2355,10 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         N_VDestroy_Serial(x_old);
         N_VDestroy_Serial(dx_old);
         N_VDestroy_Serial(xdot_old);
+
+        delete[] g;
+        delete[] r;
+
         DestroyMat(Jtmp);
         if (ne>0) {
             if(ami_mem) delete rootsfound;
@@ -2379,7 +2376,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         }
 
         if(ny>0) {
-            if(sigma_y)    delete sigma_y;
+            if(sigma_y)    delete[] sigma_y;
         }
         if (sensi >= 1) {
             if(ami_mem) delete dydx;
@@ -2434,7 +2431,7 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
         return(NULL);
 
     double dblstatus;
-    initUserDataFields(udata, rdata, &dblstatus);
+    initUserDataFields(udata, rdata);
     *pstatus = (int) dblstatus;
 
     return(rdata);
