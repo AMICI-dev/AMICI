@@ -241,8 +241,10 @@ void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
     setAttributeIntFromDouble(file_id, solutionsObject, "numsteps", numstepsdata, nt);
     setAttributeIntFromDouble(file_id, solutionsObject, "numrhsevals", numrhsevalsdata, nt);
     setAttributeIntFromDouble(file_id, solutionsObject, "order", orderdata, nt);
-    setAttributeIntFromDouble(file_id, solutionsObject, "numstepsS", numstepsSdata, nt);
-    setAttributeIntFromDouble(file_id, solutionsObject, "numrhsevalsS", numrhsevalsSdata, nt);
+    if(numstepsSdata)
+        setAttributeIntFromDouble(file_id, solutionsObject, "numstepsS", numstepsSdata, nt);
+    if(numrhsevalsSdata)
+        setAttributeIntFromDouble(file_id, solutionsObject, "numrhsevalsS", numrhsevalsSdata, nt);
 
     createAndWriteDouble2DAttribute(dataset, "J", Jdata, nx, nx);
     createAndWriteDouble2DAttribute(dataset, "x", xdata, nt, nx);
