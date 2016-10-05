@@ -3,10 +3,10 @@
 
 void freeExpData(ExpData *edata) {
     if(edata) {
-        delete my;
-        delete ysigma;
-        if(mz) delete mz;
-        if(zsigma) delete zsigma;
+        delete[] my;
+        delete[] ysigma;
+        if(mz) delete[] mz;
+        if(zsigma) delete[] zsigma;
         delete edata;
     }
 }
