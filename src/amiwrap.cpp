@@ -68,22 +68,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     if (nx>0) {
         ami_mem = setupAMI(&status, udata, tdata);
-        if (ami_mem == NULL) goto freturn;
+        if (ami_mem == NULL){
+            status = -96;
+            goto freturn;
+        }
     }
 
     rdata = setupReturnData(plhs, udata, pstatus);
-    if (rdata == NULL) goto freturn;
+    if (rdata == NULL) {
+        status = -96;
+        goto freturn;
+    }
+    
     
     if (nx>0) {
         edata = setupExpData(prhs, udata);
-        if (edata == NULL) goto freturn;
+        if (edata == NULL) {
+            status = -97;
+            goto freturn;
+        }
     }
     
-    status = workForwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot);
-    if(status)
-        goto freturn;
+    if(nx>0) {
+        status = workForwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot);
+        if(status<0) goto freturn;
 
-    status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
+        status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
+    }
 
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);

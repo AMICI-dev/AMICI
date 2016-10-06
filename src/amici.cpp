@@ -440,6 +440,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     
     if (!prhs[8]) {
         errMsgIdAndTxt("AMICI:mex:data","No data provided!");
+        return NULL;
     }
     if (mxGetProperty(prhs[8], 0 ,"Y")) {
         my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
@@ -447,6 +448,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
         nmyt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Y"));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
+        return NULL;
     }
     
     if (mxGetProperty(prhs[8], 0 ,"Sigma_Y")) {
@@ -455,6 +457,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
         nysigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
+        return NULL;
     }
     if (mxGetProperty(prhs[8], 0 ,"Z")) {
         mz = mxGetPr(mxGetProperty(prhs[8], 0 ,"Z"));
@@ -462,6 +465,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
         nmzt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Z"));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
+        return NULL;
     }
     
     if (mxGetProperty(prhs[8], 0 ,"Sigma_Z")) {
@@ -470,46 +474,55 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
         nzsigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
+        return NULL;
     }
     
     if (nmyt != nt) {
         sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
         errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
+        return NULL;
     }
     
     if (nysigmat != nt) {
         sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
         errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
+        return NULL;
     }
     
     if (nmyy != nytrue) {
         sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
         errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
+        return NULL;
     }
     
     if (nysigmay != nytrue) {
         sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
         errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
+        return NULL;
     }
     
     if (nmzt != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
         errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
+        return NULL;
     }
     
     if (nzsigmat != nmaxevent) {
         sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
         errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
+        return NULL;
     }
     
     if (nmzy != nztrue) {
         sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
         errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
+        return NULL;
     }
     
     if (nzsigmay != nztrue) {
         sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
         errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
+        return NULL;
     }
     
     return(edata);
