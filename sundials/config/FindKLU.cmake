@@ -18,7 +18,7 @@
 # 
 # Set library prefixes for Windows
 IF(WIN32)
-  set(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES})
+  set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
 
