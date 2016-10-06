@@ -2361,26 +2361,26 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 
         DestroyMat(Jtmp);
         if (ne>0) {
-            if(ami_mem) delete rootsfound;
-            if(ami_mem) delete rootvals;
-            if(ami_mem) delete rootidx;
-            if(ami_mem) delete sigma_z;
-            if(ami_mem) delete nroots;
-            if(ami_mem) delete discs;
-            if(ami_mem) delete h;
+            if(ami_mem) delete[] rootsfound;
+            if(ami_mem) delete[] rootvals;
+            if(ami_mem) delete[] rootidx;
+            if(ami_mem) delete[] sigma_z;
+            if(ami_mem) delete[] nroots;
+            if(ami_mem) delete[] discs;
+            if(ami_mem) delete[] h;
 
-            if(ami_mem) delete deltax;
-            if(ami_mem) delete deltasx;
-            if(ami_mem) delete deltaxB;
-            if(ami_mem) delete deltaqB;
+            if(ami_mem) delete[] deltax;
+            if(ami_mem) delete[] deltasx;
+            if(ami_mem) delete[] deltaxB;
+            if(ami_mem) delete[] deltaqB;
         }
 
         if(ny>0) {
             if(sigma_y)    delete[] sigma_y;
         }
         if (sensi >= 1) {
-            if(ami_mem) delete dydx;
-            if(ami_mem) delete dydp;
+            if(ami_mem) delete[] dydx;
+            if(ami_mem) delete[] dydp;
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
@@ -2394,18 +2394,18 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem) delete dgdp;
-                if(ami_mem) delete dgdx;
-                if(ami_mem) delete drdp;
-                if(ami_mem) delete drdx;
+                if(ami_mem) delete[] dgdp;
+                if(ami_mem) delete[] dgdx;
+                if(ami_mem) delete[] drdp;
+                if(ami_mem) delete[] drdx;
                 if (ne>0) {
-                    if(ami_mem) delete dzdp;
-                    if(ami_mem) delete dzdx;
+                    if(ami_mem) delete[] dzdp;
+                    if(ami_mem) delete[] dzdx;
                 }
-                if(ami_mem) delete llhS0;
-                if(ami_mem) delete dsigma_ydp;
+                if(ami_mem) delete[] llhS0;
+                if(ami_mem) delete[] dsigma_ydp;
                 if (ne>0) {
-                    if(ami_mem) delete dsigma_zdp;
+                    if(ami_mem) delete[] dsigma_zdp;
                 }
                 if(setupBdone) N_VDestroy_Serial(dxB);
                 if(setupBdone) N_VDestroy_Serial(xB);
@@ -2418,7 +2418,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         if(ami_mem) AMIFree(&ami_mem);
     }
 
-    if(tdata) delete tdata;
+    if(tdata) delete[] tdata;
 }
 
 #ifdef AMICI_WITHOUT_MATLAB

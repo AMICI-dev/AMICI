@@ -45,19 +45,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *pstatus; /* return status flag */
     
     realtype tlastroot; /* storage for last found root */
-    int iroot;
-    double tnext;
-    booleantype silent;
+
+    int iroot = 0;
     booleantype setupBdone = false;
 
-    iroot = 0;
-    
     pstatus = (double *) mxMalloc(sizeof(double));
     
     udata = setupUserData(prhs);
     if (udata == NULL) {
-        /* goto freturn will fail here */
-        *pstatus = -99;
+        /* goto freturn will fail here as freeXXXXData routines will fail*/
+        *pstatus = -98;
         return;
     }
     
@@ -91,5 +88,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    freeUserData(udata);
+    freeExpData(edata);
     *pstatus = (double) status;
 }

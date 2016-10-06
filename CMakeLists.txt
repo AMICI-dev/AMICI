@@ -12,7 +12,7 @@ set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
 
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
-${MODEL_DIR}/wrapfunctions.cpp
+${MODEL_DIR}/src/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp

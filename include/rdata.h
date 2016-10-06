@@ -71,8 +71,6 @@ typedef struct rdata {
     
 	} ReturnData;
 
-#ifdef AMICI_WITHOUT_MATLAB
 EXTERNC void freeReturnData(ReturnData *rdata);
-#endif
 
 #endif /* _MY_RDATA */
