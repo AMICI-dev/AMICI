@@ -89,8 +89,17 @@ for ifile = 1:length(codegen)
     this.HTable(1).(codegen{ifile}) = CalcMD5(which(fullfile(this.wrap_path,'@amifun',[codegen{ifile} '.m'])),'File');
 end
 this.HTable(1).generateC = CalcMD5(which(fullfile(this.wrap_path,'@amimodel','generateC.m')),'File');
+this.HTable(1).udata = CalcMD5(which(fullfile(this.wrap_path,'include','udata.h')),'File');
+this.HTable(1).tdata = CalcMD5(which(fullfile(this.wrap_path,'include','tdata.h')),'File');
 
 this.recompile = not(strcmp(this.HTable(1).generateC,HTable.generateC));
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).udata,HTable.udata));
+end
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).tdata,HTable.tdata));
+end
+
 ifile = 1;
 while(not(this.recompile) & ifile<=length(codegen))
     this.recompile = not(strcmp(this.HTable(1).(codegen{ifile}),HTable.(codegen{ifile})));

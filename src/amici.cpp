@@ -2367,7 +2367,6 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
             if(ami_mem) delete[] sigma_z;
             if(ami_mem) delete[] nroots;
             if(ami_mem) delete[] discs;
-            if(ami_mem) delete[] h;
 
             if(ami_mem) delete[] deltax;
             if(ami_mem) delete[] deltasx;

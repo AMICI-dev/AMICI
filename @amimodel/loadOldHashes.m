@@ -66,6 +66,8 @@ function HTable = loadOldHashes(this)
     DHTable.printLocalVars = '';
     DHTable.writeCcode = '';
     DHTable.writeCcode_sensi = '';
+    DHTable.udata = '';
+    DHTable.tdata = '';
     
     HTable = am_setdefault(HTable,DHTable);
 end

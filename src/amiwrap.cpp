@@ -89,6 +89,5 @@ freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     freeUserData(udata);
-    freeExpData(edata);
     *pstatus = (double) status;
 }
