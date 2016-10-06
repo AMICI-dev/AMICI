@@ -17,7 +17,10 @@ typedef struct edata {
     /** observed events */
     double *am_mz; 
     /** standard deviation of observed events */
-    double *am_zsigma; 
+    double *am_zsigma;
+    
+    /** boolean indicating whether experimental data was provided */
+    booleantype am_bexpdata;
     
 	} ExpData;
 
