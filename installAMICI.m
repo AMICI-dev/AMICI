@@ -1,5 +1,5 @@
 amipath = fileparts(mfilename('fullpath'));
 addpath(amipath)
 addpath(fullfile(amipath,'auxiliary'))
-addpath(fullfile(amipath,'auxiliary','datahash'))
+addpath(fullfile(amipath,'auxiliary','CalcMD5'))
 addpath(fullfile(amipath,'symbolic'))
