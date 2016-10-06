@@ -1,6 +1,12 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
 /** @brief struct that stores all data which is later returned by the mex function */
 typedef struct rdata {
 
@@ -66,7 +72,7 @@ typedef struct rdata {
 	} ReturnData;
 
 #ifdef AMICI_WITHOUT_MATLAB
-void freeReturnData(ReturnData *rdata);
+EXTERNC void freeReturnData(ReturnData *rdata);
 #endif
 
 #endif /* _MY_RDATA */

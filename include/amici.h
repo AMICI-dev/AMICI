@@ -11,6 +11,12 @@
 #include <mex.h>
 #endif
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
 /* sensitivity method */
 #define AMI_FSA 1
 #define AMI_ASA 2
@@ -82,10 +88,10 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, Re
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status);
 
 #ifdef AMICI_WITHOUT_MATLAB
-void initUserDataFields(UserData user_data, ReturnData *rdata, double *pstatus);
-ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus);
-void processUserData(UserData *udata);
-ReturnData *initReturnData(UserData *udata, int *pstatus);
+EXTERNC void initUserDataFields(UserData user_data, ReturnData *rdata, double *pstatus);
+EXTERNC  ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus);
+EXTERNC void processUserData(UserData *udata);
+EXTERNC ReturnData *initReturnData(UserData *udata, int *pstatus);
 #endif /* AMICI_WITHOUT_MATLAB */
 
 #endif /* amici_h */

@@ -1,8 +1,15 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
+
 #include <math.h>
 #include <include/spline.h>
 #include <stdarg.h>
+
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
 double amilog(double x);
 double heaviside(double x);
@@ -16,22 +23,22 @@ int amiIsNaN(double what);
 int amiIsInf(double what);
 double amiGetNaN();
 
-void ones(double *destination, int count);
-void zeros(double *destination, int count);
-void fillArray(double *destination, int count, double value);
-double sum(double const *array, int numElements);
-void linSpace(double *destination, double from, double to, int numValues);
-double *linSpaceAlloc(double from, double to, int numValues);
-void printArray(double const *array, int numElements);
-void printfArray(double const *array, int numElements, char const *format);
+EXTERNC void ones(double *destination, int count);
+EXTERNC void zeros(double *destination, int count);
+EXTERNC void fillArray(double *destination, int count, double value);
+EXTERNC double sum(double const *array, int numElements);
+EXTERNC void linSpace(double *destination, double from, double to, int numValues);
+EXTERNC double *linSpaceAlloc(double from, double to, int numValues);
+EXTERNC void printArray(double const *array, int numElements);
+EXTERNC void printfArray(double const *array, int numElements, char const *format);
 
-void errMsgIdAndTxt(
+EXTERNC void errMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
     const char * err_msg,    /* string with error message printf-style format */
     ...                      /* any additional arguments */
     );
 
-void warnMsgIdAndTxt(
+EXTERNC void warnMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
     const char * err_msg,    /* string with error message printf-style format */
     ...                      /* any additional arguments */

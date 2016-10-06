@@ -17,8 +17,13 @@
 #include <btf.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
-extern void warnMsgIdAndTxt(
+EXTERNC void warnMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
     const char * err_msg,    /* string with error message printf-style format */
     ...                      /* any additional arguments */

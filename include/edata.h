@@ -1,6 +1,12 @@
 #ifndef _MY_EDATA
 #define _MY_EDATA
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
 /** @brief struct that carries all information about experimental data */
 typedef struct edata {
     /** observed data */
@@ -16,7 +22,7 @@ typedef struct edata {
 	} ExpData;
 
 #ifdef AMICI_WITHOUT_MATLAB
-void freeExpData(ExpData *edata);
+EXTERNC void freeExpData(ExpData *edata);
 #endif
 
 #endif /* _MY_EDATA */

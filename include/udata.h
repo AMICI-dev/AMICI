@@ -1,3 +1,6 @@
+#ifndef _MY_UDATA
+#define _MY_UDATA
+
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
 #include <sundials/sundials_sparse.h> /* def. of type sparse stuff */
@@ -5,8 +8,11 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
-#ifndef _MY_UDATA
-#define _MY_UDATA
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
@@ -172,7 +178,7 @@ typedef struct user_data {
 } UserData;
 
 #ifdef AMICI_WITHOUT_MATLAB
-void freeUserData(UserData *udata);
+EXTERNC void freeUserData(UserData *udata);
 #endif
 
 #endif /* _MY_UDATA */
