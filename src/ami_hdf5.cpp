@@ -346,7 +346,7 @@ void getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const cha
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);
 #endif
-    *destination = (double*) malloc((*length) * sizeof(double)); // vs. type_size
+    *destination = new double[*length]; // vs. type_size
     H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
 #ifdef AMI_HDF5_H_DEBUG
     printfArray(*destination, *length, "%e ");
@@ -375,7 +375,7 @@ void getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject, const c
         *m = dims[0];
         *n = dims[1];
 
-        *destination = (double*) malloc(type_size * (*m) * (*n));
+        *destination = new double[(*m) * (*n)];
         H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
 #ifdef AMI_HDF5_H_DEBUG
         printfArray(*destination, (*m) * (*n), "%e ");
