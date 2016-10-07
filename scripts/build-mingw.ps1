@@ -53,7 +53,7 @@ cd ..\..
 
 ls hdf5
 
-Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", -Wait
+Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", -Wait /L*V
 
 ls hdf5
 
