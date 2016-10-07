@@ -9,8 +9,8 @@ set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
-set(HDF5_DIR "C:/Program Files/HDF Group/HDF5-1.8/include“)
-set(HDF5_LIB_DIR "C:/Program Files/HDF Group/HDF5-1.8/lib“)
+set(HDF5_DIR "C:/Program Files/HDF Group/HDF5-1.8/include")
+set(HDF5_LIB_DIR "C:/Program Files/HDF Group/HDF5-1.8/lib")
 
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
@@ -77,10 +77,11 @@ include_directories("${SUITESPARSE_DIR}/AMD/Include")
 include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
 include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
+include_directories("${HDF5_DIR}")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread -ldl -lz -lhdf5_hl -lhdf5 -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
-"-lm"
+"-lpthread -ldl -lz -L${HDF5_LIB_DIR} -lhdf5_hl -lhdf5 -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lm" 
 )

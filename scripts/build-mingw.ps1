@@ -62,7 +62,7 @@ cd ..
 
 cmake CMakeLists.txt -G "MinGW Makefiles"
 
-ls C:/Program Files/HDF Group
+ls "C:/Program Files/HDF Group"
 
 mingw32-make
 
