@@ -22,11 +22,8 @@ cd .\..\KLU
 
 mingw32-make library -e CC="gcc" 
 
-
 mkdir .\..\..\sundials\build\
 cd .\..\..\sundials\build\
-
-ls C:\projects\amici\SuiteSparse\lib
 
 $envPaths = $env:Path -split ';'
 
@@ -49,8 +46,6 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
 -G "MinGW Makefiles"
 
-
-
 mingw32-make
 mingw32-make install
 
@@ -60,9 +55,9 @@ Start-Process .\HDF5-1.8.17-win32.msi
 
 cd ..
 
-cmake CMakeLists.txt -G "MinGW Makefiles"
+ls
 
-ls "C:/Program Files/HDF Group"
+cmake CMakeLists.txt -G "MinGW Makefiles"
 
 mingw32-make
 

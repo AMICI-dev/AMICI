@@ -39,12 +39,7 @@ if (KLU_LIBRARY)
 else ()
     # find library with user provided directory path
     set(KLU_LIBRARY_NAME klu)
-    message(STATUS ${KLU_LIBRARY_DIR})
-    message(STATUS ${CMAKE_FIND_LIBRARY_PREFIXES})
-    message(STATUS ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    message(STATUS ${PATH_SUFFIXES})
     find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    message(STATUS ${KLU_LIBRARY})
 endif ()
 mark_as_advanced(KLU_LIBRARY)
 
