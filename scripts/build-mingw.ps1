@@ -1,3 +1,10 @@
+$envPaths = $env:Path -split ';'
+
+if ($envPaths -contains 'C:\MinGW\bin') {
+    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\MinGW\bin' }
+    $env:Path = $envPaths -join ';'
+}
+
 cd .\SuiteSparse\SuiteSparse_config
 
 mingw32-make library -e CC="gcc"
