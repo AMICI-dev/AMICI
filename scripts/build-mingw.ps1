@@ -66,7 +66,7 @@ mingw32-make install
 cd ..\..
 
 cmake CMakeLists.txt `
--DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17\\share\\cmake" `
+-DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17\\bin" `
 -G "MinGW Makefiles"
 
 mingw32-make 
