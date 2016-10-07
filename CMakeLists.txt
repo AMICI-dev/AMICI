@@ -68,7 +68,6 @@ ${MODEL_DIR}/model_dirac_z.cpp
 )
 
 find_package( HDF5 REQUIRED )
-find_package( ZLIB REQUIRED )
 
 if(HDF5_FOUND)
     include_directories( ${HDF5_INCLUDE_DIR} )
