@@ -23,7 +23,7 @@ install:
   - if not exist "%HDF5_ARCHIVE%" appveyor DownloadFile "%HDF5_URL%" -FileName "%HDF5_ARCHIVE%"
   - 7z x -y "%MINGW_ARCHIVE%" > nul
   - 7z x -y "%HDF5_ARCHIVE%" > nul
-  - ps: Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", -Wait, /L*V
+  - ps: Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", /L*V -Wait
 
 before_build:
   - set Path=%CD%\%MINGW_DIR%\bin;%HDF5_BINDIR%;%Path%
