@@ -16,7 +16,7 @@ environment:
     MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
     WINDBG_DIR: '%ProgramFiles(x86)%\Windows Kits\8.1\Debuggers\x64'
     HDF5_DIR: hdf5
-    HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/hdf5-1.8.17-win32-vs2013-shared.zip
+    HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/hdf5-1.8.17-win32-vs2015-shared.zip
     HDF5_ARCHIVE: hdf5-1.8.17-win32-vs2013-shared.zip
   
 install:

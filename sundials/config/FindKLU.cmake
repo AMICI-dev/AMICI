@@ -47,7 +47,7 @@ mark_as_advanced(KLU_LIBRARY)
 
 if (NOT AMD_LIBRARY)
     set(AMD_LIBRARY_NAME amd)
-    messsage(STATUS ${AMD_LIBRARY_NAME})
+    message(STATUS ${AMD_LIBRARY_NAME})
     FIND_LIBRARY(AMD_LIBRARY ${AMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
     mark_as_advanced(AMD_LIBRARY)
 endif ()

@@ -54,16 +54,15 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 mingw32-make
 mingw32-make install
 
-cd ..\..\..\hdf5
+cd ..\..\hdf5
 
 ls
 
-cmake CMakeLists.txt -G "MinGW Makefiles"
-mingw32-make
+Start-Process .\HDF5-1.8.17-win32.msi
 
 ls
 
-cd ..\amici
+cd ..
 
 cmake CMakeLists.txt -G "MinGW Makefiles"
 mingw32-make
