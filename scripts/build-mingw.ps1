@@ -57,7 +57,7 @@ Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", 
 
 ls hdf5
 
-ls %APPVEYOR_BUILD_FOLDER%\libhdf5-lib
+ls "C:\Program Files"
 
 cmake CMakeLists.txt -G "MinGW Makefiles"
 
