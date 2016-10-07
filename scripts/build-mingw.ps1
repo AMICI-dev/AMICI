@@ -51,14 +51,6 @@ mingw32-make install
 
 cd ..\..
 
-ls hdf5
-
-Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", -Wait, /L*V
-
-ls hdf5
-
-ls "C:\Program Files"
-
 cmake CMakeLists.txt -G "MinGW Makefiles"
 
 mingw32-make
