@@ -38,6 +38,7 @@ cmake -DCMAKE_INSTALL_PREFIX="./../../build/sundials" \
 -DEXAMPLES_ENABLE=OFF \
 -DEXAMPLES_INSTALL=OFF \
 -DKLU_ENABLE=ON \
+-DCMAKE_VERBOSE_MAKEFILE=ON \
 -DKLU_LIBRARY_DIR="$./../../SuiteSparse/lib" \
 -DKLU_INCLUDE_DIR="$./../../SuiteSparse/include" \
 .. 

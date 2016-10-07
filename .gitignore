@@ -194,3 +194,7 @@ CMakeCache.txt
 *.a
 
 model_dirac
+
+Makefile
+
+scripts/CMakeFiles
