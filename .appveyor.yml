@@ -14,8 +14,7 @@ environment:
   - MINGW_DIR: mingw64
     MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z/download
     MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
-    WINDBG_DIR: '%ProgramFiles(x86)%\Windows Kits\8.1\Debuggers\x64'
-    HDF5_DIR: hdf5
+    HDF5_DIR: "C:\\Program Files\\HDF_Group\\HDF5\\1.8.16\\bin"
     HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/extra/hdf5-1.8.17-win32-vs2015-shared.zip
     HDF5_ARCHIVE: hdf5-1.8.17-win32-vs2013-shared.zip
   
@@ -26,7 +25,7 @@ install:
   - 7z x -y "%HDF5_ARCHIVE%" > nul
 
 before_build:
-  - set Path=%CD%\%MINGW_DIR%\bin;%Path%
+  - set Path=%CD%\%MINGW_DIR%\bin;%HDF5_BINDIR%;%Path%
 
 build_script:
   - ps: .\scripts\build-mingw.ps1

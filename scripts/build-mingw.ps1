@@ -44,15 +44,16 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DKLU_ENABLE=ON `
 -DKLU_LIBRARY_DIR="C:/projects/amici/SuiteSparse/lib" `
 -DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
--DCMAKE_VERBOSE_MAKEFILE=ON `
 -G "MinGW Makefiles"
 
 mingw32-make
 mingw32-make install
 
-cd ..\..\hdf5
+cd ..\..
 
-Start-Process .\HDF5-1.8.17-win32.msi
+ls hdf5
+
+Start-Process -FilePath msiexec -ArgumentList /i, "hdf5\HDF5-1.8.17-win32.msi", -Wait
 
 cd ..
 
