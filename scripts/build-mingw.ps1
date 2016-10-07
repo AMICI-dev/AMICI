@@ -32,6 +32,13 @@ if ($envPaths -contains 'C:\Program Files\Git\usr\bin') {
     $env:Path = $envPaths -join ';'
 }
 
+$envPaths = $env:Path -split ';'
+
+if ($envPaths -contains 'C:\MinGW\msys\1.0\bin') {
+    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\MinGW\msys\1.0\bin' }
+    $env:Path = $envPaths -join ';'
+}
+
 cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
