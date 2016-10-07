@@ -72,8 +72,6 @@ find_package( ZLIB REQUIRED )
 
 if(HDF5_FOUND)
     include_directories( ${HDF5_INCLUDE_DIR} )
-    target_link_libraries( kallisto_core ${HDF5_LIBRARIES} )
-    target_link_libraries( kallisto ${HDF5_LIBRARIES} )
 else()
     message(FATAL_ERROR "HDF5 not found.")
 endif()
