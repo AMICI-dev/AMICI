@@ -1,5 +1,5 @@
 #!/bin/bash
-cd C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/bin/
+cd 'C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/bin/'
 for dll in 'ls dll/*dll'; do
       def_file='basename $dll .dll'.def
       lib_file=lib'basename $dll dll.dll'.a
