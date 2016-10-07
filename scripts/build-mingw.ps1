@@ -56,15 +56,14 @@ mingw32-make install
 
 cd ..\..\hdf5
 
-ls
-
 Start-Process .\HDF5-1.8.17-win32.msi
-
-ls
 
 cd ..
 
 cmake CMakeLists.txt -G "MinGW Makefiles"
+
+ls .\hdf5
+
 mingw32-make
 
 ls
