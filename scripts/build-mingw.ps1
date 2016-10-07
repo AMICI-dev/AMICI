@@ -66,12 +66,10 @@ mingw32-make install
 cd ..\..
 
 cmake CMakeLists.txt `
--DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17\\bin" `
+-DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17\\cmake\\hdf5" `
 -G "MinGW Makefiles"
 
 mingw32-make 
-
-ls
 
 if ( (Test-Path ".\main.exe") -eq $false)
 {
