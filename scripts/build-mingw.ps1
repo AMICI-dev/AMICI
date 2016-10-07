@@ -44,6 +44,8 @@ cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DKLU_ENABLE=ON `
 -DKLU_LIBRARY_DIR="C:/projects/amici/SuiteSparse/lib" `
 -DKLU_INCLUDE_DIR="C:/projects/amici/SuiteSparse/include" `
+-DVERBOSE=1 `
+-DCMAKE_VERBOSE_MAKEFILE=ON `
 -G "MinGW Makefiles"
 
 mingw32-make

@@ -16,7 +16,6 @@
 # ---------------------------------------------------------------
 # Top level CMakeLists.txt for SUNDIALS (for cmake build system)
 
-SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 # -------------------------------------------------------------
 # Initial commands
