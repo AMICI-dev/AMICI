@@ -1,8 +1,13 @@
 #!/bin/bash
 cd 'C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/bin/'
-for dll in 'ls dll/*dll'; do
-      def_file='basename $dll .dll'.def
-      lib_file=lib'basename $dll dll.dll'.a
+for dll in *.dll; do
+	  echo "$dll"
+	  base_def=$(basename $dll .dll)
+	  echo "$base_def"
+      def_file="${base_def}.def"
+      base_lib=$(basename $dll dll.dll)
+      echo "$base_lib"
+      lib_file="lib${base_lib}.a"
       pexports $dll > $def_file
       dlltool -d $def_file -l lib/$lib_file
 done 
