@@ -14,7 +14,7 @@ environment:
   - MINGW_DIR: mingw64
     MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z/download
     MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
-    HDF5_DIR: "C:\\Program Files (x86)\\HDF_Group\\HDF5\\1.8.17\\bin"
+    HDF5_DIR: "C:\\Program Files (x86)\\HDF_Group\\HDF5\\1.8.17"
     HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/extra/hdf5-1.8.17-win32-vs2015-shared.zip
     HDF5_ARCHIVE: hdf5-1.8.17-win32-vs2015-shared.zip
   
@@ -25,7 +25,17 @@ install:
   - 7z x -y "%HDF5_ARCHIVE%" > nul
   - cd hdf5
   - msiexec /i HDF5-1.8.17-win32.msi /quiet 
-  - cd ..
+  - mingw-get install mingw-utils
+  - cd "C:\Program Files (x86)\HDF_Group\HDF5\1.8.17\lib"
+  - for dll in 'ls dll/*dll'; do
+  -   def_file='basename $dll .dll'.def
+  -   lib_file=lib'basename $dll dll.dll'.a
+  -   pexports $dll > $def_file
+  -   dlltool -d $def_file -l lib/$lib_file
+  - done
+  - cd "C:\Program Files (x86)\HDF_Group\HDF5\1.8.17\include"
+  - patch -p1 -d /c/swarm < C:/projects/amici/scripts/hdf5-1.8.7-mingw.patch
+  - cd "C:\project\amici"
 
 before_build:
   - set Path=%CD%\%MINGW_DIR%\bin;%HDF5_BINDIR%;%Path%
