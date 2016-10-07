@@ -53,7 +53,9 @@ cd ..\..
 
 cmake CMakeLists.txt -G "MinGW Makefiles"
 
-mingw32-make
+mingw32-make -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 \ 
+-D_POSIX_SOURCE -D_BSD_SOURCE \ 
+-UH5_DEBUG_API -D_HDF5DLL_ 
 
 ls
 
