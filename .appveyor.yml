@@ -24,7 +24,7 @@ install:
   - 7z x -y "%MINGW_ARCHIVE%" > nul
   - 7z x -y "%HDF5_ARCHIVE%" > nul
   - cd hdf5
-  - msiexec /i HDF5-1.8.17-win64.msi /quiet /qn /norestart /log install.log
+  - msiexec /i HDF5-1.8.17-win32.msi /quiet /qn /norestart /log install.log
   - type install.log
   - cd ..
 
