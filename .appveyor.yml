@@ -25,6 +25,7 @@ install:
   - mingw-get install mingw-utils
   - ls 
   - cd "C:\Program Files (x86)\HDF_Group\HDF5\1.8.17\lib"
+  - ls
   - C:\MinGW\msys\1.0\bin\sh C:\projects\amici\scripts\patch-hdf5.sh
   - cd "C:\projects\amici"
 
