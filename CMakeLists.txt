@@ -9,8 +9,6 @@ set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
-set(HDF5_DIR "C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/include")
-set(HDF5_LIB_DIR "C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/include")
 
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
@@ -69,6 +67,17 @@ ${MODEL_DIR}/model_dirac_y.cpp
 ${MODEL_DIR}/model_dirac_z.cpp
 )
 
+find_package( HDF5 REQUIRED )
+find_package( ZLIB REQUIRED )
+
+if(HDF5_FOUND)
+    include_directories( ${HDF5_INCLUDE_DIR} )
+    target_link_libraries( kallisto_core ${HDF5_LIBRARIES} )
+    target_link_libraries( kallisto ${HDF5_LIBRARIES} )
+else()
+    message(FATAL_ERROR "HDF5 not found.")
+endif()
+
 include_directories("${AMICI_DIR}")
 include_directories("${AMICI_DIR}/models/model_dirac")
 include_directories("${AMICI_DIR}/sundials/include")
@@ -82,6 +91,6 @@ include_directories("${HDF5_DIR}")
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread -ldl -lz -L${HDF5_LIB_DIR} -lhdf5_hl -lhdf5 -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread -ldl -lz ${HDF5_LIBRARIES} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
