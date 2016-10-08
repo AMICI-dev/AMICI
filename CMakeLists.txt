@@ -9,8 +9,8 @@ set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
-set(HDF5_DIR "C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/include")
-set(HDF5_LIB_DIR "C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/bin")
+set(HDF5_DIR "/C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/include")
+set(HDF5_LIB_DIR "/C:/Program\ Files\ \(x86\)/HDF_Group/HDF5/1.8.17/bin")
 
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
