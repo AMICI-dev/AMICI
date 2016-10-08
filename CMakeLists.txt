@@ -77,10 +77,12 @@ include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
 
 find_package( HDF5 REQUIRED )
+find_package( ZLIB REQUIRED )
 
 if(HDF5_FOUND)
     include_directories( ${HDF5_INCLUDE_DIR} )
-    set (LINK_LIBS ${LINK_LIBS} ${HDF5_C_STATIC_LIBRARY})
+    set(LIBS ${LIBS} ${HDF5_LIBRARIES})
+    set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
 else()
     message(FATAL_ERROR "HDF5 not found.")
 endif()
@@ -90,6 +92,6 @@ message(STATUS ${LINK_LIBS})
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread  -lhdf5 -lhdf5_hl -lz -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread ${LIBS} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
