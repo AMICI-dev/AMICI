@@ -79,6 +79,7 @@ include_directories("${SUITESPARSE_DIR}/BTF/Include")
 find_package( HDF5 REQUIRED )
 
 if(HDF5_FOUND)
+    message(STATUS  ${HDF5_INCLUDE_DIR})
     include_directories( ${HDF5_INCLUDE_DIR} )
 else()
     message(FATAL_ERROR "HDF5 not found.")
@@ -86,6 +87,8 @@ endif()
 
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
+
+message(STATUS ${HDF5_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}
 "-lpthread  ${HDF5_LIBRARIES} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
