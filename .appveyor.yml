@@ -4,7 +4,7 @@ os: Visual Studio 2015
 
 cache:
   - x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
-  - hdf5-1.8.17-win32-vs2015-shared.zip
+  - hdf5-1.8.17-win64-vs2015-shared.zip
 
 platform:
   - x64
@@ -16,7 +16,7 @@ environment:
     MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
     HDF5_DIR: "C:\\Program Files (x86)\\HDF_Group\\HDF5\\1.8.17"
     HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/extra/hdf5-1.8.17-win64-vs2015-shared.zip
-    HDF5_ARCHIVE: hdf5-1.8.17-win34-vs2015-shared.zip
+    HDF5_ARCHIVE: hdf5-1.8.17-win64-vs2015-shared.zip
   
 install:
   - if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
