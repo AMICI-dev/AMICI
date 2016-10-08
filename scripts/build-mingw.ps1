@@ -77,6 +77,8 @@ cmake CMakeLists.txt `
 
 mingw32-make 
 
+ls
+
 if ( (Test-Path ".\main.exe") -eq $false)
 {
 	throw "build unsuccessfull, model_dirac failed to compile!"
