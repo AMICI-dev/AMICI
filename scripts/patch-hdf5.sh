@@ -3,8 +3,7 @@ cd 'C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/bin/'
 for dll in *.dll; do
 	  base_def=$(basename $dll .dll)
       def_file="${base_def}.def"
-      base_lib=$(basename $dll dll.dll)
-      lib_file="lib${base_lib}.a"
+      lib_file="lib${base_def}.a"
       pexports $dll > $def_file
       dlltool -d $def_file -l $lib_file
 done 
