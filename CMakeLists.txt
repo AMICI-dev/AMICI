@@ -82,6 +82,6 @@ include_directories("${HDF5_DIR}")
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread -ldl -L${HDF5_LIB_DIR} -lz -lhdf5_hl -lhdf5 -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread  -L${HDF5_LIB_DIR} -lz -lhdf5_hl -lhdf5 -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
