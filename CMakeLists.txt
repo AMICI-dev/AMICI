@@ -91,6 +91,6 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 message(STATUS ${HDF5_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread  ${HDF5_LIBRARIES} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread  -L${HDF5_LIBRARY_DIRS} -lhdf5 -lhdf_hl -lz -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
