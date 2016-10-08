@@ -72,7 +72,7 @@ ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/lib"
 ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/include"
 
 cmake CMakeLists.txt `
--DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17\\bin" `
+-DHDF5_DIR="C:\\Program Files\ \(x86\)\\HDF_Group\\HDF5\\1.8.17" `
 -G "MinGW Makefiles"
 
 mingw32-make 
