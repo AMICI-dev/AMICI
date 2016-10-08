@@ -30,7 +30,7 @@ install:
   - cd "C:\projects\amici"
 
 before_build:
-  - set Path="%CD%\%MINGW_DIR%\bin;C:\Program Files\HDF_Group\HDF5\1.8.17;%Path%"
+  - set "Path=%CD%\%MINGW_DIR%\bin;C:\Program Files\HDF_Group\HDF5\1.8.17;%Path%"
 
 build_script:
   - ps: .\scripts\build-mingw.ps1
