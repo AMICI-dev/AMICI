@@ -1,10 +1,3 @@
-$envPaths = $env:Path -split ';'
-
-if ($envPaths -contains 'C:\MinGW\bin') {
-    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\MinGW\bin' }
-    $env:Path = $envPaths -join ';'
-}
-
 cd .\SuiteSparse\SuiteSparse_config
 
 mingw32-make library -e CC="gcc"
@@ -39,13 +32,6 @@ if ($envPaths -contains 'C:\Program Files\Git\usr\bin') {
     $env:Path = $envPaths -join ';'
 }
 
-$envPaths = $env:Path -split ';'
-
-if ($envPaths -contains 'C:\MinGW\msys\1.0\bin') {
-    $envPaths = $envPaths | where { $_ -and $_ -ne 'C:\MinGW\msys\1.0\bin' }
-    $env:Path = $envPaths -join ';'
-}
-
 cmake .. -DCMAKE_INSTALL_PREFIX="C:/projects/amici/build/sundials" `
 -DBUILD_ARKODE=OFF `
 -DBUILD_CVODE=OFF `
@@ -65,18 +51,10 @@ mingw32-make install
 
 cd ..\..
 
-ls "C:/Program Files/HDF_Group/HDF5/1.8.17/bin/"
-ls "C:/Program Files/HDF_Group/HDF5/1.8.17/"
-ls "C:/Program Files/HDF_Group/HDF5/1.8.17/cmake"
-ls "C:/Program Files/HDF_Group/HDF5/1.8.17/lib"
-ls "C:/Program Files/HDF_Group/HDF5/1.8.17/include"
-
 cmake CMakeLists.txt `
 -G "MinGW Makefiles"
 
 mingw32-make 
-
-ls
 
 if ( (Test-Path ".\model_dirac.exe") -eq $false)
 {
