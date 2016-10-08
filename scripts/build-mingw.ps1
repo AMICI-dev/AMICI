@@ -72,14 +72,13 @@ ls "C:/Program Files/HDF_Group/HDF5/1.8.17/lib"
 ls "C:/Program Files/HDF_Group/HDF5/1.8.17/include"
 
 cmake CMakeLists.txt `
--DCMAKE_VERBOSE_MAKEFILE=ON `
 -G "MinGW Makefiles"
 
 mingw32-make 
 
 ls
 
-if ( (Test-Path ".\main.exe") -eq $false)
+if ( (Test-Path ".\model_dirac.exe") -eq $false)
 {
 	throw "build unsuccessfull, model_dirac failed to compile!"
 }
