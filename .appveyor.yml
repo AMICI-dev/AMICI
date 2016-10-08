@@ -15,8 +15,8 @@ environment:
     MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-win32/seh/x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z/download
     MINGW_ARCHIVE: x86_64-4.9.2-release-win32-seh-rt_v4-rev4.7z
     HDF5_DIR: "C:\\Program Files (x86)\\HDF_Group\\HDF5\\1.8.17"
-    HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/extra/hdf5-1.8.17-win32-vs2015-shared.zip
-    HDF5_ARCHIVE: hdf5-1.8.17-win32-vs2015-shared.zip
+    HDF5_URL: https://support.hdfgroup.org/ftp/HDF5/current/bin/windows/extra/hdf5-1.8.17-win64-vs2015-shared.zip
+    HDF5_ARCHIVE: hdf5-1.8.17-win34-vs2015-shared.zip
   
 install:
   - if not exist "%MINGW_ARCHIVE%" appveyor DownloadFile "%MINGW_URL%" -FileName "%MINGW_ARCHIVE%"
@@ -24,7 +24,7 @@ install:
   - 7z x -y "%MINGW_ARCHIVE%" > nul
   - 7z x -y "%HDF5_ARCHIVE%" > nul
   - cd hdf5
-  - msiexec /i HDF5-1.8.17-win32.msi /quiet 
+  - msiexec /i HDF5-1.8.17-win64.msi /quiet 
   - set Path=%path%;C:\MinGW\msys\1.0\bin;C:\MinGW\bin
   - mingw-get update
   - mingw-get install mingw-utils

@@ -65,11 +65,11 @@ mingw32-make install
 
 cd ..\..
 
-ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/bin/"
-ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/"
-ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/cmake"
-ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/lib"
-ls "C:/Program Files (x86)/HDF_Group/HDF5/1.8.17/include"
+ls "C:/Program Files/HDF_Group/HDF5/1.8.17/bin/"
+ls "C:/Program Files/HDF_Group/HDF5/1.8.17/"
+ls "C:/Program Files/HDF_Group/HDF5/1.8.17/cmake"
+ls "C:/Program Files/HDF_Group/HDF5/1.8.17/lib"
+ls "C:/Program Files/HDF_Group/HDF5/1.8.17/include"
 
 cmake CMakeLists.txt `
 -DCMAKE_VERBOSE_MAKEFILE=ON `
