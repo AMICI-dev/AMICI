@@ -67,14 +67,6 @@ ${MODEL_DIR}/model_dirac_y.cpp
 ${MODEL_DIR}/model_dirac_z.cpp
 )
 
-find_package( HDF5 REQUIRED )
-
-if(HDF5_FOUND)
-    include_directories( ${HDF5_INCLUDE_DIR} )
-else()
-    message(FATAL_ERROR "HDF5 not found.")
-endif()
-
 include_directories("${AMICI_DIR}")
 include_directories("${AMICI_DIR}/models/model_dirac")
 include_directories("${AMICI_DIR}/sundials/include")
@@ -83,11 +75,11 @@ include_directories("${SUITESPARSE_DIR}/AMD/Include")
 include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
 include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
-include_directories("${HDF5_DIR}")
+include_directories("${HDF5_DIR}/include")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
-"-lpthread -ldl -lz ${HDF5_LIBRARIES} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread -ldl -lz ${HDF5_DIR}/bin -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
