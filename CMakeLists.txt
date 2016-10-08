@@ -87,11 +87,12 @@ else()
     message(FATAL_ERROR "HDF5 not found.")
 endif()
 
-message(STATUS ${LINK_LIBS})
+message(STATUS ${LIBS})
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
+target_link_libraries(${PROJECT_NAME} ${LIBS})
 target_link_libraries(${PROJECT_NAME}
-"-lpthread ${LIBS} -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
+"-lpthread -L${SUNDIALS_LIB_DIR} -lsundials_cvodes -lsundials_nvecserial -L${SUITESPARSE_LIB_DIR}  -lklu -lbtf -lamd -lcolamd -lsuitesparseconfig"
 "-lm" 
 )
