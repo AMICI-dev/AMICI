@@ -25,12 +25,7 @@ install:
   - 7z x -y "%HDF5_ARCHIVE%" > nul
   - cd hdf5
   - msiexec /i HDF5-1.8.17-win64.msi /quiet 
-  - set Path=%path%;C:\MinGW\msys\1.0\bin;C:\MinGW\bin
-  - mingw-get update
-  - mingw-get install mingw-utils
-  - ls 
   - cd "C:\Program Files\HDF_Group\HDF5\1.8.17\lib"
-  - ls
   - C:\MinGW\msys\1.0\bin\sh C:\projects\amici\scripts\patch-hdf5.sh
   - cd "C:\projects\amici"
 
