@@ -79,7 +79,7 @@ include_directories("${SUITESPARSE_DIR}/BTF/Include")
 find_package( HDF5 REQUIRED )
 find_package( ZLIB REQUIRED )
 
-if(HDF5_LIBRARY)
+if(HDF5_FOUND)
     include_directories( ${HDF5_INCLUDE_DIR} )
     set(LIBS ${LIBS} ${HDF5_LIBRARIES})
     set(LIBS ${LIBS} ${HDF5_HL_LIBRARIES})
@@ -93,7 +93,6 @@ if(ZLIB_FOUND)
 else()
     message(FATAL_ERROR "ZLIB not found.")
 endif()
-
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
