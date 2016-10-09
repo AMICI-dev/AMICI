@@ -76,22 +76,15 @@ include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
 include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
 
-find_library( HDF5_HL_LIBRARY hdf5_hl REQUIRED )
-find_library( HDF5_LIBRARY hdf5 REQUIRED)
+find_package( HDF5 REQUIRED )
 find_package( ZLIB REQUIRED )
 
 if(HDF5_LIBRARY)
     include_directories( ${HDF5_INCLUDE_DIR} )
-    set(LIBS ${LIBS} hdf5)
+    set(LIBS ${LIBS} ${HDF5_LIBRARIES})
+    set(LIBS ${LIBS} ${HDF5_HL_LIBRARIES})
 else()
     message(FATAL_ERROR "HDF5 not found.")
-endif()
-
-if(HDF5_HL_LIBRARY)
-    include_directories( ${HDF5_HL_INCLUDE_DIR} )
-    set(LIBS ${LIBS} hdf5_hl)
-else()
-    message(FATAL_ERROR "HDF5_HL not found.")
 endif()
 
 if(ZLIB_FOUND)
@@ -101,8 +94,6 @@ else()
     message(FATAL_ERROR "ZLIB not found.")
 endif()
 
-
-message(STATUS ${LIBS})
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
