@@ -2448,7 +2448,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         if(ami_mem) AMIFree(&ami_mem);
     }
 
-    if(tdata) delete[] tdata;
+    if(tdata) delete tdata;
 }
 
 #ifdef AMICI_WITHOUT_MATLAB
