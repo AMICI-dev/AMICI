@@ -20,7 +20,7 @@ typedef struct edata {
     double *am_zsigma;
     
     /** boolean indicating whether experimental data was provided */
-    booleantype am_bexpdata;
+    bool am_bexpdata;
     
 	} ExpData;
 
