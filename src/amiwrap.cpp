@@ -36,15 +36,13 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    void *ami_mem; /* pointer to cvodes memory block */
-    UserData *udata; /* user data */
-    ReturnData *rdata; /* return data */
-    ExpData *edata; /* experimental data */
-    TempData *tdata; /* temporary data */
-    int status; /* general status flag */
+    void *ami_mem = nullptr; /* pointer to cvodes memory block */
+    UserData *udata = nullptr; /* user data */
+    ReturnData *rdata = nullptr; /* return data */
+    ExpData *edata = nullptr; /* experimental data */
+    TempData *tdata = nullptr; /* temporary data */
+    int status = 0; /* general status flag */
     double *pstatus; /* return status flag */
-    
-    realtype tlastroot; /* storage for last found root */
 
     int iroot = 0;
     booleantype setupBdone = false;
@@ -100,5 +98,6 @@ freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     freeUserData(udata);
+    delete edata;
     *pstatus = (double) status;
 }
