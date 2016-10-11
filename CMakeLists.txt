@@ -12,7 +12,6 @@ set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
 
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
-${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
@@ -65,6 +64,7 @@ ${MODEL_DIR}/model_dirac_xBdot.cpp
 ${MODEL_DIR}/model_dirac_xdot.cpp
 ${MODEL_DIR}/model_dirac_y.cpp
 ${MODEL_DIR}/model_dirac_z.cpp
+${MODEL_DIR}/wrapfunctions.cpp
 )
 
 include_directories("${AMICI_DIR}")

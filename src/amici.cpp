@@ -438,78 +438,95 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     edata = new ExpData();
     if (edata == NULL) return(NULL);
     
-    if (!prhs[8]) {
-        errMsgIdAndTxt("AMICI:mex:data","No data provided!");
-    }
-    if (mxGetProperty(prhs[8], 0 ,"Y")) {
-        my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
-        nmyy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Y"));
-        nmyt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Y"));
+    if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
+        b_expdata = FALSE;
+        if(sensi>0 && sensi_meth == AMI_ASA) {
+            errMsgIdAndTxt("AMICI:mex:data","No data provied!");
+            return NULL;
+        }
     } else {
-        errMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
-    }
-    
-    if (mxGetProperty(prhs[8], 0 ,"Sigma_Y")) {
-        ysigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
-        nysigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
-        nysigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
-    } else {
-        errMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
-    }
-    if (mxGetProperty(prhs[8], 0 ,"Z")) {
-        mz = mxGetPr(mxGetProperty(prhs[8], 0 ,"Z"));
-        nmzy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Z"));
-        nmzt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Z"));
-    } else {
-        errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
-    }
-    
-    if (mxGetProperty(prhs[8], 0 ,"Sigma_Z")) {
-        zsigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
-        nzsigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
-        nzsigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
-    } else {
-        errMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
-    }
-    
-    if (nmyt != nt) {
-        sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
-        errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
-    }
-    
-    if (nysigmat != nt) {
-        sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
-        errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
-    }
-    
-    if (nmyy != nytrue) {
-        sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
-        errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
-    }
-    
-    if (nysigmay != nytrue) {
-        sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
-        errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
-    }
-    
-    if (nmzt != nmaxevent) {
-        sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
-        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
-    }
-    
-    if (nzsigmat != nmaxevent) {
-        sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
-        errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
-    }
-    
-    if (nmzy != nztrue) {
-        sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
-        errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
-    }
-    
-    if (nzsigmay != nztrue) {
-        sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
-        errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
+        if (mxGetProperty(prhs[8], 0 ,"Y")) {
+            my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
+            nmyy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Y"));
+            nmyt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Y"));
+        } else {
+            errMsgIdAndTxt("AMICI:mex:data:Y","Field Y not specified as field in data struct!");
+            return NULL;
+        }
+        
+        if (mxGetProperty(prhs[8], 0 ,"Sigma_Y")) {
+            ysigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
+            nysigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
+            nysigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Y"));
+        } else {
+            errMsgIdAndTxt("AMICI:mex:data:Sigma_Y","Field Sigma_Y not specified as field in data struct!");
+            return NULL;
+        }
+        if (mxGetProperty(prhs[8], 0 ,"Z")) {
+            mz = mxGetPr(mxGetProperty(prhs[8], 0 ,"Z"));
+            nmzy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Z"));
+            nmzt = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Z"));
+        } else {
+            errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
+            return NULL;
+        }
+        
+        if (mxGetProperty(prhs[8], 0 ,"Sigma_Z")) {
+            zsigma = mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
+            nzsigmay = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
+            nzsigmat = (int) mxGetM(mxGetProperty(prhs[8], 0 ,"Sigma_Z"));
+        } else {
+            errMsgIdAndTxt("AMICI:mex:data:Sigma_Z","Field Sigma_Z not specified as field in data struct!");
+            return NULL;
+        }
+        
+        if (nmyt != nt) {
+            sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
+            errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
+            return NULL;
+        }
+        
+        if (nysigmat != nt) {
+            sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
+            errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
+            return NULL;
+        }
+        
+        if (nmyy != nytrue) {
+            sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
+            errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
+            return NULL;
+        }
+        
+        if (nysigmay != nytrue) {
+            sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
+            errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
+            return NULL;
+        }
+        
+        if (nmzt != nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
+            errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
+            return NULL;
+        }
+        
+        if (nzsigmat != nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
+            errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
+            return NULL;
+        }
+        
+        if (nmzy != nztrue) {
+            sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
+            errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
+            return NULL;
+        }
+        
+        if (nzsigmay != nztrue) {
+            sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
+            errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
+            return NULL;
+        }
     }
     
     return(edata);
@@ -1047,19 +1064,27 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
             }
         }
     }
+    
     for (iy=0; iy<nytrue; iy++) {
-        if (amiIsNaN(ysigma[iy*nt+it])) {
-            *status = fdsigma_ydp(t,dsigma_ydp,udata);
-            if (*status != AMI_SUCCESS) return;
+        if(b_expdata){
+            if (amiIsNaN(ysigma[iy*nt+it])) {
+                *status = fdsigma_ydp(t,dsigma_ydp,udata);
+                if (*status != AMI_SUCCESS) return;
+            } else {
+                for (ip=0; ip<np; ip++) {
+                    dsigma_ydp[ip*ny+iy] = 0;
+                }
+            }
+            for (ip=0; ip<np; ip++) {
+                ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
+            }
         } else {
             for (ip=0; ip<np; ip++) {
-                dsigma_ydp[ip*ny+iy] = 0;
+                ssigmaydata[it + nt*(ip*ny+iy)] = amiGetNaN();
             }
         }
-        for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
-        }
     }
+    
     fdydx(ts[it],it,dydx,x,udata);
     fdydp(ts[it],it,dydp,x,udata);
     fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
@@ -1132,19 +1157,21 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
     *status = fy(ts[it],it,ydata,x,udata);
     if (*status != AMI_SUCCESS) return;
     
-    for (iy=0; iy<nytrue; iy++) {
-        /* extract the value for the standard deviation, if the data value is NaN, use
-         the parameter value. Store this value in the return struct */
-        if (amiIsNaN(ysigma[iy*nt+it])) {
-            *status =fsigma_y(t,sigma_y,udata);
-            if (*status != AMI_SUCCESS) return;
-            
-        } else {
-            sigma_y[iy] = ysigma[iy*nt+it];
+    if(b_expdata) {
+        for (iy=0; iy<nytrue; iy++) {
+            /* extract the value for the standard deviation, if the data value is NaN, use
+             the parameter value. Store this value in the return struct */
+            if (amiIsNaN(ysigma[iy*nt+it])) {
+                *status =fsigma_y(t,sigma_y,udata);
+                if (*status != AMI_SUCCESS) return;
+                
+            } else {
+                sigma_y[iy] = ysigma[iy*nt+it];
+            }
+            sigmaydata[iy*nt+it] = sigma_y[iy];
         }
-        sigmaydata[iy*nt+it] = sigma_y[iy];
+        fJy(t,it,g,ydata,x,my,sigma_y,udata);
     }
-    fJy(t,it,g,ydata,x,my,sigma_y,udata);
     if (sensi >= 1) {
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -1311,14 +1338,15 @@ void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, Retu
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-    int iz;
-    
-    for (iz=0; iz<nztrue; iz++) {
-        if(z2event[iz]-1 == ie) {
-            getEventSigma(status, ie, iz, ami_mem, udata, rdata, edata, tdata);
-            if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
-                r[0] += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
-                *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+    if(b_expdata) {
+        int iz;
+        for (iz=0; iz<nztrue; iz++) {
+            if(z2event[iz]-1 == ie) {
+                getEventSigma(status, ie, iz, ami_mem, udata, rdata, edata, tdata);
+                if(!amiIsNaN(mz[iz*nmaxevent+nroots[ie]])) {
+                    r[0] += 0.5*log(2*pi*pow(zsigma[nroots[ie] + nmaxevent*iz],2)) + 0.5*pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                    *chi2data += pow( ( zdata[nroots[ie] + nmaxevent*iz] - mz[nroots[ie] + nmaxevent*iz] )/zsigma[iz] , 2);
+                }
             }
         }
     }
@@ -2321,8 +2349,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     }
     
     /* evaluate likelihood */
-    
-    *llhdata = - g[0] - r[0];
+    if(b_expdata) {
+        *llhdata = - g[0] - r[0];
+    } else {
+        *llhdata = amiGetNaN();
+    }
     
     return 0;
 }
@@ -2361,26 +2392,25 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 
         DestroyMat(Jtmp);
         if (ne>0) {
-            if(ami_mem) delete rootsfound;
-            if(ami_mem) delete rootvals;
-            if(ami_mem) delete rootidx;
-            if(ami_mem) delete sigma_z;
-            if(ami_mem) delete nroots;
-            if(ami_mem) delete discs;
-            if(ami_mem) delete h;
+            if(ami_mem) delete[] rootsfound;
+            if(ami_mem) delete[] rootvals;
+            if(ami_mem) delete[] rootidx;
+            if(ami_mem) delete[] sigma_z;
+            if(ami_mem) delete[] nroots;
+            if(ami_mem) delete[] discs;
 
-            if(ami_mem) delete deltax;
-            if(ami_mem) delete deltasx;
-            if(ami_mem) delete deltaxB;
-            if(ami_mem) delete deltaqB;
+            if(ami_mem) delete[] deltax;
+            if(ami_mem) delete[] deltasx;
+            if(ami_mem) delete[] deltaxB;
+            if(ami_mem) delete[] deltaqB;
         }
 
         if(ny>0) {
             if(sigma_y)    delete[] sigma_y;
         }
         if (sensi >= 1) {
-            if(ami_mem) delete dydx;
-            if(ami_mem) delete dydp;
+            if(ami_mem) delete[] dydx;
+            if(ami_mem) delete[] dydp;
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
@@ -2394,18 +2424,18 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem) delete dgdp;
-                if(ami_mem) delete dgdx;
-                if(ami_mem) delete drdp;
-                if(ami_mem) delete drdx;
+                if(ami_mem) delete[] dgdp;
+                if(ami_mem) delete[] dgdx;
+                if(ami_mem) delete[] drdp;
+                if(ami_mem) delete[] drdx;
                 if (ne>0) {
-                    if(ami_mem) delete dzdp;
-                    if(ami_mem) delete dzdx;
+                    if(ami_mem) delete[] dzdp;
+                    if(ami_mem) delete[] dzdx;
                 }
-                if(ami_mem) delete llhS0;
-                if(ami_mem) delete dsigma_ydp;
+                if(ami_mem) delete[] llhS0;
+                if(ami_mem) delete[] dsigma_ydp;
                 if (ne>0) {
-                    if(ami_mem) delete dsigma_zdp;
+                    if(ami_mem) delete[] dsigma_zdp;
                 }
                 if(setupBdone) N_VDestroy_Serial(dxB);
                 if(setupBdone) N_VDestroy_Serial(xB);

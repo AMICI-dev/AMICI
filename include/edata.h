@@ -17,12 +17,13 @@ typedef struct edata {
     /** observed events */
     double *am_mz; 
     /** standard deviation of observed events */
-    double *am_zsigma; 
+    double *am_zsigma;
+    
+    /** boolean indicating whether experimental data was provided */
+    bool am_bexpdata;
     
 	} ExpData;
 
-#ifdef AMICI_WITHOUT_MATLAB
 EXTERNC void freeExpData(ExpData *edata);
-#endif
 
 #endif /* _MY_EDATA */

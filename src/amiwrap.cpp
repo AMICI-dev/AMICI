@@ -36,28 +36,23 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    void *ami_mem; /* pointer to cvodes memory block */
-    UserData *udata; /* user data */
-    ReturnData *rdata; /* return data */
-    ExpData *edata; /* experimental data */
-    TempData *tdata; /* temporary data */
-    int status; /* general status flag */
+    void *ami_mem = nullptr; /* pointer to cvodes memory block */
+    UserData *udata = nullptr; /* user data */
+    ReturnData *rdata = nullptr; /* return data */
+    ExpData *edata = nullptr; /* experimental data */
+    TempData *tdata = nullptr; /* temporary data */
+    int status = 0; /* general status flag */
     double *pstatus; /* return status flag */
-    
-    realtype tlastroot; /* storage for last found root */
-    int iroot;
-    double tnext;
-    booleantype silent;
+
+    int iroot = 0;
     booleantype setupBdone = false;
 
-    iroot = 0;
-    
     pstatus = (double *) mxMalloc(sizeof(double));
     
     udata = setupUserData(prhs);
     if (udata == NULL) {
-        /* goto freturn will fail here */
-        *pstatus = -99;
+        /* goto freturn will fail here as freeXXXXData routines will fail*/
+        *pstatus = -98;
         return;
     }
     
@@ -71,25 +66,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     if (nx>0) {
         ami_mem = setupAMI(&status, udata, tdata);
-        if (ami_mem == NULL) goto freturn;
+        if (ami_mem == NULL){
+            status = -96;
+            goto freturn;
+        }
     }
 
     rdata = setupReturnData(plhs, udata, pstatus);
-    if (rdata == NULL) goto freturn;
+    if (rdata == NULL) {
+        status = -96;
+        goto freturn;
+    }
+    
     
     if (nx>0) {
         edata = setupExpData(prhs, udata);
-        if (edata == NULL) goto freturn;
+        if (edata == NULL) {
+            status = -97;
+            goto freturn;
+        }
     }
     
-    status = workForwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot);
-    if(status)
-        goto freturn;
+    if(nx>0) {
+        status = workForwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot);
+        if(status<0) goto freturn;
 
-    status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
+        status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
+    }
 
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    freeUserData(udata);
+    delete edata;
     *pstatus = (double) status;
 }
