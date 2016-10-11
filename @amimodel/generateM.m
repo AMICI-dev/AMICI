@@ -298,7 +298,7 @@ fprintf(fid,['if(nargin>=4)\n']);
 fprintf(fid,['    if(isempty(varargin{4}));\n']);
 fprintf(fid,['        data=[];\n']);
 fprintf(fid,['    else\n']);
-fprintf(fid,['        if(isa(vargargin{4},''amidata''));\n']);
+fprintf(fid,['        if(isa(varargin{4},''amidata''));\n']);
 fprintf(fid,['             data=varargin{4};\n']);
 fprintf(fid,['        else\n']);
 fprintf(fid,['            data=amidata(varargin{4});\n']);

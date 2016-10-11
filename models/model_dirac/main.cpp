@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     const char *hdffile;
 
     if(argc != 2) {
-        fprintf(stderr, "Error: must provide input file as first and only argument.");
+        fprintf(stderr, "Error: must provide input file as first and only argument.\n");
         return 1;
     } else {
         hdffile = argv[1];

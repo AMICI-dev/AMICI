@@ -4,10 +4,10 @@ set(cmake_build_type Debug)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
-set(AMICI_DIR "/home/dweindl/src/AMICI.github/")
+set(AMICI_DIR "/Users/F.Froehlich/Documents/MATLAB/AMICI")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
-set(SUITESPARSE_LIB_DIR "/home/dweindl/src/_libs/SuiteSparse/")
-set(SUNDIALS_LIB_DIR "/home/dweindl/src/_libs/sundials-2.6.2/build/install/lib/")
+set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")
+set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")
 set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")
 set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")
 
@@ -19,6 +19,7 @@ ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
 ${AMICI_DIR}/src/edata.cpp
+${AMICI_DIR}/src/ami_hdf5.cpp
 model_dirac_J.cpp
 model_dirac_JB.cpp
 model_dirac_JBand.cpp
@@ -69,12 +70,13 @@ model_dirac_z.cpp
 
 include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${AMICI_DIR}/sundials-2.6.2/include")
+include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${SUITESPARSE_DIR}/KLU/Include")
 include_directories("${SUITESPARSE_DIR}/AMD/Include")
 include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
 include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
+include_directories("/usr/include/hdf5/serial/")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
