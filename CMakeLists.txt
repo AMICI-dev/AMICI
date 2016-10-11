@@ -13,6 +13,7 @@ set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
 set(SRC_LIST
 ${MODEL_DIR}/main.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
+${AMICI_DIR}/src/spline.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
@@ -81,13 +82,14 @@ find_package( ZLIB REQUIRED )
 
 if(HDF5_FOUND)
     include_directories( ${HDF5_INCLUDE_DIR} )
+    include_directories( ${HDF5_INCLUDE_DIRS} )
     message(STATUS "Found HDF5_HL ${HDF5_HL_LIBRARIES}")
     set(LIBS ${LIBS} ${HDF5_LIBRARIES})
-    if(UNIX)
+    if(UNIX AND NOT APPLE)
     	set(LIBS ${LIBS} "-lhdf5_hl")
-    else(UNIX)
+    else(UNIX AND NOT APPLE)
     	set(LIBS ${LIBS} ${HDF5_HL_LIBRARIES})
-    endif(UNIX)
+    endif(UNIX AND NOT APPLE)
 else(HDF5_FOUND)
     message(FATAL_ERROR "HDF5 not found.")
 endif(HDF5_FOUND)
