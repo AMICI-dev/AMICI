@@ -123,73 +123,81 @@ classdef amimodel < handle
             %
             % Return values:
             %  AM: model definition object
-            if(isa(symfun,'char'))
-                model = eval(symfun);
-            elseif(isa(symfun,'struct'))
-                model = symfun;
+            if(isa(symfun,'amimodel'))
+                AM = symfun;
             else
-                error('invalid input symfun')
-            end
-            
-            if(isfield(model,'sym'))
-                AM.sym = model.sym;
-            else
-                error('symbolic definitions missing in struct returned by symfun')
-            end
-            
-            
-            
-            props = fields(model);
-            
-            for j = 1:length(props)
-                if(~strcmp(props{j},'sym')) % we already checked for the sym field
-                    if(isfield(model,props{j}))
-                        try
-                        AM.(props{j}) = model.(props{j});
-                        catch
-                            error(['The provided model struct or the struct created by the provided model function has the field ' props{j} ' which is not a valid property of ' ...
-                                'the amimodel class. Please check your model definition.']);
+                if(isa(symfun,'char'))
+                    try
+                        model = eval(symfun);
+                    catch
+                        error(['"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
+                    end
+                elseif(isa(symfun,'struct'))
+                    model = symfun;
+                else
+                    error('invalid input symfun')
+                end
+                
+                if(isfield(model,'sym'))
+                    AM.sym = model.sym;
+                else
+                    error('symbolic definitions missing in struct returned by symfun')
+                end
+                
+                
+                
+                props = fields(model);
+                
+                for j = 1:length(props)
+                    if(~strcmp(props{j},'sym')) % we already checked for the sym field
+                        if(isfield(model,props{j}))
+                            try
+                                AM.(props{j}) = model.(props{j});
+                            catch
+                                error(['The provided model struct or the struct created by the provided model function has the field ' props{j} ' which is not a valid property of ' ...
+                                    'the amimodel class. Please check your model definition.']);
+                            end
+                        end
+                    else
+                        AM.makeSyms();
+                        AM.nx = length(AM.sym.x);
+                        if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
+                            AM.nxtrue = AM.nx;
+                        end
+                        AM.ng = round(AM.nx / AM.nxtrue);
+                        AM.np = length(AM.sym.p);
+                        AM.nk = length(AM.sym.k);
+                        AM.ny = length(AM.sym.y);
+                        if(isempty(AM.nytrue)) % if its not empty we are dealing with an augmented model
+                            AM.nytrue = AM.ny;
                         end
                     end
+                end
+                
+                AM.modelname = modelname;
+                % set path and create folder
+                AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
+                if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
+                    mkdir(fullfile(AM.wrap_path,'models'));
+                    mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
                 else
-                    AM.makeSyms();
-                    AM.nx = length(AM.sym.x);
-                    if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
-                        AM.nxtrue = AM.nx;
-                    end
-                    AM.ng = round(AM.nx / AM.nxtrue);
-                    AM.np = length(AM.sym.p);
-                    AM.nk = length(AM.sym.k);
-                    AM.ny = length(AM.sym.y);
-                    if(isempty(AM.nytrue)) % if its not empty we are dealing with an augmented model
-                        AM.nytrue = AM.ny;
+                    if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
+                        mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
                     end
                 end
-            end
-            
-            AM.modelname = modelname;
-            % set path and create folder
-            AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
-            if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
-                mkdir(fullfile(AM.wrap_path,'models'));
-                mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
-            else
-                if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
-                    mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
+                AM.makeEvents();
+                AM.nz = length([AM.event.z]);
+                if(isempty(AM.nztrue))
+                    AM.nztrue = AM.nz;
                 end
-            end
-            AM.makeEvents();
-            AM.nz = length([AM.event.z]);
-            if(isempty(AM.nztrue))
-                AM.nztrue = AM.nz;
-            end
-            AM.nevent = length(AM.event);
-            
-            % check whether we have a DAE or ODE
-            if(isfield(AM.sym,'M'))
-                AM.wtype = 'iw'; % DAE
-            else
-                AM.wtype = 'cw'; % ODE
+                AM.nevent = length(AM.event);
+                
+                % check whether we have a DAE or ODE
+                if(isfield(AM.sym,'M'))
+                    AM.wtype = 'iw'; % DAE
+                else
+                    AM.wtype = 'cw'; % ODE
+                end
             end
         end
         
