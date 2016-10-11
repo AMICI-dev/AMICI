@@ -445,6 +445,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
             return NULL;
         }
     } else {
+        b_expdata = TRUE;
         if (mxGetProperty(prhs[8], 0 ,"Y")) {
             my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
             nmyy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Y"));
