@@ -428,10 +428,9 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
     
     char *errmsg;
+    errmsg = new char[200]();
     
     ExpData *edata; /* returned rdata struct */
-    
-    errmsg = new char[200]();
     
     
     /* Return edata structure */
@@ -529,6 +528,8 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
             return NULL;
         }
     }
+    
+    delete[] errmsg;
     
     return(edata);
 }
@@ -2393,25 +2394,30 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 
         DestroyMat(Jtmp);
         if (ne>0) {
-            if(ami_mem) delete[] rootsfound;
-            if(ami_mem) delete[] rootvals;
-            if(ami_mem) delete[] rootidx;
-            if(ami_mem) delete[] sigma_z;
-            if(ami_mem) delete[] nroots;
-            if(ami_mem) delete[] discs;
+            if(rootsfound) delete[] rootsfound;
+            if(rootvals) delete[] rootvals;
+            if(rootidx) delete[] rootidx;
+            if(sigma_z) delete[] sigma_z;
+            if(nroots) delete[] nroots;
+            if(discs) delete[] discs;
 
-            if(ami_mem) delete[] deltax;
-            if(ami_mem) delete[] deltasx;
-            if(ami_mem) delete[] deltaxB;
-            if(ami_mem) delete[] deltaqB;
+            if(deltax) delete[] deltax;
+            if(deltasx) delete[] deltasx;
+            if(deltaxB) delete[] deltaxB;
+            if(deltaqB) delete[] deltaqB;
+            if(h_tmp) delete[] h_tmp;
         }
 
         if(ny>0) {
             if(sigma_y)    delete[] sigma_y;
         }
         if (sensi >= 1) {
-            if(ami_mem) delete[] dydx;
-            if(ami_mem) delete[] dydp;
+            if(dydx) delete[] dydx;
+            if(dydp) delete[] dydp;
+            if(dsigma_ydp) delete[] dsigma_ydp;
+            if (ne>0) {
+                if(dsigma_zdp) delete[] dsigma_zdp;
+            }
             if (sensi_meth == AMI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,np);
             }
@@ -2430,14 +2436,10 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
                 if(ami_mem) delete[] drdp;
                 if(ami_mem) delete[] drdx;
                 if (ne>0) {
-                    if(ami_mem) delete[] dzdp;
-                    if(ami_mem) delete[] dzdx;
+                    if(dzdp) delete[] dzdp;
+                    if(dzdx) delete[] dzdx;
                 }
-                if(ami_mem) delete[] llhS0;
-                if(ami_mem) delete[] dsigma_ydp;
-                if (ne>0) {
-                    if(ami_mem) delete[] dsigma_zdp;
-                }
+                if(llhS0) delete[] llhS0;
                 if(setupBdone) N_VDestroy_Serial(dxB);
                 if(setupBdone) N_VDestroy_Serial(xB);
                 if(setupBdone) N_VDestroy_Serial(xB_old);

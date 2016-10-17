@@ -5,7 +5,6 @@ void freeUserData(UserData *udata) {
     if(udata) {
 #ifdef AMICI_WITHOUT_MATLAB
         if(qpositivex) delete[] qpositivex;
-        if(plist) delete[] plist;
         if(p) delete[] p;
         if(k) delete[] k;
         if(ts) delete[] ts;
@@ -15,6 +14,7 @@ void freeUserData(UserData *udata) {
         if(sx0data) delete sx0data;
         if(z2event) delete[] z2event;
 #endif
+        if(plist) delete[] plist;
         if(h) delete[] h;
         if(tmp_dxdotdp) delete[] tmp_dxdotdp;
         if(w_tmp) delete[] w_tmp;
