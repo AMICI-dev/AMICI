@@ -185,8 +185,6 @@ fprintf(fid,'end\n');
 fprintf(fid,'\n');
 
 fprintf(fid,'\n');
-fprintf(fid,'pbar = ones(size(theta));\n');
-fprintf(fid,'pbar(pbar==0) = 1;\n');
 fprintf(fid,'xscale = [];\n');
 fprintf(fid,'if(nargin>=5)\n');
 fprintf(fid,'    if(isa(varargin{5},''amioption''))\n');
@@ -208,6 +206,14 @@ if(o2flag > 0)
 end
 fprintf(fid,'end\n');
 fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
+fprintf(fid,'\n');
+fprintf(fid,'if(~isempty(options_ami.pbar))\n');
+fprintf(fid,'    pbar = options_ami.pbar;\n');
+fprintf(fid,'else\n');
+fprintf(fid,'    pbar = ones(size(theta));\n');
+fprintf(fid,'end\n');
+fprintf(fid,'\n');
+
 
 switch (this.param)
     case 'log'
