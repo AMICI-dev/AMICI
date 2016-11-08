@@ -5,6 +5,7 @@
 #define EXTERNC extern "C"
 #else
 #define EXTERNC
+#include <stdbool.h>
 #endif
 
 /** @brief struct that carries all information about experimental data */
@@ -22,7 +23,7 @@ typedef struct edata {
     /** boolean indicating whether experimental data was provided */
     bool am_bexpdata;
     
-	} ExpData;
+} ExpData;
 
 EXTERNC void freeExpData(ExpData *edata);
 
