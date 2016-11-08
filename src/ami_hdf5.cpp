@@ -242,7 +242,6 @@ void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
     H5LTset_attribute_double(file_id, solutionsObject, "xdot", xdotdata, nx);
     H5LTset_attribute_double(file_id, solutionsObject, "llh", llhdata, 1);
     H5LTset_attribute_double(file_id, solutionsObject, "sllh", sllhdata, np);
-
     // are double, but should write as int:
     setAttributeIntFromDouble(file_id, solutionsObject, "numsteps", numstepsdata, nt);
     setAttributeIntFromDouble(file_id, solutionsObject, "numrhsevals", numrhsevalsdata, nt);
@@ -251,7 +250,6 @@ void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
         setAttributeIntFromDouble(file_id, solutionsObject, "numstepsS", numstepsSdata, nt);
     if(numrhsevalsSdata)
         setAttributeIntFromDouble(file_id, solutionsObject, "numrhsevalsS", numrhsevalsSdata, nt);
-
     createAndWriteDouble2DAttribute(dataset, "J", Jdata, nx, nx);
     createAndWriteDouble2DAttribute(dataset, "x", xdata, nt, nx);
     createAndWriteDouble2DAttribute(dataset, "y", ydata, nt, ny);
@@ -417,6 +415,11 @@ void getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* 
 
 // option for overwrite
 void createAndWriteDouble2DAttribute(hid_t dataset, const char *attributeName, const double *buffer, hsize_t m, hsize_t n) {
+    if(m * n > 1e4) {
+        printf("Warning: not saving '%s', %llux%llu too large for attribute.\n", attributeName, m, n);
+        return;
+    }
+
     const hsize_t adims[] = {m, n};
 
     if(H5Aexists(dataset, attributeName) > 0) {
