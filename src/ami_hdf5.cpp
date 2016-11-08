@@ -1,4 +1,6 @@
-#include<assert.h>
+#include <assert.h>
+#include <execinfo.h>
+#include <unistd.h>
 
 #include "ami_hdf5.h"
 #include "wrapfunctions.h"
@@ -213,6 +215,8 @@ ExpData *readSimulationExpData(const char* hdffile, UserData *udata) {
     }
     H5Fclose(file_id);
 
+    b_expdata = TRUE;
+
     return(edata);
 }
 
@@ -342,12 +346,23 @@ int getIntScalarAttribute(hid_t file_id, const char* optionsObject, const char* 
 void getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length) {
     H5T_class_t type_class;
     size_t type_size;
-    H5LTget_attribute_info(file_id, optionsObject, attributeName, length, &type_class, &type_size);
+    herr_t status;
+    status = H5LTget_attribute_info(file_id, optionsObject, attributeName, length, &type_class, &type_size);
+    if(status < 0) {
+        fprintf(stderr, "Error in getDoubleArrayAttribute: Cannot read attribute '%s' of '%s'\n", attributeName, optionsObject);
+        void *array[10];
+        size_t size;
+        size = backtrace(array, 10);
+        backtrace_symbols_fd(array, size, STDERR_FILENO);
+    }
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);
 #endif
     *destination = new double[*length]; // vs. type_size
-    H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
+    status = H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
+    if(status < 0)
+        fprintf(stderr, "Error in getDoubleArrayAttribute: Cannot read attribute '%s' of '%s'\n", attributeName, optionsObject);
+
 #ifdef AMI_HDF5_H_DEBUG
     printfArray(*destination, *length, "%e ");
     printf("\n");
@@ -394,10 +409,6 @@ void getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* 
 #endif
     *destination = (int*) malloc(sizeof(int) * (*length));
     H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
-#ifdef AMI_HDF5_H_DEBUG
-    printfArray(*destination, *length, "%d ");
-    printf("\n");
-#endif
 }
 
 // option for overwrite
