@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
 #ifndef M_PI /* define PI if we still have no definition */
@@ -127,6 +128,8 @@ return(NULL); \
 
 #ifdef AMICI_WITHOUT_MATLAB
     typedef double mxArray;
+    void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
+    static void VXy(double *V, const double *X, const double y, int n);
 #endif
 
 /** return value for successful execution */
@@ -2538,6 +2541,7 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
     return(rdata);
 }
 
+
 ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
     /**
      * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
@@ -2547,6 +2551,25 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
      * @param[out] pstatus flag indicating success of execution @type *int
      * @return rdata data struct with simulation results @type ReturnData
      */
+    double *originalParams = 0;
+
+    if(udata->am_pscale != AMI_SCALING_NONE) {
+        originalParams = (double *) malloc(sizeof(double) * np);
+        memcpy(originalParams, p, sizeof(double) * np);
+
+        switch(udata->am_pscale) {
+        case AMI_SCALING_LOG10:
+            for(int i = 0; i < np; ++i) {
+                p[i] = pow(10, p[i]);
+            }
+            break;
+        case AMI_SCALING_LN:
+            for(int i = 0; i < np; ++i)
+                p[i] = exp(p[i]);
+            break;
+        }
+    }
+
     int iroot = 0;
     booleantype setupBdone = false;
     *pstatus = 0;
@@ -2556,7 +2579,7 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     void *ami_mem = 0; /* pointer to cvodes memory block */
     if (tdata == NULL) goto freturn;
 
-    
+
     if (nx>0) {
         ami_mem = setupAMI(pstatus, udata, tdata);
         if (ami_mem == NULL) goto freturn;
@@ -2568,23 +2591,109 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     if (nx>0) {
         if (edata == NULL) goto freturn;
     }
-    
+
     *pstatus = 0;
-    
+
     problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
     if(problem)
         goto freturn;
 
-    
+
     problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
     if(problem)
         goto freturn;
 
+    applyChainRuleFactorToSimulationResults(udata, rdata);
+
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+
+    if(originalParams) {
+        memcpy(p, originalParams, sizeof(double) * np);
+        free(originalParams);
+    }
+
     return rdata;
 }
+
+void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata)
+{
+    // postprocessing from simulate____.m file
+
+    if(udata->am_pscale == AMI_SCALING_NONE)
+        return;
+
+    // chain-rule factor: multiplier for am_p
+    double coefficient;
+
+    switch(udata->am_pscale) {
+    case AMI_SCALING_LOG10:
+        coefficient = log(10);
+        break;
+    case AMI_SCALING_LN:
+        coefficient = 1.0;
+        break;
+    }
+
+    if(sensi > 0) {
+        //        sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
+        // TODO ignores options_ami.sens_ind, assumes sensitivities are calculated for all states
+        if(rdata->am_sllhdata)
+            VXy(rdata->am_sllhdata, udata->am_p, coefficient, np);
+
+        //        sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+        // TODO: why sxdata not set?
+        if(rdata->am_sxdata)
+            VXy(rdata->am_sxdata, udata->am_p, coefficient, np);
+
+        //        sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+        if(rdata->am_sydata)
+            VXy(rdata->am_sydata, udata->am_p, coefficient, np);
+
+        //        sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+        if(rdata->am_szdata)
+            VXy(rdata->am_szdata, udata->am_p, coefficient, np);
+
+        //        sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+        if(rdata->am_ssigmaydata)
+            VXy(rdata->am_ssigmaydata, udata->am_p, coefficient, np);
+
+        //        sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
+        if(rdata->am_ssigmazdata)
+            VXy(rdata->am_ssigmazdata, udata->am_p, coefficient, np);
+    }
+
+    if(sensi_meth == AMI_SS) {
+        //        sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
+        if(rdata->am_dxdotdpdata)
+            VXy(rdata->am_dxdotdpdata, udata->am_p, coefficient, np);
+
+        //        sol.dydp = bsxfun(@times,sol.dydp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
+        if(rdata->am_dydpdata)
+            VXy(rdata->am_dydpdata, udata->am_p, coefficient, np);
+
+        // TODO For steady state sensitivities
+        //        sol.sx = -sol.J\sol.dxdotdp;
+        if(rdata->am_sxdata)
+            assert(2 == 1);
+
+        //        sol.sy = sol.dydx*sol.sx + sol.dydp;
+        if(rdata->am_sydata)
+            assert(2 == 1);
+    }
+}
+
+/*
+ * Calculate vector V = V * X * y
+ */
+static void VXy(double *V, const double *X, const double y, int n) {
+    while(n--) {
+        *V = (*V) * (*X) * y;
+        ++V; ++X;
+    }
+}
+
 #endif
 void processUserData(UserData *udata) {
     /**
