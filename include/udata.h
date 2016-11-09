@@ -14,6 +14,10 @@
 #define EXTERNC
 #endif
 
+typedef enum AMI_parameter_scaling_TAG {
+    AMI_SCALING_NONE, AMI_SCALING_LN, AMI_SCALING_LOG10
+} AMI_parameter_scaling;
+
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
     /** positivity flag */
@@ -52,6 +56,9 @@ typedef struct user_data {
     /** maximal number of events to track */
     int    am_nmaxevent;
     
+    /** Scaling of parameters am_np */
+    AMI_parameter_scaling am_pscale;
+
     /** parameter array */
     double *am_p;
     /** constants array */
@@ -178,5 +185,5 @@ typedef struct user_data {
 } UserData;
 
 EXTERNC void freeUserData(UserData *udata);
-
+EXTERNC void printUserData(UserData *udata);
 #endif /* _MY_UDATA */
