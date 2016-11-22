@@ -127,8 +127,7 @@ return(NULL); \
 #endif
 
 #ifdef AMICI_WITHOUT_MATLAB
-    typedef double mxArray;
-    void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
+    typedef double mxArray;   
     static void VXy(double *V, const double *X, const double y, int n);
 #endif
 
@@ -2557,17 +2556,7 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
         originalParams = (double *) malloc(sizeof(double) * np);
         memcpy(originalParams, p, sizeof(double) * np);
 
-        switch(udata->am_pscale) {
-        case AMI_SCALING_LOG10:
-            for(int i = 0; i < np; ++i) {
-                p[i] = pow(10, p[i]);
-            }
-            break;
-        case AMI_SCALING_LN:
-            for(int i = 0; i < np; ++i)
-                p[i] = exp(p[i]);
-            break;
-        }
+        unscaleParameters(udata);
     }
 
     int iroot = 0;
@@ -2615,6 +2604,20 @@ freturn:
     }
 
     return rdata;
+}
+
+void unscaleParameters(UserData *udata) {
+    switch(udata->am_pscale) {
+    case AMI_SCALING_LOG10:
+        for(int i = 0; i < np; ++i) {
+            p[i] = pow(10, p[i]);
+        }
+        break;
+    case AMI_SCALING_LN:
+        for(int i = 0; i < np; ++i)
+            p[i] = exp(p[i]);
+        break;
+    }
 }
 
 void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata)
