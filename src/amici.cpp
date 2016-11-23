@@ -310,6 +310,11 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
      */
     ReturnData *rdata; /* returned rdata struct */
     
+    llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
+            numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
+            sigmaydata = ssigmaydata = sigmazdata = ssigmazdata = xdotdata = Jdata = dydpdata = dydxdata =
+            dxdotdpdata = tsdata = 0;
+
     mxArray *mxsol;
     
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
