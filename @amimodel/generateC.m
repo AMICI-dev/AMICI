@@ -24,16 +24,17 @@ end
 for ifun = this.funs
     if(isfield(this.fun,ifun{1}))
         fprintf([ifun{1} ' | ']);
-        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.c']),'w');
+        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
         fprintf(fid,'#include <string.h>\n');
-        fprintf(fid,'#include <mex.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
+            fprintf(fid,'#include <include/udata_accessors.h>\n');
         end
         if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
             fprintf(fid,'#include <include/tdata.h>\n');
+            fprintf(fid,'#include <include/tdata_accessors.h>\n');
             % avoid conflicts
             fprintf(fid,'#undef t\n');
             fprintf(fid,'#undef x\n');
@@ -75,10 +76,10 @@ for ifun = this.funs
             fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
         else
             if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
-                fprintf(fid,'UserData udata = (UserData) user_data;\n');
+                fprintf(fid,'UserData *udata = (UserData*) user_data;\n');
             end
             if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
-                fprintf(fid,'TempData tdata = (TempData) temp_data;\n');
+                fprintf(fid,'TempData *tdata = (TempData*) temp_data;\n');
             end
             this.fun.(ifun{1}).printLocalVars(this,fid);
             if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
@@ -144,15 +145,15 @@ for ifun = this.funs
             if(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
                 fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                fprintf(fid,['       if(mxIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
+                fprintf(fid,['       if(amiIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                 fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
                 fprintf(fid,'           if(!udata->am_nan_dxdotdp) {\n');
-                fprintf(fid,'               mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'               warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'               udata->am_nan_dxdotdp = TRUE;\n');
                 fprintf(fid,'           }\n');
                 fprintf(fid,'       }\n');
-                fprintf(fid,['       if(mxIsInf(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
-                fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
+                fprintf(fid,['       if(amiIsInf(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                 fprintf(fid,'           return(-1);\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
@@ -161,15 +162,15 @@ for ifun = this.funs
             if(this.nx>0)
                 if(strcmp(ifun{1},'xdot'))
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                    fprintf(fid,'   if(mxIsNaN(xdot_tmp[ix])) {\n');
+                    fprintf(fid,'   if(amiIsNaN(xdot_tmp[ix])) {\n');
                     fprintf(fid,'       xdot_tmp[ix] = 0;\n');
                     fprintf(fid,'       if(!udata->am_nan_xdot) {\n');
-                    fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                    fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                     fprintf(fid,'           udata->am_nan_xdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }\n');
-                    fprintf(fid,'   if(mxIsInf(xdot_tmp[ix])) {\n');
-                    fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");\n');
+                    fprintf(fid,'   if(amiIsInf(xdot_tmp[ix])) {\n');
+                    fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");\n');
                     fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
                     fprintf(fid,'   if(qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {\n');
@@ -180,60 +181,60 @@ for ifun = this.funs
             end
             if(strcmp(ifun{1},'JSparse'))
                 fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
-                fprintf(fid,'   if(mxIsNaN(J->data[inz])) {\n');
+                fprintf(fid,'   if(amiIsNaN(J->data[inz])) {\n');
                 fprintf(fid,'       J->data[inz] = 0;\n');
                 fprintf(fid,'       if(!udata->am_nan_JSparse) {\n');
-                fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'           udata->am_nan_JSparse = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
-                fprintf(fid,'   if(mxIsInf(J->data[inz])) {\n');
-                fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                fprintf(fid,'   if(amiIsInf(J->data[inz])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'J'))
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
-                fprintf(fid,'   if(mxIsNaN(J->data[ix])) {\n');
+                fprintf(fid,'   if(amiIsNaN(J->data[ix])) {\n');
                 fprintf(fid,'       J->data[ix] = 0;\n');
                 fprintf(fid,'       if(!udata->am_nan_J) {\n');
-                fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'           udata->am_nan_J = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
-                fprintf(fid,'   if(mxIsInf(J->data[ix])) {\n');
-                fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                fprintf(fid,'   if(amiIsInf(J->data[ix])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'xBdot'))
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                fprintf(fid,'   if(mxIsNaN(xBdot_tmp[ix])) {\n');
+                fprintf(fid,'   if(amiIsNaN(xBdot_tmp[ix])) {\n');
                 fprintf(fid,'       xBdot_tmp[ix] = 0;');
                 fprintf(fid,'       if(!udata->am_nan_xBdot) {\n');
-                fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'           udata->am_nan_xBdot = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }');
-                fprintf(fid,'   if(mxIsInf(xBdot_tmp[ix])) {\n');
-                fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                fprintf(fid,'   if(amiIsInf(xBdot_tmp[ix])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }');
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
                 fprintf(fid,'for(ip = 0; ip<np*ng; ip++) {\n');
-                fprintf(fid,'   if(mxIsNaN(qBdot_tmp[ip])) {\n');
+                fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
-                fprintf(fid,'           mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'           udata->am_nan_qBdot = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }');
-                fprintf(fid,'   if(mxIsInf(qBdot_tmp[ip])) {\n');
-                fprintf(fid,'       mexWarnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
+                fprintf(fid,'   if(amiIsInf(qBdot_tmp[ip])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }');
                 fprintf(fid,'}\n');
@@ -251,7 +252,7 @@ end
 %
 %----------------------------------------------------------------
 % this.modelname.h
-% function declarations for this.modelname.c
+% function declarations for this.modelname.cpp
 %----------------------------------------------------------------
 %
 
@@ -280,7 +281,7 @@ fclose(fid);
 %
 %----------------------------------------------------------------
 % funname.h
-% function declarations for funname.c
+% function declarations for funname.cpp
 %----------------------------------------------------------------
 %
 
@@ -302,7 +303,7 @@ for ifun = this.funs
 end
 %
 %----------------------------------------------------------------
-% wrapfunctions.c
+% wrapfunctions.cpp
 % function definitions
 %----------------------------------------------------------------
 %
@@ -340,12 +341,12 @@ else
 end
 
 fprintf('wrapfunctions | ');
-fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.c'),'w');
+fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 fprintf(fid,'                \n');
 fprintf(fid,'#include "wrapfunctions.h"\n');
+fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
-fprintf(fid,'                void init_modeldims(void *user_data){\n');
-fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+fprintf(fid,'                void init_modeldims(UserData *udata){\n');
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
@@ -380,7 +381,7 @@ end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
-    fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+    fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
     fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
 else
     fprintf(fid,'                    return(-1);\n');
@@ -388,7 +389,7 @@ end
 fprintf(fid,'                }\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data){\n');
-fprintf(fid,'                    UserData udata = (UserData) user_data;\n');
+fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
 fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
 fprintf(fid,'                }\n');
 fprintf(fid,'                \n');
@@ -458,7 +459,7 @@ for iffun = ffuns
             % they should act as placeholders
             fprintf(fid,'                    return(0);\n');
         else
-            fprintf(fid,['                    mexWarnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");\n']);
+            fprintf(fid,['                    warnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");\n']);
             fprintf(fid,'                    return(-1);\n');
         end
     end
@@ -471,7 +472,7 @@ fclose(fid);
 %
 %----------------------------------------------------------------
 % wrapfunctions.h
-% function declarations for wrapfunctions.c
+% function declarations for wrapfunctions.cpp
 %----------------------------------------------------------------
 %
 
@@ -479,7 +480,9 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _am_wrapfunctions_h\n');
 fprintf(fid,'#define _am_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
+fprintf(fid,'#ifndef AMICI_WITHOUT_MATLAB\n');
 fprintf(fid,'#include <mex.h>\n');
+fprintf(fid,'#endif\n');
 fprintf(fid,'\n');
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/cvodewrap.h>\n');
@@ -496,7 +499,7 @@ fprintf(fid,'\n');
 fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
-fprintf(fid,'                void init_modeldims(void *user_data);\n');
+fprintf(fid,'                void init_modeldims(UserData *udata);\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
 fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
 fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
@@ -522,6 +525,12 @@ for iffun = ffuns
 end
 fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
 fclose(fid);
+
+fprintf('CMakeLists | ');
+generateCMakeFile(this);
+
+fprintf('main | ');
+generateMainC(this);
 
 fprintf('\r')
 end
@@ -549,4 +558,88 @@ argstr = strrep(argstr,'*','');
 argstr = strrep(argstr,' ','');
 argstr = strrep(argstr,',',', ');
 
+end
+
+
+function generateCMakeFile(this)
+    CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
+    fid = fopen(CMakeFileName,'w');
+    fprintf(fid, 'project(%s)\n', this.modelname);
+    fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n');
+    fprintf(fid, 'set(cmake_build_type Debug)\n');
+    fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
+    fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
+    
+    fprintf(fid, 'set(AMICI_DIR "%s")\n', fileparts(fileparts(mfilename('fullpath'))));
+    fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
+    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
+    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")\n');
+    fprintf(fid, 'set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")\n');
+    fprintf(fid, 'set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")\n');
+
+    % sources
+    fprintf(fid, '\nset(SRC_LIST\n');
+    for f = {'main.cpp', 'wrapfunctions.cpp', ...
+            '${AMICI_DIR}/src/symbolic_functions.cpp', ...
+            '${AMICI_DIR}/src/amici.cpp', ...
+            '${AMICI_DIR}/src/udata.cpp', ...
+            '${AMICI_DIR}/src/rdata.cpp', ...
+            '${AMICI_DIR}/src/edata.cpp', ...
+            '${AMICI_DIR}/src/ami_hdf5.cpp', ...
+            }
+        fprintf(fid, '%s\n', f{1});
+    end
+    for j=1:length(this.funs)
+        %if(this.cppfun(1).(this.funs{j}))
+             funcName = this.funs{j};
+             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
+       % end
+    end
+    fprintf(fid, ')\n\n');
+    
+    %includes
+    includeDirs = {'${AMICI_DIR}', ...
+        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
+        '${AMICI_DIR}/sundials/include',  ...
+        '${SUITESPARSE_DIR}/KLU/Include', ...
+        '${SUITESPARSE_DIR}/AMD/Include', ...
+        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
+        '${SUITESPARSE_DIR}/COLAMD/Include', ...
+        '${SUITESPARSE_DIR}/BTF/Include', ...
+        '/usr/include/hdf5/serial/'
+    };
+    for d = includeDirs
+        fprintf(fid, 'include_directories("%s")\n', d{1});
+    end
+    
+    fprintf(fid, '\n');
+    fprintf(fid, 'add_executable(${PROJECT_NAME} ${SRC_LIST})\n\n');
+
+    %libraries
+    fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
+    libs = {
+        '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
+        '${SUNDIALS_LIB_DIR}/libsundials_cvodes.so', ...
+        '${SUITESPARSE_LIB_DIR}/lib/libcolamd.so', ...
+        '${SUITESPARSE_LIB_DIR}/KLU/Lib/libklu.a', ...
+        '${SUITESPARSE_LIB_DIR}/BTF/Lib/libbtf.a', ...
+        '${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a', ...
+        '${SUITESPARSE_LIB_DIR}/COLAMD/Lib/libcolamd.a', ...
+        '${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a', ...
+        '${HDF_LIB_DIR}/libhdf5_hl.a', ...
+        '${HDF_LIB_DIR}/libhdf5.a', ...
+        '-lpthread -ldl -lz -lsz', ...
+        '-lm'
+        };
+    for l = libs
+        fprintf(fid, '"%s"\n', l{1});
+    end
+    fprintf(fid, ')\n');
+    fclose(fid);
+end
+
+function generateMainC(this)
+    mainFileSource = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/main.template.cpp');
+    mainFileDestination = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
+    copyfile(mainFileSource, mainFileDestination);
 end

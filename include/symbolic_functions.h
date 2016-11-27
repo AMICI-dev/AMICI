@@ -1,8 +1,15 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
+
 #include <math.h>
 #include <include/spline.h>
 #include <stdarg.h>
+
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
 double amilog(double x);
 double heaviside(double x);
@@ -11,6 +18,31 @@ double am_min(double a, double b, double c);
 double Dam_min(int id,double a, double b, double c);
 double am_max(double a, double b, double c);
 double Dam_max(int id,double a, double b, double c);
+
+int amiIsNaN(double what);
+int amiIsInf(double what);
+double amiGetNaN();
+
+EXTERNC void ones(double *destination, int count);
+EXTERNC void zeros(double *destination, int count);
+EXTERNC void fillArray(double *destination, int count, double value);
+EXTERNC double sum(double const *array, int numElements);
+EXTERNC void linSpace(double *destination, double from, double to, int numValues);
+EXTERNC double *linSpaceAlloc(double from, double to, int numValues);
+EXTERNC void printArray(double const *array, int numElements);
+EXTERNC void printfArray(double const *array, int numElements, char const *format);
+
+EXTERNC void errMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
+
+EXTERNC void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
 
 /* sign */
 double sign(double x);

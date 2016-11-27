@@ -62,24 +62,24 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(J->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
         case 'JSparse'
             fprintf(fid,'int inz;\n');
-            fprintf(fid,'SlsSetToZero(J);\n');
+            fprintf(fid,'SparseSetMatToZero(J);\n');
             for i = 1:length(model.rowvals)
-                fprintf(fid,['J->rowvals[' num2str(i-1) '] = ' num2str(model.rowvals(i)) ';\n']);
+                fprintf(fid,['J->indexvals[' num2str(i-1) '] = ' num2str(model.rowvals(i)) ';\n']);
             end
             for i = 1:length(model.colptrs)
-                fprintf(fid,['J->colptrs[' num2str(i-1) '] = ' num2str(model.colptrs(i)) ';\n']);
+                fprintf(fid,['J->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrs(i)) ';\n']);
             end
         case 'JBandB'
             % nothing
         case 'JB'
             fprintf(fid,['  memset(JB->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
         case 'JSparseB'
-            fprintf(fid,'  SlsSetToZero(JB);\n');
+            fprintf(fid,'  SparseSetMatToZero(JB);\n');
             for i = 1:length(model.rowvalsB)
-                fprintf(fid,['  JB->rowvals[' num2str(i-1) '] = ' num2str(model.rowvalsB(i)) ';\n']);
+                fprintf(fid,['  JB->indexvals[' num2str(i-1) '] = ' num2str(model.rowvalsB(i)) ';\n']);
             end
             for i = 1:length(model.colptrsB)
-                fprintf(fid,['  JB->colptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
+                fprintf(fid,['  JB->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
             end
         case 'sxdot'
             if(~strcmp(model.wtype,'iw'))

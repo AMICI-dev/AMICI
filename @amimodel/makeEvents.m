@@ -70,12 +70,6 @@ if(nevent>0)
     % initialise hflag
     hflags = zeros([nx,nevent]);
     
-    for ievent = 1:nevent
-        dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
-    end
-    triggeridx = logical(dtriggerdt~=0);
-    
-    
     event_dependency = zeros(nevent);
     for ievent = 1:nevent
         symchar = char(trigger{ievent});
@@ -201,10 +195,11 @@ if(nevent>0)
         end
     end
     
-    % update to prevent dirac functions.
+    % compute dtriggerdt and constant trigger functions
     for ievent = 1:nevent
         dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
     end
+    triggeridx = logical(dtriggerdt~=0);
     
     % multiply by the dtriggerdt factor, this should stay here as we
     % want the xdot to be cleaned of any dirac functions
@@ -262,7 +257,7 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(0);
     for iz = 1:length([this.event.z])
-        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz) '^2) + ((z_' num2str(iz) '-mz_' num2str(iz) ')/sigma_z_' num2str(iz) ')^2']);
+        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
 

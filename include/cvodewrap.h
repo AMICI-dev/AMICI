@@ -15,7 +15,19 @@
 #include <amd.h>
 #include <colamd.h>
 #include <btf.h>
+#include <stdbool.h>
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
+
+EXTERNC void warnMsgIdAndTxt(
+    const char * identifier, /* string with error message identifier */
+    const char * err_msg,    /* string with error message printf-style format */
+    ...                      /* any additional arguments */
+    );
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
     char buffer[250];
@@ -47,7 +59,7 @@ static void wrap_ErrHandlerFn(int error_code, const char *module, const char *fu
             break;
     }
     
-    mexWarnMsgIdAndTxt(buffid,buffer);
+    warnMsgIdAndTxt(buffid,buffer);
 };
 
 static void *AMICreate(int lmm, int iter) {
@@ -126,7 +138,7 @@ static int AMIGetSens(void *mem, realtype *tret, N_Vector *yySout) {
     return CVodeGetSens( mem, tret, yySout);
 };
 
-static int AMIRootInit(void *mem, int nrtfn, void *ptr) {
+static int AMIRootInit(void *mem, int nrtfn, CVRootFn ptr) {
     return CVodeRootInit( mem, nrtfn, ptr);
 };
 
@@ -230,8 +242,8 @@ static int AMISptfqmrB(void *mem, int which, int prectype, int maxl) {
     return CVSptfqmrB(mem, which, prectype, maxl);
 };
 
-static int AMIKLU(void *mem, int nx, int nnz) {
-    return CVKLU(mem, nx, nnz);
+static int AMIKLU(void *mem, int nx, int nnz, int sparsetype) {
+    return CVKLU(mem, nx, nnz, sparsetype);
 };
 
 static int AMIKLUSetOrdering(void *mem, int ordering) {
@@ -242,8 +254,8 @@ static int AMIKLUSetOrderingB(void *mem, int which, int ordering) {
     return CVKLUSetOrderingB(mem, which, ordering);
 };
 
-static int AMIKLUB(void *mem, int which, int nx, int nnz) {
-    return CVKLUB(mem, which, nx, nnz);
+static int AMIKLUB(void *mem, int which, int nx, int nnz, int sparsetype) {
+    return CVKLUB(mem, which, nx, nnz, sparsetype);
 };
 
 static int AMIGetNumSteps(void *mem, long int *numsteps) {

@@ -16,8 +16,9 @@ classdef amioption < hgsetget
         % index of parameters for which the sensitivities are computed
         sens_ind = double.empty();
         % index of states for which positivity should be enforced
-        % (currently this has no effect)
         qpositivex = double.empty();
+        % scaling of error tolerances for sensitivity equations
+        pbar = double.empty();
         % starting time of the simulation
         tstart = 0;
         % linear multistep method.
@@ -46,6 +47,8 @@ classdef amioption < hgsetget
         ordering = 0;
         % steady state sensitivity flag
         ss = 0;
+        % custom initial state
+        x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
     end
