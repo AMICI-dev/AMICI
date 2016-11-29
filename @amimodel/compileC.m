@@ -424,7 +424,11 @@ function compileC(this)
             CLIBS = [];
         end
     else
-        CLIBS = [];
+        if(strcmp(mex.getCompilerConfigurations('c++').Name,'MinGW64 Compiler (C++)')
+            CLIBS = 'LD="g++"';
+        else
+            CLIBS = [];
+        end
     end
     
     
