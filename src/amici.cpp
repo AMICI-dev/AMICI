@@ -2178,6 +2178,8 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
         fillEventOutput(status, ami_mem, udata, rdata, edata, tdata);
     }
 
+    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
+    
     return 0;
 }
 
