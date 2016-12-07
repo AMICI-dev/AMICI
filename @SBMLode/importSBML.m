@@ -165,26 +165,26 @@ kLaw = replaceReservedFunctions(kLaw);
 this.flux = sym(kLaw);
 this.flux = this.flux(:);
 % add local parameters to global parameters, make them global by
-% extending them by the reaction id
+% extending them by the r[reactionindex]
 species_idx = transpose(sym(1:nx));
 if(length({model.reaction.id})>0)
     try
-        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         plocal = transpose([tmp{:}]);
         tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
         pvallocal = transpose([tmp{:}]);
         % replace local parameters by globalized ones
-        tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         this.flux = [tmp{:}];
         this.flux = this.flux(:);
         
     catch
-        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.localParameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.localParameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         plocal = transpose([tmp{:}]);
         tmp = cellfun(@(x) cellfun(@double,{x.localParameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
         pvallocal = transpose([tmp{:}]);
         % replace local parameters by globalized ones
-        tmp = cellfun(@(x,y,z) subs(x,sym({y.localParameter.id}),sym(cellfun(@(x) [x '_' z],{y.localParameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},{model.reaction.id},'UniformOutput',false);
+        tmp = cellfun(@(x,y,z) subs(x,sym({y.localParameter.id}),sym(cellfun(@(x) [x '_' z],{y.localParameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
         this.flux = [tmp{:}];
         this.flux = this.flux(:);
         
@@ -212,8 +212,7 @@ if(length({model.reaction.id})>0)
         product_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
-        % the concatenation is necessary because MATLAB does reallly weird things when you apply arrayfuns to fields of
-        % 1x0 structs. Let's pray this works and these bugs are fixed in the future
+        % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
         math_expr = @(y) sym(y.math);
         symbolic_expr = @(x) num2cell([sym(arrayfun(@(y) math_expr(y),[x.stoichiometryMath],'UniformOutput',false)),sym(zeros(1,isempty([x.stoichiometryMath])*length(x)))] + sym(arrayfun(@(y) y.stoichiometry,x))*isempty([x.stoichiometryMath]));
         reactant_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.reactant},'UniformOutput',false);
