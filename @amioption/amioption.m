@@ -2,7 +2,7 @@
 % @file amioption
 % @brief definition of amioption class
 %
-classdef amioption < hgsetget
+classdef amioption < matlab.mixin.CustomDisplay
     %AMIOPTION provides an option container to pass simulation parameters to the
     %simulation routine.
     
@@ -173,7 +173,7 @@ classdef amioption < hgsetget
             
         end
         
-        function set.sensi_meth(this,value)
+        function this = set.sensi_meth(this,value)
             if(ischar(value))
                 switch(value)
                     case 'forward'
@@ -194,7 +194,7 @@ classdef amioption < hgsetget
             end
         end
         
-        function set.sensi(this,value)
+        function this = set.sensi(this,value)
             assert(isnumeric(value),'The option sensi must have a numeric value!')
             assert(floor(value)==value,'The option sensi must be an integer!')
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')
