@@ -1,5 +1,7 @@
 #include <assert.h>
+#ifdef AMI_HDF5_H_DEBUG
 #include <execinfo.h>
+#endif AMI_HDF5_H_DEBUG
 #include <unistd.h>
 
 #include "ami_hdf5.h"
@@ -350,10 +352,12 @@ void getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const cha
     status = H5LTget_attribute_info(file_id, optionsObject, attributeName, length, &type_class, &type_size);
     if(status < 0) {
         fprintf(stderr, "Error in getDoubleArrayAttribute: Cannot read attribute '%s' of '%s'\n", attributeName, optionsObject);
+        #ifdef AMI_HDF5_H_DEBUG
         void *array[10];
         size_t size;
         size = backtrace(array, 10);
         backtrace_symbols_fd(array, size, STDERR_FILENO);
+        #endif
     }
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);

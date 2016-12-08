@@ -13,6 +13,7 @@ branches:
   only:
     - master
     - stable
+    - feature_fix_windows_compilation
   
 environment:
   matrix:

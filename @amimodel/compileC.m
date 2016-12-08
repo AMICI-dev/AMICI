@@ -301,9 +301,9 @@ function compileC(this)
       
     
     % generate compile flags for the rest
-    COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'''];
+    COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
     if(this.debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall -std=c++x0'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -443,7 +443,7 @@ function compileC(this)
     prefix = 'ami';
     
     
-    eval(['mex ' DEBUG COPT ...
+    eval(['mex ' DEBUG ' ' COPT ...
         ' -c -outdir ' fullfile(this.wrap_path,'src') ' ' ...
         fullfile(this.wrap_path,'src',cstr) ' ' ...
         includesstr]);
