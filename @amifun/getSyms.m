@@ -707,8 +707,8 @@ function [this,model] = getSyms(this,model)
             this.sym = sym(zeros(model.nytrue, model.np, model.ng));
             for iy = 1 : model.nytrue
                 dJydsigma_tmp(:,:) = model.fun.dJydsigma.sym(iy,:,:);
-                this.sym(iy,:,:) = transpose(permute(model.fun.dJydy.sym(iy,:,:),[1,3,2]) * model.fun.dydp.strsym ...
-                    + permute(model.fun.dJydsigma.sym(iy,:,:),[1,3,2]) * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
+                this.sym(iy,:,:) = transpose(permute(model.fun.dJydy.sym(iy,:,:),[2,3,1]) * model.fun.dydp.strsym ...
+                    + permute(model.fun.dJydsigma.sym(iy,:,:),[2,3,1]) * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
                 % Transposition is necessary to have things sorted
                 % correctly in gccode.m
             end            
