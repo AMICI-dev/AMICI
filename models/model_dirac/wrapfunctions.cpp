@@ -198,6 +198,11 @@
                     return dJydx_model_dirac(t, it, dJydx, y, x, dydx, my, sigma_y, user_data);
                 }
                 
+                int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, realtype *my, realtype *sigma_y, void *user_data){
+                    warnMsgIdAndTxt("AMICI:mex:dJydy:NotAvailable","ERROR: The function dJydy was called but not compiled for this model.");
+                    return(-1);
+                }
+                
                 int fdJydp(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data){
                     return dJydp_model_dirac(t, it, dJydp, y, x, dydp, my, sigma_y, dsigma_ydp, user_data);
                 }

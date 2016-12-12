@@ -705,13 +705,10 @@ function [this,model] = getSyms(this,model)
             end
         case 'dJydp'
             this.sym = sym(zeros(model.nytrue, model.np, model.ng));
-            dJydy_tmp = sym(zeros(model.ng, model.ny));
-            dJydsigma_tmp = sym(zeros(model.ng, model.nytrue));
             for iy = 1 : model.nytrue
-                dJydy_tmp(:,:) = model.fun.dJydy.sym(iy,:,:);
                 dJydsigma_tmp(:,:) = model.fun.dJydsigma.sym(iy,:,:);
-                this.sym(iy,:,:) = transpose(dJydy_tmp * model.fun.dydp.strsym ...
-                    + dJydsigma_tmp * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
+                this.sym(iy,:,:) = transpose(permute(model.fun.dJydy.sym(iy,:,:),[1,3,2]) * model.fun.dydp.strsym ...
+                    + permute(model.fun.dJydsigma.sym(iy,:,:),[1,3,2]) * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
                 % Transposition is necessary to have things sorted
                 % correctly in gccode.m
             end            
@@ -721,7 +718,7 @@ function [this,model] = getSyms(this,model)
             dJydy_tmp = sym(zeros(model.ng, model.ny));
             for iy = 1 : model.nytrue
                 dJydy_tmp(:,:) = model.fun.dJydy.strsym(iy,:,:);
-                this.sym(iy,:,:) = transpose(dJydy_tmp*model.fun.sy.strsym);
+                this.sym(iy,:,:) = transpose(dJydy_tmp*(model.fun.sy.strsym-model.fun.dydp.strsym));
                 % Transposition is necessary to have things sorted
                 % correctly in gccode.m
             end

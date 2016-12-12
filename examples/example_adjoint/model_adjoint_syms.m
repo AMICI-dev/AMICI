@@ -9,6 +9,8 @@ syms x1
 % create state vector
 model.sym.x = [x1];
 
+model.debug = true;
+
 %%
 % PARAMETERS ( for these sensitivities will be computed )
 

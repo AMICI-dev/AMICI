@@ -10,7 +10,7 @@ function this = gccode(this,model,fid)
     %  this: function definition object @type amifun
     
     
-    if(any(any(any(this.sym~=0)))&&~strcmp(this.cvar,'sJy'))
+    if(any(any(any(this.sym~=0))))
         
         % replace unknown partial derivatives
         if(model.maxflag)
@@ -151,19 +151,26 @@ function this = gccode(this,model,fid)
             end
             
             if(strfind(this.cvar,'Jy'))
-                cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
-                cstr = regexprep(cstr,'dydp_([0-9]+)',['dydp\[$1+ip*' num2str(model.ny) ']']);
                 cstr = regexprep(cstr,'my_([0-9]+)','my\[it+nt*$1]');            
                 cstr = regexprep(cstr,'sigma_y_([0-9]+)','sigma_y\[$1\]');
                 cstr = regexprep(cstr,'dsdydp\[([0-9]*)\]','dsigma_ydp\[$1\]');
                 if(strcmp(this.cvar,'sJy'))
-                    cstr = regexprep(cstr,'sy_([0-9]+)','sy\[$1\]');
+                    cstr = regexprep(cstr,'sy_([0-9]+)',['sy\[it+nt*$1]']);
                     cstr = regexprep(cstr,'dJydy_([0-9]+)','dJydy\[$1\]');
+                    cstr = strrep(cstr,'=','-=');
+                elseif(strcmp(this.cvar,'dJydy'))
+                    cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
+                    cstr = regexprep(cstr,'dJydy\[([0-9]+)\]\[([0-9]+)\]',['dJydy\[$1+' num2str(model.nytrue) '*$2\]']);
+                elseif(strcmp(this.cvar,'dJydp'))
+                    cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
+                    cstr = regexprep(cstr,'dJydp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]',['dJydp\[iy+($2*$3+$1)*' num2str(model.nytrue) '\]']);
                 else
                     cstr = regexprep(cstr,'sy_([0-9]+)',['sy\[it+nt*\($1+ip*' num2str(model.ny) '\)\]']);
                     cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
                     cstr = strrep(cstr,'=','+=');
                 end
+                cstr = regexprep(cstr,'dydp_([0-9]+)',['dydp\[$1+ip*' num2str(model.ny) ']']);
+                cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1]');
             end
             
             if(strfind(this.cvar,'Jz'))

@@ -25,6 +25,7 @@
 #define dzdp tdata->am_dzdp
 #define dzdx tdata->am_dzdx
 #define dgdp tdata->am_dgdp
+#define dgdy tdata->am_dgdy
 #define dgdx tdata->am_dgdx
 #define drdp tdata->am_drdp
 #define drdx tdata->am_drdx

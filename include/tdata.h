@@ -57,6 +57,8 @@ typedef struct tdata {
     realtype *am_g;
     /** parameter derivative of data likelihood */
     realtype *am_dgdp;
+    /** observable derivative of data likelihood */
+    realtype *am_dgdy;
     /** state derivative of data likelihood */
     realtype *am_dgdx;
     /** event likelihood */
