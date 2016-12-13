@@ -1087,7 +1087,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
     }
     fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
     if(b_expdata) {
-        fsJy(ts[it],it,sllhdata,dgdy,dgdp,sydata,dydp,my,udata);
+        fsJy(ts[it],it,sllhdata,s2llhdata,dgdy,dgdp,sydata,dydp,my,udata);
     }
 }
 
@@ -2126,7 +2126,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
             }
         }
         if(sensi>1) {
-            initField2(s2llh,np,np);
+            initField2(s2llh,ng-1,np);
         }
     }
 }

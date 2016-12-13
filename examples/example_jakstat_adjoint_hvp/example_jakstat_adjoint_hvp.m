@@ -121,12 +121,9 @@ function example_jakstat_adjoint_hvp()
     
     subplot(1,2,2);
     hold on;
-    plot(1, t0, 'mo');
-    plot(2, t1, 'ro');
-    plot(3, t2, 'bo');
-    plot(4, t3, 'ko');
+    bar([t0,t1,t2,t3]);
     title(['Runtime for ' num2str(runs) 'evaluations (in sec)']);
-    legend('ODE Integration', 'Gradient computation (ASA)', 'HVP from FD via 1st order ASA', 'HVP via 2nd order ASA');
+    set(gca,'XTickLabel',{'ODE Integration', 'Gradient computation (ASA)', 'HVP from FD via 1st order ASA', 'HVP via 2nd order ASA'});
     box on;
     hold off;
 end

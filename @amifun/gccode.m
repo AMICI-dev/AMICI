@@ -54,7 +54,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(strcmp(this.funstr,'J') || strcmp(this.funstr,'JB') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx') || strcmp(this.funstr,'dydx') || strcmp(this.funstr,'dzdx') || strcmp(this.funstr,'sJy') || strcmp(this.funstr,'M') || strcmp(this.funstr,'dfdx') )
+            if(any(strcmp(this.funstr,{'J','JB','dJydp','dJydx','dJydy','dydx','dzdx','sJy','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);
@@ -157,10 +157,13 @@ function this = gccode(this,model,fid)
                 if(strcmp(this.cvar,'sJy'))
                     cstr = regexprep(cstr,'sy_([0-9]+)',['sy\[it+nt*$1]']);
                     cstr = regexprep(cstr,'dJydy_([0-9]+)','dJydy\[$1\]');
+                    cstr = regexprep(cstr,'sJy\[([0-9]+)\+0\*([0-9]+)\]',['sJy\[$1\]']);
+                    cstr = regexprep(cstr,'sJy\[([0-9]+)\+([0-9]+)\*([0-9]+)\]',['s2Jy\[(($2-1)*$3+$1)\]']);
                     cstr = strrep(cstr,'=','-=');
                 elseif(strcmp(this.cvar,'dJydy'))
                     cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
                     cstr = regexprep(cstr,'dJydy\[([0-9]+)\]\[([0-9]+)\]',['dJydy\[$1+' num2str(model.nytrue) '*$2\]']);
+                    cstr = regexprep(cstr,'dJydy\[([0-9]+)\+([0-9]+)\*([0-9]+)\]',['dJydy\[iy+($2*$3+$1)*' num2str(model.nytrue) '\]']);
                 elseif(strcmp(this.cvar,'dJydp'))
                     cstr = regexprep(cstr,'y_([0-9]+)','y\[it+nt*$1\]');
                     cstr = regexprep(cstr,'dJydp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]',['dJydp\[iy+($2*$3+$1)*' num2str(model.nytrue) '\]']);
