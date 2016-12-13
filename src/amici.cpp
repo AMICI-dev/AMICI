@@ -743,7 +743,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         dydp = new realtype[ny*np]();
         dgdp = new realtype[ng*np*nytrue]();
         dgdx = new realtype[ng*nxtrue*nt]();
-        dgdy = new realtype[ng*nytrue*nytrue]();
+        dgdy = new realtype[nytrue*ng*ny]();
         if (ne > 0) {
             dzdp = new realtype[nz*np]();
             dzdx = new realtype[nz*nx]();

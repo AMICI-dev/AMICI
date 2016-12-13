@@ -105,6 +105,8 @@ function example_jakstat_adjoint_hvp()
 %     end
 %     fprintf('|===========================================================================================================|\n');
     
+
+if(usejava('jvm'))
     figure();
     
     subplot(1,2,1);
@@ -114,7 +116,7 @@ function example_jakstat_adjoint_hvp()
     ylim([1e-12,1e0])
     box on
     hold on
-%     plot([1e-2,1e2],[1e-2,1e2],'k:')
+    %     plot([1e-2,1e2],[1e-2,1e2],'k:')
     xlabel('parameter index')
     ylabel('relative difference to adjoint sensitivities')
     legend('FD_{central}','FD_{forward}','FD_{backward}','forward sensitivities')
@@ -127,4 +129,5 @@ function example_jakstat_adjoint_hvp()
     set(gca,'XTickLabel',{'ODE Integration', 'Gradient computation (ASA)', 'HVP from FD via 1st order ASA', 'HVP via 2nd order ASA'});
     box on;
     hold off;
+end
 end
