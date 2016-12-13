@@ -110,7 +110,7 @@ if(usejava('jvm'))
     figure();
     
     subplot(1,2,1);
-    bar([abs((sol.sllh-hvp)./sol.sllh),abs((sol.sllh-hvp_f)./sol.sllh),abs((sol.sllh-hvp_b)./sol.sllh),abs((sol.sllh-solf.sllh)./sol.sllh)])
+    bar([abs((sol.s2llh-hvp)./sol.s2llh),abs((sol.s2llh-hvp_f)./sol.s2llh),abs((sol.s2llh-hvp_b)./sol.s2llh),abs((sol.s2llh-solf.s2llh)./sol.s2llh)])
     hold on
     set(gca,'YScale','log')
     ylim([1e-12,1e0])
@@ -125,8 +125,9 @@ if(usejava('jvm'))
     subplot(1,2,2);
     hold on;
     bar([t0,t1,t2,t3]);
-    title(['Runtime for ' num2str(runs) 'evaluations (in sec)']);
-    set(gca,'XTickLabel',{'ODE Integration', 'Gradient computation (ASA)', 'HVP from FD via 1st order ASA', 'HVP via 2nd order ASA'});
+    xlabel('runtime [s]')
+    set(gca,'XTick',1:4,'XTickLabel',{'ODE Integration', 'Gradient computation (ASA)', 'HVP from FD via 1st order ASA', 'HVP via 2nd order ASA'},'XTickLabelRotation',20);
+    
     box on;
     hold off;
 end
