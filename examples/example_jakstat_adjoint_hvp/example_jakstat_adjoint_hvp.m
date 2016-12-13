@@ -83,6 +83,9 @@ function example_jakstat_adjoint_hvp()
         v = presol.sllh;
         options.sensi = 2;
         sol  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
+        options.sensi_meth = 'forward';
+        solf  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
+        options.sensi_meth = 'adjoint';
         hvpasa = hvpasa + sol.s2llh;
     end
     t3 = toc;
@@ -105,19 +108,17 @@ function example_jakstat_adjoint_hvp()
     figure();
     
     subplot(1,2,1);
-    hold on;
-    min_x = min(hvpasa);
-    max_x = max(hvpasa);
-    plot([min_x, max_x], [min_x, max_x],'k:');
-    plot(hvpasa(1:14), hvp_f(1:14), 'ro');
-    plot(hvpasa(1:14), hvp_b(1:14), 'go');
-    plot(hvpasa(1:14), hvp(1:14), 'bo');
-    title('Hessian vector product with gradient');
-    xlabel('Second order adjoints sensitivities');
-    ylabel('Finite differences');
-    legend('', 'Forward FD', 'Backward FD', 'Centered FD');
-    box on;
-    hold off;
+    bar([abs((sol.sllh-hvp)./sol.sllh),abs((sol.sllh-hvp_f)./sol.sllh),abs((sol.sllh-hvp_b)./sol.sllh),abs((sol.sllh-solf.sllh)./sol.sllh)])
+    hold on
+    set(gca,'YScale','log')
+    ylim([1e-12,1e0])
+    box on
+    hold on
+%     plot([1e-2,1e2],[1e-2,1e2],'k:')
+    xlabel('parameter index')
+    ylabel('relative difference to adjoint sensitivities')
+    legend('FD_{central}','FD_{forward}','FD_{backward}','forward sensitivities')
+    set(gcf,'Position',[100 300 1200 500])
     
     subplot(1,2,2);
     hold on;

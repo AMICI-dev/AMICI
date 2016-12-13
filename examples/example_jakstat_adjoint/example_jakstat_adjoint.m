@@ -60,6 +60,8 @@ function example_jakstat_adjoint()
     options.sensi = 1;
     options.sensi_meth = 'adjoint';
     sol = simulate_model_jakstat([],xi_rand,[],D,options);
+    options.sensi_meth = 'forward';
+    solf = simulate_model_jakstat([],xi_rand,[],D,options);
     
     options.sensi = 0;
     eps = 1e-4;
@@ -73,17 +75,16 @@ function example_jakstat_adjoint()
     
     if(usejava('jvm'))
     figure
-    scatter(abs(sol.sllh),abs(fd_grad))
-    set(gca,'XScale','log')
+    bar([abs((sol.sllh-fd_grad)./sol.sllh),abs((sol.sllh-solf.sllh)./sol.sllh)])
+    hold on
     set(gca,'YScale','log')
-    xlim([1e-2,1e2])
-    ylim([1e-2,1e2])
+    ylim([1e-12,1e0])
     box on
     hold on
-    axis square
-    plot([1e-2,1e2],[1e-2,1e2],'k:')
-    xlabel('adjoint sensitivity absolute value of gradient element')
-    ylabel('finite difference absolute value of gradient element')
+%     plot([1e-2,1e2],[1e-2,1e2],'k:')
+    xlabel('parameter index')
+    ylabel('relative difference to adjoint sensitivities')
+    legend('finite differences','forward sensitivities')
     set(gcf,'Position',[100 300 1200 500])
     end
     
