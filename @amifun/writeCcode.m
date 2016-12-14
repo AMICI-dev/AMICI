@@ -82,11 +82,13 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         end
         fprintf(fid,'              } \n');
     end
-elseif(strcmp(this.funstr,'Jy') || strcmp(this.funstr,'dJydp') || strcmp(this.funstr,'dJydx'))
+elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','sJy','dJydy'})))
     tmpfun = this;
     if(any(any(nonzero)))
+        fprintf(fid,['int iy;\n']);
         for iy = 1:model.nytrue
             fprintf(fid,['if(!amiIsNaN(my[' num2str(iy-1) '*nt+it])){\n']);
+            fprintf(fid,['    iy = ' num2str(iy-1) ';\n']);
             tmpfun.sym = permute(this.sym(iy,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
             fprintf(fid,'}\n');

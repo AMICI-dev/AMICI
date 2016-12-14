@@ -400,8 +400,6 @@ end
 fprintf(fid,'end\n');
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi == 2)\n');
-    fprintf(fid, '    if(options_ami.sensi_meth==2)\n');
-    fprintf(fid,'        sol.sllh = sol.sllh.*chainRuleFactor;\n');
     switch(o2flag)
         case 1
             switch(this.param)
@@ -410,6 +408,13 @@ if(o2flag)
                 otherwise
                     fprintf(fid, '        sol.s2llh = sol.s2llh.*(chainRuleFactor*transpose(chainRuleFactor)) + diag(sol.sllh);\n');
             end
+        case 2
+            fprintf(fid, '        sol.s2llh = sol.s2llh .* chainRuleFactor + (sol.sllh .* v) ./ theta(options_ami.sens_ind);\n');
+    end
+    fprintf(fid,'        sol.sllh = sol.sllh.*chainRuleFactor;\n');
+    fprintf(fid, '    if(options_ami.sensi_meth==2)\n');
+    switch(o2flag)
+        case 1
             fprintf(fid,['        sol.sx = permute(reshape(transpose(sol.x(:,', num2str(nxtrue), '+1:end)), ', num2str(nxtrue), ', ', num2str(np), ', data.nt), [3,1,2]);\n']);
             fprintf(fid, '        sol.sx = bsxfun(@times,sol.sx,permute(chainRuleFactor,[3,2,1]));\n');
             fprintf(fid,['        sol.sy = permute(reshape(transpose(sol.y(:,', num2str(nytrue), '+1:end)), ', num2str(nytrue), ', ', num2str(np), ', data.nt), [3,1,2]);\n']);
@@ -418,8 +423,7 @@ if(o2flag)
             fprintf(fid, '        sol.sz = bsxfun(@times,sol.sz,permute(chainRuleFactor,[3,2,1]));\n');
             fprintf(fid, '        sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(chainRuleFactor,[3,2,1]));\n');
             fprintf(fid, '        sol.ssigmaz = bsxfun(@times,sol.ssigmaz,permute(chainRuleFactor,[3,2,1]));\n');
-        case 2
-            fprintf(fid, '        sol.s2llh = sol.s2llh .* chainRuleFactor + (sol.sllh .* v) ./ theta(options_ami.sens_ind);\n');
+
     end
     fprintf(fid,['        sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['        sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);

@@ -138,8 +138,10 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'dJydx'
             % nothing
+        case 'dJydy'
+            fprintf(fid,['memset(dJydy,0,sizeof(realtype)*nytrue*nytrue*ng);\n']);
         case 'dJydp'
-            % nothing
+            fprintf(fid,['memset(dJydp,0,sizeof(realtype)*nytrue*np*ng);\n']);
         case 'sJy'
             % nothing
         case 'Jz'
