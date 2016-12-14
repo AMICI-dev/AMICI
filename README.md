@@ -17,12 +17,15 @@ FAQ
 ===
 
 Q: My model fails to build.
+
 A: Remove the corresponding model directory located in AMICI/models/*yourmodelname* and compile again.
 
 Q: It still does not compile.
-A: Make an [https://github.com/ICB-DCM/AMICI/issues](issue) and we will have a look.
+
+A: Make an [issue](https://github.com/ICB-DCM/AMICI/issues) and we will have a look.
 
 Q: The simulation/sensitivities I get are incorrect.
-A: There are some known issues, especially with adjoint sensitivities and events. If your particular problem is not featured in the Make an [https://github.com/ICB-DCM/AMICI/issues](issues), please add it!
+
+A: There are some known issues, especially with adjoint sensitivities and events. If your particular problem is not featured in the [issues](https://github.com/ICB-DCM/AMICI/issues) list, please add it!
 
  
