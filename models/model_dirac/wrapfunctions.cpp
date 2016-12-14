@@ -199,8 +199,7 @@
                 }
                 
                 int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, realtype *my, realtype *sigma_y, void *user_data){
-                    warnMsgIdAndTxt("AMICI:mex:dJydy:NotAvailable","ERROR: The function dJydy was called but not compiled for this model.");
-                    return(-1);
+                    return dJydy_model_dirac(t, it, dJydy, y, my, sigma_y, user_data);
                 }
                 
                 int fdJydp(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data){
@@ -215,8 +214,8 @@
                     return dJzdp_model_dirac(t, ie, dJzdp, z, x, dzdp, mz, sigma_z, dsigma_zdp, user_data, temp_data);
                 }
                 
-                int fsJy(realtype t, int it, realtype *sJy, realtype *dJydy, realtype *dJydp, realtype *sy, void *user_data){
-                    return sJy_model_dirac(t, it, sJy, dJydy, dJydp, sy, user_data);
+                int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *sy, realtype *dydp, realtype *my, void *user_data){
+                    return sJy_model_dirac(t, it, sJy, s2Jy, dJydy, dJydp, sy, dydp, my, user_data);
                 }
                 
                 int fsJz(realtype t, int ie, realtype *sJz, realtype *z, N_Vector x, realtype *dzdp, realtype *sz, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data){

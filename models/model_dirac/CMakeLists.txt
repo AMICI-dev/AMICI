@@ -32,6 +32,7 @@ model_dirac_Jy.cpp
 model_dirac_Jz.cpp
 model_dirac_dJydp.cpp
 model_dirac_dJydx.cpp
+model_dirac_dJydy.cpp
 model_dirac_dJzdp.cpp
 model_dirac_dJzdx.cpp
 model_dirac_deltaqB.cpp

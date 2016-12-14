@@ -9,6 +9,7 @@ int dJydp_model_dirac(realtype t, int it, realtype *dJydp, realtype *y, N_Vector
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
+memset(dJydp,0,sizeof(realtype)*nytrue*np*ng);
 status = w_model_dirac(t,x,NULL,user_data);
 return(status);
 
