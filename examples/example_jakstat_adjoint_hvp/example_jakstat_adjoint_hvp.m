@@ -83,12 +83,12 @@ function example_jakstat_adjoint_hvp()
         v = presol.sllh;
         options.sensi = 2;
         sol  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
-        options.sensi_meth = 'forward';
-        solf  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
-        options.sensi_meth = 'adjoint';
         hvpasa = hvpasa + sol.s2llh;
     end
     t3 = toc;
+    options.sensi_meth = 'forward';
+    solf  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
+    options.sensi_meth = 'adjoint';
     
 %     % Printed output
 %     hvpasa = hvpasa / runs;
@@ -113,13 +113,14 @@ if(usejava('jvm'))
     bar([abs((sol.s2llh-hvp)./sol.s2llh),abs((sol.s2llh-hvp_f)./sol.s2llh),abs((sol.s2llh-hvp_b)./sol.s2llh),abs((sol.s2llh-solf.s2llh)./sol.s2llh)])
     hold on
     set(gca,'YScale','log')
-    ylim([1e-12,1e0])
+    ylim([1e-16,1e0])
     box on
     hold on
     %     plot([1e-2,1e2],[1e-2,1e2],'k:')
     xlabel('parameter index')
     ylabel('relative difference to adjoint sensitivities')
-    legend('FD_{central}','FD_{forward}','FD_{backward}','forward sensitivities')
+    legend('FD_{central}','FD_{forward}','FD_{backward}','forward sensitivities','Orientation','horizontal')
+    legend boxoff
     set(gcf,'Position',[100 300 1200 500])
     
     subplot(1,2,2);

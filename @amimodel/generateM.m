@@ -400,6 +400,7 @@ end
 fprintf(fid,'end\n');
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi == 2)\n');
+    fprintf(fid,'        sol.sllh = sol.sllh.*chainRuleFactor;\n');
     switch(o2flag)
         case 1
             switch(this.param)
@@ -411,7 +412,7 @@ if(o2flag)
         case 2
             fprintf(fid, '        sol.s2llh = sol.s2llh .* chainRuleFactor + (sol.sllh .* v) ./ theta(options_ami.sens_ind);\n');
     end
-    fprintf(fid,'        sol.sllh = sol.sllh.*chainRuleFactor;\n');
+
     fprintf(fid, '    if(options_ami.sensi_meth==2)\n');
     switch(o2flag)
         case 1
