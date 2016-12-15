@@ -95,7 +95,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
 freturn:
-    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     freeUserData(udata);
     delete edata;

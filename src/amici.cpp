@@ -310,8 +310,6 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     
     mxArray *mxsol;
     
-    /* Here, a new field for the Hessian or the HVP must be inserted */
-    /* No, this is already done with s2llh */
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
     mxArray *mxstatus;
     
@@ -743,6 +741,15 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         
         dydx = new realtype[ny*nx]();
         dydp = new realtype[ny*np]();
+        dgdp = new realtype[ng*np*nytrue]();
+        dgdx = new realtype[ng*nxtrue*nt]();
+        dgdy = new realtype[nytrue*ng*ny]();
+        if (ne > 0) {
+            dzdp = new realtype[nz*np]();
+            dzdx = new realtype[nz*nx]();
+        }
+        drdp = new realtype[ng*np*nztrue*nmaxevent]();
+        drdx = new realtype[ng*nx*nztrue*nmaxevent]();
         
         dsigma_ydp = new realtype[ny*np]();
         if(ne>0) dsigma_zdp = new realtype[nz*np]();
@@ -808,14 +815,6 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                 if (*status != AMI_SUCCESS) return(NULL);
                 
                 llhS0 = new realtype[ng*np]();
-                dgdp = new realtype[ng*np]();
-                dgdx = new realtype[ng*nxtrue*nt]();
-                if (ne > 0) {
-                    dzdp = new realtype[nz*np]();
-                    dzdx = new realtype[nz*nx]();
-                }
-                drdp = new realtype[ng*np*nztrue*nmaxevent]();
-                drdx = new realtype[ng*nx*nztrue*nmaxevent]();
             }
         }
         
@@ -1086,19 +1085,19 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
             }
         }
     }
-    
-    fdydx(ts[it],it,dydx,x,udata);
-    fdydp(ts[it],it,dydp,x,udata);
     fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
+    if(b_expdata) {
+        fsJy(ts[it],it,sllhdata,s2llhdata,dgdy,dgdp,sydata,dydp,my,udata);
+    }
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisASA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
     /**
-     * getDataSensisASA extracts data information for adjoint sensitivity analysis
+     * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
      *
      * @param[out] status flag indicating success of execution @type *int
      * @param[in] it index of current timepoint @type int
@@ -1110,29 +1109,50 @@ void getDataSensisASA(int *status, int it, void *ami_mem, UserData *udata, Retur
      * @return void
      */
     
-    int iy;
-    int ip;
+    int iy,ip,ig;
     
     
     *status = fdydx(ts[it],it,dydx,x,udata);
     if (*status != AMI_SUCCESS) return;
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
-    for (iy=0; iy<nytrue; iy++) {
-        if (amiIsNaN(ysigma[iy*nt+it])) {
-            *status = fdsigma_ydp(t,dsigma_ydp,udata);
-            if (*status != AMI_SUCCESS) return;
-        } else {
+    if(b_expdata) {
+        for (iy=0; iy<nytrue; iy++) {
+            if (amiIsNaN(ysigma[iy*nt+it])) {
+                *status = fdsigma_ydp(t,dsigma_ydp,udata);
+                if (*status != AMI_SUCCESS) return;
+            } else {
+                for (ip=0; ip<np; ip++) {
+                    dsigma_ydp[ip*ny+iy] = 0;
+                }
+            }
             for (ip=0; ip<np; ip++) {
-                dsigma_ydp[ip*ny+iy] = 0;
+                ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
             }
         }
-        for (ip=0; ip<np; ip++) {
-            ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
+        fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
+        
+        
+        if (sensi_meth == AMI_ASA) {
+            for(ig=0; ig<ng; ig++) {
+                for(ip=0; ip < np; ip++) {
+                    for(iy=0; iy < nytrue; iy++) {
+                        if(ig==0) {
+                            if (ny>0) {
+                                sllhdata[ip] -= dgdp[iy + ip*nytrue];
+                            }
+                        } else {
+                            if (ny>0) {
+                                s2llhdata[(ig-1)*np + ip] -= dgdp[(ig*np + ip)*nytrue + iy];
+                            }
+                        }
+                    }
+                }
+            }
         }
+        fdJydy(ts[it],it,dgdy,ydata,my,sigma_y,udata);
+        fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
     }
-    fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
-    fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -1175,11 +1195,9 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
         fJy(t,it,g,ydata,x,my,sigma_y,udata);
     }
     if (sensi >= 1) {
+        prepDataSensis(status, it, ami_mem, udata, rdata, edata, tdata);
         if (sensi_meth == AMI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
-        }
-        if (sensi_meth == AMI_ASA) {
-            getDataSensisASA(status, it, ami_mem, udata, rdata, edata, tdata);
         }
     }
 }
@@ -2108,7 +2126,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
             }
         }
         if(sensi>1) {
-            initField2(s2llh,np,np);
+            initField2(s2llh,ng-1,np);
         }
     }
 }
@@ -2178,6 +2196,8 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
         fillEventOutput(status, ami_mem, udata, rdata, edata, tdata);
     }
 
+    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
+    
     return 0;
 }
 
@@ -2303,18 +2323,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < np; ip++) {
                                 if (ig==0) {
-                                    sllhdata[ip] = - llhS0[ip] - xQB_tmp[ip];
-                                    if (ny>0) {
-                                        sllhdata[ip] -= dgdp[ip];
-                                    }
+                                    sllhdata[ip] -=  llhS0[ip] + xQB_tmp[ip];
                                     if (nz>0) {
                                         sllhdata[ip] -= drdp[ip];
                                     }
                                 } else {
-                                    s2llhdata[(ig-1)*np + ip] = - llhS0[ig*np + ip] - xQB_tmp[ig*np + ip];
-                                    if (ny>0) {
-                                        s2llhdata[(ig-1)*np + ip] -= dgdp[ig*np + ip];
-                                    }
+                                    s2llhdata[(ig-1)*np + ip] -= llhS0[ig*np + ip] + xQB_tmp[ig*np + ip];
                                     if (nz>0) {
                                         s2llhdata[(ig-1)*np + ip] -= drdp[ig*np + ip];
                                     }
@@ -2414,6 +2428,15 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         if (sensi >= 1) {
             if(dydx) delete[] dydx;
             if(dydp) delete[] dydp;
+            if(dgdp) delete[] dgdp;
+            if(dgdy) delete[] dgdy;
+            if(dgdx) delete[] dgdx;
+            if(drdp) delete[] drdp;
+            if(drdx) delete[] drdx;
+            if (ne>0) {
+                if(dzdp) delete[] dzdp;
+                if(dzdx) delete[] dzdx;
+            }
             if(dsigma_ydp) delete[] dsigma_ydp;
             if (ne>0) {
                 if(dsigma_zdp) delete[] dsigma_zdp;
@@ -2431,14 +2454,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
                 N_VDestroyVectorArray_Serial(sdx, np);
             }
             if (sensi_meth == AMI_ASA) {
-                if(ami_mem) delete[] dgdp;
-                if(ami_mem) delete[] dgdx;
-                if(ami_mem) delete[] drdp;
-                if(ami_mem) delete[] drdx;
-                if (ne>0) {
-                    if(dzdp) delete[] dzdp;
-                    if(dzdx) delete[] dzdx;
-                }
+
                 if(llhS0) delete[] llhS0;
                 if(setupBdone) N_VDestroy_Serial(dxB);
                 if(setupBdone) N_VDestroy_Serial(xB);

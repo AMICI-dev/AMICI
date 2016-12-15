@@ -59,9 +59,11 @@ classdef SBMLode < handle
             % Return values:
             %
             model.importSBML(filename);
+            model.checkODE();
         end
         
         importSBML(this,filename)
+        checkODE(this);
         
         writeAMICI(this,modelname)
     end

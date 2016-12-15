@@ -32,6 +32,7 @@ ${MODEL_DIR}/model_dirac_Jz.cpp
 ${MODEL_DIR}/model_dirac_dJydp.cpp
 ${MODEL_DIR}/model_dirac_dJydx.cpp
 ${MODEL_DIR}/model_dirac_dJzdp.cpp
+${MODEL_DIR}/model_dirac_dJydy.cpp
 ${MODEL_DIR}/model_dirac_dJzdx.cpp
 ${MODEL_DIR}/model_dirac_deltaqB.cpp
 ${MODEL_DIR}/model_dirac_deltasx.cpp
