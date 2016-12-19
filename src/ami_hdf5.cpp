@@ -1,7 +1,7 @@
 #include <assert.h>
 #ifdef AMI_HDF5_H_DEBUG
 #include <execinfo.h>
-#endif AMI_HDF5_H_DEBUG
+#endif
 #include <unistd.h>
 
 #include "ami_hdf5.h"
