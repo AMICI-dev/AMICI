@@ -7,7 +7,7 @@ dist: trusty
 branches:
   only:
     - master
-    - stable
+    - staging
 
 compiler:
     - clang

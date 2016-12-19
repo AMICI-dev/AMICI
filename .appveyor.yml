@@ -12,7 +12,7 @@ platform:
 branches:
   only:
     - master
-    - stable
+    - staging
   
 environment:
   matrix:
