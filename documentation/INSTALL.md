@@ -7,8 +7,6 @@ The sources for AMICI are accessible as
 - Source  [zip](https://github.com/ICB-DCM/AMICI/zipball/master)
 - GIT repository on  [github](https://github.com/ICB-DCM/AMICI)
 
-Once you've obtained your copy check out the @ref install
-
 ### Obtaining AMICI via the GIT versioning system
 In order to always stay up-to-date with the latest AMICI versions, simply pull it from our GIT repository and
 recompile it when a new release is available. For more information about GIT checkout their [website](http://git-scm.com/)
@@ -17,7 +15,7 @@ The GIT repository can currently be found at https://github.com/ICB-DCM/AMICI an
 
     git clone https://github.com/ICB-DCM/AMICI.git AMICI
 
-## Installation {#install}
+## Installation
 
 If AMICI was downloaded as a zip, it needs to be unpacked in a convenient directory. If AMICI was obtained via cloning of the git repository, no further unpacking is necessary.
 
@@ -63,11 +61,11 @@ script to compile amici libary. The static library file can then be linked from
  
 ## Dependencies
 
-The MATLAB interface requires the Mathworks Symbolic Toolbox for model general, but not for model compilation or execution.
+The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via `amiwrap(...)`, but not for execution of precompiled models.
 
-The Python and C++ interfaces require cmake and cblas to be installed.
+The Python and C++ interfaces require `cmake` and `cblas` to be installed.
 
-The tools SUNDIALS and SuiteSparse shipped with AMICI do __not__ require further installation.
+The tools SUNDIALS and SuiteSparse shipped with AMICI do __not__ require explicit installation.
 
 AMICI uses the following packages from SUNDIALS:
 
