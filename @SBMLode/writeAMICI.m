@@ -27,9 +27,11 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,['% EVENTS\n']);
     for ievent = 1:length(this.trigger)
+        str_trigger = char(this.trigger(ievent));
+        str_bolus = strjoin(arrayfun(@char,this.bolus(:,ievent),'UniformOutput',false),',');
         fprintf(fid,['model.event(' num2str(ievent) ') = amievent(' ...
-            char(this.trigger(ievent)) ', ...\n' ...
-            '[' strjoin(arrayfun(@char,this.bolus(:,ievent),'UniformOutput',false),',') '], ...\n' ...
+            str_trigger ', ...\n' ...
+            '[' str_bolus '], ...\n' ...
             '[]);\n']);
     end
     fprintf(fid,'\n');
@@ -56,6 +58,28 @@ function writeAMICI(this,modelname)
         fprintf(fid,'end\n');
         fprintf(fid,'\n');
     end
+    
+    fprintf(fid,['function r = factorial(x)\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,['    error(''AMICI does not support the factorial function'');\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+    
+    fprintf(fid,['function r = ceil(x)\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,['    error(''AMICI does not support the ceil function'');\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+    
+    fprintf(fid,['function r = psi(x)\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,['    error(''AMICI does not support the psi function'');\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+    
     fclose(fid);
 end
 

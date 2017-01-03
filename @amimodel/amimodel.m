@@ -127,13 +127,16 @@ classdef amimodel < handle
                 AM = symfun;
             else
                 if(isa(symfun,'char'))
-                    try
-                        model = eval(symfun);
-                    catch
-                        error(['"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
+                    if(exist(symfun,'file'))
+                        fun = str2func(symfun);
+                        model = fun();
+                    else
+                        error(['"' symfun '" must be the name of a matlab function in a matlab file, with the corresponding name, in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
                     end
                 elseif(isa(symfun,'struct'))
                     model = symfun;
+                elseif(isa(symfun,'function_handle'))
+                    model = symfun();
                 else
                     error('invalid input symfun')
                 end
