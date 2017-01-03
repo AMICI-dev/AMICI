@@ -136,10 +136,6 @@ parameter_val = transpose([model.parameter.value]);
 parameter_sym = parameter_sym(:);
 this.param = parameter_sym;
 
-% set initial assignments
-setInitialAssignment(this,model,'parameter',initAssignemnts_sym,initAssignemnts_math)
-applyRule(this,model,'param',rulevars,rulemath)
-
 np = length(this.param);
 
 %% CONSTANTS
@@ -245,15 +241,20 @@ for irule = 1:length(model.rule)
         if(~isempty(state_rate_idx))
             this.xdot(state_rate_idx) = sym(model.rule(irule).formula);
         elseif(~isempty(param_rate_idx))
-            this.state = [this.state; this.param(param_rate_idx)];
+            this.state = [this.state; parameter_sym(param_rate_idx)];
             this.xdot = [this.xdot; sym(model.rule(irule).formula)];
-            this.initState = [this.initState; parameter_val(param_rate_idx)];
+            if(ismember(parameter_sym(param_rate_idx),initAssignemnts_sym))
+                this.initState = [this.initState; initAssignemnts_math(find(initAssignemnts_sym==parameter_sym(param_rate_idx)))];
+            else
+                this.initState = [this.initState; parameter_val(param_rate_idx)];
+            end
             this.volume = [this.volume; 1];
             nx = nx + 1;
             parameter_val(param_rate_idx) = [];
             parameter_sym(param_rate_idx) = [];
             this.param(param_rate_idx) = [];
             np = np - 1;
+            setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math);
         end
     end
 end
@@ -373,6 +374,16 @@ if(~isempty(lambdas))
         eval([replaceReservedFunctions(this.funarg{ifun}(1:(start{1}-1))) ' = @(' token{1}{1}{1} ')' this.funmath{ifun} ';']);
     end
 end
+
+%% Parameter Rules/Assignments
+
+% set initial assignments
+% for iIA = 1:length(initAssignemnts_sym)
+%     if(ismember(initAssignemnts_sym(iIA),this.param))
+%         param_idx =  find(initAssignemnts_sym==this.param);
+%     end  
+% end
+applyRule(this,model,'param',rulevars,rulemath)
 
 %% CLEAN-UP
 
