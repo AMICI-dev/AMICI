@@ -416,8 +416,8 @@ this.pnom = parameter_val(and(not(isRuleVar),not(isPartOfRule)));
 
 this.condition = condition_sym;
 obs_idx = all([isRuleVar,not(isPartOfRule),not(isUsedParam),not(hasAssignment)],2);
-this.observable = this.param(obs_idx);
-this.observable_name = parameter_sym(obs_idx);
+this.observable = this.param(obs_idx(1:length(this.param)));
+this.observable_name = parameter_sym(obs_idx(1:length(this.param)));
 
 equal_idx = logical(this.observable==this.observable_name); % this is the unused stuff
 this.observable(equal_idx) = [];
