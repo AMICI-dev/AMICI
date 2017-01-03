@@ -63,6 +63,9 @@ function makeSyms( this )
     if(numel(this.sym.x)~=numel(this.sym.x0))
         error('Size of model.sym.x and model.sym.x0 does not agree.')
     end
+    if(any(ismember(symvar(this.sym.x0),this.sym.x)))
+        error('initial states x0 must not contain state variables x');
+    end
     
     if(~isfield(this.sym,'y'))
         error('Model this is missing the definition of the vector of observables y (.sym.y)!')

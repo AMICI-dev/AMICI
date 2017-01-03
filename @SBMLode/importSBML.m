@@ -446,6 +446,9 @@ alt_prohib = sym({'null_sym','beta_sym'});
 this.parameter = subs(this.parameter,prohibited,alt_prohib);
 this.state = subs(this.state,prohibited,alt_prohib);
 this.condition = subs(this.condition,prohibited,alt_prohib);
+while(any(ismember(symvar(this.initState),this.state)))
+    this.initState = subs(this.initState,this.state,this.initState);
+end
 end
 
 function setInitialAssignment(this,~,field,initAssignemnts_sym,initAssignemnts_math)
