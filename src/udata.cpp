@@ -23,7 +23,7 @@ void freeUserData(UserData *udata) {
         if(M_tmp) delete[] M_tmp;
         if(dfdx_tmp) delete[] dfdx_tmp;
         if(stau_tmp) delete[] stau_tmp;
-        SparseDestroyMat(tmp_J);
+        if(tmp_J) SparseDestroyMat(tmp_J);
 
         delete udata;
     }

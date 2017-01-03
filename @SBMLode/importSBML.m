@@ -49,6 +49,9 @@ if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
 end
 
 rulevars = sym({model.rule.variable});
+if(any(arrayfun(@(x) ismember(x,compartments_sym),rulevars)))
+    error('rules for compartments are currently not supported!');
+end
 rulemath = sym({model.rule.formula});
 % remove rate rules
 rulevars = rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
@@ -114,6 +117,7 @@ this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConc
 % set initial amounts
 amount_idx = logical([model.species.isSetInitialAmount]);
 this.initState = subs(this.initState,species_sym(amount_idx),sym(initAmount(amount_idx))./this.volume(amount_idx));
+% this.initState = subs(this.initState,species_sym(amount_idx),sym(initAmount(amount_idx)));
 
 % apply rules
 applyRule(this,model,'initState',rulevars,rulemath)
@@ -239,7 +243,7 @@ for irule = 1:length(model.rule)
         state_rate_idx = find(this.state == sym(model.rule(irule).variable));
         param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
         if(~isempty(state_rate_idx))
-            this.xdot(fstate_rate_idx) = sym(model.rule(irule).formula);
+            this.xdot(state_rate_idx) = sym(model.rule(irule).formula);
         elseif(~isempty(param_rate_idx))
             this.state = [this.state; this.param(param_rate_idx)];
             this.xdot = [this.xdot; sym(model.rule(irule).formula)];
@@ -274,13 +278,19 @@ if(isfield(model.species,'conversionFactor'))
     end
 end
 
-this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)./this.volume;
+% this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)./this.volume;
+this.xdot = conversionfactor.*this.xdot./this.volume;
+
+% this.xdot = conversionfactor.*this.xdot;
 
 %% EVENTS
 
 fprintf('loading events ...\n')
 
-
+if(numel({model.event.delay}))
+   error('Events with delays are currently not supported'); 
+end
+    
 try
     tmp = cellfun(@(x) sym(x),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];

@@ -1,9 +1,9 @@
 function runSBMLTests
-for iTest = 21:1183
+for iTest = 161:1183
     try
     runSBMLTest(iTest)
-    catch error_msg
-        
+    catch error
+        disp(error.message);
     end
 end
 end
@@ -63,6 +63,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     rdev(isinf(rdev)) = 0;
     assert(not(any(any(and(adev>settings.atol,rdev>settings.rtol)))))
     cd(curdir)
+    mkdir(fullfile(pwd,'SBMLresults'))
     writetable(amiresults,fullfile(pwd,'SBMLresults',[testid '-results.csv']))
     clear all
 end

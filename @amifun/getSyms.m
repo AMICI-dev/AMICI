@@ -332,10 +332,12 @@ function [this,model] = getSyms(this,model)
         case 'JB'
             this.sym = sym(zeros(model.nx, model.nx));
             % Augmentation needs a transposition in the submatrices
-            for ix = 1 : model.ng
-                for jx = 1 : model.ng
-                    this.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue) = ...
-                        -transpose(model.fun.J.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue));
+            if(model.nx>0)
+                for ix = 1 : model.ng
+                    for jx = 1 : model.ng
+                        this.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue) = ...
+                            -transpose(model.fun.J.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue));
+                    end
                 end
             end
             

@@ -164,7 +164,7 @@ classdef amimodel < handle
                         if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
                             AM.nxtrue = AM.nx;
                         end
-                        AM.ng = round(AM.nx / AM.nxtrue);
+                        AM.ng = size(AM.sym.Jy,2);
                         AM.np = length(AM.sym.p);
                         AM.nk = length(AM.sym.k);
                         AM.ny = length(AM.sym.y);
