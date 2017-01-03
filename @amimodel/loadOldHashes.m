@@ -9,17 +9,9 @@ function HTable = loadOldHashes(this)
     try
         load(fullfile(wrap_path,'models',this.modelname,['hashes.mat']))
         try
-            this.nxtrue = nxtrue;
-            this.nytrue = nytrue;
-            this.nx = nx;
-            this.ny = ny;
-            this.np = np;
-            this.nk = nk;
-            this.nevent = nevent;
             this.nw = nw;
             this.ndwdp = ndwdp;
             this.ndwdx = ndwdx;
-            this.nz = nz;
             this.z2event = z2event;
             this.nnz = nnonzeros;
             this.id = id;

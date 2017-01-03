@@ -44,6 +44,11 @@ if(this.nztrue == 0)
     nztrue = length(this.sym.sigma_z);
     this.nztrue = nztrue;
 end
+if(this.nxtrue == 0)
+    nxtrue = length(this.sym.x);
+    this.nztrue = nxtrue;
+end
+
 
 %check zero trigger events
 for ievent = 1:nevent
