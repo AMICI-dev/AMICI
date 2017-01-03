@@ -473,6 +473,20 @@ function [this,model] = getSyms(this,model)
             else
                 this.sym = sym(zeros(0,1));
             end
+            for ir = 1:nevent
+                if(not(all([model.splineflag,model.minflag,model.maxflag])))
+                    str = char(this.sym(ir));
+                    if(strfind(str,'spline'))
+                        model.splineflag = true;
+                    end
+                    if(strfind(str,'max'))
+                        model.maxflag = true;
+                    end
+                    if(strfind(str,'min'))
+                        model.minflag = true;
+                    end
+                end
+            end
             
         case 'drootdp'
             this.sym = jacobian(model.fun.root.sym,p);
