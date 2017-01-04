@@ -119,7 +119,7 @@ applyRule(this,model,'condition',rulevars,rulemath)
 
 % set initial concentrations
 concentration_idx = logical([model.species.isSetInitialConcentration]);
-this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx))./this.volume(concentration_idx));
+this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx)));
 
 % set initial amounts
 amount_idx = logical([model.species.isSetInitialAmount]);

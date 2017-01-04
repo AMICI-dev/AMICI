@@ -2,7 +2,7 @@ function runSBMLTests
 cd(fileparts(mfilename('fullpath')));
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for testid = 586:1183
+for testid = 609:1183
     try
     runSBMLTest(testid,fid)
     catch error
@@ -83,7 +83,8 @@ T = textscan(fid,'%s %f');
 options.atol = T{2}(1);
 options.rtol = T{2}(2);
 tline = fgetl(fid);
-if(strcmp(tline,''))
+tline = fgetl(fid);
+if(~strcmp(tline,'concentration:'))
     concflag = false;
 else
     concflag = true;
