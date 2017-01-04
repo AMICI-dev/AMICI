@@ -1,15 +1,17 @@
 function runSBMLTests
-for iTest = 198:1183
+fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
+for testid = 297:1183
     try
-    runSBMLTest(iTest)
+    runSBMLTest(testid,fid)
     catch error
-        disp(error.message);
+        fprintf(fid,['Test ' num2str(testid) ' failed: ' error.message '\n']);;
     end
 end
+fclose(fid);
 end
 
 
-function runSBMLTest(iTest)
+function runSBMLTest(iTest,fid)
 cd(fileparts(mfilename('fullpath')))
 curdir = pwd;
 testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
@@ -24,7 +26,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
         end
         amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd);
     catch error
-        warning(['Test ' testid ' failed: ' error.message]);
+        fprintf(fid,['Test ' testid ' failed: ' error.message '\n']);;
         return
     end
     load(['SBMLTEST_' testid '_knom.mat'])
@@ -32,6 +34,7 @@ if(exist(fullfile(pwd,'CustomSBMLTestsuite',testid),'dir'))
     load(['SBMLTEST_' testid '_vnom.mat'])
     [t,settings,concflag] = parseSettings(testid);
     options.sensi = 0;
+    options.maxsteps = 1e6;
     eval(['sol = simulate_SBMLTEST_' testid '(t,pnom,knom,[],options);'])
     results = readtable([testid '-results.csv']);
     eval(['model = SBMLTEST_' testid '_syms;'])

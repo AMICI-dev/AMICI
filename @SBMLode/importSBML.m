@@ -54,8 +54,8 @@ if(any(arrayfun(@(x) ismember(x,compartments_sym),rulevars)))
 end
 rulemath = sym({model.rule.formula});
 % remove rate rules
-rulevars = rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
-rulemath = rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
+rulevars = rulevars(not(any(strcmp({model.rule.typecode},'SBML_RATE_RULE'))));
+rulemath = rulemath(not(any(strcmp({model.rule.typecode},'SBML_RATE_RULE'))));
 repeat_idx = ismember(rulevars,symvar(rulemath));
 while(any(repeat_idx))
     rulemath= subs(rulemath,rulevars,rulemath);
@@ -84,6 +84,7 @@ initConcentration = initConcentration(:);
 initAmount = [model.species.initialAmount];
 initAmount = initAmount(:);
 this.initState = species_sym;
+hasAssignmentRule = ismember(this.state,rulevars(strcmp({model.rule.typecode},'SBML_ASSIGNMENT_RULE')))';
 
 % set initial assignments
 setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math)
@@ -91,8 +92,8 @@ setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_
 
 % remove conditions species (boundary condition + no initialisation)
 if(~isempty(this.state))
-    cond_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState)));
-    bound_idx = and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState)));
+    cond_idx = and(and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState))),~hasAssignmentRule);
+    bound_idx = and(and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState))),~hasAssignmentRule);
     condition_sym = this.state(cond_idx);
     conditions = this.state(cond_idx);
     boundary_sym = this.state(bound_idx);
@@ -257,7 +258,22 @@ for irule = 1:length(model.rule)
             setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math);
         end
     end
+    if(strcmp(model.rule(irule).typecode,'SBML_ASSIGNMENT_RULE'))
+        state_rate_idx = find(this.state == sym(model.rule(irule).variable));
+        if(~isempty(state_rate_idx))
+            this.state(state_rate_idx) = [];
+            this.xdot(state_rate_idx) = [];
+            this.initState(state_rate_idx) = [];
+            this.volume(state_rate_idx) = [];
+            nx = nx-1;
+            this.observable = [this.observable;sym(model.rule(irule).formula)];
+            this.observable_name = [this.observable_name;sym(model.rule(irule).variable)];
+        end
+    end
 end
+
+
+
 %% CONVERSION FACTORS/VOLUMES
 
 fprintf('converting to concentrations ...\n')
@@ -427,10 +443,10 @@ this.pnom = parameter_val(and(not(isRuleVar),not(isPartOfRule)));
 
 this.condition = condition_sym;
 obs_idx = all([isRuleVar,not(isPartOfRule),not(isUsedParam),not(hasAssignment)],2);
-this.observable = this.param(obs_idx(1:length(this.param)));
-this.observable_name = parameter_sym(obs_idx(1:length(this.param)));
+this.observable = [this.observable;this.param(obs_idx(1:length(this.param)))];
+this.observable_name = [this.observable_name;parameter_sym(obs_idx(1:length(this.param)))];
 
-equal_idx = logical(this.observable==this.observable_name); % this is the unused stuff
+equal_idx = logical(this.observable(:)==this.observable_name(:)); % this is the unused stuff
 this.observable(equal_idx) = [];
 this.observable_name(equal_idx) = [];
 

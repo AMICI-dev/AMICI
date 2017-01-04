@@ -199,3 +199,5 @@ Makefile
 
 scripts/CMakeFiles
 
+
+unitTests/SBMLTest_log.txt
