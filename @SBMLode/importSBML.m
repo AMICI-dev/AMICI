@@ -48,14 +48,14 @@ if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
     error('DAEs currently not supported!');
 end
 
-rulevars = sym({model.rule.variable});
-if(any(arrayfun(@(x) ismember(x,compartments_sym),rulevars)))
+all_rulevars = sym({model.rule.variable});
+if(any(arrayfun(@(x) ismember(x,compartments_sym),all_rulevars)))
     error('rules for compartments are currently not supported!');
 end
-rulemath = sym({model.rule.formula});
+all_rulemath = sym({model.rule.formula});
 % remove rate rules
-rulevars = rulevars(not(any(strcmp({model.rule.typecode},'SBML_RATE_RULE'))));
-rulemath = rulemath(not(any(strcmp({model.rule.typecode},'SBML_RATE_RULE'))));
+rulevars = all_rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
+rulemath = all_rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
 repeat_idx = ismember(rulevars,symvar(rulemath));
 while(any(repeat_idx))
     rulemath= subs(rulemath,rulevars,rulemath);
@@ -78,33 +78,39 @@ nx = length(this.state);
 % extract corresponding volumes
 compartments = sym({model.species.compartment});
 this.volume = subs(compartments(:),sym({model.compartment.id}),this.compartment);
+if(any(arrayfun(@(x) ~isempty(regexp(char(x),'[\w]+\(')),this.volume)))
+    error('The use of functions in volume definitions is currently not supported.')
+end
 
 initConcentration = [model.species.initialConcentration];
 initConcentration = initConcentration(:);
 initAmount = [model.species.initialAmount];
 initAmount = initAmount(:);
 this.initState = species_sym;
-hasAssignmentRule = ismember(this.state,rulevars(strcmp({model.rule.typecode},'SBML_ASSIGNMENT_RULE')))';
+hasAssignmentRule = ismember(this.state,all_rulevars(strcmp({model.rule.typecode},'SBML_ASSIGNMENT_RULE')))';
+hasRateRule = ismember(this.state,all_rulevars(strcmp({model.rule.typecode},'SBML_RATE_RULE')))';
 
 % set initial assignments
 setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math)
 
 
+
 % remove conditions species (boundary condition + no initialisation)
 if(~isempty(this.state))
-    cond_idx = and(and(logical([model.species.boundaryCondition]),transpose(logical(this.state==this.initState))),~hasAssignmentRule);
-    bound_idx = and(and(logical([model.species.boundaryCondition]),transpose(logical(this.state~=this.initState))),~hasAssignmentRule);
+    cond_idx = all([logical([model.species.boundaryCondition]);transpose(logical(this.state==this.initState));~hasAssignmentRule;~hasRateRule]);
+    bound_idx = all([logical([model.species.boundaryCondition]);transpose(logical(this.state~=this.initState));~hasAssignmentRule;~hasRateRule]);
     condition_sym = this.state(cond_idx);
     conditions = this.state(cond_idx);
     boundary_sym = this.state(bound_idx);
     boundaries = this.initState(bound_idx);
 else
-    conditions = this.state;
+    
     cond_idx = [];
     bound_idx = [];
     condition_sym = sym([]);
+    conditions = sym([]);
     boundary_sym = sym([]);
-    boundaries = this.state;
+    boundaries = sym([]);
 end
 
 nk = length(conditions);
@@ -113,7 +119,7 @@ applyRule(this,model,'condition',rulevars,rulemath)
 
 % set initial concentrations
 concentration_idx = logical([model.species.isSetInitialConcentration]);
-this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx)));
+this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx))./this.volume(concentration_idx));
 
 % set initial amounts
 amount_idx = logical([model.species.isSetInitialAmount]);
@@ -125,6 +131,9 @@ applyRule(this,model,'initState',rulevars,rulemath)
 
 while(any(ismember(symvar(this.initState),this.state)))
     this.initState = subs(this.initState,this.state,this.initState);
+end
+while(any(ismember(symvar(boundaries),this.state)))
+    boundaries = subs(boundaries,this.state,this.initState);
 end
 
 %% PARAMETERS
@@ -394,11 +403,21 @@ end
 %% Parameter Rules/Assignments
 
 % set initial assignments
-% for iIA = 1:length(initAssignemnts_sym)
-%     if(ismember(initAssignemnts_sym(iIA),this.param))
-%         param_idx =  find(initAssignemnts_sym==this.param);
-%     end  
-% end
+for iIA = 1:length(initAssignemnts_sym)
+    if(ismember(initAssignemnts_sym(iIA),this.param))
+        param_idx =  find(initAssignemnts_sym==this.param);
+        parameter_sym(param_idx) = [];
+        parameter_val(param_idx) = [];
+        this.param(param_idx) = [];
+        this.xdot = subs(this.xdot,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        this.trigger = subs(this.trigger,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        this.bolus = subs(this.bolus,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        this.initState = subs(this.initState,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        this.param = subs(this.param,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        rulemath = subs(rulemath,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        np = np-1;
+    end  
+end
 applyRule(this,model,'param',rulevars,rulemath)
 
 %% CLEAN-UP
