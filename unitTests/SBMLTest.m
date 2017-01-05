@@ -2,11 +2,12 @@ function runSBMLTests
 cd(fileparts(mfilename('fullpath')));
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for testid = 609:1183
+for iTest = 610:1183
     try
-    runSBMLTest(testid,fid)
+        runSBMLTest(iTest,fid);
     catch error
-        fprintf(fid,['Test ' num2str(testid) ' failed: ' error.message '\n']);;
+        testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
+        fprintf(fid,['Test ' testid ' failed: ' error.message '\n']);;
     end
 end
 fclose(fid);

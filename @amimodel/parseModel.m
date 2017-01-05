@@ -46,7 +46,7 @@ if(this.nztrue == 0)
 end
 if(this.nxtrue == 0)
     nxtrue = length(this.sym.x);
-    this.nztrue = nxtrue;
+    this.nxtrue = nxtrue;
 end
 
 
