@@ -2,7 +2,7 @@ function runSBMLTests
 cd(fileparts(mfilename('fullpath')));
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for iTest = 610:1183
+for iTest = 687:1183
     try
         runSBMLTest(iTest,fid);
     catch error

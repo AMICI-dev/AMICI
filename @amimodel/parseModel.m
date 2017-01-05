@@ -162,6 +162,7 @@ if(isfield(this.fun,'J'))
     
     I = arrayfun(@(x) find(M(:,x))-1,1:nx,'UniformOutput',false);
     this.rowvals = [];
+    this.colptrs = [];
     for ix = 1:nx
         this.colptrs(ix) = length(this.rowvals);
         this.rowvals = [this.rowvals; I{ix}];
@@ -175,6 +176,7 @@ if(isfield(this.fun,'J'))
             this.sparseidxB = find(MB);
             I = arrayfun(@(x) find(MB(:,x))-1,1:nx,'UniformOutput',false);
             this.rowvalsB = [];
+            this.colptrsB = [];
             for ix = 1:nx
                 this.colptrsB(ix) = length(this.rowvalsB);
                 this.rowvalsB = [this.rowvalsB; I{ix}];

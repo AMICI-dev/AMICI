@@ -249,7 +249,7 @@ for irule = 1:length(model.rule)
         state_rate_idx = find(this.state == sym(model.rule(irule).variable));
         param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
         if(~isempty(state_rate_idx))
-            this.xdot(state_rate_idx) = sym(model.rule(irule).formula);
+            this.xdot(state_rate_idx) = sym(model.rule(irule).formula).*this.volume(state_rate_idx);
         elseif(~isempty(param_rate_idx))
             this.state = [this.state; parameter_sym(param_rate_idx)];
             this.xdot = [this.xdot; sym(model.rule(irule).formula)];
