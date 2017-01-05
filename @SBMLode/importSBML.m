@@ -25,7 +25,7 @@ this.compartment = compartments_sym;
 % set initial assignments
 if(isfield(model,'initialAssignment'))
     initAssignemnts_sym = sym({model.initialAssignment.symbol});
-    initAssignemnts_math = sym({model.initialAssignment.math});
+    initAssignemnts_math = cleanedsym({model.initialAssignment.math});
 else
     initAssignemnts_sym = sym([]);
     initAssignemnts_math = sym([]);
@@ -52,7 +52,7 @@ all_rulevars = sym({model.rule.variable});
 if(any(arrayfun(@(x) ismember(x,compartments_sym),all_rulevars)))
     error('rules for compartments are currently not supported!');
 end
-all_rulemath = sym({model.rule.formula});
+all_rulemath = cleanedsym({model.rule.formula}); 
 % remove rate rules
 rulevars = all_rulevars(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
 rulemath = all_rulemath(not(strcmp({model.rule.typecode},'SBML_RATE_RULE')));
@@ -76,7 +76,7 @@ this.state = species_sym;
 nx = length(this.state);
 
 % extract corresponding volumes
-compartments = sym({model.species.compartment});
+compartments = sym(sanitizeString({model.species.compartment}));
 this.volume = subs(compartments(:),sym({model.compartment.id}),this.compartment);
 if(any(arrayfun(@(x) ~isempty(regexp(char(x),'[\w]+\(')),this.volume)))
     error('The use of functions in volume definitions is currently not supported.')
@@ -164,6 +164,15 @@ constants = this.initState(const_idx);
 fprintf('parsing reactions ...\n')
 
 nr = length(model.reaction);
+if(nr>0)
+    for ir = 1:nr
+        if(model.reaction(ir).isSetFast)
+            if(model.reaction(ir).fast)
+                error('Fast reactions are currently not supported');
+            end
+        end
+    end
+end
 
 kLaw = cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false);
 
@@ -269,18 +278,20 @@ for irule = 1:length(model.rule)
     end
     if(strcmp(model.rule(irule).typecode,'SBML_ASSIGNMENT_RULE'))
         state_rate_idx = find(this.state == sym(model.rule(irule).variable));
+        param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
         if(~isempty(state_rate_idx))
             this.state(state_rate_idx) = [];
             this.xdot(state_rate_idx) = [];
             this.initState(state_rate_idx) = [];
             this.volume(state_rate_idx) = [];
             nx = nx-1;
-            this.observable = [this.observable;sym(model.rule(irule).formula)];
+            this.observable = [this.observable;cleanedsym(model.rule(irule).formula)];
             this.observable_name = [this.observable_name;sym(model.rule(irule).variable)];
         end
     end
 end
 
+applyRule(this,model,'xdot',rulevars,rulemath)
 
 
 %% CONVERSION FACTORS/VOLUMES
@@ -405,7 +416,7 @@ end
 % set initial assignments
 for iIA = 1:length(initAssignemnts_sym)
     if(ismember(initAssignemnts_sym(iIA),this.param))
-        param_idx =  find(initAssignemnts_sym==this.param);
+        param_idx =  find(initAssignemnts_sym(iIA)==this.param);
         parameter_sym(param_idx) = [];
         parameter_val(param_idx) = [];
         this.param(param_idx) = [];
@@ -433,7 +444,7 @@ this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 
 % apply rules to dynamics
 for irule = 1:length(rulevars)
-    eval(['syms ' strjoin(arrayfun(@char,rulevars(irule),'UniformOutput',false),' ') ' ' strjoin(arrayfun(@char,symvar(sym(rulemath(irule))),'UniformOutput',false),' ')]);
+    eval(['syms ' strjoin(arrayfun(@char,rulevars(irule),'UniformOutput',false),' ') ' ' strrep(strrep(strjoin(arrayfun(@char,symvar(sym(rulemath(irule))),'UniformOutput',false),' '),'true',''),'false','')]);
     eval(['rule = ' char(rulemath(irule)) ';']);
     rule_idx = find(rulevars(irule)==this.state);
     this.xdot(rule_idx) = jacobian(rule,this.state)*this.xdot;
@@ -454,7 +465,7 @@ makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,compartments_sym,this.compartment);
 
 isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
-isPartOfRule = and(ismember(parameter_sym,symvar(sym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
+isPartOfRule = and(ismember(parameter_sym,symvar(cleanedsym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
 isRuleVar = ismember(parameter_sym,sym({model.rule.variable}));
 hasAssignment = ismember(parameter_sym,initAssignemnts_sym);
 this.parameter = parameter_sym(and(not(isRuleVar),not(isPartOfRule)));
@@ -474,6 +485,8 @@ this.observable = subs(this.observable,condition_sym,conditions);
 this.observable = subs(this.observable,constant_sym,constants);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
+applyRule(this,model,'observable',rulevars,rulemath)
+
 this.time_symbol = model.time_symbol;
 
 prohibited = sym({'null','beta'});
@@ -526,6 +539,16 @@ if(any(cell2mat(strfind(str,'floor'))))
 end
 end
 
+function csym = cleanedsym(str)
+csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
+end
+
+function str = sanitizeString(str)
+% wrapper for replaceDiscontinuousFunctions() and replaceReservedFunctions()
+str = replaceDiscontinuousFunctions(str);
+str = replaceReservedFunctions(str);
+end
 
 function str = replaceDiscontinuousFunctions(str)
 % replace imcompatible piecewise defintion
@@ -553,5 +576,9 @@ function str = replaceReservedFunctionIDs(str)
 for logicalf = {'divide'}
     str = regexprep(str,['^' logicalf{1} '$'],['am_' logicalf{1} '']);
 end
+end
+
+function z = delay(x,y)
+error('Events with delays are currently not supported'); 
 end
 

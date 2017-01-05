@@ -16,6 +16,9 @@ function writeAMICI(this,modelname)
     else
         fprintf(fid,[this.time_symbol ' = sym(''t'');\n']);
     end
+    fprintf(fid,'\n');
+    fprintf(fid,'avogadro = 6.02214179e23;');
+    
 %     fprintf(fid,'model.debug = true;\n');
     writeDefinition('STATES','x','state',this,fid)
     writeDefinition('PARAMETERS','p','parameter',this,fid)
