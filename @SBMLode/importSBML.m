@@ -224,7 +224,7 @@ if(length({model.reaction.id})>0)
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
         math_expr = @(y) sym(y.math);
-        symbolic_expr = @(x) num2cell([sym(arrayfun(@(y) math_expr(y),[x.stoichiometryMath],'UniformOutput',false)),sym(zeros(1,isempty([x.stoichiometryMath])*length(x)))] + sym(arrayfun(@(y) y.stoichiometry,x))*isempty([x.stoichiometryMath]));
+        symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
         reactant_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.product},'UniformOutput',false);
     end
