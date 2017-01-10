@@ -24,13 +24,13 @@ this.compartment = compartments_sym;
 
 % set initial assignments
 if(isfield(model,'initialAssignment'))
-    initAssignemnts_sym = sym({model.initialAssignment.symbol});
-    initAssignemnts_math = cleanedsym({model.initialAssignment.math});
+    initassignments_sym = sym({model.initialAssignment.symbol});
+    initassignments_math = cleanedsym({model.initialAssignment.math});
 else
-    initAssignemnts_sym = sym([]);
-    initAssignemnts_math = sym([]);
+    initassignments_sym = sym([]);
+    initassignments_math = sym([]);
 end
-setInitialAssignment(this,model,'compartment',initAssignemnts_sym,initAssignemnts_math)
+setInitialAssignment(this,model,'compartment',initassignments_sym,initassignments_math)
 
 % extract compartment sizes, default to 1
 this.compartment = subs(this.compartment,compartments_sym(logical([model.compartment.isSetSize])),sym([model.compartment.size]));
@@ -91,7 +91,7 @@ hasAssignmentRule = ismember(this.state,all_rulevars(strcmp({model.rule.typecode
 hasRateRule = ismember(this.state,all_rulevars(strcmp({model.rule.typecode},'SBML_RATE_RULE')))';
 
 % set initial assignments
-setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math)
+setInitialAssignment(this,model,'initState',initassignments_sym,initassignments_math)
 
 
 
@@ -119,6 +119,7 @@ applyRule(this,model,'condition',rulevars,rulemath)
 
 % set initial concentrations
 concentration_idx = logical([model.species.isSetInitialConcentration]);
+onlysubstance_idx = logical([model.species.hasOnlySubstanceUnits]);
 this.initState = subs(this.initState,species_sym(concentration_idx),sym(initConcentration(concentration_idx)));
 
 % set initial amounts
@@ -227,8 +228,10 @@ if(length({model.reaction.id})>0)
     wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
     product_ridx = tmp(logical(wprod));
     if(model.SBML_level>=3)
-        reactant_stochiometry = cellfun(@(x) stoich_or_initAssign(x,initAssignemnts_sym,initAssignemnts_math),{model.reaction.reactant},'UniformOutput',false);
-        product_stochiometry = cellfun(@(x) stoich_or_initAssign(x,initAssignemnts_sym,initAssignemnts_math),{model.reaction.product},'UniformOutput',false);
+        reactant_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
+        product_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
@@ -240,9 +243,13 @@ if(length({model.reaction.id})>0)
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
     tmp = cat(2,reactant_stochiometry{:});
-    eS(sub2ind(size(eS),reactant_sidx,reactant_ridx)) = [tmp{:}];
+    if(~isempty([tmp{:}]))
+        eS(sub2ind(size(eS),reactant_sidx,reactant_ridx)) = [tmp{:}];
+    end
     tmp = cat(2,product_stochiometry{:});
-    pS(sub2ind(size(eS),product_sidx,product_ridx)) = [tmp{:}];
+    if(~isempty([tmp{:}]))
+        pS(sub2ind(size(eS),product_sidx,product_ridx)) = [tmp{:}];
+    end
     
     this.stochiometry = - eS + pS;
     
@@ -251,7 +258,42 @@ else
     this.xdot = sym(zeros(size(this.state)));
 end
 
+if(model.SBML_level>=3)
+    stoichsymbols = [reactant_id{:},product_id{:}];
+    tmp_r = [reactant_stochiometry{:}];
+    tmp_p = [product_stochiometry{:}];
+    stoichmath = [tmp_r{:},tmp_p{:}];
+    
+    stoichidx = not(strcmp(stoichsymbols,''));
+    stoichsymbols = stoichsymbols(stoichidx);
+    stoichmath = stoichmath(stoichidx);
+else
+    stoichsymbols = sym([]);
+    stoichmath = sym([]);
+end
+
 %% RATE RULES
+
+fprintf('converting to concentrations ...\n')
+
+%extract model conversion factor
+if(isfield(model,'conversionFactor'))
+    if(strcmp(model.conversionFactor,''))
+        conversionfactor = sym(ones(nx,1));
+    else
+        conversionfactor = sym(model.conversionFactor)*ones(nx,1);
+    end
+else
+    conversionfactor = ones(nx,1);
+end
+
+if(isfield(model.species,'conversionFactor'))
+    if(any(not(strcmp({model.species.conversionFactor},''))))
+        tmp = {model.species.conversionFactor};
+        idx = ~strcmp({model.species.conversionFactor},'');
+        conversionfactor(idx) = sym(tmp(idx));
+    end
+end
 
 for irule = 1:length(model.rule)
     if(strcmp(model.rule(irule).typecode,'SBML_RATE_RULE'))
@@ -262,18 +304,21 @@ for irule = 1:length(model.rule)
         elseif(~isempty(param_rate_idx))
             this.state = [this.state; parameter_sym(param_rate_idx)];
             this.xdot = [this.xdot; sym(model.rule(irule).formula)];
-            if(ismember(parameter_sym(param_rate_idx),initAssignemnts_sym))
-                this.initState = [this.initState; initAssignemnts_math(find(initAssignemnts_sym==parameter_sym(param_rate_idx)))];
+            if(ismember(parameter_sym(param_rate_idx),initassignments_sym))
+                this.initState = [this.initState; initassignments_math(find(initassignments_sym==parameter_sym(param_rate_idx)))];
             else
                 this.initState = [this.initState; parameter_val(param_rate_idx)];
             end
             this.volume = [this.volume; 1];
+            concentration_idx = [concentration_idx; false];
+            onlysubstance_idx = [onlysubstance_idx; false]
+            conversionfactor = [conversionfactor; 1];
             nx = nx + 1;
             parameter_val(param_rate_idx) = [];
             parameter_sym(param_rate_idx) = [];
             this.param(param_rate_idx) = [];
             np = np - 1;
-            setInitialAssignment(this,model,'initState',initAssignemnts_sym,initAssignemnts_math);
+            setInitialAssignment(this,model,'initState',initassignments_sym,initassignments_math);
         end
     end
     if(strcmp(model.rule(irule).typecode,'SBML_ASSIGNMENT_RULE'))
@@ -284,6 +329,9 @@ for irule = 1:length(model.rule)
             this.xdot(state_rate_idx) = [];
             this.initState(state_rate_idx) = [];
             this.volume(state_rate_idx) = [];
+            concentration_idx(state_rate_idx) = [];
+            onlysubstance_idx(state_rate_idx) = [];
+            conversionfactor(state_rate_idx) = [];
             nx = nx-1;
             this.observable = [this.observable;cleanedsym(model.rule(irule).formula)];
             this.observable_name = [this.observable_name;sym(model.rule(irule).variable)];
@@ -296,27 +344,8 @@ applyRule(this,model,'xdot',rulevars,rulemath)
 
 %% CONVERSION FACTORS/VOLUMES
 
-fprintf('converting to concentrations ...\n')
-
-%extract model conversion factor
-if(isfield(model,'conversionFactor'))
-    if(strcmp(model.conversionFactor,''))
-        conversionfactor = ones(nx,1);
-    else
-        conversionfactor = model.conversionFactor*ones(nx,1);
-    end
-else
-    conversionfactor = ones(nx,1);
-end
-
-if(isfield(model.species,'conversionFactor'))
-    if(any(not(strcmp({model.species.conversionFactor},''))))
-        conversionfactor(~isnan({model.species.conversionFactor})) = model.species.conversionFactor(~isnan(model.species.conversionFactor));
-    end
-end
-
 % this.xdot = conversionfactor.*subs(this.xdot,this.state,this.state.*this.volume)./this.volume;
-this.xdot = conversionfactor.*this.xdot./this.volume;
+this.xdot = conversionfactor.*subs(this.xdot,this.state(onlysubstance_idx),this.state(onlysubstance_idx).*this.volume(onlysubstance_idx))./this.volume;
 
 % this.xdot = conversionfactor.*this.xdot;
 
@@ -428,23 +457,24 @@ makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,condition_sym,conditions);
 makeSubs(this,constant_sym,constants);
 makeSubs(this,compartments_sym,this.compartment);
+makeSubs(this,stoichsymbols,stoichmath);
 
 % set initial assignments
-for iIA = 1:length(initAssignemnts_sym)
-    if(ismember(initAssignemnts_sym(iIA),this.param))
-        if(ismember(sym(model.time_symbol),symvar(initAssignemnts_math(iIA))))
+for iIA = 1:length(initassignments_sym)
+    if(ismember(initassignments_sym(iIA),this.param))
+        if(ismember(sym(model.time_symbol),symvar(initassignments_math(iIA))))
             error('Time dependent initial assignments are currently not supported!')
         end          
-        param_idx =  find(initAssignemnts_sym(iIA)==this.param);
+        param_idx =  find(initassignments_sym(iIA)==this.param);
         parameter_sym(param_idx) = [];
         parameter_val(param_idx) = [];
         this.param(param_idx) = [];
-        this.xdot = subs(this.xdot,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
-        this.trigger = subs(this.trigger,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
-        this.bolus = subs(this.bolus,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
-        this.initState = subs(this.initState,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
-        this.param = subs(this.param,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
-        rulemath = subs(rulemath,initAssignemnts_sym(iIA),initAssignemnts_math(iIA));
+        this.xdot = subs(this.xdot,initassignments_sym(iIA),initassignments_math(iIA));
+        this.trigger = subs(this.trigger,initassignments_sym(iIA),initassignments_math(iIA));
+        this.bolus = subs(this.bolus,initassignments_sym(iIA),initassignments_math(iIA));
+        this.initState = subs(this.initState,initassignments_sym(iIA),initassignments_math(iIA));
+        this.param = subs(this.param,initassignments_sym(iIA),initassignments_math(iIA));
+        rulemath = subs(rulemath,initassignments_sym(iIA),initassignments_math(iIA));
         np = np-1;
     end  
 end
@@ -472,7 +502,7 @@ event_vars = [symvar(this.bolus),symvar(this.trigger)];
 isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
 isPartOfRule = and(ismember(parameter_sym,symvar(cleanedsym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
 isRuleVar = ismember(parameter_sym,sym({model.rule.variable}));
-hasAssignment = ismember(parameter_sym,initAssignemnts_sym);
+hasAssignment = ismember(parameter_sym,initassignments_sym);
 this.parameter = parameter_sym(and(not(isRuleVar),not(isPartOfRule)));
 this.pnom = parameter_val(and(not(isRuleVar),not(isPartOfRule)));
 
@@ -490,6 +520,7 @@ this.observable = subs(this.observable,condition_sym,conditions);
 this.observable = subs(this.observable,constant_sym,constants);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
+this.observable = subs(this.observable,stoichsymbols,stoichmath);
 applyRule(this,model,'observable',rulevars,rulemath)
 
 this.time_symbol = model.time_symbol;
@@ -504,8 +535,8 @@ while(any(ismember(symvar(this.initState),this.state)))
 end
 end
 
-function setInitialAssignment(this,~,field,initAssignemnts_sym,initAssignemnts_math)
-this.(field) = subs(this.(field),initAssignemnts_sym,initAssignemnts_math);
+function setInitialAssignment(this,~,field,initassignments_sym,initassignments_math)
+this.(field) = subs(this.(field),initassignments_sym,initassignments_math);
 end
 
 
@@ -587,11 +618,19 @@ function z = delay(x,y)
 error('Events with delays are currently not supported');
 end
 
-function x = stoich_or_initAssign(y,initAssignemnts_sym,initAssignemnts_math)
-if(~ismember(sym(y.id),initAssignemnts_sym))
-    x = {y.stoichiometry};
-else
-    x = cellfun(@(z) char(subs(sym(z),initAssignemnts_sym,initAssignemnts_math)),{y.id},'UniformOutput',false);
+function x = stoich_initAssign_rule(y,initassignments_sym,initassignments_math,rulevars,rulemath)
+if(~isempty(initassignments_sym))
+    if(ismember(sym(y.id),initassignments_sym))
+        x = cellfun(@(z) char(subs(sym(z),initassignments_sym,initassignments_math)),{y.id},'UniformOutput',false);
+        return;
+    end
 end
+if(~isempty(rulevars))
+    if(ismember(sym(y.id),rulevars))
+        x = cellfun(@(z) char(subs(sym(z),rulevars,rulemath)),{y.id},'UniformOutput',false);
+        return;
+    end
+end
+x = {y.stoichiometry};
 end
 
