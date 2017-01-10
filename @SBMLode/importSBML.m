@@ -227,15 +227,15 @@ if(length({model.reaction.id})>0)
     wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
     product_ridx = tmp(logical(wprod));
     if(model.SBML_level>=3)
-        reactant_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.reactant},'UniformOutput',false);
-        product_stochiometry = cellfun(@(x) {x.stoichiometry},{model.reaction.product},'UniformOutput',false);
+        reactant_stochiometry = cellfun(@(x) stoich_or_initAssign(x,initAssignemnts_sym,initAssignemnts_math),{model.reaction.reactant},'UniformOutput',false);
+        product_stochiometry = cellfun(@(x) stoich_or_initAssign(x,initAssignemnts_sym,initAssignemnts_math),{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
         math_expr = @(y) sym(y.math);
         symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
-        reactant_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.reactant},'UniformOutput',false);
-        product_stochiometry = cellfun(@(x) symbolic_expr(x),{model.reaction.product},'UniformOutput',false);
+        reactant_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.reactant},'UniformOutput',false);
+        product_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.product},'UniformOutput',false);
     end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
@@ -411,11 +411,30 @@ if(~isempty(lambdas))
     end
 end
 
-%% Parameter Rules/Assignments
+
+%% CLEAN-UP
+
+fprintf('cleaning up ...\n')
+
+% remove constant/condition states
+this.state(any([cond_idx;const_idx;bound_idx])) = [];
+this.volume(any([cond_idx;const_idx;bound_idx])) = [];
+this.initState(any([cond_idx;const_idx;bound_idx])) = [];
+this.xdot(any([cond_idx;const_idx;bound_idx])) = [];
+this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
+
+% substitute with actual expressions, do this twice to resolve co-dependencies, do we need a loop here?
+makeSubs(this,boundary_sym,boundaries);
+makeSubs(this,condition_sym,conditions);
+makeSubs(this,constant_sym,constants);
+makeSubs(this,compartments_sym,this.compartment);
 
 % set initial assignments
 for iIA = 1:length(initAssignemnts_sym)
     if(ismember(initAssignemnts_sym(iIA),this.param))
+        if(ismember(sym(model.time_symbol),symvar(initAssignemnts_math(iIA))))
+            error('Time dependent initial assignments are currently not supported!')
+        end          
         param_idx =  find(initAssignemnts_sym(iIA)==this.param);
         parameter_sym(param_idx) = [];
         parameter_val(param_idx) = [];
@@ -431,16 +450,7 @@ for iIA = 1:length(initAssignemnts_sym)
 end
 applyRule(this,model,'param',rulevars,rulemath)
 
-%% CLEAN-UP
-
-fprintf('cleaning up ...\n')
-
-% remove constant/condition states
-this.state(any([cond_idx;const_idx;bound_idx])) = [];
-this.volume(any([cond_idx;const_idx;bound_idx])) = [];
-this.initState(any([cond_idx;const_idx;bound_idx])) = [];
-this.xdot(any([cond_idx;const_idx;bound_idx])) = [];
-this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
+makeSubs(this,parameter_sym(1:np),this.param);
 
 % apply rules to dynamics
 for irule = 1:length(rulevars)
@@ -454,15 +464,10 @@ for irule = 1:length(rulevars)
     end
 end
 
+applyRule(this,model,'xdot',rulevars,rulemath)
+
 state_vars = [symvar(this.xdot),symvar(this.initState)];
 event_vars = [symvar(this.bolus),symvar(this.trigger)];
-
-% substitute with actual expressions
-makeSubs(this,parameter_sym(1:np),this.param);
-makeSubs(this,condition_sym,conditions);
-makeSubs(this,constant_sym,constants);
-makeSubs(this,boundary_sym,boundaries);
-makeSubs(this,compartments_sym,this.compartment);
 
 isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
 isPartOfRule = and(ismember(parameter_sym,symvar(cleanedsym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));
@@ -563,7 +568,7 @@ end
 function str = replaceReservedFunctions(str)
 % replace imcompatible piecewise defintion
 % execute twice for directly nested calls (overlapping regexp expressions)
-for logicalf = {'divide'}
+for logicalf = {'divide','minus','multiply'}
     str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
@@ -573,12 +578,20 @@ end
 function str = replaceReservedFunctionIDs(str)
 % replace imcompatible piecewise defintion
 % execute twice for directly nested calls (overlapping regexp expressions)
-for logicalf = {'divide'}
+for logicalf = {'divide','minus','multiply'}
     str = regexprep(str,['^' logicalf{1} '$'],['am_' logicalf{1} '']);
 end
 end
 
 function z = delay(x,y)
-error('Events with delays are currently not supported'); 
+error('Events with delays are currently not supported');
+end
+
+function x = stoich_or_initAssign(y,initAssignemnts_sym,initAssignemnts_math)
+if(~ismember(sym(y.id),initAssignemnts_sym))
+    x = {y.stoichiometry};
+else
+    x = cellfun(@(z) char(subs(sym(z),initAssignemnts_sym,initAssignemnts_math)),{y.id},'UniformOutput',false);
+end
 end
 
