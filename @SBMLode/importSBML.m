@@ -8,10 +8,32 @@ function importSBML(this,modelname)
 % Return values:
 %
 
+extension = [];
+if(exist([modelname '.sbml']))
+    extension = '.sbml';
+end
+if(exist([modelname '.xml']))
+    extension = '.xml';
+end
+if(exist([modelname]))
+    extension = '';
+end
+if(isempty(extension))
+    error([modelname ' could not be found in the matlab path'])
+end
+
+
 try
-    model = TranslateSBML([modelname '.sbml']);
-catch
-    model = TranslateSBML([modelname '.xml']);
+    [model,err] = TranslateSBML([modelname extension]);
+    if(~isempty(err))
+        error(err.message);
+    end
+catch err
+    error(['TranslateSBML failed to read the provided sbml file: ' err.message ]);
+end
+
+if(isfield(model,'fbc_objective'))
+   error('Flux Balance Constraints are currently not supported!') 
 end
 
 %% COMPARTMENTS
@@ -175,14 +197,11 @@ if(nr>0)
     end
 end
 
-kLaw = cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false);
+kLaw = [cellfun(@(x) x.math,{model.reaction.kineticLaw},'UniformOutput',false)];
 
 checkIllegalFunctions(kLaw);
 
-kLaw = replaceDiscontinuousFunctions(kLaw);
-kLaw = replaceReservedFunctions(kLaw);
-
-this.flux = sym(kLaw);
+this.flux = cleanedsym(kLaw);
 this.flux = this.flux(:);
 % add local parameters to global parameters, make them global by
 % extending them by the r[reactionindex]
@@ -229,13 +248,15 @@ if(length({model.reaction.id})>0)
     product_ridx = tmp(logical(wprod));
     if(model.SBML_level>=3)
         reactant_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.reactant},'UniformOutput',false);
+        reactant_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.reactant},'UniformOutput',false);
         reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.product},'UniformOutput',false);
+        product_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.product},'UniformOutput',false);
         product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
-        math_expr = @(y) sym(y.math);
+        math_expr = @(y) cleanedsym(y.math);
         symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
         reactant_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.product},'UniformOutput',false);
@@ -258,11 +279,11 @@ else
     this.xdot = sym(zeros(size(this.state)));
 end
 
-if(model.SBML_level>=3)
+if(model.SBML_level>=3 && length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
-    tmp_r = [reactant_stochiometry{:}];
-    tmp_p = [product_stochiometry{:}];
-    stoichmath = [tmp_r{:},tmp_p{:}];
+    tmp_r = [reactant_math{:}];
+    tmp_p = [product_math{:}];
+    stoichmath = [tmp_r,tmp_p];
     
     stoichidx = not(strcmp(stoichsymbols,''));
     stoichsymbols = stoichsymbols(stoichidx);
@@ -299,26 +320,47 @@ for irule = 1:length(model.rule)
     if(strcmp(model.rule(irule).typecode,'SBML_RATE_RULE'))
         state_rate_idx = find(this.state == sym(model.rule(irule).variable));
         param_rate_idx = find(parameter_sym == sym(model.rule(irule).variable));
+        stoich_rate_idx = find(stoichsymbols == sym(model.rule(irule).variable));
         if(~isempty(state_rate_idx))
-            this.xdot(state_rate_idx) = sym(model.rule(irule).formula).*this.volume(state_rate_idx);
+            this.xdot(state_rate_idx) = cleanedsym(model.rule(irule).formula);
+            if(~onlysubstance_idx(state_rate_idx))
+                this.xdot(state_rate_idx) = this.xdot(state_rate_idx).*this.volume(state_rate_idx);
+            end
         elseif(~isempty(param_rate_idx))
             this.state = [this.state; parameter_sym(param_rate_idx)];
-            this.xdot = [this.xdot; sym(model.rule(irule).formula)];
+            this.xdot = [this.xdot; cleanedsym(model.rule(irule).formula)];
             if(ismember(parameter_sym(param_rate_idx),initassignments_sym))
                 this.initState = [this.initState; initassignments_math(find(initassignments_sym==parameter_sym(param_rate_idx)))];
             else
                 this.initState = [this.initState; parameter_val(param_rate_idx)];
             end
             this.volume = [this.volume; 1];
-            concentration_idx = [concentration_idx; false];
-            onlysubstance_idx = [onlysubstance_idx; false]
+            concentration_idx = [concentration_idx, false];
+            onlysubstance_idx = [onlysubstance_idx, false];
             conversionfactor = [conversionfactor; 1];
+            cond_idx = [cond_idx, false ];
+            const_idx = [const_idx, false ];
+            bound_idx = [bound_idx, false];
             nx = nx + 1;
             parameter_val(param_rate_idx) = [];
             parameter_sym(param_rate_idx) = [];
             this.param(param_rate_idx) = [];
             np = np - 1;
             setInitialAssignment(this,model,'initState',initassignments_sym,initassignments_math);
+        elseif(~isempty(stoich_rate_idx))
+            this.state = [this.state; stoichsymbols(stoich_rate_idx)];
+            this.xdot = [this.xdot; cleanedsym(model.rule(irule).formula)];
+            this.initState = [this.initState; stoichmath(stoich_rate_idx)];
+            this.volume = [this.volume; 1];
+            concentration_idx = [concentration_idx, false];
+            onlysubstance_idx = [onlysubstance_idx, false];
+            conversionfactor = [conversionfactor; 1];
+            cond_idx = [cond_idx, false ];
+            const_idx = [const_idx, false ];
+            bound_idx = [bound_idx, false];
+            nx = nx + 1;
+            stoichmath(stoich_rate_idx) = [];
+            stoichsymbols(stoich_rate_idx) = [];
         end
     end
     if(strcmp(model.rule(irule).typecode,'SBML_ASSIGNMENT_RULE'))
@@ -332,6 +374,9 @@ for irule = 1:length(model.rule)
             concentration_idx(state_rate_idx) = [];
             onlysubstance_idx(state_rate_idx) = [];
             conversionfactor(state_rate_idx) = [];
+            cond_idx(state_rate_idx) = [];
+            const_idx(state_rate_idx) = [];
+            bound_idx(state_rate_idx) = [];
             nx = nx-1;
             this.observable = [this.observable;cleanedsym(model.rule(irule).formula)];
             this.observable_name = [this.observable_name;sym(model.rule(irule).variable)];
@@ -377,7 +422,7 @@ if(length(this.trigger)>0)
         assignments = sym(cat(2,tmp{:}));
         
         tmp = cellfun(@(x) {x.math},{model.event(ievent).eventAssignment},'UniformOutput',false);
-        assignments_math = sym(replaceReservedFunctions(cat(2,tmp{:})));
+        assignments_math = cleanedsym(cat(2,tmp{:}));
         
         for iassign = 1:length(assignments)
             state_assign_idx = find(assignments(iassign)==species_sym);
@@ -487,10 +532,12 @@ for irule = 1:length(rulevars)
     eval(['syms ' strjoin(arrayfun(@char,rulevars(irule),'UniformOutput',false),' ') ' ' strrep(strrep(strjoin(arrayfun(@char,symvar(sym(rulemath(irule))),'UniformOutput',false),' '),'true',''),'false','')]);
     eval(['rule = ' char(rulemath(irule)) ';']);
     rule_idx = find(rulevars(irule)==this.state);
-    this.xdot(rule_idx) = jacobian(rule,this.state)*this.xdot;
-    this.initState(rule_idx) = rulemath(irule);
-    if(~isempty(this.bolus))
-        this.bolus(rule_idx,:) = jacobian(rule,this.state)*this.bolus;
+    if(nx>0)
+        this.xdot(rule_idx) = jacobian(rule,this.state)*this.xdot;
+        this.initState(rule_idx) = rulemath(irule);
+        if(~isempty(this.bolus))
+            this.bolus(rule_idx,:) = jacobian(rule,this.state)*this.bolus;
+        end
     end
 end
 
@@ -576,8 +623,12 @@ end
 end
 
 function csym = cleanedsym(str)
+if(nargin>0)
 csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
 csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
+else
+    csym = sym();
+end
 end
 
 function str = sanitizeString(str)
@@ -597,19 +648,19 @@ end
 end
 
 function str = replaceReservedFunctions(str)
-% replace imcompatible piecewise defintion
-% execute twice for directly nested calls (overlapping regexp expressions)
-for logicalf = {'divide','minus','multiply'}
+% replace reserved matlab functions
+
+for logicalf = {'divide','minus','multiply','plus'}
     str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
+    % execute twice for directly nested calls (overlapping regexp expressions)
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
 end
 end
 
 function str = replaceReservedFunctionIDs(str)
-% replace imcompatible piecewise defintion
-% execute twice for directly nested calls (overlapping regexp expressions)
-for logicalf = {'divide','minus','multiply'}
+% replace reserved matlab functions
+for logicalf = {'divide','minus','multiply','plus'}
     str = regexprep(str,['^' logicalf{1} '$'],['am_' logicalf{1} '']);
 end
 end
@@ -619,18 +670,23 @@ error('Events with delays are currently not supported');
 end
 
 function x = stoich_initAssign_rule(y,initassignments_sym,initassignments_math,rulevars,rulemath)
-if(~isempty(initassignments_sym))
-    if(ismember(sym(y.id),initassignments_sym))
-        x = cellfun(@(z) char(subs(sym(z),initassignments_sym,initassignments_math)),{y.id},'UniformOutput',false);
-        return;
+x = {};
+for iy = 1:length(y)
+    x{iy} = sym(y(iy).stoichiometry);
+    if(~isempty(sym(y(iy).id)))
+        if(~isempty(initassignments_sym))
+            if(ismember(sym(y(iy).id),initassignments_sym))
+                x{iy} = subs(sym(y(iy).id),initassignments_sym,initassignments_math);
+            end
+        end
+        if(~isempty(rulevars))
+            if(ismember(sym(y(iy).id),rulevars))
+                x{iy} = subs(sym(y(iy).id),rulevars,rulemath);
+                return;
+            end
+        end
+        x{iy} = sym(y(iy).id);
     end
 end
-if(~isempty(rulevars))
-    if(ismember(sym(y.id),rulevars))
-        x = cellfun(@(z) char(subs(sym(z),rulevars,rulemath)),{y.id},'UniformOutput',false);
-        return;
-    end
-end
-x = {y.stoichiometry};
 end
 
