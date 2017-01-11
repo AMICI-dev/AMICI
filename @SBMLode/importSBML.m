@@ -674,18 +674,20 @@ x = {};
 for iy = 1:length(y)
     x{iy} = sym(y(iy).stoichiometry);
     if(~isempty(sym(y(iy).id)))
-        if(~isempty(initassignments_sym))
-            if(ismember(sym(y(iy).id),initassignments_sym))
-                x{iy} = subs(sym(y(iy).id),initassignments_sym,initassignments_math);
+        if(~isempty(initassignments_sym) || ~isempty(rulevars))
+            if(~isempty(initassignments_sym))
+                if(ismember(sym(y(iy).id),initassignments_sym))
+                    x{iy} = subs(sym(y(iy).id),initassignments_sym,initassignments_math);
+                end
             end
-        end
-        if(~isempty(rulevars))
-            if(ismember(sym(y(iy).id),rulevars))
-                x{iy} = subs(sym(y(iy).id),rulevars,rulemath);
-                return;
+            if(~isempty(rulevars))
+                if(ismember(sym(y(iy).id),rulevars))
+                    x{iy} = subs(sym(y(iy).id),rulevars,rulemath);
+                end
             end
+        else
+            x{iy} = sym(y(iy).id);
         end
-        x{iy} = sym(y(iy).id);
     end
 end
 end

@@ -1,6 +1,6 @@
 function runSBMLTests
 exedir = fileparts(mfilename('fullpath'));
-
+cd(exedir);
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
 for iTest = 1:1218
