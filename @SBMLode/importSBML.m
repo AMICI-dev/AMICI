@@ -471,7 +471,7 @@ if(~isempty(lambdas))
     % replace helper functions
     
     checkIllegalFunctions(this.funmath);
-    this.funmath = replaceDiscontinuousFunctions(this.funmath);
+    this.funmath = replaceLogicalFunctions(this.funmath);
     
     this.funmath = strrep(this.funmath,tmpfun,{model.functionDefinition.id});
     this.funarg = cellfun(@(x,y) [y '(' strjoin(transpose(x(1:end-1)),',') ')'],lambdas,replaceReservedFunctionIDs({model.functionDefinition.id}),'UniformOutput',false);
@@ -633,14 +633,14 @@ end
 
 function str = sanitizeString(str)
 % wrapper for replaceDiscontinuousFunctions() and replaceReservedFunctions()
-str = replaceDiscontinuousFunctions(str);
+str = replaceLogicalFunctions(str);
 str = replaceReservedFunctions(str);
 end
 
-function str = replaceDiscontinuousFunctions(str)
+function str = replaceLogicalFunctions(str)
 % replace imcompatible piecewise defintion
 % execute twice for directly nested calls (overlapping regexp expressions)
-for logicalf = {'piecewise','and','or','lt','gt','ge','le','ge','le','xor'}
+for logicalf = {'piecewise','and','or','lt','gt','ge','le','ge','le','xor','eq'}
     str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);
     str = regexprep(str,['([\W]+)' logicalf{1} '('],['$1am_' logicalf{1} '(']);

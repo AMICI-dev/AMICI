@@ -6,6 +6,6 @@ a=varargin{1};
 b=varargin{2};
 fun = a-b;
 if(nargin>2)
-    error('N-ary ge is currently not supported!')
+    fun = am_and(a-b,am_ge(varargin{2:end}));
 end
 end

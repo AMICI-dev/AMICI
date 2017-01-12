@@ -6,6 +6,6 @@ a=varargin{1};
 b=varargin{2};
 fun = b-a;
 if(nargin>2)
-    error('N-ary le is currently not supported!')
+    fun = am_and(b-a,am_le(varargin{2:end}));
 end
 end
