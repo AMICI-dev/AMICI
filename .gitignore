@@ -205,3 +205,15 @@ unitTests/SBMLTest_log.txt
 unitTests/SBMLTest_log_04-Jan-2017.txt
 
 unitTests/SBMLTest_log_05-Jan-2017.txt
+
+*.txt
+
+src/symbolic_functions.o-f5eb52a8
+
+src/symbolic_functions.o-bea7fd73
+
+src/amici.o-404f292d
+
+unitTests/sbml-test-suite/
+
+tests/sbml-test-suite/

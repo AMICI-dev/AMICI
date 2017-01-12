@@ -27,7 +27,7 @@ classdef amised < handle
     
     methods
         function ASED = amised(sedname)
-            ASED.sedml = importSED(sedname);
+
             % get models
             for imodel = 1:length(ASED.sedml.listOfModels.model)
                 % get the model sbml
