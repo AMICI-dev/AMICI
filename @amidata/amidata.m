@@ -64,6 +64,7 @@ classdef amidata < handle
                 end
                 if(isfield(varargin{1},'Z'))
                     D.nz = size(varargin{1}.Z,2);
+                    D.ne = size(varargin{1}.Z,1);
                     D.Z = varargin{1}.Z;
                 else
                     D.nz = 0;

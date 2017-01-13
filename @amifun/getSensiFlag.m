@@ -52,6 +52,9 @@ function [ this ] = getSensiFlag(this)
         case 'sz'
             this.sensiflag = true;
             
+        case 'sz_tf'
+            this.sensiflag = true;
+            
         case 'dtaudp'
             this.sensiflag = true;
             
@@ -59,6 +62,9 @@ function [ this ] = getSensiFlag(this)
             this.sensiflag = true;
             
         case 'sroot'
+            this.sensiflag = true;
+            
+        case 's2root'
             this.sensiflag = true;
             
         case 'sx'

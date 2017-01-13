@@ -38,6 +38,7 @@ function example_steadystate
     %%
     % PLOTTING
     
+    if(usejava('jvm'))
     figure
     c_x = get(gca,'ColorOrder');
     subplot(2,2,1)
@@ -57,6 +58,7 @@ function example_steadystate
     legend('error x1','error x2','error x3','Location','NorthEastOutside')
     legend boxoff
     set(gcf,'Position',[100 300 1200 500])
+    end
     
     %%
     % FORWARD SENSITIVITY ANALYSIS
@@ -82,6 +84,7 @@ function example_steadystate
     
     %%
     % PLOTTING
+    if(usejava('jvm'))
     figure
     for ip = 1:4
         subplot(4,2,ip*2-1)
@@ -108,7 +111,7 @@ function example_steadystate
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+    end
     
     %%
     % STEADY STATE SENSITIVITY
@@ -124,7 +127,7 @@ function example_steadystate
     
     %%
     % PLOTTING
-    
+    if(usejava('jvm'))
     figure
     for ip = 1:4
         subplot(4,2,ip*2-1)
@@ -167,7 +170,8 @@ function example_steadystate
     set(gcf,'Position',[100 300 1200 500])
     
     drawnow
-    
+    end
+
 end
 
 

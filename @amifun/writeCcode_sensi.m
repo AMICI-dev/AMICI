@@ -10,13 +10,16 @@ function writeCcode_sensi(this,model,fid)
 %  void
       
 np = model.np;
+ng = model.ng;
 
-nonzero = this.sym~=0;
+nonzero_idx = find(this.sym);
+nonzero = zeros(size(this.sym));
+nonzero(nonzero_idx) = 1;
 
 if(strcmp(this.funstr,'deltaqB'))
     if(any(nonzero))
         tmpfun = this;
-        for ip=1:np
+        for ip=1:np*ng
             if(nonzero(ip))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
                 tmpfun.sym = this.sym(ip,:);
@@ -32,7 +35,34 @@ elseif(strcmp(this.funstr,'deltasx'))
         for ip=1:np
             if(any(any(any(nonzero(:,ip,:)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                tmpfun.sym = squeeze(this.sym(:,ip,:));
+                tmpfun.sym = permute(this.sym(:,ip,:),[1,3,2]);
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
+elseif(strcmp(this.funstr,'s2root'))
+    if(any(any(any(nonzero))))
+        tmpfun = this;
+        for ip=1:np
+            if(any(any(any(nonzero(:,:,ip)))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = squeeze(this.sym(model.z2event(1:model.nztrue),:,ip));
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
+elseif(strcmp(this.funstr,'qBdot'))
+    nonzero = this.sym ~=0;
+    if(any(any(nonzero)))
+        tmpfun = this;
+        for ip=1:np
+            if(any(nonzero(:,ip)))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = this.sym(:,ip);
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');
@@ -49,7 +79,11 @@ else
                 if(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'sz') || strcmp(this.funstr,'sy'))
                     fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
-                tmpfun.sym = this.sym(:,ip);
+                if(strcmp(this.funstr,'sroot'))
+                    tmpfun.sym = this.sym(model.z2event,ip);
+                else
+                    tmpfun.sym = this.sym(:,ip);
+                end
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');

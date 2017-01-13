@@ -2,7 +2,7 @@
 % @file amioption
 % @brief definition of amioption class
 %
-classdef amioption < matlab.mixin.SetGet
+classdef amioption < matlab.mixin.CustomDisplay
     %AMIOPTION provides an option container to pass simulation parameters to the
     %simulation routine.
     
@@ -16,8 +16,9 @@ classdef amioption < matlab.mixin.SetGet
         % index of parameters for which the sensitivities are computed
         sens_ind = double.empty();
         % index of states for which positivity should be enforced
-        % (currently this has no effect)
         qpositivex = double.empty();
+        % scaling of error tolerances for sensitivity equations
+        pbar = double.empty();
         % starting time of the simulation
         tstart = 0;
         % linear multistep method.
@@ -43,9 +44,11 @@ classdef amioption < matlab.mixin.SetGet
         % number of reported events
         nmaxevent = 10;
         % reordering of states
-        ordering = 1;
+        ordering = 0;
         % steady state sensitivity flag
         ss = 0;
+        % custom initial state
+        x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
     end
@@ -170,7 +173,7 @@ classdef amioption < matlab.mixin.SetGet
             
         end
         
-        function set.sensi_meth(this,value)
+        function this = set.sensi_meth(this,value)
             if(ischar(value))
                 switch(value)
                     case 'forward'
@@ -191,7 +194,7 @@ classdef amioption < matlab.mixin.SetGet
             end
         end
         
-        function set.sensi(this,value)
+        function this = set.sensi(this,value)
             assert(isnumeric(value),'The option sensi must have a numeric value!')
             assert(floor(value)==value,'The option sensi must be an integer!')
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')

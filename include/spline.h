@@ -1,7 +1,6 @@
 #ifndef amici_spline_h
 #define amici_spline_h
 #include <math.h>
-#include <src/spline.c>
 
 
 #undef k

@@ -36,10 +36,15 @@ function [modelo2] = augmento2(this)
     % generate deltasx
     this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
-        Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
-        znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
+        if(numel(this.event(ievent).z)>0)
+            Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
+            znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
+        else
+            znew = this.event(ievent).z;
+        end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
+        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym),this.fun.sx.sym, Sx);
         bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
         % replace sx by augmented x
         for ip = 1:np
@@ -54,13 +59,19 @@ function [modelo2] = augmento2(this)
     this.getFun([],'dydp');
     SJy = jacobian(this.sym.Jy,this.sym.p) ...
         + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
-        + jacobian(this.sym.Jy,this.fun.y.strsym)*this.fun.dydp.sym;
+        + jacobian(this.sym.Jy,this.fun.y.strsym)*Sy;
     this.getFun([],'dsigma_zdp');
     this.getFun([],'z');
-    this.getFun([],'dzdp');
-    SJz = jacobian(this.sym.Jz,this.sym.p) ...
-        + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-        + jacobian(this.sym.Jz,this.fun.z.strsym)*this.fun.dzdp.sym;
+    this.getFun([],'dzdp');   
+    SJz = jacobian(this.sym.Jz,this.sym.p);
+    if(~isempty(this.fun.sigma_z.strsym))
+        SJz = SJz + jacobian(this.sym.Jz,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
+              + jacobian(this.sym.Jz,this.fun.z.strsym)*Sz;   
+    end
+    
+    % augment sigmas
+    this.getFun([],'sigma_y');
+    this.getFun([],'sigma_z');
     
     S0 = jacobian(this.sym.x0,this.sym.p);
     
@@ -69,13 +80,18 @@ function [modelo2] = augmento2(this)
     augmodel.sym.f = augmodel.sym.xdot;
     augmodel.sym.y = [this.sym.y;reshape(Sy,[numel(Sy),1])];
     augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
-    augmodel.sym.Jy = [this.sym.Jy;reshape(SJy,[numel(SJy),1])];
-    augmodel.sym.Jz = [this.sym.Jz;reshape(SJz,[numel(SJz),1])];
+    augmodel.sym.Jy = [this.sym.Jy,SJy];
+    augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
+    augmodel.sym.sigma_y = [this.sym.sigma_y, reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];
+    augmodel.sym.sigma_z = [this.sym.sigma_z, reshape(transpose(this.fun.dsigma_zdp.sym), [1,numel(this.fun.dsigma_zdp.sym)])];
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;
+    modelo2.debug = this.debug;
+    modelo2.forward = this.forward;
+    modelo2.adjoint = this.adjoint;
 end
 
 

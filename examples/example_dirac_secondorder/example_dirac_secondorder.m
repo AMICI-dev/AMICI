@@ -1,51 +1,52 @@
 function example_dirac_secondorder()
-    %%
-    % COMPILATION
-    
-    [exdir,~,~]=fileparts(which('example_dirac_secondorder.m'));
-    % compile the model
-    amiwrap('model_dirac_secondorder','model_dirac_secondorder_syms',exdir,1)
-    
-    %%
-    % SIMULATION
-    
-    % time vector
-    t = linspace(0,3,1001);
-    p = [1;0.5;2;3];
-    k = [];
-    
-    options = amioption('sensi',0,...
-        'maxsteps',1e4);
-    
-    % load mex into memory
-    [msg] = which('simulate_model_secondorder_dirac'); % fix for inaccessability problems
-    options.sensi = 2;
-    sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
-    
-    %%
-    % FORWARD SENSITIVITY ANALYSIS
-    
-    options.sensi = 2;
-    
-    sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
-    
-    %%
-    % FINITE DIFFERENCES
-    
-    options.sensi = 1;
-    
-    eps = 1e-4;
-    xi = log10(p);
-    for ip = 1:4;
-        xip = xi;
-        xip(ip) = xip(ip) + eps;
-        solp = simulate_model_dirac_secondorder(t,xip,k,[],options);
-        s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
-        s2y_fd(:,:,:,ip) = (solp.sy - sol.sy)/eps;
-    end
-    
-    %%
-    % PLOTTING
+%%
+% COMPILATION
+
+[exdir,~,~]=fileparts(which('example_dirac_secondorder.m'));
+% compile the model
+amiwrap('model_dirac_secondorder','model_dirac_secondorder_syms',exdir,1)
+
+%%
+% SIMULATION
+
+% time vector
+t = linspace(0,3,1001);
+p = [1;0.5;2;3];
+k = [];
+
+options = amioption('sensi',0,...
+    'maxsteps',1e4);
+
+% load mex into memory
+[msg] = which('simulate_model_secondorder_dirac'); % fix for inaccessability problems
+options.sensi = 2;
+sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
+
+%%
+% FORWARD SENSITIVITY ANALYSIS
+
+options.sensi = 2;
+
+sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
+
+%%
+% FINITE DIFFERENCES
+
+options.sensi = 1;
+
+eps = 1e-4;
+xi = log10(p);
+for ip = 1:4;
+    xip = xi;
+    xip(ip) = xip(ip) + eps;
+    solp = simulate_model_dirac_secondorder(t,xip,k,[],options);
+    s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
+    s2y_fd(:,:,:,ip) = (solp.sy - sol.sy)/eps;
+end
+
+%%
+% PLOTTING
+if(usejava('jvm'))
     figure
     c_x = get(gca,'ColorOrder');
     for ip = 1:4
@@ -84,5 +85,6 @@ function example_dirac_secondorder()
     set(gcf,'Position',[100 300 1200 500])
     
     drawnow
-    
+end
+
 end

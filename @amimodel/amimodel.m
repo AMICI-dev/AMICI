@@ -23,6 +23,8 @@ classdef amimodel < handle
         adjoint = true;
         % flag indicating whether forward sensitivities should be enabled @type bool
         forward = true;
+        % flag indicating whether steady state sensitivities should be enabled @type bool
+        steadystate = true;
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string
@@ -30,15 +32,17 @@ classdef amimodel < handle
         % number of states @type int
         nx = double.empty();
         % number of original states for second order sensitivities @type int
-        nxtrue = 0;
+        nxtrue = double.empty();
         % number of observables @type int
         ny = double.empty();
         % number of original observables for second order sensitivities @type int
-        nytrue = 0;
+        nytrue = double.empty();
         % number of parameters @type int
         np = double.empty();
         % number of constants @type int
         nk = double.empty();
+        % number of objective functions @type int
+        ng = double.empty();
         % number of events @type int
         nevent = double.empty();
         % number of event outputs @type int
@@ -67,6 +71,8 @@ classdef amimodel < handle
         colptrsB = double.empty();
         % cell array of functions to be compiled @type *cell
         funs = cell.empty();
+        % cell array of matlab functions to be compiled @type *cell
+        mfuns = cell.empty();
         % optimisation flag for compilation @type string
         coptim = '-O3';
         % default parametrisation @type string
@@ -85,10 +91,6 @@ classdef amimodel < handle
         %  2 indicates augmentation by one linear combination of first
         %  order sensitivities (yields hessian-vector product)
         o2flag = 0;
-
-        % counter that allows enforcing of recompilation of models after
-        % code changes
-        compver = 9;
     end
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -121,63 +123,81 @@ classdef amimodel < handle
             %
             % Return values:
             %  AM: model definition object
-            if(isa(symfun,'char'))
-                model = eval(symfun);
-            elseif(isa(symfun,'struct'))
-                model = symfun;
+            if(isa(symfun,'amimodel'))
+                AM = symfun;
             else
-                error('invalid input symfun')
-            end
-            
-            if(isfield(model,'sym'))
-                AM.sym = model.sym;
-            else
-                error('symbolic definitions missing in struct returned by symfun')
-            end
-            
-            
-            
-            props = properties(AM);
-            
-            for j = 1:length(props)
-                if(~strcmp(props{j},'sym')) % we already checked for the sym field
-                    if(isfield(model,props{j}))
-                        AM.(props{j}) = model.(props{j});
+                if(isa(symfun,'char'))
+                    try
+                        model = eval(symfun);
+                    catch
+                        error(['"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
                     end
+                elseif(isa(symfun,'struct'))
+                    model = symfun;
                 else
-                    AM.makeSyms();
-                    AM.nx = length(AM.sym.x);
-                    AM.nxtrue = AM.nx;
-                    AM.np = length(AM.sym.p);
-                    AM.nk = length(AM.sym.k);
-                    AM.ny = length(AM.sym.y);
-                    AM.nytrue = AM.ny;
+                    error('invalid input symfun')
                 end
-            end
-            
-            AM.modelname = modelname;
-            % set path and create folder
-            AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
-            if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
-                mkdir(fullfile(AM.wrap_path,'models'));
-                mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
-            else
-                if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
-                    mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
+                
+                if(isfield(model,'sym'))
+                    AM.sym = model.sym;
+                else
+                    error('symbolic definitions missing in struct returned by symfun')
                 end
-            end
-            AM.makeEvents();
-            AM.nz = length([AM.event.z]);
-            if(isempty(AM.nztrue))
-                AM.nztrue = AM.nz;
-            end
-            AM.nevent = length(AM.event);
-            
-            % check whether we have a DAE or ODE
-            if(isfield(AM.sym,'M'))
-                AM.wtype = 'iw'; % DAE
-            else
-                AM.wtype = 'cw'; % ODE
+                
+                
+                
+                props = fields(model);
+                
+                for j = 1:length(props)
+                    if(~strcmp(props{j},'sym')) % we already checked for the sym field
+                        if(isfield(model,props{j}))
+                            try
+                                AM.(props{j}) = model.(props{j});
+                            catch
+                                error(['The provided model struct or the struct created by the provided model function has the field ' props{j} ' which is not a valid property of ' ...
+                                    'the amimodel class. Please check your model definition.']);
+                            end
+                        end
+                    else
+                        AM.makeSyms();
+                        AM.nx = length(AM.sym.x);
+                        if(isempty(AM.nxtrue)) % if its not empty we are dealing with an augmented model
+                            AM.nxtrue = AM.nx;
+                        end
+                        AM.ng = round(AM.nx / AM.nxtrue);
+                        AM.np = length(AM.sym.p);
+                        AM.nk = length(AM.sym.k);
+                        AM.ny = length(AM.sym.y);
+                        if(isempty(AM.nytrue)) % if its not empty we are dealing with an augmented model
+                            AM.nytrue = AM.ny;
+                        end
+                    end
+                end
+                
+                AM.modelname = modelname;
+                % set path and create folder
+                AM.wrap_path=fileparts(fileparts(mfilename('fullpath')));
+                if(~exist(fullfile(AM.wrap_path,'models'),'dir'))
+                    mkdir(fullfile(AM.wrap_path,'models'));
+                    mkdir(fullfile(AM.wrap_path,'models',AM.modelname));
+                else
+                    if(~exist(fullfile(AM.wrap_path,'models',AM.modelname),'dir'))
+                        mkdir(fullfile(AM.wrap_path,'models',AM.modelname))
+                    end
+                end
+                AM.makeEvents();
+                AM.nz = length([AM.event.z]);
+                if(isempty(AM.nztrue))
+                    AM.nztrue = AM.nz;
+                end
+                AM.nevent = length(AM.event);
+                
+                % check whether we have a DAE or ODE
+                if(isfield(AM.sym,'M'))
+                    AM.wtype = 'iw'; % DAE
+                else
+                    AM.wtype = 'cw'; % ODE
+                end
             end
         end
         
@@ -189,12 +209,15 @@ classdef amimodel < handle
             %  xdot: new right hand side of the differential equation
             %
             % Return values:
+            this.fun.xdot.sym_noopt = this.fun.xdot.sym;
             this.fun.xdot.sym = xdot;
         end
         
         parseModel(this)
         
         generateC(this)
+        
+        generateCStandalone(this)
         
         compileC(this)
         

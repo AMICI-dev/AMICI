@@ -24,9 +24,6 @@ function amiwrap( varargin )
     if(~ischar(symfun))
         error(' second argument must be a string')
     end
-    if(exist(symfun,'file') ~= 2)
-        error(['"' symfun '" must be the name of a matlab function in the matlab path. Please check whether the folder containing "' symfun '" is in the matlab path. AMICI currently does not support absolute or relative paths in its input arguments.'])
-    end
     if nargin > 2
         tdir = varargin{3};
     else
@@ -67,8 +64,10 @@ function amiwrap( varargin )
         case 0 
             % do nothing
         case 1
+            disp('Augmenting to second order ...')
             modelo2 = augmento2(model);
         case 2
+            disp('Augmenting to second order ...')
             modelo2 = augmento2vec(model);
     end
     
@@ -94,6 +93,7 @@ function amiwrap( varargin )
     end
     
     % generate the matlab wrapper
+    disp('Generating M code ...')
     if(o2flag)
         model.generateM(modelo2);
     else
@@ -106,7 +106,10 @@ function amiwrap( varargin )
         clear(['ami_' modelname '_o2']);
         [odewrap_path,~,~]=fileparts(which('amiwrap.m'));
         movefile(fullfile(odewrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
-        movefile(fullfile(odewrap_path,'models',modelname,[ 'ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
+        movefile(fullfile(odewrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
+        for fun = model.mfuns
+            copyfile(fullfile(odewrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']))
+        end
         % clear .m and .mex files from memory
         switch(o2flag)
             case 1

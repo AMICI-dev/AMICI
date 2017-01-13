@@ -1,3 +1,6 @@
+#ifndef _MY_UDATA
+#define _MY_UDATA
+
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
 #include <sundials/sundials_sparse.h> /* def. of type sparse stuff */
@@ -5,76 +8,14 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
-#define qpositivex udata->am_qpositivex
-
-#define plist udata->am_plist
-#define np udata->am_np
-#define ny udata->am_ny
-#define nytrue udata->am_nytrue
-#define nx udata->am_nx
-#define nz udata->am_nz
-#define nztrue udata->am_nztrue
-#define ne udata->am_ne
-#define nt udata->am_nt
-#define nw udata->am_nw
-#define ndwdx udata->am_ndwdx
-#define ndwdp udata->am_ndwdp
-#define nnz udata->am_nnz
-#define nmaxevent udata->am_nmaxevent
-
-#define p udata->am_p
-#define k udata->am_k
-
-#define tstart udata->am_tstart
-#define ts udata->am_ts
-
-#define pbar udata->am_pbar
-#define xbar udata->am_xbar
-
-#define idlist udata->am_idlist
-
-#define sensi udata->am_sensi
-#define atol udata->am_atol
-#define rtol udata->am_rtol
-#define maxsteps udata->am_maxsteps
-
-#define ism udata->am_ism
-#define sensi_meth udata->am_sensi_meth
-
-#define linsol udata->am_linsol
-#define interpType udata->am_interpType
-
-#define lmm udata->am_lmm
-#define iter udata->am_iter
-
-#define stldet udata->am_stldet
-
-#define ubw udata->am_ubw
-#define lbw udata->am_lbw
-
-#define b_sx0 udata->am_bsx0
-#define sx0data udata->am_sx0data
-
-#define event_model udata->am_event_model
-
-#define ordering udata->am_ordering
-
-#define tmp_J udata->am_J
-#define tmp_dxdotdp udata->am_dxdotdp
-#define w_tmp udata->am_w
-#define dwdx_tmp udata->am_dwdx
-#define dwdp_tmp udata->am_dwdp
-#define M_tmp udata->am_M
-#define dfdx_tmp udata->am_dfdx
-
-#define z2event udata->am_z2event
-#define h udata->am_h
-
-#ifndef _MY_UDATA
-#define _MY_UDATA
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
 /** @brief struct that stores all user provided data */
-typedef struct {
+typedef struct user_data {
     /** positivity flag */
     double *am_qpositivex;
     
@@ -88,6 +29,8 @@ typedef struct {
     int    am_nytrue;
     /** number of states */
     int    am_nx;
+    /** number of states in the unaugmented system */
+    int    am_nxtrue;
     /** number of event outputs */
     int    am_nz;
     /** number of event outputs in the unaugmented system */
@@ -96,6 +39,8 @@ typedef struct {
     int    am_ne;
     /** number of timepoints */
     int    am_nt;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    int    am_ng;    
     /** number of common expressions */
     int    am_nw;
     /** number of derivatives of common expressions wrt x */
@@ -173,17 +118,24 @@ typedef struct {
     /** lower bandwith of the jacobian */
     int am_lbw;
     
+    /** flag for state initialisation */
+    /*!
+     * flag which determines whether analytic state initialisation or provided initialisation should be used
+     */
+    booleantype am_bx0;
+    
     /** flag for sensitivity initialisation */
     /*!
      * flag which determines whether analytic sensitivities initialisation or provided initialisation should be used
      */
     booleantype am_bsx0;
     
+    /** state initialisation */
+    double *am_x0data;
+    
     /** sensitivity initialisation */
     double *am_sx0data;
     
-    /** error model for events */
-    int am_event_model;
     
     /** state ordering */
     int am_ordering;
@@ -208,7 +160,9 @@ typedef struct {
     realtype *am_M;
     /** tempory storage of dfdx data across functions */
     realtype *am_dfdx;
-    
+    /** tempory storage of stau data across functions */
+    realtype *am_stau;
+
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype am_nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */
@@ -221,7 +175,8 @@ typedef struct {
     booleantype am_nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype am_nan_qBdot;
-    
-    
-} *UserData;
+} UserData;
+
+EXTERNC void freeUserData(UserData *udata);
+
 #endif /* _MY_UDATA */

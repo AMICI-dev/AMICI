@@ -26,18 +26,27 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'realtype *sdx0_tmp;\n');
         else
             if(or(strcmp(model.wtype,'iw'),~strcmp(nvec{1},'dx')))
-                fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+                % check for nx ==0, otherwise we will access a NULL pointer and crash
+                if(not(and(nx==0,strcmp(nvec{1},'x'))))
+                    fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
+                end
             end
         end
     end
     
+    if(this.sensiflag && xor(~strcmp(this.funstr,'sxdot'),strcmp(model.wtype,'iw')))    
+        fprintf(fid,'int ip;\n');
+    end
+    
     switch(this.funstr)
         case 'xdot'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'xBdot'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xBdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'qBdot'
-            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np);\n');
+            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np*ng);\n');
         case 'x0'
             fprintf(fid,['memset(x0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'dx0'
@@ -49,26 +58,28 @@ function printLocalVars(this,model,fid)
         case 'JBand'
             % nothing
         case 'J'
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(J->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
         case 'JSparse'
-            fprintf(fid,'SlsSetToZero(J);\n');
+            fprintf(fid,'int inz;\n');
+            fprintf(fid,'SparseSetMatToZero(J);\n');
             for i = 1:length(model.rowvals)
-                fprintf(fid,['J->rowvals[' num2str(i-1) '] = ' num2str(model.rowvals(i)) ';\n']);
+                fprintf(fid,['J->indexvals[' num2str(i-1) '] = ' num2str(model.rowvals(i)) ';\n']);
             end
             for i = 1:length(model.colptrs)
-                fprintf(fid,['J->colptrs[' num2str(i-1) '] = ' num2str(model.colptrs(i)) ';\n']);
+                fprintf(fid,['J->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrs(i)) ';\n']);
             end
         case 'JBandB'
             % nothing
         case 'JB'
             fprintf(fid,['  memset(JB->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
         case 'JSparseB'
-            fprintf(fid,'  SlsSetToZero(JB);\n');
+            fprintf(fid,'  SparseSetMatToZero(JB);\n');
             for i = 1:length(model.rowvalsB)
-                fprintf(fid,['  JB->rowvals[' num2str(i-1) '] = ' num2str(model.rowvalsB(i)) ';\n']);
+                fprintf(fid,['  JB->indexvals[' num2str(i-1) '] = ' num2str(model.rowvalsB(i)) ';\n']);
             end
             for i = 1:length(model.colptrsB)
-                fprintf(fid,['  JB->colptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
+                fprintf(fid,['  JB->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
             end
         case 'sxdot'
             if(~strcmp(model.wtype,'iw'))
@@ -101,20 +112,24 @@ function printLocalVars(this,model,fid)
         case 'deltaxB'
             fprintf(fid,['memset(deltaxB,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaqB'
-            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*np);\n']);
+            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*np*ng);\n']);
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'stau'
-            % nothing
+            fprintf(fid,['memset(stau,0,sizeof(realtype)*np);\n']);
         case 'dxdotdp'
-            % nothing
+            fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(dxdotdp,0,sizeof(realtype)*' num2str(nx) '*np);\n']);
         case 'root'
             % nothing
+        case 'sroot'
+            % nothing
+        case 's2root'
+            % nothing
         case 'sigma_y'
-            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(ny) ');\n']);
+            fprintf(fid,['memset(sigma_y,0,sizeof(realtype)*' num2str(model.ny) ');\n']);
         case 'dsigma_ydp'
-            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(ny) '*np);\n']);
+            fprintf(fid,['memset(dsigma_ydp,0,sizeof(realtype)*' num2str(model.ny) '*np);\n']);
         case 'sigma_z'
             fprintf(fid,['memset(sigma_z,0,sizeof(realtype)*' num2str(model.nz) ');\n']);
         case 'dsigma_zdp'
@@ -123,8 +138,10 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'dJydx'
             % nothing
+        case 'dJydy'
+            fprintf(fid,['memset(dJydy,0,sizeof(realtype)*nytrue*nytrue*ng);\n']);
         case 'dJydp'
-            % nothing
+            fprintf(fid,['memset(dJydp,0,sizeof(realtype)*nytrue*np*ng);\n']);
         case 'sJy'
             % nothing
         case 'Jz'

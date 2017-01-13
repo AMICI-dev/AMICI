@@ -93,13 +93,13 @@ function makeSyms( this )
         error('The definition of events via a root function is deprecated and no longer supported. Please update the model definition syntax!')
     end
     if(~isfield(this.sym,'sigma_y'))
-        this.sym.sigma_y = sym(ones(size(this.sym.y)));
+        this.sym.sigma_y = sym(ones(length(this.sym.y),1));
     end
     if(numel(this.sym.sigma_y) == 1)
-        this.sym.sigma_y = this.sym.sigma_y*sym(ones(size(this.sym.y)));
+        this.sym.sigma_y = this.sym.sigma_y*sym(ones(length(this.sym.y),1));
     end
-    if(numel(this.sym.sigma_y)~=numel(this.sym.y))
-        error('Size of model.sym.y and model.sym.sigma_ygit does not agree.')
+    if(numel(this.sym.sigma_y)~=length(this.sym.y))
+        error('Size of model.sym.y and model.sym.sigma_y does not agree.')
     end
     
     if(any(ismember(this.sym.k,this.sym.p)))
@@ -109,7 +109,7 @@ function makeSyms( this )
     if(~isfield(this.sym,'Jy'))
         this.sym.Jy = sym(zeros(numel(this.sym.y),1));
         for iy = 1:length(this.sym.y)
-            this.sym.Jy(iy) = sym(['0.5*log(2*pi*sdy_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sdy_' num2str(iy-1) ')^2']);
+            this.sym.Jy(iy) = sym(['0.5*log(2*pi*sigma_y_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sigma_y_' num2str(iy-1) ')^2']);
         end
     end
     

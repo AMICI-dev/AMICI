@@ -14,7 +14,7 @@ function AMICI2D2D( filename, modelname )
     fprintf(fid,'cell             V   "pl"      "vol."        1\n');
     fprintf(fid,'\n');
     fprintf(fid,'STATES\n');
-    fprintf(fid,strjoin(cellfun(@(x) [char(x) '\t\tC\tnM"\t"conc."\tcell\n'],num2cell(model.sym.x),'UniformOutput',false),''));
+    fprintf(fid,strjoin(cellfun(@(x) [char(x) '\t\tC\t"nM"\t"conc."\tcell\n'],num2cell(model.sym.x),'UniformOutput',false),''));
     fprintf(fid,'\n');
     fprintf(fid,'INPUTS\n');
     fprintf(fid,'\n');
@@ -23,6 +23,8 @@ function AMICI2D2D( filename, modelname )
     tmp = regexprep(tmp,'heaviside\(t - ([0-9/]*)\)','step1(t,0.0,$1,1.0)');
     tmp = regexprep(tmp,'heaviside\(([0-9/]*) - t\)','step1(t,1.0,$1,0.0)');
     fprintf(fid,tmp);
+    fprintf(fid,'\n');
+    fprintf(fid,'DERIVED\n');
     fprintf(fid,'\n');
     fprintf(fid,'OBSERVABLES\n');
     fprintf(fid,strjoin(cellfun(@(x,y) ['y_' num2str(y) '\tC\t"au"\t"conc."\t1\t0\t"' char(x) '"\n'],num2cell(model.sym.y),num2cell(1:length(model.sym.y)),'UniformOutput',false),''));
