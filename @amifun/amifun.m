@@ -60,13 +60,15 @@ classdef amifun
         
         writeCcode(this,model,fid)
         
-        writeMcode(this,model,fid)
+        writeMcode(this,model)
         
         gccode(this,model,fid)
         
         [ this ] = getDeps(this,model)
         
         [ this ] = getArgs(this,model)
+        
+        [ this ] = getFArgs(this)
         
         [ this ] = getNVecs(this)
         

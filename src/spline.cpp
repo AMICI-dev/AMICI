@@ -1,5 +1,5 @@
 /**
- * @file   spline.c
+ * @file   spline.cpp
  * @brief  definition of spline functions
  * @author Peter & Nigel, Design Software, 42 Gubberley St, Kenmore, 4069, Australia.           
  */

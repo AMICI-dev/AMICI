@@ -1578,6 +1578,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
      * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] seflag flag indicating whether this is a secondary event @type int
      * @return void
      */
     int ie;
@@ -2134,6 +2135,20 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
 
 
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot) {
+    /**
+     * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] edata pointer to the experimental data struct @type ExpData
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] iroot pointer to the current root index, the value pointed to will be increased during the forward solve
+     * @return int status flag
+     */
+    
+    
     /*******************/
     /* FORWARD PROBLEM */
     /*******************/
@@ -2202,9 +2217,19 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
 }
 
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
-    /********************/
-    /* BACKWARD PROBLEM */
-    /********************/
+    /**
+     * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
+     * workForwardProblem should be called before this is function is called
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] edata pointer to the experimental data struct @type ExpData
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] iroot pointer to the current root index, the value pointed to will be decreased during the forward solve
+     * @return int status flag
+     */
     int ix, it;
     int ip;
 
@@ -2375,6 +2400,15 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
 }
 
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
+    /**
+     * evalues the Jacobian and differential equation right hand side, stores it in tdata and
+     and copys it to rdata
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @return void
+     */
     
     /* store current Jacobian and derivative */
     if(udata) {
@@ -2395,6 +2429,16 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  R
 }
 
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status) {
+    /**
+     * freeTempDataAmiMem frees all allocated memory in udata, tdata and ami_mem
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[in] setupBdone flag indicating whether backward problem was initialized @type booleantyp
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[out] status flag indicating success of execution @type *int
+     * @return void
+     */
     if(nx>0) {
         N_VDestroy_Serial(x);
         N_VDestroy_Serial(dx);
@@ -2472,6 +2516,13 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 
 #ifdef AMICI_WITHOUT_MATLAB
 ReturnData *initReturnData(UserData *udata, int *pstatus) {
+    /**
+     * initReturnData initialises a ReturnData struct
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] pstatus flag indicating success of execution @type *int
+     * @return rdata initialized return data struct @type ReturnData
+     */
     ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
@@ -2487,6 +2538,14 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
 }
 
 ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
+    /**
+     * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] pstatus flag indicating success of execution @type *int
+     * @return rdata data struct with simulation results @type ReturnData
+     */
     int iroot = 0;
     booleantype setupBdone = false;
     *pstatus = 0;
@@ -2527,6 +2586,12 @@ freturn:
 }
 #endif
 void processUserData(UserData *udata) {
+    /**
+     * processUserData initializes fields of the udata struct
+     *
+     * @param[out] udata pointer to the user data struct @type UserData
+     * @return void
+     */
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);

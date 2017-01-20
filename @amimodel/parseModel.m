@@ -1,6 +1,11 @@
 function parseModel(this)
 % parseModel parses the model definition and computes all necessary symbolic expressions.
 %
+% Parameters:
+%
+% Return values:
+%
+
 
 % compile CalcMD5 if necessary
 try

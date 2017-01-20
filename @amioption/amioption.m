@@ -63,7 +63,6 @@ classdef amioption < matlab.mixin.CustomDisplay
     methods
         function obj = amioption(varargin)
             %amioptions Construct a new amioptions object
-            %
             %   OPTS = amioption() creates a set of options with each option set to its
             %   default value.
             %
@@ -73,8 +72,16 @@ classdef amioption < matlab.mixin.CustomDisplay
             %   OPTS = amioption(OLDOPTS, PARAM, VAL, ...) creates a copy of OLDOPTS with
             %   the named parameters altered with the specified value
             %
-            %   Note to see the parameters, check the
-            %   documentation page for amioptions
+            %   Note: to see the parameters, check the
+            %   documentation page for @amioption
+            %
+            % Parameters:
+            %  varargin: input to construct amioption object, see function
+            %            function description
+            %
+            % Return values:
+            %  obj: amioption object constructed from inputs
+            %
             
             % adapted from SolverOptions
             

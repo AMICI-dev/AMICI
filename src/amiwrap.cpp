@@ -1,5 +1,5 @@
 /**
- * @file   amiwrap.c
+ * @file   amiwrap.cpp
  * @brief  core routines for mex interface
  *
  * This file defines the fuction mexFunction which is executed upon calling the mex file from matlab

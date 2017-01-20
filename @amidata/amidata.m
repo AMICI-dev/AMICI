@@ -3,8 +3,11 @@
 % @brief definition of amidata class
 %
 classdef amidata < handle
-    %AMIDATA provides a data container to pass experimental data to the
-    %simulation routine for likelihood computation. 
+    % AMIDATA provides a data container to pass experimental data to the
+    % simulation routine for likelihood computation. 
+    % when any of the properties are updated, the class automatically 
+    % checks consistency of dimension and updates related properties and 
+    % initialises them with NaNs
     
     properties
         % number of timepoints
@@ -33,6 +36,37 @@ classdef amidata < handle
     
     methods
         function D = amidata(varargin)
+            % amidata creates an @amidata container for experimental data 
+            % with specified dimensions amidata.
+            % 
+            % AMIDATA(amidata) creates a copy of the input container
+            %
+            % AMIDATA(struct) tries to creates an amidata container from the
+            %                 input struct. the struct should have the following
+            %                 fields:
+            %                 t [nt,1]
+            %                 Y [nt,ny]
+            %                 Sigma_Y [nt,ny]
+            %                 Z [ne,nz]
+            %                 Sigma_Z [ne,nz]
+            %                 condition [nk,1]
+            %                 
+            %                 if some fields are missing the function will try
+            %                 to initialise them with NaNs with consistent
+            %                 dimensions
+            %
+            % AMIDATA(nt,ny,nz,ne,nk) constructs an empty data container with
+            %                 in the provided dimensions intialised with NaNs
+            %
+            % 
+            %
+            % Parameters:
+            %    varargin:
+            %
+            % Return values:
+            %
+            
+            
             % initialisation via struct
             if isa(varargin{1},'amidata')
                     if strcmp(class(varargin{1}),class(D))

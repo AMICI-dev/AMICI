@@ -1,6 +1,11 @@
 function makeEvents( this )
 % makeEvents extracts discontiniuties from the model right hand side
 % and converts them into events
+%
+% Parameters:
+%
+% Return values:
+%
 
 nevent = length(this.event);
 nx = length(this.sym.x);
@@ -239,11 +244,11 @@ if(nevent>0)
     
     % update events
     for ievent = 1:nevent
-            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
-            % do not add a (:) after z{ievent} this will transform an
-            % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
-            % zero entry if we apply [this.event.z]
-            this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
+        this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
+        % do not add a (:) after z{ievent} this will transform an
+        % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
+        % zero entry if we apply [this.event.z]
+        this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
     end
 end
 

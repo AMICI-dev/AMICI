@@ -1,6 +1,6 @@
 %
-% @file amidata
-% @brief definition of optsym class
+% @file optsym.m
+% @brief wrapper class for sym to make symob::optimize accessible
 %
 classdef optsym<sym
     %OPTSYM is an auxiliary class to gain access to the private symbolic
@@ -13,20 +13,21 @@ classdef optsym<sym
     methods
         function obj=optsym(symbol)
             %optsym converts the symbolic object into a optsym object
-            obj=obj@sym(symbol);
             %
             % Parameters:
             %  symbol: symbolic object @type sym
             %
             % Return values:
+            %  obj: cast symbolic object @type optsym
+            obj=obj@sym(symbol);
         end
         function out=getoptimized(obj)    
-            %optsym calls symobj::optimize on the optsym object
+            %getoptimized calls symobj::optimize on the optsym object
             %
             % Parameters:
             %
             % Return values:
-            %  optimized symbolic object @type sym
+            %  out: optimized symbolic object @type sym
             out = mupadmex('symobj::optimize',obj.s);
         end
     end

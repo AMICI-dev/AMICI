@@ -1,7 +1,14 @@
 function fun = am_lt(varargin)
-% syms x y
-% f = symfun(sym('cw_lt(x,y)'),[x y]);
-% fun = f(a,b);
+% am_lt is the amici implementation of the n-ary mathml lessthan function
+% this is an n-ary function, for more than 2 input parameters it will check
+% whether and(varargin{1} < varargin{2},varargin{2} < varargin{3},...)
+%
+% Parameters:
+%  a: first input parameter @type sym
+%  b: second input parameter @type sym
+%
+% Return values:
+%  fun: a < b logical value, negative for false, positive for true
 a=varargin{1};
 b=varargin{2};
 fun = b-a;
