@@ -34,7 +34,7 @@ function printLocalVars(this,model,fid)
         end
     end
     
-    if(this.sensiflag && xor(~strcmp(this.funstr,'sxdot'),strcmp(model.wtype,'iw')))    
+    if(this.sensiflag && xor(strcmp(this.funstr,'sxdot'),strcmp(model.wtype,'iw')))    
         fprintf(fid,'int ip;\n');
     end
     

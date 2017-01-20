@@ -3,10 +3,6 @@ function [model] = example_model_7_syms()
 %%
 % CVODES OPTIONS
 
-model.atol = 1e-8;
-model.rtol = 1e-8;
-model.maxsteps = 1e4;
-
 %%
 % STATES
 
