@@ -19,7 +19,7 @@ if(exist([modelname]))
     extension = '';
 end
 if(isempty(extension))
-    error([modelname ' could not be found in the matlab path'])
+    error([modelname ' could not be found in the matlab path!'])
 end
 
 
@@ -67,12 +67,12 @@ fprintf('applying rules ...\n')
 rule_types = {model.rule.typecode};
 if(any(strcmp(rule_types,'SBML_ALGEBRAIC_RULE')))
     %DAE part TBD
-    error('DAEs currently not supported!');
+    error('Algebraic rules are currently not supported!');
 end
 
 all_rulevars = sym({model.rule.variable});
 if(any(arrayfun(@(x) ismember(x,compartments_sym),all_rulevars)))
-    error('rules for compartments are currently not supported!');
+    error('Rules for compartments are currently not supported!');
 end
 all_rulemath = cleanedsym({model.rule.formula}); 
 % remove rate rules
@@ -101,7 +101,7 @@ nx = length(this.state);
 compartments = sym(sanitizeString({model.species.compartment}));
 this.volume = subs(compartments(:),sym({model.compartment.id}),this.compartment);
 if(any(arrayfun(@(x) ~isempty(regexp(char(x),'[\w]+\(')),this.volume)))
-    error('The use of functions in volume definitions is currently not supported.')
+    error('Functions in volume definitions is currently not supported.')
 end
 
 initConcentration = [model.species.initialConcentration];
@@ -191,7 +191,7 @@ if(nr>0)
     for ir = 1:nr
         if(model.reaction(ir).isSetFast)
             if(model.reaction(ir).fast)
-                error('Fast reactions are currently not supported');
+                error('Fast reactions are currently not supported!');
             end
         end
     end
@@ -399,7 +399,7 @@ this.xdot = conversionfactor.*subs(this.xdot,this.state(onlysubstance_idx),this.
 fprintf('loading events ...\n')
 
 if(numel({model.event.delay}))
-   error('Events with delays are currently not supported'); 
+   error('Events with delays are currently not supported!'); 
 end
     
 try
@@ -612,13 +612,13 @@ end
 function checkIllegalFunctions(str)
 
 if(any(cell2mat(strfind(str,'factorial'))))
-    error('Sorry, factorial functions are not supported at the moment!')
+    error('Factorial functions are currently not supported!')
 end
 if(any(cell2mat(strfind(str,'ceil'))))
-    error('Sorry, ceil functions are not supported at the moment!')
+    error('Ceil functions are currently not supported!')
 end
 if(any(cell2mat(strfind(str,'floor'))))
-    error('Sorry, floor functions are not supported at the moment!')
+    error('Floor functions are currently not supported!')
 end
 end
 
@@ -666,7 +666,7 @@ end
 end
 
 function z = delay(x,y)
-error('Events with delays are currently not supported');
+error('Events with delays are currently not supported!');
 end
 
 function x = stoich_initAssign_rule(y,initassignments_sym,initassignments_math,rulevars,rulemath)

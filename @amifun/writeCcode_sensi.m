@@ -46,9 +46,9 @@ elseif(strcmp(this.funstr,'s2root'))
     if(any(any(any(nonzero))))
         tmpfun = this;
         for ip=1:np
-            if(any(any(any(nonzero(:,:,ip)))))
+            if(any(any(any(nonzero(:,ip,:)))))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                tmpfun.sym = squeeze(this.sym(model.z2event(1:model.nztrue),:,ip));
+                tmpfun.sym = squeeze(this.sym(model.z2event(1:model.nztrue),ip,:));
                 tmpfun.writeCcode(model,fid);
                 fprintf(fid,'\n');
                 fprintf(fid,'  } break;\n\n');

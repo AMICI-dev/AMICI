@@ -64,21 +64,21 @@ function writeAMICI(this,modelname)
     
     fprintf(fid,['function r = factorial(x)\n']);
     fprintf(fid,'\n');
-    fprintf(fid,['    error(''AMICI does not support the factorial function'');\n']);
+    fprintf(fid,['    error(''The factorial function is currently not supported!'');\n']);
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
     
     fprintf(fid,['function r = ceil(x)\n']);
     fprintf(fid,'\n');
-    fprintf(fid,['    error(''AMICI does not support the ceil function'');\n']);
+    fprintf(fid,['    error(''The ceil function is currently not supported!'');\n']);
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
     
     fprintf(fid,['function r = psi(x)\n']);
     fprintf(fid,'\n');
-    fprintf(fid,['    error(''AMICI does not support the psi function'');\n']);
+    fprintf(fid,['    error(''The psi function is currently not supported!'');\n']);
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
