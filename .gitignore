@@ -219,3 +219,5 @@ unitTests/sbml-test-suite/
 tests/sbml-test-suite/
 
 tests/sedml-test-suite/
+
+examples/example_7/simulate_model_example_7.m
