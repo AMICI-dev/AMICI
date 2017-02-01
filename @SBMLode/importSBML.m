@@ -265,14 +265,16 @@ if(length({model.reaction.id})>0)
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
     tmp = cat(2,reactant_stochiometry{:});
-    if(~isempty([tmp{:}]))
-        eS(sub2ind(size(eS),reactant_sidx,reactant_ridx)) = [tmp{:}];
+    tmp = [tmp{:}];
+    for iidx = 1:length(reactant_sidx)
+        eS(reactant_sidx(iidx),reactant_ridx(iidx)) = eS(reactant_sidx(iidx),reactant_ridx(iidx)) + tmp(iidx);
     end
     tmp = cat(2,product_stochiometry{:});
-    if(~isempty([tmp{:}]))
-        pS(sub2ind(size(eS),product_sidx,product_ridx)) = [tmp{:}];
+    tmp = [tmp{:}];
+    for iidx = 1:length(product_sidx)
+        pS(product_sidx(iidx),product_ridx(iidx)) = pS(reactant_sidx(iidx),reactant_ridx(iidx)) + tmp(iidx);
     end
-    
+
     this.stochiometry = - eS + pS;
     
     this.xdot = this.stochiometry*this.flux;
