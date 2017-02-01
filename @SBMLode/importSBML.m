@@ -173,12 +173,13 @@ np = length(this.param);
 
 %% CONSTANTS
 
-this.knom = double(subs(this.initState(cond_idx),parameter_sym,parameter_val));
-
 % remove constant species
 const_idx = logical([model.species.constant]) & not(cond_idx);
 constant_sym = this.state(const_idx);
-constants = this.initState(const_idx);
+
+this.knom = double(subs([this.initState(cond_idx),this.initState(const_idx)],parameter_sym,parameter_val));
+
+
 
 
 
@@ -500,7 +501,6 @@ this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 % substitute with actual expressions, do this twice to resolve co-dependencies, do we need a loop here?
 makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,condition_sym,conditions);
-makeSubs(this,constant_sym,constants);
 makeSubs(this,compartments_sym,this.compartment);
 makeSubs(this,stoichsymbols,stoichmath);
 
@@ -553,7 +553,7 @@ hasAssignment = ismember(parameter_sym,initassignments_sym);
 this.parameter = parameter_sym(and(not(isRuleVar),not(isPartOfRule)));
 this.pnom = parameter_val(and(not(isRuleVar),not(isPartOfRule)));
 
-this.condition = condition_sym;
+this.condition = [condition_sym;constant_sym];
 obs_idx = all([isRuleVar,not(isPartOfRule),not(isUsedParam),not(hasAssignment)],2);
 this.observable = [this.observable;this.param(obs_idx(1:length(this.param)))];
 this.observable_name = [this.observable_name;parameter_sym(obs_idx(1:length(this.param)))];
@@ -564,7 +564,6 @@ this.observable_name(equal_idx) = [];
 
 this.observable = subs(this.observable,parameter_sym(1:np),this.param);
 this.observable = subs(this.observable,condition_sym,conditions);
-this.observable = subs(this.observable,constant_sym,constants);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
 this.observable = subs(this.observable,stoichsymbols,stoichmath);

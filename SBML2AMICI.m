@@ -4,11 +4,13 @@ function  SBML2AMICI( filename, modelname )
     % Parameters:
     %  filename: name of the SBML file (withouth extension)
     %  modelname: name of the model, this will define the name of the
-    %  output file
+    %  output file (default: input filename)
     %
     % Return values:
     %  void
-    
+    if(nargin<2)
+        modelname = filename;
+    end
     ODE = SBMLode(filename);
     ODE.writeAMICI(modelname);
     pnom = ODE.pnom;
