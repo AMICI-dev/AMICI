@@ -177,7 +177,7 @@ np = length(this.param);
 const_idx = logical([model.species.constant]) & not(cond_idx);
 constant_sym = this.state(const_idx);
 
-this.knom = double(subs([this.initState(cond_idx),this.initState(const_idx)],parameter_sym,parameter_val));
+this.knom = double(subs([this.initState(cond_idx);this.initState(const_idx)],parameter_sym,parameter_val));
 
 
 
