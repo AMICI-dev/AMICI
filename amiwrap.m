@@ -27,7 +27,7 @@ function amiwrap( varargin )
     if nargin > 2
         tdir = varargin{3};
     else
-        tdir = [];
+        tdir = pwd;
     end
     
     if nargin > 3
