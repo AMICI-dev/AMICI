@@ -705,7 +705,7 @@ function [this,model] = getSyms(this,model)
             end
             this = makeStrSyms(this);
         case 'dJydx'
-            this.sym = sym(zeros(model.nytrue, model.nxtrue, model.ng)); % Maybe nxtrue is sufficient...
+            this.sym = sym(zeros(model.nytrue, model.nxtrue, model.ng));
             dJydy_tmp = sym(zeros(model.ng, model.ny));
             for iy = 1 : model.nytrue
                 dJydy_tmp(:,:) = model.fun.dJydy.sym(iy,:,:);
@@ -713,7 +713,6 @@ function [this,model] = getSyms(this,model)
                 % Transposition is necessary to have things sorted
                 % correctly in gccode.m
             end
-            disp('');
         case 'dJydsigma'
             this.sym = sym(zeros(model.nytrue, model.ng, model.nytrue));
             for iy = 1 : model.nytrue
@@ -740,25 +739,47 @@ function [this,model] = getSyms(this,model)
             end
             this.sym = this.sym + model.fun.dJydp.strsym;
         case 'Jz'
-            this.sym = model.sym.Jz(:);
+            this.sym = model.sym.Jz;
         case 'dJzdz'
-            if(nz>0)
-                this.sym = jacobian(model.fun.Jz.sym,model.fun.z.strsym);
-            else
-                this.sym = sym(zeros(1,0));
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
+            for iz = 1 : model.nztrue
+                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
+            this = makeStrSyms(this);
         case 'dJzdx'
-            this.sym = model.fun.dJzdz.sym*model.fun.dzdx.strsym;
+            this.sym = sym(zeros(model.nztrue, model.nxtrue, model.ng));
+            dJzdz_tmp = sym(zeros(model.ng, model.nz));
+            for iz = 1 : model.nztrue
+                dJzdz_tmp(:,:) = model.fun.dJzdz.sym(iz,:,:);
+                this.sym(iz,:,:) = transpose(dJzdz_tmp * model.fun.dzdx.strsym(:,1:model.nxtrue));
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end
         case 'dJzdsigma'
-            if(nz>0)
-                this.sym = jacobian(model.fun.Jz.sym,model.fun.sigma_z.strsym);
-            else
-                this.sym = sym(zeros(1,0));
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nztrue));
+            for iz = 1 : model.nztrue
+                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym(1:model.nztrue));
             end
         case 'dJzdp'
-            this.sym = model.fun.dJzdz.sym*model.fun.dzdp.strsym + model.fun.dJzdsigma.sym*model.fun.dsigma_zdp.strsym;
+            this.sym = sym(zeros(model.nztrue, model.np, model.ng));
+            for iz = 1 : model.nztrue
+                dJzdsigma_tmp(:,:) = model.fun.dJzdsigma.sym(iz,:,:);
+                this.sym(iz,:,:) = transpose(permute(model.fun.dJzdz.sym(iz,:,:),[2,3,1]) * model.fun.dzdp.strsym ...
+                    + permute(model.fun.dJzdsigma.sym(iz,:,:),[2,3,1]) * model.fun.dsigma_zdp.strsym(1:model.nztrue,:));
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end            
+            this = makeStrSyms(this);
         case 'sJz'
-            this.sym = model.fun.dJzdz.sym*model.fun.sz.strsym + model.fun.dJzdp.sym;
+            this.sym = sym(zeros(model.nztrue, model.np, model.ng));
+            dJzdz_tmp = sym(zeros(model.ng, model.nz));
+            for iz = 1 : model.nztrue
+                dJzdz_tmp(:,:) = model.fun.dJzdz.strsym(iz,:,:);
+                this.sym(iz,:,:) = transpose(dJzdz_tmp*(model.fun.sz.strsym-model.fun.dzdp.strsym));
+                % Transposition is necessary to have things sorted
+                % correctly in gccode.m
+            end
+            this.sym = this.sym + model.fun.dJzdp.strsym;
             
             
         otherwise

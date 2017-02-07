@@ -184,6 +184,9 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'sigma_z_([0-9]+)','sigma_z\[$1\]');
                 cstr = regexprep(cstr,'dsdzdp\[([0-9]*)\]','dsigma_zdp\[$1\]');
                 cstr = regexprep(cstr,'z_([0-9]+)','z\[nroots[ie]+nmaxevent*$1\]');
+                if(strcmp(this.cvar,'dJzdp'))
+                    cstr = regexprep(cstr,'dJzdp\[([0-9]+)\]\[0]',['dJzdp\[iz+(nmaxevent*$1+nroots[ie])*' num2str(model.nztrue) '\]']);
+                end
                 cstr = strrep(cstr,'=','+=');
             end
             
