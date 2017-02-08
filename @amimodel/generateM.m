@@ -429,6 +429,7 @@ if(o2flag)
     fprintf(fid,['        sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['        sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
     fprintf(fid,['        sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
+    fprintf(fid,['        sol.rz = sol.rz(:,1:' num2str(nztrue) ');\n']);
     fprintf(fid, '    else\n');
     fprintf(fid,['        sx = sol.sx(:,1:' num2str(nxtrue) ',:);\n']);
     fprintf(fid,['        sy = sol.sy(:,1:' num2str(nytrue) ',:);\n']);
@@ -476,6 +477,7 @@ if(o2flag)
     fprintf(fid,['        sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['        sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
     fprintf(fid,['        sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
+    fprintf(fid,['        sol.rz = sol.rz(:,1:' num2str(nztrue) ');\n']);
     switch(this.param)
         case 'log'
             fprintf(fid,['        sol.sx = bsxfun(@times,sx,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
