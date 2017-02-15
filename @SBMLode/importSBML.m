@@ -253,10 +253,10 @@ if(length({model.reaction.id})>0)
     product_ridx = tmp(logical(wprod));
     if(model.SBML_level>=3)
         reactant_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.reactant},'UniformOutput',false);
-        reactant_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.reactant},'UniformOutput',false);
+%         reactant_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.reactant},'UniformOutput',false);
         reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.product},'UniformOutput',false);
-        product_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.product},'UniformOutput',false);
+%         product_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.product},'UniformOutput',false);
         product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
@@ -268,15 +268,13 @@ if(length({model.reaction.id})>0)
     end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
-    tmp = cat(2,reactant_stochiometry{:});
-    tmp = [tmp{:}];
+    tmp = [reactant_id{:}];
     for iidx = 1:length(reactant_sidx)
-        eS(reactant_sidx(iidx),reactant_ridx(iidx)) = eS(reactant_sidx(iidx),reactant_ridx(iidx)) + tmp(iidx);
+        eS(reactant_sidx(iidx),reactant_ridx(iidx)) = eS(reactant_sidx(iidx),reactant_ridx(iidx)) + sym(tmp{iidx});
     end
-    tmp = cat(2,product_stochiometry{:});
-    tmp = [tmp{:}];
+    tmp = [product_id{:}];
     for iidx = 1:length(product_sidx)
-        pS(product_sidx(iidx),product_ridx(iidx)) = pS(product_sidx(iidx),product_ridx(iidx)) + tmp(iidx);
+        pS(product_sidx(iidx),product_ridx(iidx)) = pS(product_sidx(iidx),product_ridx(iidx)) + sym(tmp(iidx));
     end
 
     this.stochiometry = - eS + pS;
@@ -290,8 +288,8 @@ reactionsymbols = sym({model.reaction.id}');
 
 if(model.SBML_level>=3 && length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
-    tmp_r = [reactant_math{:}];
-    tmp_p = [product_math{:}];
+    tmp_r = [reactant_stochiometry{:}{:}];
+    tmp_p = [product_stochiometry{:}{:}];
     stoichmath = [tmp_r,tmp_p];
     
     stoichidx = not(strcmp(stoichsymbols,''));
@@ -438,6 +436,7 @@ if(length(this.trigger)>0)
             param_assign_idx = find(assignments(iassign)==parameter_sym);
             cond_assign_idx = find(assignments(iassign)==condition_sym);
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
+            stoich_assign_idx = find(assignments(iassign)==stoichsymbols);
             
             if(np>0 && ~isempty(param_assign_idx))
                 this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
@@ -451,6 +450,10 @@ if(length(this.trigger)>0)
                 boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
             end
             
+            if(length(stoichsymbols)>0 && ~isempty(stoich_assign_idx))
+                stoichmath(stoich_assign_idx) = stoichmath(stoich_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
+            end
+            
             if(length(this.state)>0 && ~isempty(state_assign_idx))
                 
                 this.bolus(state_assign_idx,ievent) = -this.state(state_assign_idx);
@@ -459,6 +462,7 @@ if(length(this.trigger)>0)
                 
                 this.bolus(:,ievent) = this.bolus(:,ievent) + addToBolus;
             end
+
         end
     end
 else
@@ -511,6 +515,7 @@ makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,condition_sym,conditions);
 makeSubs(this,compartments_sym,this.compartment);
 makeSubs(this,stoichsymbols,stoichmath);
+makeSubs(this,reactionsymbols,this.flux);
 
 % set initial assignments
 for iIA = 1:length(initassignments_sym)
@@ -575,12 +580,10 @@ this.observable = subs(this.observable,condition_sym,conditions);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
 this.observable = subs(this.observable,stoichsymbols,stoichmath);
-this.observable = subs(this.observable,reactionsymbols,this.flux);
+
 applyRule(this,model,'observable',rulevars,rulemath);
 
 this.time_symbol = model.time_symbol;
-
-this.xdot = subs(this.xdot,reactionsymbols,this.flux);
 
 prohibited = sym({'null','beta'});
 alt_prohib = sym({'null_sym','beta_sym'});
