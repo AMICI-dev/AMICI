@@ -276,7 +276,7 @@ if(length({model.reaction.id})>0)
     tmp = cat(2,product_stochiometry{:});
     tmp = [tmp{:}];
     for iidx = 1:length(product_sidx)
-        pS(product_sidx(iidx),product_ridx(iidx)) = pS(reactant_sidx(iidx),reactant_ridx(iidx)) + tmp(iidx);
+        pS(product_sidx(iidx),product_ridx(iidx)) = pS(product_sidx(iidx),product_ridx(iidx)) + tmp(iidx);
     end
 
     this.stochiometry = - eS + pS;
@@ -285,6 +285,8 @@ if(length({model.reaction.id})>0)
 else
     this.xdot = sym(zeros(size(this.state)));
 end
+
+reactionsymbols = sym({model.reaction.id}');
 
 if(model.SBML_level>=3 && length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
@@ -405,7 +407,7 @@ this.xdot = conversionfactor.*subs(this.xdot,this.state(onlysubstance_idx),this.
 
 fprintf('loading events ...\n')
 
-if(numel({model.event.delay}))
+if(sum(cellfun(@(x)numel(x),{model.event.delay})>0))
    error('Events with delays are currently not supported!'); 
 end
     
@@ -573,9 +575,12 @@ this.observable = subs(this.observable,condition_sym,conditions);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
 this.observable = subs(this.observable,stoichsymbols,stoichmath);
-applyRule(this,model,'observable',rulevars,rulemath)
+this.observable = subs(this.observable,reactionsymbols,this.flux);
+applyRule(this,model,'observable',rulevars,rulemath);
 
 this.time_symbol = model.time_symbol;
+
+this.xdot = subs(this.xdot,reactionsymbols,this.flux);
 
 prohibited = sym({'null','beta'});
 alt_prohib = sym({'null_sym','beta_sym'});
@@ -654,6 +659,10 @@ end
 
 function str = replaceReservedFunctions(str)
 % replace reserved matlab functions
+
+if(strcmp(str,'this'))
+    error('SBML functions may not be called ''this''');
+end
 
 for logicalf = {'divide','minus','multiply','plus'}
     str = regexprep(str,['^' logicalf{1} '('],['am_' logicalf{1} '(']);
