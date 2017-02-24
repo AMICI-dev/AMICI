@@ -453,15 +453,15 @@ if(length(this.trigger)>0)
             stoich_assign_idx = find(assignments(iassign)==stoichsymbols);
             
             if(np>0 && ~isempty(param_assign_idx))
-                this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(nk>0 && ~isempty(cond_assign_idx))
-                conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(length(boundaries)>0 && ~isempty(bound_assign_idx))
-                boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(this.trigger(ievent)) + assignments_math(iassign)*heaviside(-this.trigger(ievent));
+                boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(length(stoichsymbols)>0 && ~isempty(stoich_assign_idx))
