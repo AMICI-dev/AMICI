@@ -3,7 +3,7 @@ exedir = fileparts(mfilename('fullpath'));
 cd(exedir);
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for iTest = 1444:1453
+for iTest = 248:1453
     cd(exedir);
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
     if(~exist(fullfile(pwd,'SBMLresults',[testid '-results.csv'])))
@@ -39,6 +39,7 @@ if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
     load(['SBMLTEST_' testid '_knom.mat'])
     load(['SBMLTEST_' testid '_pnom.mat'])
     load(['SBMLTEST_' testid '_vnom.mat'])
+    load(['SBMLTEST_' testid '_kvnom.mat'])
     [t,settings,concflag] = parseSettings(testid);
     options.sensi = 0;
     options.maxsteps = 1e6;
@@ -61,14 +62,19 @@ if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
                 vol = 1;
             end
             amiresults{:,ispecies} = sol.x(:,ix)*vol;
-            adev(:,ispecies-1) = abs(sol.x(:,ix)*vol-results{:,ispecies});
-            rdev(:,ispecies-1) = abs((sol.x(:,ix)*vol-results{:,ispecies})./results{:,ispecies});
         elseif(~isempty(ik))
-            amiresults{:,ispecies} = results{:,ispecies}*0 + knom(ik);
-            
-            adev(:,ispecies-1) = abs(knom(ik)-results{:,ispecies});
-            rdev(:,ispecies-1) = abs((knom(ik)-results{:,ispecies})./results{:,ispecies});
+            if(concflag)
+                vol = kvnom(ik);
+                vol = subs(vol,model.sym.k(:),sym(knom(:)));
+                vol = subs(vol,model.sym.p(:),sym(pnom(:)));
+                vol = double(vol);
+            else
+                vol = 1;
+            end
+            amiresults{:,ispecies} = results{:,ispecies}*0 + knom(ik)*vol;
         end
+        adev(:,ispecies-1) = abs(amiresults{:,ispecies}-results{:,ispecies});
+        rdev(:,ispecies-1) = abs((amiresults{:,ispecies}-results{:,ispecies})./results{:,ispecies});
     end
     rdev(isinf(rdev)) = 0;
     assert(not(any(any(and(adev>settings.atol,rdev>settings.rtol)))))

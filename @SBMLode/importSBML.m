@@ -264,17 +264,33 @@ if(length({model.reaction.id})>0)
         math_expr = @(y) cleanedsym(y.math);
         symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
         reactant_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
     end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
-    tmp = [reactant_id{:}];
+    tmp_rs = cellfun(@(x)[x{:}],reactant_stochiometry,'UniformOutput',false);
+    tmp_rs = [tmp_rs{:}];
+    tmp_rid = cat(2,reactant_id{:});
     for iidx = 1:length(reactant_sidx)
-        eS(reactant_sidx(iidx),reactant_ridx(iidx)) = eS(reactant_sidx(iidx),reactant_ridx(iidx)) + sym(tmp{iidx});
+        if(strcmp(tmp_rid{iidx},''))
+            tmp = tmp_rs(iidx);
+        else
+            tmp = sym(tmp_rid{iidx});
+        end
+        eS(reactant_sidx(iidx),reactant_ridx(iidx)) = eS(reactant_sidx(iidx),reactant_ridx(iidx)) + tmp;
     end
-    tmp = [product_id{:}];
+    tmp_ps = cellfun(@(x)[x{:}],product_stochiometry,'UniformOutput',false);
+    tmp_ps = [tmp_ps{:}];
+    tmp_pid = cat(2,product_id{:});
     for iidx = 1:length(product_sidx)
-        pS(product_sidx(iidx),product_ridx(iidx)) = pS(product_sidx(iidx),product_ridx(iidx)) + sym(tmp(iidx));
+        if(strcmp(tmp_pid{iidx},''))
+            tmp = tmp_ps(iidx);
+        else
+            tmp = sym(tmp_pid{iidx});
+        end
+        pS(product_sidx(iidx),product_ridx(iidx)) = pS(product_sidx(iidx),product_ridx(iidx)) + tmp;
     end
 
     this.stochiometry = - eS + pS;
@@ -288,9 +304,7 @@ reactionsymbols = sym({model.reaction.id}');
 
 if(model.SBML_level>=3 && length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
-    tmp_r = [reactant_stochiometry{:}{:}];
-    tmp_p = [product_stochiometry{:}{:}];
-    stoichmath = [tmp_r,tmp_p];
+    stoichmath = [tmp_rs,tmp_ps];
     
     stoichidx = not(strcmp(stoichsymbols,''));
     stoichsymbols = stoichsymbols(stoichidx);
@@ -505,6 +519,7 @@ fprintf('cleaning up ...\n')
 
 % remove constant/condition states
 this.state(any([cond_idx;const_idx;bound_idx])) = [];
+this.kvolume = this.volume(any([cond_idx;const_idx;bound_idx]));
 this.volume(any([cond_idx;const_idx;bound_idx])) = [];
 this.initState(any([cond_idx;const_idx;bound_idx])) = [];
 this.xdot(any([cond_idx;const_idx;bound_idx])) = [];
@@ -703,7 +718,7 @@ for iy = 1:length(y)
                 end
             end
         else
-            x{iy} = sym(y(iy).id);
+            x{iy} = sym(y(iy).stoichiometry);
         end
     end
 end

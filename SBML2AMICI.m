@@ -16,9 +16,10 @@ function  SBML2AMICI( filename, modelname )
     pnom = ODE.pnom;
     knom = ODE.knom;
     vnom = ODE.volume;
+    kvnom = ODE.kvolume;
     save([modelname '_pnom.mat'],'pnom');
     save([modelname '_knom.mat'],'knom');
     save([modelname '_vnom.mat'],'vnom');
-    
+    save([modelname '_kvnom.mat'],'kvnom');
 end
 
