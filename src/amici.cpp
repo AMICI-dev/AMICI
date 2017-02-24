@@ -1398,7 +1398,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
-            if(rootsfound[ie] != 0) {
+            if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 
@@ -1637,7 +1637,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
             /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
             if (seflag == 0) {
                 for (ie = 0; ie<ne; ie++) {
-                    if(rootsfound[ie] != 0) {
+                    if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                         fstau(t,ie,stau_tmp,x,NVsx,udata);
                     }
                 }
@@ -1857,7 +1857,7 @@ void applyEventBolus(int *status, void *ami_mem, UserData *udata, TempData *tdat
     
     
     for (ie=0; ie<ne; ie++){
-        if(rootsfound[ie] != 0) {
+        if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,udata);
             
             x_tmp = NV_DATA_S(x);
@@ -1889,7 +1889,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempDa
     
     
     for (ie=0; ie<ne; ie++){
-        if(rootsfound[ie] != 0) {
+        if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
             
             for (ip=0; ip<np; ip++) {
