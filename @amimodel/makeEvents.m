@@ -210,6 +210,9 @@ if(nevent>0)
     % want the xdot to be cleaned of any dirac functions
     ievent = 1;
     for ievent = 1:nevent
+        if(logical(subs(trigger{ievent},sym('t'),this.t0)==0))
+            error(['The trigger of event ' num2str(ievent) ' fires at initial timepoint t0 = ' num2str(this.t0) ', which is currently not supported.'])
+        end
         if(not(triggeridx(ievent)))
             if(any(bolus{ievent}~=0))
                 error(['Event ' num2str(ievent) ' has a constant trigger function but non-zero bolus.' ...
