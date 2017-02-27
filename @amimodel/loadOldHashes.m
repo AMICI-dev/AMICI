@@ -39,7 +39,7 @@ function HTable = loadOldHashes(this)
     DHTable.sigma_z = '';
     DHTable.z = '';
     DHTable.trigger = '';
-    DHTable.bolus = '';
+    DHTable.deltax = '';
     DHTable.xdot = '';
     if(strcmp(this.wtype,'iw'))
         DHTable.dx0 = '';
