@@ -97,10 +97,10 @@ options.atol = T{2}(1);
 options.rtol = T{2}(2);
 tline = fgetl(fid);
 tline = fgetl(fid);
-if(~strcmp(tline,'concentration:'))
-    concflag = false;
-else
+if(~strcmp(tline,'concentration: ') && ~strcmp(tline,'concentration:'))
     concflag = true;
+else
+    concflag = false;
 end
 fclose(fid);
 
