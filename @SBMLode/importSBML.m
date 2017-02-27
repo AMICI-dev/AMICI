@@ -8,7 +8,7 @@ function importSBML(this,modelname)
 % Return values:
 %
 
-extension = [];
+extension = nan;
 if(exist([modelname],'file'))
     extension = '';
 else
@@ -22,7 +22,7 @@ else
     end
 end
 
-if(isempty(extension))
+if(isnan(extension))
     error([modelname ' could not be found in the matlab path!'])
 end
 
