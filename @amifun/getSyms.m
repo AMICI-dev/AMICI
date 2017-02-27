@@ -564,8 +564,10 @@ function [this,model] = getSyms(this,model)
             
         case 'ddeltaxdx'
             this.sym = sym(zeros(nx,nevent,nx));
-            for ievent = 1:nevent
-                this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),x);
+            if(nx>0)
+                for ievent = 1:nevent
+                    this.sym(:,ievent,:) = jacobian(model.fun.deltax.sym(:,ievent),x);
+                end
             end
              
         case 'ddeltaxdt'

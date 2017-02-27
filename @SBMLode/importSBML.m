@@ -302,7 +302,7 @@ end
 
 reactionsymbols = sym({model.reaction.id}');
 
-if(model.SBML_level>=3 && length({model.reaction.id})>0)
+if(length({model.reaction.id})>0)
     stoichsymbols = [reactant_id{:},product_id{:}];
     stoichmath = [tmp_rs,tmp_ps];
     
@@ -420,14 +420,22 @@ this.xdot = conversionfactor.*subs(this.xdot,this.state(onlysubstance_idx),this.
 fprintf('loading events ...\n')
 
 if(sum(cellfun(@(x)numel(x),{model.event.delay})>0))
-   error('Events with delays are currently not supported!'); 
+    error('Events with delays are currently not supported!');
+end
+if(~strcmp(model.delay_symbol,''))
+    error('Delay symbols are currently not supported!');
+end
+if(model.SBML_level>=3)
+    if(sum(cellfun(@(x)numel(x),{model.event.priority})>0))
+        error('Event priorities are currently not supported!');
+    end
 end
     
 try
-    tmp = cellfun(@(x) sym(x),{model.event.trigger},'UniformOutput',false);
+    tmp = cellfun(@(x) sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
 catch
-    tmp = cellfun(@(x) sym(x.math),{model.event.trigger},'UniformOutput',false);
+    tmp = cellfun(@(x) sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
 end
 this.trigger = this.trigger(:);
@@ -451,6 +459,7 @@ if(length(this.trigger)>0)
             cond_assign_idx = find(assignments(iassign)==condition_sym);
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
             stoich_assign_idx = find(assignments(iassign)==stoichsymbols);
+            vol_assign_idx = find(assignments(iassign)==compartments_sym);
             
             if(np>0 && ~isempty(param_assign_idx))
                 error('Assignments of parameters via events are currently not supported')
@@ -472,6 +481,10 @@ if(length(this.trigger)>0)
                 stoichmath(stoich_assign_idx) = stoichmath(stoich_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
+            if(length(compartments_sym)>0 && ~isempty(vol_assign_idx))
+                error('Assignments of compartment volumes via events are currently not supported')
+            end
+            
             if(length(this.state)>0 && ~isempty(state_assign_idx))
                 
                 this.bolus(state_assign_idx,ievent) = -this.state(state_assign_idx);
@@ -486,6 +499,9 @@ if(length(this.trigger)>0)
 else
     addToBolus = sym([]);
 end
+
+
+
 
 %% FUNCTIONS
 
@@ -599,6 +615,7 @@ this.observable = subs(this.observable,condition_sym,conditions);
 this.observable = subs(this.observable,boundary_sym,boundaries);
 this.observable = subs(this.observable,compartments_sym,this.compartment);
 this.observable = subs(this.observable,stoichsymbols,stoichmath);
+this.observable = subs(this.observable,reactionsymbols,this.flux);
 
 applyRule(this,model,'observable',rulevars,rulemath);
 

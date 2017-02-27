@@ -3,7 +3,7 @@ exedir = fileparts(mfilename('fullpath'));
 cd(exedir);
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for iTest = 928:1453
+for iTest = 1:1453
     cd(exedir);
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
     if(~exist(fullfile(pwd,'SBMLresults',[testid '-results.csv'])))
@@ -30,6 +30,8 @@ if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
             SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])
         elseif(exist(fullfile(pwd,[testid '-sbml-l2v4.xml'])))
             SBML2AMICI([testid '-sbml-l2v4'],['SBMLTEST_' testid])
+        else
+            return;
         end
         amiwrap(['SBMLTEST_' testid],['SBMLTEST_' testid '_syms'],pwd);
     catch error
@@ -53,7 +55,7 @@ if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
         ix = find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.x));
         ik = find(logical(sym(results.Properties.VariableNames{ispecies})==model.sym.k));
         if(~isempty(ix))
-            if(concflag)
+            if(~concflag)
                 vol = vnom(ix);
                 vol = subs(vol,model.sym.k(:),sym(knom(:)));
                 vol = subs(vol,model.sym.p(:),sym(pnom(:)));
@@ -63,7 +65,7 @@ if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
             end
             amiresults{:,ispecies} = sol.x(:,ix)*vol;
         elseif(~isempty(ik))
-            if(concflag)
+            if(~concflag)
                 vol = kvnom(ik);
                 vol = subs(vol,model.sym.k(:),sym(knom(:)));
                 vol = subs(vol,model.sym.p(:),sym(pnom(:)));
