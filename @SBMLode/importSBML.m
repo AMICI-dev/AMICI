@@ -446,25 +446,29 @@ if(length(this.trigger)>0)
         assignments_math = cleanedsym(cat(2,tmp{:}));
         
         for iassign = 1:length(assignments)
-            state_assign_idx = find(assignments(iassign)==species_sym);
-            param_assign_idx = find(assignments(iassign)==parameter_sym);
+            state_assign_idx = find(assignments(iassign)==this.state);
+            param_assign_idx = find(assignments(iassign)==this.param);
             cond_assign_idx = find(assignments(iassign)==condition_sym);
             bound_assign_idx = find(assignments(iassign)==boundary_sym);
             stoich_assign_idx = find(assignments(iassign)==stoichsymbols);
             
             if(np>0 && ~isempty(param_assign_idx))
+                error('Assignments of parameters via events are currently not supported')
                 this.param(param_assign_idx) = this.param(param_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(nk>0 && ~isempty(cond_assign_idx))
+                error('Assignments of constants via events are currently not supported')
                 conditions(cond_assign_idx) = conditions(cond_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(length(boundaries)>0 && ~isempty(bound_assign_idx))
+                error('Assignments of boundary conditions via events are currently not supported')
                 boundaries(bound_assign_idx) = conditions(bound_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             
             if(length(stoichsymbols)>0 && ~isempty(stoich_assign_idx))
+                error('Assignments of stoichiometries via events are currently not supported')
                 stoichmath(stoich_assign_idx) = stoichmath(stoich_assign_idx)*heaviside(-this.trigger(ievent)) + assignments_math(iassign)*heaviside(this.trigger(ievent));
             end
             

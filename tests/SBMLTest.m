@@ -3,7 +3,7 @@ exedir = fileparts(mfilename('fullpath'));
 cd(exedir);
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for iTest = 376:1453
+for iTest = 172:1453
     cd(exedir);
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
     if(~exist(fullfile(pwd,'SBMLresults',[testid '-results.csv'])))
