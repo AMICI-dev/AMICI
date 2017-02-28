@@ -8,24 +8,19 @@ function importSBML(this,modelname)
 % Return values:
 %
 
-extension = nan;
+extension = [];
 if(exist([modelname],'file'))
     extension = '';
-else
-    if(exist([modelname '.sbml'],'file'))
-        extension = '.sbml';
-        if(exist([modelname '.xml'],'file'))
-            error(['Found both ' modelname '.sbml and ' modelname '.xml . please specify the filename with an explicit extension.']);
-        end
-    elseif(exist([modelname '.xml'],'file'))
-        extension = '.xml';
+elseif(exist([modelname '.sbml'],'file'))
+    extension = '.sbml';
+    if(exist([modelname '.xml'],'file'))
+        error(['Found both ' modelname '.sbml and ' modelname '.xml . please specify the filename with an explicit extension.']);
     end
-end
-
-if(isnan(extension))
+elseif(exist([modelname '.xml'],'file'))
+    extension = '.xml';
+else
     error([modelname ' could not be found in the matlab path!'])
 end
-
 
 try
     [model,err] = TranslateSBML([modelname extension]);
