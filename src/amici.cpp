@@ -1401,17 +1401,6 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
             if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
-                
-                for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz]-1 == ie) {
-                        getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
-                        if (*status != AMI_SUCCESS) return;
-                    }
-                }
-                
-                getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
-                if (*status != AMI_SUCCESS) return;
-                
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
@@ -1420,6 +1409,18 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
                         getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
                         if (*status != AMI_SUCCESS) return;
                     }
+                }
+                
+                if(b_expdata) {
+                    for (iz=0; iz<nztrue; iz++) {
+                        if(z2event[iz]-1 == ie) {
+                            getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
+                            if (*status != AMI_SUCCESS) return;
+                        }
+                    }
+                    
+                    getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
+                    if (*status != AMI_SUCCESS) return;
                 }
                 
                 nroots[ie]++;
