@@ -486,7 +486,7 @@ if(o2flag)
             if(nztrue>0)
                 fprintf(fid,['        sol.sz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
                 fprintf(fid,['        sol.ssigmaz = bsxfun(@times,ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
-                fprintf(fid,['        sol.srz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
+                fprintf(fid,['        sol.srz = bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1]));\n']);
             end
             switch(o2flag)
                 case 1
@@ -511,7 +511,7 @@ if(o2flag)
             if(nztrue>0)
                 fprintf(fid,['        sol.sz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
                 fprintf(fid,['        sol.ssigmaz = bsxfun(@times,ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
-                fprintf(fid,['        sol.srz = bsxfun(@times,sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
+                fprintf(fid,['        sol.srz = bsxfun(@times,srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n']);
             end
             switch(o2flag)
                 case 1
