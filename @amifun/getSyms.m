@@ -699,6 +699,7 @@ function [this,model] = getSyms(this,model)
         case 'Jy'
             this.sym = model.sym.Jy;
             % replace unify symbolic expression
+            this = unifySyms(this,model);
             this.sym = mysubs(this.sym,model.sym.y,model.fun.y.strsym);
         case 'dJydy'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
@@ -742,6 +743,7 @@ function [this,model] = getSyms(this,model)
             this.sym = this.sym + model.fun.dJydp.strsym;
         case 'Jz'
             this.sym = model.sym.Jz;
+            this = unifySyms(this,model);
         case 'dJzdz'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
