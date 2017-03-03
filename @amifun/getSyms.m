@@ -495,7 +495,8 @@ function [this,model] = getSyms(this,model)
             this.sym = jacobian(model.fun.root.sym,x);
             
         case 'drootdt'
-            this.sym = diff(model.fun.root.sym,'t') + model.fun.drootdx.sym*model.fun.xdot.sym;
+            % noopt is important here to get derivatives right
+            this.sym = diff(model.fun.root.sym,'t') + model.fun.drootdx.sym*model.fun.xdot.sym_noopt;
             
         case 'sroot'
             this.sym = model.fun.drootdp.sym + model.fun.drootdx.sym*sx;
@@ -661,15 +662,56 @@ function [this,model] = getSyms(this,model)
             this = makeStrSyms(this);
             
         case 'dzdt'
-            this.sym = diag(diff(model.fun.z.sym,'t'));
+            this.sym = diff(model.fun.z.sym,'t')+jacobian(model.fun.z.sym,x(1:model.nxtrue))*model.fun.xdot.sym_noopt(1:model.nxtrue);
             
         case 'sz'
-            % the tau is event specific so mapping from z to events is
-            % necessary here.
-            this.sym = ...
-                + jacobian(model.fun.z.sym,p) ...
-                + jacobian(model.fun.z.sym,x)*sx ...
-                + model.fun.dzdt.sym*model.fun.stau.sym(model.z2event,:);
+            this.sym = sym(zeros(nz,np));
+            tmpsym = sym(zeros(nz-model.nztrue,np));
+            for iz = 1:nz
+                if iz <= model.nztrue
+                    this.sym(iz,:) = ...
+                        + jacobian(model.fun.z.sym(iz),p) ...
+                        + jacobian(model.fun.z.sym(iz),x(1:model.nxtrue))*sx(1:model.nxtrue,:) ...
+                        + model.fun.dzdt.sym(iz)*model.fun.stau.sym(model.z2event(iz),:);
+                else
+                    % I have discovered a truly marvelous proof of these equations, which this margin is too small to
+                    % contain.
+                    %
+                    % we need (dtau/dt)\(ddzdpdt*dtdp + dtdpddzdtdp + ddzdpdp       + dtdp*ddzdtdt*dtdp here
+                    % term above:        jacx*sx+jacp   dzdt*st       jacx*sx+jacp    dzdt*st
+                    % term in aug z:     drootdt        dzdp          dzdp            drootdt
+                    % augmented is always drootdt\dzdp or linear combinations
+                    % we cannot correctly compute ddzdpdt, but only ddzdtdp so we omit the drootdt part of jacx*sx-jacp
+                    % symmetrise it and add it later on.
+                    % also the dzdp part contains second order sensitivities and the drootdt part does not (this leads
+                    % to 1:model.nxtrue indexing)
+                    
+                    
+                    if(model.o2flag==1)
+                        tmpsym(iz-model.nztrue,:) = jacobian(1/model.fun.drootdt.sym(model.z2event(iz)),p)*model.fun.z.sym(iz)*model.fun.drootdt.sym(model.z2event(iz)) ...
+                            + jacobian(1/model.fun.drootdt.sym(model.z2event(iz)),x(1:model.nxtrue))*sx(1:model.nxtrue,:)*model.fun.z.sym(iz)*model.fun.drootdt.sym(model.z2event(iz));
+                    else
+                       error('sz for directional second order sensis was never implemented and I do not know how to, you are on your own here.'); 
+                    end
+                    
+                    this.sym(iz,:) = ...
+                        + jacobian(model.fun.z.sym(iz)*model.fun.drootdt.sym(model.z2event(iz)),p)/model.fun.drootdt.sym(model.z2event(iz)) ...
+                        + jacobian(model.fun.z.sym(iz)*model.fun.drootdt.sym(model.z2event(iz)),x)*sx/model.fun.drootdt.sym(model.z2event(iz)) ...
+                        + model.fun.dzdt.sym(iz)*model.fun.stau.sym(model.z2event(iz),:);
+                end
+            end
+            if(model.o2flag==1)
+                % THIS IS WHAT YOU NEED TO FIX FOR model.o2flag == 2, transpose does not do the deal :(
+                % we need to pay attention here, some sensitivities are encoded as sx and some as augmented x.
+                % the sx ones are not transposable (as the parameter is encoded in the matrix column) so we need to
+                % convert all of them to augmented x.
+                for ip = 1:np
+                    tmpsym(:,ip) = subs(tmpsym(:,ip),sx(1:model.nxtrue,1),x((model.nxtrue*ip+1):(model.nxtrue*(ip+1))));
+                end
+                this.sym(model.nztrue+1:end,:) = this.sym(model.nztrue+1:end,:) + tmpsym + transpose(tmpsym);
+                % you might not believe this, but this matrix should (and hopefully will) actually be symmetric ;)
+            end
+            
             % create cell array of same size
             szs = cell(nz,np);
             % fill cell array

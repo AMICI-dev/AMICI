@@ -85,7 +85,8 @@ function [ this ] = getDeps(this, model)
             this.deps = {'root','x'};
             
         case 'drootdt'
-            this.deps = {'root','drootdx','xdot'};
+            % w is necessary for xdot_noopt
+            this.deps = {'root','drootdx','xdot','w'};
             
         case 'deltax'
             this.deps = {'x','k','p'};
@@ -118,7 +119,8 @@ function [ this ] = getDeps(this, model)
             this.deps = {'z','x','dtaudx'};
             
         case 'dzdt'
-            this.deps = {'z','x','xdot'};
+            % w is necessary for xdot_noopt
+            this.deps = {'z','x','xdot','w'};
             
         case 'sz'
             this.deps = {'dzdp','dzdx','dzdt','sx','dtaudp','stau'};
