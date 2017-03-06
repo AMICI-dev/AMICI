@@ -54,7 +54,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(any(strcmp(this.funstr,{'J','JB','dJydp','dJydx','dJydy','dydx','dzdx','sJy','M','dfdx'}) ))
+            if(any(strcmp(this.funstr,{'J','JB','dJydp','dJydx','dJydy','dJzdp','dJzdx','dydx','dzdx','sJy','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);
@@ -185,7 +185,7 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr,'dsdzdp\[([0-9]*)\]','dsigma_zdp\[$1\]');
                 cstr = regexprep(cstr,'z_([0-9]+)','z\[nroots[ie]+nmaxevent*$1\]');
                 if(strcmp(this.cvar,'dJzdp'))
-                    cstr = regexprep(cstr,'dJzdp\[([0-9]+)\]\[0]',['dJzdp\[iz+(nmaxevent*$1+nroots[ie])*' num2str(model.nztrue) '\]']);
+                    cstr = regexprep(cstr,'dJzdp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]',['dJzdp\[iz+($2*$3+$1)*' num2str(model.nztrue) '\]']);
                 end
                 cstr = strrep(cstr,'=','+=');
             end
