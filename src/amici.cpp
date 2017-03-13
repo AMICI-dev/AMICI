@@ -1150,7 +1150,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
                 }
             }
         }
-        fdJydy(ts[it],it,dgdy,ydata,my,sigma_y,udata);
+        fdJydy(ts[it],it,dgdy,ydata,x,my,sigma_y,udata);
         fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
     }
 }

@@ -198,8 +198,8 @@
                     return dJydx_model_dirac(t, it, dJydx, y, x, dydx, my, sigma_y, user_data);
                 }
                 
-                int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, realtype *my, realtype *sigma_y, void *user_data){
-                    return dJydy_model_dirac(t, it, dJydy, y, my, sigma_y, user_data);
+                int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, N_Vector x, realtype *my, realtype *sigma_y, void *user_data){
+                    return dJydy_model_dirac(t, it, dJydy, y, x, my, sigma_y, user_data);
                 }
                 
                 int fdJydp(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data){
