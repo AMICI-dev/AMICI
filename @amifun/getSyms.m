@@ -240,6 +240,8 @@ function [this,model] = getSyms(this,model)
                     ndw = ndw+1;
                 end
                 ndw = ndw - 1;
+            else
+                model.updateRHS(tmpxdot); % update RHS anyways to generate sym_noopt for fun.xdot
             end
             w = this.strsym;
 
@@ -787,9 +789,9 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
         case 'dJzdz'
-            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
+            this.sym = sym(zeros(model.nztrue, model.nz,  model.ng));
             for iz = 1 : model.nztrue
-                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
+                this.sym(iz,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
             this = makeStrSyms(this);
         case 'dJzdx'
