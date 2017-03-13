@@ -789,13 +789,13 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
         case 'dJzdz'
-            this.sym = sym(zeros(model.nztrue, model.nz,  model.ng));
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
-                this.sym(iz,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
+                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
             this = makeStrSyms(this);
         case 'dJzdx'
-            this.sym = sym(zeros(model.nztrue, model.nxtrue, model.ng));
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nxtrue));
             dJzdz_tmp = sym(zeros(model.ng, model.nz));
             for iz = 1 : model.nztrue
                 dJzdz_tmp(:,:) = model.fun.dJzdz.sym(iz,:,:);
@@ -809,7 +809,7 @@ function [this,model] = getSyms(this,model)
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym(1:model.nztrue));
             end
         case 'dJzdp'
-            this.sym = sym(zeros(model.nztrue, model.np, model.ng));
+            this.sym = sym(zeros(model.nztrue, model.ng,  model.np));
             for iz = 1 : model.nztrue
                 dJzdsigma_tmp(:,:) = model.fun.dJzdsigma.sym(iz,:,:);
                 this.sym(iz,:,:) = transpose(permute(model.fun.dJzdz.sym(iz,:,:),[2,3,1]) * model.fun.dzdp.strsym ...
@@ -819,7 +819,7 @@ function [this,model] = getSyms(this,model)
             end            
             this = makeStrSyms(this);
         case 'sJz'
-            this.sym = sym(zeros(model.nztrue, model.np, model.ng));
+            this.sym = sym(zeros(model.nztrue, model.ng, model.np));
             dJzdz_tmp = sym(zeros(model.ng, model.nz));
             for iz = 1 : model.nztrue
                 dJzdz_tmp(:,:) = model.fun.dJzdz.strsym(iz,:,:);
