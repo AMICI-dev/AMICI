@@ -60,28 +60,11 @@ function writeAMICI(this,modelname)
         fprintf(fid,'\n');
         fprintf(fid,'end\n');
         fprintf(fid,'\n');
+    end 
+    
+    for fun = {'factorial','cei','psi'}
+        fprintUnsupportedFunctionError(fun{1},fid)
     end
-    
-    fprintf(fid,['function r = factorial(x)\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,['    error(''The factorial function is currently not supported!'');\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,'end\n');
-    fprintf(fid,'\n');
-    
-    fprintf(fid,['function r = ceil(x)\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,['    error(''The ceil function is currently not supported!'');\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,'end\n');
-    fprintf(fid,'\n');
-    
-    fprintf(fid,['function r = psi(x)\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,['    error(''The psi function is currently not supported!'');\n']);
-    fprintf(fid,'\n');
-    fprintf(fid,'end\n');
-    fprintf(fid,'\n');
     
     fclose(fid);
 end
@@ -105,4 +88,13 @@ function writeDerived(header,identifier,field,this,fid)
         fprintf(fid,['%% ' strjoin(cellfun(@char,num2cell(this.observable_name),'UniformOutput',false),'\n%% ')  '\n']);
     end
     fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),', ...\n') '];']);
+end
+
+function fprintUnsupportedFunctionError(functionName,fid)
+    fprintf(fid,['function r = ' functionName '(x)\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,['    error(''The ' functionName ' function is currently not supported!'');\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
 end

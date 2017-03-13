@@ -1,29 +1,29 @@
-function importSBML(this,modelname)
+function importSBML(this,filename)
 % importSBML parses information from the SBML definition and populates
 % the SBMLode object from this information.
 %
 % Parameters:
-%  modelname: target name of the model
+%  filename: target name of the model
 %
 % Return values:
 %
 
 extension = [];
-if(exist([modelname],'file'))
+if(exist([filename],'file'))
     extension = '';
-elseif(exist([modelname '.sbml'],'file'))
+elseif(exist([filename '.sbml'],'file'))
     extension = '.sbml';
-    if(exist([modelname '.xml'],'file'))
-        error(['Found both ' modelname '.sbml and ' modelname '.xml . please specify the filename with an explicit extension.']);
+    if(exist([filename '.xml'],'file'))
+        error(['Found both ' filename '.sbml and ' filename '.xml . please specify the filename with an explicit extension.']);
     end
-elseif(exist([modelname '.xml'],'file'))
+elseif(exist([filename '.xml'],'file'))
     extension = '.xml';
 else
-    error([modelname ' could not be found in the matlab path!'])
+    error([filename ' could not be found in the matlab path!'])
 end
 
 try
-    [model,err] = TranslateSBML([modelname extension]);
+    [model,err] = TranslateSBML([filename extension]);
     if(~isempty(err))
         error(err.message);
     end
@@ -722,19 +722,15 @@ x = {};
 for iy = 1:length(y)
     x{iy} = sym(y(iy).stoichiometry);
     if(~isempty(sym(y(iy).id)))
-        if(~isempty(initassignments_sym) || ~isempty(rulevars))
-            if(~isempty(initassignments_sym))
-                if(ismember(sym(y(iy).id),initassignments_sym))
-                    x{iy} = subs(sym(y(iy).id),initassignments_sym,initassignments_math);
-                end
+        if(~isempty(initassignments_sym))
+            if(ismember(sym(y(iy).id),initassignments_sym))
+                x{iy} = subs(sym(y(iy).id),initassignments_sym,initassignments_math);
             end
-            if(~isempty(rulevars))
-                if(ismember(sym(y(iy).id),rulevars))
-                    x{iy} = subs(sym(y(iy).id),rulevars,rulemath);
-                end
+        end
+        if(~isempty(rulevars))
+            if(ismember(sym(y(iy).id),rulevars))
+                x{iy} = subs(sym(y(iy).id),rulevars,rulemath);
             end
-        else
-            x{iy} = sym(y(iy).stoichiometry);
         end
     end
 end

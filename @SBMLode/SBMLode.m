@@ -64,7 +64,7 @@ classdef SBMLode < handle
             model.checkODE();
         end
         
-        importSBML(this,modelname)
+        importSBML(this,filename)
         checkODE(this);
         
         writeAMICI(this,modelname)
