@@ -664,7 +664,11 @@ function [this,model] = getSyms(this,model)
             this = makeStrSyms(this);
             
         case 'dzdt'
-            this.sym = diff(model.fun.z.sym,'t')+jacobian(model.fun.z.sym,x(1:model.nxtrue))*model.fun.xdot.sym_noopt(1:model.nxtrue);
+            if(nz>0)
+                this.sym = diff(model.fun.z.sym,'t')+jacobian(model.fun.z.sym,x(1:model.nxtrue))*model.fun.xdot.sym_noopt(1:model.nxtrue);
+            else
+                this.sym = sym.empty();
+            end
             
         case 'sz'
             this.sym = sym(zeros(nz,np));

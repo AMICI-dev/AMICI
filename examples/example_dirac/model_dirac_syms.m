@@ -31,7 +31,7 @@ syms t
 model.sym.xdot = sym(zeros(size(model.sym.x)));
 
 % piecewise defined function
-model.sym.xdot(1) = -p1*x1 + dirac(t-p2);
+model.sym.xdot(1) = -p1*x1 + dirac(p2-t);
 % inhomogeneous
 model.sym.xdot(2) = p3*x1 - p4*x2 ;
 
