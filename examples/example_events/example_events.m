@@ -15,8 +15,7 @@ p = [0.5;2;0.5;0.5];
 k = [4,8,10,4];
 
 options = amioption('sensi',0,...
-    'maxsteps',1e4,...
-    'nmaxevent', 2);
+    'maxsteps',1e4);
 D = amidata(length(t),1,2,2,4);
 % load mex into memory
 [~] = which('simulate_model_events'); % fix for inaccessability problems
@@ -54,7 +53,7 @@ if(usejava('jvm'))
     end
     stem(sol.z(:,1),sol.z(:,1)*0+10,'r')
     stem(sol.z(:,2),sol.z(:,2)*0+10,'k')
-    legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','x3==x2','x3==x1','Location','NorthEastOutside')
+    legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','x3<x2','x3<x1','Location','NorthEastOutside')
     legend boxoff
     xlabel('time t')
     ylabel('x')
@@ -169,10 +168,10 @@ if(usejava('jvm'))
     figure
     for ip = 1:4
         subplot(4,2,2*ip-1)
-        bar(1:options.nmaxevent,sol.sz(1:options.nmaxevent,:,ip),0.8)
+        bar(1:D.ne,sol.sz(1:D.ne,:,ip),0.8,'grouped')
         hold on
-        bar(1:options.nmaxevent,sz_fd(1:options.nmaxevent,:,ip),0.4)
-        legend('x3==x2','x3==x1','x3==x2 fd','x3==x1 fd','Location','NorthEastOutside')
+        bar(1:D.ne,sz_fd(1:D.ne,:,ip),0.4)
+        legend('x3>x2','x3>x1','x3>x2 fd','x3>x1 fd','Location','NorthEastOutside')
         legend boxoff
         title(['event sensitivity for p' num2str(ip)])
         xlabel('event #')
@@ -180,8 +179,9 @@ if(usejava('jvm'))
         box on
         
         subplot(4,2,2*ip)
-        bar(1:options.nmaxevent,sol.sz(1:options.nmaxevent,:,ip)-sz_fd(1:options.nmaxevent,:,ip),0.8)
-        legend('error x3==x2','error x3==x1','Location','NorthEastOutside')
+        bar(1:D.ne,sol.sz(1:D.ne,:,ip)-sz_fd(1:D.ne,:,ip),0.8)
+        hold on
+        legend('error x3>x2','error x3>x1','Location','NorthEastOutside')
         legend boxoff
         title(['error event sensitivity for p' num2str(ip)])
         xlabel('event #')

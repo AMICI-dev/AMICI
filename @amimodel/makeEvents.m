@@ -46,13 +46,13 @@ for ix = 1:nx
 end
 
 % select the unique ones
-abstriggers = cellfun(@(x) char(abs(x)),triggers,'UniformOutput',false);
-utriggers = unique(abstriggers);
+all_triggers = cellfun(@(x) char(x),triggers,'UniformOutput',false);
+utriggers = unique(all_triggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
     % find the original one
     % transform to char once to get the right ordering
-    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},abstriggers),1)}));
+    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},all_triggers),1)}));
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
