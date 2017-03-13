@@ -706,16 +706,18 @@ function [this,model] = getSyms(this,model)
                         + model.fun.dzdt.sym(iz)*model.fun.stau.sym(model.z2event(iz),:);
                 end
             end
-            if(model.o2flag==1)
-                % THIS IS WHAT YOU NEED TO FIX FOR model.o2flag == 2, transpose does not do the deal :(
-                % we need to pay attention here, some sensitivities are encoded as sx and some as augmented x.
-                % the sx ones are not transposable (as the parameter is encoded in the matrix column) so we need to
-                % convert all of them to augmented x.
-                for ip = 1:np
-                    tmpsym(:,ip) = subs(tmpsym(:,ip),sx(1:model.nxtrue,1),x((model.nxtrue*ip+1):(model.nxtrue*(ip+1))));
+            if(model.nz>0)
+                if(model.o2flag==1)
+                    % THIS IS WHAT YOU NEED TO FIX FOR model.o2flag == 2, transpose does not do the deal :(
+                    % we need to pay attention here, some sensitivities are encoded as sx and some as augmented x.
+                    % the sx ones are not transposable (as the parameter is encoded in the matrix column) so we need to
+                    % convert all of them to augmented x.
+                    for ip = 1:np
+                        tmpsym(:,ip) = subs(tmpsym(:,ip),sx(1:model.nxtrue,1),x((model.nxtrue*ip+1):(model.nxtrue*(ip+1))));
+                    end
+                    this.sym(model.nztrue+1:end,:) = this.sym(model.nztrue+1:end,:) + tmpsym + transpose(tmpsym);
+                    % you might not believe this, but this matrix should (and hopefully will) actually be symmetric ;)
                 end
-                this.sym(model.nztrue+1:end,:) = this.sym(model.nztrue+1:end,:) + tmpsym + transpose(tmpsym);
-                % you might not believe this, but this matrix should (and hopefully will) actually be symmetric ;)
             end
             
             % create cell array of same size

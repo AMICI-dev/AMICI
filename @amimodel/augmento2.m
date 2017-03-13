@@ -48,7 +48,7 @@ function [modelo2] = augmento2(this)
         end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
-        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym),this.fun.sx.sym, Sx);
+        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym(ievent,:)),this.fun.sx.sym, Sx);
         bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
         % replace sx by augmented x
         for ip = 1:np
