@@ -41,7 +41,9 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = sym(arg);
-            triggers{end+1} = -sym(arg); % for dirac/heavyside we need both +to- and -to+ transitions
+            if(ismember(iocc,strfind(tmp_str,'heaviside') + 9))
+                triggers{end+1} = -sym(arg); % for dirac we need both +to- and -to+ transitions
+            end
         end
     end
 end
@@ -130,7 +132,9 @@ if(nevent>0)
                 [cfp,t] = coeffs(symvariable,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
-                    tmp_bolus{find(cellfun(@(x) double(x==-trigger{ievent}),trigger))} = tmp_bolus{ievent}(ix); % for dirac/heavyside we need both +to- and -to+ transitions
+                    if(~isempty(find(cellfun(@(x) double(x==-trigger{ievent}),trigger))))
+                        tmp_bolus{find(cellfun(@(x) double(x==-trigger{ievent}),trigger))} = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
+                    end
                 end
                 % remove dirac
                 symvariable = subs(symvariable,sym('polydirac'),sym('0'));
