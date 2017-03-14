@@ -2174,7 +2174,11 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
                         }
                     } else {
                         if (nx>0) {
-                            *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                            if (ts[it] == inf) {
+                                *status = workSteadyStateProblem(udata, tdata, rdata, &status, ami_mem);
+                            } else {
+                                *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
+                            }
                         } else {
                             t = ts[it];
                         }
@@ -2398,6 +2402,18 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     }
     
     return 0;
+}
+
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem) {
+    /*
+     * tries to determine the steady state of the ODE system by a Newton solver 
+     uses forward intergration, if the Newton solver fails
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     */
 }
 
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
