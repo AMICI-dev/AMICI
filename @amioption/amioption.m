@@ -51,6 +51,18 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
+        % newton solver: linear solver (BiCGStab, GMRES, KLU direct)
+        ns_linsol = 0;
+        % newton solver: preconditioning method (none, diagonal, incomplete LU)
+        ns_precon = 1;
+        % newton solver: maximum newton steps
+        ns_maxsteps = 20;
+        % newton solver: maximum linear steps
+        ns_maxlinsteps = 50;
+        % newton solver: maximum time for integration in backup case
+        ns_maxtime = 10^9;
+        % preequilibration of system via newton solver
+        preequil = 0;
     end
     
     properties (Hidden)
@@ -207,7 +219,43 @@ classdef amioption < matlab.mixin.CustomDisplay
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')
             this.sensi = value;
         end
+        
+        function this = set.ns_linsol(this,value)
+            assert(isnumeric(value),'The option ns_linsol must have a numeric value!')
+            assert(floor(value)==value,'The option ns_linsol must be an integer!')
+            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_linsol!')
+            this.ns_linsol = value;
+        end
+        
+        function this = set.ns_precon(this,value)
+            assert(isnumeric(value),'The option ns_precon must have a numeric value!')
+            assert(floor(value)==value,'The option ns_precon must be an integer!')
+            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_precon!')
+            this.ns_precon = value;
+        end
+        
+        function this = set.ns_maxsteps(this,value)
+            assert(isnumeric(value),'The option ns_maxsteps must have a numeric value!')
+            assert(floor(value)==value,'The option ns_maxsteps must be an integer!')
+            this.ns_maxsteps = value;
+        end
+        
+        function this = set.ns_maxlinsteps(this,value)
+            assert(isnumeric(value),'The option ns_maxlinsteps must have a numeric value!')
+            assert(floor(value)==value,'The option ns_maxlinsteps must be an integer!')
+            this.ns_maxlinsteps = value;
+        end
+        
+        function this = set.ns_maxtime(this,value)
+            assert(isnumeric(value),'The option ns_maxtime must have a numeric value!')
+            this.ns_maxtime = value;
+        end
+        
+        function this = set.preequil(this,value)
+            assert(isnumeric(value),'The option preequil must have a numeric value!')
+            assert(floor(value)==value,'The option preequil must be an integer!')
+            assert(value<=2,'Only 0 and 1 are valid options for preequil!')
+            this.preequil = value;
+        end
     end
-    
 end
-
