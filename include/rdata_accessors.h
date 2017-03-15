@@ -13,6 +13,7 @@
 #define s2rzdata rdata->am_s2rzdata
 #define xdata rdata->am_xdata
 #define sxdata rdata->am_sxdata
+#define xssdata rdata->am_xssdata
 #define ydata rdata->am_ydata
 #define sigmaydata rdata->am_sigmaydata
 #define sydata rdata->am_sydata
@@ -21,6 +22,9 @@
 #define numstepsdata rdata->am_numstepsdata
 #define numrhsevalsdata rdata->am_numrhsevalsdata
 #define orderdata rdata->am_orderdata
+#define newt rdata->am_newtdata
+#define numstepsNewt rdata->am_numstepsNewtdata
+#define numlinstepsNewt rdata->am_numlinstepsNewtdata
 
 #define numstepsSdata rdata->am_numstepsSdata
 #define numrhsevalsSdata rdata->am_numrhsevalsSdata

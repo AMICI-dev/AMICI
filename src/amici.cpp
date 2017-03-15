@@ -310,7 +310,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     
     mxArray *mxsol;
     
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp","xss","newt","numstepsNewt","numlinstepsNewt"};
     mxArray *mxstatus;
     
     mxArray *mxts;
@@ -328,7 +328,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     rdata = (ReturnData*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
     
-    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+    mxsol = mxCreateStructMatrix(1,1,33,field_names_sol);
     
     plhs[0] = mxsol;
     
@@ -340,8 +340,6 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     
     initField2(llh,1,1);
     initField2(chi2,1,1);
-    /*initField2(g,ng,1);
-     initField2(r,ng,1);*/
     
     mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
@@ -363,6 +361,10 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
         initField2(x,nt,nx);
         initField2(xdot,1,nx);
         initField2(J,nx,nx);
+        initField2(newt,1,1);
+        initField2(xss,1,nx);
+        initField2(numstepsNewt,2,1);
+        initField2(numlinstepsNewt,2,nns);
     }
     if(ny>0) {
         initField2(y,nt,ny);
@@ -2051,6 +2053,47 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnDat
     
 }
 
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
+    /**
+     * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
+     *
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @return void
+     */
+    
+    long int numsteps;
+    long int numrhsevals;
+    int order;
+    
+    
+    *status = AMIGetNumSteps(ami_mem, &numsteps);
+    if (*status != AMI_SUCCESS) return;
+    numstepsdata[it] = (realtype)numsteps;
+    
+    *status = AMIGetNumRhsEvals(ami_mem, &numrhsevals);
+    if (*status != AMI_SUCCESS) return;
+    numrhsevalsdata[it] = (realtype)numrhsevals;
+    
+    *status = AMIGetLastOrder(ami_mem, &order);
+    if (*status != AMI_SUCCESS) return;
+    orderdata[it] = (realtype)order;
+    
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+
 #ifdef AMICI_WITHOUT_MATLAB
 
 void initUserDataFields(UserData *udata, ReturnData *rdata) {
@@ -2175,7 +2218,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
                     } else {
                         if (nx>0) {
                             if (ts[it] == inf) {
-                                *status = workSteadyStateProblem(udata, tdata, rdata, &status, ami_mem);
+                                *status = workSteadyStateProblem(udata, tdata, rdata, status, ami_mem, &t);
                             } else {
                                 *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
                             }
@@ -2404,7 +2447,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     return 0;
 }
 
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem) {
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem, double *t) {
     /*
      * tries to determine the steady state of the ODE system by a Newton solver 
      uses forward intergration, if the Newton solver fails
@@ -2414,6 +2457,38 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      */
+    
+    /* First, try to do Newton steps */
+    *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata);
+    
+    if (*status == 0) {
+        /* store new steady state */
+        *t = inf; // tell workForwardProblem, that tout = inf was reached
+        // return flag for successful steady state solve
+    } else {
+        /* Try to integrate for finding the steady state */
+        *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, t, AMI_NORMAL);
+        x_tmp = NV_DATA_S(x);
+        
+        if (*status == -1) {
+            /* mxstep was reached, trigger new Newton Solve */
+            *status = applyNewtonsMethod();
+            if (*status == 0) {
+                /* store Newton Step */
+            } else {
+                return *status;
+            }
+        }
+        
+        /* integration error occured */
+        if (*status<0) {
+            return *status;
+        }
+        if (*status==AMI_ROOT_RETURN) {
+            /* store new steady state */
+            if (*status != AMI_SUCCESS) return *status;
+        }
+    }    
 }
 
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {

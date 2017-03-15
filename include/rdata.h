@@ -40,6 +40,8 @@ typedef struct rdata {
     double *am_xdata;
     /** parameter derivative of state */
     double *am_sxdata;
+    /** steady state */
+    double *am_xssdata;
     /** observable */
     double *am_ydata;
     /** observable standard deviation */
@@ -59,6 +61,12 @@ typedef struct rdata {
     double *am_numrhsevalsSdata; 
     /** employed order forward problem */
     double *am_orderdata;
+    /** flag success of Newton solver */
+    double *am_newtdata;
+    /** number of Newton steps steady state problem */
+    double *am_numstepsNewtdata;
+    /** number of linear steps per Newton step steady state problem */
+    double *am_numlinstepsNewtdata;
     
     /** likelihood value */
     double *am_llhdata;
