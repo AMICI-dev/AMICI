@@ -81,9 +81,11 @@ void updateHeavisideB(int *status, int iroot, UserData *udata, TempData *tdata);
 
 void getDiagnosis(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata);
 void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
-
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
+    
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int* status, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem, realtype *t);
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status);
 

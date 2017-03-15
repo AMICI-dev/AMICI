@@ -270,8 +270,13 @@ static int AMIGetLastOrder(void *mem,int *order) {
     return CVodeGetLastOrder(mem,order);
 }
 
+/*
+static void *AMIEwtFn(N_Vector y, N_Vector ewt, void *user data) {
+    return CVodeEwtFn(y,ewt,user data);
+}*/
+
 static void *AMIGetAdjBmem(void *mem, int which) {
-    return CVodeGetAdjCVodeBmem(mem,which);
+    return CVGetAdjCVodeBmem(mem,which);
 }
 
 static int AMICalcIC(void *mem, realtype tout1) {

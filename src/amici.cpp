@@ -868,11 +868,6 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     for (ix=0; ix<nx; ix++) {
         xB_tmp[ix] += dgdx[nt-1+ix*nt];
     }
-    /*for (ix=0; ix<nxtrue; ix++) {
-     for (ig=0; ig<ng; ig++) {
-     xB_tmp[ix+ig*nxtrue] += dgdx[nt-1+ix*nt+ig*nxtrue*nt];
-     }
-     }*/
     
     if (dxB == NULL) return;
     dxB_tmp = NV_DATA_S(dxB);
@@ -2069,24 +2064,71 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @return void
      */
+
+    int i, j;
+    int lin_its = 0;
+    int newt_its = 0;
     
-    long int numsteps;
-    long int numrhsevals;
-    int order;
+    double gamma = 1.0;
+    double tol;
+    double *x_try = new double[nx];
+    double *delta = new double[nx];
+    double *F = new double[nx];
+    double *F_try = new double[nx];
+
+    nl_its = 0;
+    lin_its = 0;
+    tol = 1e-5;
+    
+    for (i=0;i<nx;i++) {
+        delta[i] = 0.0;
+    }
+    
+    // Check, how fxdot is used exactly within AMICI
+    fxdot(F, x, p_data, k_data);
+    if (norm_inf(F)<tol) {
+        return (lin_its);
+    }
+    
+    // compute the inital search direction
+    lin_its = getNewtonStep(delta, x,  F, p_data, k_data);
+    
+    // Newton iterations
+    while (norm_inf(F)>tol) {
+        
+        // Try a full, undamped Newton step and ensure positivity
+        for (ix=0; ix<nx; ix++) {
+            x_try[ix] = x[ix] - gamma*delta[ix];
+            if (x_try[ix] < 0.0) {
+                x_try = 0.0;
+            }
+        }
+        
+        // Compute new xdot
+        fxdot(F_try, x_try, p_data, k_data);
+        
+        // if the step was useful, the dampening can be enlarged
+        if (norm(F_try)<norm(F)) {
+            // update x with x_try
+            for (ix=0; ix<nx; ix++) {
+                x[ix] = x_try[ix];
+                F[ix] = F_try[ix];
+            }
+            
+            // increase dampening
+            gamma = max(1.0, 2.0*gamma);
+            
+            // solve the new linear system
+            lin_its += getNewtonStep(delta, x,  F, p_data, k_data);
+        } else {
+            gamma = gamma/4.0;
+        }
+        nl_its++;
+     }
     
     
-    *status = AMIGetNumSteps(ami_mem, &numsteps);
-    if (*status != AMI_SUCCESS) return;
-    numstepsdata[it] = (realtype)numsteps;
-    
-    *status = AMIGetNumRhsEvals(ami_mem, &numrhsevals);
-    if (*status != AMI_SUCCESS) return;
-    numrhsevalsdata[it] = (realtype)numrhsevals;
-    
-    *status = AMIGetLastOrder(ami_mem, &order);
-    if (*status != AMI_SUCCESS) return;
-    orderdata[it] = (realtype)order;
-    
+    printf("lin_its %d, nl_its %d\n", lin_its, nl_its);
+    return(0);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -2447,7 +2489,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     return 0;
 }
 
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem, double *t) {
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem, realtype *t) {
     /*
      * tries to determine the steady state of the ODE system by a Newton solver 
      uses forward intergration, if the Newton solver fails
