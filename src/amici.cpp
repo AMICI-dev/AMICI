@@ -2053,7 +2053,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnDat
 /* ------------------------------------------------------------------------------------- */
 
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int *status, int ntry) {
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
      *
@@ -2065,36 +2065,30 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
      * @return void
      */
 
-    int i, j;
-    int lin_its = 0;
-    int newt_its = 0;
+    int ix;
+    int inewt = 0;
     
     double gamma = 1.0;
     double tol;
-    double *x_try = new double[nx];
     double *delta = new double[nx];
-    double *F = new double[nx];
-    double *F_try = new double[nx];
 
-    nl_its = 0;
-    lin_its = 0;
     tol = 1e-5;
     
-    for (i=0;i<nx;i++) {
+    for (ix=0; ix<nx; ix++) {
         delta[i] = 0.0;
     }
     
     // Check, how fxdot is used exactly within AMICI
-    fxdot(F, x, p_data, k_data);
-    if (norm_inf(F)<tol) {
-        return (lin_its);
+    fxdot(*t, tdata->am_xdot, tdata->am_x, udata);
+    if (norm_inf(xdot_tmp)<tol) {
+        return (0);
     }
     
     // compute the inital search direction
-    lin_its = getNewtonStep(delta, x,  F, p_data, k_data);
+    *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry);
     
     // Newton iterations
-    while (norm_inf(F)>tol) {
+    for(inewt=0; inewt<ns_maxsteps; inewt++) {
         
         // Try a full, undamped Newton step and ensure positivity
         for (ix=0; ix<nx; ix++) {
@@ -2109,26 +2103,157 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
         
         // if the step was useful, the dampening can be enlarged
         if (norm(F_try)<norm(F)) {
-            // update x with x_try
+            // update x and F with x_try and F_try
             for (ix=0; ix<nx; ix++) {
                 x[ix] = x_try[ix];
                 F[ix] = F_try[ix];
+            }
+            
+            // Check condition
+            if (norm_inf(F)>tol) {
+                numstepsNewtdata[ntry] = inewt + 1;
+                break;
             }
             
             // increase dampening
             gamma = max(1.0, 2.0*gamma);
             
             // solve the new linear system
-            lin_its += getNewtonStep(delta, x,  F, p_data, k_data);
+            *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry);
         } else {
             gamma = gamma/4.0;
         }
-        nl_its++;
      }
     
-    
-    printf("lin_its %d, nl_its %d\n", lin_its, nl_its);
+    printf("lin_its %d, nl_its %d\n", lin_its, inewt++);
     return(0);
+    
+    delete[] delta;
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+int getNewtonStep(double *delta, UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry) {
+    /**
+     * getNewtonStep acomputes the Newton Step by solving a linear system
+     *
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return void
+     */
+    
+    // Solves J(u)*x = b; using Jacobian preconditioning
+    double tol, tolb;
+    int maxit;
+    double *p, *h, *t, *s, *r, *rt, *v, *Jx, *w, *dwdu, *d, *e, *z, *dg;
+    double rho, rho1, omega, alpha, beta;
+    int i, ii;
+    double residual;
+    
+    
+    
+    // Sparse matrix
+    double* Jval;
+    int* rp;
+    int* ci;
+    double *prod;
+    double error;
+    int flag;
+    
+    flag = 0;
+    rp = malloc(sizeof(int)*1231);
+    ci = malloc(sizeof(int)*8226);
+    Jval =  malloc(sizeof(double)*8226);
+    
+    
+    tol = 1e-6;
+    maxit = 20;
+    
+    p = malloc(sizeof(double)*NEQ);
+    h = malloc(sizeof(double)*NEQ);
+    t = malloc(sizeof(double)*NEQ);
+    s = malloc(sizeof(double)*NEQ);
+    r = malloc(sizeof(double)*NEQ);
+    rt = malloc(sizeof(double)*NEQ);
+    v = malloc(sizeof(double)*NEQ);
+    Jx = malloc(sizeof(double)*NEQ);
+    d = malloc(sizeof(double)*NEQ);
+    
+    
+    
+    // get diagonal 'd' need for the preconditioning
+    J_diag(d, u, p_data, k_data);  // could be picked out from Jval instead...
+    //print_range(d);
+    
+    for (i = 0; i < NEQ; i ++) {
+        //d[i] = 1.0; // removes the effect of preconditioner, i.e Prec=eye;
+        p[i] = 0.0;
+        v[i] = 0.0;
+        //x[i] = b[i]/d[i]; // works better than starting from last solution, i.e. not setting x[i] at all
+        x[i] = 0;  // seems to work even better
+    }
+    
+    
+    tolb = tol*norm(b);
+    tolb = 1e-8;
+    
+    rho = 1.0;
+    omega = 1.0;
+    alpha = 1.0;
+    
+    J_struct(rp, ci);  // 41us wasted, can be moved out
+    // compute Jval = J(u);
+    J_val(Jval, u, p_data,  k_data); // 89us, needs to stay
+    
+    multiply(Jx, Jval, rp, ci, x);
+    
+    add(r, 1.0, b, -1.0, Jx); // r = b - A*x;
+    
+    scale(r,d);
+    
+    residual = norm(r);
+    
+    add(rt, 1.0,r,0.0,r); // rt = r;
+    ii = 0;
+    while (residual>tolb) {
+        ii++;
+        rho1 = rho;
+        rho = dot(rt,r);
+        beta = (rho/rho1)*(alpha/omega);
+        
+        
+        //p = r+beta*(p - omega*v):
+        add(p, 1.0, p, -omega,v);
+        add(p, 1.0, r, beta, p);
+        
+        
+        multiply(v, Jval, rp, ci, p);// v = J(u)*p = A*p;
+        scale(v,d);
+        
+        alpha = rho/dot(rt,v);
+        
+        add(h, 1.0, x, alpha, p);    // h = x + alpha * p;
+        add(s, 1.0, r, -alpha,v);    // s = r - alpha * v;
+        
+        multiply(t, Jval, rp, ci, s);  // t = J(u)*s = A*s;
+        scale(t,d); // prec scaling
+        
+        omega = dot(t,s)/dot(t,t);   // omega = (t' * s) / (t' * t);
+        add(x, 1.0,h,omega,s);   //  x = h + omega * s;
+        add(r, 1.0,s,-omega,t); //     r = s - omega * t;
+        
+        // compute the residual on the original non-scaled vector
+        inv_scale(r,d);
+        residual = norm(r);
+        scale(r,d);
+        
+    }
+    //printf("\n conv: %d %g \n", ii, residual);
+    return(ii);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -2500,36 +2625,46 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
      * @param[out] rdata pointer to the return data struct @type ReturnData
      */
     
+    int ntry = 1;
+    
     /* First, try to do Newton steps */
-    *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata);
+    *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
     
     if (*status == 0) {
-        /* store new steady state */
-        *t = inf; // tell workForwardProblem, that tout = inf was reached
-        // return flag for successful steady state solve
+        // tell workForwardProblem, that tout = inf was reached and set flag for successful integration
+        *t = inf;
+        newtdata = 1.0;
+        
     } else {
-        /* Try to integrate for finding the steady state */
+        
+        // Try to integrate for finding the steady state
         *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, t, AMI_NORMAL);
         x_tmp = NV_DATA_S(x);
         
+        // If integration found a steady state
+        if (*status == AMI_ROOT_RETURN) {
+            xssdata = x_tmp;
+            newtdata = 2.0;
+            return(0);
+        }
+        
+        // if mxstep was reached, trigger new Newton Solve
         if (*status == -1) {
-            /* mxstep was reached, trigger new Newton Solve */
-            *status = applyNewtonsMethod();
+            ntry = 2;
+            *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
             if (*status == 0) {
                 /* store Newton Step */
+                newtdata = 3.0;
             } else {
                 return *status;
             }
         }
         
-        /* integration error occured */
+        // if some integration error occuredm return the error
         if (*status<0) {
             return *status;
         }
-        if (*status==AMI_ROOT_RETURN) {
-            /* store new steady state */
-            if (*status != AMI_SUCCESS) return *status;
-        }
+        
     }    
 }
 

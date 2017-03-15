@@ -78,6 +78,10 @@ typedef struct user_data {
     double am_rtol;
     /** maximum number of allowed integration steps */
     int am_maxsteps;
+    /** maximum number of allowed Newton steps for steady state computation */
+    int am_ns_maxsteps;
+    /** maximum number of allowed linear steps per Newton step for steady state computation */
+    int am_ns_maxlinsteps;
     
     /** internal sensitivity method */
     /*!

@@ -15,6 +15,7 @@ void freeReturnData(ReturnData *rdata) {
     if(srzdata) delete[] srzdata;
     if(s2rzdata) delete[] s2rzdata;
     if(xdata) delete[] xdata;
+    if(xssdata) delete[] xssdata;
     if(sxdata) delete[] sxdata;
     if(ydata) delete[] ydata;
     if(sigmaydata) delete[] sigmaydata;
@@ -25,6 +26,9 @@ void freeReturnData(ReturnData *rdata) {
     if(orderdata) delete[] orderdata;
     if(numstepsSdata) delete[] numstepsSdata;
     if(numrhsevalsSdata) delete[] numrhsevalsSdata;
+    if(numstepsNewtdata) delete[] numstepsNewtdata;
+    if(numlinstepsNewtdata) delete[] numstepsNewtdata;
+    if(newtdata) delete[] newtdata;
     if(llhdata) delete[] llhdata;
     if(sllhdata) delete[] sllhdata;
     if(s2llhdata) delete[] s2llhdata;

@@ -81,7 +81,8 @@ void updateHeavisideB(int *status, int iroot, UserData *udata, TempData *tdata);
 
 void getDiagnosis(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata);
 void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int ntry);
+int getNewtonStep(void *ami_mem, UserData *udata, TempData *tdata)
     
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int* status, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);

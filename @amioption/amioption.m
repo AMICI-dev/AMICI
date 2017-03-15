@@ -59,8 +59,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         ns_maxsteps = 20;
         % newton solver: maximum linear steps
         ns_maxlinsteps = 50;
-        % newton solver: maximum time for integration in backup case
-        ns_maxtime = 10^9;
         % preequilibration of system via newton solver
         preequil = 0;
     end
@@ -245,12 +243,7 @@ classdef amioption < matlab.mixin.CustomDisplay
             assert(floor(value)==value,'The option ns_maxlinsteps must be an integer!')
             this.ns_maxlinsteps = value;
         end
-        
-        function this = set.ns_maxtime(this,value)
-            assert(isnumeric(value),'The option ns_maxtime must have a numeric value!')
-            this.ns_maxtime = value;
-        end
-        
+
         function this = set.preequil(this,value)
             assert(isnumeric(value),'The option preequil must have a numeric value!')
             assert(floor(value)==value,'The option preequil must be an integer!')

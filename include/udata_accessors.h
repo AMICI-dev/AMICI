@@ -32,6 +32,8 @@
 #define atol udata->am_atol
 #define rtol udata->am_rtol
 #define maxsteps udata->am_maxsteps
+#define ns_maxsteps udata->am_ns_maxsteps
+#define ns_maxlinsteps udata->am_ns_maxlinsteps
 
 #define ism udata->am_ism
 #define sensi_meth udata->am_sensi_meth
