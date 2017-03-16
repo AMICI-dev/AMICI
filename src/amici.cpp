@@ -2068,74 +2068,90 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     int ix;
     int inewt = 0;
     
+    double res;
+    double res_old;
     double gamma = 1.0;
-    double tol;
-    double *delta = new double[nx];
-
-    tol = 1e-5;
+    double tol = 1e-5;
     
-    for (ix=0; ix<nx; ix++) {
-        delta[i] = 0.0;
-    }
+    delta = N_VNew_Serial(nx);
+    pos_ind = N_VNew_Serial(nx);
+    N_VConst(0.0, Delta);
     
     // Check, how fxdot is used exactly within AMICI
-    fxdot(*t, tdata->am_xdot, tdata->am_x, udata);
-    if (norm_inf(xdot_tmp)<tol) {
+    fxdot(t, xdot, x, udata);
+    if (srqt(N_VDotProd(xdot,xdot)) < tol) {
+        // Clean up worksapce
+        N_VDestroy(pos_ind);
+        N_VDestroy(delta);
+        
+        // Return Success;
         return (0);
     }
     
     // compute the inital search direction
-    *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry);
+    *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
+    
+    // Copy the current state to the old one, make up a new vector for Jdiag
+    x_old = N_VCloneVectorArray_Serial(nx, x);
+    xdot_old = N_VCloneVectorArray_Serial(nx, xdot);
     
     // Newton iterations
     for(inewt=0; inewt<ns_maxsteps; inewt++) {
         
         // Try a full, undamped Newton step and ensure positivity
-        for (ix=0; ix<nx; ix++) {
-            x_try[ix] = x[ix] - gamma*delta[ix];
-            if (x_try[ix] < 0.0) {
-                x_try = 0.0;
-            }
-        }
+        N_VLinearSum(1.0, x_old, gamma, delta, x);
+        N_VCompare(0.0, x, pos_ind);
+        N_VProd(x, pos_ind, x);
         
         // Compute new xdot
-        fxdot(F_try, x_try, p_data, k_data);
+        fxdot(t, xdot, x, udata);
+        
+        // Compute residuals
+        res = sqrt(N_VDotProd(xdot, xdot));
+        res_old = sqrt(N_VDotProd(xdot_old, xdot_old));
         
         // if the step was useful, the dampening can be enlarged
-        if (norm(F_try)<norm(F)) {
+        if (res<res_old) {
             // update x and F with x_try and F_try
-            for (ix=0; ix<nx; ix++) {
-                x[ix] = x_try[ix];
-                F[ix] = F_try[ix];
-            }
+            x_old = N_VCloneVectorArray_Serial(nx, x);
+            xdot_old = N_VCloneVectorArray_Serial(nx, xdot);
             
             // Check condition
-            if (norm_inf(F)>tol) {
+            if (res < tol) {
+                // Return number of Newton steps needed
                 numstepsNewtdata[ntry] = inewt + 1;
-                break;
+                
+                // Clean up worksapce
+                N_VDestroy(pos_ind);
+                N_VDestroy(delta);
+                
+                // Return Success;
+                return (0);
             }
             
             // increase dampening
             gamma = max(1.0, 2.0*gamma);
             
             // solve the new linear system
-            *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry);
+            *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
         } else {
             gamma = gamma/4.0;
         }
      }
+
+    // Clean up worksapce
+    N_VDestroy(pos_ind);
+    N_VDestroy(delta);
     
-    printf("lin_its %d, nl_its %d\n", lin_its, inewt++);
-    return(0);
+    return(-1);
     
-    delete[] delta;
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonStep(double *delta, UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry) {
+int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt) {
     /**
      * getNewtonStep acomputes the Newton Step by solving a linear system
      *
@@ -2146,115 +2162,128 @@ int getNewtonStep(double *delta, UserData *udata, ReturnData *rdata, TempData *t
      * @return void
      */
     
-    // Solves J(u)*x = b; using Jacobian preconditioning
-    double tol, tolb;
-    int maxit;
-    double *p, *h, *t, *s, *r, *rt, *v, *Jx, *w, *dwdu, *d, *e, *z, *dg;
-    double rho, rho1, omega, alpha, beta;
-    int i, ii;
-    double residual;
+    int ix, il;
+    double tol;
+    double tolb;
+    double = rho;
+    double = rho1;
+    double = alpha;
+    double = beta;
+    double = omega;
+    double = res;
     
+    ns_p  = N_VNew_Serial(nx);
+    ns_h  = N_VNew_Serial(nx);
+    ns_t  = N_VNew_Serial(nx);
+    ns_s  = N_VNew_Serial(nx);
+    ns_r  = N_VNew_Serial(nx);
+    ns_rt = N_VNew_Serial(nx);
+    ns_v  = N_VNew_Serial(nx);
+    ns_Jv = N_VNew_Serial(nx);
+    ns_tmp = N_VNew_Serial(nx);
+    ns_Jdiag = N_VNew_Serial(nx);
     
+    // Get the diagonal of the Jacobian for preconditioning
+    fJdiag(ns_Jdiag, x, udata);
     
-    // Sparse matrix
-    double* Jval;
-    int* rp;
-    int* ci;
-    double *prod;
-    double error;
-    int flag;
-    
-    flag = 0;
-    rp = malloc(sizeof(int)*1231);
-    ci = malloc(sizeof(int)*8226);
-    Jval =  malloc(sizeof(double)*8226);
-    
-    
-    tol = 1e-6;
-    maxit = 20;
-    
-    p = malloc(sizeof(double)*NEQ);
-    h = malloc(sizeof(double)*NEQ);
-    t = malloc(sizeof(double)*NEQ);
-    s = malloc(sizeof(double)*NEQ);
-    r = malloc(sizeof(double)*NEQ);
-    rt = malloc(sizeof(double)*NEQ);
-    v = malloc(sizeof(double)*NEQ);
-    Jx = malloc(sizeof(double)*NEQ);
-    d = malloc(sizeof(double)*NEQ);
-    
-    
-    
-    // get diagonal 'd' need for the preconditioning
-    J_diag(d, u, p_data, k_data);  // could be picked out from Jval instead...
-    //print_range(d);
-    
-    for (i = 0; i < NEQ; i ++) {
-        //d[i] = 1.0; // removes the effect of preconditioner, i.e Prec=eye;
-        p[i] = 0.0;
-        v[i] = 0.0;
-        //x[i] = b[i]/d[i]; // works better than starting from last solution, i.e. not setting x[i] at all
-        x[i] = 0;  // seems to work even better
-    }
-    
-    
-    tolb = tol*norm(b);
-    tolb = 1e-8;
-    
+    // Initialize for linear solve
+    N_VConst(0.0, ns_p);
+    N_VConst(0.0, ns_v);
+    N_VConst(0.0, ns_x);
+    N_VConst(0.0, ns_tmp);
     rho = 1.0;
     omega = 1.0;
     alpha = 1.0;
     
-    J_struct(rp, ci);  // 41us wasted, can be moved out
-    // compute Jval = J(u);
-    J_val(Jval, u, p_data,  k_data); // 89us, needs to stay
+    // Set tolerances
+    tolb = tol*norm(b);
+    tolb = 1e-8;
     
-    multiply(Jx, Jval, rp, ci, x);
+    // can be set to 0 at the moment
+    fJv(ns_delta, ns_Jv, t, x, xdot, udata, ns_tmp);
+    N_VLinearSum(-1.0, Jv, 1.0, xdot, ns_r);
+    N_VDiv(ns_r, ns_Jdiag, ns_r);
+    res = sqrt(N_VDotProd(ns_r, ns_r));
+    N_VScale(1.0, ns_r, ns_rt);
     
-    add(r, 1.0, b, -1.0, Jx); // r = b - A*x;
-    
-    scale(r,d);
-    
-    residual = norm(r);
-    
-    add(rt, 1.0,r,0.0,r); // rt = r;
-    ii = 0;
-    while (residual>tolb) {
-        ii++;
+    for (il=0; il<ns_maxlinsteps; il++) {
+        // Compute factors
         rho1 = rho;
-        rho = dot(rt,r);
-        beta = (rho/rho1)*(alpha/omega);
+        rho = N_VDotProd(ns_rt, ns_r);
+        beta = rho*alpha / (rho1*omega);
         
+        // ns_p = ns_r + beta * (ns_p + omega * ns_v);
+        N_VLinearSum(1.0, ns_p, omega, ns_v, ns_p);
+        N_VLinearSum(1.0, ns_p, beta, ns_r, ns_p);
         
-        //p = r+beta*(p - omega*v):
-        add(p, 1.0, p, -omega,v);
-        add(p, 1.0, r, beta, p);
+        // ns_v = J * ns_p
+        fJv(ns_p, ns_v, t, x, xdot, udata, ns_tmp);
+        N_VDiv(ns_v, ns_Jdiag, ns_v);
         
+        // Compute factor
+        alpha = rho / N_VDotProd(ns_r, ns_v);
         
-        multiply(v, Jval, rp, ci, p);// v = J(u)*p = A*p;
-        scale(v,d);
+        // ns_h = ns_x + alpha * ns_p;
+        N_VLinearSum(1.0, ns_x, alpha, ns_p, ns_h);
+        // ns_s = ns_r + alpha * ns_v;
+        N_VLinearSum(1.0, ns_r, alpha, ns_v, ns_s);
         
-        alpha = rho/dot(rt,v);
+        // ns_t = J * ns_s
+        fJv(ns_s, ns_t, t, x, xdot, udata, ns_tmp);
+        N_VDiv(ns_t, ns_Jdiag, ns_t);
         
-        add(h, 1.0, x, alpha, p);    // h = x + alpha * p;
-        add(s, 1.0, r, -alpha,v);    // s = r - alpha * v;
+        // Compute factor
+        omega = N_VDotProd(ns_t, ns_s) / N_VDotProd(ns_t, ns_t);
         
-        multiply(t, Jval, rp, ci, s);  // t = J(u)*s = A*s;
-        scale(t,d); // prec scaling
+        // ns_x = ns_h + omega * ns_s;
+        N_VLinearSum(1.0, ns_h, omega, ns_s, ns_x);
+        // ns_r = ns_s - omega * ns_t;
+        N_VLinearSum(1.0, ns_s, -omega, ns_t, ns_r);
         
-        omega = dot(t,s)/dot(t,t);   // omega = (t' * s) / (t' * t);
-        add(x, 1.0,h,omega,s);   //  x = h + omega * s;
-        add(r, 1.0,s,-omega,t); //     r = s - omega * t;
+        // Compute the (unscaled) residual
+        N_VProd(ns_r, ns_Jdiag, ns_r);
+        res = sqrt(N_VDotProd(ns_r, ns_r));
         
-        // compute the residual on the original non-scaled vector
-        inv_scale(r,d);
-        residual = norm(r);
-        scale(r,d);
+        // Test convergence
+        if (res <= tolb) {
+            // Write number of steps needed
+            numlinstepsNewtdata[ntry*ns_max+nnewt] = il + 1;
+            
+            // Clean up workspace
+            N_VDestroy(ns_p);
+            N_VDestroy(ns_h);
+            N_VDestroy(ns_t);
+            N_VDestroy(ns_s);
+            N_VDestroy(ns_r);
+            N_VDestroy(ns_rt);
+            N_VDestroy(ns_v);
+            N_VDestroy(ns_Jv);
+            N_VDestroy(ns_tmp);
+            N_VDestroy(ns_Jdiag);
+            
+            // Reutrn success
+            return(0);
+        }
         
+        // Scale back
+        N_VDiv(ns_r, ns_Jdiag, ns_r);
     }
-    //printf("\n conv: %d %g \n", ii, residual);
-    return(ii);
-}
+    
+    // Clean up workspace
+    N_VDestroy(ns_p);
+    N_VDestroy(ns_h);
+    N_VDestroy(ns_t);
+    N_VDestroy(ns_s);
+    N_VDestroy(ns_r);
+    N_VDestroy(ns_rt);
+    N_VDestroy(ns_v);
+    N_VDestroy(ns_Jv);
+    N_VDestroy(ns_tmp);
+    N_VDestroy(ns_Jdiag);
+    
+    // Return
+    return(-1);
+ }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
@@ -2640,6 +2669,9 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         // Try to integrate for finding the steady state
         *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, t, AMI_NORMAL);
         x_tmp = NV_DATA_S(x);
+        for (ix=0; ix<nx; ix++) {
+            xssdata[ix] = x_tmp[ix];
+        }
         
         // If integration found a steady state
         if (*status == AMI_ROOT_RETURN) {

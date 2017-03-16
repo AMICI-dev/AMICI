@@ -122,7 +122,7 @@ if(this.recompile)
 end
 % compute functions
 
-funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','y','z','deltax','root','Jy','Jz','sigma_y','sigma_z'};
+funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','JDiag','y','z','deltax','root','Jy','Jz','sigma_y','sigma_z'};
 
 if(this.steadystate)
     funs = {funs{:},'dwdp','dxdotdp','dydp'};

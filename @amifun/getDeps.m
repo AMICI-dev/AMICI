@@ -155,6 +155,9 @@ function [ this ] = getDeps(this, model)
         case 'JSparseB'
             this.deps = {'JB'};
             
+        case 'JDiag'
+            this.deps = {'J'};
+            
         case 'y'
             this.deps = {'x','p','k'};
             

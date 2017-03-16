@@ -47,7 +47,9 @@ for ifun = this.funs
             fprintf(fid,'#undef dsigma_ydp\n');
             fprintf(fid,'#undef dsigma_zdp\n');
         end
-        if(strcmp(ifun{1},'JBand'))
+        if(strcmp(ifun{1},'JDiag'))
+            fprintf(fid,['#include "' this.modelname '_JDiag.h"\n']);
+        elseif(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
         elseif(strcmp(ifun{1},'JBandB'))
             fprintf(fid,['#include "' this.modelname '_JB.h"\n']);
@@ -205,6 +207,21 @@ for ifun = this.funs
                 fprintf(fid,'   }\n');
                 fprintf(fid,'   if(amiIsInf(J->data[ix])) {\n');
                 fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                fprintf(fid,'       return(-1);\n');
+                fprintf(fid,'   }\n');
+                fprintf(fid,'}\n');
+            end
+            if(strcmp(ifun{1},'JDiag'))
+                fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
+                fprintf(fid,'   if(amiIsNaN(JDiag->data[ix])) {\n');
+                fprintf(fid,'       JDiag->data[ix] = 0;\n');
+                fprintf(fid,'       if(!udata->am_nan_JDiag) {\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value on Jacobian diagonal and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           udata->am_nan_JDiag = TRUE;\n');
+                fprintf(fid,'       }\n');
+                fprintf(fid,'   }\n');
+                fprintf(fid,'   if(amiIsInf(JDiag->data[ix])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value on Jacobian diagonal! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'}\n');
@@ -434,7 +451,7 @@ else
 end
 fprintf(fid,'                }\n');
 
-ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','sroot','s2root','stau',...
+ffuns = {'x0','dx0','sx0','sdx0','J','JDiag','JB','root','sroot','s2root','stau',...
     'y','sy','dydp','dydx','z','sz','sz_tf','dzdp','dzdx',...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...

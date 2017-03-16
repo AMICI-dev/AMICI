@@ -58,7 +58,7 @@ classdef amioption < matlab.mixin.CustomDisplay
         % newton solver: maximum newton steps
         ns_maxsteps = 20;
         % newton solver: maximum linear steps
-        ns_maxlinsteps = 50;
+        ns_maxlinsteps = 150;
         % preequilibration of system via newton solver
         preequil = 0;
     end

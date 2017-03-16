@@ -22,9 +22,9 @@
 #define numstepsdata rdata->am_numstepsdata
 #define numrhsevalsdata rdata->am_numrhsevalsdata
 #define orderdata rdata->am_orderdata
-#define newt rdata->am_newtdata
-#define numstepsNewt rdata->am_numstepsNewtdata
-#define numlinstepsNewt rdata->am_numlinstepsNewtdata
+#define newtdata rdata->am_newtdata
+#define numstepsNewtdata rdata->am_numstepsNewtdata
+#define numlinstepsNewtdata rdata->am_numlinstepsNewtdata
 
 #define numstepsSdata rdata->am_numstepsSdata
 #define numrhsevalsSdata rdata->am_numrhsevalsSdata
