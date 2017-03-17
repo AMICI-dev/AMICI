@@ -172,6 +172,8 @@ typedef struct user_data {
     /** flag indicating whether a NaN in J has been reported */
     booleantype am_nan_J;
     /** flag indicating whether a NaN in JSparse has been reported */
+    booleantype am_nan_JDiag;
+    /** flag indicating whether a NaN in JSparse has been reported */
     booleantype am_nan_JSparse;
     /** flag indicating whether a NaN in xdot has been reported */
     booleantype am_nan_xdot;

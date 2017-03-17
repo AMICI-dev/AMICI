@@ -54,7 +54,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(any(strcmp(this.funstr,{'J','JB','dJydp','dJydx','dJydy','dJzdp','dJzdx','dydx','dzdx','sJy','M','dfdx'}) ))
+            if(any(strcmp(this.funstr,{'J','JDiag','JB','dJydp','dJydx','dJydy','dJzdp','dJzdx','dydx','dzdx','sJy','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '[$1]']);

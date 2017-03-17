@@ -213,14 +213,14 @@ for ifun = this.funs
             end
             if(strcmp(ifun{1},'JDiag'))
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                fprintf(fid,'   if(amiIsNaN(JDiag->data[ix])) {\n');
-                fprintf(fid,'       JDiag->data[ix] = 0;\n');
+                fprintf(fid,'   if(amiIsNaN(JDiag_tmp[ix])) {\n');
+                fprintf(fid,'       JDiag_tmp[ix] = 0;\n');
                 fprintf(fid,'       if(!udata->am_nan_JDiag) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value on Jacobian diagonal and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'           udata->am_nan_JDiag = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
-                fprintf(fid,'   if(amiIsInf(JDiag->data[ix])) {\n');
+                fprintf(fid,'   if(amiIsInf(JDiag_tmp[ix])) {\n');
                 fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value on Jacobian diagonal! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }\n');
