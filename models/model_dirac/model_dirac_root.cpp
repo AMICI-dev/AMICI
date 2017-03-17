@@ -11,6 +11,7 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 status = w_model_dirac(t,x,NULL,user_data);
   root[0] = p[1]-t;
+  root[1] = -p[1]+t;
 return(status);
 
 }

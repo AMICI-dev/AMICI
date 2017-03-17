@@ -35,16 +35,20 @@ function [modelo2] = augmento2(this)
    
     % generate deltasx
     this.getFun([],'deltasx');
+    this.getFun([],'sz');
     for ievent = 1:this.nevent;
         if(numel(this.event(ievent).z)>0)
-            Sz = jacobian(this.event(ievent).z,this.sym.x)*Sx+jacobian(this.event(ievent).z,this.sym.p);
-            znew = [this.event(ievent).z,reshape(Sz,[1,numel(Sz)])];
+            Sz = this.fun.sz.sym(this.z2event==ievent,:);
+            for ip = 1:np
+                Sz(:,ip) = subs(Sz(:,ip),this.fun.sx.sym(:,ip),Sx(:,ip));
+            end
+            znew = [this.event(ievent).z,reshape(Sz,[sum(this.z2event==ievent),np])];
         else
             znew = this.event(ievent).z;
         end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
-        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym),this.fun.sx.sym, Sx);
+        tmp=subs(subs(tmp,this.fun.stau.strsym,this.fun.stau.sym(ievent,:)),this.fun.sx.sym, Sx);
         bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
         % replace sx by augmented x
         for ip = 1:np
@@ -61,7 +65,7 @@ function [modelo2] = augmento2(this)
         + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
         + jacobian(this.sym.Jy,this.fun.y.strsym)*Sy;
     this.getFun([],'dsigma_zdp');
-    this.getFun([],'z');
+    
     this.getFun([],'dzdp');   
     SJz = jacobian(this.sym.Jz,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
@@ -84,8 +88,8 @@ function [modelo2] = augmento2(this)
     augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
-    augmodel.sym.sigma_y = [this.sym.sigma_y, reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];
-    augmodel.sym.sigma_z = [this.sym.sigma_z, reshape(transpose(this.fun.dsigma_zdp.sym), [1,numel(this.fun.dsigma_zdp.sym)])];
+    augmodel.sym.sigma_y = [this.sym.sigma_y(:)', reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];
+    augmodel.sym.sigma_z = [this.sym.sigma_z(:)', reshape(transpose(this.fun.dsigma_zdp.sym), [1,numel(this.fun.dsigma_zdp.sym)])];
     
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;

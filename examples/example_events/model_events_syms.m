@@ -51,7 +51,7 @@ model.sym.xdot = sym(zeros(size(model.sym.x)));
 model.sym.xdot(1) = -p1*heaviside(t-p4)*x1;
 % inhomogeneous
 model.sym.xdot(2) = +p2*x1*exp(-0.1*t)-p3*x2 ;
-model.sym.xdot(3) = -1.5*x3;
+model.sym.xdot(3) = -1*x3;
 
 %%
 % INITIAL CONDITIONS
@@ -75,8 +75,8 @@ model.sym.y(1) = p4 * (x1+x2+x3);
 % this part is optional and can be ommited
 syms t
 
-% events fire when there is a zero crossing of the root function
-model.event(1) = amievent(x3-x2,0,t);
-model.event(2) = amievent(x3-x1,0,t);
+% events fire when there is a -zero crossing of the root function
+model.event(1) = amievent(am_ge(x2,x3),0,t);
+model.event(2) = amievent(am_ge(x1,x3),0,t);
 
 end

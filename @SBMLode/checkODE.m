@@ -1,5 +1,10 @@
 function checkODE(this)
-
+    % checkODE checks whether the length of various variable names exceeds
+    % namelengthmax (would cause troube with symbolic processing later on).
+    %
+    % Parameters:
+    %
+    % Return values:
 length_states = arrayfun(@(x) length(char(x)),this.state);
 assert(all(length_states<=namelengthmax),['Some species have identifiers are longer than ' namelengthmax ' which MATLAB cannot handle, please shorten the identifiers!'])
 length_parameters = arrayfun(@(x) length(char(x)),this.parameter);

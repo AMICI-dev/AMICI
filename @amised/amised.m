@@ -16,7 +16,9 @@ classdef amised < handle
         outputcount = [];
         % indexes for dataGenerators
         varidx = [];
+        % symbolic expressions for variables
         varsym = sym([]);
+        % symbolic expressions for data
         datasym = sym([]);
         
     end
@@ -27,7 +29,16 @@ classdef amised < handle
     
     methods
         function ASED = amised(sedname)
-            ASED.sedml = importSED(sedname);
+            %amised reads in an SEDML document using the JAVA binding of 
+            % of libSEDML
+            %
+            % Parameters:
+            %  sedname: name/path of the SEDML document
+            %
+            % Return values:
+            %  ASED: amised object which contains all the information from
+            %        the SEDML document
+            
             % get models
             for imodel = 1:length(ASED.sedml.listOfModels.model)
                 % get the model sbml

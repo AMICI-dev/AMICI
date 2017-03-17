@@ -94,6 +94,18 @@ elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','sJy','dJydy'})))
             fprintf(fid,'}\n');
         end
     end
+elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','sJz','dJzdz'})))
+    tmpfun = this;
+    if(any(any(nonzero)))
+        fprintf(fid,['int iz;\n']);
+        for iz = 1:model.nztrue
+            fprintf(fid,['if(!amiIsNaN(mz[' num2str(iz-1) '*nmaxevent+nroots[ie]])){\n']);
+            fprintf(fid,['    iz = ' num2str(iz-1) ';\n']);
+            tmpfun.sym = permute(this.sym(iz,:,:),[2,3,1]);
+            tmpfun.gccode(model,fid);
+            fprintf(fid,'}\n');
+        end
+    end
 else
     if(any(any(nonzero)))
         this.gccode(model,fid);

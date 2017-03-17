@@ -12,6 +12,7 @@
 #endif
 
 double amilog(double x);
+double dirac(double x);
 double heaviside(double x);
 
 double am_min(double a, double b, double c);

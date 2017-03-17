@@ -1,5 +1,5 @@
 /**
- * @file   symbolic_functions.c
+ * @file   symbolic_functions.cpp
  * @brief  definition of symbolic functions
  *
  * This file contains definitions of various symbolic functions which

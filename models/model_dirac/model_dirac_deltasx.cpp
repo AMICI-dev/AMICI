@@ -26,6 +26,12 @@ switch (plist[ip]) {
 
               } break;
 
+              case 1: {
+  deltasx[ip*2 + 0] = -stau_tmp[0]*(xdot_tmp[0]-xdot_old_tmp[0]);
+  deltasx[ip*2 + 1] = -stau_tmp[0]*(xdot_tmp[1]-xdot_old_tmp[1]);
+
+              } break;
+
               } 
 
   } break;
@@ -33,6 +39,12 @@ switch (plist[ip]) {
   case 1: {
               switch(ie) { 
               case 0: {
+  deltasx[ip*2 + 0] = -stau_tmp[1]*(xdot_tmp[0]-xdot_old_tmp[0]);
+  deltasx[ip*2 + 1] = -stau_tmp[1]*(xdot_tmp[1]-xdot_old_tmp[1]);
+
+              } break;
+
+              case 1: {
   deltasx[ip*2 + 0] = -stau_tmp[1]*(xdot_tmp[0]-xdot_old_tmp[0]);
   deltasx[ip*2 + 1] = -stau_tmp[1]*(xdot_tmp[1]-xdot_old_tmp[1]);
 
@@ -50,6 +62,12 @@ switch (plist[ip]) {
 
               } break;
 
+              case 1: {
+  deltasx[ip*2 + 0] = -stau_tmp[2]*(xdot_tmp[0]-xdot_old_tmp[0]);
+  deltasx[ip*2 + 1] = -stau_tmp[2]*(xdot_tmp[1]-xdot_old_tmp[1]);
+
+              } break;
+
               } 
 
   } break;
@@ -57,6 +75,12 @@ switch (plist[ip]) {
   case 3: {
               switch(ie) { 
               case 0: {
+  deltasx[ip*2 + 0] = -stau_tmp[3]*(xdot_tmp[0]-xdot_old_tmp[0]);
+  deltasx[ip*2 + 1] = -stau_tmp[3]*(xdot_tmp[1]-xdot_old_tmp[1]);
+
+              } break;
+
+              case 1: {
   deltasx[ip*2 + 0] = -stau_tmp[3]*(xdot_tmp[0]-xdot_old_tmp[0]);
   deltasx[ip*2 + 1] = -stau_tmp[3]*(xdot_tmp[1]-xdot_old_tmp[1]);
 

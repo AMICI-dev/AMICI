@@ -11,6 +11,7 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *sx0_tmp;
 int ip;
+realtype t = tstart;
 for(ip = 0; ip<np; ip++) {
 sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);
 memset(sx0_tmp,0,sizeof(realtype)*2);

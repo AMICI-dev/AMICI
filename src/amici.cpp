@@ -1150,7 +1150,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
                 }
             }
         }
-        fdJydy(ts[it],it,dgdy,ydata,my,sigma_y,udata);
+        fdJydy(ts[it],it,dgdy,ydata,x,my,sigma_y,udata);
         fdJydx(ts[it],it,dgdx,ydata,x,dydx,my,sigma_y,udata);
     }
 }
@@ -1398,20 +1398,9 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
     /* EVENT OUTPUT */
     for (ie=0; ie<ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (nroots[ie]<nmaxevent) {
-            if(rootsfound[ie] != 0) {
+            if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
-                
-                for (iz=0; iz<nztrue; iz++) {
-                    if(z2event[iz]-1 == ie) {
-                        getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
-                        if (*status != AMI_SUCCESS) return;
-                    }
-                }
-                
-                getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
-                if (*status != AMI_SUCCESS) return;
-                
                 if (sensi >= 1) {
                     if(sensi_meth == AMI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
@@ -1420,6 +1409,18 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
                         getEventSensisFSA(status, ie, ami_mem, udata, rdata, tdata);
                         if (*status != AMI_SUCCESS) return;
                     }
+                }
+                
+                if(b_expdata) {
+                    for (iz=0; iz<nztrue; iz++) {
+                        if(z2event[iz]-1 == ie) {
+                            getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
+                            if (*status != AMI_SUCCESS) return;
+                        }
+                    }
+                    
+                    getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
+                    if (*status != AMI_SUCCESS) return;
                 }
                 
                 nroots[ie]++;
@@ -1578,6 +1579,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
      * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] seflag flag indicating whether this is a secondary event @type int
      * @return void
      */
     int ie;
@@ -1636,7 +1638,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
             /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
             if (seflag == 0) {
                 for (ie = 0; ie<ne; ie++) {
-                    if(rootsfound[ie] != 0) {
+                    if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                         fstau(t,ie,stau_tmp,x,NVsx,udata);
                     }
                 }
@@ -1856,7 +1858,7 @@ void applyEventBolus(int *status, void *ami_mem, UserData *udata, TempData *tdat
     
     
     for (ie=0; ie<ne; ie++){
-        if(rootsfound[ie] != 0) {
+        if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltax(t,ie,deltax,x,xdot,xdot_old,udata);
             
             x_tmp = NV_DATA_S(x);
@@ -1888,7 +1890,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempDa
     
     
     for (ie=0; ie<ne; ie++){
-        if(rootsfound[ie] != 0) {
+        if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
             
             for (ip=0; ip<np; ip++) {
@@ -2134,6 +2136,20 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
 
 
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot) {
+    /**
+     * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] edata pointer to the experimental data struct @type ExpData
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] iroot pointer to the current root index, the value pointed to will be increased during the forward solve
+     * @return int status flag
+     */
+    
+    
     /*******************/
     /* FORWARD PROBLEM */
     /*******************/
@@ -2202,9 +2218,19 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
 }
 
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
-    /********************/
-    /* BACKWARD PROBLEM */
-    /********************/
+    /**
+     * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
+     * workForwardProblem should be called before this is function is called
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] edata pointer to the experimental data struct @type ExpData
+     * @param[out] status flag indicating success of execution @type *int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] iroot pointer to the current root index, the value pointed to will be decreased during the forward solve
+     * @return int status flag
+     */
     int ix, it;
     int ip;
 
@@ -2375,6 +2401,15 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
 }
 
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
+    /**
+     * evalues the Jacobian and differential equation right hand side, stores it in tdata and
+     and copys it to rdata
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @return void
+     */
     
     /* store current Jacobian and derivative */
     if(udata) {
@@ -2395,6 +2430,16 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  R
 }
 
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status) {
+    /**
+     * freeTempDataAmiMem frees all allocated memory in udata, tdata and ami_mem
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[in] setupBdone flag indicating whether backward problem was initialized @type booleantyp
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[out] status flag indicating success of execution @type *int
+     * @return void
+     */
     if(nx>0) {
         N_VDestroy_Serial(x);
         N_VDestroy_Serial(dx);
@@ -2472,6 +2517,13 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 
 #ifdef AMICI_WITHOUT_MATLAB
 ReturnData *initReturnData(UserData *udata, int *pstatus) {
+    /**
+     * initReturnData initialises a ReturnData struct
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] pstatus flag indicating success of execution @type *int
+     * @return rdata initialized return data struct @type ReturnData
+     */
     ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
@@ -2487,6 +2539,14 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
 }
 
 ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
+    /**
+     * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] pstatus flag indicating success of execution @type *int
+     * @return rdata data struct with simulation results @type ReturnData
+     */
     int iroot = 0;
     booleantype setupBdone = false;
     *pstatus = 0;
@@ -2527,6 +2587,12 @@ freturn:
 }
 #endif
 void processUserData(UserData *udata) {
+    /**
+     * processUserData initializes fields of the udata struct
+     *
+     * @param[out] udata pointer to the user data struct @type UserData
+     * @return void
+     */
     if (nx>0) {
         /* initialise temporary jacobian storage */
         tmp_J = SparseNewMat(nx,nx,nnz,CSC_MAT);

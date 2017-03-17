@@ -9,7 +9,7 @@
                    nytrue = 1;
                    nz = 0;
                    nztrue = 0;
-                   ne = 1;
+                   ne = 2;
                    ng = 1;
                    nw = 0;
                    ndwdx = 0;
@@ -34,7 +34,7 @@
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeRootInit(cvode_mem, 1, root_model_dirac);
+                    return CVodeRootInit(cvode_mem, 2, root_model_dirac);
                 }
                 
                 int wrap_SetDenseJacFn(void *cvode_mem){
@@ -198,8 +198,8 @@
                     return dJydx_model_dirac(t, it, dJydx, y, x, dydx, my, sigma_y, user_data);
                 }
                 
-                int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, realtype *my, realtype *sigma_y, void *user_data){
-                    return dJydy_model_dirac(t, it, dJydy, y, my, sigma_y, user_data);
+                int fdJydy(realtype t, int it, realtype *dJydy, realtype *y, N_Vector x, realtype *my, realtype *sigma_y, void *user_data){
+                    return dJydy_model_dirac(t, it, dJydy, y, x, my, sigma_y, user_data);
                 }
                 
                 int fdJydp(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data){
@@ -218,7 +218,7 @@
                     return sJy_model_dirac(t, it, sJy, s2Jy, dJydy, dJydp, sy, dydp, my, user_data);
                 }
                 
-                int fsJz(realtype t, int ie, realtype *sJz, realtype *z, N_Vector x, realtype *dzdp, realtype *sz, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data){
-                    return sJz_model_dirac(t, ie, sJz, z, x, dzdp, sz, mz, sigma_z, dsigma_zdp, user_data, temp_data);
+                int fsJz(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data){
+                    return sJz_model_dirac(t, ie, sJz, s2Jz, dJzdz, dJzdp, sz, dzdp, mz, user_data, temp_data);
                 }
                 

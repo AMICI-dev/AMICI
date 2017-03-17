@@ -1,6 +1,11 @@
 function parseModel(this)
 % parseModel parses the model definition and computes all necessary symbolic expressions.
 %
+% Parameters:
+%
+% Return values:
+%
+
 
 % compile CalcMD5 if necessary
 try
@@ -44,6 +49,11 @@ if(this.nztrue == 0)
     nztrue = length(this.sym.sigma_z);
     this.nztrue = nztrue;
 end
+if(this.nxtrue == 0)
+    nxtrue = length(this.sym.x);
+    this.nxtrue = nxtrue;
+end
+
 
 %check zero trigger events
 for ievent = 1:nevent
@@ -66,7 +76,7 @@ this.HTable(1).k = CalcMD5(char(this.sym.k));
 this.HTable(1).x0 = CalcMD5(char(this.sym.x0));
 if(nevent>0)
     this.HTable(1).trigger = CalcMD5(char([this.event.trigger]));
-    this.HTable(1).bolus = CalcMD5(char([this.event.bolus]));
+    this.HTable(1).deltax = CalcMD5(char([this.event.bolus]));
     this.HTable(1).z = CalcMD5(char([this.event.z]));
 end
 if(strcmp(this.wtype,'iw'))
@@ -112,7 +122,6 @@ if(this.recompile)
 end
 % compute functions
 
-% do not change the ordering, it is essential for correct dependencies
 funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','y','z','deltax','root','Jy','Jz','sigma_y','sigma_z'};
 
 if(this.steadystate)
@@ -120,7 +129,7 @@ if(this.steadystate)
 end
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot','sJy','dJydy','dJydx','dJydp','sJz','dwdp','dxdotdp','dydp'};
+    funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot','sJy','dJydy','dJydx','dJydp','sJz','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx'};
 end
 if(this.adjoint)
     funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydx','dJydp','dJzdx','dJzdp','dwdp','dxdotdp','dydp'};
@@ -158,6 +167,7 @@ if(isfield(this.fun,'J'))
     
     I = arrayfun(@(x) find(M(:,x))-1,1:nx,'UniformOutput',false);
     this.rowvals = [];
+    this.colptrs = [];
     for ix = 1:nx
         this.colptrs(ix) = length(this.rowvals);
         this.rowvals = [this.rowvals; I{ix}];
@@ -171,6 +181,7 @@ if(isfield(this.fun,'J'))
             this.sparseidxB = find(MB);
             I = arrayfun(@(x) find(MB(:,x))-1,1:nx,'UniformOutput',false);
             this.rowvalsB = [];
+            this.colptrsB = [];
             for ix = 1:nx
                 this.colptrsB(ix) = length(this.rowvalsB);
                 this.rowvalsB = [this.rowvalsB; I{ix}];

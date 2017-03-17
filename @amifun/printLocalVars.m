@@ -34,7 +34,7 @@ function printLocalVars(this,model,fid)
         end
     end
     
-    if(this.sensiflag && xor(~strcmp(this.funstr,'sxdot'),strcmp(model.wtype,'iw')))    
+    if(this.sensiflag && not(strcmp(this.funstr,'sxdot')))    
         fprintf(fid,'int ip;\n');
     end
     
@@ -49,6 +49,7 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*np*ng);\n');
         case 'x0'
             fprintf(fid,['memset(x0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
+            fprintf(fid,['realtype t = tstart;\n']);
         case 'dx0'
             fprintf(fid,['memset(dx0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'Jv'
@@ -86,8 +87,10 @@ function printLocalVars(this,model,fid)
                 fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
             end
         case 'sx0'
+            fprintf(fid,['realtype t = tstart;\n']);
             % nothing
         case 'sdx0'
+            fprintf(fid,['realtype t = tstart;\n']);
             % nothing
         case 'y'
             % nothing

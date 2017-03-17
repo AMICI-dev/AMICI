@@ -61,7 +61,7 @@ int Jy_model_dirac(realtype t, int it, realtype *Jy, realtype *y, N_Vector x, re
 int Jz_model_dirac(realtype t, int ie, realtype *Jz, realtype *z, N_Vector x, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data);
 int dJydp_model_dirac(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data);
 int dJydx_model_dirac(realtype t, int it, realtype *dJydx, realtype *y, N_Vector x, realtype *dydx, realtype *my, realtype *sigma_y, void *user_data);
-int dJydy_model_dirac(realtype t, int it, realtype *dJydy, realtype *y, realtype *my, realtype *sigma_y, void *user_data);
+int dJydy_model_dirac(realtype t, int it, realtype *dJydy, realtype *y, N_Vector x, realtype *my, realtype *sigma_y, void *user_data);
 int dJzdp_model_dirac(realtype t, int ie, realtype *dJzdp, realtype *z, N_Vector x, realtype *dzdp, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data);
 int dJzdx_model_dirac(realtype t, int ie, realtype *dJzdx, realtype *z, N_Vector x, realtype *dzdx, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data);
 int deltaqB_model_dirac(realtype t, int ie, realtype *deltaqB, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data);
@@ -80,7 +80,7 @@ int dzdx_model_dirac(realtype t, int ie, realtype *dzdx, N_Vector x, void *user_
 int qBdot_model_dirac(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
 int root_model_dirac(realtype t, N_Vector x, realtype *root, void *user_data);
 int sJy_model_dirac(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *sy, realtype *dydp, realtype *my, void *user_data);
-int sJz_model_dirac(realtype t, int ie, realtype *sJz, realtype *z, N_Vector x, realtype *dzdp, realtype *sz, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data);
+int sJz_model_dirac(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
 int sigma_y_model_dirac(realtype t, realtype *sigma_y, void *user_data);
 int sigma_z_model_dirac(realtype t, int ie, realtype *sigma_z, void *user_data);
 int sroot_model_dirac(realtype t, int ie, int *nroots, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data);

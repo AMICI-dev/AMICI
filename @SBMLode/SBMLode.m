@@ -21,6 +21,8 @@ classdef SBMLode < handle
         compartment = sym.empty();
         % compartment volumes
         volume = sym.empty();
+        % condition volumes
+        kvolume = sym.empty();
         % initial condition of states
         initState = sym.empty();
         % condition

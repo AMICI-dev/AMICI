@@ -1,6 +1,18 @@
-function fun = am_gt(a,b)
-% syms x y
-% f = symfun(sym('cw_gt(x,y)'),[x y]);
-% fun = f(a,b);
+function fun = am_gt(varargin)
+% am_gt is the amici implementation of the n-ary mathml greaterthan function
+% this is an n-ary function, for more than 2 input parameters it will check
+% whether and(varargin{1} > varargin{2},varargin{2} > varargin{3},...)
+%
+% Parameters:
+%  a: first input parameter @type sym
+%  b: second input parameter @type sym
+%
+% Return values:
+%  fun: a > b logical value, negative for false, positive for true
+a=varargin{1};
+b=varargin{2};
 fun = a-b;
+if(nargin>2)
+    fun = am_and(a-b,am_gt(varargin{2:end}));
+end
 end

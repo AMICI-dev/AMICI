@@ -1,6 +1,11 @@
 function makeEvents( this )
 % makeEvents extracts discontiniuties from the model right hand side
 % and converts them into events
+%
+% Parameters:
+%
+% Return values:
+%
 
 nevent = length(this.event);
 nx = length(this.sym.x);
@@ -36,18 +41,21 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = sym(arg);
+            if(ismember(iocc,strfind(tmp_str,'heaviside') + 9))
+                triggers{end+1} = -sym(arg); % for dirac we need both +to- and -to+ transitions
+            end
         end
     end
 end
 
 % select the unique ones
-abstriggers = cellfun(@(x) char(abs(x)),triggers,'UniformOutput',false);
-utriggers = unique(abstriggers);
+all_triggers = cellfun(@(x) char(x),triggers,'UniformOutput',false);
+utriggers = unique(all_triggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
     % find the original one
     % transform to char once to get the right ordering
-    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},abstriggers),1)}));
+    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},all_triggers),1)}));
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
@@ -124,6 +132,9 @@ if(nevent>0)
                 [cfp,t] = coeffs(symvariable,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
+                    if(~isempty(find(cellfun(@(x) double(x==-trigger{ievent}),trigger))))
+                        tmp_bolus{find(cellfun(@(x) double(x==-trigger{ievent}),trigger))} = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
+                    end
                 end
                 % remove dirac
                 symvariable = subs(symvariable,sym('polydirac'),sym('0'));
@@ -205,6 +216,9 @@ if(nevent>0)
     % want the xdot to be cleaned of any dirac functions
     ievent = 1;
     for ievent = 1:nevent
+        if(logical(subs(trigger{ievent},sym('t'),this.t0)==0))
+            error(['The trigger of event ' num2str(ievent) ' fires at initial timepoint t0 = ' num2str(this.t0) ', which is currently not supported.'])
+        end
         if(not(triggeridx(ievent)))
             if(any(bolus{ievent}~=0))
                 error(['Event ' num2str(ievent) ' has a constant trigger function but non-zero bolus.' ...
@@ -239,11 +253,11 @@ if(nevent>0)
     
     % update events
     for ievent = 1:nevent
-            this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
-            % do not add a (:) after z{ievent} this will transform an
-            % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
-            % zero entry if we apply [this.event.z]
-            this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
+        this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
+        % do not add a (:) after z{ievent} this will transform an
+        % [ empty sym ] into Empty sym: 0-by-1 which will lead to a
+        % zero entry if we apply [this.event.z]
+        this.event(ievent) = this.event(ievent).setHflag(hflags(:,ievent));
     end
 end
 
@@ -255,9 +269,9 @@ if(numel(this.sym.sigma_z) == 1)
 end
 
 if(~isfield(this.sym,'Jz'))
-    this.sym.Jz = sym(0);
+    this.sym.Jz = sym(zeros(length([this.event.z]),1));
     for iz = 1:length([this.event.z])
-        this.sym.Jz = this.sym.Jz + sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
+        this.sym.Jz(iz) = sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
 

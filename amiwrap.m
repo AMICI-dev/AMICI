@@ -21,13 +21,10 @@ function amiwrap( varargin )
         error(' modelname must be a string')
     end
     symfun = varargin{2}; % this is the function which generates the symbolic struct
-    if(~ischar(symfun))
-        error(' second argument must be a string')
-    end
     if nargin > 2
         tdir = varargin{3};
     else
-        tdir = [];
+        tdir = pwd;
     end
     
     if nargin > 3

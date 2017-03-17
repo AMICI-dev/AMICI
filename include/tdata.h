@@ -116,7 +116,7 @@ typedef struct tdata {
     
     /** array of flags indicating which root has beend found */
     /*!
-    array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr?1, rootsfound[i]?= 0 if gi has a root, and = 0 if not.
+    array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
     */
     int *am_rootsfound;
     /** array of index which root has been found */

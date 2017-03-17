@@ -17,6 +17,9 @@ function writeAMICI(this,modelname)
         fprintf(fid,[this.time_symbol ' = sym(''t'');\n']);
     end
     fprintf(fid,'\n');
+    fprintf(fid,'avogadro = 6.02214179e23;');
+    
+%     fprintf(fid,'model.debug = true;\n');
     writeDefinition('STATES','x','state',this,fid)
     writeDefinition('PARAMETERS','p','parameter',this,fid)
     writeDefinition('CONDITIONS','k','condition',this,fid)
@@ -27,9 +30,11 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,['% EVENTS\n']);
     for ievent = 1:length(this.trigger)
+        str_trigger = char(this.trigger(ievent));
+        str_bolus = strjoin(arrayfun(@char,this.bolus(:,ievent),'UniformOutput',false),',');
         fprintf(fid,['model.event(' num2str(ievent) ') = amievent(' ...
-            char(this.trigger(ievent)) ', ...\n' ...
-            '[' strjoin(arrayfun(@char,this.bolus(:,ievent),'UniformOutput',false),',') '], ...\n' ...
+            str_trigger ', ...\n' ...
+            '[' str_bolus '], ...\n' ...
             '[]);\n']);
     end
     fprintf(fid,'\n');
@@ -55,7 +60,12 @@ function writeAMICI(this,modelname)
         fprintf(fid,'\n');
         fprintf(fid,'end\n');
         fprintf(fid,'\n');
+    end 
+    
+    for fun = {'factorial','cei','psi'}
+        fprintUnsupportedFunctionError(fun{1},fid)
     end
+    
     fclose(fid);
 end
 
@@ -78,4 +88,13 @@ function writeDerived(header,identifier,field,this,fid)
         fprintf(fid,['%% ' strjoin(cellfun(@char,num2cell(this.observable_name),'UniformOutput',false),'\n%% ')  '\n']);
     end
     fprintf(fid,['model.sym.' identifier ' = [' strjoin(cellfun(@char,num2cell(this.(field)),'UniformOutput',false),', ...\n') '];']);
+end
+
+function fprintUnsupportedFunctionError(functionName,fid)
+    fprintf(fid,['function r = ' functionName '(x)\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,['    error(''The ' functionName ' function is currently not supported!'');\n']);
+    fprintf(fid,'\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
 end
