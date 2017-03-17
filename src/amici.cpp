@@ -2430,7 +2430,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
                         }
                     } else {
                         if (nx>0) {
-                            if (ts[it] == inf) {
+                            if (isinf(ts[it])) {
                                 *status = workSteadyStateProblem(udata, tdata, rdata, status, ami_mem, it);
                             } else {
                                 *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
@@ -2679,7 +2679,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     
     if (*status == 0) {
         // tell workForwardProblem, that tout = inf was reached and set flag for successful integration
-        *t = inf;
+        t = INFINITY;
         *newtdata = 1.0;
         
     } else {
@@ -2714,6 +2714,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         if (*status<0) {
             return *status;
         }
+        return(0);
         
     }    
 }
