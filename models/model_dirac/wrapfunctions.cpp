@@ -9,7 +9,7 @@
                    nytrue = 1;
                    nz = 0;
                    nztrue = 0;
-                   ne = 2;
+                   ne = 1;
                    ng = 1;
                    nw = 0;
                    ndwdx = 0;
@@ -34,7 +34,7 @@
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeRootInit(cvode_mem, 2, root_model_dirac);
+                    return CVodeRootInit(cvode_mem, 1, root_model_dirac);
                 }
                 
                 int wrap_SetDenseJacFn(void *cvode_mem){
@@ -79,6 +79,10 @@
                 
                 int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
                     return J_model_dirac(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+                }
+                
+                int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data){
+                    return JDiag_model_dirac(t, JDiag, x, user_data);
                 }
                 
                 int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
