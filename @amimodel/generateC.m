@@ -47,9 +47,7 @@ for ifun = this.funs
             fprintf(fid,'#undef dsigma_ydp\n');
             fprintf(fid,'#undef dsigma_zdp\n');
         end
-        if(strcmp(ifun{1},'JDiag'))
-            fprintf(fid,['#include "' this.modelname '_JDiag.h"\n']);
-        elseif(strcmp(ifun{1},'JBand'))
+        if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
         elseif(strcmp(ifun{1},'JBandB'))
             fprintf(fid,['#include "' this.modelname '_JB.h"\n']);
@@ -62,7 +60,7 @@ for ifun = this.funs
             end
         elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
             fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
         elseif(strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -139,7 +137,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             else
-                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
+                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
                     fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 this.fun.(ifun{1}).writeCcode(this,fid);

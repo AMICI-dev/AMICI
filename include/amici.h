@@ -10,7 +10,7 @@
 #ifndef AMICI_WITHOUT_MATLAB
 #include <mex.h>
 #endif
-
+#include <time.h>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
