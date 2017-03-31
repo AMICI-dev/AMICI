@@ -365,9 +365,9 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
         initField2(J,nx,nx);
         initField2(newt,1,1);
         initField2(xss,1,nx);
-        initField2(ns_numsteps,2,1);
-        initField2(ns_numlinsteps,2,ns_maxsteps);
-        initField2(ns_time,2,1);
+        initField2(ns_numsteps,1,2);
+        initField2(ns_numlinsteps,ns_maxsteps,2);
+        initField2(ns_time,1,2);
     }
     if(ny>0) {
         initField2(y,nt,ny);
@@ -2701,13 +2701,13 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         // Try to integrate for finding the steady state
         *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
         x_tmp = NV_DATA_S(x);
-        for (ix=0; ix<nx; ix++) {
-            xssdata[ix] = x_tmp[ix];
-        }
         
         // If integration found a steady state
         if (*status == AMI_ROOT_RETURN) {
             xssdata = x_tmp;
+            for (ix=0; ix<nx; ix++) {
+                xssdata[ix] = x_tmp[ix];
+            }
             *newtdata = 2.0;
             return(0);
         }
