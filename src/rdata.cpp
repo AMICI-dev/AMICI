@@ -26,8 +26,9 @@ void freeReturnData(ReturnData *rdata) {
     if(orderdata) delete[] orderdata;
     if(numstepsSdata) delete[] numstepsSdata;
     if(numrhsevalsSdata) delete[] numrhsevalsSdata;
-    if(numstepsNewtdata) delete[] numstepsNewtdata;
-    if(numlinstepsNewtdata) delete[] numlinstepsNewtdata;
+    if(ns_numstepsdata) delete[] ns_numstepsdata;
+    if(ns_numlinstepsdata) delete[] ns_numlinstepsdata;
+    if(ns_timedata) delete[] ns_timedata;
     if(newtdata) delete[] newtdata;
     if(llhdata) delete[] llhdata;
     if(sllhdata) delete[] sllhdata;

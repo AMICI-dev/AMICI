@@ -64,9 +64,11 @@ typedef struct rdata {
     /** flag success of Newton solver */
     double *am_newtdata;
     /** number of Newton steps steady state problem */
-    double *am_numstepsNewtdata;
+    double *am_ns_timedata;
+    /** number of Newton steps steady state problem */
+    double *am_ns_numstepsdata;
     /** number of linear steps per Newton step steady state problem */
-    double *am_numlinstepsNewtdata;
+    double *am_ns_numlinstepsdata;
     
     /** likelihood value */
     double *am_llhdata;

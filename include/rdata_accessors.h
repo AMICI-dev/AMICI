@@ -23,8 +23,9 @@
 #define numrhsevalsdata rdata->am_numrhsevalsdata
 #define orderdata rdata->am_orderdata
 #define newtdata rdata->am_newtdata
-#define numstepsNewtdata rdata->am_numstepsNewtdata
-#define numlinstepsNewtdata rdata->am_numlinstepsNewtdata
+#define ns_timedata rdata->am_ns_timedata
+#define ns_numstepsdata rdata->am_ns_numstepsdata
+#define ns_numlinstepsdata rdata->am_ns_numlinstepsdata
 
 #define numstepsSdata rdata->am_numstepsSdata
 #define numrhsevalsSdata rdata->am_numrhsevalsSdata
