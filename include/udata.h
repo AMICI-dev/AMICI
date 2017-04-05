@@ -14,9 +14,11 @@
 #define EXTERNC
 #endif
 
+#ifdef AMICI_WITHOUT_MATLAB
 typedef enum AMI_parameter_scaling_TAG {
     AMI_SCALING_NONE, AMI_SCALING_LN, AMI_SCALING_LOG10
 } AMI_parameter_scaling;
+#endif
 
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
@@ -55,9 +57,11 @@ typedef struct user_data {
     int    am_nnz;
     /** maximal number of events to track */
     int    am_nmaxevent;
-    
+
+#ifdef AMICI_WITHOUT_MATLAB
     /** Scaling of parameters am_np */
     AMI_parameter_scaling am_pscale;
+#endif
 
     /** parameter array */
     double *am_p;
@@ -184,6 +188,9 @@ typedef struct user_data {
     booleantype am_nan_qBdot;
 } UserData;
 
+#ifdef AMICI_WITHOUT_MATLAB
 EXTERNC void freeUserData(UserData *udata);
 EXTERNC void printUserData(UserData *udata);
+#endif
+
 #endif /* _MY_UDATA */

@@ -128,7 +128,9 @@ return(NULL); \
 
 #ifdef AMICI_WITHOUT_MATLAB
     typedef double mxArray;   
-    static void VXy(double *V, const double *X, const double y, int n);
+    void unscaleParameters(UserData *udata);
+    void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
+    static void elementwiseMultiplyArrayArrayScalar(double *V, const double *X, const double y, int n);
 #endif
 
 /** return value for successful execution */
@@ -2522,7 +2524,6 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
     if(tdata) delete tdata;
 }
 
-#ifdef AMICI_WITHOUT_MATLAB
 ReturnData *initReturnData(UserData *udata, int *pstatus) {
     /**
      * initReturnData initialises a ReturnData struct
@@ -2545,7 +2546,6 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
     return(rdata);
 }
 
-
 ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
     /**
      * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
@@ -2555,6 +2555,8 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
      * @param[out] pstatus flag indicating success of execution @type *int
      * @return rdata data struct with simulation results @type ReturnData
      */
+
+#ifdef AMICI_WITHOUT_MATLAB
     double *originalParams = 0;
 
     if(udata->am_pscale != AMI_SCALING_NONE) {
@@ -2563,6 +2565,7 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
 
         unscaleParameters(udata);
     }
+#endif
 
     int iroot = 0;
     booleantype setupBdone = false;
@@ -2597,20 +2600,24 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     if(problem)
         goto freturn;
 
+#ifdef AMICI_WITHOUT_MATLAB
     applyChainRuleFactorToSimulationResults(udata, rdata);
+#endif
 
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
 
+#ifdef AMICI_WITHOUT_MATLAB
     if(originalParams) {
         memcpy(p, originalParams, sizeof(double) * np);
         free(originalParams);
     }
-
+#endif
     return rdata;
 }
 
+#ifdef AMICI_WITHOUT_MATLAB
 void unscaleParameters(UserData *udata) {
     switch(udata->am_pscale) {
     case AMI_SCALING_LOG10:
@@ -2645,64 +2652,56 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     }
 
     if(sensi > 0) {
-        //        sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);
         // TODO ignores options_ami.sens_ind, assumes sensitivities are calculated for all states
         if(rdata->am_sllhdata)
-            VXy(rdata->am_sllhdata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_sllhdata, udata->am_p, coefficient, np);
 
         //        sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
-        // TODO: why sxdata not set?
         if(rdata->am_sxdata)
-            VXy(rdata->am_sxdata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_sxdata, udata->am_p, coefficient, np);
 
         //        sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_sydata)
-            VXy(rdata->am_sydata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_sydata, udata->am_p, coefficient, np);
 
         //        sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_szdata)
-            VXy(rdata->am_szdata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_szdata, udata->am_p, coefficient, np);
 
         //        sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_ssigmaydata)
-            VXy(rdata->am_ssigmaydata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_ssigmaydata, udata->am_p, coefficient, np);
 
         //        sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_ssigmazdata)
-            VXy(rdata->am_ssigmazdata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_ssigmazdata, udata->am_p, coefficient, np);
     }
 
     if(sensi_meth == AMI_SS) {
-        //        sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
         if(rdata->am_dxdotdpdata)
-            VXy(rdata->am_dxdotdpdata, udata->am_p, coefficient, np);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_dxdotdpdata, udata->am_p, coefficient, np);
 
-        //        sol.dydp = bsxfun(@times,sol.dydp,permute(theta(options_ami.sens_ind),[2,1])*log(10));
         if(rdata->am_dydpdata)
-            VXy(rdata->am_dydpdata, udata->am_p, coefficient, np);
-
-        // TODO For steady state sensitivities
-        //        sol.sx = -sol.J\sol.dxdotdp;
-        if(rdata->am_sxdata)
-            assert(2 == 1);
-
-        //        sol.sy = sol.dydx*sol.sx + sol.dydp;
-        if(rdata->am_sydata)
-            assert(2 == 1);
+            elementwiseMultiplyArrayArrayScalar(rdata->am_dydpdata, udata->am_p, coefficient, np);
     }
 }
 
-/*
- * Calculate vector V = V * X * y
+/**
+ * @brief elementwiseMultiplyArrayArrayScalar Multiplies two vectors elementwise and with a scalar value:
+ * V = V * X * y
+ * @param V first vector and output variable
+ * @param X second vector
+ * @param y scalar
+ * @param n dimension of V and X
  */
-static void VXy(double *V, const double *X, const double y, int n) {
+static void elementwiseMultiplyArrayArrayScalar(double *V, const double *X, const double y, int n) {
     while(n--) {
         *V = (*V) * (*X) * y;
         ++V; ++X;
     }
 }
-
 #endif
+
 void processUserData(UserData *udata) {
     /**
      * processUserData initializes fields of the udata struct
