@@ -130,7 +130,6 @@ return(NULL); \
     typedef double mxArray;   
     void unscaleParameters(UserData *udata);
     void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
-    static void elementwiseMultiplyArrayArrayScalar(double *V, const double *X, const double y, int n);
 #endif
 
 /** return value for successful execution */
@@ -2654,52 +2653,53 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     if(sensi > 0) {
         // TODO ignores options_ami.sens_ind, assumes sensitivities are calculated for all states
         if(rdata->am_sllhdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_sllhdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                sllhdata[ip] *= p[ip] * coefficient;
 
-        //        sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_sxdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_sxdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int ix = 0; ix < nx; ++ix)
+                    for(int it = 0; it < nt; ++it)
+                        sxdata[(ip*nx + ix)*nt + it] *= p[ip] * coefficient;
 
-        //        sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_sydata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_sydata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int iy = 0; iy < ny; ++iy)
+                    for(int it = 0; it < nt; ++it)
+                        sydata[(ip*ny + iy)*nt + it] *= p[ip] * coefficient;
 
-        //        sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_szdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_szdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int iz = 0; iz < nz; ++iz)
+                    for(int ie = 0; ie < nmaxevent; ++ie)
+                        szdata[(ip*nz + iz)*nmaxevent + ie] *= p[ip] * coefficient;
 
-        //        sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_ssigmaydata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_ssigmaydata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int iy = 0; iy < ny; ++iy)
+                    for(int it = 0; it < nt; ++it)
+                        ssigmaydata[(ip*ny + iy)*nt + it] *= p[ip] * coefficient;
 
-        //        sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));
         if(rdata->am_ssigmazdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_ssigmazdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int iz = 0; iz < nz; ++iz)
+                    for(int ie = 0; ie < nmaxevent; ++ie)
+                        ssigmazdata[(ip*nz + iz)*nmaxevent + ie] *= p[ip] * coefficient;
     }
 
     if(sensi_meth == AMI_SS) {
         if(rdata->am_dxdotdpdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_dxdotdpdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int ix = 0; ix < nx; ++ix)
+                    dxdotdpdata[ip*nx + ix] *= p[ip] * coefficient;
 
         if(rdata->am_dydpdata)
-            elementwiseMultiplyArrayArrayScalar(rdata->am_dydpdata, udata->am_p, coefficient, np);
+            for(int ip = 0; ip < np; ++ip)
+                for(int iy = 0; iy < ny; ++iy)
+                    dydpdata[ip*nx + iy] *= p[ip] * coefficient;
     }
 }
 
-/**
- * @brief elementwiseMultiplyArrayArrayScalar Multiplies two vectors elementwise and with a scalar value:
- * V = V * X * y
- * @param V first vector and output variable
- * @param X second vector
- * @param y scalar
- * @param n dimension of V and X
- */
-static void elementwiseMultiplyArrayArrayScalar(double *V, const double *X, const double y, int n) {
-    while(n--) {
-        *V = (*V) * (*X) * y;
-        ++V; ++X;
-    }
-}
 #endif
 
 void processUserData(UserData *udata) {
