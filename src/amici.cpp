@@ -2633,8 +2633,6 @@ void unscaleParameters(UserData *udata) {
 
 void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata)
 {
-    // postprocessing from simulate____.m file
-
     if(udata->am_pscale == AMI_SCALING_NONE)
         return;
 
@@ -2651,7 +2649,6 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     }
 
     if(sensi > 0) {
-        // TODO ignores options_ami.sens_ind, assumes sensitivities are calculated for all states
         if(rdata->am_sllhdata)
             for(int ip = 0; ip < np; ++ip)
                 sllhdata[ip] *= p[ip] * coefficient;
