@@ -411,7 +411,7 @@ void getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* 
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %d: ", attributeName, *length);
 #endif
-    *destination = (int*) malloc(sizeof(int) * (*length));
+    *destination = new int[*length];
     H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
 }
 
