@@ -30,6 +30,7 @@ void freeUserData(UserData *udata) {
     }
 }
 
+#ifdef AMICI_WITHOUT_MATLAB
 void printUserData(UserData *udata) {
     printf("am_qpositivex: %p\n", udata->am_qpositivex);
     printf("am_plist: %p\n", udata->am_plist);
@@ -76,3 +77,4 @@ void printUserData(UserData *udata) {
     printf("am_z2event: %p\n", udata->am_z2event);
     printf("am_h: %p\n", udata->am_h);
 }
+#endif
