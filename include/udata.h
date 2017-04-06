@@ -188,8 +188,8 @@ typedef struct user_data {
     booleantype am_nan_qBdot;
 } UserData;
 
-#ifdef AMICI_WITHOUT_MATLAB
 EXTERNC void freeUserData(UserData *udata);
+#ifdef AMICI_WITHOUT_MATLAB
 EXTERNC void printUserData(UserData *udata);
 #endif
 
