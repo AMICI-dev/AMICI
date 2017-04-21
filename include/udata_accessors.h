@@ -2,6 +2,7 @@
 
 #define plist udata->am_plist
 #define np udata->am_np
+#define nk udata->am_nk
 #define ny udata->am_ny
 #define nytrue udata->am_nytrue
 #define nx udata->am_nx
