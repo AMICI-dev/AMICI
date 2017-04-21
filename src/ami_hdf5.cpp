@@ -65,7 +65,6 @@ UserData *readSimulationUserData(const char* fileName) {
     np = length;
 
     getDoubleArrayAttribute(file_id, dataObject, "kappa", &k, &length);
-    int nk = getIntScalarAttribute(file_id, dataObject, "nk");
     assert(length == nk);
     getDoubleArrayAttribute(file_id, dataObject, "ts", &ts, &length);
     nt = getIntScalarAttribute(file_id, dataObject, "nt");
