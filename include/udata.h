@@ -29,6 +29,8 @@ typedef struct user_data {
     int    *am_plist;
     /** number of parameters */
     int    am_np;
+    /** number of fixed parameters */
+    int    am_nk;
     /** number of observables */
     int    am_ny;
     /** number of observables in the unaugmented system */

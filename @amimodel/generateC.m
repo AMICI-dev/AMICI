@@ -349,6 +349,7 @@ fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(UserData *udata){\n');
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
+fprintf(fid,['                   nk = ' num2str(this.nk) ';\n']);
 fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
 fprintf(fid,['                   nytrue = ' num2str(this.nytrue) ';\n']);
 fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
