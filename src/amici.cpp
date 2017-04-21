@@ -2694,6 +2694,19 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
                 for(int iy = 0; iy < ny; ++iy)
                     dydpdata[ip*nx + iy] *= p[ip] * coefficient;
     }
+
+    if(sensi == 2) {
+        if(rdata->am_s2llhdata) {
+            double s2coefficient = coefficient * coefficient;
+            for(int ip = 0; ip < np; ++ip) {
+                for(int iq = 0; iq < np; ++iq) {
+                    s2llhdata[ip] *= p[ip] * s2coefficient;
+                    if(iq == ip)
+                        s2llhdata[ip] += sllhdata[ip];
+                }
+            }
+        }
+    }
 }
 
 #endif
