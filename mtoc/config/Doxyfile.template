@@ -1770,6 +1770,7 @@ FILE_PATTERNS     = *.m \
                     *.hh \
                     *.hpp \
                     *.dox \
+                    *.md
 
 # the link between mtoc++ and doxygen (the `' separates the macros)
 FILTER_PATTERNS   = *.m="_MTOCFILTER_"
