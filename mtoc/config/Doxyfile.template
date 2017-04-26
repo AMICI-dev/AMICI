@@ -669,7 +669,13 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = "/Users/F.Froehlich/Documents/MATLAB/AMICI/sundials-2.6.2" "/Users/F.Froehlich/Documents/MATLAB/AMICI/SuiteSparse" "/Users/F.Froehlich/Documents/MATLAB/AMICI/models" "/Users/F.Froehlich/Documents/MATLAB/AMICI/examples" "/Users/F.Froehlich/Documents/MATLAB/AMICI/mtoc" "/Users/F.Froehlich/Documents/MATLAB/AMICI/auxiliary"
+EXCLUDE                = "sundials-2.6.2" \
+                         "SuiteSparse" \
+                         "models" \
+                         "examples" \
+                         "mtoc" \
+                         "auxiliary" \
+                         "README.md"
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -697,7 +703,7 @@ EXCLUDE_SYMBOLS        =
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-EXAMPLE_PATH           = "/Users/F.Froehlich/Documents/MATLAB/AMICI/examples"
+EXAMPLE_PATH           = "/examples"
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp
