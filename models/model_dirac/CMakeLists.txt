@@ -1,15 +1,17 @@
 project(model_dirac)
 cmake_minimum_required(VERSION 2.8)
+
 set(cmake_build_type Debug)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
-set(AMICI_DIR "/Users/F.Froehlich/Documents/MATLAB/AMICI")
+set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")
-set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")
-set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")
-set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")
+set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
+
+find_package(HDF5 COMPONENTS C HL REQUIRED)
 
 set(SRC_LIST
 main.cpp
@@ -20,6 +22,7 @@ ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
 ${AMICI_DIR}/src/edata.cpp
 ${AMICI_DIR}/src/ami_hdf5.cpp
+${AMICI_DIR}/src/spline.cpp
 model_dirac_J.cpp
 model_dirac_JB.cpp
 model_dirac_JBand.cpp
@@ -71,13 +74,13 @@ model_dirac_z.cpp
 
 include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${SUITESPARSE_DIR}/KLU/Include")
 include_directories("${SUITESPARSE_DIR}/AMD/Include")
 include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
 include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
 include_directories("${SUITESPARSE_DIR}/BTF/Include")
-include_directories("/usr/include/hdf5/serial/")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
@@ -90,8 +93,8 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a"
 "${SUITESPARSE_LIB_DIR}/COLAMD/Lib/libcolamd.a"
 "${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a"
-"${HDF_LIB_DIR}/libhdf5_hl.a"
-"${HDF_LIB_DIR}/libhdf5.a"
+"${HDF5_HL_LIBRARIES}"
+"${HDF5_C_LIBRARIES}"
 "-lpthread -ldl -lz -lsz"
 "-lm"
 )
