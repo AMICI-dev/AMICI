@@ -2,7 +2,7 @@
 
 #define npmodel udata->am_npmodel
 #define plist udata->am_plist
-#define np udata->am_np
+#define nplist udata->am_nplist
 #define nk udata->am_nk
 #define ny udata->am_ny
 #define nytrue udata->am_nytrue

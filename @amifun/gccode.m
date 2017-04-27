@@ -113,7 +113,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'xdotdp([0-9]+)',['xdotdp\[$1 + ip*' num2str(model.nx) '\]']);
             
             if(strcmp(this.cvar,'qBdot'))
-                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip+np*$1]');
+                cstr = regexprep(cstr,'qBdot\[([0-9]*)\]','qBdot\[ip+nplist*$1]');
             elseif(strcmp(this.cvar,'stau'))
                 cstr = regexprep(cstr,'stau\[([0-9]*)\]','stau\[ip]');
             elseif(strcmp(this.cvar,'y'))
@@ -125,7 +125,7 @@ function this = gccode(this,model,fid)
             elseif(strcmp(this.cvar,'sz') || strcmp(this.cvar,'sroot') || strcmp(this.cvar,'sz_tf'))
                 cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) ')\]']);
             elseif(strcmp(this.cvar,'s2root'))
-                cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) '*np)\]']);
+                cstr = regexprep(cstr,[this.cvar '\[([0-9+*]*)\]'],[this.cvar '\[nroots[ie] + nmaxevent*(($1)+ip*' num2str(model.nz) '*nplist)\]']);
             elseif(strcmp(this.cvar,'dxdotdp'))
                 cstr = regexprep(cstr, 'dxdotdp\[([0-9]*)\]',['dxdotdp[\($1+ip*' num2str(model.nx) '\)\]']);
             elseif(strcmp(this.cvar,'Jdata'))
