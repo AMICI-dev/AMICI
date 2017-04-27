@@ -18,16 +18,22 @@
  * is expected as single command line argument.
  *
  * An initial HDF5 file with the required fields can be generated using MATLAB by adding the following lines
- * in the simulate_${MODEL_NAME}.m file before the call to .....:
+ * in the simulate_${MODEL_NAME}.m file just before "sol = ami_${MODEL_NAME}" close to the end of the file:
  *
- * hdffile = 'mydata.h5'
- * structToHDF5Attribute(hdffile, '/options', options)
- * structToHDF5Attribute(hdffile, '/data', data)
+ *    %% Write data that is passed to AMICI to HDF5
+ *    hdffile = fullfile(pwd, 'mydata.h5');
+ *    structToHDF5Attribute(hdffile, '/options', options_ami);
+ *    h5writeatt(hdffile, '/options', 'ts', tout);
+ *    h5writeatt(hdffile, '/options', 'nt', numel(tout));
+ *    h5writeatt(hdffile, '/options', 'theta', theta);
+ *    h5writeatt(hdffile, '/options', 'kappa', kappa);
+ *    if(~isempty(data))
+ *      structToHDF5Attribute(hdffile, '/data', data);
+ *    end
  *
  * ... and then running a simulation from MATLAB as usual.
  *
  */
-
 
 // Function prototypes
 void processReturnData(ReturnData *rdata, UserData *udata);
