@@ -62,7 +62,6 @@ UserData *readSimulationUserData(const char* fileName) {
 
     const char* dataObject = "/data";
     getDoubleArrayAttribute(file_id, dataObject, "theta", &p, &length);
-    np = length;
 
     getDoubleArrayAttribute(file_id, dataObject, "kappa", &k, &length);
     assert(length == nk);
@@ -75,8 +74,9 @@ UserData *readSimulationUserData(const char* fileName) {
 
     /* plist, matlab: fifth argument */
     // parameter ordering
-    plist = new int[np]();
-    for (int i = 0; i < np; i++) {
+    nplist = np;
+    plist = new int[nplist]();
+    for (int i = 0; i < nplist; i++) {
         plist[i] = i;
     }
 
@@ -85,16 +85,16 @@ UserData *readSimulationUserData(const char* fileName) {
     for(int i = 0; i < ne; ++i)
         z2event[i] = i;
 
-    idlist = new realtype[np]();
-    for(int i = 0; i < np; ++i)
+    idlist = new realtype[nplist]();
+    for(int i = 0; i < nplist; ++i)
         idlist[i] = 0;
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
     b_sx0 = FALSE;
     sx0data = 0;
 
     /* pbarm parameterscales ; matlab: sixth argument*/
-    pbar = new realtype[np]();
-    ones(pbar, np);
+    pbar = new realtype[nplist]();
+    ones(pbar, nplist);
 
     //    /* xscale, matlab: seventh argument */
     //    xbar = mxGetPr(prhs[6]);
@@ -104,7 +104,7 @@ UserData *readSimulationUserData(const char* fileName) {
 //    /** parameter reordering */
 //    int    *am_plist;
 //    /** number of parameters */
-//    int    am_np;
+//    int    am_nplist;
 //    /** number of observables */
 //    int    am_ny;
 //    /** number of observables in the unaugmented system */
@@ -240,7 +240,7 @@ void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
     H5LTset_attribute_double(file_id, solutionsObject, "t", tsdata, nt);
     H5LTset_attribute_double(file_id, solutionsObject, "xdot", xdotdata, nx);
     H5LTset_attribute_double(file_id, solutionsObject, "llh", llhdata, 1);
-    H5LTset_attribute_double(file_id, solutionsObject, "sllh", sllhdata, np);
+    H5LTset_attribute_double(file_id, solutionsObject, "sllh", sllhdata, nplist);
 
     // are double, but should write as int:
     setAttributeIntFromDouble(file_id, solutionsObject, "numsteps", numstepsdata, nt);
@@ -257,11 +257,11 @@ void writeReturnData(const char* hdffile, ReturnData *rdata, UserData *udata) {
     createAndWriteDouble2DAttribute(dataset, "sigmay", sigmaydata, nt, ny);
 
     if(sxdata)
-        createAndWriteDouble3DAttribute(dataset, "sx", sxdata, nt, nx, np);
+        createAndWriteDouble3DAttribute(dataset, "sx", sxdata, nt, nx, nplist);
     if(sydata)
-        createAndWriteDouble3DAttribute(dataset, "sy", sydata, nt, ny, np);
+        createAndWriteDouble3DAttribute(dataset, "sy", sydata, nt, ny, nplist);
     if(ssigmaydata)
-        createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, nt, ny, np);
+        createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, nt, ny, nplist);
     // TODO: sssigmaz
 
     H5Fclose(file_id);
