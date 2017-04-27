@@ -9,8 +9,8 @@ int dsigma_zdp_model_dirac(realtype t, int ie, realtype *dsigma_zdp, void *user_
 int status = 0;
 UserData *udata = (UserData*) user_data;
 int ip;
-memset(dsigma_zdp,0,sizeof(realtype)*0*np);
-for(ip = 0; ip<np; ip++) {
+memset(dsigma_zdp,0,sizeof(realtype)*0*nplist);
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
 }
 }

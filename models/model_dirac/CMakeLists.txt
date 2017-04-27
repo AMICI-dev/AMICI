@@ -4,7 +4,7 @@ set(cmake_build_type Debug)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
-set(AMICI_DIR "/Users/F.Froehlich/Documents/MATLAB/AMICI")
+set(AMICI_DIR "/home/dweindl/src/AMICI.github")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")

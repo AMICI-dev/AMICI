@@ -3,13 +3,15 @@
 #include <include/udata_accessors.h>
                 
                 void init_modeldims(UserData *udata){
+                   nplist = 4;
                    nx = 2;
                    nxtrue = 2;
+                   nk = 0;
                    ny = 1;
                    nytrue = 1;
                    nz = 0;
                    nztrue = 0;
-                   ne = 2;
+                   ne = 1;
                    ng = 1;
                    nw = 0;
                    ndwdx = 0;
@@ -29,12 +31,12 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, np, sensi_meth, sxdot_model_dirac, sx);
+                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_dirac, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeRootInit(cvode_mem, 2, root_model_dirac);
+                    return CVodeRootInit(cvode_mem, 1, root_model_dirac);
                 }
                 
                 int wrap_SetDenseJacFn(void *cvode_mem){

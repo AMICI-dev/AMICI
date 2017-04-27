@@ -11,19 +11,14 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;
-memset(stau,0,sizeof(realtype)*np);
+memset(stau,0,sizeof(realtype)*nplist);
 status = w_model_dirac(t,x,NULL,user_data);
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);
 switch (plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  stau[ip] = 1.0;
-
-        } break;
-
-        case 1: {
   stau[ip] = 1.0;
 
         } break;
