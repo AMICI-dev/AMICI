@@ -347,7 +347,7 @@ fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(UserData *udata){\n');
-fprintf(fid,['                   nplist = ' num2str(this.np) ';\n']);
+fprintf(fid,['                   np = ' num2str(this.np) ';\n']);
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   nk = ' num2str(this.nk) ';\n']);
