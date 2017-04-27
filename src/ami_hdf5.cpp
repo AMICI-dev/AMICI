@@ -61,9 +61,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
     assert(length == nt);
 
-    assert(ny == AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ny"));
-    assert(nz == AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nz"));
-
     /* parameter ordering, matlab: fifth argument */
     plist = new int[np];
     for (int i = 0; i < np; i++)
@@ -111,31 +108,32 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
         return(NULL);
     }
 
+    mz = NULL;
+    zsigma = NULL;
+    b_expdata = FALSE;
+
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n;
     const char* dataObject = "/data";
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-    assert(m * n == nt * ny); // TODO m, n separately
+    if(H5Lexists(file_id, dataObject, 0)) {
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
+        assert(m * n == nt * ny); // TODO m, n separately
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-    assert(m * n == nt * ny);
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
+        assert(m * n == nt * ny);
 
-    if(nz) {
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
-        assert(m * n == nt * nz);
+        if(nz) {
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
+            assert(m * n == nt * nz);
 
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
-        assert(m * n == nt * nz);
-    } else {
-        mz = NULL;
-        zsigma = NULL;
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
+            assert(m * n == nt * nz);
+        }
+        b_expdata = TRUE;
     }
-
     H5Fclose(file_id);
-
-    b_expdata = TRUE;
 
     return(edata);
 }
@@ -147,7 +145,7 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
     hid_t dataset;
 
     if(H5Lexists(file_id, datasetPath, H5P_DEFAULT)) {
-        printf("INFO: 'solutions' section already exists. overwriting.\n");
+        printf("INFO: result section already exists -- overwriting.\n");
         dataset = H5Dopen2(file_id, datasetPath, H5P_DEFAULT);
     } else {
         hsize_t dim [] = {1};
