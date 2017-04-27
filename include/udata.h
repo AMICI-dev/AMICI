@@ -20,7 +20,7 @@ typedef struct user_data {
     double *am_qpositivex;
 
     /** total number of model parameters */
-    int    *am_np;
+    int    am_np;
     /** parameter selection and reordering */
     int    *am_plist;
     /** number of parameters in am_plist */
