@@ -5,11 +5,12 @@
                 void init_modeldims(UserData *udata){
                    nx = 2;
                    nxtrue = 2;
+                   nk = 0;
                    ny = 1;
                    nytrue = 1;
                    nz = 0;
                    nztrue = 0;
-                   ne = 2;
+                   ne = 1;
                    ng = 1;
                    nw = 0;
                    ndwdx = 0;
@@ -34,7 +35,7 @@
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeRootInit(cvode_mem, 2, root_model_dirac);
+                    return CVodeRootInit(cvode_mem, 1, root_model_dirac);
                 }
                 
                 int wrap_SetDenseJacFn(void *cvode_mem){

@@ -35,4 +35,6 @@ The complete AMICI API is available through amici.h; this is the only header fil
 
 You need to compile and link `${AMICI_ROOT_DIR}/models/${MODEL_NAME}/*.cpp`, `${AMICI_ROOT_DIR}/src/*.cpp`, the SUNDIALS and the SUITESPARSE library.
 
-Along with `main.cpp`, a [CMake](https://cmake.org/) file (`CMakeLists.txt`) will be generated automatically. The CMake file shows the abovementioned library dependencies. These files provide a scaffold for a standalone simulation program. (NOTE: This program should compile and link, but will crash most certainly without further problem-specific adaptations.)
+Along with `main.cpp`, a [CMake](https://cmake.org/) file (`CMakeLists.txt`) will be generated automatically. The CMake file shows the abovementioned library dependencies. These files provide a scaffold for a standalone simulation program. The required numerical libraries are shipped with AMICI. To compile them, run `${AMICI_ROOT_DIR}/scripts/run-tests.sh` once. HDF5 libraries and header files need to be installed separately. 
+More information on how to run the compiled program is provided in `main.cpp`.
+(NOTE: This sample program should compile and link, but will crash most certainly without further problem-specific adaptations.)
