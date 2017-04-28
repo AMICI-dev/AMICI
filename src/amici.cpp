@@ -180,7 +180,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
     
-    np = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
+    nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
     
     /* plist */
     if (!prhs[4]) {
@@ -191,8 +191,8 @@ UserData *setupUserData(const mxArray *prhs[]) {
         plistdata = mxGetPr(prhs[4]);
     }
     
-    plist = new int[np]();
-    for (ip=0; ip<np; ip++) {
+    plist = new int[nplist]();
+    for (ip=0; ip<nplist; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
     
@@ -258,7 +258,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
             sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
             if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
                 /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != np) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
                 if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
                 b_sx0 = TRUE;
             } else {
@@ -278,11 +278,11 @@ UserData *setupUserData(const mxArray *prhs[]) {
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = new realtype[nx*np]();
+        tmp_dxdotdp = new realtype[nx*nplist]();
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = new realtype[np]();
+        stau_tmp = new realtype[nplist]();
     }
     
     w_tmp = new realtype[nw]();
@@ -368,39 +368,39 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
         initField2(y,nt,ny);
         initField2(sigmay,nt,ny);
         if (sensi_meth == AMI_SS) {
-            initField2(dydp,ny,np);
+            initField2(dydp,ny,nplist);
             initField2(dydx,ny,nx);
-            initField2(dxdotdp,nx,np);
+            initField2(dxdotdp,nx,nplist);
         }
     }
     if(sensi>0) {
-        initField2(sllh,np,1);
+        initField2(sllh,nplist,1);
         if (sensi_meth == AMI_FSA) {
-            initField3(sx,nt,nx,np);
+            initField3(sx,nt,nx,nplist);
             if(ny>0) {
-                initField3(sy,nt,ny,np);
-                initField3(ssigmay,nt,ny,np);
+                initField3(sy,nt,ny,nplist);
+                initField3(ssigmay,nt,ny,nplist);
             }
             if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nz,np);
+                initField3(srz,nmaxevent,nz,nplist);
                 if(sensi>1){
-                    initField4(s2rz,nmaxevent,nz,np,np);
+                    initField4(s2rz,nmaxevent,nz,nplist,nplist);
                 }
-                initField3(sz,nmaxevent,nz,np);
-                initField3(ssigmaz,nmaxevent,nz,np);
+                initField3(sz,nmaxevent,nz,nplist);
+                initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
         if (sensi_meth == AMI_ASA) {
             if(ny>0) {
-                initField3(ssigmay,nt,ny,np);
+                initField3(ssigmay,nt,ny,nplist);
             }
             if((nz>0) & (ne>0)){
-                initField3(ssigmaz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
         if(sensi>1) {
             if (ng>1) {
-                initField2(s2llh,np,(ng-1));
+                initField2(s2llh,nplist,(ng-1));
             }
         }
     }
@@ -571,9 +571,9 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         if(ne>0) h_tmp = new realtype[ne]();
         
         if(ne>0) deltax = new realtype[nx]();
-        if(ne>0) deltasx = new realtype[nx*np]();
+        if(ne>0) deltasx = new realtype[nx*nplist]();
         if(ne>0) deltaxB = new realtype[nx]();
-        if(ne>0) deltaqB = new realtype[ng*np]();
+        if(ne>0) deltaqB = new realtype[ng*nplist]();
         
         if(ny>0) sigma_y = new realtype[ny]();
         if(ne>0) sigma_z = new realtype[nz]();
@@ -740,19 +740,19 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     if ( sensi >= 1) {
         
         dydx = new realtype[ny*nx]();
-        dydp = new realtype[ny*np]();
-        dgdp = new realtype[ng*np*nytrue]();
+        dydp = new realtype[ny*nplist]();
+        dgdp = new realtype[ng*nplist*nytrue]();
         dgdx = new realtype[ng*nxtrue*nt]();
         dgdy = new realtype[nytrue*ng*ny]();
         if (ne > 0) {
-            dzdp = new realtype[nz*np]();
+            dzdp = new realtype[nz*nplist]();
             dzdx = new realtype[nz*nx]();
         }
-        drdp = new realtype[ng*np*nztrue*nmaxevent]();
+        drdp = new realtype[ng*nplist*nztrue*nmaxevent]();
         drdx = new realtype[ng*nx*nztrue*nmaxevent]();
         
-        dsigma_ydp = new realtype[ny*np]();
-        if(ne>0) dsigma_zdp = new realtype[nz*np]();
+        dsigma_ydp = new realtype[ny*nplist]();
+        if(ne>0) dsigma_zdp = new realtype[nz*nplist]();
         
         if (sensi_meth == AMI_FSA) {
             
@@ -760,8 +760,8 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                 
                 /* allocate some more temporary storage */
                 
-                NVsx = N_VCloneVectorArray_Serial(np, x);
-                sdx = N_VCloneVectorArray_Serial(np, x);
+                NVsx = N_VCloneVectorArray_Serial(nplist, x);
+                sdx = N_VCloneVectorArray_Serial(nplist, x);
                 if (NVsx == NULL) return(NULL);
                 if (sdx == NULL) return(NULL);
                 
@@ -772,7 +772,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                     if (*status != AMI_SUCCESS) return(NULL);
                 } else {
                     int ip;
-                    for (ip=0; ip<np; ip++) {
+                    for (ip=0; ip<nplist; ip++) {
                         sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                         int ix;
                         for (ix=0; ix<nx; ix++) {
@@ -814,7 +814,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
                 
-                llhS0 = new realtype[ng*np]();
+                llhS0 = new realtype[ng*nplist]();
             }
         }
         
@@ -856,8 +856,8 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     
     dxB = N_VNew_Serial(nx);
     
-    xQB = N_VNew_Serial(ng*np);
-    xQB_old = N_VNew_Serial(ng*np);
+    xQB = N_VNew_Serial(ng*nplist);
+    xQB_old = N_VNew_Serial(ng*nplist);
     
     /* write initial conditions */
     if (xB == NULL) return;
@@ -878,7 +878,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
-    memset(xQB_tmp,0,sizeof(realtype)*ng*np);
+    memset(xQB_tmp,0,sizeof(realtype)*ng*nplist);
     
     /* create backward problem */
     if (lmm>2||lmm<1) {
@@ -1052,7 +1052,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
     int iy;
     int ix;
     
-    for(ip=0; ip < np; ip++) {
+    for(ip=0; ip < nplist; ip++) {
         if(nx>0) {
             if(ts[it] > tstart) {
                 *status = AMIGetSens(ami_mem, &t, NVsx);
@@ -1072,11 +1072,11 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
                 *status = fdsigma_ydp(t,dsigma_ydp,udata);
                 if (*status != AMI_SUCCESS) return;
             } else {
-                for (ip=0; ip<np; ip++) {
+                for (ip=0; ip<nplist; ip++) {
                     dsigma_ydp[ip*ny+iy] = 0;
                 }
             }
-            for (ip=0; ip<np; ip++) {
+            for (ip=0; ip<nplist; ip++) {
                 ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
             }
         } else {
@@ -1122,11 +1122,11 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
                 *status = fdsigma_ydp(t,dsigma_ydp,udata);
                 if (*status != AMI_SUCCESS) return;
             } else {
-                for (ip=0; ip<np; ip++) {
+                for (ip=0; ip<nplist; ip++) {
                     dsigma_ydp[ip*ny+iy] = 0;
                 }
             }
-            for (ip=0; ip<np; ip++) {
+            for (ip=0; ip<nplist; ip++) {
                 ssigmaydata[it + nt*(ip*ny+iy)] = dsigma_ydp[ip*ny+iy];
             }
         }
@@ -1135,7 +1135,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
         
         if (sensi_meth == AMI_ASA) {
             for(ig=0; ig<ng; ig++) {
-                for(ip=0; ip < np; ip++) {
+                for(ip=0; ip < nplist; ip++) {
                     for(iy=0; iy < nytrue; iy++) {
                         if(ig==0) {
                             if (ny>0) {
@@ -1143,7 +1143,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
                             }
                         } else {
                             if (ny>0) {
-                                s2llhdata[(ig-1)*np + ip] -= dgdp[(ig*np + ip)*nytrue + iy];
+                                s2llhdata[(ig-1)*nplist + ip] -= dgdp[(ig*nplist + ip)*nytrue + iy];
                             }
                         }
                     }
@@ -1299,13 +1299,13 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, Retu
                     *status = fdsigma_zdp(t,ie,dsigma_zdp,udata);
                     if (*status != AMI_SUCCESS) return;
                 } else {
-                    for (ip=0; ip<np; ip++) {
+                    for (ip=0; ip<nplist; ip++) {
                         dsigma_zdp[iz+nz*ip] = 0;
                     }
                     sigma_z[iz] = zsigma[nroots[ie] + nmaxevent*iz];
                 }
                 sigmazdata[nroots[ie] + nmaxevent*iz] = sigma_z[iz];
-                for (ip=0; ip<np; ip++) {
+                for (ip=0; ip<nplist; ip++) {
                     ssigmazdata[nroots[ie] + nmaxevent*(iz+nz*ip)] = dsigma_zdp[iz+nz*ip];
                 }
                 
@@ -1788,8 +1788,8 @@ void handleEventB(int *status, int iroot, void *ami_mem, UserData *udata, TempDa
             }
             
             for (ig=0; ig<ng; ig++) {
-                for (ip=0; ip<np; ip++) {
-                    xQB_tmp[ig*np+ip] += deltaqB[ig*np+ip];
+                for (ip=0; ip<nplist; ip++) {
+                    xQB_tmp[ig*nplist+ip] += deltaqB[ig*nplist+ip];
                 }
             }
             
@@ -1899,7 +1899,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempDa
         if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
             
-            for (ip=0; ip<np; ip++) {
+            for (ip=0; ip<nplist; ip++) {
                 sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                 for (ix=0; ix<nx; ix++) {
                     sx_tmp[ix] += deltasx[ix + nx*ip];
@@ -2103,38 +2103,38 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
         initField2(y,nt,ny);
         initField2(sigmay,nt,ny);
         if (sensi_meth == AMI_SS) {
-            initField2(dydp,ny,np);
+            initField2(dydp,ny,nplist);
             initField2(dydx,ny,nx);
-            initField2(dxdotdp,nx,np);
+            initField2(dxdotdp,nx,nplist);
         }
     }
     if(sensi>0) {
-        initField2(sllh,np,1);
+        initField2(sllh,nplist,1);
         if (sensi_meth == AMI_FSA) {
-            initField3(sx,nt,nx,np);
+            initField3(sx,nt,nx,nplist);
             if(ny>0) {
-                initField3(sy,nt,ny,np);
-                initField3(ssigmay,nt,ny,np);
+                initField3(sy,nt,ny,nplist);
+                initField3(ssigmay,nt,ny,nplist);
             }
             if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nz,np);
+                initField3(srz,nmaxevent,nz,nplist);
                 if(sensi>1){
-                    initField4(s2rz,nmaxevent,nz,np,np);
+                    initField4(s2rz,nmaxevent,nz,nplist,nplist);
                 }
-                initField3(sz,nmaxevent,nz,np);
-                initField3(ssigmaz,nmaxevent,nz,np);
+                initField3(sz,nmaxevent,nz,nplist);
+                initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
         if (sensi_meth == AMI_ASA) {
             if(ny>0) {
-                initField3(ssigmay,nt,ny,np);
+                initField3(ssigmay,nt,ny,nplist);
             }
             if((nz>0) & (ne>0)){
-                initField3(ssigmaz,nmaxevent,nz,np);
+                initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
         if(sensi>1) {
-            initField2(s2llh,ng-1,np);
+            initField2(s2llh,ng-1,nplist);
         }
     }
 }
@@ -2315,7 +2315,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                     }
 
                     /* evaluate initial values */
-                    NVsx = N_VCloneVectorArray_Serial(np,x);
+                    NVsx = N_VCloneVectorArray_Serial(nplist,x);
                     if (NVsx == NULL) return *status;
                     
                     *status = fx0(x,udata);
@@ -2332,19 +2332,19 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         int ig;
                         for (ig=0; ig<ng; ig++) {
                             if (ig==0) {
-                                for (ip=0; ip<np; ip++) {
-                                    llhS0[ig*np + ip] = 0.0;
+                                for (ip=0; ip<nplist; ip++) {
+                                    llhS0[ig*nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(NVsx[ip]);
                                     for (ix = 0; ix < nxtrue; ix++) {
                                         llhS0[ip] = llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                                     }
                                 }
                             } else {
-                                for (ip=0; ip<np; ip++) {
-                                    llhS0[ig*np + ip] = 0.0;
+                                for (ip=0; ip<nplist; ip++) {
+                                    llhS0[ig*nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(NVsx[ip]);
                                     for (ix = 0; ix < nxtrue; ix++) {
-                                        llhS0[ig*np + ip] = llhS0[ig*np + ip] + xB_tmp[ig*nxtrue + ix] * sx_tmp[ix] + xB_tmp[ix] * sx_tmp[ig*nxtrue + ix];
+                                        llhS0[ig*nplist + ip] = llhS0[ig*nplist + ip] + xB_tmp[ig*nxtrue + ix] * sx_tmp[ix] + xB_tmp[ix] * sx_tmp[ig*nxtrue + ix];
                                     }
                                 }
                             }
@@ -2353,16 +2353,16 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         xQB_tmp = NV_DATA_S(xQB);
 
                         for(ig=0; ig<ng; ig++) {
-                            for(ip=0; ip < np; ip++) {
+                            for(ip=0; ip < nplist; ip++) {
                                 if (ig==0) {
                                     sllhdata[ip] -=  llhS0[ip] + xQB_tmp[ip];
                                     if (nz>0) {
                                         sllhdata[ip] -= drdp[ip];
                                     }
                                 } else {
-                                    s2llhdata[(ig-1)*np + ip] -= llhS0[ig*np + ip] + xQB_tmp[ig*np + ip];
+                                    s2llhdata[(ig-1)*nplist + ip] -= llhS0[ig*nplist + ip] + xQB_tmp[ig*nplist + ip];
                                     if (nz>0) {
-                                        s2llhdata[(ig-1)*np + ip] -= drdp[ig*np + ip];
+                                        s2llhdata[(ig-1)*nplist + ip] -= drdp[ig*nplist + ip];
                                     }
                                 }
                             }
@@ -2371,11 +2371,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                     } else {
                         int ig;
                         for(ig=0; ig<ng; ig++) {
-                            for(ip=0; ip < np; ip++) {
+                            for(ip=0; ip < nplist; ip++) {
                                 if (ig==0) {
                                     sllhdata[ip] = amiGetNaN();
                                 } else {
-                                    s2llhdata[(ig-1)*np + ip] = amiGetNaN();
+                                    s2llhdata[(ig-1)*nplist + ip] = amiGetNaN();
                                 }
                             }
                         }
@@ -2383,11 +2383,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                 } else {
                     int ig;
                     for(ig=0; ig<ng; ig++) {
-                        for(ip=0; ip < np; ip++) {
+                        for(ip=0; ip < nplist; ip++) {
                             if (ig==0) {
                                 sllhdata[ip] = amiGetNaN();
                             } else {
-                                s2llhdata[(ig-1)*np + ip] = amiGetNaN();
+                                s2llhdata[(ig-1)*nplist + ip] = amiGetNaN();
                             }
                         }
                     }
@@ -2493,16 +2493,16 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
                 if(dsigma_zdp) delete[] dsigma_zdp;
             }
             if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(NVsx,np);
+                N_VDestroyVectorArray_Serial(NVsx,nplist);
             }
             if (sensi_meth == AMI_ASA) {
                 if(NVsx) {
-                    N_VDestroyVectorArray_Serial(NVsx,np);
+                    N_VDestroyVectorArray_Serial(NVsx,nplist);
                 }
             }
             
             if (sensi_meth == AMI_FSA) {
-                N_VDestroyVectorArray_Serial(sdx, np);
+                N_VDestroyVectorArray_Serial(sdx, nplist);
             }
             if (sensi_meth == AMI_ASA) {
 
@@ -2607,11 +2607,11 @@ void processUserData(UserData *udata) {
     }
     if (sensi>0) {
         /* initialise temporary dxdotdp storage */
-        tmp_dxdotdp = new realtype[nx*np]();
+        tmp_dxdotdp = new realtype[nx*nplist]();
     }
     if (ne>0) {
         /* initialise temporary stau storage */
-        stau_tmp = new realtype[np]();
+        stau_tmp = new realtype[nplist]();
     }
 
 

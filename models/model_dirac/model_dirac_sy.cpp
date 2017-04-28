@@ -10,7 +10,7 @@ int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *sx_tmp;
 int ip;
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);
 switch (plist[ip]) {
   case 0: {

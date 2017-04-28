@@ -14,9 +14,9 @@ realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
 realtype *xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 int ip;
-memset(deltaqB,0,sizeof(realtype)*np*ng);
+memset(deltaqB,0,sizeof(realtype)*nplist*ng);
 status = w_model_dirac(t,x,NULL,user_data);
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
 }
 }
