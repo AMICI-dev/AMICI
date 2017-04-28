@@ -243,7 +243,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
     H5T_class_t type_class;
     size_t type_size;
     herr_t status;
-
+    *length = 0; // TODO: check why not set when reading scalar
     status = H5LTget_attribute_info(file_id, optionsObject, attributeName, length, &type_class, &type_size);
 
     if(status < 0) {
@@ -258,7 +258,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
     }
 
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %d: ", attributeName, *length);
+    printf("%s: %lld: ", attributeName, *length);
 #endif
 
     *destination = new double[*length]; // vs. type_size
