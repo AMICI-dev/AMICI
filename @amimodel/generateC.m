@@ -595,9 +595,9 @@ function generateCMakeFile(this)
     end
     fprintf(fid, '\n');
     
-    % sources
-    fprintf(fid, '\nset(SRC_LIST\n');
-    for f = {'main.cpp', '${MODEL_DIR}/wrapfunctions.cpp', ...
+    % library 
+    fprintf(fid, '\nset(SRC_LIST_LIB\n');
+    for f = {'${MODEL_DIR}/wrapfunctions.cpp', ...
             '${AMICI_DIR}/src/symbolic_functions.cpp', ...
             '${AMICI_DIR}/src/amici.cpp', ...
             '${AMICI_DIR}/src/udata.cpp', ...
@@ -616,10 +616,8 @@ function generateCMakeFile(this)
     end
     fprintf(fid, ')\n\n');
     
+    fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
 
-    fprintf(fid, 'add_executable(${PROJECT_NAME} ${SRC_LIST})\n\n');
-
-    %libraries
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
         '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
@@ -639,6 +637,14 @@ function generateCMakeFile(this)
         fprintf(fid, '"%s"\n', l{1});
     end
     fprintf(fid, ')\n');
+    
+    % executable
+    fprintf(fid, '\nset(SRC_LIST_EXE main.cpp)\n\n');
+
+    fprintf(fid, 'add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})\n\n');
+    
+    fprintf(fid, 'target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})\n\n');
+    
     fclose(fid);
 end
 
