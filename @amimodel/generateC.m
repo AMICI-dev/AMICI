@@ -363,6 +363,17 @@ fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);
 fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
 fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
 fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);
+switch(this.param)
+    case 'lin'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_NONE;\n']);
+    case 'log'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_LN;\n']);
+    case 'log10'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_LOG10;\n']);
+    otherwise
+        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_NONE;\n']);     
+end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
 fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);

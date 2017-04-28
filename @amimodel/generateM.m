@@ -153,7 +153,7 @@ fprintf(fid,'if(nargin<2)\n');
 fprintf(fid,'    error(''Not enough input arguments.'');\n');
 fprintf(fid,'else\n');
 fprintf(fid,'    tout=varargin{1};\n');
-fprintf(fid,'    phi=varargin{2};\n');
+fprintf(fid,'    theta=varargin{2};\n');
 fprintf(fid,'end\n');
 
 fprintf(fid,'if(nargin>=3)\n');
@@ -161,17 +161,6 @@ fprintf(fid,'    kappa=varargin{3};\n');
 fprintf(fid,'else\n');
 fprintf(fid,'    kappa=[];\n');
 fprintf(fid,'end\n');
-switch(this.param)
-    case 'log'
-        fprintf(fid,'theta = exp(phi(:));\n\n');
-    case 'log10'
-        fprintf(fid,'theta = 10.^(phi(:));\n\n');
-    case 'lin'
-        fprintf(fid,'theta = phi(:);\n\n');
-    otherwise
-        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using linear parametrisation (default)!')
-        fprintf(fid,'theta = phi(:);\n\n');
-end
 fprintf(fid,'\n');
 if(nk==0)
     fprintf(fid,'if(nargin==2)\n');
@@ -377,27 +366,7 @@ if(o2flag)
 else
     fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
 end
-fprintf(fid,'if(options_ami.sensi==1)\n');
-switch(this.param)
-    case 'log'
-        fprintf(fid,'    sol.sllh = sol.sllh.*theta(options_ami.sens_ind);\n');
-        fprintf(fid,'    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-        fprintf(fid,'    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-        fprintf(fid,'    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-        fprintf(fid,'    sol.srz = bsxfun(@times,sol.srz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-        fprintf(fid,'    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-        fprintf(fid,'    sol.ssigmaz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1]));\n');
-    case 'log10'
-        fprintf(fid,'    sol.sllh = sol.sllh.*theta(options_ami.sens_ind)*log(10);\n');
-        fprintf(fid,'    sol.sx = bsxfun(@times,sol.sx,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-        fprintf(fid,'    sol.sy = bsxfun(@times,sol.sy,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-        fprintf(fid,'    sol.sz = bsxfun(@times,sol.sz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-        fprintf(fid,'    sol.srz = bsxfun(@times,sol.srz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-        fprintf(fid,'    sol.ssigmay = bsxfun(@times,sol.ssigmay,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-        fprintf(fid,'    sol.ssigmayz = bsxfun(@times,sol.ssigmaz,permute(theta(options_ami.sens_ind),[3,2,1])*log(10));\n');
-    otherwise
-end
-fprintf(fid,'end\n');
+
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi == 2)\n');
     fprintf(fid,'        sol.sllh = sol.sllh.*chainRuleFactor;\n');
@@ -550,21 +519,10 @@ if(o2flag)
 end
 
 fprintf(fid,'if(options_ami.sensi_meth == 3)\n');
-switch(this.param)
-    case 'log'
-        fprintf(fid,'    sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1]));\n');
-        fprintf(fid,'    sol.dydp = bsxfun(@times,sol.dydp,permute(theta(options_ami.sens_ind),[2,1]));\n');
-    case 'log10'
-        fprintf(fid,'    sol.dxdotdp = bsxfun(@times,sol.dxdotdp,permute(theta(options_ami.sens_ind),[2,1])*log(10));\n');
-        fprintf(fid,'    sol.dydp = bsxfun(@times,sol.dydp,permute(theta(options_ami.sens_ind),[2,1])*log(10));\n');
-    otherwise
-end
-
 fprintf(fid,'    sol.sx = -sol.J\\sol.dxdotdp;\n');
 fprintf(fid,'    sol.sy = sol.dydx*sol.sx + sol.dydp;\n');
-
-
 fprintf(fid,'end\n');
+
 fprintf(fid,'if(nargout>1)\n');
 fprintf(fid,'    varargout{1} = sol.status;\n');
 fprintf(fid,'    varargout{2} = sol.t;\n');

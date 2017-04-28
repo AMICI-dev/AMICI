@@ -2615,8 +2615,6 @@ freturn:
 }
 #endif
 
-
-#ifdef AMICI_WITHOUT_MATLAB
 void unscaleParameters(UserData *udata) {
     switch(udata->am_pscale) {
     case AMI_SCALING_LOG10:
@@ -2649,39 +2647,32 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     }
 
     if(sensi > 0) {
-        if(rdata->am_sllhdata)
-            for(int ip = 0; ip < np; ++ip)
+        for(int ip = 0; ip < np; ++ip){
+            if(rdata->am_sllhdata)
                 sllhdata[ip] *= p[ip] * coefficient;
-
-        if(rdata->am_sxdata)
-            for(int ip = 0; ip < np; ++ip)
-                for(int ix = 0; ix < nx; ++ix)
-                    for(int it = 0; it < nt; ++it)
+        
+            for(int it = 0; it < nt; ++it){
+                if(rdata->am_sxdata)
+                    for(int ix = 0; ix < nx; ++ix)
                         sxdata[(ip*nx + ix)*nt + it] *= p[ip] * coefficient;
-
-        if(rdata->am_sydata)
-            for(int ip = 0; ip < np; ++ip)
-                for(int iy = 0; iy < ny; ++iy)
-                    for(int it = 0; it < nt; ++it)
+                
+                for(int iy = 0; iy < ny; ++iy){
+                    if(rdata->am_sydata)
                         sydata[(ip*ny + iy)*nt + it] *= p[ip] * coefficient;
-
-        if(rdata->am_szdata)
-            for(int ip = 0; ip < np; ++ip)
-                for(int iz = 0; iz < nz; ++iz)
-                    for(int ie = 0; ie < nmaxevent; ++ie)
-                        szdata[(ip*nz + iz)*nmaxevent + ie] *= p[ip] * coefficient;
-
-        if(rdata->am_ssigmaydata)
-            for(int ip = 0; ip < np; ++ip)
-                for(int iy = 0; iy < ny; ++iy)
-                    for(int it = 0; it < nt; ++it)
+                    if(rdata->am_ssigmaydata)
                         ssigmaydata[(ip*ny + iy)*nt + it] *= p[ip] * coefficient;
-
-        if(rdata->am_ssigmazdata)
-            for(int ip = 0; ip < np; ++ip)
-                for(int iz = 0; iz < nz; ++iz)
-                    for(int ie = 0; ie < nmaxevent; ++ie)
+                }
+            }
+            
+            for(int ie = 0; ie < nmaxevent; ++ie){
+                for(int iz = 0; iz < nz; ++iz){
+                    if(rdata->am_szdata)
+                        szdata[(ip*nz + iz)*nmaxevent + ie] *= p[ip] * coefficient;
+                    if(rdata->am_ssigmazdata)
                         ssigmazdata[(ip*nz + iz)*nmaxevent + ie] *= p[ip] * coefficient;
+                }
+            }
+        }
     }
 
     if(sensi_meth == AMI_SS) {
@@ -2709,8 +2700,6 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
         }
     }
 }
-
-#endif
 
 void processUserData(UserData *udata) {
     /**
