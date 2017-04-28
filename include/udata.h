@@ -60,7 +60,7 @@ typedef struct user_data {
     /** maximal number of events to track */
     int    am_nmaxevent;
 
-    /** Scaling of parameters am_np */
+    /** parametrization of parameters p */
     AMI_parameter_scaling am_pscale;
 
     /** parameter array */

@@ -14,8 +14,13 @@
 
 #define pi M_PI
 
+#ifdef __cplusplus
+#define EXTERNC extern "C"
+#else
+#define EXTERNC
+#endif
 
-                void init_modeldims(UserData *udata);
+EXTERNC         void init_modeldims(UserData *udata);
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
                 int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);
                 int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);
