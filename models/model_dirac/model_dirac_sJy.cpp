@@ -5,7 +5,7 @@
 #include <include/udata_accessors.h>
 #include "model_dirac_w.h"
 
-int sJy_model_dirac(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *sy, realtype *dydp, realtype *my, void *user_data) {
+int sJy_model_dirac(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
 int iy;
