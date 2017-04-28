@@ -14,7 +14,7 @@ compiler:
     - gcc
     
 before_script:
-    - sudo apt-get install libhdf5-serial-dev zlib1g-dev
+    - sudo apt-get install libhdf5-serial-dev zlib1g-dev libsz2
     
 install: true
 
