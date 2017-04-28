@@ -61,9 +61,15 @@ function [modelo2] = augmento2(this)
     this.getFun([],'dsigma_ydp');
     this.getFun([],'y');
     this.getFun([],'dydp');
+    tmp = arrayfun(@(x) sym(['y_' num2str(x)]),0:(augmodel.nytrue*(1+np)-1),'UniformOutput',false);
+    tmp = transpose([tmp{:}]);
+    aug_y_strsym =  reshape(tmp((augmodel.nytrue+1):end),[augmodel.nytrue,np]);% the update Jy must not contain any
+    % references to x (otherwise we have to deal with sx in sJy), thus
+    % we replace sy with the corresponding augmented y that we are about to
+    % create
     SJy = jacobian(this.sym.Jy,this.sym.p) ...
         + jacobian(this.sym.Jy,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
-        + jacobian(this.sym.Jy,this.fun.y.strsym)*Sy;
+        + jacobian(this.sym.Jy,this.fun.y.strsym)*aug_y_strsym;
     this.getFun([],'dsigma_zdp');
     
     this.getFun([],'dzdp');   

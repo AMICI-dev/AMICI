@@ -19,6 +19,11 @@ status = w_model_dirac(t,x,NULL,user_data);
 
               } break;
 
+              case 1: {
+  deltax[0] = 1.0;
+
+              } break;
+
               } 
 return(status);
 

@@ -30,7 +30,7 @@ disp(['Time elapsed with cvodes: ' num2str(toc) ])
 
 ode_system = @(t,x,p,k) [-p(1)*heaviside(t-p(4))*x(1);
     +p(2)*x(1)*exp(-0.1*t)-p(3)*x(2);
-    -1.5*x(3)];
+    -1*x(3)+heaviside(t-4)];
 % event_fn = @(t,x) [x(3) - x(2);
 %     x(3) - x(1)];
 % 'Events',event_fn

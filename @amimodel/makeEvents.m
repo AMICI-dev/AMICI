@@ -41,7 +41,7 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = sym(arg);
-            if(ismember(iocc,strfind(tmp_str,'heaviside') + 9))
+            if(ismember(idx_start(iocc),strfind(tmp_str,'dirac') + 5))
                 triggers{end+1} = -sym(arg); % for dirac we need both +to- and -to+ transitions
             end
         end
@@ -78,6 +78,7 @@ if(nevent>0)
     % initialise hflag
     hflags = zeros([nx,nevent]);
     
+    % heaviside
     event_dependency = zeros(nevent);
     for ievent = 1:nevent
         symchar = char(trigger{ievent});
@@ -132,8 +133,9 @@ if(nevent>0)
                 [cfp,t] = coeffs(symvariable,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
-                    if(~isempty(find(cellfun(@(x) double(x==-trigger{ievent}),trigger))))
-                        tmp_bolus{find(cellfun(@(x) double(x==-trigger{ievent}),trigger))} = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
+                    idx_mirror = find(cellfun(@(x) double(x==-trigger{ievent}),trigger));
+                    if(~isempty(idx_mirror))
+                        tmp_bolus{idx_mirror}(ix) = tmp_bolus{idx_mirror}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
                     end
                 end
                 % remove dirac
