@@ -1,10 +1,11 @@
+#include "ami_hdf5.h"
+
 #include <assert.h>
 #ifdef AMI_HDF5_H_DEBUG
 #include <execinfo.h>
 #endif
 #include <unistd.h>
 
-#include "ami_hdf5.h"
 #include "wrapfunctions.h"
 #include "include/symbolic_functions.h"
 
