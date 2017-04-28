@@ -10,7 +10,7 @@
                    nytrue = 1;
                    nz = 0;
                    nztrue = 0;
-                   ne = 1;
+                   ne = 2;
                    ng = 1;
                    nw = 0;
                    ndwdx = 0;
@@ -35,7 +35,7 @@
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeRootInit(cvode_mem, 1, root_model_dirac);
+                    return CVodeRootInit(cvode_mem, 2, root_model_dirac);
                 }
                 
                 int wrap_SetDenseJacFn(void *cvode_mem){
@@ -215,8 +215,8 @@
                     return dJzdp_model_dirac(t, ie, dJzdp, z, x, dzdp, mz, sigma_z, dsigma_zdp, user_data, temp_data);
                 }
                 
-                int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *sy, realtype *dydp, realtype *my, void *user_data){
-                    return sJy_model_dirac(t, it, sJy, s2Jy, dJydy, dJydp, sy, dydp, my, user_data);
+                int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data){
+                    return sJy_model_dirac(t, it, sJy, s2Jy, dJydy, dJydp, y, sigma_y, sy, dydp, my, user_data);
                 }
                 
                 int fsJz(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data){

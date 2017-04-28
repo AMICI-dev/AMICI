@@ -588,7 +588,10 @@ function [this,model] = getSyms(this,model)
                     % discontinuous we can ignore some of the terms!                
                     if(any(logical(model.fun.deltax.sym(:,ievent)~=0)))
                         % dxdp  = dx/dt*dt/dp + dx/dp
-                        dxdp = model.fun.xdot.sym*dtdp + sx;
+                        dxdp = sym(zeros(nx,np));
+                        for ix = 1:nx
+                            dxdp(ix,:) = model.fun.xdot.sym(ix)*dtdp + sx(ix,:);
+                        end
                         
                         this.sym(:,:,ievent) = ...
                             + permute(model.fun.ddeltaxdx.sym(:,ievent,:),[1 3 2])*dxdp ...
@@ -785,10 +788,10 @@ function [this,model] = getSyms(this,model)
             this.sym = sym(zeros(model.nytrue, model.np, model.ng));
             dJydy_tmp = sym(zeros(model.ng, model.ny));
             for iy = 1 : model.nytrue
-                dJydy_tmp(:,:) = model.fun.dJydy.strsym(iy,:,:);
+                dJydy_tmp = permute(model.fun.dJydy.strsym(iy,:,:),[2,3,1]);
                 this.sym(iy,:,:) = transpose(dJydy_tmp*(model.fun.sy.strsym-model.fun.dydp.strsym));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
+                % dydp part needs to be substracted as it is already contained in dJydp
+                % we only need to account for sensitivities here
             end
             this.sym = this.sym + model.fun.dJydp.strsym;
         case 'Jz'
