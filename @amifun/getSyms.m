@@ -588,7 +588,10 @@ function [this,model] = getSyms(this,model)
                     % discontinuous we can ignore some of the terms!                
                     if(any(logical(model.fun.deltax.sym(:,ievent)~=0)))
                         % dxdp  = dx/dt*dt/dp + dx/dp
-                        dxdp = model.fun.xdot.sym*dtdp + sx;
+                        dxdp = sym(zeros(nx,np));
+                        for ix = 1:nx
+                            dxdp(ix,:) = model.fun.xdot.sym(ix)*dtdp + sx(ix,:);
+                        end
                         
                         this.sym(:,:,ievent) = ...
                             + permute(model.fun.ddeltaxdx.sym(:,ievent,:),[1 3 2])*dxdp ...

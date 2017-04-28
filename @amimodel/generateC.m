@@ -568,19 +568,37 @@ function generateCMakeFile(this)
     fid = fopen(CMakeFileName,'w');
     fprintf(fid, 'project(%s)\n', this.modelname);
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
-    fprintf(fid, 'set(cmake_build_type Debug)\n\n');
+    fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
     fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
+    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")\n');
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")\n\n');
     fprintf(fid, 'find_package(HDF5 COMPONENTS C HL REQUIRED)\n');
 
-    % sources
-    fprintf(fid, '\nset(SRC_LIST\n');
-    for f = {'main.cpp', 'wrapfunctions.cpp', ...
+    %includes
+    includeDirs = {'${AMICI_DIR}', ...
+        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
+        '${MODEL_DIR}',  ...
+        '${HDF5_INCLUDE_DIRS}',  ...
+        '${AMICI_DIR}/sundials/include',  ...
+        '${SUITESPARSE_DIR}/KLU/Include', ...
+        '${SUITESPARSE_DIR}/AMD/Include', ...
+        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
+        '${SUITESPARSE_DIR}/COLAMD/Include', ...
+        '${SUITESPARSE_DIR}/BTF/Include', ...
+    };
+    for d = includeDirs
+        fprintf(fid, 'include_directories("%s")\n', d{1});
+    end
+    fprintf(fid, '\n');
+    
+    % library 
+    fprintf(fid, '\nset(SRC_LIST_LIB\n');
+    for f = {'${MODEL_DIR}/wrapfunctions.cpp', ...
             '${AMICI_DIR}/src/symbolic_functions.cpp', ...
             '${AMICI_DIR}/src/amici.cpp', ...
             '${AMICI_DIR}/src/udata.cpp', ...
@@ -594,30 +612,13 @@ function generateCMakeFile(this)
     for j=1:length(this.funs)
         %if(this.cppfun(1).(this.funs{j}))
              funcName = this.funs{j};
-             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
+             fprintf(fid, '${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName);
        % end
     end
     fprintf(fid, ')\n\n');
     
-    %includes
-    includeDirs = {'${AMICI_DIR}', ...
-        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
-        '${HDF5_INCLUDE_DIRS}',  ...
-        '${AMICI_DIR}/sundials/include',  ...
-        '${SUITESPARSE_DIR}/KLU/Include', ...
-        '${SUITESPARSE_DIR}/AMD/Include', ...
-        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
-        '${SUITESPARSE_DIR}/COLAMD/Include', ...
-        '${SUITESPARSE_DIR}/BTF/Include', ...
-    };
-    for d = includeDirs
-        fprintf(fid, 'include_directories("%s")\n', d{1});
-    end
-    
-    fprintf(fid, '\n');
-    fprintf(fid, 'add_executable(${PROJECT_NAME} ${SRC_LIST})\n\n');
+    fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
 
-    %libraries
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
         '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
@@ -637,6 +638,14 @@ function generateCMakeFile(this)
         fprintf(fid, '"%s"\n', l{1});
     end
     fprintf(fid, ')\n');
+    
+    % executable
+    fprintf(fid, '\nset(SRC_LIST_EXE main.cpp)\n\n');
+
+    fprintf(fid, 'add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})\n\n');
+    
+    fprintf(fid, 'target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})\n\n');
+    
     fclose(fid);
 end
 
