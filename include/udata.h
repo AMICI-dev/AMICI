@@ -18,11 +18,13 @@
 typedef struct user_data {
     /** positivity flag */
     double *am_qpositivex;
-    
-    /** parameter reordering */
-    int    *am_plist;
-    /** number of parameters */
+
+    /** total number of model parameters */
     int    am_np;
+    /** parameter selection and reordering */
+    int    *am_plist;
+    /** number of parameters in am_plist */
+    int    am_nplist;
     /** number of fixed parameters */
     int    am_nk;
     /** number of observables */

@@ -95,7 +95,7 @@ for ifun = this.funs
                     fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                    fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                     fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                     fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
                     fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
@@ -111,7 +111,7 @@ for ifun = this.funs
                 end
             elseif( strcmp(ifun{1},'qBdot') )
                 fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 fprintf(fid,'switch (plist[ip]) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
@@ -120,7 +120,7 @@ for ifun = this.funs
                 if( strcmp(ifun{1},'dxdotdp'))
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 if(ismember('*sx',this.fun.(ifun{1}).nvecs))
                     fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
@@ -143,7 +143,7 @@ for ifun = this.funs
                 this.fun.(ifun{1}).writeCcode(this,fid);
             end
             if(strcmp(ifun{1},'dxdotdp'))
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                 fprintf(fid,['       if(amiIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                 fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
@@ -225,7 +225,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<np*ng; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist*ng; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
@@ -347,6 +347,7 @@ fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(UserData *udata){\n');
+fprintf(fid,['                   np = ' num2str(this.np) ';\n']);
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   nk = ' num2str(this.nk) ';\n']);
@@ -383,7 +384,7 @@ fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
     fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-    fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
+    fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, nplist, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
 else
     fprintf(fid,'                    return(-1);\n');
 end

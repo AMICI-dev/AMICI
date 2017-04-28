@@ -1,6 +1,8 @@
 #define qpositivex udata->am_qpositivex
 
+#define npmodel udata->am_npmodel
 #define plist udata->am_plist
+#define nplist udata->am_nplist
 #define np udata->am_np
 #define nk udata->am_nk
 #define ny udata->am_ny

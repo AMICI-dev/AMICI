@@ -22,7 +22,7 @@ int status = 0;
 UserData *udata = (UserData*) user_data;
 TempData *tdata = (TempData*) temp_data;
 int ip;
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
 }
 }

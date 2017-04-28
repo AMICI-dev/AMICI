@@ -49,6 +49,8 @@ function HTable = loadOldHashes(this)
     DHTable.Jz = '';
     
     DHTable.generateC = '';
+    DHTable.makeSyms = '';
+    DHTable.makeEvents = '';
     DHTable.gccode = '';
     DHTable.getArgs = '';
     DHTable.getCVar = '';
@@ -60,6 +62,7 @@ function HTable = loadOldHashes(this)
     DHTable.writeCcode_sensi = '';
     DHTable.udata = '';
     DHTable.tdata = '';
+
     
     HTable = am_setdefault(HTable,DHTable);
 end

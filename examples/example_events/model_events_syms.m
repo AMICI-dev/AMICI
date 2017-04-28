@@ -51,7 +51,7 @@ model.sym.xdot = sym(zeros(size(model.sym.x)));
 model.sym.xdot(1) = -p1*heaviside(t-p4)*x1;
 % inhomogeneous
 model.sym.xdot(2) = +p2*x1*exp(-0.1*t)-p3*x2 ;
-model.sym.xdot(3) = -1*x3;
+model.sym.xdot(3) = -1*x3+heaviside(t-4);
 
 %%
 % INITIAL CONDITIONS
