@@ -1,5 +1,7 @@
 #!/bin/bash
-
+AMICI_PATH="`dirname \"$0\"`"
+AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+ 
 cd ./SuiteSparse/SuiteSparse_config
 
 make library
@@ -47,6 +49,15 @@ make install
 
 cd ../../
 
-cmake CMakeLists.txt
+# build dirac model
+mkdir ${AMICI_PATH}/models/model_dirac/build
+cd ${AMICI_PATH}/models/model_dirac/build
+cmake ..
 make
-#cmake -f ./../models/model_dirac/CMakeLists.txt
+
+cd ${AMICI_PATH}/tests/dirac/
+mkdir build
+cd build
+cmake ..
+make
+./model_dirac_test
