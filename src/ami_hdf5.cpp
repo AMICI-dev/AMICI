@@ -287,7 +287,7 @@ void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject
         AMI_HDF5_getDoubleArrayAttribute(file_id, optionsObject, attributeName, destination, m);
     } else {
 #ifdef AMI_HDF5_H_DEBUG
-        printf("%s: %d x %d: ", attributeName, dims[0], dims[1]);
+        printf("%s: %lld x %lld: ", attributeName, dims[0], dims[1]);
 #endif
         *m = dims[0];
         *n = dims[1];
@@ -313,7 +313,7 @@ void AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id, const char* optionsObject
     H5LTget_attribute_info(file_id, optionsObject, attributeName, dims, &type_class, &type_size);
 
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %d x %d x %d: ", attributeName, dims[0], dims[1], dims[2]);
+    printf("%s: %lld x %lld x %lld: ", attributeName, dims[0], dims[1], dims[2]);
 #endif
     *m = dims[0];
     *n = dims[1];
@@ -336,7 +336,7 @@ void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, con
     H5LTget_attribute_info(file_id, optionsObject, attributeName, length, &type_class, &type_size);
 
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %d: ", attributeName, *length);
+    printf("%s: %lld: ", attributeName, *length);
 #endif
 
     *destination = new int[*length];
