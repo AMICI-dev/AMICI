@@ -7,7 +7,7 @@
 #include "src/ami_hdf5.h"
 
 #define HDFFILE "../expectedResults.h5"
-
+#define TEST_EPSILON 1e-12
 TEST_GROUP(group1)
 {
     void setup() {
@@ -79,7 +79,7 @@ TEST(group1, testCreateAndFreeReturnData) {
 void checkEqualArray(const double *expected, const double *actual, int length) {
     for(int i = 0; i < length; ++i) {
         // std::cout<<i<<"/"<<length<<" "<<expected[i]<<" "<<actual[i]<<std::endl;
-        DOUBLES_EQUAL(expected[i], actual[i], 1e-10);
+        DOUBLES_EQUAL(expected[i], actual[i], TEST_EPSILON);
     }
 }
 
@@ -105,6 +105,27 @@ void verifyReturnData(const char* hdfGroup, const ReturnData *rdata, const UserD
     checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt);
     delete[] expected;
 
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "numsteps", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt);
+    delete[] expected;
+
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "order", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_orderdata, udata->am_nt);
+    delete[] expected;
+
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "y", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_sigmaydata, udata->am_nt);
+    delete[] expected;
+
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "sigmay", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_ydata, udata->am_nt);
+    delete[] expected;
+
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "xdot", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_xdotdata, udata->am_nx);
+    delete[] expected;
+
+    H5Fclose(file_id);
 }
 
 TEST(group1, testSimulation) {
