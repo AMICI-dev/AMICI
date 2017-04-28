@@ -12,7 +12,7 @@ set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
 
-set(CPPUTEST_DIR "/home/dweindl/src/cpputest/")
+set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/")
 set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include")
 set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/build/src/CppUTest/libCppUTest.a" "${CPPUTEST_DIR}/build/src/CppUTestExt/libCppUTestExt.a")
 
