@@ -96,7 +96,7 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a"
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz -lsz"
+"-lpthread -ldl -lz"
 "-lm"
 )
 
