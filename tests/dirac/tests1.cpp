@@ -83,7 +83,7 @@ void checkEqualArray(const double *expected, const double *actual, int length) {
     }
 }
 
-void verifyReturnData(const char* hdfGroup, const ReturnData *rdata, const UserData*udata) {
+void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata) {
     CHECK_TRUE(isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata));
 
     // compare to saved data in hdf file
@@ -93,35 +93,35 @@ void verifyReturnData(const char* hdfGroup, const ReturnData *rdata, const UserD
 
     double *expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "x", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nx);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "J", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "J", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_Jdata, udata->am_nx * udata->am_nx);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "numrhsevals", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "numsteps", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "order", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_orderdata, udata->am_nt);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "y", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_sigmaydata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "sigmay", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_ydata, udata->am_nt);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, "/results", "xdot", &expected, &m, &n);
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmay", &expected, &m, &n);
+    checkEqualArray(expected, rdata->am_sigmaydata, udata->am_nt);
+    delete[] expected;
+
+    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "xdot", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_xdotdata, udata->am_nx);
     delete[] expected;
 
@@ -130,7 +130,7 @@ void verifyReturnData(const char* hdfGroup, const ReturnData *rdata, const UserD
 
 TEST(group1, testSimulation) {
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options");
     ExpData *edata = getTestExpData();
 
     int status;
@@ -138,7 +138,7 @@ TEST(group1, testSimulation) {
     CHECK_EQUAL(0, status);
 
     // TODO proper paths /testDirac1/...
-    verifyReturnData("/", rdata, udata);
+    verifyReturnData("/model_dirac/nosensi/results", rdata, udata);
 
     freeReturnData(rdata);
     freeExpData(edata);
