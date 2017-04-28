@@ -11,7 +11,7 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 int ip;
 status = w_model_dirac(t,x,NULL,user_data);
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
 }
 }

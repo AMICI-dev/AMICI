@@ -95,7 +95,7 @@ for ifun = this.funs
                     fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                    fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                     fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                     fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
                     fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
@@ -111,7 +111,7 @@ for ifun = this.funs
                 end
             elseif( strcmp(ifun{1},'qBdot') )
                 fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 fprintf(fid,'switch (plist[ip]) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
@@ -120,7 +120,7 @@ for ifun = this.funs
                 if( strcmp(ifun{1},'dxdotdp'))
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 if(ismember('*sx',this.fun.(ifun{1}).nvecs))
                     fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
                 end
@@ -143,7 +143,7 @@ for ifun = this.funs
                 this.fun.(ifun{1}).writeCcode(this,fid);
             end
             if(strcmp(ifun{1},'dxdotdp'))
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                 fprintf(fid,['       if(amiIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
                 fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
@@ -225,7 +225,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<np*ng; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<nplist*ng; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
@@ -347,6 +347,7 @@ fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/udata_accessors.h>\n');
 fprintf(fid,'                \n');
 fprintf(fid,'                void init_modeldims(UserData *udata){\n');
+fprintf(fid,['                   np = ' num2str(this.np) ';\n']);
 fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
 fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
 fprintf(fid,['                   nk = ' num2str(this.nk) ';\n']);
@@ -383,7 +384,7 @@ fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
     fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-    fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
+    fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, nplist, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
 else
     fprintf(fid,'                    return(-1);\n');
 end
@@ -568,19 +569,37 @@ function generateCMakeFile(this)
     fid = fopen(CMakeFileName,'w');
     fprintf(fid, 'project(%s)\n', this.modelname);
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
-    fprintf(fid, 'set(cmake_build_type Debug)\n\n');
+    fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
     fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
+    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")\n');
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")\n\n');
     fprintf(fid, 'find_package(HDF5 COMPONENTS C HL REQUIRED)\n');
 
-    % sources
-    fprintf(fid, '\nset(SRC_LIST\n');
-    for f = {'main.cpp', 'wrapfunctions.cpp', ...
+    %includes
+    includeDirs = {'${AMICI_DIR}', ...
+        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
+        '${MODEL_DIR}',  ...
+        '${HDF5_INCLUDE_DIRS}',  ...
+        '${AMICI_DIR}/sundials/include',  ...
+        '${SUITESPARSE_DIR}/KLU/Include', ...
+        '${SUITESPARSE_DIR}/AMD/Include', ...
+        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
+        '${SUITESPARSE_DIR}/COLAMD/Include', ...
+        '${SUITESPARSE_DIR}/BTF/Include', ...
+    };
+    for d = includeDirs
+        fprintf(fid, 'include_directories("%s")\n', d{1});
+    end
+    fprintf(fid, '\n');
+    
+    % library 
+    fprintf(fid, '\nset(SRC_LIST_LIB\n');
+    for f = {'${MODEL_DIR}/wrapfunctions.cpp', ...
             '${AMICI_DIR}/src/symbolic_functions.cpp', ...
             '${AMICI_DIR}/src/amici.cpp', ...
             '${AMICI_DIR}/src/udata.cpp', ...
@@ -594,30 +613,13 @@ function generateCMakeFile(this)
     for j=1:length(this.funs)
         %if(this.cppfun(1).(this.funs{j}))
              funcName = this.funs{j};
-             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
+             fprintf(fid, '${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName);
        % end
     end
     fprintf(fid, ')\n\n');
     
-    %includes
-    includeDirs = {'${AMICI_DIR}', ...
-        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
-        '${HDF5_INCLUDE_DIRS}',  ...
-        '${AMICI_DIR}/sundials/include',  ...
-        '${SUITESPARSE_DIR}/KLU/Include', ...
-        '${SUITESPARSE_DIR}/AMD/Include', ...
-        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
-        '${SUITESPARSE_DIR}/COLAMD/Include', ...
-        '${SUITESPARSE_DIR}/BTF/Include', ...
-    };
-    for d = includeDirs
-        fprintf(fid, 'include_directories("%s")\n', d{1});
-    end
-    
-    fprintf(fid, '\n');
-    fprintf(fid, 'add_executable(${PROJECT_NAME} ${SRC_LIST})\n\n');
+    fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
 
-    %libraries
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
         '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
@@ -637,6 +639,14 @@ function generateCMakeFile(this)
         fprintf(fid, '"%s"\n', l{1});
     end
     fprintf(fid, ')\n');
+    
+    % executable
+    fprintf(fid, '\nset(SRC_LIST_EXE main.cpp)\n\n');
+
+    fprintf(fid, 'add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})\n\n');
+    
+    fprintf(fid, 'target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})\n\n');
+    
     fclose(fid);
 end
 

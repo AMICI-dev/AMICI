@@ -3,6 +3,7 @@
 #include <include/udata_accessors.h>
                 
                 void init_modeldims(UserData *udata){
+                   nplist = 4;
                    nx = 2;
                    nxtrue = 2;
                    nk = 0;
@@ -30,7 +31,7 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, np, sensi_meth, sxdot_model_dirac, sx);
+                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_dirac, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){

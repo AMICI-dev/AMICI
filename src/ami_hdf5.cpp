@@ -71,8 +71,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     for(int i = 0; i < ne; ++i)
         z2event[i] = i;
 
-    idlist = new realtype[np]();
-    for(int i = 0; i < np; ++i)
+    idlist = new realtype[nplist]();
+    for(int i = 0; i < nplist; ++i)
         idlist[i] = 0;
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
@@ -182,7 +182,6 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
 
     if(ssigmaydata)
         AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, nt, ny, np);
-
 
     H5Fclose(file_id);
 

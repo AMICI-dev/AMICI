@@ -13,28 +13,28 @@ realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
 realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
 int ip;
-memset(qBdot_tmp,0,sizeof(realtype)*np*ng);
+memset(qBdot_tmp,0,sizeof(realtype)*nplist*ng);
 status = dwdp_model_dirac(t,x,NULL,user_data);
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
   case 0: {
-  qBdot_tmp[ip+np*0] = xB_tmp[0]*x_tmp[0];
+  qBdot_tmp[ip+nplist*0] = xB_tmp[0]*x_tmp[0];
 
   } break;
 
   case 2: {
-  qBdot_tmp[ip+np*0] = -xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip+nplist*0] = -xB_tmp[1]*x_tmp[0];
 
   } break;
 
   case 3: {
-  qBdot_tmp[ip+np*0] = xB_tmp[1]*x_tmp[1];
+  qBdot_tmp[ip+nplist*0] = xB_tmp[1]*x_tmp[1];
 
   } break;
 
 }
 }
-for(ip = 0; ip<np*ng; ip++) {
+for(ip = 0; ip<nplist*ng; ip++) {
    if(amiIsNaN(qBdot_tmp[ip])) {
        qBdot_tmp[ip] = 0;       if(!udata->am_nan_qBdot) {
            warnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");

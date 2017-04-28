@@ -12,9 +12,9 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 int ip;
 int ix;
-memset(dxdotdp,0,sizeof(realtype)*2*np);
+memset(dxdotdp,0,sizeof(realtype)*2*nplist);
 status = dwdp_model_dirac(t,x,NULL,user_data);
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
 switch (plist[ip]) {
   case 0: {
   dxdotdp[(0+ip*2)] = -x_tmp[0];
@@ -33,7 +33,7 @@ switch (plist[ip]) {
 
 }
 }
-for(ip = 0; ip<np; ip++) {
+for(ip = 0; ip<nplist; ip++) {
    for(ix = 0; ix<2; ix++) {
        if(amiIsNaN(dxdotdp[ix+ip*2])) {
            dxdotdp[ix+ip*2] = 0;
