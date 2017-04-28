@@ -572,6 +572,7 @@ function generateCMakeFile(this)
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
+    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")\n');
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")\n\n');
@@ -593,7 +594,7 @@ function generateCMakeFile(this)
     for j=1:length(this.funs)
         %if(this.cppfun(1).(this.funs{j}))
              funcName = this.funs{j};
-             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
+             fprintf(fid, '${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName);
        % end
     end
     fprintf(fid, ')\n\n');
@@ -601,6 +602,7 @@ function generateCMakeFile(this)
     %includes
     includeDirs = {'${AMICI_DIR}', ...
         '${CMAKE_CURRENT_SOURCE_DIR}',  ...
+        '${MODEL_DIR}',  ...
         '${HDF5_INCLUDE_DIRS}',  ...
         '${AMICI_DIR}/sundials/include',  ...
         '${SUITESPARSE_DIR}/KLU/Include', ...
