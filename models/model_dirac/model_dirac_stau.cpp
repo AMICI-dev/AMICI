@@ -23,6 +23,11 @@ switch (plist[ip]) {
 
         } break;
 
+        case 1: {
+  stau[ip] = 1.0;
+
+        } break;
+
     } 
 
   } break;
