@@ -302,6 +302,33 @@ void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject
     }
 }
 
+void AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *m, hsize_t *n, hsize_t *o) {
+    int rank;
+    H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    assert(rank == 3);
+
+    hsize_t dims[3];
+    H5T_class_t type_class;
+    size_t type_size;
+    H5LTget_attribute_info(file_id, optionsObject, attributeName, dims, &type_class, &type_size);
+
+#ifdef AMI_HDF5_H_DEBUG
+    printf("%s: %d x %d x %d: ", attributeName, dims[0], dims[1], dims[2]);
+#endif
+    *m = dims[0];
+    *n = dims[1];
+    *o = dims[2];
+
+    *destination = new double[(*m) * (*n) * (*o)];
+    H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
+
+#ifdef AMI_HDF5_H_DEBUG
+    printfArray(*destination, (*m) * (*n) * (*o), "%e ");
+    printf("\n");
+#endif
+}
+
+
 void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length) {
     H5T_class_t type_class;
     size_t type_size;
