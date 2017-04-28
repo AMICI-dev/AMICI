@@ -17,6 +17,7 @@ function [model] = model_jakstat_adjoint_hvp_syms()
     model.sym.p = [p1,p2,p3,p4,init_STAT,sp1,sp2,sp3,sp4,sp5,offset_tSTAT,offset_pSTAT,scale_tSTAT,scale_pSTAT,sigma_pSTAT,sigma_tSTAT,sigma_pEpoR];
     
     model.param = 'log10';
+    model.debug = true;
     
     model.sym.k = [Omega_cyt,Omega_nuc];
     

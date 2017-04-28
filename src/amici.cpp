@@ -1081,13 +1081,13 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
             }
         } else {
             for (ip=0; ip<np; ip++) {
-                ssigmaydata[it + nt*(ip*ny+iy)] = amiGetNaN();
+                ssigmaydata[it + nt*(ip*ny+iy)] = 0;
             }
         }
     }
     fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
     if(b_expdata) {
-        fsJy(ts[it],it,sllhdata,s2llhdata,dgdy,dgdp,sydata,dydp,my,udata);
+        fsJy(ts[it],it,sllhdata,s2llhdata,dgdy,dgdp,ydata,sigma_y,sydata,dydp,my,udata);
     }
 }
 
@@ -1193,6 +1193,12 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
             sigmaydata[iy*nt+it] = sigma_y[iy];
         }
         fJy(t,it,g,ydata,x,my,sigma_y,udata);
+    } else {
+        *status =fsigma_y(t,sigma_y,udata);
+        if (*status != AMI_SUCCESS) return;
+        for (iy=0; iy<nytrue; iy++) {
+            sigmaydata[iy*nt+it] = sigma_y[iy];
+        }
     }
     if (sensi >= 1) {
         prepDataSensis(status, it, ami_mem, udata, rdata, edata, tdata);
