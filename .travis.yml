@@ -14,6 +14,7 @@ compiler:
     - gcc
     
 before_script:
+    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
     - sudo apt-get install libhdf5-serial-dev zlib1g-dev libsz2
     
 install: true
