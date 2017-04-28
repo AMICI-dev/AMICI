@@ -1,36 +1,35 @@
 #!/bin/bash
 AMICI_PATH="`dirname \"$0\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
- 
-cd ./SuiteSparse/SuiteSparse_config
 
+# Build dependencies
+
+# SuiteSpare
+SUITESPARSE_ROOT="${AMICI_PATH}/SuiteSparse"
+cd ${SUITESPARSE_ROOT}/SuiteSparse_config
 make library
 
-cd ./../AMD
-
+cd ${SUITESPARSE_ROOT}/AMD
 make library
 
-cd ./../BTF
-
+cd ${SUITESPARSE_ROOT}/BTF
 make library
 
-cd ./../CAMD
-
+cd ${SUITESPARSE_ROOT}/CAMD
 make library
 
-cd ./../COLAMD
-
+cd ${SUITESPARSE_ROOT}/COLAMD
 make library
 
-cd ./../KLU
-
+cd ${SUITESPARSE_ROOT}/KLU
 make library
 
+# Sundials
+SUNDIALS_BUILD_PATH="${AMICI_PATH}/sundials/build/"
+mkdir -p ${SUNDIALS_BUILD_PATH}
+cd ${SUNDIALS_BUILD_PATH}
 
-mkdir ./../../sundials/build/
-cd ./../../sundials/build/
-
-cmake -DCMAKE_INSTALL_PREFIX="./../../build/sundials" \
+cmake -DCMAKE_INSTALL_PREFIX="${AMICI_PATH}/build/sundials" \
 -DBUILD_ARKODE=OFF \
 -DBUILD_CVODE=OFF \
 -DBUILD_IDA=OFF \
@@ -40,8 +39,8 @@ cmake -DCMAKE_INSTALL_PREFIX="./../../build/sundials" \
 -DEXAMPLES_ENABLE=OFF \
 -DEXAMPLES_INSTALL=OFF \
 -DKLU_ENABLE=ON \
--DKLU_LIBRARY_DIR="$./../../SuiteSparse/lib" \
--DKLU_INCLUDE_DIR="$./../../SuiteSparse/include" \
+-DKLU_LIBRARY_DIR="${SUITESPARSE_ROOT}/lib" \
+-DKLU_INCLUDE_DIR="${SUITESPARSE_ROOT}/include" \
 .. 
 
 make 
@@ -49,15 +48,20 @@ make install
 
 cd ../../
 
-# build dirac model
-mkdir ${AMICI_PATH}/models/model_dirac/build
+# done building dependencies
+
+# Prepare tests
+# Build dirac model
+mkdir -p ${AMICI_PATH}/models/model_dirac/build
 cd ${AMICI_PATH}/models/model_dirac/build
 cmake ..
 make
 
+# Build test suite
 cd ${AMICI_PATH}/tests/dirac/
-mkdir build
+mkdir -p build
 cd build
 cmake ..
 make
+# Run tests
 ./model_dirac_test
