@@ -567,7 +567,7 @@ function generateCMakeFile(this)
     fid = fopen(CMakeFileName,'w');
     fprintf(fid, 'project(%s)\n', this.modelname);
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
-    fprintf(fid, 'set(cmake_build_type Debug)\n\n');
+    fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
     fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
