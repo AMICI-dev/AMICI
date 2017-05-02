@@ -2725,22 +2725,22 @@ if(rdata->am_s ## QUANT ## data) \
             }
         }
     
-#define s2ChainRule(QUANT,IND1,N1,IND2,N2) \
+#define s2ChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
         for(int jp = 0; jp < nplist; ++jp) \
-            for(int IND1 = 0; IND1 < N1; ++IND1) \
+            for(int IND1 = 0; IND1 < N1T; ++IND1) \
                 for(int IND2 = 0; IND2 < N2; ++IND2){ \
-                    s ## QUANT ## data[(((ip + 1)*np + jp)*N1 + IND1)*N2 + IND2] *= pcoefficient[ip]*pcoefficient[jp]; \
+                    s ## QUANT ## data[(ip*N1 + (jp+1)*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*pcoefficient[jp]; \
                     if(ip==jp) \
-                        s  ## QUANT ## data[(((ip + 1)*np + jp)*N1 + IND1)*N2 + IND2] += s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]*coefficient;}
+                        s  ## QUANT ## data[(ip*N1 + (jp+1)*N1T + IND1)*N2 + IND2] += s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]*coefficient;}
         
-        s2ChainRule(x,ix,nxtrue,it,nt)
-        s2ChainRule(y,iy,nytrue,it,nt)
-        s2ChainRule(sigmay,iy,nytrue,it,nt)
-        s2ChainRule(z,iz,nztrue,ie,nmaxevent)
-        s2ChainRule(sigmaz,iz,nztrue,ie,nmaxevent)
-        s2ChainRule(rz,iz,nztrue,ie,nmaxevent)
+        s2ChainRule(x,ix,nxtrue,nx,it,nt)
+        s2ChainRule(y,iy,nytrue,ny,it,nt)
+        s2ChainRule(sigmay,iy,nytrue,ny,it,nt)
+        s2ChainRule(z,iz,nztrue,nz,ie,nmaxevent)
+        s2ChainRule(sigmaz,iz,nztrue,nz,ie,nmaxevent)
+        s2ChainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
     
     if(sensi == 3) { //directional
@@ -2753,20 +2753,20 @@ if(rdata->am_s ## QUANT ## data) \
             }
         }
         
-#define s2vecChainRule(QUANT,IND1,N1,IND2,N2) \
+#define s2vecChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
-            for(int IND1 = 0; IND1 < N1; ++IND1) \
+            for(int IND1 = N1T; IND1 < N1; ++IND1) \
                 for(int IND2 = 0; IND2 < N2; ++IND2){ \
                     s ## QUANT ## data[((ip + 1)*N1 + IND1)*N2 + IND2] *= pcoefficient[ip]; \
                     s ## QUANT ## data[((ip + 1)*N1 + IND1)*N2 + IND2] += udata->am_k[nk-nplist+ip]*s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]/p[plist[ip]];}
         
-        s2vecChainRule(x,ix,nxtrue,it,nt)
-        s2vecChainRule(y,iy,nytrue,it,nt)
-        s2vecChainRule(sigmay,iy,nytrue,it,nt)
-        s2vecChainRule(z,iz,nztrue,ie,nmaxevent)
-        s2vecChainRule(sigmaz,iz,nztrue,ie,nmaxevent)
-        s2vecChainRule(rz,iz,nztrue,ie,nmaxevent)
+        s2vecChainRule(x,ix,nxtrue,nx,it,nt)
+        s2vecChainRule(y,iy,nytrue,ny,it,nt)
+        s2vecChainRule(sigmay,iy,nytrue,ny,it,nt)
+        s2vecChainRule(z,iz,nztrue,nz,ie,nmaxevent)
+        s2vecChainRule(sigmaz,iz,nztrue,nz,ie,nmaxevent)
+        s2vecChainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
 
     delete[] pcoefficient;
