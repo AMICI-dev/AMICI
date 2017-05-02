@@ -2599,7 +2599,7 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     if(problem)
         goto freturn;
 
-    applyChainRuleFactorToSimulationResults(udata, rdata, edata));
+    applyChainRuleFactorToSimulationResults(udata, rdata, edata);
 
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
