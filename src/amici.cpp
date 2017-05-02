@@ -128,8 +128,6 @@ return(NULL); \
 
 #ifdef AMICI_WITHOUT_MATLAB
     typedef double mxArray;
-    void unscaleParameters(UserData *udata);
-    void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
 #endif
 
 /** return value for successful execution */
@@ -780,7 +778,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                         sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
                         int ix;
                         for (ix=0; ix<nx; ix++) {
-                            sx_tmp[ix] = sx0data[ix + nx*plist[ip]];
+                            sx_tmp[ix] = sx0data[ix + nx*ip];
                         }
                     }
                 }
@@ -2358,9 +2356,9 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
                         for(ig=0; ig<ng; ig++) {
                             for(ip=0; ip < nplist; ip++) {
                                 if (ig==0) {
-                                    sllhdata[ip] -=  llhS0[ip] + xQB_tmp[plist[ip]];
+                                    sllhdata[ip] -=  llhS0[ip] + xQB_tmp[ip];
                                     if (nz>0) {
-                                        sllhdata[ip] -= drdp[plist[ip]];
+                                        sllhdata[ip] -= drdp[ip];
                                     }
                                 } else {
                                     s2llhdata[(ig-1)*nplist + ip] -= llhS0[ig*nplist + ip] + xQB_tmp[ig*nplist + ip];
@@ -2601,7 +2599,7 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     if(problem)
         goto freturn;
 
-    applyChainRuleFactorToSimulationResults(udata, rdata);
+    applyChainRuleFactorToSimulationResults(udata, rdata, edata));
 
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
@@ -2629,7 +2627,7 @@ void unscaleParameters(UserData *udata) {
     }
 }
 
-void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata)
+void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, ExpData *edata)
 {
     if(udata->am_pscale == AMI_SCALING_NONE)
         return;
@@ -2654,7 +2652,6 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     }
 
     if(sensi > 0) {
-        /*
         // recover first order sensitivies from states for adjoint sensitivity analysis
         if(sensi == 2){
             if(sensi_meth == AMI_ASA){
@@ -2680,26 +2677,27 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
                                     sydata[(ip*nztrue + iz)*nt + it] = zdata[(nztrue + ip*nztrue + iz)*nt + it];
                 
             }
-        }*/
+        }
         
+        if(edata->am_bexpdata) {
+            if(rdata->am_sllhdata)
+                for(int ip = 0; ip < nplist; ++ip)
+                    sllhdata[ip] *= pcoefficient[ip];
+        }
         
-        if(rdata->am_sllhdata)
-            for(int ip = 0; ip < nplist; ++ip)
-                sllhdata[ip] *= pcoefficient[ip];
-        
-#define chainRule(QUANT,IND1,N1,IND2,N2) \
+#define chainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
-        for(int IND1 = 0; IND1 < N1; ++IND1) \
+        for(int IND1 = 0; IND1 < N1T; ++IND1) \
             for(int IND2 = 0; IND2 < N2; ++IND2){ \
                 s ## QUANT ## data[(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
         
-        chainRule(x,ix,nxtrue,it,nt)
-        chainRule(y,iy,nytrue,it,nt)
-        chainRule(sigmay,iy,nytrue,it,nt)
-        chainRule(z,iz,nztrue,ie,nmaxevent)
-        chainRule(sigmaz,iz,nztrue,ie,nmaxevent)
-        chainRule(rz,iz,nztrue,ie,nmaxevent)
+        chainRule(x,ix,nxtrue,nx,it,nt)
+        chainRule(y,iy,nytrue,ny,it,nt)
+        chainRule(sigmay,iy,nytrue,ny,it,nt)
+        chainRule(z,iz,nztrue,nz,ie,nmaxevent)
+        chainRule(sigmaz,iz,nztrue,nz,ie,nmaxevent)
+        chainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
     if(sensi_meth == AMI_SS) {
         if(rdata->am_dxdotdpdata)
@@ -2712,20 +2710,21 @@ if(rdata->am_s ## QUANT ## data) \
                 for(int iy = 0; iy < ny; ++iy)
                     dydpdata[ip*nxtrue + iy] *= pcoefficient[ip];
     }
-
     if(sensi == 2) { //full
-        if(rdata->am_s2llhdata) {
-            if(rdata->am_sllhdata) {
-                for(int ip = 0; ip < nplist; ++ip) {
-                    for(int jp = 0; jp < nplist; ++ip) {
-                        s2llhdata[ip*nplist+jp] *= pcoefficient[ip];
-                        if(ip == jp)
-                            s2llhdata[ip*nplist+jp] += sllhdata[ip]*coefficient;
+        if(edata->am_bexpdata){
+            if(rdata->am_s2llhdata) {
+                if(rdata->am_sllhdata) {
+                    for(int ip = 0; ip < nplist; ++ip) {
+                        for(int jp = 0; jp < nplist; ++ip) {
+                            s2llhdata[ip*nplist+jp] *= pcoefficient[ip]*pcoefficient[jp];
+                            if(ip == jp)
+                                s2llhdata[ip*nplist+jp] += sllhdata[ip]*coefficient;
+                        }
                     }
                 }
             }
         }
-        
+    
 #define s2ChainRule(QUANT,IND1,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \

@@ -97,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
 freturn:
-    applyChainRuleFactorToSimulationResults(udata, rdata);
+    applyChainRuleFactorToSimulationResults(udata, rdata, edata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     freeUserData(udata);
     delete edata;

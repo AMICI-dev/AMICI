@@ -86,7 +86,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status);
-void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata);
+void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, ExpData *edata);
 void unscaleParameters(UserData *udata);
 
 #ifdef AMICI_WITHOUT_MATLAB
