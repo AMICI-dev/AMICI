@@ -206,9 +206,9 @@ fprintf(fid,'\n');
 
 switch (this.param)
     case 'log'
-        fprintf(fid, 'chainRuleFactor = theta(options_ami.sens_ind);\n\n');
+        fprintf(fid, 'chainRuleFactor = exp(theta(options_ami.sens_ind));\n\n');
     case 'log10'
-        fprintf(fid, 'chainRuleFactor = theta(options_ami.sens_ind)*log(10);\n\n');
+        fprintf(fid, 'chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n\n');
     otherwise
         fprintf(fid, 'chainRuleFactor = ones(size(options_ami.sens_ind));\n\n');
 end
