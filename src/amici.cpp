@@ -2710,7 +2710,7 @@ if(rdata->am_s ## QUANT ## data) \
                 for(int iy = 0; iy < ny; ++iy)
                     dydpdata[ip*nxtrue + iy] *= pcoefficient[ip];
     }
-    if(sensi == 2) { //full
+    if(udata->am_o2mode == AMI_O2MODE_FULL) { //full
         if(edata->am_bexpdata){
             if(rdata->am_s2llhdata) {
                 if(rdata->am_sllhdata) {
@@ -2743,7 +2743,7 @@ if(rdata->am_s ## QUANT ## data) \
         s2ChainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
     
-    if(sensi == 3) { //directional
+    if(udata->am_o2mode == AMI_O2MODE_DIR) { //directional
         if(rdata->am_s2llhdata) {
             if(rdata->am_sllhdata) {
                 for(int ip = 0; ip < nplist; ++ip) {

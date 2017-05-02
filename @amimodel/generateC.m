@@ -374,6 +374,14 @@ fprintf(fid,['                   udata->am_pscale = AMI_SCALING_LOG10;\n']);
         disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
 fprintf(fid,['                   udata->am_pscale = AMI_SCALING_NONE;\n']);     
 end
+switch(this.o2flag)
+    case 1
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_FULL;\n']);
+    case 2
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_DIR;\n']);
+    otherwise
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_NONE;\n']);
+end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
 fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
