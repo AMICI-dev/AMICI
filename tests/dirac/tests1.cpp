@@ -152,14 +152,13 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         delete[] expected;
 
         if(udata->am_sensi_meth == 1) {
-            // TODO: there are deviations in sx and sy CHECK!
-//            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
-//            checkEqualArray(expected, rdata->am_sxdata, udata->am_nt * udata->am_nx * udata->am_nplist);
-//            delete[] expected;
+            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
+            checkEqualArray(expected, rdata->am_sxdata, udata->am_nt * udata->am_nx * udata->am_nplist);
+            delete[] expected;
 
-//            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sy", &expected, &m, &n, &o);
-//            checkEqualArray(expected, rdata->am_sydata, udata->am_nt * udata->am_ny * udata->am_nplist);
-//            delete[] expected;
+            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sy", &expected, &m, &n, &o);
+            checkEqualArray(expected, rdata->am_sydata, udata->am_nt * udata->am_ny * udata->am_nplist);
+            delete[] expected;
 
         }
 
