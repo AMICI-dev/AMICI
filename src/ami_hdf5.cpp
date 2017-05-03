@@ -63,6 +63,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     assert(length == nt);
 
     /* parameter ordering, matlab: fifth argument */
+    nplist = np;
     plist = new int[np];
     for (int i = 0; i < np; i++)
         plist[i] = i;
