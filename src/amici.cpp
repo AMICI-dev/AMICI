@@ -2627,6 +2627,9 @@ void unscaleParameters(UserData *udata) {
         for(int ip = 0; ip < nplist; ++ip)
             p[ip] = exp(p[ip]);
         break;
+    case AMI_SCALING_NONE:
+        //this should never be reached
+        break;
     }
 }
 
@@ -2651,6 +2654,9 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
             coefficient = 1.0;
             for(int ip = 0; ip < nplist; ++ip)
                 pcoefficient[ip] = p[plist[ip]];
+        break;
+    case AMI_SCALING_NONE:
+            //this should never be reached
         break;
     }
 

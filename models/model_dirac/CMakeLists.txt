@@ -18,11 +18,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${MODEL_DIR}")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
-include_directories("${SUITESPARSE_DIR}/KLU/Include")
-include_directories("${SUITESPARSE_DIR}/AMD/Include")
-include_directories("${SUITESPARSE_DIR}/SuiteSparse_config")
-include_directories("${SUITESPARSE_DIR}/COLAMD/Include")
-include_directories("${SUITESPARSE_DIR}/BTF/Include")
+include_directories("${SUITESPARSE_DIR}/include")
 
 
 set(SRC_LIST_LIB

@@ -9,6 +9,10 @@ branches:
     - master
     - staging
 
+os:
+  - linux
+  - osx
+
 compiler:
     - clang
     - gcc
