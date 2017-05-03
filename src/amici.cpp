@@ -2724,7 +2724,7 @@ if(rdata->am_s ## QUANT ## data) \
             if(rdata->am_s2llhdata) {
                 if(rdata->am_sllhdata) {
                     for(int ip = 0; ip < nplist; ++ip) {
-                        for(int jp = 0; jp < nplist; ++ip) {
+                        for(int jp = 0; jp < nplist; ++jp) {
                             s2llhdata[ip*nplist+jp] *= pcoefficient[ip]*pcoefficient[jp];
                             if(ip == jp)
                                 s2llhdata[ip*nplist+jp] += sllhdata[ip]*coefficient;
