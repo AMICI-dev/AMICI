@@ -9,8 +9,6 @@ function [model] = model_jakstat_adjoint_hvp_syms()
         STAT, pSTAT, pSTAT_pSTAT, npSTAT_npSTAT, nSTAT1, nSTAT2, nSTAT3, nSTAT4, nSTAT5 ...
         ];
     
-    model.debug = true;
-    
     %%
     % PARAMETERS
     

@@ -2759,10 +2759,10 @@ if(rdata->am_s ## QUANT ## data) \
 #define s2vecChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
-            for(int IND1 = N1T; IND1 < N1; ++IND1) \
+            for(int IND1 = 0; IND1 < N1T; ++IND1) \
                 for(int IND2 = 0; IND2 < N2; ++IND2){ \
-                    s ## QUANT ## data[((ip + 1)*N1 + IND1)*N2 + IND2] *= pcoefficient[ip]; \
-                    s ## QUANT ## data[((ip + 1)*N1 + IND1)*N2 + IND2] += udata->am_k[nk-nplist+ip]*s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]/p[plist[ip]];}
+                    s ## QUANT ## data[(ip*N1 + N1T + IND1)*N2 + IND2] *= pcoefficient[ip]; \
+                    s ## QUANT ## data[(ip*N1 + N1T + IND1)*N2 + IND2] += udata->am_k[nk-nplist+ip]*s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]/p[plist[ip]];}
         
         s2vecChainRule(x,ix,nxtrue,nx,it,nt)
         s2vecChainRule(y,iy,nytrue,ny,it,nt)
