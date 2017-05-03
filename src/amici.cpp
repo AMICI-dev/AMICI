@@ -2602,7 +2602,6 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
     applyChainRuleFactorToSimulationResults(udata, rdata, edata);
 
 freturn:
-    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
 
     if(originalParams) {
