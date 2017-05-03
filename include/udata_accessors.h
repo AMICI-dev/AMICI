@@ -68,3 +68,5 @@
 
 #define z2event udata->am_z2event
 #define h udata->am_h
+
+#define o2mode udata->am_o2mode

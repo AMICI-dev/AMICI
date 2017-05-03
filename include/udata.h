@@ -14,6 +14,14 @@
 #define EXTERNC
 #endif
 
+typedef enum AMI_parameter_scaling_TAG {
+    AMI_SCALING_NONE, AMI_SCALING_LN, AMI_SCALING_LOG10
+} AMI_parameter_scaling;
+
+typedef enum AMI_o2mode_TAG {
+    AMI_O2MODE_NONE, AMI_O2MODE_FULL, AMI_O2MODE_DIR
+} AMI_o2mode;
+
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
     /** positivity flag */
@@ -55,7 +63,10 @@ typedef struct user_data {
     int    am_nnz;
     /** maximal number of events to track */
     int    am_nmaxevent;
-    
+
+    /** parametrization of parameters p */
+    AMI_parameter_scaling am_pscale;
+
     /** parameter array */
     double *am_p;
     /** constants array */
@@ -179,8 +190,15 @@ typedef struct user_data {
     booleantype am_nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype am_nan_qBdot;
+    
+    /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
+    AMI_o2mode am_o2mode;
+    
 } UserData;
 
 EXTERNC void freeUserData(UserData *udata);
+#ifdef AMICI_WITHOUT_MATLAB
+EXTERNC void printUserData(UserData *udata);
+#endif
 
 #endif /* _MY_UDATA */

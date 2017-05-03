@@ -3,7 +3,7 @@
 #include <include/udata_accessors.h>
                 
                 void init_modeldims(UserData *udata){
-                   nplist = 4;
+                   np = 4;
                    nx = 2;
                    nxtrue = 2;
                    nk = 0;
@@ -19,6 +19,8 @@
                    nnz = 3;
                    ubw = 0;
                    lbw = 1;
+                   udata->am_pscale = AMI_SCALING_LOG10;
+                   udata->am_o2mode = AMI_O2MODE_NONE;
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_dirac, RCONST(t), x);

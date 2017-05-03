@@ -63,6 +63,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     assert(length == nt);
 
     /* parameter ordering, matlab: fifth argument */
+    nplist = np;
     plist = new int[np];
     for (int i = 0; i < np; i++)
         plist[i] = i;
@@ -327,6 +328,34 @@ void AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id, const char* optionsObject
     printf("\n");
 #endif
 }
+
+void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *m, hsize_t *n, hsize_t *o, hsize_t *pp) {
+    int rank;
+    H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    assert(rank == 4);
+
+    hsize_t dims[4];
+    H5T_class_t type_class;
+    size_t type_size;
+    H5LTget_attribute_info(file_id, optionsObject, attributeName, dims, &type_class, &type_size);
+
+#ifdef AMI_HDF5_H_DEBUG
+    printf("%s: %lld x %lld x %lld x %lld: ", attributeName, dims[0], dims[1], dims[2], dims[3]);
+#endif
+    *m = dims[0];
+    *n = dims[1];
+    *o = dims[2];
+    *pp = dims[3];
+
+    *destination = new double[(*m) * (*n) * (*o) * (*pp)];
+    H5LTget_attribute_double(file_id, optionsObject, attributeName, *destination);
+
+#ifdef AMI_HDF5_H_DEBUG
+    printfArray(*destination, (*m) * (*n) * (*o) * (*pp), "%e ");
+    printf("\n");
+#endif
+}
+
 
 
 void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length) {

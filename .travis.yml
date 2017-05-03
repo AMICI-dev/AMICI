@@ -9,12 +9,17 @@ branches:
     - master
     - staging
 
+os:
+  - linux
+  - osx
+
 compiler:
     - clang
     - gcc
-    
+
 before_script:
-    - sudo apt-get install libhdf5-serial-dev zlib1g-dev
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev; fi
     
 install: true
 

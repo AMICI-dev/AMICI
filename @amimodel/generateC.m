@@ -363,6 +363,25 @@ fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);
 fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
 fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
 fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);
+switch(this.param)
+    case 'lin'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_NONE;\n']);
+    case 'log'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_LN;\n']);
+    case 'log10'
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_LOG10;\n']);
+    otherwise
+        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
+fprintf(fid,['                   udata->am_pscale = AMI_SCALING_NONE;\n']);     
+end
+switch(this.o2flag)
+    case 1
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_FULL;\n']);
+    case 2
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_DIR;\n']);
+    otherwise
+fprintf(fid,['                   udata->am_o2mode = AMI_O2MODE_NONE;\n']);
+end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
 fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
@@ -500,8 +519,9 @@ fprintf(fid,'\n');
 
 fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
+fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'                void init_modeldims(UserData *udata);\n');
+fprintf(fid,'EXTERNC         void init_modeldims(UserData *udata);\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
 fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
 fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
@@ -573,10 +593,10 @@ function generateCMakeFile(this)
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
-    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")\n');
+    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/%s")\n', this.modelname);
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")\n\n');
+    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")\n');
+    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")\n\n');
     fprintf(fid, 'find_package(HDF5 COMPONENTS C HL REQUIRED)\n');
 
     %includes
@@ -585,11 +605,7 @@ function generateCMakeFile(this)
         '${MODEL_DIR}',  ...
         '${HDF5_INCLUDE_DIRS}',  ...
         '${AMICI_DIR}/sundials/include',  ...
-        '${SUITESPARSE_DIR}/KLU/Include', ...
-        '${SUITESPARSE_DIR}/AMD/Include', ...
-        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
-        '${SUITESPARSE_DIR}/COLAMD/Include', ...
-        '${SUITESPARSE_DIR}/BTF/Include', ...
+        '${SUITESPARSE_DIR}/include', ...
     };
     for d = includeDirs
         fprintf(fid, 'include_directories("%s")\n', d{1});
@@ -619,16 +635,17 @@ function generateCMakeFile(this)
     
     fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
 
+    fprintf(fid, 'if(APPLE)\n    set(SHARED_OBJECT_EXTENSION .dylib)\nelse()\n    set(SHARED_OBJECT_EXTENSION .so)\nendif()\n\n');
+    
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
-        '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
-        '${SUNDIALS_LIB_DIR}/libsundials_cvodes.so', ...
-        '${SUITESPARSE_LIB_DIR}/lib/libcolamd.so', ...
-        '${SUITESPARSE_LIB_DIR}/KLU/Lib/libklu.a', ...
-        '${SUITESPARSE_LIB_DIR}/BTF/Lib/libbtf.a', ...
-        '${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a', ...
-        '${SUITESPARSE_LIB_DIR}/COLAMD/Lib/libcolamd.a', ...
-        '${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a', ...
+        '${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}', ...
+        '${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}', ...
+        '${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}', ...
+        '${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}', ...
+        '${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}', ...
+        '${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}', ...
+        '${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}', ...
         '${HDF5_HL_LIBRARIES}', ...
         '${HDF5_C_LIBRARIES}', ...
         '-lpthread -ldl -lz', ...
