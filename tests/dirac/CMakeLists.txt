@@ -10,7 +10,7 @@ set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
-set(SUNDIALS_LIB_DIR "${AMICI_DIR}/build/sundials/lib")
+set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 
 set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/")
 set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include")

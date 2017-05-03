@@ -29,7 +29,7 @@ SUNDIALS_BUILD_PATH="${AMICI_PATH}/sundials/build/"
 mkdir -p ${SUNDIALS_BUILD_PATH}
 cd ${SUNDIALS_BUILD_PATH}
 
-cmake -DCMAKE_INSTALL_PREFIX="${AMICI_PATH}/build/sundials" \
+cmake -DCMAKE_INSTALL_PREFIX="${SUNDIALS_BUILD_PATH}" \
 -DBUILD_ARKODE=OFF \
 -DBUILD_CVODE=OFF \
 -DBUILD_IDA=OFF \
@@ -76,4 +76,4 @@ cd build
 cmake ..
 make
 # Run tests
-DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${AMICI_PATH}/build/sundials/lib:${AMICI_PATH}/SuiteSparse/lib" ./model_dirac_test
+DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" ./model_dirac_test
