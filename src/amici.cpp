@@ -2619,12 +2619,12 @@ freturn:
 void unscaleParameters(UserData *udata) {
     switch(udata->am_pscale) {
     case AMI_SCALING_LOG10:
-        for(int ip = 0; ip < nplist; ++ip) {
+        for(int ip = 0; ip < np; ++ip) {
             p[ip] = pow(10, p[ip]);
         }
         break;
     case AMI_SCALING_LN:
-        for(int ip = 0; ip < nplist; ++ip)
+        for(int ip = 0; ip < np; ++ip)
             p[ip] = exp(p[ip]);
         break;
     case AMI_SCALING_NONE:
