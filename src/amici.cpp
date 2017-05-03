@@ -2425,7 +2425,8 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  R
                 fxdot(t,x,dx,xdot,udata);
                 xdot_tmp = NV_DATA_S(xdot);
                 if(xdotdata)
-                    memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
+                    if(xdot_tmp)
+                        memcpy(xdotdata,xdot_tmp,nx*sizeof(realtype));
             }
         }
     }
@@ -2433,7 +2434,8 @@ void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  R
         if(nx>0) {
             fJ(nx,t,0,x,dx,xdot,Jtmp,udata,NULL,NULL,NULL);
             if(Jdata)
-                memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
+                if(Jtmp->data)
+                    memcpy(Jdata,Jtmp->data,nx*nx*sizeof(realtype));
         }
     }
 }
