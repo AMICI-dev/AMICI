@@ -41,7 +41,7 @@ include_directories(${CPPUTEST_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 if(APPLE)
-    set(SHARED_OBJECT_EXTENSION .dynlib)
+    set(SHARED_OBJECT_EXTENSION .dylib)
 else()
     set(SHARED_OBJECT_EXTENSION .so)
 endif()
