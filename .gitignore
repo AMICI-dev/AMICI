@@ -11,6 +11,12 @@ CMakeFiles/*
 
 build/*
 
+
+
+tests/dirac/build/*
+
+ThirdParty/*
+
 *.o
 
 doc/*
@@ -20,6 +26,8 @@ debug_amici/*
 models/*
 
 !models/model_dirac
+
+models/model_dirac/build/*
 
 doc/*
 
@@ -65,15 +73,7 @@ AMICI.mlappinstall
 
 *.mat
 
-mtoc/makeExampleDoc.m
-
-mtoc/makeDocumentation.m
-
 examples/example_5/example_model_5_paper.m
-
-mtoc/makeDocumentation.m
-
-mtoc/makeDocumentation.m
 
 index.html
 
@@ -115,11 +115,7 @@ examples/example_dirac_secondorder_vectmult/simulate_model_dirac_secondorder_vec
 
 examples/example_jakstat_adjoint/simulate_model_jakstat.m
 
-unitTests/CustomSBMLTestsuite/*
-
 sed-ml/*
-
-unitTests/SBMLresults/00144-results.csv
 
 *.csv
 
@@ -199,13 +195,6 @@ Makefile
 
 scripts/CMakeFiles
 
-
-unitTests/SBMLTest_log.txt
-
-unitTests/SBMLTest_log_04-Jan-2017.txt
-
-unitTests/SBMLTest_log_05-Jan-2017.txt
-
 *.txt
 
 src/symbolic_functions.o-f5eb52a8
@@ -213,8 +202,6 @@ src/symbolic_functions.o-f5eb52a8
 src/symbolic_functions.o-bea7fd73
 
 src/amici.o-404f292d
-
-unitTests/sbml-test-suite/
 
 tests/sbml-test-suite/
 

@@ -639,7 +639,7 @@ function generateCMakeFile(this)
     
     fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
 
-    fprintf(fid, 'if(APPLE)\n    set(SHARED_OBJECT_EXTENSION .dynlib)\nelse()\n    set(SHARED_OBJECT_EXTENSION .so)\nendif()\n\n');
+    fprintf(fid, 'if(APPLE)\n    set(SHARED_OBJECT_EXTENSION .dylib)\nelse()\n    set(SHARED_OBJECT_EXTENSION .so)\nendif()\n\n');
     
     fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
