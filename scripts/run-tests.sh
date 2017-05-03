@@ -76,4 +76,4 @@ cd build
 cmake ..
 make
 # Run tests
-./model_dirac_test
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH=}:${AMICI_PATH}/build/sundials/lib:${AMICI_PATH}/SuiteSparse/lib" ./model_dirac_test
