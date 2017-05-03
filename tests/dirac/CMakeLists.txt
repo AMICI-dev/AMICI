@@ -40,12 +40,18 @@ include_directories(${CPPUTEST_INCLUDE_DIR})
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
+if(APPLE)
+    set(SHARED_OBJECT_EXTENSION .dynlib)
+else()
+    set(SHARED_OBJECT_EXTENSION .so)
+endif()
+
 target_link_libraries(${PROJECT_NAME}
 ${AMICI_DIR}/models/model_dirac/build/libmodel_dirac.a
 ${CPPUTEST_LIBRARY}
-"${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so"
-"${SUNDIALS_LIB_DIR}/libsundials_cvodes.so"
-"${SUITESPARSE_LIB_DIR}/lib/libcolamd.so"
+"${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}"
+"${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}"
+"${SUITESPARSE_LIB_DIR}/lib/libcolamd${SHARED_OBJECT_EXTENSION}"
 "${SUITESPARSE_LIB_DIR}/KLU/Lib/libklu.a"
 "${SUITESPARSE_LIB_DIR}/BTF/Lib/libbtf.a"
 "${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a"
