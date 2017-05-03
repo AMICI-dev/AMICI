@@ -593,7 +593,7 @@ function generateCMakeFile(this)
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
-    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")\n');
+    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/%s")\n', this.modelname);
     fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
     fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")\n');
     fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")\n\n');
