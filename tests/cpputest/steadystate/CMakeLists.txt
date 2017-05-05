@@ -1,4 +1,4 @@
-project(model_dirac_test)
+project(model_steadystate_test)
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -7,7 +7,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
-set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
+set(MODEL_DIR "${AMICI_DIR}/models/model_steadystate")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
@@ -45,7 +45,7 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-${AMICI_DIR}/models/model_dirac/build/libmodel_dirac.a
+${AMICI_DIR}/models/model_steadystate/build/libmodel_steadystate.a
 ${CPPUTEST_LIBRARY}
 "${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}"
 "${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}"

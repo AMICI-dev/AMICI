@@ -69,6 +69,13 @@ cd ${AMICI_PATH}/models/model_dirac/build
 cmake ..
 make
 
+# Build steadystate model
+mkdir -p ${AMICI_PATH}/models/model_steadystate/build
+cd ${AMICI_PATH}/models/model_steadystate/build
+cmake ..
+make 
+
+
 # Build test suite
 cd ${AMICI_PATH}/tests/cpputest/dirac/
 mkdir -p build

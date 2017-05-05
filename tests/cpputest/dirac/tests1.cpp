@@ -1,19 +1,12 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include <testfunctions.h>
 #include <include/amici.h>
 #include <cstring>
 #include "wrapfunctions.h"
-#include "src/ami_hdf5.h"
 
-#define HDFFILE "../../expectedResults.h5"
-#define TEST_EPSILON 1e-12
-
-#ifndef __APPLE__
-#include <iostream>
-#endif
-
-TEST_GROUP(group1)
+TEST_GROUP(groupDirac)
 {
     void setup() {
 
@@ -43,18 +36,11 @@ UserData *getTestUserData() {
     return udata;
 }
 
-ExpData *getTestExpData() {
-    ExpData *edata = new ExpData;
-    memset(edata, 0, sizeof(*edata));
-
-    return edata;
-}
-
 
 /*
  * Test for mem leaks in UserData initalization / destruction
  */
-TEST(group1, testCreateAndFreeUserData) {
+TEST(groupDirac, testCreateAndFreeUserData) {
     UserData *udata = getTestUserData();
 
     freeUserData(udata);
@@ -64,7 +50,7 @@ TEST(group1, testCreateAndFreeUserData) {
  * Test for mem leaks in ExpData initalization / destruction
  */
 
-TEST(group1, testCreateAndFreeExpData) {
+TEST(groupDirac, testCreateAndFreeExpData) {
     ExpData *edata = getTestExpData();
 
     freeExpData(edata);
@@ -74,105 +60,15 @@ TEST(group1, testCreateAndFreeExpData) {
  * Test for mem leaks in ReturnData initalization / destruction
  */
 
-TEST(group1, testCreateAndFreeReturnData) {
+TEST(groupDirac, testCreateAndFreeReturnData) {
     ReturnData *rdata = new ReturnData;
     memset(rdata, 0, sizeof(*rdata));
 
     freeReturnData(rdata);
 }
 
-void checkEqualArray(const double *expected, const double *actual, int length) {
-    for(int i = 0; i < length; ++i)
-    {
-#ifndef __APPLE__
-        if(expected[i] != actual[i])
-            std::cout<<i<<"/"<<length<<" "<<expected[i]<<" "<<actual[i]<<std::endl;
-#endif
-        DOUBLES_EQUAL(expected[i], actual[i], TEST_EPSILON);
-    }
-}
 
-void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata) {
-    CHECK_TRUE(isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata));
-
-    // compare to saved data in hdf file
-    hid_t file_id = H5Fopen(HDFFILE, H5F_ACC_RDONLY, H5P_DEFAULT);
-
-    hsize_t m, n, o;
-
-    double *expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nx);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "J", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_Jdata, udata->am_nx * udata->am_nx);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_orderdata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_ydata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmay", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_sigmaydata, udata->am_nt);
-    delete[] expected;
-
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "xdot", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_xdotdata, udata->am_nx);
-    delete[] expected;
-
-    if(udata->am_sensi > 0) {
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_sllhdata, udata->am_np);
-        delete[] expected;
-
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevalsS", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_numrhsevalsSdata, udata->am_nt);
-        delete[] expected;
-
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numstepsS", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_numstepsSdata, udata->am_nt);
-        delete[] expected;
-
-        AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
-        checkEqualArray(expected, rdata->am_ssigmaydata, udata->am_nt * udata->am_ny * udata->am_nplist);
-        delete[] expected;
-
-        if(udata->am_sensi_meth == 1) {
-            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
-            checkEqualArray(expected, rdata->am_sxdata, udata->am_nt * udata->am_nx * udata->am_nplist);
-            delete[] expected;
-
-            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sy", &expected, &m, &n, &o);
-            checkEqualArray(expected, rdata->am_sydata, udata->am_nt * udata->am_ny * udata->am_nplist);
-            delete[] expected;
-
-        }
-
-    } else {
-        POINTERS_EQUAL(NULL, rdata->am_sllhdata);
-        POINTERS_EQUAL(NULL, rdata->am_numrhsevalsSdata);
-        POINTERS_EQUAL(NULL, rdata->am_numstepsSdata);
-
-    }
-
-    H5Fclose(file_id);
-}
-
-TEST(group1, testSimulation) {
+TEST(groupDirac, testSimulation) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options");
     ExpData *edata = getTestExpData();
@@ -189,11 +85,11 @@ TEST(group1, testSimulation) {
     freeUserData(udata);
 }
 
-TEST(group1, testSimulationExpData) {
+TEST(groupDirac, testSimulationExpData) {
 
 }
 
-TEST(group1, testSensitivityForward) {
+TEST(groupDirac, testSensitivityForward) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options");
     ExpData *edata = getTestExpData();
@@ -210,11 +106,11 @@ TEST(group1, testSensitivityForward) {
     freeUserData(udata);
 }
 
-TEST(group1, testSensitivityState) {
+TEST(groupDirac, testSensitivityState) {
 
 }
 
-TEST(group1, testSensitivityAdjoint) {
+TEST(groupDirac, testSensitivityAdjoint) {
 
 }
 
