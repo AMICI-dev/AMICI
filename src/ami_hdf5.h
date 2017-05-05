@@ -47,7 +47,7 @@ EXTERNC double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id, const char* opti
 
 EXTERNC int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char* optionsObject, const char* attributeName);
 
-EXTERNC void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length);
+EXTERNC int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length);
 
 EXTERNC void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length);
 

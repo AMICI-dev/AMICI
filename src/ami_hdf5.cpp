@@ -239,7 +239,7 @@ int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char* optionsObject, con
     return intScalar;
 }
 
-void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length) {
+int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length) {
     H5T_class_t type_class;
     size_t type_size;
     herr_t status;
@@ -255,6 +255,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
         size = backtrace(array, 10);
         backtrace_symbols_fd(array, size, STDERR_FILENO);
 #endif
+        return status;
     }
 
 #ifdef AMI_HDF5_H_DEBUG
@@ -270,6 +271,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
     printfArray(*destination, *length, "%e ");
     printf("\n");
 #endif
+    return status < 0;
 }
 
 void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *m, hsize_t *n) {
