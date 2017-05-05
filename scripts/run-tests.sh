@@ -70,7 +70,7 @@ cmake ..
 make
 
 # Build test suite
-cd ${AMICI_PATH}/tests/dirac/
+cd ${AMICI_PATH}/tests/cpputest/dirac/
 mkdir -p build
 cd build
 cmake ..

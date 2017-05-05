@@ -6,7 +6,7 @@
 #include "wrapfunctions.h"
 #include "src/ami_hdf5.h"
 
-#define HDFFILE "../expectedResults.h5"
+#define HDFFILE "../../expectedResults.h5"
 #define TEST_EPSILON 1e-12
 
 #ifndef __APPLE__
