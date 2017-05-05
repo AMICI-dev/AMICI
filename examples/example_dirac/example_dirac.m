@@ -17,6 +17,10 @@ k = [];
 options = amioption('sensi',0,...
     'maxsteps',1e4);
 
+options.sens_ind = 1:4;
+
+options.sens_ind = [3,4,1,2];
+
 % load mex into memory
 [msg] = which('simulate_model_dirac'); % fix for inaccessability problems
 sol = simulate_model_dirac(t,log10(p),k,[],options);
@@ -102,7 +106,7 @@ eps = 1e-4;
 xi = log10(p);
 for ip = 1:4;
     xip = xi;
-    xip(ip) = xip(ip) + eps;
+    xip(options.sens_ind(ip)) = xip(options.sens_ind(ip)) + eps;
     solp = simulate_model_dirac(t,xip,k,[],options);
     sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
     sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
@@ -112,8 +116,8 @@ end
 % PLOTTING
 if(usejava('jvm'))
     figure
-    for ip = 1:4
-        subplot(4,2,ip*2-1)
+    for ip = 1:length(options.sens_ind)
+        subplot(length(options.sens_ind),2,ip*2-1)
         hold on
         for ix = 1:size(sol.x,2)
             plot(t,sol.sx(:,ix,ip),'.-','Color',c_x(ix,:))
@@ -122,16 +126,16 @@ if(usejava('jvm'))
         ylim([-2,2])
         legend('x1','x1_{fd}','x2','x2_{fd}','Location','NorthEastOutside')
         legend boxoff
-        title(['state sensitivity for p' num2str(ip)])
+        title(['state sensitivity for p' num2str(options.sens_ind(ip))])
         xlabel('time t')
         ylabel('x')
         box on
         
-        subplot(4,2,ip*2)
+        subplot(length(options.sens_ind),2,ip*2)
         plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'r--')
         legend('error x1','error x2','Location','NorthEastOutside')
         legend boxoff
-        title(['state sensitivity for p' num2str(ip)])
+        title(['state sensitivity for p' num2str(options.sens_ind(ip))])
         xlabel('time t')
         ylabel('error')
         ylim([1e-12,1e0])
@@ -141,8 +145,8 @@ if(usejava('jvm'))
     set(gcf,'Position',[100 300 1200 500])
     
     figure
-    for ip = 1:4
-        subplot(4,2,ip*2-1)
+    for ip = 1:length(options.sens_ind)
+        subplot(length(options.sens_ind),2,ip*2-1)
         hold on
         for iy = 1:size(sol.y,2)
             plot(t,sol.sy(:,iy,ip),'.-','Color',c_x(iy,:))
@@ -151,16 +155,16 @@ if(usejava('jvm'))
         ylim([-2,2])
         legend('y1','y1_{fd}','Location','NorthEastOutside')
         legend boxoff
-        title(['observable sensitivity for p' num2str(ip)])
+        title(['observable sensitivity for p' num2str(options.sens_ind(ip))])
         xlabel('time t')
         ylabel('y')
         box on
         
-        subplot(4,2,ip*2)
+        subplot(length(options.sens_ind),2,ip*2)
         plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'r--')
         legend('error y1','Location','NorthEastOutside')
         legend boxoff
-        title(['observable sensitivity for p' num2str(ip)])
+        title(['observable sensitivity for p' num2str(options.sens_ind(ip))])
         xlabel('time t')
         ylabel('error')
         ylim([1e-12,1e0])

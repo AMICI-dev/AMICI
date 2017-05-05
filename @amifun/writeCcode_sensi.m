@@ -76,9 +76,6 @@ else
         for ip=1:np
             if(any(nonzero(:,ip)))
                 fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
-                if(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'sz') || strcmp(this.funstr,'sy'))
-                    fprintf(fid,'  sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
-                end
                 if(strcmp(this.funstr,'sroot'))
                     tmpfun.sym = this.sym(model.z2event,ip);
                 else

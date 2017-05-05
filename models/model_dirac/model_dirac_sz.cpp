@@ -13,7 +13,7 @@ realtype *sx_tmp;
 int ip;
 status = w_model_dirac(t,x,NULL,user_data);
 for(ip = 0; ip<nplist; ip++) {
-sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);
+sx_tmp = N_VGetArrayPointer(sx[ip]);
 switch (plist[ip]) {
 }
 }
