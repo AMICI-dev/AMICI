@@ -69,11 +69,19 @@ cd ${AMICI_PATH}/models/model_dirac/build
 cmake ..
 make
 
+# Build steadystate model
+mkdir -p ${AMICI_PATH}/models/model_steadystate/build
+cd ${AMICI_PATH}/models/model_steadystate/build
+cmake ..
+make 
+
+
 # Build test suite
-cd ${AMICI_PATH}/tests/dirac/
+cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
 cmake ..
 make
 # Run tests
-DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" ./model_dirac_test
+DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" dirac/model_dirac_test
+DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" steadystate/model_steadystate_test
