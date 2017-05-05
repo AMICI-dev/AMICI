@@ -50,17 +50,20 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 
     hsize_t length;
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
+    int status = 0;
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
     np = length; // TODO init_modeldims? -> assert
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-    assert(length == nk);
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
+    if(length != nk)
+        return NULL;
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
     nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-    assert(length == nt);
+    if(length != nt || status > 0)
+        return NULL;
 
     /* parameter ordering, matlab: fifth argument */
     nplist = np;
