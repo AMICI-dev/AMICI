@@ -2,12 +2,18 @@ function [ output_args ] = createTestingData( input_args )
     %CREATETESTINGDATA This function writes some data for continuous
     % integration tests
     
+    amiciPath = fileparts(mfilename('fullpath'));
+    amiciPath = [amiciPath '/..'];
+
+    %% EXAMPLE DIRAC
+    cd([amiciPath '/examples/example_dirac/']);
+    
     !head -n -1 simulate_model_dirac.m > simulate_model_dirac_hdf.m
-    !tail -n +2 writeSimulationData.template.m >> simulate_model_dirac_hdf.m
+    !tail -n +2 ../../tests/writeSimulationData.template.m >> simulate_model_dirac_hdf.m
     
     global amiHDFfile
     global amiHDFprefix;
-    amiHDFfile = fullfile(pwd, '../../tests/dirac/expectedResults.h5');
+    amiHDFfile = [amiciPath '/tests/dirac/expectedResults.h5'];
     
     % time vector
     t = linspace(0,3,1001);
