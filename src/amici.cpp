@@ -25,6 +25,7 @@
 /** return value for successful execution */
 #define AMI_SUCCESS               0
 
+
 void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     /**
      * @brief setupAMIs initialises the ami memory object
@@ -261,7 +262,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
                 } else {
                     int ip;
                     for (ip=0; ip<nplist; ip++) {
-                        sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
+                        sx_tmp = NV_DATA_S(NVsx[ip]);
                         int ix;
                         for (ix=0; ix<nx; ix++) {
                             sx_tmp[ix] = sx0data[ix + nx*ip];
@@ -1379,7 +1380,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempDa
             *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
             
             for (ip=0; ip<nplist; ip++) {
-                sx_tmp = NV_DATA_S(NVsx[plist[ip]]);
+                sx_tmp = NV_DATA_S(NVsx[ip]);
                 for (ix=0; ix<nx; ix++) {
                     sx_tmp[ix] += deltasx[ix + nx*ip];
                 }
@@ -1946,20 +1947,29 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
 
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
-    realtype *pcoefficient;
+    realtype *pcoefficient, *augcoefficient;
 
     pcoefficient = new realtype[nplist]();
+    augcoefficient = new realtype[np]();
     
     switch(udata->am_pscale) {
     case AMI_SCALING_LOG10:
             coefficient = log(10.0);
             for(int ip = 0; ip < nplist; ++ip)
                 pcoefficient[ip] = p[plist[ip]]*log(10);
+            if(sensi == 2)
+                if(udata->am_o2mode == AMI_O2MODE_FULL)
+                    for(int ip = 0; ip < np; ++ip)
+                    augcoefficient[ip] = p[ip]*log(10);
         break;
     case AMI_SCALING_LN:
             coefficient = 1.0;
             for(int ip = 0; ip < nplist; ++ip)
                 pcoefficient[ip] = p[plist[ip]];
+            if(sensi == 2)
+                if(udata->am_o2mode == AMI_O2MODE_FULL)
+                    for(int ip = 0; ip < np; ++ip)
+                        augcoefficient[ip] = p[ip];
         break;
     case AMI_SCALING_NONE:
             //this should never be reached
@@ -2030,10 +2040,10 @@ if(rdata->am_s ## QUANT ## data) \
             if(rdata->am_s2llhdata) {
                 if(rdata->am_sllhdata) {
                     for(int ip = 0; ip < nplist; ++ip) {
-                        for(int jp = 0; jp < nplist; ++jp) {
-                            s2llhdata[ip*nplist+jp] *= pcoefficient[ip]*pcoefficient[jp];
-                            if(ip == jp)
-                                s2llhdata[ip*nplist+jp] += sllhdata[ip]*coefficient;
+                        for(int ig = 1; ig < ng; ++ig) {
+                            s2llhdata[ip*nplist+(ig-1)] *= pcoefficient[ip]*augcoefficient[ig-1];
+                            if(plist[ip] == ig-1)
+                                s2llhdata[ip*nplist+(ig-1)] += sllhdata[ip]*coefficient;
                         }
                     }
                 }
@@ -2043,12 +2053,12 @@ if(rdata->am_s ## QUANT ## data) \
 #define s2ChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
-        for(int jp = 0; jp < nplist; ++jp) \
+        for(int ig = 1; ig < ng; ++ig) \
             for(int IND1 = 0; IND1 < N1T; ++IND1) \
                 for(int IND2 = 0; IND2 < N2; ++IND2){ \
-                    s ## QUANT ## data[(ip*N1 + (jp+1)*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*pcoefficient[jp]; \
-                    if(ip==jp) \
-                        s  ## QUANT ## data[(ip*N1 + (jp+1)*N1T + IND1)*N2 + IND2] += s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]*coefficient;}
+                    s ## QUANT ## data[(ip*N1 + ig*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*augcoefficient[ig-1]; \
+                    if(plist[ip]==ig-1) \
+                        s  ## QUANT ## data[(ip*N1 + ig*N1T + IND1)*N2 + IND2] += s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]*coefficient;}
         
         s2ChainRule(x,ix,nxtrue,nx,it,nt)
         s2ChainRule(y,iy,nytrue,ny,it,nt)
@@ -2085,6 +2095,7 @@ if(rdata->am_s ## QUANT ## data) \
     }
 
     delete[] pcoefficient;
+    delete[] augcoefficient;
 }
 
 void processUserData(UserData *udata) {
