@@ -204,11 +204,16 @@ checkIllegalFunctions(kLaw);
 this.flux = cleanedsym(kLaw);
 this.flux = this.flux(:);
 % add local parameters to global parameters, make them global by
-% extending them by the r[reactionindex]
+% extending them by the reaction_id string
 species_idx = transpose(sym(1:nx));
 if(length({model.reaction.id})>0)
     try
-        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y], ...
+                                 {x.parameter.id}, ...
+                                 'UniformOutput',false)), ...
+                      {model.reaction.kineticLaw}, ...
+                      {model.reaction.id}, ...
+                      'UniformOutput',false);
         plocal = transpose([tmp{:}]);
         tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
         pvallocal = transpose([tmp{:}]);
