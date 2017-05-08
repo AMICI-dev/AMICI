@@ -23,7 +23,7 @@ typedef enum AMI_o2mode_TAG {
 } AMI_o2mode;
 
 typedef enum AMI_sensi_order_TAG {
-    AMI_SENSI_ORDER_NONE, AMI_SENSI_ORDER_FIRST, AMI_SENSI_ORDER_SECOND, AMI_SENSI_ORDER_SECOND_DIRECTIONAL
+    AMI_SENSI_ORDER_NONE, AMI_SENSI_ORDER_FIRST, AMI_SENSI_ORDER_SECOND
 } AMI_sensi_order;
 
 typedef enum AMI_sensi_meth_TAG {
