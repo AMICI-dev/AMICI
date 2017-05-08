@@ -326,10 +326,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     rdata = (ReturnData*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
 
-    llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
-            numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
-            sigmaydata = ssigmaydata = sigmazdata = ssigmazdata = xdotdata = Jdata = dydpdata = dydxdata =
-            dxdotdpdata = tsdata = 0;
+    memset(rdata, 0, sizeof(*rdata));
 
     mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
 
@@ -2062,12 +2059,6 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnDat
 #ifdef AMICI_WITHOUT_MATLAB
 
 void initUserDataFields(UserData *udata, ReturnData *rdata) {
-
-    llhdata = sllhdata = s2llhdata = chi2data = numstepsdata = numrhsevalsdata = orderdata = numstepsSdata =
-            numrhsevalsSdata = rzdata = zdata = xdata = ydata = srzdata = szdata = sxdata = sydata = s2rzdata =
-            sigmaydata = ssigmaydata = sigmazdata = ssigmazdata = xdotdata = Jdata = dydpdata = dydxdata =
-            dxdotdpdata = tsdata = 0;
-
     size_t dimssx[] = {0,0,0};
     size_t dimssy[] = {0,0,0};
     size_t dimssz[] = {0,0,0};
@@ -2542,6 +2533,8 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
     rdata = new ReturnData();
     if (rdata == NULL)
         return(NULL);
+
+    memset(rdata, 0, sizeof(*rdata));
 
     double dblstatus;
     initUserDataFields(udata, rdata);
