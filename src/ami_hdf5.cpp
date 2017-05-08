@@ -27,7 +27,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, cons
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath)
 {
-    UserData *udata = new UserData();
+    UserData *udata = getDefaultUserData();
     if (udata == NULL)
         return(NULL);
 
@@ -44,25 +44,37 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     stldet     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
     interpType = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
     ism        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
-    sensi_meth = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
-    sensi      = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
+    sensi_meth = (AMI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
+    sensi      = (AMI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
     nmaxevent  = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
     ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 
     hsize_t length;
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
+    int status = 0;
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
-    np = length; // TODO init_modeldims? -> assert
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-    assert(length == nk);
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
+        if(np != length)
+            return NULL;
+    }
 
-    AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
-    nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-    assert(length == nt);
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
+        if(length != nk)
+            return NULL;
+    }
 
-    /* parameter ordering, matlab: fifth argument */
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
+        nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
+        if(length != nt || status > 0)
+            return NULL;
+    }
+
+    // parameter selection and reordering for sensitivities (matlab: fifth argument)
+    // For now, use all parameters
     nplist = np;
     plist = new int[np];
     for (int i = 0; i < np; i++)
@@ -78,9 +90,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
         idlist[i] = 0;
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
-    b_x0 = FALSE;
     x0data = NULL;
-    b_sx0 = FALSE;
     sx0data = NULL;
 
     /* pbarm parameterscales ; matlab: sixth argument*/
@@ -104,7 +114,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 }
 
 
-ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
+ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject) {
     ExpData *edata = new ExpData();
     if (edata == NULL) {
         return(NULL);
@@ -112,12 +122,10 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
 
     mz = NULL;
     zsigma = NULL;
-    b_expdata = FALSE;
 
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n;
-    const char* dataObject = "/data";
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
@@ -133,7 +141,6 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
             assert(m * n == nt * nz);
         }
-        b_expdata = TRUE;
     }
     H5Fclose(file_id);
 
@@ -239,7 +246,7 @@ int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char* optionsObject, con
     return intScalar;
 }
 
-void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length) {
+int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length) {
     H5T_class_t type_class;
     size_t type_size;
     herr_t status;
@@ -255,6 +262,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
         size = backtrace(array, 10);
         backtrace_symbols_fd(array, size, STDERR_FILENO);
 #endif
+        return status;
     }
 
 #ifdef AMI_HDF5_H_DEBUG
@@ -270,6 +278,7 @@ void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, 
     printfArray(*destination, *length, "%e ");
     printf("\n");
 #endif
+    return status < 0;
 }
 
 void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *m, hsize_t *n) {
@@ -411,3 +420,12 @@ void AMI_HDF5_setAttributeIntFromDouble(hid_t file_id, const char *obj_name, con
     H5LTset_attribute_int(file_id, obj_name, attr_name, intBuffer, size);
 }
 
+int AMI_HDF5_attributeExists(hid_t fileId, const char *datasetPath, const char *attributeName) {
+    if(H5Lexists(fileId, datasetPath, H5P_DEFAULT)) {
+        hid_t dataset = H5Dopen2(fileId, datasetPath, H5P_DEFAULT);
+        if(H5LTfind_attribute(dataset, attributeName))
+            return 1;
+    }
+
+    return 0;
+}

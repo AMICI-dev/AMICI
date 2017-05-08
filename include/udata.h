@@ -22,6 +22,14 @@ typedef enum AMI_o2mode_TAG {
     AMI_O2MODE_NONE, AMI_O2MODE_FULL, AMI_O2MODE_DIR
 } AMI_o2mode;
 
+typedef enum AMI_sensi_order_TAG {
+    AMI_SENSI_ORDER_NONE, AMI_SENSI_ORDER_FIRST, AMI_SENSI_ORDER_SECOND
+} AMI_sensi_order;
+
+typedef enum AMI_sensi_meth_TAG {
+    AMI_SENSI_NONE, AMI_SENSI_FSA, AMI_SENSI_ASA, AMI_SENSI_SS
+} AMI_sensi_meth;
+
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
     /** positivity flag */
@@ -86,7 +94,7 @@ typedef struct user_data {
     double *am_idlist;
     
     /** flag indicating whether sensitivities are supposed to be computed */
-    int am_sensi;
+    AMI_sensi_order am_sensi;
     /** absolute tolerances for integration */
     double am_atol;
     /** relative tolerances for integration */
@@ -104,7 +112,7 @@ typedef struct user_data {
     /*!
      * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
      */
-    int am_sensi_meth;
+    AMI_sensi_meth am_sensi_meth;
     /** linear solver specification */
     int am_linsol;
     /** interpolation type */
@@ -133,18 +141,7 @@ typedef struct user_data {
     /** lower bandwith of the jacobian */
     int am_lbw;
     
-    /** flag for state initialisation */
-    /*!
-     * flag which determines whether analytic state initialisation or provided initialisation should be used
-     */
-    booleantype am_bx0;
-    
-    /** flag for sensitivity initialisation */
-    /*!
-     * flag which determines whether analytic sensitivities initialisation or provided initialisation should be used
-     */
-    booleantype am_bsx0;
-    
+        
     /** state initialisation */
     double *am_x0data;
     
@@ -198,6 +195,7 @@ typedef struct user_data {
 
 EXTERNC void freeUserData(UserData *udata);
 #ifdef AMICI_WITHOUT_MATLAB
+EXTERNC UserData *getDefaultUserData();
 EXTERNC void printUserData(UserData *udata);
 #endif
 

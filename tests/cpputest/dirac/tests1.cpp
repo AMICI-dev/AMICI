@@ -71,7 +71,7 @@ TEST(groupDirac, testCreateAndFreeReturnData) {
 TEST(groupDirac, testSimulation) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options");
-    ExpData *edata = getTestExpData();
+    ExpData *edata = NULL;
 
     int status;
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
@@ -92,7 +92,7 @@ TEST(groupDirac, testSimulationExpData) {
 TEST(groupDirac, testSensitivityForward) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options");
-    ExpData *edata = getTestExpData();
+    ExpData *edata = NULL;
 
     int status;
     ReturnData *rdata = getSimulationResults(udata, edata, &status);

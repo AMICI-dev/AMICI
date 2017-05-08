@@ -17,11 +17,6 @@
 #define EXTERNC
 #endif
 
-/* sensitivity method */
-#define AMI_FSA 1
-#define AMI_ASA 2
-#define AMI_SS  3
-
 /* linear solvers */
 #define AMI_DENSE       1
 #define AMI_BAND        2
@@ -46,7 +41,7 @@
 #ifndef AMICI_WITHOUT_MATLAB
 UserData *setupUserData(const mxArray *prhs[]);
 ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus);
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata);
+ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status);
 #endif /* AMICI_WITHOUT_MATLAB */
 
 void *setupAMI(int *status, UserData *udata, TempData *tdata);

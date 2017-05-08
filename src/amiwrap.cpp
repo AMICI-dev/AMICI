@@ -82,9 +82,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     
     if (nx>0) {
-        edata = setupExpData(prhs, udata);
-        if (edata == NULL) {
-            status = -97;
+        edata = setupExpData(prhs, udata, &status);
+        if (status != 0) {
             goto freturn;
         }
     }

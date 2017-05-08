@@ -31,11 +31,28 @@ EXTERNC void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *u
  * @param datasetPath Path inside the HDF5 file
  * @return
  */
+
 EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char *datasetPath);
 
 EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath);
 
-EXTERNC ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata);
+/**
+ * @brief AMI_HDF5_readSimulationExpData reads AMICI experimental data from attributes in HDF5 file.
+ * @param hdffile Name of HDF5 file
+ * @param dataObject Path inside the HDF5 file to object having ExpData as attributes
+ * @return
+ */
+
+EXTERNC ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char *dataObject);
+
+/**
+ * @brief AMI_HDF5_attributeExists Check whether an attribute with the given name exists on the given dataset
+ * @param fileId The HDF5 file object
+ * @param datasetPath Dataset of which attributes should be checked
+ * @param attributeName Name of the attribute of interest
+ * @return
+ */
+EXTERNC int AMI_HDF5_attributeExists(hid_t fileId, const char *datasetPath, const char *attributeName);
 
 // Helper functions to reading and writing HDF5 attributes:
 
@@ -47,7 +64,7 @@ EXTERNC double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id, const char* opti
 
 EXTERNC int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char* optionsObject, const char* attributeName);
 
-EXTERNC void AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length);
+EXTERNC int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, double **destination, hsize_t *length);
 
 EXTERNC void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length);
 

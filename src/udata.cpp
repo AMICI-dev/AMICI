@@ -1,6 +1,14 @@
 #include "include/udata.h"
-#include<include/udata_accessors.h>
+#include <include/udata_accessors.h>
 #include <stdio.h>
+#include <cstring>
+
+UserData *getDefaultUserData() {
+    UserData *udata = new UserData;
+    memset(udata, 0, sizeof(*udata));
+
+    return udata;
+}
 
 void freeUserData(UserData *udata) {
     if(udata) {
@@ -69,8 +77,6 @@ void printUserData(UserData *udata) {
     printf("am_stldet: %d\n", udata->am_stldet);
     printf("am_ubw: %d\n", udata->am_ubw);
     printf("am_lbw: %d\n", udata->am_lbw);
-    printf("am_bx0: %d\n", udata->am_bx0);
-    printf("am_bsx0: %d\n", udata->am_bsx0);
     printf("am_x0data: %p\n", udata->am_x0data);
     printf("am_sx0data: %p\n", udata->am_sx0data);
     printf("am_ordering: %d\n", udata->am_ordering);

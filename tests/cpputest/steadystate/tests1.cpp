@@ -22,7 +22,7 @@ TEST_GROUP(groupSteadystate)
 TEST(groupSteadystate, testSimulation) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/nosensi/options");
-    ExpData *edata = getTestExpData();
+    ExpData *edata = NULL;
 
     int status;
     ReturnData *rdata = getSimulationResults(udata, edata, &status);

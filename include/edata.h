@@ -19,10 +19,6 @@ typedef struct edata {
     double *am_mz; 
     /** standard deviation of observed events */
     double *am_zsigma;
-    
-    /** boolean indicating whether experimental data was provided */
-    bool am_bexpdata;
-    
 } ExpData;
 
 EXTERNC void freeExpData(ExpData *edata);
