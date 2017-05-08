@@ -424,7 +424,9 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
 
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
         if(sensi >= AMI_SENSI_ORDER_FIRST && sensi_meth == AMI_SENSI_ASA) {
-            errMsgIdAndTxt("AMICI:mex:data","No data provied!");
+            errMsgIdAndTxt("AMICI:mex:data","No data provided!");
+        } else {
+            *status = 0;
         }
         return NULL;
     } else {
