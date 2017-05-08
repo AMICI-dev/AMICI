@@ -122,14 +122,14 @@ for ifun = this.funs
                 end
                 fprintf(fid,'for(ip = 0; ip<nplist; ip++) {\n');
                 if(ismember('*sx',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
+                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[ip]);\n');
                 end
                 if(ismember('*sx0',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);\n');
+                    fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[ip]);\n');
                     fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 if(ismember('*sdx0',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sdx0_tmp = N_VGetArrayPointer(sdx0[plist[ip]]);\n');
+                    fprintf(fid,'sdx0_tmp = N_VGetArrayPointer(sdx0[ip]);\n');
                     fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 fprintf(fid,'switch (plist[ip]) {\n');

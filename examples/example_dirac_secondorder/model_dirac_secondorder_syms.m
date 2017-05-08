@@ -20,7 +20,7 @@ model.sym.p = [p1,p2,p3,p4];
 
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
-model.param = 'log10'; 
+model.param = 'log10';
 
 %%
 % SYSTEM EQUATIONS
@@ -33,7 +33,7 @@ model.sym.xdot = sym(zeros(size(model.sym.x)));
 % piecewise defined function
 model.sym.xdot(1) = -p1*x1 + dirac(t-p2);
 % inhomogeneous
-model.sym.xdot(2) = p3*x1 - p4*x2 ;
+model.sym.xdot(2) = p3*x1 - p4*x2;
 
 %%
 % INITIAL CONDITIONS

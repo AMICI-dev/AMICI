@@ -381,9 +381,9 @@ if(o2flag)
     fprintf(fid,['        end\n']);
     switch(o2flag)
         case 1
-            fprintf(fid,['        sol.s2x = reshape(sol.sx(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['        sol.s2y = reshape(sol.sy(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['        sol.s2sigmay = reshape(sol.ssigmay(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+            fprintf(fid,['        sol.s2x = reshape(sol.sx(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['        sol.s2y = reshape(sol.sy(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['        sol.s2sigmay = reshape(sol.ssigmay(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
         case 2
             fprintf(fid,['        sol.s2x = sol.sx(:,' num2str(nxtrue+1) ':end,:);\n']);
             fprintf(fid,['        sol.s2y = sol.sy(:,' num2str(nytrue+1) ':end,:);\n']);
@@ -391,9 +391,9 @@ if(o2flag)
     end
     switch(o2flag)
         case 1
-            fprintf(fid,['        s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['        s2sigmaz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['        s2rz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+            fprintf(fid,['        s2z = zeros(size(sol.z,1),' num2str(nztrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['        s2sigmaz = zeros(size(sol.z,1),' num2str(nztrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['        s2rz = zeros(size(sol.z,1),' num2str(nztrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
         case 2
             fprintf(fid,['        s2z = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
             fprintf(fid,['        s2sigmaz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
@@ -402,9 +402,9 @@ if(o2flag)
     fprintf(fid,['        for iz = 1:' num2str(nztrue) '\n']);
     switch(o2flag)
         case 1
-            fprintf(fid,['            sol.s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['            sol.s2sigmaz(:,iz,:,:) = reshape(sol.ssigmaz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
-            fprintf(fid,['            sol.s2rz(:,iz,:,:) = reshape(sol.srz(:,((iz-1)*(length(theta(options_ami.sens_ind)+1))+2):((iz-1)*(length(theta(options_ami.sens_ind)+1))+length(theta(options_ami.sens_ind))+1),:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)),length(theta(options_ami.sens_ind)));\n']);
+            fprintf(fid,['            sol.s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(' num2str(np) '+1)+2):((iz-1)*(' num2str(np) '+1)+' num2str(np) '+1),:),options_ami.nmaxevent,1,' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['            sol.s2sigmaz(:,iz,:,:) = reshape(sol.ssigmaz(:,((iz-1)*(' num2str(np) '+1)+2):((iz-1)*(' num2str(np) '+1)+' num2str(np) '+1),:),options_ami.nmaxevent,1,' num2str(np) ',length(options_ami.sens_ind));\n']);
+            fprintf(fid,['            sol.s2rz(:,iz,:,:) = reshape(sol.srz(:,((iz-1)*(' num2str(np) '+1)+2):((iz-1)*(' num2str(np) '+1)+' num2str(np) '+1),:),options_ami.nmaxevent,1,' num2str(np) ',length(options_ami.sens_ind));\n']);
         case 2
             fprintf(fid,['            sol.s2z(:,iz,:) = reshape(sol.sz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
             fprintf(fid,['            sol.s2sigmaz(:,iz,:) = reshape(sol.ssigmaz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
