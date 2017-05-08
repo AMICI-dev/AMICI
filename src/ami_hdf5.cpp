@@ -27,7 +27,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, cons
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath)
 {
-    UserData *udata = new UserData();
+    UserData *udata = getDefaultUserData();
     if (udata == NULL)
         return(NULL);
 
@@ -53,19 +53,28 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
-    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
-    np = length; // TODO init_modeldims? -> assert
 
-    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-    if(length != nk)
-        return NULL;
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
+        if(np != length)
+            return NULL;
+    }
 
-    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
-    nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-    if(length != nt || status > 0)
-        return NULL;
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
+        if(length != nk)
+            return NULL;
+    }
 
-    /* parameter ordering, matlab: fifth argument */
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
+        nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
+        if(length != nt || status > 0)
+            return NULL;
+    }
+
+    // parameter selection and reordering for sensitivities (matlab: fifth argument)
+    // For now, use all parameters
     nplist = np;
     plist = new int[np];
     for (int i = 0; i < np; i++)
@@ -416,3 +425,12 @@ void AMI_HDF5_setAttributeIntFromDouble(hid_t file_id, const char *obj_name, con
     H5LTset_attribute_int(file_id, obj_name, attr_name, intBuffer, size);
 }
 
+int AMI_HDF5_attributeExists(hid_t fileId, const char *datasetPath, const char *attributeName) {
+    if(H5Lexists(fileId, datasetPath, H5P_DEFAULT)) {
+        hid_t dataset = H5Dopen2(fileId, datasetPath, H5P_DEFAULT);
+        if(H5LTfind_attribute(dataset, attributeName))
+            return 1;
+    }
+
+    return 0;
+}

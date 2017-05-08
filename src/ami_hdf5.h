@@ -59,4 +59,5 @@ EXTERNC void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id, const char* optio
 
 EXTERNC void AMI_HDF5_setAttributeIntFromDouble(hid_t file_id, const char *obj_name, const char *attr_name, const double *bufferDouble, size_t size );
 
+EXTERNC int AMI_HDF5_attributeExists(hid_t fileId, const char *datasetPath, const char *attributeName);
 #endif
