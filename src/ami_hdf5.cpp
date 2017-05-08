@@ -1,4 +1,4 @@
-#include "ami_hdf5.h"
+#include "include/ami_hdf5.h"
 
 #include <assert.h>
 #ifdef AMI_HDF5_H_DEBUG

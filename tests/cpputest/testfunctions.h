@@ -4,7 +4,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-#include "src/ami_hdf5.h"
+#include "include/ami_hdf5.h"
 
 #define HDFFILE "../expectedResults.h5"
 #define TEST_EPSILON 1e-12
