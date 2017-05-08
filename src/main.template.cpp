@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     }
 
     // Read ExpData (experimental data for model) from HDF5 file
-    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata);
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data");
     if (edata == NULL) {
         freeUserData(udata);
         return 1;

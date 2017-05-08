@@ -116,7 +116,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 }
 
 
-ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
+ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject) {
     ExpData *edata = new ExpData();
     if (edata == NULL) {
         return(NULL);
@@ -129,7 +129,6 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata) {
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n;
-    const char* dataObject = "/data";
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
