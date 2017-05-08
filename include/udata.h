@@ -141,11 +141,6 @@ typedef struct user_data {
     /** lower bandwith of the jacobian */
     int am_lbw;
     
-    /** flag for state initialisation */
-    /*!
-     * flag which determines whether analytic state initialisation or provided initialisation should be used
-     */
-    booleantype am_bx0;
     
     /** flag for sensitivity initialisation */
     /*!

@@ -234,22 +234,18 @@ UserData *setupUserData(const mxArray *prhs[]) {
     xbar = mxGetPr(prhs[6]);
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
+    x0data = NULL;
     if (!prhs[7]) {
-        b_x0 = FALSE;
         b_sx0 = FALSE;
     } else {
         if(mxGetField(prhs[7], 0 ,"x0")) {
-            x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
             if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
+                x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
+
                 /* check dimensions */
                 if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
                 if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
-                b_x0 = TRUE;
-            } else {
-                b_x0 = FALSE;
             }
-        } else {
-            b_x0 = FALSE;
         }
 
         if(mxGetField(prhs[7], 0 ,"sx0")) {
@@ -582,7 +578,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
 
         /* initialise states */
         if (x == NULL) return(NULL);
-        if(!b_x0) {
+        if(x0data == NULL) {
             *status = fx0(x, udata);
             if (*status != AMI_SUCCESS) return(NULL);
         } else {
