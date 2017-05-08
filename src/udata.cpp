@@ -1,6 +1,14 @@
 #include "include/udata.h"
-#include<include/udata_accessors.h>
+#include <include/udata_accessors.h>
 #include <stdio.h>
+#include <cstring>
+
+UserData *getDefaultUserData() {
+    UserData *udata = new UserData;
+    memset(udata, 0, sizeof(*udata));
+
+    return udata;
+}
 
 void freeUserData(UserData *udata) {
     if(udata) {

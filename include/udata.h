@@ -198,6 +198,7 @@ typedef struct user_data {
 
 EXTERNC void freeUserData(UserData *udata);
 #ifdef AMICI_WITHOUT_MATLAB
+EXTERNC UserData *getDefaultUserData();
 EXTERNC void printUserData(UserData *udata);
 #endif
 
