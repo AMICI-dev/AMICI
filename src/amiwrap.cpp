@@ -15,15 +15,11 @@
 #endif
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
-#include <include/amici.h> /* amici functions */
-#include <include/udata.h>
-#include <include/rdata.h>
-#include <include/edata.h>
-#include <include/tdata.h>
-#include <include/udata_accessors.h>
-#include <include/tdata_accessors.h>
+#include <include/amici_interface_matlab.h> /* amici functions */
 #include <include/edata_accessors.h>
+#include <include/udata_accessors.h>
 #include <include/rdata_accessors.h>
+
 
 /*!
  * mexFunction is the main function of the mex simulation file this function carries out all numerical integration and writes results into the sol struct.

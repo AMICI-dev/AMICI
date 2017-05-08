@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "wrapfunctions.h" /* model specific functions */
-#include <include/amici.h> /* AMICI API */
+#include <include/amici_interface_cpp.h> /* AMICI API */
 #include <include/ami_hdf5.h>  /* AMICI HDF5 I/O functions */
 #include <include/udata_accessors.h> /* Accessor macros for UserData members */
 #include <include/rdata_accessors.h> /* Accessor macros for ReturnData members */

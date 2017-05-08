@@ -24,6 +24,7 @@ include_directories("${SUITESPARSE_DIR}/include")
 set(SRC_LIST_LIB
 ${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
+${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp

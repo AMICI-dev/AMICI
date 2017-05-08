@@ -2,7 +2,7 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include <testfunctions.h>
-#include <include/amici.h>
+#include <include/amici_interface_cpp.h>
 #include <cstring>
 #include "wrapfunctions.h"
 
