@@ -214,7 +214,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
 
     readOptionData(z2event)
     readOptionData(qpositivex)
-    readOptionScalar(sensi,int)
+    readOptionScalar(sensi,AMI_sensi_order)
     readOptionScalar(ism,int)
     readOptionScalar(sensi_meth,AMI_sensi_meth)
     readOptionScalar(ordering,int)
@@ -274,7 +274,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
         M_tmp = new realtype[nx*nx]();
         dfdx_tmp = new realtype[nx*nx]();
     }
-    if (sensi>0) {
+    if (sensi >= AMI_SENSI_ORDER_FIRST) {
         /* initialise temporary dxdotdp storage */
         tmp_dxdotdp = new realtype[nx*nplist]();
     }
@@ -350,7 +350,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
     initField2(order,nt,1);
-    if(sensi>0){
+    if(sensi >= AMI_SENSI_ORDER_FIRST){
         initField2(numstepsS,nt,1);
         initField2(numrhsevalsS,nt,1);
     }
@@ -373,7 +373,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
             initField2(dxdotdp,nx,nplist);
         }
     }
-    if(sensi>0) {
+    if(sensi >= AMI_SENSI_ORDER_FIRST) {
         initField2(sllh,nplist,1);
         if (sensi_meth == AMI_SENSI_FSA) {
             initField3(sx,nt,nx,nplist);
@@ -383,7 +383,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
             }
             if((nz>0) & (ne>0)){
                 initField3(srz,nmaxevent,nz,nplist);
-                if(sensi>1){
+                if(sensi >= AMI_SENSI_ORDER_SECOND){
                     initField4(s2rz,nmaxevent,nz,nplist,nplist);
                 }
                 initField3(sz,nmaxevent,nz,nplist);
@@ -398,7 +398,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
                 initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
-        if(sensi>1) {
+        if(sensi >= AMI_SENSI_ORDER_SECOND) {
             if (ng>1) {
                 initField2(s2llh,nplist,(ng-1));
             }
@@ -433,7 +433,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
     ExpData *edata; /* returned rdata struct */
 
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
-        if(sensi>0 && sensi_meth == AMI_SENSI_ASA) {
+        if(sensi >= AMI_SENSI_ORDER_FIRST && sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provied!");
         }
         return NULL;
@@ -738,7 +738,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
             break;
     }
 
-    if ( sensi >= 1) {
+    if (sensi >= AMI_SENSI_ORDER_FIRST) {
 
         dydx = new realtype[ny*nx]();
         dydp = new realtype[ny*nplist]();
@@ -1199,7 +1199,7 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
             sigmaydata[iy*nt+it] = sigma_y[iy];
         }
     }
-    if (sensi >= 1) {
+    if (sensi >= AMI_SENSI_ORDER_FIRST) {
         prepDataSensis(status, it, ami_mem, udata, rdata, edata, tdata);
         if (sensi_meth == AMI_SENSI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
@@ -1255,7 +1255,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData *udata, R
     *status = fsroot(t,ie,nroots,srzdata,x,NVsx,udata);
     if (*status != AMI_SUCCESS) return;
 
-    if(sensi>1) {
+    if(sensi >= AMI_SENSI_ORDER_SECOND) {
         *status = fs2root(t,ie,nroots,s2rzdata,x,NVsx,udata);
         if (*status != AMI_SUCCESS) return;
     }
@@ -1406,7 +1406,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
             if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
-                if (sensi >= 1) {
+                if (sensi >= AMI_SENSI_ORDER_FIRST) {
                     if(sensi_meth == AMI_SENSI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
                         if (*status != AMI_SUCCESS) return;
@@ -1476,7 +1476,7 @@ void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rd
                 getEventObjective(status, ie, ami_mem, udata, rdata, edata, tdata);
                 if (*status != AMI_SUCCESS) return;
 
-                if (sensi >= 1) {
+                if (sensi >= AMI_SENSI_ORDER_FIRST) {
                     if(sensi_meth == AMI_SENSI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
                         if (*status != AMI_SUCCESS) return;
@@ -1610,7 +1610,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
 
     /* only extract in the first event fired */
     if (seflag == 0) {
-        if(sensi >= 1){
+        if(sensi >= AMI_SENSI_ORDER_FIRST){
             if (sensi_meth == AMI_SENSI_FSA) {
                 *status = AMIGetSens(ami_mem, &t, NVsx);
                 if (*status != AMI_SUCCESS) return;
@@ -1632,7 +1632,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
     if (*status != AMI_SUCCESS) return;
 
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
-    if(sensi >= 1){
+    if(sensi >= AMI_SENSI_ORDER_FIRST){
         /* store x and xdot to compute jump in sensitivities */
         N_VScale(1.0,x,x_old);
         if (sensi_meth == AMI_SENSI_FSA) {
@@ -1675,7 +1675,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
         return;
     }
 
-    if(sensi >= 1){
+    if(sensi >= AMI_SENSI_ORDER_FIRST){
         if (sensi_meth == AMI_SENSI_FSA) {
 
             /* compute the new xdot  */
@@ -1723,22 +1723,14 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
         if (*status != AMI_SUCCESS) return;
     }
 
-    /* I don't get the meaning of those double if's ... */
-    if(sensi >= 1){
+    if(sensi >= AMI_SENSI_ORDER_FIRST){
         if (sensi_meth == AMI_SENSI_FSA) {
-            if(sensi >= 1){
-                if (sensi_meth == AMI_SENSI_FSA) {
-                    if (seflag == 0) {
-                        *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
-                        if (*status != AMI_SUCCESS) return;
-                    }
-                }
+            if (seflag == 0) {
+                *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
+                if (*status != AMI_SUCCESS) return;
             }
         }
     }
-
-    return;
-
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -2078,7 +2070,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
     initField2(order,nt,1);
-    if(sensi>0){
+    if(sensi >= AMI_SENSI_ORDER_FIRST){
         initField2(numstepsS,nt,1);
         initField2(numrhsevalsS,nt,1);
     }
@@ -2101,7 +2093,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
             initField2(dxdotdp,nx,nplist);
         }
     }
-    if(sensi>0) {
+    if(sensi >= AMI_SENSI_ORDER_FIRST) {
         initField2(sllh,nplist,1);
         if (sensi_meth == AMI_SENSI_FSA) {
             initField3(sx,nt,nx,nplist);
@@ -2111,7 +2103,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
             }
             if((nz>0) & (ne>0)){
                 initField3(srz,nmaxevent,nz,nplist);
-                if(sensi>1){
+                if(sensi >= AMI_SENSI_ORDER_SECOND){
                     initField4(s2rz,nmaxevent,nz,nplist,nplist);
                 }
                 initField3(sz,nmaxevent,nz,nplist);
@@ -2126,7 +2118,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
                 initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
-        if(sensi>1) {
+        if(sensi >= AMI_SENSI_ORDER_SECOND) {
             initField2(s2llh,ng-1,nplist);
         }
     }
@@ -2158,14 +2150,14 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
 
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
-        if(sensi_meth == AMI_SENSI_FSA && sensi >= 1) {
+        if(sensi_meth == AMI_SENSI_FSA && sensi >= AMI_SENSI_ORDER_FIRST) {
             *status = AMISetStopTime(ami_mem, ts[it]);
         }
         if (*status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
                 while (t<ts[it]) {
-                    if(sensi_meth == AMI_SENSI_ASA && sensi >= 1) {
+                    if(sensi_meth == AMI_SENSI_ASA && sensi >= AMI_SENSI_ORDER_FIRST) {
                         if (nx>0) {
                             *status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                         } else {
@@ -2236,7 +2228,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     double tnext;
 
     if (nx>0) {
-        if (sensi >= 1) {
+        if (sensi >= AMI_SENSI_ORDER_FIRST) {
             if(sensi_meth == AMI_SENSI_ASA) {
                 if(*status == 0) {
                     setupAMIB(status, ami_mem, udata, tdata);
@@ -2473,7 +2465,7 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
         if(ny>0) {
             if(sigma_y)    delete[] sigma_y;
         }
-        if (sensi >= 1) {
+        if (sensi >= AMI_SENSI_ORDER_FIRST) {
             if(dydx) delete[] dydx;
             if(dydp) delete[] dydp;
             if(dgdp) delete[] dgdp;
@@ -2650,9 +2642,9 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
         break;
     }
 
-    if(sensi > 0) {
+    if(sensi >= AMI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity analysis
-        if(sensi == 2){
+        if(sensi == AMI_SENSI_ORDER_SECOND){
             if(sensi_meth == AMI_SENSI_ASA){
                 if(rdata->am_xdata)
                     if(rdata->am_sxdata)
@@ -2784,7 +2776,7 @@ void processUserData(UserData *udata) {
         M_tmp = new realtype[nx*nx]();
         dfdx_tmp = new realtype[nx*nx]();
     }
-    if (sensi>0) {
+    if (sensi >= AMI_SENSI_ORDER_FIRST) {
         /* initialise temporary dxdotdp storage */
         tmp_dxdotdp = new realtype[nx*nplist]();
     }

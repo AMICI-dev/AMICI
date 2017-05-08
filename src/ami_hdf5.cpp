@@ -45,7 +45,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     interpType = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
     ism        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
     sensi_meth = (AMI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
-    sensi      = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
+    sensi      = (AMI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
     nmaxevent  = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
     ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 

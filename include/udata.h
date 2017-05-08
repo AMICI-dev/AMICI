@@ -22,6 +22,10 @@ typedef enum AMI_o2mode_TAG {
     AMI_O2MODE_NONE, AMI_O2MODE_FULL, AMI_O2MODE_DIR
 } AMI_o2mode;
 
+typedef enum AMI_sensi_order_TAG {
+    AMI_SENSI_ORDER_NONE, AMI_SENSI_ORDER_FIRST, AMI_SENSI_ORDER_SECOND, AMI_SENSI_ORDER_SECOND_DIRECTIONAL
+} AMI_sensi_order;
+
 typedef enum AMI_sensi_meth_TAG {
     AMI_SENSI_NONE, AMI_SENSI_FSA, AMI_SENSI_ASA, AMI_SENSI_SS
 } AMI_sensi_meth;
@@ -90,7 +94,7 @@ typedef struct user_data {
     double *am_idlist;
     
     /** flag indicating whether sensitivities are supposed to be computed */
-    int am_sensi;
+    AMI_sensi_order am_sensi;
     /** absolute tolerances for integration */
     double am_atol;
     /** relative tolerances for integration */
