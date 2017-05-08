@@ -216,7 +216,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
     readOptionData(qpositivex)
     readOptionScalar(sensi,int)
     readOptionScalar(ism,int)
-    readOptionScalar(sensi_meth,int)
+    readOptionScalar(sensi_meth,AMI_sensi_meth)
     readOptionScalar(ordering,int)
 
     /* pbar */
@@ -367,7 +367,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     if(ny>0) {
         initField2(y,nt,ny);
         initField2(sigmay,nt,ny);
-        if (sensi_meth == AMI_SS) {
+        if (sensi_meth == AMI_SENSI_SS) {
             initField2(dydp,ny,nplist);
             initField2(dydx,ny,nx);
             initField2(dxdotdp,nx,nplist);
@@ -375,7 +375,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     }
     if(sensi>0) {
         initField2(sllh,nplist,1);
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
             initField3(sx,nt,nx,nplist);
             if(ny>0) {
                 initField3(sy,nt,ny,nplist);
@@ -390,7 +390,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
                 initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
-        if (sensi_meth == AMI_ASA) {
+        if (sensi_meth == AMI_SENSI_ASA) {
             if(ny>0) {
                 initField3(ssigmay,nt,ny,nplist);
             }
@@ -433,7 +433,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
     ExpData *edata; /* returned rdata struct */
 
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
-        if(sensi>0 && sensi_meth == AMI_ASA) {
+        if(sensi>0 && sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provied!");
         }
         return NULL;
@@ -755,7 +755,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         dsigma_ydp = new realtype[ny*nplist]();
         if(ne>0) dsigma_zdp = new realtype[nz*nplist]();
         
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
 
             if(nx>0) {
 
@@ -800,7 +800,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
             }
         }
 
-        if (sensi_meth == AMI_ASA) {
+        if (sensi_meth == AMI_SENSI_ASA) {
 
             if(nx>0) {
                 /* Allocate space for the adjoint computation */
@@ -1132,7 +1132,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
         fdJydp(ts[it],it,dgdp,ydata,x,dydp,my,sigma_y,dsigma_ydp,udata);
 
 
-        if (sensi_meth == AMI_ASA) {
+        if (sensi_meth == AMI_SENSI_ASA) {
             for(ig=0; ig<ng; ig++) {
                 for(ip=0; ip < nplist; ip++) {
                     for(iy=0; iy < nytrue; iy++) {
@@ -1201,7 +1201,7 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
     }
     if (sensi >= 1) {
         prepDataSensis(status, it, ami_mem, udata, rdata, edata, tdata);
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
             getDataSensisFSA(status, it, ami_mem, udata, rdata, edata, tdata);
         }
     }
@@ -1407,7 +1407,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
                 *status = fz(t,ie,nroots,zdata,x,udata);
                 if (*status != AMI_SUCCESS) return;
                 if (sensi >= 1) {
-                    if(sensi_meth == AMI_ASA) {
+                    if(sensi_meth == AMI_SENSI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
                         if (*status != AMI_SUCCESS) return;
                     } else {
@@ -1477,7 +1477,7 @@ void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rd
                 if (*status != AMI_SUCCESS) return;
 
                 if (sensi >= 1) {
-                    if(sensi_meth == AMI_ASA) {
+                    if(sensi_meth == AMI_SENSI_ASA) {
                         getEventSensisASA(status, ie, ami_mem, udata, rdata, edata, tdata);
                         if (*status != AMI_SUCCESS) return;
                     } else {
@@ -1522,7 +1522,7 @@ void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, Return
         }
 
         if (it == nt-1) {
-            if( sensi_meth == AMI_SS) {
+            if( sensi_meth == AMI_SENSI_SS) {
 
                 *status = fdxdotdp(t,dxdotdpdata,x,dx,udata);
                 if (*status != AMI_SUCCESS) return;
@@ -1611,7 +1611,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
     /* only extract in the first event fired */
     if (seflag == 0) {
         if(sensi >= 1){
-            if (sensi_meth == AMI_FSA) {
+            if (sensi_meth == AMI_SENSI_FSA) {
                 *status = AMIGetSens(ami_mem, &t, NVsx);
                 if (*status != AMI_SUCCESS) return;
             }
@@ -1635,7 +1635,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
     if(sensi >= 1){
         /* store x and xdot to compute jump in sensitivities */
         N_VScale(1.0,x,x_old);
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
             *status = fxdot(t,x,dx,xdot,udata);
             N_VScale(1.0,xdot,xdot_old);
             N_VScale(1.0,dx,dx_old);
@@ -1650,7 +1650,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
             }
         }
 
-        if (sensi_meth == AMI_ASA) {
+        if (sensi_meth == AMI_SENSI_ASA) {
             /* store x to compute jump in discontinuity */
             if (*iroot<nmaxevent*ne) {
                 N_VScale(1.0,x,x_disc[*iroot]);
@@ -1676,7 +1676,7 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
     }
 
     if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
 
             /* compute the new xdot  */
             *status = fxdot(t,x,dx,xdot,udata);
@@ -1725,9 +1725,9 @@ void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, Us
 
     /* I don't get the meaning of those double if's ... */
     if(sensi >= 1){
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
             if(sensi >= 1){
-                if (sensi_meth == AMI_FSA) {
+                if (sensi_meth == AMI_SENSI_FSA) {
                     if (seflag == 0) {
                         *status = AMISensReInit(ami_mem, ism, NVsx, sdx);
                         if (*status != AMI_SUCCESS) return;
@@ -2095,7 +2095,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
     if(ny>0) {
         initField2(y,nt,ny);
         initField2(sigmay,nt,ny);
-        if (sensi_meth == AMI_SS) {
+        if (sensi_meth == AMI_SENSI_SS) {
             initField2(dydp,ny,nplist);
             initField2(dydx,ny,nx);
             initField2(dxdotdp,nx,nplist);
@@ -2103,7 +2103,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
     }
     if(sensi>0) {
         initField2(sllh,nplist,1);
-        if (sensi_meth == AMI_FSA) {
+        if (sensi_meth == AMI_SENSI_FSA) {
             initField3(sx,nt,nx,nplist);
             if(ny>0) {
                 initField3(sy,nt,ny,nplist);
@@ -2118,7 +2118,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
                 initField3(ssigmaz,nmaxevent,nz,nplist);
             }
         }
-        if (sensi_meth == AMI_ASA) {
+        if (sensi_meth == AMI_SENSI_ASA) {
             if(ny>0) {
                 initField3(ssigmay,nt,ny,nplist);
             }
@@ -2158,14 +2158,14 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
 
     /* loop over timepoints */
     for (it=0; it < nt; it++) {
-        if(sensi_meth == AMI_FSA && sensi >= 1) {
+        if(sensi_meth == AMI_SENSI_FSA && sensi >= 1) {
             *status = AMISetStopTime(ami_mem, ts[it]);
         }
         if (*status == 0) {
             /* only integrate if no errors occured */
             if(ts[it] > tstart) {
                 while (t<ts[it]) {
-                    if(sensi_meth == AMI_ASA && sensi >= 1) {
+                    if(sensi_meth == AMI_SENSI_ASA && sensi >= 1) {
                         if (nx>0) {
                             *status = AMISolveF(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL, &ncheck);
                         } else {
@@ -2237,7 +2237,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
 
     if (nx>0) {
         if (sensi >= 1) {
-            if(sensi_meth == AMI_ASA) {
+            if(sensi_meth == AMI_SENSI_ASA) {
                 if(*status == 0) {
                     setupAMIB(status, ami_mem, udata, tdata);
                     *setupBdone = true;
@@ -2489,19 +2489,19 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
             if (ne>0) {
                 if(dsigma_zdp) delete[] dsigma_zdp;
             }
-            if (sensi_meth == AMI_FSA) {
+            if (sensi_meth == AMI_SENSI_FSA) {
                 N_VDestroyVectorArray_Serial(NVsx,nplist);
             }
-            if (sensi_meth == AMI_ASA) {
+            if (sensi_meth == AMI_SENSI_ASA) {
                 if(NVsx) {
                     N_VDestroyVectorArray_Serial(NVsx,nplist);
                 }
             }
 
-            if (sensi_meth == AMI_FSA) {
+            if (sensi_meth == AMI_SENSI_FSA) {
                 N_VDestroyVectorArray_Serial(sdx, nplist);
             }
-            if (sensi_meth == AMI_ASA) {
+            if (sensi_meth == AMI_SENSI_ASA) {
 
                 if(llhS0) delete[] llhS0;
                 if(setupBdone) N_VDestroy_Serial(dxB);
@@ -2653,7 +2653,7 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
     if(sensi > 0) {
         // recover first order sensitivies from states for adjoint sensitivity analysis
         if(sensi == 2){
-            if(sensi_meth == AMI_ASA){
+            if(sensi_meth == AMI_SENSI_ASA){
                 if(rdata->am_xdata)
                     if(rdata->am_sxdata)
                         for(int ip = 0; ip < nplist; ++ip)
@@ -2698,7 +2698,7 @@ if(rdata->am_s ## QUANT ## data) \
         chainRule(sigmaz,iz,nztrue,nz,ie,nmaxevent)
         chainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
-    if(sensi_meth == AMI_SS) {
+    if(sensi_meth == AMI_SENSI_SS) {
         if(rdata->am_dxdotdpdata)
             for(int ip = 0; ip < nplist; ++ip)
                 for(int ix = 0; ix < nx; ++ix)

@@ -17,11 +17,6 @@
 #define EXTERNC
 #endif
 
-/* sensitivity method */
-#define AMI_FSA 1
-#define AMI_ASA 2
-#define AMI_SS  3
-
 /* linear solvers */
 #define AMI_DENSE       1
 #define AMI_BAND        2

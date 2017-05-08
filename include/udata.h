@@ -22,6 +22,10 @@ typedef enum AMI_o2mode_TAG {
     AMI_O2MODE_NONE, AMI_O2MODE_FULL, AMI_O2MODE_DIR
 } AMI_o2mode;
 
+typedef enum AMI_sensi_meth_TAG {
+    AMI_SENSI_NONE, AMI_SENSI_FSA, AMI_SENSI_ASA, AMI_SENSI_SS
+} AMI_sensi_meth;
+
 /** @brief struct that stores all user provided data */
 typedef struct user_data {
     /** positivity flag */
@@ -104,7 +108,7 @@ typedef struct user_data {
     /*!
      * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
      */
-    int am_sensi_meth;
+    AMI_sensi_meth am_sensi_meth;
     /** linear solver specification */
     int am_linsol;
     /** interpolation type */
