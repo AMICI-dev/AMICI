@@ -528,7 +528,7 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
 
     delete[] errmsg;
 
-    status = 0;
+    *status = 0;
 
     return(edata);
 }
@@ -2581,10 +2581,6 @@ ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) 
 
     rdata = initReturnData(udata, pstatus);
     if (rdata == NULL) goto freturn;
-
-    if (nx>0) {
-        if (edata == NULL) goto freturn;
-    }
 
     *pstatus = 0;
 
