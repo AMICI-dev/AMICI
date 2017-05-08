@@ -124,7 +124,6 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     mz = NULL;
     zsigma = NULL;
-    b_expdata = FALSE;
 
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -144,7 +143,6 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
             assert(m * n == nt * nz);
         }
-        b_expdata = TRUE;
     }
     H5Fclose(file_id);
 

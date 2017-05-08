@@ -417,7 +417,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
 /* ------------------------------------------------------------------------------------- */
 
 #ifndef AMICI_WITHOUT_MATLAB
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
+ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
     /**
      * setupExpData initialises the experimental data struct
      * @param[in] prhs user input @type *mxArray
@@ -431,21 +431,20 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     char *errmsg;
     errmsg = new char[200]();
 
+    *status = -97;
+
     ExpData *edata; /* returned rdata struct */
 
-
-    /* Return edata structure */
-    edata = new ExpData();
-    if (edata == NULL) return(NULL);
-
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
-        b_expdata = FALSE;
         if(sensi>0 && sensi_meth == AMI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provied!");
-            return NULL;
         }
+        return NULL;
     } else {
-        b_expdata = TRUE;
+        /* Return edata structure */
+        edata = new ExpData();
+        if (edata == NULL) return(NULL);
+
         if (mxGetProperty(prhs[8], 0 ,"Y")) {
             my = mxGetPr(mxGetProperty(prhs[8], 0 ,"Y"));
             nmyy = (int) mxGetN(mxGetProperty(prhs[8], 0 ,"Y"));
@@ -531,6 +530,8 @@ ExpData *setupExpData(const mxArray *prhs[], UserData *udata) {
     }
 
     delete[] errmsg;
+
+    status = 0;
 
     return(edata);
 }
@@ -1068,7 +1069,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
     }
 
     for (iy=0; iy<nytrue; iy++) {
-        if(b_expdata){
+        if(edata){
             if (amiIsNaN(ysigma[iy*nt+it])) {
                 *status = fdsigma_ydp(t,dsigma_ydp,udata);
                 if (*status != AMI_SUCCESS) return;
@@ -1087,7 +1088,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
         }
     }
     fsy(ts[it],it,sydata,dydx,dydp,NVsx,udata);
-    if(b_expdata) {
+    if(edata) {
         fsJy(ts[it],it,sllhdata,s2llhdata,dgdy,dgdp,ydata,sigma_y,sydata,dydp,my,udata);
     }
 }
@@ -1117,7 +1118,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
     if (*status != AMI_SUCCESS) return;
     *status = fdydp(ts[it],it,dydp,x,udata);
     if (*status != AMI_SUCCESS) return;
-    if(b_expdata) {
+    if(edata) {
         for (iy=0; iy<nytrue; iy++) {
             if (amiIsNaN(ysigma[iy*nt+it])) {
                 *status = fdsigma_ydp(t,dsigma_ydp,udata);
@@ -1180,7 +1181,7 @@ void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnDa
     *status = fy(ts[it],it,ydata,x,udata);
     if (*status != AMI_SUCCESS) return;
 
-    if(b_expdata) {
+    if(edata) {
         for (iy=0; iy<nytrue; iy++) {
             /* extract the value for the standard deviation, if the data value is NaN, use
              the parameter value. Store this value in the return struct */
@@ -1365,7 +1366,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, Retu
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return void
      */
-    if(b_expdata) {
+    if(edata) {
         int iz;
         for (iz=0; iz<nztrue; iz++) {
             if(z2event[iz]-1 == ie) {
@@ -1418,7 +1419,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
                     }
                 }
 
-                if(b_expdata) {
+                if(edata) {
                     for (iz=0; iz<nztrue; iz++) {
                         if(z2event[iz]-1 == ie) {
                             getEventSigma(status, ie, iz, ami_mem,udata,rdata,edata,tdata);
@@ -2398,7 +2399,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Exp
     }
 
     /* evaluate likelihood */
-    if(b_expdata) {
+    if(edata) {
         *llhdata = - g[0] - r[0];
     } else {
         *llhdata = amiGetNaN();
@@ -2688,7 +2689,7 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
             }
         }
         
-        if(edata->am_bexpdata) {
+        if(edata) {
             if(rdata->am_sllhdata)
                 for(int ip = 0; ip < nplist; ++ip)
                     sllhdata[ip] *= pcoefficient[ip];
@@ -2720,7 +2721,7 @@ if(rdata->am_s ## QUANT ## data) \
                     dydpdata[ip*nxtrue + iy] *= pcoefficient[ip];
     }
     if(udata->am_o2mode == AMI_O2MODE_FULL) { //full
-        if(edata->am_bexpdata){
+        if(edata){
             if(rdata->am_s2llhdata) {
                 if(rdata->am_sllhdata) {
                     for(int ip = 0; ip < nplist; ++ip) {
