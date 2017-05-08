@@ -18,7 +18,7 @@
  * is expected as single command line argument.
  *
  * An initial HDF5 file with the required fields can be generated using MATLAB by adding the following lines
- * in the simulate_${MODEL_NAME}.m file just before "sol = ami_${MODEL_NAME}" close to the end of the file:
+ * at the end of simulate_${MODEL_NAME}.m file just before the final "end":
  *
  *    %% Write data that is passed to AMICI to HDF5
  *    hdffile = fullfile(pwd, 'mydata.h5');
@@ -33,6 +33,8 @@
  *
  * ... and then running a simulation from MATLAB as usual.
  *
+ * Default UserData settings can be written to an HDF5 file with:
+ *     structToHDF5Attribute('test.h5', '/options', amioption())
  */
 
 // Function prototypes
