@@ -102,7 +102,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'k_([0-9]+)','k\[$1\]');
             cstr = regexprep(cstr,'h_([0-9]+)','h\[$1\]');
             cstr = regexprep(cstr,'w_([0-9]+)','w_tmp\[$1\]');
-            cstr = regexprep(cstr,'stau_([0-9]+)','stau_tmp\[$1\]');
+            cstr = regexprep(cstr,'stau_([0-9]+)','stau_tmp\[ip]');
             
             cstr = regexprep(cstr,'dwdx_([0-9]+)','dwdx_tmp\[$1\]');
             cstr = regexprep(cstr,'dydx_([0-9]+)','dydx\[$1\]');

@@ -13,7 +13,7 @@ realtype *sx0_tmp;
 int ip;
 realtype t = tstart;
 for(ip = 0; ip<nplist; ip++) {
-sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);
+sx0_tmp = N_VGetArrayPointer(sx0[ip]);
 memset(sx0_tmp,0,sizeof(realtype)*2);
 switch (plist[ip]) {
 }
