@@ -235,9 +235,8 @@ UserData *setupUserData(const mxArray *prhs[]) {
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
     x0data = NULL;
-    if (!prhs[7]) {
-        b_sx0 = FALSE;
-    } else {
+    sx0data = NULL;
+    if (prhs[7]) {
         if(mxGetField(prhs[7], 0 ,"x0")) {
             if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
                 x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
@@ -249,20 +248,15 @@ UserData *setupUserData(const mxArray *prhs[]) {
         }
 
         if(mxGetField(prhs[7], 0 ,"sx0")) {
-            sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
             if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
+                sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
+
                 /* check dimensions */
                 if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
                 if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
-                b_sx0 = TRUE;
-            } else {
-                b_sx0 = FALSE;
             }
-        } else {
-            b_sx0 = FALSE;
         }
     }
-
 
     if (nx>0) {
         /* initialise temporary jacobian storage */
@@ -763,7 +757,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
 
                 /* initialise sensitivities, this can either be user provided or come from the model definition */
 
-                if(!b_sx0) {
+                if(!sx0data) {
                     *status = fsx0(NVsx, x, dx, udata);
                     if (*status != AMI_SUCCESS) return(NULL);
                 } else {

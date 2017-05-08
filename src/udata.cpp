@@ -77,7 +77,6 @@ void printUserData(UserData *udata) {
     printf("am_stldet: %d\n", udata->am_stldet);
     printf("am_ubw: %d\n", udata->am_ubw);
     printf("am_lbw: %d\n", udata->am_lbw);
-    printf("am_bsx0: %d\n", udata->am_bsx0);
     printf("am_x0data: %p\n", udata->am_x0data);
     printf("am_sx0data: %p\n", udata->am_sx0data);
     printf("am_ordering: %d\n", udata->am_ordering);

@@ -91,7 +91,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
     x0data = NULL;
-    b_sx0 = FALSE;
     sx0data = NULL;
 
     /* pbarm parameterscales ; matlab: sixth argument*/

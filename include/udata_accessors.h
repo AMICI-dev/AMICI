@@ -51,7 +51,6 @@
 #define lbw udata->am_lbw
 
 #define x0data udata->am_x0data
-#define b_sx0 udata->am_bsx0
 #define sx0data udata->am_sx0data
 
 #define ordering udata->am_ordering
