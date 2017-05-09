@@ -7,16 +7,6 @@
 #include <include/tdata.h>
 #include <stdbool.h>
 
-#ifndef AMICI_WITHOUT_MATLAB
-#include <mex.h>
-#endif
-
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
-
 /* linear solvers */
 #define AMI_DENSE       1
 #define AMI_BAND        2
@@ -37,12 +27,6 @@
 #define AMI_DATA_RETURN           1
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
-
-#ifndef AMICI_WITHOUT_MATLAB
-UserData *setupUserData(const mxArray *prhs[]);
-ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus);
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status);
-#endif /* AMICI_WITHOUT_MATLAB */
 
 void *setupAMI(int *status, UserData *udata, TempData *tdata);
 void setupAMIB(int *status, void *ami_mem, UserData *udata, TempData *tdata);
@@ -84,11 +68,6 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, ExpData *edata);
 void unscaleParameters(UserData *udata);
 
-#ifdef AMICI_WITHOUT_MATLAB
-EXTERNC void initUserDataFields(UserData user_data, ReturnData *rdata, double *pstatus);
-EXTERNC  ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus);
-EXTERNC void processUserData(UserData *udata);
-EXTERNC ReturnData *initReturnData(UserData *udata, int *pstatus);
-#endif /* AMICI_WITHOUT_MATLAB */
+void processUserData(UserData *udata);
 
 #endif /* amici_h */

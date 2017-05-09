@@ -3,7 +3,7 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
-#include <include/amici.h>
+#include <include/amici_interface_cpp.h>
 
 #undef AMI_HDF5_H_DEBUG
 
