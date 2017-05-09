@@ -27,9 +27,6 @@ FIELD ## data = mx ## FIELD;
  */
 #define initField3(FIELD,D1,D2,D3) \
 double *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
 mx ## FIELD = new double[D1 * D2 * D3](); \
 FIELD ## data = mx ## FIELD;
 
@@ -43,25 +40,11 @@ FIELD ## data = mx ## FIELD;
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
 double *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
-dims ## FIELD[3]=D4; \
 mx ## FIELD = new double[D1 * D2 * D3 * D4](); \
 FIELD ## data = mx ## FIELD;
 
 
 void initUserDataFields(UserData *udata, ReturnData *rdata) {
-    size_t dimssx[] = {0,0,0};
-    size_t dimssy[] = {0,0,0};
-    size_t dimssz[] = {0,0,0};
-    size_t dimssrz[] = {0,0,0};
-    size_t dimss2rz[] = {0,0,0,0};
-    size_t dimssigmay[] = {0,0,0};
-    size_t dimssigmaz[] = {0,0,0};
-    size_t dimsssigmay[] = {0,0,0};
-    size_t dimsssigmaz[] = {0,0,0};
-
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
