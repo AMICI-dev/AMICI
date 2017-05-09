@@ -283,7 +283,7 @@ ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *psta
 }
 
 
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status) {
     int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
 

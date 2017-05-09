@@ -21,12 +21,13 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]);
 ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus);
 
 /**
- * setupExpData initialises the experimental data struct
+ * expDataFromMatlabCall initialises the experimental data struct
  * @param[in] prhs user input @type *mxArray
  * @param[in] udata pointer to the user data struct @type UserData
+ * @param[out] status non-zero on failure, zero on success
  * @return edata: experimental data struct @type ExpData
  */
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status);
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status);
 
 
 #endif
