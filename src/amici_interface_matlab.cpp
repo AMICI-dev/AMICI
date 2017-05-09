@@ -77,12 +77,6 @@
 
 
 UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
-    /**
-     * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
-     * @param[in] prhs: pointer to the array of input arguments @type mxArray
-     * @return udata: struct containing all provided user data @type UserData
-     */
-
     /* User udata structure */
     UserData *udata = new UserData();
     if(udata==NULL) return NULL;
@@ -201,13 +195,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 
 
 ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
-    /**
-     * setupReturnData initialises the return data struct
-     * @param[in] plhs user input @type mxArray
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] pstatus pointer to the flag indicating the execution status @type double
-     * @return rdata: return data struct @type ReturnData
-     */
 
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
 
@@ -297,13 +284,6 @@ ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *psta
 
 
 ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
-    /**
-     * setupExpData initialises the experimental data struct
-     * @param[in] prhs user input @type *mxArray
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @return edata: experimental data struct @type ExpData
-     */
-
     int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
 
