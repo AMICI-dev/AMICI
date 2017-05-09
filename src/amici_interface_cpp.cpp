@@ -14,9 +14,7 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-double *mx ## FIELD; \
-mx ## FIELD = new double[D1 * D2](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2]();
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -26,9 +24,7 @@ FIELD ## data = mx ## FIELD;
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-double *mx ## FIELD; \
-mx ## FIELD = new double[D1 * D2 * D3](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2 * D3]();
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -39,17 +35,14 @@ FIELD ## data = mx ## FIELD;
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-double *mx ## FIELD; \
-mx ## FIELD = new double[D1 * D2 * D3 * D4](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2 * D3 * D4]();
 
 
 void initUserDataFields(UserData *udata, ReturnData *rdata) {
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
-    double *mxts = new double[nt]();
-    tsdata = mxts;
+    tsdata = new double[nt]();
 
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
