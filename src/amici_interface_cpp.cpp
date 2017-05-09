@@ -51,10 +51,6 @@ mx ## FIELD = new double[D1 * D2 * D3 * D4](); \
 FIELD ## data = mx ## FIELD;
 
 
-typedef double mxArray;
-
-
-
 void initUserDataFields(UserData *udata, ReturnData *rdata) {
     size_t dimssx[] = {0,0,0};
     size_t dimssy[] = {0,0,0};
