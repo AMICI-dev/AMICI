@@ -45,7 +45,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     pstatus = (double *) mxMalloc(sizeof(double));
     
-    udata = setupUserData(prhs);
+    udata = userDataFromMatlabCall(prhs);
     if (udata == NULL) {
         /* goto freturn will fail here as freeXXXXData routines will fail*/
         *pstatus = -98;
@@ -78,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     
     if (nx>0) {
-        edata = setupExpData(prhs, udata, &status);
+        edata = expDataFromMatlabCall(prhs, udata, &status);
         if (status != 0) {
             goto freturn;
         }

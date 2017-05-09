@@ -14,9 +14,7 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-double *mx ## FIELD; \
-mx ## FIELD = new double[D1 * D2](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2]();
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -26,12 +24,7 @@ FIELD ## data = mx ## FIELD;
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-double *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
-mx ## FIELD = new double[D1 * D2 * D3](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2 * D3]();
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -42,35 +35,16 @@ FIELD ## data = mx ## FIELD;
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-double *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
-dims ## FIELD[3]=D4; \
-mx ## FIELD = new double[D1 * D2 * D3 * D4](); \
-FIELD ## data = mx ## FIELD;
+FIELD ## data = new double[D1 * D2 * D3 * D4]();
 
 
-typedef double mxArray;
+static void initUserDataFields(const UserData user_data, ReturnData *rdata, double *pstatus);
 
-
-
-void initUserDataFields(UserData *udata, ReturnData *rdata) {
-    size_t dimssx[] = {0,0,0};
-    size_t dimssy[] = {0,0,0};
-    size_t dimssz[] = {0,0,0};
-    size_t dimssrz[] = {0,0,0};
-    size_t dimss2rz[] = {0,0,0,0};
-    size_t dimssigmay[] = {0,0,0};
-    size_t dimssigmaz[] = {0,0,0};
-    size_t dimsssigmay[] = {0,0,0};
-    size_t dimsssigmaz[] = {0,0,0};
-
+void initUserDataFields(const UserData *udata, ReturnData *rdata) {
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
-    double *mxts = new double[nt]();
-    tsdata = mxts;
+    tsdata = new double[nt]();
 
     initField2(numsteps,nt,1);
     initField2(numrhsevals,nt,1);
@@ -130,14 +104,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
 }
 
 
-ReturnData *initReturnData(UserData *udata, int *pstatus) {
-    /**
-     * initReturnData initialises a ReturnData struct
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] pstatus flag indicating success of execution @type *int
-     * @return rdata initialized return data struct @type ReturnData
-     */
+ReturnData *initReturnData(const UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
@@ -155,16 +122,7 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
 }
 
 
-ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
-    /**
-     * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] pstatus flag indicating success of execution @type *int
-     * @return rdata data struct with simulation results @type ReturnData
-     */
-
+ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus) {
     double *originalParams = 0;
 
     if(udata->am_pscale != AMI_SCALING_NONE) {

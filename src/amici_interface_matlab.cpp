@@ -16,10 +16,9 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-mxArray *mx ## FIELD; \
-mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mxArray *mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -29,13 +28,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-mxArray *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
-mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mwSize dims ## FIELD[] = {D1,D2,D3}; \
+    mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -46,14 +42,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-mxArray *mx ## FIELD; \
-dims ## FIELD[0]=D1; \
-dims ## FIELD[1]=D2; \
-dims ## FIELD[2]=D3; \
-dims ## FIELD[3]=D4; \
-mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mwSize dims ## FIELD[] = {D1,D2,D3,D4}; \
+    mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 
 /**
@@ -62,12 +54,12 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param TYPE class to which the information should be cast
  */
 #define readOptionScalar(OPTION,TYPE) \
-if(mxGetProperty(prhs[3],0,#OPTION)){ \
-OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
-} else { \
-warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-return(NULL); \
-}
+    if(mxGetProperty(prhs[3],0,#OPTION)){ \
+        OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
+    } else { \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        return(NULL); \
+    }
 
 
 /**
@@ -75,29 +67,18 @@ return(NULL); \
  * @ param OPTION name of the property
  */
 #define readOptionData(OPTION) \
-if(mxGetProperty(prhs[3],0,#OPTION)){ \
-OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
-} else { \
-warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-return(NULL); \
-}
+    if(mxGetProperty(prhs[3],0,#OPTION)){ \
+        OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
+    } else { \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        return(NULL); \
+    }
 
 
 
-UserData *setupUserData(const mxArray *prhs[]) {
-    /**
-     * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
-     * @param[in] prhs: pointer to the array of input arguments @type mxArray
-     * @return udata: struct containing all provided user data @type UserData
-     */
-
-    UserData *udata; /* returned udata *struct */
-    realtype *plistdata; /* input for plist */
-
-    int ip;
-
+UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /* User udata structure */
-    udata = new UserData();
+    UserData *udata = new UserData();
     if(udata==NULL) return NULL;
 
     init_modeldims(udata);
@@ -130,6 +111,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
     }
 
     /* plist */
+    realtype *plistdata;
     if (!prhs[4]) {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     } else {
@@ -138,7 +120,7 @@ UserData *setupUserData(const mxArray *prhs[]) {
     }
 
     plist = new int[nplist]();
-    for (ip=0; ip<nplist; ip++) {
+    for (int ip=0; ip<nplist; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
 
@@ -212,45 +194,21 @@ UserData *setupUserData(const mxArray *prhs[]) {
 }
 
 
-ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
-    /**
-     * setupReturnData initialises the return data struct
-     * @param[in] plhs user input @type mxArray
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] pstatus pointer to the flag indicating the execution status @type double
-     * @return rdata: return data struct @type ReturnData
-     */
-    ReturnData *rdata; /* returned rdata struct */
-
-    mxArray *mxsol;
+ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
 
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-    mxArray *mxstatus;
-
-    mxArray *mxts;
-
-    mwSize dimssx[] = {0,0,0};
-    mwSize dimssy[] = {0,0,0};
-    mwSize dimssz[] = {0,0,0};
-    mwSize dimssrz[] = {0,0,0};
-    mwSize dimss2rz[] = {0,0,0,0};
-    mwSize dimsssigmay[] = {0,0,0};
-    mwSize dimsssigmaz[] = {0,0,0};
-
 
     /* Return rdata structure */
-    rdata = (ReturnData*) mxMalloc(sizeof *rdata);
+    ReturnData *rdata = (ReturnData*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
 
     memset(rdata, 0, sizeof(*rdata));
 
-    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+    mxArray *mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
 
     plhs[0] = mxsol;
 
-
-    mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
-
+    mxArray *mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     mxSetPr(mxstatus,pstatus);
     mxSetField(mxsol,0,"status",mxstatus);
 
@@ -259,7 +217,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     /*initField2(g,ng,1);
      initField2(r,ng,1);*/
 
-    mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
+    mxArray *mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
 
@@ -325,14 +283,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
 }
 
 
-ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status) {
-    /**
-     * setupExpData initialises the experimental data struct
-     * @param[in] prhs user input @type *mxArray
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @return edata: experimental data struct @type ExpData
-     */
-
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status) {
     int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
 

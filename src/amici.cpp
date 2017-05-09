@@ -522,7 +522,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
      *
@@ -583,7 +583,7 @@ void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, Retur
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
      *
@@ -647,7 +647,7 @@ void prepDataSensis(int *status, int it, void *ami_mem, UserData *udata, ReturnD
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getDataOutput extracts output information for data-points
      *
@@ -755,7 +755,7 @@ void getEventSensisFSA_tf(int *status, int ie, void *ami_mem, UserData *udata, R
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventSensisASA extracts event information for adjoint sensitivity analysis
      *
@@ -808,7 +808,7 @@ void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, Retu
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventSigma extracts fills sigma_z either from the user defined function or from user input
      *
@@ -839,7 +839,7 @@ void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventObjective updates the objective function on the occurence of an event
      *
@@ -871,7 +871,7 @@ void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, Retu
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventOutput extracts output information for events
      *
@@ -928,7 +928,7 @@ void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *u
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * fillEventOutput fills missing roots at last timepoint
      *
@@ -985,7 +985,7 @@ void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rd
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata) {
+void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points
      *
@@ -1061,7 +1061,7 @@ void handleDataPointB(int *status, int it, void *ami_mem, UserData *udata, Retur
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata, int seflag) {
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -1538,7 +1538,7 @@ void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnDat
 }
 
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot) {
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *status, void *ami_mem, int *iroot) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
      *
@@ -1620,7 +1620,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpD
     return 0;
 }
 
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
     /**
      * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
      * workForwardProblem should be called before this is function is called
@@ -1940,7 +1940,7 @@ void unscaleParameters(UserData *udata) {
     }
 }
 
-void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, ExpData *edata)
+void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata)
 {
     if(udata->am_pscale == AMI_SCALING_NONE)
         return;

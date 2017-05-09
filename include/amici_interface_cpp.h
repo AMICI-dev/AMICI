@@ -9,8 +9,25 @@
 #define EXTERNC
 #endif
 
-EXTERNC void initUserDataFields(UserData user_data, ReturnData *rdata, double *pstatus);
-EXTERNC  ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus);
-EXTERNC ReturnData *initReturnData(UserData *udata, int *pstatus);
+/**
+ * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
+ *
+ * @param[in] udata pointer to the user data struct @type UserData
+ * @param[in] edata pointer to the experimental data struct @type ExpData
+ * @param[out] pstatus flag indicating success of execution @type *int
+ * @return rdata data struct with simulation results @type ReturnData
+ */
+
+EXTERNC ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus);
+
+/**
+ * initReturnData initialises a ReturnData struct
+ *
+ * @param[in] udata pointer to the user data struct @type UserData
+ * @param[out] pstatus flag indicating success of execution @type *int
+ * @return rdata initialized return data struct @type ReturnData
+ */
+
+EXTERNC ReturnData *initReturnData(const UserData *udata, int *pstatus);
 
 #endif
