@@ -30,6 +30,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  */
 #define initField3(FIELD,D1,D2,D3) \
 mxArray *mx ## FIELD; \
+mwSize dims ## FIELD[] = {0,0,0}; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -47,6 +48,7 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
 mxArray *mx ## FIELD; \
+mwSize dims ## FIELD[] = {0,0,0,0}; \
 dims ## FIELD[0]=D1; \
 dims ## FIELD[1]=D2; \
 dims ## FIELD[2]=D3; \
@@ -228,15 +230,6 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     mxArray *mxstatus;
 
     mxArray *mxts;
-
-    mwSize dimssx[] = {0,0,0};
-    mwSize dimssy[] = {0,0,0};
-    mwSize dimssz[] = {0,0,0};
-    mwSize dimssrz[] = {0,0,0};
-    mwSize dimss2rz[] = {0,0,0,0};
-    mwSize dimsssigmay[] = {0,0,0};
-    mwSize dimsssigmaz[] = {0,0,0};
-
 
     /* Return rdata structure */
     rdata = (ReturnData*) mxMalloc(sizeof *rdata);
