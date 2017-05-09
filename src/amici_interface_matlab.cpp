@@ -16,9 +16,9 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-mxArray *mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mxArray *mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -28,10 +28,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-mwSize dims ## FIELD[] = {D1,D2,D3}; \
-mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mwSize dims ## FIELD[] = {D1,D2,D3}; \
+    mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -42,10 +42,10 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-mwSize dims ## FIELD[] = {D1,D2,D3,D4}; \
-mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-FIELD ## data = mxGetPr(mx ## FIELD); \
-mxSetField(mxsol,0,#FIELD,mx ## FIELD)
+    mwSize dims ## FIELD[] = {D1,D2,D3,D4}; \
+    mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
+    FIELD ## data = mxGetPr(mx ## FIELD); \
+    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
 
 /**
@@ -54,12 +54,12 @@ mxSetField(mxsol,0,#FIELD,mx ## FIELD)
  * @ param TYPE class to which the information should be cast
  */
 #define readOptionScalar(OPTION,TYPE) \
-if(mxGetProperty(prhs[3],0,#OPTION)){ \
-OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
-} else { \
-warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-return(NULL); \
-}
+    if(mxGetProperty(prhs[3],0,#OPTION)){ \
+        OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
+    } else { \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        return(NULL); \
+    }
 
 
 /**
@@ -67,12 +67,12 @@ return(NULL); \
  * @ param OPTION name of the property
  */
 #define readOptionData(OPTION) \
-if(mxGetProperty(prhs[3],0,#OPTION)){ \
-OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
-} else { \
-warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-return(NULL); \
-}
+    if(mxGetProperty(prhs[3],0,#OPTION)){ \
+        OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
+    } else { \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        return(NULL); \
+    }
 
 
 
