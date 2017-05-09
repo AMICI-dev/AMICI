@@ -17,5 +17,8 @@ function [ output_args ] = wrapTestModels( input_args )
     
     [exdir,~,~]=fileparts(which('example_dirac.m'));
     amiwrap('model_dirac','model_dirac_syms',exdir)
+    
+    cd(fileparts(mfilename('fullpath')));
+    
 end
 
