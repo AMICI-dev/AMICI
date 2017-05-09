@@ -83,13 +83,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
      * @return udata: struct containing all provided user data @type UserData
      */
 
-    UserData *udata; /* returned udata *struct */
-    realtype *plistdata; /* input for plist */
-
-    int ip;
-
     /* User udata structure */
-    udata = new UserData();
+    UserData *udata = new UserData();
     if(udata==NULL) return NULL;
 
     init_modeldims(udata);
@@ -122,6 +117,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     }
 
     /* plist */
+    realtype *plistdata;
     if (!prhs[4]) {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     } else {
@@ -130,7 +126,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     }
 
     plist = new int[nplist]();
-    for (ip=0; ip<nplist; ip++) {
+    for (int ip=0; ip<nplist; ip++) {
         plist[ip] = (int)plistdata[ip];
     }
 
@@ -204,7 +200,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 }
 
 
-ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
+ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
     /**
      * setupReturnData initialises the return data struct
      * @param[in] plhs user input @type mxArray
@@ -212,28 +208,20 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
      * @param[out] pstatus pointer to the flag indicating the execution status @type double
      * @return rdata: return data struct @type ReturnData
      */
-    ReturnData *rdata; /* returned rdata struct */
-
-    mxArray *mxsol;
 
     const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-    mxArray *mxstatus;
-
-    mxArray *mxts;
 
     /* Return rdata structure */
-    rdata = (ReturnData*) mxMalloc(sizeof *rdata);
+    ReturnData *rdata = (ReturnData*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
 
     memset(rdata, 0, sizeof(*rdata));
 
-    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+    mxArray *mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
 
     plhs[0] = mxsol;
 
-
-    mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
-
+    mxArray *mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     mxSetPr(mxstatus,pstatus);
     mxSetField(mxsol,0,"status",mxstatus);
 
@@ -242,7 +230,7 @@ ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus) {
     /*initField2(g,ng,1);
      initField2(r,ng,1);*/
 
-    mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
+    mxArray *mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
 

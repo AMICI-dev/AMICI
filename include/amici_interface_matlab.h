@@ -5,7 +5,7 @@
 #include "include/amici.h"
 
 UserData *userDataFromMatlabCall(const mxArray *prhs[]);
-ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus);
+ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus);
 ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status);
 
 
