@@ -4,7 +4,7 @@
 #include <mex.h>
 #include "include/amici.h"
 
-UserData *setupUserData(const mxArray *prhs[]);
+UserData *userDataFromMatlabCall(const mxArray *prhs[]);
 ReturnData *setupReturnData(mxArray *plhs[], UserData *udata, double *pstatus);
 ExpData *setupExpData(const mxArray *prhs[], UserData *udata, int *status);
 

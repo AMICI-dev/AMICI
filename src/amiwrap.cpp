@@ -45,7 +45,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     pstatus = (double *) mxMalloc(sizeof(double));
     
-    udata = setupUserData(prhs);
+    udata = userDataFromMatlabCall(prhs);
     if (udata == NULL) {
         /* goto freturn will fail here as freeXXXXData routines will fail*/
         *pstatus = -98;

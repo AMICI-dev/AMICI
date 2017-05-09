@@ -76,7 +76,7 @@
 
 
 
-UserData *setupUserData(const mxArray *prhs[]) {
+UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /**
      * @brief setupUserData extracts information from the matlab call and returns the corresponding UserData struct
      * @param[in] prhs: pointer to the array of input arguments @type mxArray
