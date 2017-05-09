@@ -31,21 +31,21 @@
 void *setupAMI(int *status, UserData *udata, TempData *tdata);
 void setupAMIB(int *status, void *ami_mem, UserData *udata, TempData *tdata);
 
-void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
-void getDataSensisASA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
+void getDataSensisFSA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+void getDataSensisASA(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
 void getEventSensisFSA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
-void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
+void getEventSensisASA(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
-void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
-void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
+void getEventSigma(int *status, int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+void getEventObjective(int *status, int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
-void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
-void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
-void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
+void getDataOutput(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+void getEventOutput(int *status, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+void fillEventOutput(int *status, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
-void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata, int seflag);
-void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, ExpData *edata, TempData *tdata);
+void handleEvent(int *status, int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag);
+void handleDataPoint(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 void handleDataPointB(int *status, int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
 void handleEventB(int *status, int iroot, void *ami_mem, UserData *udata, TempData *tdata);
 
@@ -61,11 +61,11 @@ void updateHeavisideB(int *status, int iroot, UserData *udata, TempData *tdata);
 void getDiagnosis(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata);
 void getDiagnosisB(int *status,int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int* status, void *ami_mem, int* iroot);
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int* status, void *ami_mem, int* iroot);
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone);
 void storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, booleantype setupBdone, int status);
-void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, ExpData *edata);
+void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata);
 void unscaleParameters(UserData *udata);
 
 void processUserData(UserData *udata);

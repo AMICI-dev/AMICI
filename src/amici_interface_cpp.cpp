@@ -38,7 +38,9 @@ FIELD ## data = new double[D1 * D2 * D3]();
 FIELD ## data = new double[D1 * D2 * D3 * D4]();
 
 
-void initUserDataFields(UserData *udata, ReturnData *rdata) {
+static void initUserDataFields(const UserData user_data, ReturnData *rdata, double *pstatus);
+
+void initUserDataFields(const UserData *udata, ReturnData *rdata) {
     initField2(llh,1,1);
     initField2(chi2,1,1);
 
@@ -102,14 +104,7 @@ void initUserDataFields(UserData *udata, ReturnData *rdata) {
 }
 
 
-ReturnData *initReturnData(UserData *udata, int *pstatus) {
-    /**
-     * initReturnData initialises a ReturnData struct
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] pstatus flag indicating success of execution @type *int
-     * @return rdata initialized return data struct @type ReturnData
-     */
+ReturnData *initReturnData(const UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
 
     /* Return rdata structure */
@@ -127,16 +122,7 @@ ReturnData *initReturnData(UserData *udata, int *pstatus) {
 }
 
 
-ReturnData *getSimulationResults(UserData *udata, ExpData *edata, int *pstatus) {
-    /**
-     * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] pstatus flag indicating success of execution @type *int
-     * @return rdata data struct with simulation results @type ReturnData
-     */
-
+ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus) {
     double *originalParams = 0;
 
     if(udata->am_pscale != AMI_SCALING_NONE) {
