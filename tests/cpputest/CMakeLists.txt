@@ -39,3 +39,4 @@ enable_testing()
 
 add_subdirectory(dirac)
 add_subdirectory(steadystate)
+add_subdirectory(jakstat_adjoint)
