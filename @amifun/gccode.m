@@ -3,7 +3,7 @@ function this = gccode(this,model,fid)
     % respective expression into a specified file
     %
     % Parameters:
-    %  model: model defintion object @type amimodel
+    %  model: model definition object @type amimodel
     %  fid: file id in which the expression should be written @type fileid
     %
     % Return values:

@@ -3,7 +3,7 @@
 % @brief definition of amifun class
 %
 classdef amifun
-    % AMIFUN defines  functions which later on will be transformed into
+    % AMIFUN defines functions which later on will be transformed into
     % appropriate C code
     
     properties ( GetAccess = 'public', SetAccess = 'public' )
@@ -39,7 +39,7 @@ classdef amifun
             % Parameters:
             %  funstr: name of the requested function
             %  model: amimodel object which carries all symbolic
-            %  definitions to construct the funtion
+            %  definitions to construct the function
             %  
             %
             % Return values:
