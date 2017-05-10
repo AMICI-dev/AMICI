@@ -19,14 +19,16 @@ void checkEqualArray(const double *expected, const double *actual, int length) {
 }
 
 void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata) {
-    CHECK_TRUE(isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata));
-
     // compare to saved data in hdf file
     hid_t file_id = H5Fopen(HDFFILE, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n, o;
 
     double *expected;
+
+    double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
+    // TODO: need to check NaN and Inf in HDF5
+    CHECK_TRUE(llhExp == *rdata->am_llhdata || isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nx);
@@ -60,7 +62,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     checkEqualArray(expected, rdata->am_xdotdata, udata->am_nx);
     delete[] expected;
 
-    if(udata->am_sensi > 0) {
+    if(udata->am_sensi >= AMI_SENSI_ORDER_FIRST) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
         checkEqualArray(expected, rdata->am_sllhdata, udata->am_np);
         delete[] expected;
