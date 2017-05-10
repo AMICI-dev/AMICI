@@ -32,42 +32,24 @@
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
-    void *ami_mem = nullptr; /* pointer to cvodes memory block */
     UserData *udata = nullptr; /* user data */
     ReturnData *rdata = nullptr; /* return data */
     ExpData *edata = nullptr; /* experimental data */
-    TempData *tdata = nullptr; /* temporary data */
-    int status = 0; /* general status flag */
-    double *pstatus; /* return status flag */
 
-    int iroot = 0;
-    booleantype setupBdone = false;
+    /* return status flag */
+    int status;
+    double *pstatus = (double *) mxMalloc(sizeof(double));
 
-    pstatus = (double *) mxMalloc(sizeof(double));
-    
     udata = userDataFromMatlabCall(prhs);
     if (udata == NULL) {
         /* goto freturn will fail here as freeXXXXData routines will fail*/
         *pstatus = -98;
         return;
     }
-    
-    unscaleParameters(udata);
-    
+
     /* options */
     if (!prhs[3]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
-    }
-    
-    tdata = new TempData();
-    if (tdata == NULL) goto freturn;
-    
-    if (nx>0) {
-        ami_mem = setupAMI(&status, udata, tdata);
-        if (ami_mem == NULL){
-            status = -96;
-            goto freturn;
-        }
     }
 
     rdata = setupReturnData(plhs, udata, pstatus);
@@ -75,25 +57,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         status = -96;
         goto freturn;
     }
-    
-    
+
     if (nx>0) {
         edata = expDataFromMatlabCall(prhs, udata, &status);
         if (status != 0) {
             goto freturn;
         }
     }
-    
-    if(nx>0) {
-        status = workForwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot);
-        if(status<0) goto freturn;
 
-        status = workBackwardProblem(udata, tdata, rdata, edata, &status, ami_mem, &iroot, &setupBdone);
-    }
+    runAmiciSimulation(udata, edata, rdata, &status);
 
 freturn:
-    applyChainRuleFactorToSimulationResults(udata, rdata, edata);
-    freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
     freeUserData(udata);
     delete edata;
     *pstatus = (double) status;

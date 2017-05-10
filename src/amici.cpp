@@ -25,6 +25,47 @@
 /** return value for successful execution */
 #define AMI_SUCCESS               0
 
+void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus) {
+
+    if(nx <= 0) {
+        *pstatus = -99;
+        return;
+    }
+
+    *pstatus = 0;
+
+    TempData *tdata = new TempData();
+    if (tdata == NULL) {
+        *pstatus = -100;
+        return;
+    }
+
+    unscaleParameters(udata);
+
+    /* pointer to cvodes memory block */
+    void *ami_mem = setupAMI(pstatus, udata, tdata);
+    if (ami_mem == NULL){
+        *pstatus = -96;
+        delete tdata;
+        return;
+    }
+
+    int iroot = 0;
+    booleantype setupBdone = false;
+
+    int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
+    if(problem)
+        goto freturn;
+
+    problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
+    if(problem)
+        goto freturn;
+
+    applyChainRuleFactorToSimulationResults(udata, rdata, edata);
+
+freturn:
+    freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+}
 
 void *setupAMI(int *status, UserData *udata, TempData *tdata) {
     /**
