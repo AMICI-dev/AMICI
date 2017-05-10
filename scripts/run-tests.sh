@@ -63,20 +63,18 @@ fi
 # done building dependencies
 
 # Prepare tests
-# Build dirac model
-mkdir -p ${AMICI_PATH}/models/model_dirac/build
-cd ${AMICI_PATH}/models/model_dirac/build
-cmake ..
-make
 
-# Build steadystate model
-mkdir -p ${AMICI_PATH}/models/model_steadystate/build
-cd ${AMICI_PATH}/models/model_steadystate/build
-cmake ..
-make 
+TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint"
+for MODEL in $TESTMODELS; do 
+	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
+	cd ${AMICI_PATH}/models/${MODEL}/build
+	cmake ..
+	make
+done;
 
 
 # Build test suite
+
 cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
