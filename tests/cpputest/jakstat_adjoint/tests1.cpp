@@ -6,6 +6,8 @@
 #include <cstring>
 #include "wrapfunctions.h"
 
+#define TEST_EPSILON 1e-10
+
 TEST_GROUP(groupJakstatAdjoint)
 {
     void setup() {
@@ -27,7 +29,7 @@ TEST(groupJakstatAdjoint, testSimulation) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    verifyReturnData("/model_jakstat_adjoint/nosensi/results", rdata, udata);
+    verifyReturnData("/model_jakstat_adjoint/nosensi/results", rdata, udata, TEST_EPSILON);
 
     freeReturnData(rdata);
     freeExpData(edata);
@@ -43,7 +45,7 @@ TEST(groupJakstatAdjoint, testSensitivityForward) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    verifyReturnData("/model_jakstat_adjoint/sensiforward/results", rdata, udata);
+    verifyReturnData("/model_jakstat_adjoint/sensiforward/results", rdata, udata, TEST_EPSILON);
 
     freeReturnData(rdata);
     freeExpData(edata);
@@ -59,7 +61,7 @@ TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    verifyReturnData("/model_jakstat_adjoint/sensiadjoint/results", rdata, udata);
+    verifyReturnData("/model_jakstat_adjoint/sensiadjoint/results", rdata, udata, TEST_EPSILON);
 
     freeReturnData(rdata);
     freeExpData(edata);

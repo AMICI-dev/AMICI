@@ -15,8 +15,8 @@
 
 ExpData *getTestExpData();
 
-void checkEqualArray(const double *expected, const double *actual, int length);
+void checkEqualArray(const double *expected, const double *actual, int length, double epsilon);
 
-void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata);
+void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata, double epsilon);
 
 #endif

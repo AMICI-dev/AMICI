@@ -28,7 +28,7 @@ TEST(groupSteadystate, testSimulation) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata);
+    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata, TEST_EPSILON);
 
     freeReturnData(rdata);
     freeExpData(edata);
@@ -44,7 +44,7 @@ TEST(groupSteadystate, testSensitivityForward) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata);
+    verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata, TEST_EPSILON);
 
     freeReturnData(rdata);
     freeExpData(edata);
