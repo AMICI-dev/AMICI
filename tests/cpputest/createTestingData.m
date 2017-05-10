@@ -30,6 +30,10 @@ function [ output_args ] = createTestingData( input_args )
     amiHDFprefix = '/model_steadystate/nosensi/';
     sol = simulate_model_steadystate_hdf(t,log10(p),k,[],options);
 
+    amiHDFprefix = '/model_steadystate/sensiforward/';
+    options.sensi = 1;
+    sol = simulate_model_steadystate_hdf(t,log10(p),k,[],options);
+
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
     
