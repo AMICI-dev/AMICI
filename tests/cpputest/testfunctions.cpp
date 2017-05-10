@@ -27,8 +27,9 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     double *expected;
 
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
-    // TODO: need to check NaN and Inf in HDF5
-    CHECK_TRUE(llhExp == *rdata->am_llhdata || isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata));
+    // TODO: ignores Inf and NaN results; need to check with format in HDF5
+    if(! isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata))
+        DOUBLES_EQUAL(llhExp, *rdata->am_llhdata, epsilon);
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nx, epsilon);
