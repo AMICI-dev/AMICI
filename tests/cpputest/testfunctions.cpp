@@ -1,5 +1,9 @@
 #include "testfunctions.h"
 #include <cstring>
+#include <execinfo.h>
+#include <cstdio>
+#include <unistd.h>
+
 ExpData *getTestExpData() {
     ExpData *edata = new ExpData;
     memset(edata, 0, sizeof(*edata));
@@ -8,19 +12,22 @@ ExpData *getTestExpData() {
 }
 
 bool withinTolerance(double expected, double actual, double atol, double rtol) {
-    return fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
+    bool withinTol =  fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
+
+    if(!withinTol) {
+        fprintf(stderr, "ERROR: Expected value %e, but was %e.\n",expected, actual);
+        fprintf(stderr, "       Relative error: %e (tolerance was %e)\n", fabs((expected - actual) / (rtol + expected)), rtol);
+        fprintf(stderr, "       Absolute error: %e (tolerance was %e)\n", fabs(expected - actual), atol);
+        printBacktrace(12);
+    }
+
+    return withinTol;
 }
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol) {
     for(int i = 0; i < length; ++i)
     {
         bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol);
-
-#ifndef __APPLE__
-        if(!withinTol)
-            std::cout<<i<<"/"<<length<<" "<<expected[i]<<" "<<actual[i]<<std::endl;
-#endif
-
         CHECK_TRUE(withinTol);
     }
 }
@@ -106,4 +113,12 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     }
 
     H5Fclose(file_id);
+}
+
+
+void printBacktrace(int depth) {
+    void *array[depth];
+    size_t size;
+    size = backtrace(array, depth);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
 }
