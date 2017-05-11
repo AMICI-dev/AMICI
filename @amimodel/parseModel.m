@@ -136,7 +136,7 @@ if(this.steadystate)
 end
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot','sJy','dJydy','dJydx','dJydp','sJz','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx'};
+    funs = {funs{:},'sxdot','sx0','sz','sz_tf','deltasx','stau','sroot','sJy','dJydy','dJydx','dJydp','sJz','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx'};
 end
 if(this.adjoint)
     funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydx','dJydp','dJzdx','dJzdp','dwdp','dxdotdp','dydp'};

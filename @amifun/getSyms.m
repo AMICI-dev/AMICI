@@ -392,11 +392,6 @@ function [this,model] = getSyms(this,model)
             % create cell array of same size
             this = makeStrSyms(this);
             
-        case 'sy'
-            this.sym=model.fun.dydp.strsym + model.fun.dydx.strsym*model.fun.sx.sym ;
-            % create cell array of same size
-            this = makeStrSyms(this);
-            
         case 'Jv'
             % create cell array of same size
             vs = cell(nx,1);

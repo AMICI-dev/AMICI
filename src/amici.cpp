@@ -2,7 +2,7 @@
  * @file   amici.cpp
  * @brief  core routines for integration
  */
-
+#include <cblas.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +24,8 @@
 
 /** return value for successful execution */
 #define AMI_SUCCESS               0
+
+static int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_Vector *sx, void *user_data);
 
 void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus) {
 
@@ -2165,4 +2167,26 @@ void processUserData(UserData *udata) {
     w_tmp = new realtype[nw]();
     dwdx_tmp = new realtype[ndwdx]();
     dwdp_tmp = new realtype[ndwdp]();
+}
+
+int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_Vector *sx, void *user_data){
+    // Compute sy = dydx * sx + dydp
+
+    int status = 0;
+    UserData *udata = (UserData*) user_data;
+
+    for(int ip = 0; ip < nplist; ++ip) {
+        for(int iy = 0; iy < ny; ++iy)
+            // copy dydp to sy
+            sy[ip * nt * ny + iy * nt + it] = dydp_[iy + ip * ny];
+
+        realtype *sxTmp = N_VGetArrayPointer(sx[ip]);
+
+        // compute sy = 1.0*dydx*sx + 1.0*sy
+        cblas_dgemv(CblasColMajor, CblasNoTrans, ny, nx,
+                    1.0, dydx_, ny, sxTmp, 1,
+                    1.0, &sy[ip * nt * ny + it], nt);
+    }
+
+    return status;
 }
