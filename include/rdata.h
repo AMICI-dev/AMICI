@@ -7,21 +7,24 @@
 #define EXTERNC
 #endif
 
-/** @brief struct that stores all data which is later returned by the mex function */
+/** @brief struct that stores all data which is later returned by the mex function
+ *
+ * NOTE: MATLAB stores multidimensional arrays in column-major order (FORTRAN-style)
+ */
 typedef struct rdata {
 
     /** timepoints */
-    double *am_tsdata; 
+    double *am_tsdata;
     /** time derivative */
     double *am_xdotdata;
     /** parameter derivative of time derivative */
-    double *am_dxdotdpdata; 
+    double *am_dxdotdpdata;
     /** state derivative of observables */
-    double *am_dydxdata; 
+    double *am_dydxdata;
     /** parameter derivative of observables */
-    double *am_dydpdata; 
+    double *am_dydpdata;
     /** Jacobian of differential equation right hand side */
-    double *am_Jdata; 
+    double *am_Jdata;
     /** event output */
     double *am_zdata;
     /** event output sigma standard deviation */
@@ -52,11 +55,11 @@ typedef struct rdata {
     /** number of integration steps forward problem */
     double *am_numstepsdata;
     /** number of integration steps backward problem */
-    double *am_numstepsSdata; 
+    double *am_numstepsSdata;
     /** number of right hand side evaluations forward problem */
     double *am_numrhsevalsdata;
     /** number of right hand side evaluations backwad problem */
-    double *am_numrhsevalsSdata; 
+    double *am_numrhsevalsSdata;
     /** employed order forward problem */
     double *am_orderdata;
     
@@ -69,7 +72,7 @@ typedef struct rdata {
     /** second order parameter derivative of likelihood */
     double *am_s2llhdata;
     
-	} ReturnData;
+} ReturnData;
 
 EXTERNC void freeReturnData(ReturnData *rdata);
 
