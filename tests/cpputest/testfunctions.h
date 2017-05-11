@@ -8,7 +8,7 @@
 
 #define HDFFILE "../expectedResults.h5"
 #define TEST_ATOL 1e-10
-#define TEST_RTOL 1e-08
+#define TEST_RTOL 1e-06
 
 #ifndef __APPLE__
 #include <iostream>
