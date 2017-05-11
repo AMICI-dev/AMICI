@@ -78,7 +78,7 @@ TEST(groupDirac, testSimulation) {
     CHECK_EQUAL(0, status);
 
     // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/nosensi/results", rdata, udata, TEST_EPSILON);
+    verifyReturnData("/model_dirac/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     freeReturnData(rdata);
     freeExpData(edata);
@@ -99,7 +99,7 @@ TEST(groupDirac, testSensitivityForward) {
     CHECK_EQUAL(0, status);
 
     // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, TEST_EPSILON);
+    verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     freeReturnData(rdata);
     freeExpData(edata);
