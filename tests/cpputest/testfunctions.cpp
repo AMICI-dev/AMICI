@@ -39,13 +39,13 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     checkEqualArray(expected, rdata->am_Jdata, udata->am_nx * udata->am_nx, epsilon);
     delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt, epsilon);
-    delete[] expected;
+//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
+//    checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt, epsilon);
+//    delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt, epsilon);
-    delete[] expected;
+//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
+//    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt, epsilon);
+//    delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_orderdata, udata->am_nt, epsilon);
@@ -68,13 +68,13 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         checkEqualArray(expected, rdata->am_sllhdata, udata->am_np, epsilon);
         delete[] expected;
 
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevalsS", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_numrhsevalsSdata, udata->am_nt, epsilon);
-        delete[] expected;
+//        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevalsS", &expected, &m, &n);
+//        checkEqualArray(expected, rdata->am_numrhsevalsSdata, udata->am_nt, epsilon);
+//        delete[] expected;
 
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numstepsS", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_numstepsSdata, udata->am_nt, epsilon);
-        delete[] expected;
+//        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numstepsS", &expected, &m, &n);
+//        checkEqualArray(expected, rdata->am_numstepsSdata, udata->am_nt, epsilon);
+//        delete[] expected;
 
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
         checkEqualArray(expected, rdata->am_ssigmaydata, udata->am_nt * udata->am_ny * udata->am_nplist, epsilon);
