@@ -64,6 +64,19 @@ void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata
     applyChainRuleFactorToSimulationResults(udata, rdata, edata);
 
 freturn:
+    if(*pstatus<0){
+        if(llhdata)
+            *llhdata = amiGetNaN();
+        
+        if(sllhdata)
+            for (int ip=0; ip<nplist; ip++)
+            sllhdata[ip] = amiGetNaN();
+        
+        if(s2llhdata)
+            for (int ig=1; ig<ng; ig++)
+                for (int ip=0; ip<nplist; ip++)
+                    s2llhdata[(ig-1)*nplist + ip] = amiGetNaN();
+    }
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
 }
 
