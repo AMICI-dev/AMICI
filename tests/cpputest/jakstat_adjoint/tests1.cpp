@@ -18,7 +18,7 @@ TEST_GROUP(groupJakstatAdjoint)
 };
 
 #undef TEST_RTOL
-#define TEST_RTOL 1e-4
+#define TEST_RTOL 1e-6
 
 TEST(groupJakstatAdjoint, testSimulation) {
     // read simulation options

@@ -8,7 +8,7 @@ ExpData *getTestExpData() {
 }
 
 bool withinTolerance(double expected, double actual, double atol, double rtol) {
-    return fabs(expected - actual) <= atol || fabs((expected - actual) / expected) <= rtol;
+    return fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
 }
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol) {
