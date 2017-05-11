@@ -17,9 +17,6 @@ TEST_GROUP(groupJakstatAdjoint)
     }
 };
 
-#undef TEST_RTOL
-#define TEST_RTOL 1e-6
-
 TEST(groupJakstatAdjoint, testSimulation) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_jakstat_adjoint/nosensi/options");

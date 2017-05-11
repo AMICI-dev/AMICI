@@ -61,9 +61,9 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
 //    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt, epsilon, blab);
 //    delete[] expected;
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_orderdata, udata->am_nt, atol, rtol);
-    delete[] expected;
+//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
+//    checkEqualArray(expected, rdata->am_orderdata, udata->am_nt, atol, rtol);
+//    delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_ydata, udata->am_nt, atol, rtol);
