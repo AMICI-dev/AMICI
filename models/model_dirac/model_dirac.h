@@ -39,7 +39,6 @@
 #include "model_dirac_stau.h"
 #include "model_dirac_sx0.h"
 #include "model_dirac_sxdot.h"
-#include "model_dirac_sy.h"
 #include "model_dirac_sz.h"
 #include "model_dirac_sz_tf.h"
 #include "model_dirac_w.h"
@@ -87,7 +86,6 @@ int sroot_model_dirac(realtype t, int ie, int *nroots, realtype *sroot, N_Vector
 int stau_model_dirac(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
 int sx0_model_dirac(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_dirac(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-int sy_model_dirac(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data);
 int sz_model_dirac(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
 int sz_tf_model_dirac(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
 int w_model_dirac(realtype t, N_Vector x, N_Vector dx, void *user_data);

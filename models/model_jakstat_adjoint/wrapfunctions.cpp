@@ -110,10 +110,6 @@
                     return y_model_jakstat_adjoint(t, it, y, x, user_data);
                 }
                 
-                int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data){
-                    return sy_model_jakstat_adjoint(t, it, sy, dydx, dydp, sx, user_data);
-                }
-                
                 int fdydp(realtype t, int it, realtype *dydp, N_Vector x, void *user_data){
                     return dydp_model_jakstat_adjoint(t, it, dydp, x, user_data);
                 }

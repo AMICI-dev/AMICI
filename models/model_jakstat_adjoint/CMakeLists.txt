@@ -1,7 +1,7 @@
 project(model_jakstat_adjoint)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
@@ -69,7 +69,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_sroot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_stau.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sxdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sz_tf.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_w.cpp
@@ -98,7 +97,7 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}"
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 

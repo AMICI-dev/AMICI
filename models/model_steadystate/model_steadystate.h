@@ -39,7 +39,6 @@
 #include "model_steadystate_stau.h"
 #include "model_steadystate_sx0.h"
 #include "model_steadystate_sxdot.h"
-#include "model_steadystate_sy.h"
 #include "model_steadystate_sz.h"
 #include "model_steadystate_sz_tf.h"
 #include "model_steadystate_w.h"
@@ -87,7 +86,6 @@ int sroot_model_steadystate(realtype t, int ie, int *nroots, realtype *sroot, N_
 int stau_model_steadystate(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
 int sx0_model_steadystate(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_steadystate(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-int sy_model_steadystate(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data);
 int sz_model_steadystate(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
 int sz_tf_model_steadystate(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
 int w_model_steadystate(realtype t, N_Vector x, N_Vector dx, void *user_data);

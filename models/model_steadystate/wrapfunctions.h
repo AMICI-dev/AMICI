@@ -45,7 +45,6 @@ EXTERNC         void init_modeldims(UserData *udata);
                 int fs2root(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data);
                 int fstau(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
                 int fy(realtype t, int it, realtype *y, N_Vector x, void *user_data);
-                int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data);
                 int fdydp(realtype t, int it, realtype *dydp, N_Vector x, void *user_data);
                 int fdydx(realtype t, int it, realtype *dydx, N_Vector x, void *user_data);
                 int fz(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data);

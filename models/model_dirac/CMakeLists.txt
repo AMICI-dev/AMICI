@@ -69,7 +69,6 @@ ${MODEL_DIR}/model_dirac_sroot.cpp
 ${MODEL_DIR}/model_dirac_stau.cpp
 ${MODEL_DIR}/model_dirac_sx0.cpp
 ${MODEL_DIR}/model_dirac_sxdot.cpp
-${MODEL_DIR}/model_dirac_sy.cpp
 ${MODEL_DIR}/model_dirac_sz.cpp
 ${MODEL_DIR}/model_dirac_sz_tf.cpp
 ${MODEL_DIR}/model_dirac_w.cpp
@@ -98,7 +97,7 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}"
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 
