@@ -23,10 +23,9 @@ ${CPPUTEST_LIBRARY}
 "${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}"
 "${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}"
 "${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}"
-
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 

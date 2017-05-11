@@ -19,7 +19,7 @@ compiler:
 
 before_script:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev libblas-dev; fi
     
 install: true
 
