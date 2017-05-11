@@ -7,15 +7,21 @@ ExpData *getTestExpData() {
     return edata;
 }
 
+bool withinTolerance(double expected, double actual, double atol, double rtol) {
+    return fabs(expected - actual) <= atol || fabs((expected - actual) / expected) <= rtol;
+}
+
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol) {
     for(int i = 0; i < length; ++i)
     {
-        bool withinTolerance = fabs(expected[i] - actual[i]) <= atol || fabs((expected[i] - actual[i]) / expected[i]) <= rtol;
+        bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol);
+
 #ifndef __APPLE__
-        if(!withinTolerance)
+        if(!withinTol)
             std::cout<<i<<"/"<<length<<" "<<expected[i]<<" "<<actual[i]<<std::endl;
 #endif
-        CHECK_TRUE(withinTolerance);
+
+        CHECK_TRUE(withinTol);
     }
 }
 
@@ -30,7 +36,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
     // TODO: ignores Inf and NaN results; need to check with format in HDF5
     if(! isinf(*rdata->am_llhdata) || isnan(*rdata->am_llhdata))
-        DOUBLES_EQUAL(llhExp, *rdata->am_llhdata, atol);
+        CHECK_TRUE(withinTolerance(llhExp, *rdata->am_llhdata, atol, rtol));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nx, atol, rtol);

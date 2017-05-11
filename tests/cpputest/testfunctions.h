@@ -16,6 +16,8 @@
 
 ExpData *getTestExpData();
 
+bool withinTolerance(double expected, double actual, double atol, double rtol);
+
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol);
 
 void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
