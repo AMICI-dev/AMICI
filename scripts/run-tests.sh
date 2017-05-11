@@ -63,25 +63,28 @@ fi
 # done building dependencies
 
 # Prepare tests
-# Build dirac model
-mkdir -p ${AMICI_PATH}/models/model_dirac/build
-cd ${AMICI_PATH}/models/model_dirac/build
-cmake ..
-make
 
-# Build steadystate model
-mkdir -p ${AMICI_PATH}/models/model_steadystate/build
-cd ${AMICI_PATH}/models/model_steadystate/build
-cmake ..
-make 
+TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint"
+for MODEL in $TESTMODELS; do 
+	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
+	cd ${AMICI_PATH}/models/${MODEL}/build
+	cmake ..
+	make
+done;
 
 
 # Build test suite
+
 cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
 cmake ..
 make
+
 # Run tests
-DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" dirac/model_dirac_test
-DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH=}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib" steadystate/model_steadystate_test
+export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
+
+dirac/model_dirac_test
+steadystate/model_steadystate_test
+jakstat_adjoint/model_jakstat_adjoint_test
+

@@ -123,52 +123,21 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 
 
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus) {
-    double *originalParams = 0;
+    double *originalParams = NULL;
 
     if(udata->am_pscale != AMI_SCALING_NONE) {
         originalParams = (double *) malloc(sizeof(double) * np);
         memcpy(originalParams, p, sizeof(double) * np);
-
-        unscaleParameters(udata);
     }
 
-    int iroot = 0;
-    booleantype setupBdone = false;
-    *pstatus = 0;
-    int problem;
-    ReturnData *rdata;
-    TempData *tdata = new TempData();
-    void *ami_mem = 0; /* pointer to cvodes memory block */
-    if (tdata == NULL) goto freturn;
+    ReturnData *rdata = initReturnData(udata, pstatus);
 
-
-    if (nx>0) {
-        ami_mem = setupAMI(pstatus, udata, tdata);
-        if (ami_mem == NULL) goto freturn;
-    }
-
-    rdata = initReturnData(udata, pstatus);
-    if (rdata == NULL) goto freturn;
-
-    *pstatus = 0;
-
-    problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
-    if(problem)
-        goto freturn;
-
-
-    problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
-    if(problem)
-        goto freturn;
-
-    applyChainRuleFactorToSimulationResults(udata, rdata, edata);
-
-freturn:
-    freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    runAmiciSimulation(udata, edata, rdata, pstatus);
 
     if(originalParams) {
         memcpy(p, originalParams, sizeof(double) * np);
         free(originalParams);
     }
+
     return rdata;
 }

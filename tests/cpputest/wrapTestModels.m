@@ -4,20 +4,38 @@ function [ output_args ] = wrapTestModels( input_args )
     
     amiciPath = fileparts(mfilename('fullpath'));
     amiciPath = [amiciPath '/../..'];
-
+    
     %% EXAMPLE STEADYSTATE
-
+    
     cd([amiciPath '/examples/example_steadystate/']);
-
-    [exdir,~,~]=fileparts(which('example_steadystate.m'));
-    amiwrap('model_steadystate','model_steadystate_syms',exdir)
-          
+    
+    try
+        [exdir,~,~]=fileparts(which('example_steadystate.m'));
+        amiwrap('model_steadystate','model_steadystate_syms',exdir);
+    catch
+        cd(fileparts(mfilename('fullpath')));
+    end
+    
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
     
-    [exdir,~,~]=fileparts(which('example_dirac.m'));
-    amiwrap('model_dirac','model_dirac_syms',exdir)
+    try
+        [exdir,~,~]=fileparts(which('example_dirac.m'));
+        amiwrap('model_dirac','model_dirac_syms',exdir);
+    catch
+        cd(fileparts(mfilename('fullpath')));
+    end
     
+        %% EXAMPLE JAKSTAT
+    cd([amiciPath '/examples/example_jakstat_adjoint/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
+        amiwrap('model_jakstat_adjoint','model_jakstat_adjoint_syms',exdir);
+    catch
+        cd(fileparts(mfilename('fullpath')));
+    end
+
     cd(fileparts(mfilename('fullpath')));
     
 end

@@ -3,8 +3,8 @@ function amiwrap( varargin )
     %
     % Parameters:
     %  varargin:
-    %  modelname: specifies the name of the model which will be later used for the naming of the simualation file @type string
-    %  symfun: specifies a function which executes model defition see @ref definition for details @type string.
+    %  modelname: specifies the name of the model which will be later used for the naming of the simulation file @type string
+    %  symfun: specifies a function which executes model definition see @ref definition for details @type string.
     %  tdir: target directory where the simulation file should be placed @type string @default $AMICIDIR/models/modelname
     %  o2flag: boolean whether second order sensitivities should be enabled @type boolean @default false
     %

@@ -28,13 +28,26 @@ TEST(groupSteadystate, testSimulation) {
     ReturnData *rdata = getSimulationResults(udata, edata, &status);
     CHECK_EQUAL(0, status);
 
-    // TODO proper paths /teststeadystate1/...
-    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata);
+    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     freeReturnData(rdata);
     freeExpData(edata);
     freeUserData(udata);
 }
 
+TEST(groupSteadystate, testSensitivityForward) {
+    // read simulation options
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/sensiforward/options");
+    ExpData *edata = NULL;
 
+    int status;
+    ReturnData *rdata = getSimulationResults(udata, edata, &status);
+    CHECK_EQUAL(0, status);
+
+    verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+
+    freeReturnData(rdata);
+    freeExpData(edata);
+    freeUserData(udata);
+}
 
