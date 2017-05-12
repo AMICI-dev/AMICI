@@ -59,14 +59,14 @@ function [ output_args ] = createTestingData( input_args )
     options.sensi = 1;
     sol = simulate_model_dirac_hdf(t,log10(p),k,[],options);
     
-    %% EXAMPLE JAKSTAT
+    %% EXAMPLE JAKSTAT ADJOINT
     cd([amiciPath '/examples/example_jakstat_adjoint/']);
     
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
-    amiwrap('model_jakstat_adjoint','model_jakstat_adjoint_syms',exdir);
+     amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir, 1);
 
-    !head -n -1 simulate_model_jakstat.m > simulate_model_jakstat_hdf.m
-    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_jakstat_hdf.m
+    !head -n -1 simulate_model_jakstat_adjoint.m > simulate_model_jakstat_adjoint_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_jakstat_adjoint_hdf.m
 
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     
@@ -96,17 +96,23 @@ function [ output_args ] = createTestingData( input_args )
     
     amiHDFprefix = '/model_jakstat_adjoint/nosensi/';
     options.sensi = 0;
-    simulate_model_jakstat_hdf([],xi,[],D,options);
+    simulate_model_jakstat_adjoint_hdf([],xi,[],D,options);
     
     xi_rand = xi + 0.1;
     options.sensi = 1;
     amiHDFprefix = '/model_jakstat_adjoint/sensiadjoint/';
     options.sensi_meth = 'adjoint';
-    simulate_model_jakstat_hdf([],xi_rand,[],D,options);
+    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
     amiHDFprefix = '/model_jakstat_adjoint/sensiforward/';
     options.sensi_meth = 'forward';
-    simulate_model_jakstat_hdf([],xi_rand,[],D,options);
+    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
+
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint/';
+    amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir, 1);
+    options.sensi = 2;
+    options.sensi_meth = 'forward';
+    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
 
     %%
     chdir(oldwd)
