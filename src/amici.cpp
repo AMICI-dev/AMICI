@@ -26,6 +26,7 @@
 #define AMI_SUCCESS               0
 
 static int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_Vector *sx, void *user_data);
+static int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y_, realtype *sy, realtype *dydp_, realtype *my_, void *user_data);
 
 void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus) {
 
@@ -80,10 +81,10 @@ void invalidateReturnData(UserData* udata, ReturnData* rdata) {
      */
     if(llhdata)
         *llhdata = amiGetNaN();
-    
+
     if(sllhdata)
         fillArray(sllhdata, nplist, amiGetNaN());
-    
+
     if(s2llhdata)
         fillArray(s2llhdata, nplist*(ng-1), amiGetNaN());
 }
@@ -126,7 +127,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         if(ne>0) deltasx = new realtype[nx*nplist]();
         if(ne>0) deltaxB = new realtype[nx]();
         if(ne>0) deltaqB = new realtype[ng*nplist]();
-        
+
         if(ny>0) sigma_y = new realtype[ny]();
         if(ne>0) sigma_z = new realtype[nz]();
 
@@ -302,10 +303,10 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
         }
         drdp = new realtype[ng*nplist*nztrue*nmaxevent]();
         drdx = new realtype[ng*nx*nztrue*nmaxevent]();
-        
+
         dsigma_ydp = new realtype[ny*nplist]();
         if(ne>0) dsigma_zdp = new realtype[nz*nplist]();
-        
+
         if (sensi_meth == AMI_SENSI_FSA) {
 
             if(nx>0) {
@@ -364,7 +365,7 @@ void *setupAMI(int *status, UserData *udata, TempData *tdata) {
 
                 *status = AMIAdjInit(ami_mem, maxsteps, interpType);
                 if (*status != AMI_SUCCESS) return(NULL);
-                
+
                 llhS0 = new realtype[ng*nplist]();
             }
         }
@@ -408,7 +409,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     dxB = N_VNew_Serial(nx);
     xQB = N_VNew_Serial(ng*nplist);
     xQB_old = N_VNew_Serial(ng*nplist);
-    
+
     /* write initial conditions */
     if (xB == NULL) return;
     xB_tmp = NV_DATA_S(xB);
@@ -429,7 +430,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     if (xQB == NULL) return;
     xQB_tmp = NV_DATA_S(xQB);
     memset(xQB_tmp,0,sizeof(realtype)*ng*nplist);
-    
+
     /* create backward problem */
     if (lmm>2||lmm<1) {
         errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
@@ -1440,7 +1441,7 @@ void applyEventSensiBolusFSA(int *status, void *ami_mem, UserData *udata, TempDa
     for (ie=0; ie<ne; ie++){
         if(rootsfound[ie] == 1) { /* only consider transitions false -> true */
             *status = fdeltasx(t,ie,deltasx,x_old,xdot,xdot_old,NVsx,udata);
-            
+
             for (ip=0; ip<nplist; ip++) {
                 sx_tmp = NV_DATA_S(NVsx[ip]);
                 for (ix=0; ix<nx; ix++) {
@@ -2013,7 +2014,7 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
 
     pcoefficient = new realtype[nplist]();
     augcoefficient = new realtype[np]();
-    
+
     switch(udata->am_pscale) {
     case AMI_SCALING_LOG10:
             coefficient = log(10.0);
@@ -2048,37 +2049,37 @@ void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *
                             for(int ix = 0; ix < nxtrue; ++ix)
                                 for(int it = 0; it < nt; ++it)
                                     sxdata[(ip*nxtrue + ix)*nt + it] = xdata[(nxtrue + ip*nxtrue + ix)*nt + it];
-                
+
                 if(rdata->am_ydata)
                     if(rdata->am_sydata)
                         for(int ip = 0; ip < nplist; ++ip)
                             for(int iy = 0; iy < nytrue; ++iy)
                                 for(int it = 0; it < nt; ++it)
                                     sydata[(ip*nytrue + iy)*nt + it] = ydata[(nytrue + ip*nytrue + iy)*nt + it];
-                
+
                 if(rdata->am_zdata)
                     if(rdata->am_szdata)
                         for(int ip = 0; ip < nplist; ++ip)
                             for(int iz = 0; iz < nztrue; ++iz)
                                 for(int it = 0; it < nt; ++it)
                                     sydata[(ip*nztrue + iz)*nt + it] = zdata[(nztrue + ip*nztrue + iz)*nt + it];
-                
+
             }
         }
-        
+
         if(edata) {
             if(rdata->am_sllhdata)
                 for(int ip = 0; ip < nplist; ++ip)
                     sllhdata[ip] *= pcoefficient[ip];
         }
-        
+
 #define chainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
         for(int IND1 = 0; IND1 < N1T; ++IND1) \
             for(int IND2 = 0; IND2 < N2; ++IND2){ \
                 s ## QUANT ## data[(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
-        
+
         chainRule(x,ix,nxtrue,nx,it,nt)
         chainRule(y,iy,nytrue,ny,it,nt)
         chainRule(sigmay,iy,nytrue,ny,it,nt)
@@ -2111,7 +2112,7 @@ if(rdata->am_s ## QUANT ## data) \
                 }
             }
         }
-    
+
 #define s2ChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
@@ -2121,7 +2122,7 @@ if(rdata->am_s ## QUANT ## data) \
                     s ## QUANT ## data[(ip*N1 + ig*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*augcoefficient[ig-1]; \
                     if(plist[ip]==ig-1) \
                         s  ## QUANT ## data[(ip*N1 + ig*N1T + IND1)*N2 + IND2] += s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]*coefficient;}
-        
+
         s2ChainRule(x,ix,nxtrue,nx,it,nt)
         s2ChainRule(y,iy,nytrue,ny,it,nt)
         s2ChainRule(sigmay,iy,nytrue,ny,it,nt)
@@ -2129,7 +2130,7 @@ if(rdata->am_s ## QUANT ## data) \
         s2ChainRule(sigmaz,iz,nztrue,nz,ie,nmaxevent)
         s2ChainRule(rz,iz,nztrue,nz,ie,nmaxevent)
     }
-    
+
     if(udata->am_o2mode == AMI_O2MODE_DIR) { //directional
         if(rdata->am_s2llhdata) {
             if(rdata->am_sllhdata) {
@@ -2139,7 +2140,7 @@ if(rdata->am_s ## QUANT ## data) \
                 }
             }
         }
-        
+
 #define s2vecChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if(rdata->am_s ## QUANT ## data) \
     for(int ip = 0; ip < nplist; ++ip) \
@@ -2147,7 +2148,7 @@ if(rdata->am_s ## QUANT ## data) \
                 for(int IND2 = 0; IND2 < N2; ++IND2){ \
                     s ## QUANT ## data[(ip*N1 + N1T + IND1)*N2 + IND2] *= pcoefficient[ip]; \
                     s ## QUANT ## data[(ip*N1 + N1T + IND1)*N2 + IND2] += udata->am_k[nk-nplist+ip]*s ## QUANT ## data[(ip*N1 + IND1)*N2 + IND2]/p[plist[ip]];}
-        
+
         s2vecChainRule(x,ix,nxtrue,nx,it,nt)
         s2vecChainRule(y,iy,nytrue,ny,it,nt)
         s2vecChainRule(sigmay,iy,nytrue,ny,it,nt)
@@ -2209,3 +2210,68 @@ int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_V
 
     return status;
 }
+
+int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y_, realtype *sy, realtype *dydp_, realtype *my_, void *user_data) {
+    int status = 0;
+    UserData *udata = (UserData*) user_data;
+
+    // Compute sy-dydp for current 'it'
+    // dydp         ny x nplist
+    // sy           nt x ny x nṕlist
+    // dydp part needs to be substracted as it is already contained in dJydp
+    // we only need to account for sensitivities here
+    realtype *diff = new realtype[ny * nplist];
+    for(int iy = 0; iy < ny; ++iy)
+        for(int ip = 0; ip < nplist; ++ip)
+            diff[iy + ip * ny] = sy[ip * nt * ny + iy * nt + it] - dydp_[iy + ip * ny];
+
+    // sJy          nplist x ng
+    // dJydp=dgdp   nytrue x nplist x ng
+    // dJydy=dgdy   nytrue x ng x ny
+
+    realtype *dJydyTmp = new realtype[ng * ny];
+    realtype *multResult = new realtype[nplist * ng];
+
+    for(int iyt = 0; iyt < nytrue; ++iyt) {
+        if(amiIsNaN(my_[nt * iyt + it]))
+            continue;
+
+        // copy current (iyt) dJydy slice
+        // dJydyTmp     ng x ny
+        for(int ig = 0; ig < ng; ++ig)
+            for(int iy = 0; iy < ny; ++iy)
+                dJydyTmp[ig + iy * ng] = dJydy[iyt + ig * nytrue + iy * nytrue * ng];
+
+        // compute multResult = (dJydyTmp * diff)' + dJydp == diff' * dJydyTmp' + dJydp
+        // copy dJydp slice (iyt) to result
+        for(int ip = 0; ip < nplist; ++ip)
+            for(int ig = 0; ig < ng; ++ig)
+                multResult[ip + np * ig] = dJydp[iyt + ip * nytrue + ig * nytrue * nplist];
+
+        // C := alpha*op(A)*op(B) + beta*C,
+        cblas_dgemm(CblasColMajor, CblasTrans, CblasTrans,
+                    nplist, ng, ny,
+                    1.0, diff, ny,
+                    dJydyTmp, ng,
+                    1.0, multResult, nplist);
+
+
+        // sJy += multResult
+        for(int ig = 0; ig < ng; ++ig) {
+            if(ig == 0)
+                for(int ip = 0; ip < nplist; ++ip)
+                    sJy[ip] -= multResult[ip];
+            else
+                for(int ip = 0; ip < nplist; ++ip)
+                    s2Jy[ip + nplist * ig] -= multResult[ip+ nplist * ig];
+        }
+
+
+    }
+    delete[] dJydyTmp;
+    delete[] multResult;
+    delete[] diff;
+
+    return(status);
+}
+

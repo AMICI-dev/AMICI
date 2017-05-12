@@ -779,16 +779,6 @@ function [this,model] = getSyms(this,model)
                 % correctly in gccode.m
             end            
             this = makeStrSyms(this);
-        case 'sJy'
-            this.sym = sym(zeros(model.nytrue, model.np, model.ng));
-            dJydy_tmp = sym(zeros(model.ng, model.ny));
-            for iy = 1 : model.nytrue
-                dJydy_tmp = permute(model.fun.dJydy.strsym(iy,:,:),[2,3,1]);
-                this.sym(iy,:,:) = transpose(dJydy_tmp*(model.fun.sy.strsym-model.fun.dydp.strsym));
-                % dydp part needs to be substracted as it is already contained in dJydp
-                % we only need to account for sensitivities here
-            end
-            this.sym = this.sym + model.fun.dJydp.strsym;
         case 'Jz'
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
