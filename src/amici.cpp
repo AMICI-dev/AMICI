@@ -65,19 +65,25 @@ void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata
 
 freturn:
     if(*pstatus<0){
-        if(llhdata)
-            *llhdata = amiGetNaN();
-        
-        if(sllhdata)
-            for (int ip=0; ip<nplist; ip++)
-            sllhdata[ip] = amiGetNaN();
-        
-        if(s2llhdata)
-            for (int ig=1; ig<ng; ig++)
-                for (int ip=0; ip<nplist; ip++)
-                    s2llhdata[(ig-1)*nplist + ip] = amiGetNaN();
+        invalidateReturnData(udata, rdata);
     }
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+}
+
+void invalidateReturnData(UserData* udata, ReturnData* rdata) {
+    /**
+     * @brief performs all necessary actions to reset return data upon integration failure
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     */
+    if(llhdata)
+        *llhdata = amiGetNaN();
+    
+    if(sllhdata)
+        fillArray(sllhdata, nplist, amiGetNaN());
+    
+    if(s2llhdata)
+        fillArray(s2llhdata, nplist*(ng-1), amiGetNaN());
 }
 
 void *setupAMI(int *status, UserData *udata, TempData *tdata) {
