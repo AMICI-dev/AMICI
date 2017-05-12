@@ -61,7 +61,6 @@ ${MODEL_DIR}/model_dirac_dzdp.cpp
 ${MODEL_DIR}/model_dirac_dzdx.cpp
 ${MODEL_DIR}/model_dirac_qBdot.cpp
 ${MODEL_DIR}/model_dirac_root.cpp
-${MODEL_DIR}/model_dirac_sJy.cpp
 ${MODEL_DIR}/model_dirac_sJz.cpp
 ${MODEL_DIR}/model_dirac_sigma_y.cpp
 ${MODEL_DIR}/model_dirac_sigma_z.cpp

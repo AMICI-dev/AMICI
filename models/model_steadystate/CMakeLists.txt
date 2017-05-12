@@ -61,7 +61,6 @@ ${MODEL_DIR}/model_steadystate_dzdp.cpp
 ${MODEL_DIR}/model_steadystate_dzdx.cpp
 ${MODEL_DIR}/model_steadystate_qBdot.cpp
 ${MODEL_DIR}/model_steadystate_root.cpp
-${MODEL_DIR}/model_steadystate_sJy.cpp
 ${MODEL_DIR}/model_steadystate_sJz.cpp
 ${MODEL_DIR}/model_steadystate_sigma_y.cpp
 ${MODEL_DIR}/model_steadystate_sigma_z.cpp

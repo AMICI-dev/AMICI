@@ -61,7 +61,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_dzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sJy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sJz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_z.cpp

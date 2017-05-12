@@ -31,7 +31,6 @@
 #include "model_dirac_dzdx.h"
 #include "model_dirac_qBdot.h"
 #include "model_dirac_root.h"
-#include "model_dirac_sJy.h"
 #include "model_dirac_sJz.h"
 #include "model_dirac_sigma_y.h"
 #include "model_dirac_sigma_z.h"
@@ -78,7 +77,6 @@ int dzdp_model_dirac(realtype t, int ie, realtype *dzdp, N_Vector x, void *user_
 int dzdx_model_dirac(realtype t, int ie, realtype *dzdx, N_Vector x, void *user_data);
 int qBdot_model_dirac(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
 int root_model_dirac(realtype t, N_Vector x, realtype *root, void *user_data);
-int sJy_model_dirac(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data);
 int sJz_model_dirac(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
 int sigma_y_model_dirac(realtype t, realtype *sigma_y, void *user_data);
 int sigma_z_model_dirac(realtype t, int ie, realtype *sigma_z, void *user_data);
