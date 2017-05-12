@@ -108,7 +108,7 @@ function [ output_args ] = createTestingData( input_args )
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
 
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2forward/';
     options.sensi = 2;
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
