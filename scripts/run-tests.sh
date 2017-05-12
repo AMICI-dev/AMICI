@@ -66,8 +66,8 @@ if ! ldconfig -p | grep libcblas;  then
 	tar -xzf blas.tgz
 	cd CBLAS
 	make
-	sudo cp blas_UNIX.a /usr/local/lib/libcblas.a
-	sudo cp include/*.h /usr/local/include/
+	sudo cp blas_UNIX.a /usr/lib/libcblas.a
+	sudo cp include/*.h /usr/include/
 fi 
 
 # done building dependencies
