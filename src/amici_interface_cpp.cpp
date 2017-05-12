@@ -14,7 +14,7 @@
  * @ param D2 number of columns in the matrix
  */
 #define initField2(FIELD,D1,D2) \
-FIELD ## data = new double[D1 * D2]();
+FIELD ## data = new double[(D1) * (D2)]();
 
 /**
  * @ brief initialise 3D tensor and attach to the field
@@ -24,7 +24,7 @@ FIELD ## data = new double[D1 * D2]();
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-FIELD ## data = new double[D1 * D2 * D3]();
+FIELD ## data = new double[(D1) * (D2) * (D3)]();
 
 /**
  * @ brief initialise 4D tensor and attach to the field
@@ -35,7 +35,7 @@ FIELD ## data = new double[D1 * D2 * D3]();
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-FIELD ## data = new double[D1 * D2 * D3 * D4]();
+FIELD ## data = new double[(D1) * (D2) * (D3) * (D4)]();
 
 ReturnData *initReturnData(const UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
