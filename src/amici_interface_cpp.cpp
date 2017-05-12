@@ -114,9 +114,7 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 
     memset(rdata, 0, sizeof(*rdata));
 
-    double dblstatus;
     initUserDataFields(udata, rdata);
-    *pstatus = (int) dblstatus;
 
     return(rdata);
 }
