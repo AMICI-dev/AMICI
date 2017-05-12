@@ -37,72 +37,7 @@ FIELD ## data = new double[D1 * D2 * D3]();
 #define initField4(FIELD,D1,D2,D3,D4) \
 FIELD ## data = new double[D1 * D2 * D3 * D4]();
 
-
-static void initUserDataFields(const UserData user_data, ReturnData *rdata, double *pstatus);
-
-void initUserDataFields(const UserData *udata, ReturnData *rdata) {
-    initField2(llh,1,1);
-    initField2(chi2,1,1);
-
-    tsdata = new double[nt]();
-
-    initField2(numsteps,nt,1);
-    initField2(numrhsevals,nt,1);
-    initField2(order,nt,1);
-    if(sensi >= AMI_SENSI_ORDER_FIRST){
-        initField2(numstepsS,nt,1);
-        initField2(numrhsevalsS,nt,1);
-    }
-    if((nz>0) & (ne>0)){
-        initField2(z,nmaxevent,nz);
-        initField2(rz,nmaxevent,nz);
-        initField2(sigmaz,nmaxevent,nz);
-    }
-    if(nx>0) {
-        initField2(x,nt,nx);
-        initField2(xdot,1,nx);
-        initField2(J,nx,nx);
-    }
-    if(ny>0) {
-        initField2(y,nt,ny);
-        initField2(sigmay,nt,ny);
-        if (sensi_meth == AMI_SENSI_SS) {
-            initField2(dydp,ny,nplist);
-            initField2(dydx,ny,nx);
-            initField2(dxdotdp,nx,nplist);
-        }
-    }
-    if(sensi >= AMI_SENSI_ORDER_FIRST) {
-        initField2(sllh,nplist,1);
-        if (sensi_meth == AMI_SENSI_FSA) {
-            initField3(sx,nt,nx,nplist);
-            if(ny>0) {
-                initField3(sy,nt,ny,nplist);
-                initField3(ssigmay,nt,ny,nplist);
-            }
-            if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nz,nplist);
-                if(sensi >= AMI_SENSI_ORDER_SECOND){
-                    initField4(s2rz,nmaxevent,nz,nplist,nplist);
-                }
-                initField3(sz,nmaxevent,nz,nplist);
-                initField3(ssigmaz,nmaxevent,nz,nplist);
-            }
-        }
-        if (sensi_meth == AMI_SENSI_ASA) {
-            if(ny>0) {
-                initField3(ssigmay,nt,ny,nplist);
-            }
-            if((nz>0) & (ne>0)){
-                initField3(ssigmaz,nmaxevent,nz,nplist);
-            }
-        }
-        if(sensi >= AMI_SENSI_ORDER_SECOND) {
-            initField2(s2llh,ng-1,nplist);
-        }
-    }
-}
-
+#include "include/amici_init_return_data_fields.h"
 
 ReturnData *initReturnData(const UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
@@ -114,7 +49,9 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 
     memset(rdata, 0, sizeof(*rdata));
 
-    initUserDataFields(udata, rdata);
+    tsdata = new double[nt]();
+
+    initReturnDataFields(udata, rdata);
 
     return(rdata);
 }
