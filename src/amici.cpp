@@ -2,7 +2,11 @@
  * @file   amici.cpp
  * @brief  core routines for integration
  */
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#else
 #include <cblas.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
