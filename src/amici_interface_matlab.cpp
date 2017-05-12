@@ -47,8 +47,6 @@
     FIELD ## data = mxGetPr(mx ## FIELD); \
     mxSetField(mxsol,0,#FIELD,mx ## FIELD)
 
-#include "include/amici_init_return_data_fields.h"
-
 
 /**
  * @ brief extract information from a property of a matlab class (scalar)
@@ -207,8 +205,9 @@ ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *psta
     memset(rdata, 0, sizeof(*rdata));
 
     mxArray *mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
-
     plhs[0] = mxsol;
+
+    #include "include/amici_init_return_data_fields.h"
 
     mxArray *mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
     mxSetPr(mxstatus,pstatus);

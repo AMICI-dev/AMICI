@@ -37,8 +37,6 @@ FIELD ## data = new double[D1 * D2 * D3]();
 #define initField4(FIELD,D1,D2,D3,D4) \
 FIELD ## data = new double[D1 * D2 * D3 * D4]();
 
-#include "include/amici_init_return_data_fields.h"
-
 ReturnData *initReturnData(const UserData *udata, int *pstatus) {
     ReturnData *rdata; /* returned rdata struct */
 
@@ -51,7 +49,7 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 
     tsdata = new double[nt]();
 
-    initReturnDataFields(udata, rdata);
+    #include "include/amici_init_return_data_fields.h"
 
     return(rdata);
 }

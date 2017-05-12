@@ -3,7 +3,6 @@
  * it depends on the initField* macros defined there.
  */
 
-void initReturnDataFields(const UserData *udata, ReturnData *rdata) {
     initField2(llh,1,1);
     initField2(chi2,1,1);
     initField2(numsteps,nt,1);
@@ -61,5 +60,3 @@ void initReturnDataFields(const UserData *udata, ReturnData *rdata) {
             initField2(s2llh,ng-1,nplist);
         }
     }
-}
-
