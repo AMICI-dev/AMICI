@@ -54,6 +54,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
+    assert(length == nx);
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
@@ -130,10 +131,12 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-        assert(m * n == nt * ny); // TODO m, n separately
+        assert(n == nt);
+        assert(m == nytrue);
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-        assert(m * n == nt * ny);
+        assert(n == nt);
+        assert(m == nytrue);
 
         if(nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
