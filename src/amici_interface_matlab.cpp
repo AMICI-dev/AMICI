@@ -217,8 +217,6 @@ ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *psta
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
 
-    initReturnDataFields(udata, rdata);
-
     return(rdata);
 }
 
