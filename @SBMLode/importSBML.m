@@ -676,7 +676,7 @@ if(nargin>0)
 csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
 csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
 else
-    csym = sym();
+    csym = sym(0);
 end
 end
 

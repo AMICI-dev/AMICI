@@ -64,7 +64,26 @@ void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata
     applyChainRuleFactorToSimulationResults(udata, rdata, edata);
 
 freturn:
+    if(*pstatus<0){
+        invalidateReturnData(udata, rdata);
+    }
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+}
+
+void invalidateReturnData(UserData* udata, ReturnData* rdata) {
+    /**
+     * @brief performs all necessary actions to reset return data upon integration failure
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     */
+    if(llhdata)
+        *llhdata = amiGetNaN();
+    
+    if(sllhdata)
+        fillArray(sllhdata, nplist, amiGetNaN());
+    
+    if(s2llhdata)
+        fillArray(s2llhdata, nplist*(ng-1), amiGetNaN());
 }
 
 void *setupAMI(int *status, UserData *udata, TempData *tdata) {
