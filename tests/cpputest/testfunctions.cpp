@@ -142,6 +142,15 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
                 udata->am_nt * udata->am_nytrue, atol, rtol);
     delete[] expected;
 
+    if(udata->am_sensi >= AMI_SENSI_ORDER_SECOND) {
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "s2llh", &expected, &m, &n);
+        checkEqualArray(expected, rdata->am_s2llhdata, udata->am_nplist * udata->am_nplist, atol, rtol);
+        delete[] expected;
+    } else {
+        POINTERS_EQUAL(NULL, rdata->am_s2llhdata);
+        POINTERS_EQUAL(NULL, rdata->am_s2rzdata);
+    }
+
 }
 
 

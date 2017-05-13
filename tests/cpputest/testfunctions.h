@@ -22,7 +22,7 @@ void checkEqualArray(const double *expected, const double *actual, int length, d
 
 void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
 
-void verifyReturnDataSensitivities(hid_t file_id, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
+void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
 
 void printBacktrace(int depth);
 #endif
