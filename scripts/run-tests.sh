@@ -94,7 +94,4 @@ make
 # Run tests
 export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
 
-dirac/model_dirac_test
-steadystate/model_steadystate_test
-jakstat_adjoint/model_jakstat_adjoint_test
-
+ctest -V
