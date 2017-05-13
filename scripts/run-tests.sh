@@ -60,16 +60,6 @@ if [ ! -d "cpputest-3.8" ]; then
     ../configure && make
 fi
 
-# cblas 
-if ! ldconfig -p | grep libcblas;  then
-	wget http://www.netlib.org/blas/blast-forum/cblas.tgz
-	tar -xzf blas.tgz
-	cd CBLAS
-	make
-	sudo cp blas_UNIX.a /usr/lib/libcblas.a
-	sudo cp include/*.h /usr/include/
-fi 
-
 # done building dependencies
 
 # Prepare tests
