@@ -74,7 +74,7 @@ fi
 
 # Prepare tests
 
-TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint"
+TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_adjoint_o2"
 for MODEL in $TESTMODELS; do 
 	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 	cd ${AMICI_PATH}/models/${MODEL}/build
