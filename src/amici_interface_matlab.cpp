@@ -28,7 +28,7 @@
  * @ param D3 number of elements in the third dimension of the tensor
  */
 #define initField3(FIELD,D1,D2,D3) \
-    mwSize dims ## FIELD[] = {D1,D2,D3}; \
+    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3)}; \
     mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
     FIELD ## data = mxGetPr(mx ## FIELD); \
     mxSetField(mxsol,0,#FIELD,mx ## FIELD)
@@ -42,7 +42,7 @@
  * @ param D4 number of elements in the fourth dimension of the tensor
  */
 #define initField4(FIELD,D1,D2,D3,D4) \
-    mwSize dims ## FIELD[] = {D1,D2,D3,D4}; \
+    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3), (mwSize)(D4)}; \
     mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
     FIELD ## data = mxGetPr(mx ## FIELD); \
     mxSetField(mxsol,0,#FIELD,mx ## FIELD)
