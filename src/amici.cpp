@@ -2267,7 +2267,7 @@ int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, re
                     sJy[ip] -= multResult[ip];
             else
                 for(int ip = 0; ip < nplist; ++ip)
-                    s2Jy[ip + nplist * ig] -= multResult[ip+ nplist * ig];
+                    s2Jy[ip + nplist * (ig - 1)] -= multResult[ip+ nplist * ig];
         }
 
 
