@@ -410,7 +410,7 @@ function compileC(this)
         if(~ismac)
             CLIBS = 'CLIBS="-lrt -lcblas"';
         else
-            CLIBS = [];
+            CLIBS = 'CLIBS="-lcblas"';
         end
     else
         if(strcmp(mex.getCompilerConfigurations('c++').Name,'MinGW64 Compiler (C++)'))
