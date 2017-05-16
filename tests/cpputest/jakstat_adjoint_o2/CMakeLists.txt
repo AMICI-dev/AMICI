@@ -30,4 +30,4 @@ ${CPPUTEST_LIBRARY}
 "-lm"
 )
 
-add_test(NAME jakstat_adjoint COMMAND ./model_jakstat_adjoint_o2_test -c)
+add_test(NAME jakstat_adjoint_o2 COMMAND ./model_jakstat_adjoint_o2_test -c)
