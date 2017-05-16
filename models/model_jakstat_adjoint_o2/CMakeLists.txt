@@ -1,7 +1,7 @@
 project(model_jakstat_adjoint_o2)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
@@ -62,7 +62,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_root.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_s2root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sJy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sJz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sigma_z.cpp
@@ -70,7 +69,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_sroot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_stau.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sxdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sz_tf.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_w.cpp
@@ -99,7 +97,7 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}"
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 
