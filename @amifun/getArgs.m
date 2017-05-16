@@ -77,8 +77,6 @@ function this = getArgs(this,model)
             this.argstr = '(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data)';
         case 'y'
             this.argstr = '(realtype t, int it, realtype *y, N_Vector x, void *user_data)';
-        case 'sy'
-            this.argstr = '(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data)';
         case 'z'
             this.argstr = '(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data)';
         case 'sz'
