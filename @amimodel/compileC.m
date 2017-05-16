@@ -408,7 +408,7 @@ function compileC(this)
 
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS="-lrt"';
+            CLIBS = 'CLIBS="-lrt -lcblas"';
         else
             CLIBS = [];
         end

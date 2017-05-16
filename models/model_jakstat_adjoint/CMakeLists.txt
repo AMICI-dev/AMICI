@@ -61,7 +61,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_dzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sJy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sJz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_z.cpp
@@ -69,7 +68,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_sroot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_stau.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sxdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sz_tf.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_w.cpp
@@ -98,7 +96,7 @@ target_link_libraries(${PROJECT_NAME}
 "${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}"
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 

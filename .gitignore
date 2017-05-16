@@ -11,9 +11,9 @@ CMakeFiles/*
 
 build/*
 
-
-
 tests/dirac/build/*
+
+tests/cpputest/build/*
 
 ThirdParty/*
 
@@ -177,12 +177,6 @@ models/model_dirac/.DS_Store
 
 *.o
 
-models/model_dirac/dxdotdp_model_dirac.m
-
-models/model_dirac/J_model_dirac.m
-
-models/model_dirac/wrapfunctions.c
-
 cmake_install.cmake
 
 CMakeCache.txt
@@ -196,12 +190,6 @@ Makefile
 scripts/CMakeFiles
 
 *.txt
-
-src/symbolic_functions.o-f5eb52a8
-
-src/symbolic_functions.o-bea7fd73
-
-src/amici.o-404f292d
 
 tests/sbml-test-suite/
 
