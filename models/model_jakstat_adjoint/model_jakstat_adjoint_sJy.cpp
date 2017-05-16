@@ -58,7 +58,6 @@ if(!amiIsNaN(my[2*nt+it])){
   sJy[9] -= dJydp[29]-dJydy[8]*(dydp[29]-sy[it+nt*29]);
   sJy[16] -= dJydp[50];
 }
-
 return(status);
 
 }
