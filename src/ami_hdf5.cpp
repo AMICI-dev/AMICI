@@ -54,6 +54,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
+    assert(length == nx);
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
@@ -75,20 +76,18 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     }
 
     // parameter selection and reordering for sensitivities (matlab: fifth argument)
-    // For now, use all parameters
-    nplist = np;
-    plist = new int[np];
-    for (int i = 0; i < np; i++)
-        plist[i] = i;
+    AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &plist, &length);
+    nplist = length;
+    assert(nplist <= np);
+    // TODO: currently base 1 indices are written
+    for(int i = 0; i < nplist; ++i) plist[i] -= 1;
 
     /* Options ; matlab: fourth argument   */
     z2event = new realtype[ne];
     for(int i = 0; i < ne; ++i)
         z2event[i] = i;
 
-    idlist = new realtype[nplist]();
-    for(int i = 0; i < nplist; ++i)
-        idlist[i] = 0;
+    idlist = new realtype[nx]();
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
     x0data = NULL;
@@ -130,10 +129,12 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-        assert(m * n == nt * ny); // TODO m, n separately
+        assert(n == nt);
+        assert(m == nytrue);
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-        assert(m * n == nt * ny);
+        assert(n == nt);
+        assert(m == nytrue);
 
         if(nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);

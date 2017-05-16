@@ -26,7 +26,7 @@ ${CPPUTEST_LIBRARY}
 
 "${HDF5_HL_LIBRARIES}"
 "${HDF5_C_LIBRARIES}"
-"-lpthread -ldl -lz"
+"-lpthread -ldl -lz -lcblas"
 "-lm"
 )
 

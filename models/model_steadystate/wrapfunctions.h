@@ -45,7 +45,6 @@ EXTERNC         void init_modeldims(UserData *udata);
                 int fs2root(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data);
                 int fstau(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
                 int fy(realtype t, int it, realtype *y, N_Vector x, void *user_data);
-                int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data);
                 int fdydp(realtype t, int it, realtype *dydp, N_Vector x, void *user_data);
                 int fdydx(realtype t, int it, realtype *dydx, N_Vector x, void *user_data);
                 int fz(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data);
@@ -72,6 +71,5 @@ EXTERNC         void init_modeldims(UserData *udata);
                 int fdJydp(realtype t, int it, realtype *dJydp, realtype *y, N_Vector x, realtype *dydp, realtype *my, realtype *sigma_y, realtype *dsigma_ydp, void *user_data);
                 int fdJzdx(realtype t, int ie, realtype *dJzdx, realtype *z, N_Vector x, realtype *dzdx, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data);
                 int fdJzdp(realtype t, int ie, realtype *dJzdp, realtype *z, N_Vector x, realtype *dzdp, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data);
-                int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data);
                 int fsJz(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
 #endif /* _LW_cvodewrapfunctions */

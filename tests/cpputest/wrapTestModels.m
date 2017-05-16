@@ -26,12 +26,12 @@ function [ output_args ] = wrapTestModels( input_args )
         cd(fileparts(mfilename('fullpath')));
     end
     
-        %% EXAMPLE JAKSTAT
+    %% EXAMPLE JAKSTAT
     cd([amiciPath '/examples/example_jakstat_adjoint/']);
     
     try
         [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
-        amiwrap('model_jakstat_adjoint','model_jakstat_adjoint_syms',exdir);
+        amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir, 1);
     catch
         cd(fileparts(mfilename('fullpath')));
     end
