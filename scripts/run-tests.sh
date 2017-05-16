@@ -64,7 +64,7 @@ fi
 
 # Prepare tests
 
-TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint"
+TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_adjoint_o2"
 for MODEL in $TESTMODELS; do 
 	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 	cd ${AMICI_PATH}/models/${MODEL}/build
@@ -84,7 +84,4 @@ make
 # Run tests
 export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
 
-dirac/model_dirac_test
-steadystate/model_steadystate_test
-jakstat_adjoint/model_jakstat_adjoint_test
-
+ctest -V
