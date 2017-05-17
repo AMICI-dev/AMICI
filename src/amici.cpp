@@ -1477,15 +1477,12 @@ void initHeaviside(int *status, UserData *udata, TempData *tdata) {
     froot(t,x,dx,rootvals,udata);
 
     for (ie = 0; ie<ne; ie++) {
-        if (rootvals[ie]<=0) {
-            if(rootvals[ie]==0){
-            } if (rootvals[ie]==0) {
-                errMsgIdAndTxt("AMICI:mex:initHeaviside","Simulation started in an event. This could lead to unexpected results, aborting simulation! Please specify an earlier simulation start via @amimodel.t0");
-                *status = -10;
-                return;
-            } else {
-                h[ie] = 0.0;
-            }
+        if (rootvals[ie]<0) {
+            h[ie] = 0.0;
+        } else if (rootvals[ie]==0) {
+            errMsgIdAndTxt("AMICI:mex:initHeaviside","Simulation started in an event. This could lead to unexpected results, aborting simulation! Please specify an earlier simulation start via @amimodel.t0");
+            *status = -10;
+            return;
         } else {
             h[ie] = 1.0;
         }
