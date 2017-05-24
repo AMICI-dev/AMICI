@@ -390,9 +390,12 @@ void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, con
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %lld: ", attributeName, *length);
 #endif
-
-    *destination = new int[*length];
-    H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
+    if(*length > 0) {
+        *destination = new int[*length];
+        H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
+    } else {
+        *destination = NULL;
+    }
 }
 
 // TODO: option for overwrite
