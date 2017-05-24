@@ -88,6 +88,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
         for(int i = 0; i < nplist; ++i) plist[i] -= 1;
     } else {
         nplist = np;
+        plist = new int[nplist];
         for(int i = 0; i < np; ++i) plist[i] = i;
     }
 
@@ -379,7 +380,7 @@ void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id, const char* optionsObject
 
 
 void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length) {
-    *length = -1;
+    *length = 0;
 
     H5T_class_t type_class;
     size_t type_size;
