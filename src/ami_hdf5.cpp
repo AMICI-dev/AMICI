@@ -28,6 +28,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, cons
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath)
 {
+    assert(fileId > 0);
+
     UserData *udata = getDefaultUserData();
     if (udata == NULL)
         return(NULL);
@@ -54,7 +56,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
-    assert(length == nx);
+    if(length != nx)
+        return NULL;
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
@@ -77,10 +80,16 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 
     // parameter selection and reordering for sensitivities (matlab: fifth argument)
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &plist, &length);
-    nplist = length;
     assert(nplist <= np);
-    // TODO: currently base 1 indices are written
-    for(int i = 0; i < nplist; ++i) plist[i] -= 1;
+
+    if(length > 0) {
+        nplist = length;
+        // TODO: currently base 1 indices are written
+        for(int i = 0; i < nplist; ++i) plist[i] -= 1;
+    } else {
+        nplist = np;
+        for(int i = 0; i < np; ++i) plist[i] = i;
+    }
 
     /* Options ; matlab: fourth argument   */
     z2event = new realtype[ne];
@@ -370,6 +379,8 @@ void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id, const char* optionsObject
 
 
 void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length) {
+    *length = -1;
+
     H5T_class_t type_class;
     size_t type_size;
 
