@@ -56,25 +56,25 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
-    if(length != nx)
+    if(length != (unsigned) nx)
         return NULL;
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
-        if(np != length)
+        if((unsigned) np != length)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-        if(length != nk)
+        if(length != (unsigned) nk)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
         nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-        if(length != nt || status > 0)
+        if(length != (unsigned) nt || status > 0)
             return NULL;
     }
 
@@ -112,8 +112,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     h = 0;
 
     udata->am_dxdotdp = NULL;
-    udata->am_dwdx = NULL;
-    udata->am_dwdp = NULL;
     udata->am_M = NULL;
     udata->am_dfdx = NULL;
     udata->am_stau = NULL;
@@ -139,19 +137,19 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-        assert(n == nt);
-        assert(m == nytrue);
+        assert(n == (unsigned) nt);
+        assert(m == (unsigned) nytrue);
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-        assert(n == nt);
-        assert(m == nytrue);
+        assert(n == (unsigned) nt);
+        assert(m == (unsigned) nytrue);
 
         if(nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
-            assert(m * n == nt * nz);
+            assert(m * n == (unsigned) (nt * nz));
 
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
-            assert(m * n == nt * nz);
+            assert(m * n == (unsigned) (nt * nz));
         }
     }
     H5Fclose(file_id);
