@@ -2,6 +2,9 @@
 #include<include/rdata_accessors.h>
 
 void freeReturnData(ReturnData *rdata) {
+    if(!rdata)
+        return;
+
     if(tsdata) delete[] tsdata;
     if(xdotdata) delete[] xdotdata;
     if(dxdotdpdata) delete[] dxdotdpdata;
