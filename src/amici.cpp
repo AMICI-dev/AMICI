@@ -7,9 +7,9 @@
 #else
 #include <cblas.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <assert.h>
 #define _USE_MATH_DEFINES /* MS definition of PI and other constants */
 #include <math.h>
@@ -462,7 +462,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     if(*status != AMI_SUCCESS) return;
 
     /* Number of maximal internal steps */
-    *status = AMISetMaxNumStepsB(ami_mem, which, 100*maxsteps);
+    *status = AMISetMaxNumStepsB(ami_mem, which, 10*maxsteps);
     if(*status != AMI_SUCCESS) return;
 
     switch (linsol) {
