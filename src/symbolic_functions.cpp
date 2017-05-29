@@ -29,23 +29,23 @@
 
 
 int amiIsNaN(double what) {
-    #ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxIsNaN(what);
-    #else
-    return isnan(what);
-    #endif
+#else
+    return std::isnan(what);
+#endif
 }
 
 int amiIsInf(double what) {
-    #ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxIsInf(what);
-    #else
-    return isinf(what);
-    #endif
+#else
+    return std::isinf(what);
+#endif
 }
 
 double amiGetNaN() {
-#ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxGetNaN();
 #else
     return INFINITY;
@@ -200,7 +200,7 @@ double sign(double x) {
  *
  */
 double am_min(double a, double b, double c) {
-    int anan = isnan(a), bnan = isnan(b);
+    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
     if(anan || bnan) {
         if(anan && !bnan) return b;
         if(!anan && bnan) return a;
@@ -246,7 +246,7 @@ double Dam_min(int id,double a, double b, double c) {
  *
  */
 double am_max(double a, double b, double c) {
-    int anan = isnan(a), bnan = isnan(b);
+    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
     if(anan || bnan) {
         if(anan && !bnan) return b;
         if(!anan && bnan) return a;
@@ -303,12 +303,12 @@ double am_spline(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
+    double *ts = new double[num]();;
+    double *us = new double[num]();;
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = new double[num]();;
+    double *c = new double[num]();;
+    double *d = new double[num]();;
     
     int i;
     int j;
@@ -330,6 +330,13 @@ double am_spline(double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
+    
+    delete[] ts;
+    delete[] us;
+    
+    delete[] b;
+    delete[] c;
+    delete[] d;
     
     return(uout);
 }
@@ -354,13 +361,13 @@ double am_spline_pos(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
-    double uslog[num];
+    double *ts = new double[num]();;
+    double *us = new double[num]();;
+    double *uslog = new double[num]();
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = new double[num]();;
+    double *c = new double[num]();;
+    double *d = new double[num]();;
     
     int i;
     int j;
@@ -382,6 +389,14 @@ double am_spline_pos(double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uout = seval(num, t, ts, uslog, b, c, d);
+    
+    delete[] ts;
+    delete[] us;
+    delete[] uslog;
+    
+    delete[] b;
+    delete[] c;
+    delete[] d;
     
     return(exp(uout));
 }
@@ -406,13 +421,13 @@ double am_Dspline(int id, double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
-    double ps[num];
+    double *ts = new double[num]();;
+    double *us = new double[num]();;
+    double *ps = new double[num]();
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = new double[num]();;
+    double *c = new double[num]();;
+    double *d = new double[num]();;
     
     int i;
     int j;
@@ -439,6 +454,14 @@ double am_Dspline(int id, double t, int num, ...) {
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
     
+    delete[] ts;
+    delete[] us;
+    delete[] ps;
+    
+    delete[] b;
+    delete[] c;
+    delete[] d;
+    
     return(uout);
 }
 
@@ -458,14 +481,14 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     
     va_list valist;
     
-    double ts[num];
-    double us[num];
-    double sus[num];
-    double uslog[num];
+    double *ts = new double[num]();;
+    double *us = new double[num]();;
+    double *sus = new double[num]();
+    double *uslog = new double[num]();
 
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = new double[num]();;
+    double *c = new double[num]();;
+    double *d = new double[num]();;
     
     double uout;
     double ss;
@@ -503,6 +526,15 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     suspline = seval(num, t, ts, sus, b, c, d);
     uout = suspline * uspline_pos / us[did];
     
+    delete[] ts;
+    delete[] us;
+    delete[] sus;
+    delete[] uslog;
+    
+    delete[] b;
+    delete[] c;
+    delete[] d;
+    
     return(uout);
 }
 
@@ -538,15 +570,15 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     
     va_list valist;
     
-    double ts[num];
-    double us[num];
-    double sus1[num];
-    double sus2[num];
-    double uslog[num];
+    double *ts = new double[num]();;
+    double *us = new double[num]();;
+    double *sus1 = new double[num]();
+    double *sus2 = new double[num]();
+    double *uslog = new double[num]();
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = new double[num]();;
+    double *c = new double[num]();;
+    double *d = new double[num]();;
     
     double uout;
     double ss;
@@ -598,5 +630,16 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
         uout = su1spline * su2spline * uspline_pos;
     }
     uout = uout / us[did1] / us[did2];
+    
+    delete[] ts;
+    delete[] us;
+    delete[] sus1;
+    delete[] sus2;
+    delete[] uslog;
+    
+    delete[] b;
+    delete[] c;
+    delete[] d;
+    
     return(uout);
 }
