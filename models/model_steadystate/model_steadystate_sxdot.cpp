@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_steadystate_JSparse.h"
 #include "model_steadystate_dxdotdp.h"
 #include "model_steadystate_w.h"
@@ -16,12 +15,12 @@ realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*3);
 if(ip == 0) {
-    status = JSparse_model_steadystate(t,x,xdot,tmp_J,user_data,NULL,NULL,NULL);
-    status = dxdotdp_model_steadystate(t,tmp_dxdotdp,x,NULL,user_data);
+    status = JSparse_model_steadystate(t,x,xdot,udata->J,user_data,NULL,NULL,NULL);
+    status = dxdotdp_model_steadystate(t,udata->dxdotdp,x,NULL,user_data);
 }
-  sxdot_tmp[0] = tmp_dxdotdp[0 + ip*3]+sx_tmp[0]*tmp_J->data[0]+sx_tmp[1]*tmp_J->data[3]+sx_tmp[2]*tmp_J->data[6];
-  sxdot_tmp[1] = tmp_dxdotdp[1 + ip*3]+sx_tmp[0]*tmp_J->data[1]+sx_tmp[1]*tmp_J->data[4]+sx_tmp[2]*tmp_J->data[7];
-  sxdot_tmp[2] = tmp_dxdotdp[2 + ip*3]+sx_tmp[0]*tmp_J->data[2]+sx_tmp[1]*tmp_J->data[5]+sx_tmp[2]*tmp_J->data[8];
+  sxdot_tmp[0] = udata->dxdotdp[0 + ip*udata->nx]+sx_tmp[0]*udata->J->data[0]+sx_tmp[1]*udata->J->data[3]+sx_tmp[2]*udata->J->data[6];
+  sxdot_tmp[1] = udata->dxdotdp[1 + ip*udata->nx]+sx_tmp[0]*udata->J->data[1]+sx_tmp[1]*udata->J->data[4]+sx_tmp[2]*udata->J->data[7];
+  sxdot_tmp[2] = udata->dxdotdp[2 + ip*udata->nx]+sx_tmp[0]*udata->J->data[2]+sx_tmp[1]*udata->J->data[5]+sx_tmp[2]*udata->J->data[8];
 return(status);
 
 }

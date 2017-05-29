@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_w.h"
 
 int sigma_z_model_jakstat_adjoint(realtype t, int ie, realtype *sigma_z, void *user_data) {

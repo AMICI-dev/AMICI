@@ -1,26 +1,25 @@
                 
 #include "wrapfunctions.h"
-#include <include/udata_accessors.h>
                 
-                void init_modeldims(UserData *udata){
-                   np = 17;
-                   nx = 9;
-                   nxtrue = 9;
-                   nk = 2;
-                   ny = 3;
-                   nytrue = 3;
-                   nz = 0;
-                   nztrue = 0;
-                   ne = 0;
-                   ng = 1;
-                   nw = 2;
-                   ndwdx = 1;
-                   ndwdp = 5;
-                   nnz = 18;
-                   ubw = 8;
-                   lbw = 1;
-                   udata->am_pscale = AMI_SCALING_LOG10;
-                   udata->am_o2mode = AMI_O2MODE_NONE;
+    UserData *getUserData(){
+    return new UserData(17,
+                         9,
+                         9,
+                         2,
+                         3,
+                         3,
+                         0,
+                         0,
+                         0,
+                         1,
+                         2,
+                         1,
+                         5,
+                         18,
+                         8,
+                         1,
+                         AMI_SCALING_LOG10,
+                         AMI_O2MODE_NONE);
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_jakstat_adjoint, RCONST(t), x);
@@ -33,7 +32,7 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_jakstat_adjoint, sx);
+                    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_jakstat_adjoint, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){

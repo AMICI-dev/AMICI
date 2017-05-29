@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_steadystate_dwdx.h"
 #include "model_steadystate_w.h"
 
@@ -28,15 +27,15 @@ realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   JB->indexptrs[3] = 9;
 status = w_model_steadystate(t,x,NULL,user_data);
 status = dwdx_model_steadystate(t,x,NULL,user_data);
-  JB->data[0] = dwdx_tmp[0]*p[0]*2.0+p[1]*x_tmp[1];
-  JB->data[1] = p[2]*-2.0+p[1]*x_tmp[0];
-  JB->data[2] = -dwdx_tmp[1];
-  JB->data[3] = -dwdx_tmp[0]*p[0]+p[1]*x_tmp[1];
-  JB->data[4] = p[2]+p[1]*x_tmp[0];
-  JB->data[5] = -dwdx_tmp[1];
-  JB->data[6] = -p[1]*x_tmp[1];
-  JB->data[7] = -p[1]*x_tmp[0];
-  JB->data[8] = dwdx_tmp[1]+k[3];
+  JB->data[0] = udata->dwdx[0]*udata->p[0]*2.0+udata->p[1]*x_tmp[1];
+  JB->data[1] = udata->p[2]*-2.0+udata->p[1]*x_tmp[0];
+  JB->data[2] = -udata->dwdx[1];
+  JB->data[3] = -udata->dwdx[0]*udata->p[0]+udata->p[1]*x_tmp[1];
+  JB->data[4] = udata->p[2]+udata->p[1]*x_tmp[0];
+  JB->data[5] = -udata->dwdx[1];
+  JB->data[6] = -udata->p[1]*x_tmp[1];
+  JB->data[7] = -udata->p[1]*x_tmp[0];
+  JB->data[8] = udata->dwdx[1]+udata->k[3];
 return(status);
 
 }
