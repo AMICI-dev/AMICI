@@ -30,7 +30,7 @@ TEST(groupJakstatAdjoint, testSimulation) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 TEST(groupJakstatAdjoint, testSensitivityForward) {
@@ -46,7 +46,7 @@ TEST(groupJakstatAdjoint, testSensitivityForward) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
@@ -62,7 +62,7 @@ TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 

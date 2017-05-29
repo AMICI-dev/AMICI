@@ -19,17 +19,14 @@ TEST_GROUP(groupDirac)
 
 
 UserData *getTestUserData() {
-    UserData *udata = new UserData;
-    memset(udata, 0, sizeof(*udata));
+    UserData *udata = getUserData();
 
-    init_modeldims(udata);
-
-    udata->am_qpositivex = new double[udata->am_nx];
-    udata->am_p = new double[udata->am_np];
-    udata->am_k = new double[udata->am_nk];
-    udata->am_idlist = new realtype[udata->am_np]();
-    for(int i = 0; i < udata->am_np; ++i)
-        udata->am_idlist[i] = 0;
+    udata->qpositivex = new double[udata->nx];
+    udata->p = new double[udata->np];
+    udata->k = new double[udata->nk];
+    udata->idlist = new realtype[udata->np]();
+    for(int i = 0; i < udata->np; ++i)
+        udata->idlist[i] = 0;
 
     processUserData(udata);
 
@@ -43,7 +40,7 @@ UserData *getTestUserData() {
 TEST(groupDirac, testCreateAndFreeUserData) {
     UserData *udata = getTestUserData();
 
-    freeUserData(udata);
+    delete udata;
 }
 
 /*
@@ -82,7 +79,7 @@ TEST(groupDirac, testSimulation) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 TEST(groupDirac, testSimulationExpData) {
@@ -103,7 +100,7 @@ TEST(groupDirac, testSensitivityForward) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 TEST(groupDirac, testSensitivityState) {

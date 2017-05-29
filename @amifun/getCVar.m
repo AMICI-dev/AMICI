@@ -16,15 +16,15 @@ function [ this ] = getCVar(this)
         case 'JSparseB'
             this.cvar =  'JBdata';
         case 'w'
-            this.cvar =  'w_tmp';
+            this.cvar =  'udata->w';
         case 'dwdx'
-            this.cvar =  'dwdx_tmp';
+            this.cvar =  'dwdx';
         case 'dwdp'
-            this.cvar =  'dwdp_tmp';
+            this.cvar =  'udata->dwdp';
         case 'M'
-            this.cvar =  'M_tmp';
+            this.cvar =  'udata->M';
         case 'dfdx'
-            this.cvar =  'dfdx_tmp';
+            this.cvar =  'udata->dfdx';
         case 'sz_tf'
             this.cvar =  'sz';
         otherwise

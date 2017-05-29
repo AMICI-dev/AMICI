@@ -17,7 +17,6 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici_interface_matlab.h> /* amici functions */
 #include <include/edata_accessors.h>
-#include <include/udata_accessors.h>
 #include <include/rdata_accessors.h>
 
 
@@ -58,7 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         goto freturn;
     }
 
-    if (nx>0) {
+    if (udata->nx>0) {
         edata = expDataFromMatlabCall(prhs, udata, &status);
         if (status != 0) {
             goto freturn;
@@ -68,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     runAmiciSimulation(udata, edata, rdata, &status);
 
 freturn:
-    freeUserData(udata);
+    delete udata;
     delete edata;
     *pstatus = (double) status;
 }

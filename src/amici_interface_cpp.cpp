@@ -1,7 +1,6 @@
 #include "include/amici_interface_cpp.h"
 
 #include <include/edata_accessors.h>
-#include <include/udata_accessors.h>
 #include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
 
@@ -47,7 +46,7 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 
     memset(rdata, 0, sizeof(*rdata));
 
-    tsdata = new double[nt]();
+    tsdata = new double[udata->nt]();
 
     #include "include/amici_init_return_data_fields.h"
 
@@ -58,9 +57,9 @@ ReturnData *initReturnData(const UserData *udata, int *pstatus) {
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus) {
     double *originalParams = NULL;
 
-    if(udata->am_pscale != AMI_SCALING_NONE) {
-        originalParams = (double *) malloc(sizeof(double) * np);
-        memcpy(originalParams, p, sizeof(double) * np);
+    if(udata->pscale != AMI_SCALING_NONE) {
+        originalParams = (double *) malloc(sizeof(double) * udata->np);
+        memcpy(originalParams, udata->p, sizeof(double) * udata->np);
     }
 
     ReturnData *rdata = initReturnData(udata, pstatus);
@@ -68,7 +67,7 @@ ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pst
     runAmiciSimulation(udata, edata, rdata, pstatus);
 
     if(originalParams) {
-        memcpy(p, originalParams, sizeof(double) * np);
+        memcpy(udata->p, originalParams, sizeof(double) * udata->np);
         free(originalParams);
     }
 

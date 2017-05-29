@@ -12,8 +12,6 @@
 
 #include "include/rdata_accessors.h"
 #include "include/edata_accessors.h"
-#include "include/udata_accessors.h"
-
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char* datasetPath) {
 
@@ -30,91 +28,88 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 {
     assert(fileId > 0);
 
-    UserData *udata = getDefaultUserData();
+    UserData *udata = getUserData();
     if (udata == NULL)
         return(NULL);
 
-    // Set hard-coded model dimensions
-    init_modeldims(udata);
-
-    atol       = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "atol");
-    rtol       = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "rtol");
-    maxsteps   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps");
-    tstart     = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
-    lmm        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
-    iter       = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
-    linsol     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol");
-    stldet     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
-    interpType = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
-    ism        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
-    sensi_meth = (AMI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
-    sensi      = (AMI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
-    nmaxevent  = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
-    ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
+    udata->atol       = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "atol");
+    udata->rtol       = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "rtol");
+    udata->maxsteps   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps");
+    udata->tstart     = AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
+    udata->lmm        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
+    udata->iter       = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
+    udata->linsol     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol");
+    udata->stldet     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
+    udata->interpType = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
+    udata->ism        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
+    udata->sensi_meth = (AMI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
+    udata->sensi      = (AMI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
+    udata->nmaxevent  = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
+    udata->ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 
     hsize_t length;
     int status = 0;
 
-    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
-    if(length != (unsigned) nx)
+    status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &udata->qpositivex, &length);
+    if(length != (unsigned) udata->nx)
         return NULL;
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
-        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
-        if((unsigned) np != length)
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &udata->p, &length);
+        if((unsigned) udata->np != length)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
-        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-        if(length != (unsigned) nk)
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &udata->k, &length);
+        if(length != (unsigned) udata->nk)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
-        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
-        nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-        if(length != (unsigned) nt || status > 0)
+        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &udata->ts, &length);
+        udata->nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
+        if(length != (unsigned) udata->nt || status > 0)
             return NULL;
     }
 
     // parameter selection and reordering for sensitivities (matlab: fifth argument)
-    AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &plist, &length);
-    assert(nplist <= np);
+    AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &udata->plist, &length);
+    assert(udata->nplist <= udata->np);
 
     if(length > 0) {
-        nplist = length;
+        udata->nplist = length;
         // TODO: currently base 1 indices are written
-        for(int i = 0; i < nplist; ++i) plist[i] -= 1;
+        for(int i = 0; i < udata->nplist; ++i) udata->plist[i] -= 1;
     } else {
-        nplist = np;
-        plist = new int[nplist];
-        for(int i = 0; i < np; ++i) plist[i] = i;
+        udata->nplist = udata->np;
+        udata->plist = new int[udata->nplist];
+        for(int i = 0; i < udata->np; ++i) udata->plist[i] = i;
     }
 
     /* Options ; matlab: fourth argument   */
-    z2event = new realtype[ne];
-    for(int i = 0; i < ne; ++i)
-        z2event[i] = i;
+    udata->z2event = new realtype[udata->ne];
+    for(int i = 0; i < udata->ne; ++i)
+        udata->z2event[i] = i;
 
-    idlist = new realtype[nx]();
+    udata->idlist = new realtype[udata->nx]();
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
-    x0data = NULL;
-    sx0data = NULL;
+    udata->x0data = NULL;
+    udata->sx0data = NULL;
 
     /* pbarm parameterscales ; matlab: sixth argument*/
-    pbar = NULL;
+    udata->pbar = NULL;
 
     // xscale, matlab: seventh argument
-    xbar = NULL;
+    udata->xbar = NULL;
 
-    h = 0;
+    udata->h = 0;
 
-    udata->am_dxdotdp = NULL;
-    udata->am_M = NULL;
-    udata->am_dfdx = NULL;
-    udata->am_stau = NULL;
+    udata->dxdotdp = NULL;
+    udata->M = NULL;
+    udata->dfdx = NULL;
+    udata->stau = NULL;
 
     processUserData(udata);
 
@@ -144,7 +139,7 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
         assert(n == (unsigned) nt);
         assert(m == (unsigned) nytrue);
 
-        if(nz) {
+        if(udata->nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
             assert(m * n == (unsigned) (nt * nz));
 
@@ -172,35 +167,35 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
         dataset = H5Dcreate(file_id, datasetPath, H5T_IEEE_F64LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
 
-    H5LTset_attribute_double(file_id, datasetPath, "t", tsdata, nt);
-    H5LTset_attribute_double(file_id, datasetPath, "xdot", xdotdata, nx);
+    H5LTset_attribute_double(file_id, datasetPath, "t", tsdata, udata->nt);
+    H5LTset_attribute_double(file_id, datasetPath, "xdot", xdotdata, udata->nx);
     H5LTset_attribute_double(file_id, datasetPath, "llh", llhdata, 1);
-    H5LTset_attribute_double(file_id, datasetPath, "sllh", sllhdata, np);
+    H5LTset_attribute_double(file_id, datasetPath, "sllh", sllhdata, udata->np);
 
     // are double, but should write as int:
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", numstepsdata, nt);
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", numrhsevalsdata, nt);
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", orderdata, nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", numstepsdata, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", numrhsevalsdata, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", orderdata, udata->nt);
 
     if(numstepsSdata)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", numstepsSdata, nt);
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", numstepsSdata, udata->nt);
 
     if(numrhsevalsSdata)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", numrhsevalsSdata, nt);
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", numrhsevalsSdata, udata->nt);
 
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", Jdata, nx, nx);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", xdata, nt, nx);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "y", ydata, nt, ny);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "sigmay", sigmaydata, nt, ny);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", Jdata, udata->nx, udata->nx);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", xdata, udata->nt, udata->nx);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "y", ydata, udata->nt, udata->ny);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "sigmay", sigmaydata, udata->nt, udata->ny);
 
     if(sxdata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sx", sxdata, nt, nx, np);
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sx", sxdata, udata->nt, udata->nx, udata->np);
 
     if(sydata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sy", sydata, nt, ny, np);
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sy", sydata, udata->nt, udata->ny, udata->np);
 
     if(ssigmaydata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, nt, ny, np);
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, udata->nt, udata->ny, udata->np);
 
     H5Fclose(file_id);
 

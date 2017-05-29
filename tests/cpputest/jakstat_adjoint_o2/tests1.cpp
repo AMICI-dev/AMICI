@@ -34,7 +34,7 @@ TEST(groupJakstatAdjointO2, testSensitivity2) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 

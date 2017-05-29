@@ -32,7 +32,7 @@ TEST(groupSteadystate, testSimulation) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
@@ -48,6 +48,6 @@ TEST(groupSteadystate, testSensitivityForward) {
 
     freeReturnData(rdata);
     freeExpData(edata);
-    freeUserData(udata);
+    delete udata;
 }
 

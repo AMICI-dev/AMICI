@@ -3,7 +3,6 @@
 #include "wrapfunctions.h" /* user functions */
 
 #include <include/edata_accessors.h>
-#include <include/udata_accessors.h>
 #include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
 
@@ -78,33 +77,31 @@
 
 UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /* User udata structure */
-    UserData *udata = new UserData();
+    UserData *udata = getUserData();
     if(udata==NULL) return NULL;
-
-    init_modeldims(udata);
 
     /* time */
 
     if (!prhs[0]) {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
     }
-    ts = mxGetPr(prhs[0]);
+    udata->ts = mxGetPr(prhs[0]);
 
-    nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
+    udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
 
     /* parameters */
 
     if (!prhs[1]) {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
     }
-    p = mxGetPr(prhs[1]);
+    udata->p = mxGetPr(prhs[1]);
 
     /* constants */
 
     if (!prhs[2]) {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
     }
-    k = mxGetPr(prhs[2]);
+    udata->k = mxGetPr(prhs[2]);
 
     if (!prhs[3]) {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
@@ -115,75 +112,73 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     if (!prhs[4]) {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
     } else {
-        nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
+        udata->nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
         plistdata = mxGetPr(prhs[4]);
     }
 
-    plist = new int[nplist]();
-    for (int ip=0; ip<nplist; ip++) {
-        plist[ip] = (int)plistdata[ip];
+    udata->plist = new int[udata->nplist]();
+    for (int ip=0; ip<udata->nplist; ip++) {
+        udata->plist[ip] = (int)plistdata[ip];
     }
 
-    readOptionScalar(nmaxevent,int)
-    readOptionScalar(tstart,double)
-    readOptionScalar(atol,double)
-    readOptionScalar(rtol,double)
-    readOptionScalar(maxsteps,int)
-    readOptionScalar(lmm,int)
-    readOptionScalar(iter,int)
-    readOptionScalar(interpType,int)
-    readOptionScalar(linsol,int)
-    readOptionScalar(stldet,booleantype)
+    readOptionScalar(udata->nmaxevent,int)
+    readOptionScalar(udata->tstart,double)
+    readOptionScalar(udata->atol,double)
+    readOptionScalar(udata->rtol,double)
+    readOptionScalar(udata->maxsteps,int)
+    readOptionScalar(udata->lmm,int)
+    readOptionScalar(udata->iter,int)
+    readOptionScalar(udata->interpType,int)
+    readOptionScalar(udata->linsol,int)
+    readOptionScalar(udata->stldet,booleantype)
 
     if(mxGetProperty(prhs[3],0,"id")){ \
-        idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
+        udata->idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
     } else { \
         warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
         return(NULL); \
     }
 
-    readOptionData(z2event)
-    readOptionData(qpositivex)
-    readOptionScalar(sensi,AMI_sensi_order)
-    readOptionScalar(ism,int)
-    readOptionScalar(sensi_meth,AMI_sensi_meth)
-    readOptionScalar(ordering,int)
+    readOptionData(udata->z2event)
+    readOptionData(udata->qpositivex)
+    readOptionScalar(udata->sensi,AMI_sensi_order)
+    readOptionScalar(udata->ism,int)
+    readOptionScalar(udata->sensi_meth,AMI_sensi_meth)
+    readOptionScalar(udata->ordering,int)
 
     /* pbar */
     if (!prhs[5]) {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
     }
 
-    pbar = mxGetPr(prhs[5]);
+    udata->pbar = mxGetPr(prhs[5]);
 
     /* xscale */
     if (!prhs[6]) {
         errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
     }
 
-    xbar = mxGetPr(prhs[6]);
+    udata->xbar = mxGetPr(prhs[6]);
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
-    x0data = NULL;
-    sx0data = NULL;
     if (prhs[7]) {
         if(mxGetField(prhs[7], 0 ,"x0")) {
             if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
-                x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
+                udata->x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
 
                 /* check dimensions */
                 if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
             }
         }
 
         if(mxGetField(prhs[7], 0 ,"sx0")) {
             if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
-                sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
+                udata->sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
 
                 /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
             }
         }
     }
@@ -213,7 +208,7 @@ ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *psta
     mxSetPr(mxstatus,pstatus);
     mxSetField(mxsol,0,"status",mxstatus);
 
-    mxArray *mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
+    mxArray *mxts = mxCreateDoubleMatrix(udata->nt,1,mxREAL);
     tsdata = mxGetPr(mxts);
     mxSetField(mxsol,0,"t",mxts);
 
@@ -233,7 +228,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
     ExpData *edata; /* returned rdata struct */
 
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
-        if(sensi >= AMI_SENSI_ORDER_FIRST && sensi_meth == AMI_SENSI_ASA) {
+        if(udata->sensi >= AMI_SENSI_ORDER_FIRST && udata->sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provided!");
         } else {
             *status = 0;
@@ -279,50 +274,50 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
             return NULL;
         }
 
-        if (nmyt != nt) {
-            sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
+        if (nmyt != udata->nt) {
+            sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,udata->nt);
             errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
             return NULL;
         }
 
-        if (nysigmat != nt) {
-            sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
+        if (nysigmat != udata->nt) {
+            sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,udata->nt);
             errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
             return NULL;
         }
 
-        if (nmyy != nytrue) {
-            sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
+        if (nmyy != udata->nytrue) {
+            sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,udata->nytrue);
             errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
             return NULL;
         }
 
-        if (nysigmay != nytrue) {
-            sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
+        if (nysigmay != udata->nytrue) {
+            sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,udata->nytrue);
             errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
             return NULL;
         }
 
-        if (nmzt != nmaxevent) {
-            sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
+        if (nmzt != udata->nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,udata->nmaxevent);
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
             return NULL;
         }
 
-        if (nzsigmat != nmaxevent) {
-            sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
+        if (nzsigmat != udata->nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,udata->nmaxevent);
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
             return NULL;
         }
 
-        if (nmzy != nztrue) {
-            sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
+        if (nmzy != udata->nztrue) {
+            sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,udata->nztrue);
             errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
             return NULL;
         }
 
-        if (nzsigmay != nztrue) {
-            sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
+        if (nzsigmay != udata->nztrue) {
+            sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,udata->nztrue);
             errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
             return NULL;
         }

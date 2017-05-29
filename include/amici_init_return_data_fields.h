@@ -5,58 +5,58 @@
 
     initField2(llh,1,1);
     initField2(chi2,1,1);
-    initField2(numsteps,nt,1);
-    initField2(numrhsevals,nt,1);
-    initField2(order,nt,1);
-    if(sensi >= AMI_SENSI_ORDER_FIRST){
-        initField2(numstepsS,nt,1);
-        initField2(numrhsevalsS,nt,1);
+    initField2(numsteps,udata->nt,1);
+    initField2(numrhsevals,udata->nt,1);
+    initField2(order,udata->nt,1);
+    if(udata->sensi >= AMI_SENSI_ORDER_FIRST){
+        initField2(numstepsS,udata->nt,1);
+        initField2(numrhsevalsS,udata->nt,1);
     }
-    if((nz>0) & (ne>0)){
-        initField2(z,nmaxevent,nz);
-        initField2(rz,nmaxevent,nz);
-        initField2(sigmaz,nmaxevent,nz);
+    if((udata->nz>0) & (udata->ne>0)){
+        initField2(z,udata->nmaxevent,udata->nz);
+        initField2(rz,udata->nmaxevent,udata->nz);
+        initField2(sigmaz,udata->nmaxevent,udata->nz);
     }
-    if(nx>0) {
-        initField2(x,nt,nx);
-        initField2(xdot,1,nx);
-        initField2(J,nx,nx);
+    if(udata->nx>0) {
+        initField2(x,udata->nt,udata->nx);
+        initField2(xdot,1,udata->nx);
+        initField2(J,udata->nx,udata->nx);
     }
-    if(ny>0) {
-        initField2(y,nt,ny);
-        initField2(sigmay,nt,ny);
-        if (sensi_meth == AMI_SENSI_SS) {
-            initField2(dydp,ny,nplist);
-            initField2(dydx,ny,nx);
-            initField2(dxdotdp,nx,nplist);
+    if(udata->ny>0) {
+        initField2(y,udata->nt,udata->ny);
+        initField2(sigmay,udata->nt,udata->ny);
+        if (udata->sensi_meth == AMI_SENSI_SS) {
+            initField2(dydp,udata->ny,udata->nplist);
+            initField2(dydx,udata->ny,udata->nx);
+            initField2(dxdotdp,udata->nx,udata->nplist);
         }
     }
-    if(sensi >= AMI_SENSI_ORDER_FIRST) {
-        initField2(sllh,nplist,1);
-        if (sensi_meth == AMI_SENSI_FSA) {
-            initField3(sx,nt,nx,nplist);
-            if(ny>0) {
-                initField3(sy,nt,ny,nplist);
-                initField3(ssigmay,nt,ny,nplist);
+    if(udata->sensi >= AMI_SENSI_ORDER_FIRST) {
+        initField2(sllh,udata->nplist,1);
+        if (udata->sensi_meth == AMI_SENSI_FSA) {
+            initField3(sx,udata->nt,udata->nx,udata->nplist);
+            if(udata->ny>0) {
+                initField3(sy,udata->nt,udata->ny,udata->nplist);
+                initField3(ssigmay,udata->nt,udata->ny,udata->nplist);
             }
-            if((nz>0) & (ne>0)){
-                initField3(srz,nmaxevent,nz,nplist);
-                if(sensi >= AMI_SENSI_ORDER_SECOND){
-                    initField4(s2rz,nmaxevent,nz,nplist,nplist);
+            if((udata->nz>0) & (udata->ne>0)){
+                initField3(srz,udata->nmaxevent,udata->nz,udata->nplist);
+                if(udata->sensi >= AMI_SENSI_ORDER_SECOND){
+                    initField4(s2rz,udata->nmaxevent,udata->nz,udata->nplist,udata->nplist);
                 }
-                initField3(sz,nmaxevent,nz,nplist);
-                initField3(ssigmaz,nmaxevent,nz,nplist);
+                initField3(sz,udata->nmaxevent,udata->nz,udata->nplist);
+                initField3(ssigmaz,udata->nmaxevent,udata->nz,udata->nplist);
             }
         }
-        if (sensi_meth == AMI_SENSI_ASA) {
-            if(ny>0) {
-                initField3(ssigmay,nt,ny,nplist);
+        if (udata->sensi_meth == AMI_SENSI_ASA) {
+            if(udata->ny>0) {
+                initField3(ssigmay,udata->nt,udata->ny,udata->nplist);
             }
-            if((nz>0) & (ne>0)){
-                initField3(ssigmaz,nmaxevent,nz,nplist);
+            if((udata->nz>0) & (udata->ne>0)){
+                initField3(ssigmaz,udata->nmaxevent,udata->nz,udata->nplist);
             }
         }
-        if(sensi >= AMI_SENSI_ORDER_SECOND) {
-            initField2(s2llh,ng-1,nplist);
+        if(udata->sensi >= AMI_SENSI_ORDER_SECOND) {
+            initField2(s2llh,udata->ng-1,udata->nplist);
         }
     }

@@ -56,42 +56,42 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         CHECK_TRUE(withinTolerance(llhExp, *rdata->am_llhdata, atol, rtol));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_xdata, udata->am_nt * udata->am_nxtrue, atol, rtol);
+    checkEqualArray(expected, rdata->am_xdata, udata->nt * udata->nxtrue, atol, rtol);
     delete[] expected;
 
-//    CHECK_EQUAL(AMI_O2MODE_FULL, udata->am_o2mode);
+//    CHECK_EQUAL(AMI_O2MODE_FULL, udata->o2mode);
 
     if(AMI_HDF5_attributeExists(file_id, resultPath, "J")) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "J", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_Jdata, udata->am_nx * udata->am_nx, atol, rtol);
+        checkEqualArray(expected, rdata->am_Jdata, udata->nx * udata->nx, atol, rtol);
         delete[] expected;
     }
 
 //    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->am_nt, epsilon, blab);
+//    checkEqualArray(expected, rdata->am_numrhsevalsdata, udata->nt, epsilon, blab);
 //    delete[] expected;
 
 //    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->am_numstepsdata, udata->am_nt, epsilon, blab);
+//    checkEqualArray(expected, rdata->am_numstepsdata, udata->nt, epsilon, blab);
 //    delete[] expected;
 
 //    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->am_orderdata, udata->am_nt, atol, rtol);
+//    checkEqualArray(expected, rdata->am_orderdata, udata->nt, atol, rtol);
 //    delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_ydata, udata->am_nt * udata->am_nytrue, atol, rtol);
+    checkEqualArray(expected, rdata->am_ydata, udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmay", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_sigmaydata, udata->am_nt * udata->am_nytrue, atol, rtol);
+    checkEqualArray(expected, rdata->am_sigmaydata, udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "xdot", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_xdotdata, udata->am_nxtrue, atol, rtol);
+    checkEqualArray(expected, rdata->am_xdotdata, udata->nxtrue, atol, rtol);
     delete[] expected;
 
-    if(udata->am_sensi >= AMI_SENSI_ORDER_FIRST) {
+    if(udata->sensi >= AMI_SENSI_ORDER_FIRST) {
         verifyReturnDataSensitivities(file_id, resultPath, rdata, udata, atol, rtol);
     } else {
         POINTERS_EQUAL(NULL, rdata->am_sllhdata);
@@ -108,43 +108,43 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
     double *expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
-    checkEqualArray(expected, rdata->am_sllhdata, udata->am_np, atol, rtol);
+    checkEqualArray(expected, rdata->am_sllhdata, udata->np, atol, rtol);
     delete[] expected;
 
 //        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevalsS", &expected, &m, &n);
-//        checkEqualArray(expected, rdata->am_numrhsevalsSdata, udata->am_nt, epsilon, blab);
+//        checkEqualArray(expected, rdata->am_numrhsevalsSdata, udata->nt, epsilon, blab);
 //        delete[] expected;
 
 //        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numstepsS", &expected, &m, &n);
-//        checkEqualArray(expected, rdata->am_numstepsSdata, udata->am_nt, epsilon, blab);
+//        checkEqualArray(expected, rdata->am_numstepsSdata, udata->nt, epsilon, blab);
 //        delete[] expected;
 
-    if(udata->am_sensi_meth == AMI_SENSI_FSA) {
+    if(udata->sensi_meth == AMI_SENSI_FSA) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
-        for(int ip = 0; ip < udata->am_nplist; ++ip)
-            checkEqualArray(&expected[ip * udata->am_nt * udata->am_nxtrue],
-                    &rdata->am_sxdata[ip * udata->am_nt * udata->am_nx],
-                    udata->am_nt * udata->am_nxtrue, atol, rtol);
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            checkEqualArray(&expected[ip * udata->nt * udata->nxtrue],
+                    &rdata->am_sxdata[ip * udata->nt * udata->nx],
+                    udata->nt * udata->nxtrue, atol, rtol);
         delete[] expected;
 
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sy", &expected, &m, &n, &o);
-        for(int ip = 0; ip < udata->am_nplist; ++ip)
-            checkEqualArray(&expected[ip * udata->am_nt * udata->am_nytrue],
-                    &rdata->am_sydata[ip * udata->am_nt * udata->am_ny],
-                    udata->am_nt * udata->am_nytrue, atol, rtol);
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            checkEqualArray(&expected[ip * udata->nt * udata->nytrue],
+                    &rdata->am_sydata[ip * udata->nt * udata->ny],
+                    udata->nt * udata->nytrue, atol, rtol);
         delete[] expected;
     }
 
     AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
-    for(int ip = 0; ip < udata->am_nplist; ++ip)
-        checkEqualArray(&expected[ip * udata->am_nt * udata->am_nytrue],
-                &rdata->am_ssigmaydata[ip * udata->am_nt * udata->am_ny],
-                udata->am_nt * udata->am_nytrue, atol, rtol);
+    for(int ip = 0; ip < udata->nplist; ++ip)
+        checkEqualArray(&expected[ip * udata->nt * udata->nytrue],
+                &rdata->am_ssigmaydata[ip * udata->nt * udata->ny],
+                udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
 
-    if(udata->am_sensi >= AMI_SENSI_ORDER_SECOND) {
+    if(udata->sensi >= AMI_SENSI_ORDER_SECOND) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "s2llh", &expected, &m, &n);
-        checkEqualArray(expected, rdata->am_s2llhdata, udata->am_nplist * udata->am_nplist, atol, rtol);
+        checkEqualArray(expected, rdata->am_s2llhdata, udata->nplist * udata->nplist, atol, rtol);
         delete[] expected;
     } else {
         POINTERS_EQUAL(NULL, rdata->am_s2llhdata);
