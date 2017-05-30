@@ -36,17 +36,18 @@ UserData::UserData(int np,
     xbar = NULL;
     idlist = NULL;
     sensi = AMI_SENSI_ORDER_NONE;
-    atol = 0;
-    rtol = 0;
+    atol = 1e-16;
+    rtol = 1e-8;
     maxsteps = 0;
-    ism = 0;
+    ism = 1;
+    nmaxevent = 10;
 
-    sensi_meth = AMI_SENSI_NONE;
-    linsol = 0;
-    interpType = 0;
-    lmm = 0;
-    iter = 0;
-    stldet = false;
+    sensi_meth = AMI_SENSI_FSA;
+    linsol = 9;
+    interpType = 1;
+    lmm = 2;
+    iter = 2;
+    stldet = true;
     x0data = NULL;
 
     sx0data = NULL;
@@ -95,8 +96,6 @@ UserData::~UserData()
         if(dfdx) delete[] dfdx;
         if(stau) delete[] stau;
         if(J) SparseDestroyMat(J);
-
-
 }
 
 #ifdef AMICI_WITHOUT_MATLAB
