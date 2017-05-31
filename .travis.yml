@@ -20,7 +20,8 @@ compiler:
     - gcc
     
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; docker pull "ubuntu:16.04"; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull "ubuntu:16.04"; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -td ubuntu:16.04 /bin/bash; fi
 
 before_script:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
