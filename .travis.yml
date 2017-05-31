@@ -2,7 +2,7 @@ language: cpp
 services:
     - docker
 
-sudo: required
+sudo: false
 
 dist: trusty
 
@@ -11,29 +11,46 @@ branches:
     - master
     - staging
 
-os:
-    - linux
-    - osx
-
-compiler:
-    - clang
-    - gcc
-    
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull "ubuntu:16.04"; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -d ubuntu:16.04 /bin/bash -c "./scripts/run-tests.sh"; fi
-
-before_script:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev; fi
+matrix:
+  include: 
+    - os: linux  
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - g++-5
+            - libhdf5-serial-dev
+            - zlib1g-dev
+            - libatlas-base-dev
+      env: COMPILER=g++-5
+    - os: linux 
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+            - libhdf5-serial-dev
+            - zlib1g-dev
+            - libatlas-base-dev
+      env: COMPILER=clang++-3.7
+    - os: osx
+      compiler: clang
+      before_script: brew install homebrew/science/hdf5
     
 install: true
 
-script: 
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-tests.sh; fi
+script:  ./scripts/run-tests.sh
 
 notifications:
   slack: 
     rooms:
       - icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI#amici-dev
     on_success: change
+    
+   
