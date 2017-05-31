@@ -1,9 +1,9 @@
 #include "include/ami_hdf5.h"
 #include "include/amici_interface_cpp.h"
 
-#include <assert.h>
+#include <cassert>
 #ifdef AMI_HDF5_H_DEBUG
-#include <execinfo.h>
+#include <cexecinfo>
 #endif
 #include <unistd.h>
 

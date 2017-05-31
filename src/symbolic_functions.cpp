@@ -6,16 +6,16 @@
  */
 
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #ifndef AMICI_WITHOUT_MATLAB
     #include <mex.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <float.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cfloat>
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
