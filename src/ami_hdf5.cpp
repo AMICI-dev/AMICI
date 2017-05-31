@@ -28,6 +28,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, cons
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath)
 {
+    assert(fileId > 0);
+
     UserData *udata = getDefaultUserData();
     if (udata == NULL)
         return(NULL);
@@ -54,33 +56,41 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "qpositivex", &qpositivex, &length);
-    assert(length == nx);
+    if(length != (unsigned) nx)
+        return NULL;
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta", &p, &length);
-        if(np != length)
+        if((unsigned) np != length)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa", &k, &length);
-        if(length != nk)
+        if(length != (unsigned) nk)
             return NULL;
     }
 
     if(AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts", &ts, &length);
         nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
-        if(length != nt || status > 0)
+        if(length != (unsigned) nt || status > 0)
             return NULL;
     }
 
     // parameter selection and reordering for sensitivities (matlab: fifth argument)
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &plist, &length);
-    nplist = length;
     assert(nplist <= np);
-    // TODO: currently base 1 indices are written
-    for(int i = 0; i < nplist; ++i) plist[i] -= 1;
+
+    if(length > 0) {
+        nplist = length;
+        // TODO: currently base 1 indices are written
+        for(int i = 0; i < nplist; ++i) plist[i] -= 1;
+    } else {
+        nplist = np;
+        plist = new int[nplist];
+        for(int i = 0; i < np; ++i) plist[i] = i;
+    }
 
     /* Options ; matlab: fourth argument   */
     z2event = new realtype[ne];
@@ -102,8 +112,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     h = 0;
 
     udata->am_dxdotdp = NULL;
-    udata->am_dwdx = NULL;
-    udata->am_dwdp = NULL;
     udata->am_M = NULL;
     udata->am_dfdx = NULL;
     udata->am_stau = NULL;
@@ -129,19 +137,19 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-        assert(n == nt);
-        assert(m == nytrue);
+        assert(n == (unsigned) nt);
+        assert(m == (unsigned) nytrue);
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-        assert(n == nt);
-        assert(m == nytrue);
+        assert(n == (unsigned) nt);
+        assert(m == (unsigned) nytrue);
 
         if(nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
-            assert(m * n == nt * nz);
+            assert(m * n == (unsigned) (nt * nz));
 
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
-            assert(m * n == nt * nz);
+            assert(m * n == (unsigned) (nt * nz));
         }
     }
     H5Fclose(file_id);
@@ -370,6 +378,8 @@ void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id, const char* optionsObject
 
 
 void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, const char* attributeName, int **destination, hsize_t *length) {
+    *length = 0;
+
     H5T_class_t type_class;
     size_t type_size;
 
@@ -378,9 +388,12 @@ void AMI_HDF5_getIntArrayAttribute(hid_t file_id, const char* optionsObject, con
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %lld: ", attributeName, *length);
 #endif
-
-    *destination = new int[*length];
-    H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
+    if(*length > 0) {
+        *destination = new int[*length];
+        H5LTget_attribute_int(file_id, optionsObject, attributeName, *destination);
+    } else {
+        *destination = NULL;
+    }
 }
 
 // TODO: option for overwrite

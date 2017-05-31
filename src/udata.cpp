@@ -20,7 +20,8 @@ void freeUserData(UserData *udata) {
         if(pbar) delete[] pbar;
         if(xbar) delete[] xbar;
         if(idlist) delete[] idlist;
-        if(sx0data) delete sx0data;
+        if(x0data) delete[] x0data;
+        if(sx0data) delete[] sx0data;
         if(z2event) delete[] z2event;
 #endif
         if(plist) delete[] plist;
