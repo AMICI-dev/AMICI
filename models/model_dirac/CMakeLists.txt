@@ -1,7 +1,7 @@
 project(model_dirac)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
@@ -13,6 +13,19 @@ set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 
 find_package(HDF5 COMPONENTS C HL REQUIRED)
+set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
+set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
+
+if(${BLAS} STREQUAL "MKL")
+    add_definitions(-DAMICI_BLAS_MKL)
+    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
+    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
+else()
+    add_definitions(-DAMICI_BLAS_CBLAS)
+    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
+    set(BLAS_LIBRARIES -lcblas CACHE STRING "")
+endif()
+
 include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${MODEL_DIR}")

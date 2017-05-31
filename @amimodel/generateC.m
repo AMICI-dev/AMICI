@@ -599,6 +599,18 @@ function generateCMakeFile(this)
     fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")\n\n');
     fprintf(fid, 'find_package(HDF5 COMPONENTS C HL REQUIRED)\n');
 
+    fprintf(fid, 'set(BLAS "CBLAS" CACHE STRING "BLAS library to use")\n');
+    fprintf(fid, 'set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")\n\n');
+    fprintf(fid, 'if(${BLAS} STREQUAL "MKL")\n');
+    fprintf(fid, '    add_definitions(-DAMICI_BLAS_MKL)\n');
+    fprintf(fid, '    set(BLAS_LIBRARIES -lmkl CACHE STRING "")\n');
+    fprintf(fid, '    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")\n');
+    fprintf(fid, 'else()\n');
+    fprintf(fid, '    add_definitions(-DAMICI_BLAS_CBLAS)\n');
+    fprintf(fid, '    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")\n');
+    fprintf(fid, '    set(BLAS_LIBRARIES -lcblas CACHE STRING "")\n');
+    fprintf(fid, 'endif()\n\n');
+
     %includes
     includeDirs = {'${AMICI_DIR}', ...
         '${CMAKE_CURRENT_SOURCE_DIR}',  ...
