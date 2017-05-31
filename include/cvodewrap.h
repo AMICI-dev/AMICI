@@ -15,7 +15,6 @@
 #include <amd.h>
 #include <colamd.h>
 #include <btf.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"

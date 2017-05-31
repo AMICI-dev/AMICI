@@ -3,11 +3,11 @@
  * @brief  core routines for integration
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 #define _USE_MATH_DEFINES /* MS definition of PI and other constants */
-#include <math.h>
+#include <cmath>
 #ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
@@ -470,7 +470,7 @@ void setupAMIB(int *status,void *ami_mem, UserData *udata, TempData *tdata) {
     if(*status != AMI_SUCCESS) return;
 
     /* Number of maximal internal steps */
-    *status = AMISetMaxNumStepsB(ami_mem, which, 100*maxsteps);
+    *status = AMISetMaxNumStepsB(ami_mem, which, 10*maxsteps);
     if(*status != AMI_SUCCESS) return;
 
     switch (linsol) {
