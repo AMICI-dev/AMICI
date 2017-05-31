@@ -25,7 +25,7 @@ matrix:
             - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
-      env: COMPILER=g++-5
+      env: CXX_COMPILER=g++-5
     - os: linux 
       compiler: clang
       addons:
@@ -38,10 +38,11 @@ matrix:
             - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
-      env: COMPILER=clang++-3.7
+      env: CXX_COMPILER=clang++-3.7
     - os: osx
       compiler: clang
       before_script: brew install homebrew/science/hdf5
+      env: CXX_COMPILER=clang++
     
 install: true
 
