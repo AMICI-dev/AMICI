@@ -2,6 +2,8 @@
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
+#elif defined(AMICI_BLAS_MKL)
+#include <mkl.h>
 #else
 #include <cblas.h>
 #endif
