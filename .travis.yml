@@ -21,7 +21,7 @@ compiler:
     
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker pull "ubuntu:16.04"; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -td ubuntu:16.04 /bin/bash; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -d ubuntu:16.04 /bin/bash -c "./scripts/run-tests.sh"; fi
 
 before_script:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
@@ -29,7 +29,8 @@ before_script:
     
 install: true
 
-script: ./scripts/run-tests.sh
+script: 
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-tests.sh; fi
 
 notifications:
   slack: 
