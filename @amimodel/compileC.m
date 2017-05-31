@@ -408,9 +408,9 @@ function compileC(this)
 
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS="-lrt -lcblas"';
+            CLIBS = 'CLIBS="-lrt -lmwblas"';
         else
-            CLIBS = 'CLIBS="-lcblas"';
+            CLIBS = 'CLIBS="-lmwblas"';
         end
     else
         if(strcmp(mex.getCompilerConfigurations('c++').Name,'MinGW64 Compiler (C++)'))
