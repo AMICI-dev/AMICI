@@ -41,6 +41,8 @@ public:
              AMI_o2mode o2mode
              );
 
+    void processUserData();
+
     virtual ~UserData();
 
     /* Model dimensions */

@@ -7,7 +7,6 @@
 #include "wrapfunctions.h" /* model specific functions */
 #include <include/amici_interface_cpp.h> /* AMICI API */
 #include <include/ami_hdf5.h>  /* AMICI HDF5 I/O functions */
-#include <include/rdata_accessors.h> /* Accessor macros for ReturnData members */
 
 /* This is a scaffold for a stand-alone AMICI simulation executable demonstrating
  * use of the AMICI C++ API.
@@ -68,8 +67,7 @@ int main(int argc, char **argv)
     }
 
     // Run the simulation
-    int status = 0;
-    ReturnData *rdata = getSimulationResults(udata, edata, &status);
+    ReturnData *rdata = getSimulationResults(udata, edata);
     if (rdata == NULL) {
         freeExpData(edata);
         delete udata;
@@ -85,7 +83,7 @@ int main(int argc, char **argv)
     // Free memory
     freeExpData(edata);
     delete udata;
-    freeReturnData(rdata);
+    delete rdata;
 
     return 0;
 }
@@ -100,43 +98,43 @@ void printReturnData(ReturnData *rdata, UserData *udata) {
     //Print of some the simulation results
 
     printf("Timepoints (tsdata): ");
-    printArray(tsdata, udata->nt);
+    printArray(rdata->ts, udata->nt);
 
     printf("\n\nStates (xdata):\n");
     for(int i = 0; i < udata->nx; ++i) {
         for(int j = 0; j < udata->nt; ++j)
-            printf("%e\t", rdata->am_xdata[j +  udata->nt * i]);
+            printf("%e\t", rdata->x[j +  udata->nt * i]);
         printf("\n");
     }
 
     printf("\nObservables (ydata):\n");
     for(int i = 0; i < udata->ny; ++i) {
         for(int j = 0; j < udata->nt; ++j)
-            printf("%e\t", rdata->am_ydata[j +  udata->nt * i]);
+            printf("%e\t", rdata->y[j +  udata->nt * i]);
         printf("\n");
     }
 
     printf("\n\ndx/dt (xdotdata):\n");
     for(int i = 0; i < udata->nx; ++i)
-        printf("%e\t", rdata->am_xdotdata[i]);
+        printf("%e\t", rdata->xdot[i]);
 
 //    printf("\nJacobian (jdata)\n");
 //    for(int i = 0; i < nx; ++i) {
 //        for(int j = 0; j < nx; ++j)
-//            printf("%e\t", rdata->am_Jdata[i + nx * j]);
+//            printf("%e\t", rdata->J[i + nx * j]);
 //        printf("\n");
 //    }
 
     printf("\nnumsteps: \t\t");
-    printfArray(numstepsdata, udata->nt, "%.0f ");
+    printfArray(rdata->numsteps, udata->nt, "%.0f ");
 
     printf("\nnumrhsevalsdata: \t");
-    printfArray(numrhsevalsdata, udata->nt, "%.0f ");
+    printfArray(rdata->numrhsevals, udata->nt, "%.0f ");
 
     printf("\norder: \t\t");
-    printfArray(orderdata, udata->nt, "%.0f ");
+    printfArray(rdata->order, udata->nt, "%.0f ");
 
     printf("\n");
-    printf("Loglikelihood (llhdata): %e\n", *llhdata);
+    printf("Loglikelihood (llh): %e\n", *rdata->llh);
 }
 

@@ -10,7 +10,6 @@
 #include "wrapfunctions.h"
 #include "include/symbolic_functions.h"
 
-#include "include/rdata_accessors.h"
 #include "include/edata_accessors.h"
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char* datasetPath) {
@@ -111,7 +110,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     udata->dfdx = NULL;
     udata->stau = NULL;
 
-    processUserData(udata);
+    udata->processUserData();
 
     return udata;
 }
@@ -132,19 +131,19 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
 
     if(H5Lexists(file_id, dataObject, 0)) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
-        assert(n == (unsigned) nt);
-        assert(m == (unsigned) nytrue);
+        assert(n == (unsigned) udata->nt);
+        assert(m == (unsigned) udata->nytrue);
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
-        assert(n == (unsigned) nt);
-        assert(m == (unsigned) nytrue);
+        assert(n == (unsigned) udata->nt);
+        assert(m == (unsigned) udata->nytrue);
 
         if(udata->nz) {
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
-            assert(m * n == (unsigned) (nt * nz));
+            assert(m * n == (unsigned) (udata->nt * udata->nz));
 
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
-            assert(m * n == (unsigned) (nt * nz));
+            assert(m * n == (unsigned) (udata->nt * udata->nz));
         }
     }
     H5Fclose(file_id);
@@ -167,35 +166,35 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
         dataset = H5Dcreate(file_id, datasetPath, H5T_IEEE_F64LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
 
-    H5LTset_attribute_double(file_id, datasetPath, "t", tsdata, udata->nt);
-    H5LTset_attribute_double(file_id, datasetPath, "xdot", xdotdata, udata->nx);
-    H5LTset_attribute_double(file_id, datasetPath, "llh", llhdata, 1);
-    H5LTset_attribute_double(file_id, datasetPath, "sllh", sllhdata, udata->np);
+    H5LTset_attribute_double(file_id, datasetPath, "t", rdata->ts, udata->nt);
+    H5LTset_attribute_double(file_id, datasetPath, "xdot", rdata->xdot, udata->nx);
+    H5LTset_attribute_double(file_id, datasetPath, "llh", rdata->llh, 1);
+    H5LTset_attribute_double(file_id, datasetPath, "sllh", rdata->sllh, udata->np);
 
     // are double, but should write as int:
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", numstepsdata, udata->nt);
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", numrhsevalsdata, udata->nt);
-    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", orderdata, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", rdata->numsteps, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", rdata->numrhsevals, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", rdata->order, udata->nt);
 
-    if(numstepsSdata)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", numstepsSdata, udata->nt);
+    if(rdata->numstepsS)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", rdata->numstepsS, udata->nt);
 
-    if(numrhsevalsSdata)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", numrhsevalsSdata, udata->nt);
+    if(rdata->numrhsevalsS)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", rdata->numrhsevalsS, udata->nt);
 
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", Jdata, udata->nx, udata->nx);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", xdata, udata->nt, udata->nx);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "y", ydata, udata->nt, udata->ny);
-    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "sigmay", sigmaydata, udata->nt, udata->ny);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", rdata->J, udata->nx, udata->nx);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", rdata->x, udata->nt, udata->nx);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "y", rdata->y, udata->nt, udata->ny);
+    AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "sigmay", rdata->sigmay, udata->nt, udata->ny);
 
-    if(sxdata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sx", sxdata, udata->nt, udata->nx, udata->np);
+    if(rdata->sx)
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sx", rdata->sx, udata->nt, udata->nx, udata->np);
 
-    if(sydata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sy", sydata, udata->nt, udata->ny, udata->np);
+    if(rdata->sy)
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "sy", rdata->sy, udata->nt, udata->ny, udata->np);
 
-    if(ssigmaydata)
-        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmay", ssigmaydata, udata->nt, udata->ny, udata->np);
+    if(rdata->ssigmay)
+        AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmay", rdata->ssigmay, udata->nt, udata->ny, udata->np);
 
     H5Fclose(file_id);
 

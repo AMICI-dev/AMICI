@@ -28,7 +28,7 @@ UserData *getTestUserData() {
     for(int i = 0; i < udata->np; ++i)
         udata->idlist[i] = 0;
 
-    processUserData(udata);
+    udata->processUserData();
 
     return udata;
 }
@@ -58,10 +58,10 @@ TEST(groupDirac, testCreateAndFreeExpData) {
  */
 
 TEST(groupDirac, testCreateAndFreeReturnData) {
-    ReturnData *rdata = new ReturnData;
-    memset(rdata, 0, sizeof(*rdata));
+    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMI_SCALING_NONE, AMI_O2MODE_NONE);
+    ReturnData *rdata = new ReturnData(&udata);
 
-    freeReturnData(rdata);
+   delete rdata;
 }
 
 
@@ -71,13 +71,13 @@ TEST(groupDirac, testSimulation) {
     ExpData *edata = NULL;
 
     int status;
-    ReturnData *rdata = getSimulationResults(udata, edata, &status);
-    CHECK_EQUAL(0, status);
+    ReturnData *rdata = getSimulationResults(udata, edata);
+    CHECK_EQUAL(0, *rdata->status);
 
     // TODO proper paths /testDirac1/...
     verifyReturnData("/model_dirac/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
-    freeReturnData(rdata);
+    delete rdata;
     freeExpData(edata);
     delete udata;
 }
@@ -91,14 +91,13 @@ TEST(groupDirac, testSensitivityForward) {
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options");
     ExpData *edata = NULL;
 
-    int status;
-    ReturnData *rdata = getSimulationResults(udata, edata, &status);
-    CHECK_EQUAL(0, status);
+    ReturnData *rdata = getSimulationResults(udata, edata);
+    CHECK_EQUAL(0, *rdata->status);
 
     // TODO proper paths /testDirac1/...
     verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
-    freeReturnData(rdata);
+    delete rdata;
     freeExpData(edata);
     delete udata;
 }

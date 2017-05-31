@@ -3,49 +3,9 @@
 #include "wrapfunctions.h" /* user functions */
 
 #include <include/edata_accessors.h>
-#include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
 
 #include <cstring>
-
-/**
- * @ brief initialise matrix and attach to the field
- * @ param FIELD name of the field to which the matrix will be attached
- * @ param D1 number of rows in the matrix
- * @ param D2 number of columns in the matrix
- */
-#define initField2(FIELD,D1,D2) \
-    mxArray *mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
-/**
- * @ brief initialise 3D tensor and attach to the field
- * @ param FIELD name of the field to which the tensor will be attached
- * @ param D1 number of rows in the tensor
- * @ param D2 number of columns in the tensor
- * @ param D3 number of elements in the third dimension of the tensor
- */
-#define initField3(FIELD,D1,D2,D3) \
-    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3)}; \
-    mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
-/**
- * @ brief initialise 4D tensor and attach to the field
- * @ param FIELD name of the field to which the tensor will be attached
- * @ param D1 number of rows in the tensor
- * @ param D2 number of columns in the tensor
- * @ param D3 number of elements in the third dimension of the tensor
- * @ param D4 number of elements in the fourth dimension of the tensor
- */
-#define initField4(FIELD,D1,D2,D3,D4) \
-    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3), (mwSize)(D4)}; \
-    mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
 
 /**
  * @ brief extract information from a property of a matlab class (scalar)
@@ -189,28 +149,12 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 }
 
 
-ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
+ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
 
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-
-    /* Return rdata structure */
-    ReturnData *rdata = (ReturnData*) mxMalloc(sizeof *rdata);
+    ReturnDataMatlab *rdata = (ReturnDataMatlab*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
-
-    memset(rdata, 0, sizeof(*rdata));
-
-    mxArray *mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
-    plhs[0] = mxsol;
-
-    #include "include/amici_init_return_data_fields.h"
-
-    mxArray *mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
-    mxSetPr(mxstatus,pstatus);
-    mxSetField(mxsol,0,"status",mxstatus);
-
-    mxArray *mxts = mxCreateDoubleMatrix(udata->nt,1,mxREAL);
-    tsdata = mxGetPr(mxts);
-    mxSetField(mxsol,0,"t",mxts);
+    *rdata = ReturnDataMatlab(udata);
+    plhs[0] = rdata->mxsol;
 
     return(rdata);
 }
@@ -330,4 +274,50 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
     return(edata);
 }
 
+
+ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData(udata)
+{
+
+}
+
+void ReturnDataMatlab::initFields(const UserData *udata)
+{
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+
+    ReturnData::initFields(udata);
+}
+
+void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName, int dim)
+{
+    mxArray *array = mxCreateDoubleMatrix(dim, 1, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
+}
+
+void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName, int dim1, int dim2)
+{
+    mxArray *array = mxCreateDoubleMatrix(dim1, dim2, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+}
+
+void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3)
+{
+    mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
+    mxArray *array = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
+}
+
+void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4)
+{
+    mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3), (mwSize)(dim4)};
+    mxArray *array = mxCreateNumericArray(4, dims, mxDOUBLE_CLASS, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
+}
 

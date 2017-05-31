@@ -55,7 +55,8 @@ UserData::UserData(int np,
     z2event = NULL;
     h = NULL;
 
-    // J;
+    // TODO to TempData?
+    J = NULL;
     dxdotdp = NULL;
     w = NULL;
     dwdx = NULL;
@@ -70,6 +71,35 @@ UserData::UserData(int np,
     nan_xdot = false;
     nan_xBdot = false;
     nan_qBdot = false;
+}
+
+/**
+ * processUserData initializes fields of the udata struct
+ *
+ * @param[out] udata pointer to the user data struct @type UserData
+ * @return void
+ */
+void UserData::processUserData()
+{
+    if (nx>0) {
+        /* initialise temporary jacobian storage */
+        J = SparseNewMat(nx,nx,nnz,CSC_MAT);
+        M = new realtype[nx*nx]();
+        dfdx = new realtype[nx*nx]();
+    }
+    if (sensi >= AMI_SENSI_ORDER_FIRST) {
+        /* initialise temporary dxdotdp storage */
+        dxdotdp = new realtype[nx*nplist]();
+    }
+    if (ne>0) {
+        /* initialise temporary stau storage */
+        stau = new realtype[nplist]();
+    }
+
+
+    w = new realtype[nw]();
+    dwdx = new realtype[ndwdx]();
+    dwdp = new realtype[ndwdp]();
 }
 
 UserData::~UserData()

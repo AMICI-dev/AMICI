@@ -17,7 +17,6 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici_interface_matlab.h> /* amici functions */
 #include <include/edata_accessors.h>
-#include <include/rdata_accessors.h>
 
 
 /*!
