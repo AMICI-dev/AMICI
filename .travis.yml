@@ -1,6 +1,12 @@
 language: cpp
+services:
+    - docker
 
 sudo: required
+
+env:
+    - distribution: ubuntu
+	  version: 16.04
 
 dist: trusty
 
@@ -10,19 +16,21 @@ branches:
     - staging
 
 os:
-  - linux
-  - osx
+    - linux
+    - osx
 
 compiler:
     - clang
     - gcc
+    
+before_install:
+	- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; docker pull ${distribution}:${version}"; fi
 
 before_script:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev gcc-4.9 g++-4.9 clang; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev; fi
     
-install:
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+install: true
 
 script: ./scripts/run-tests.sh
 
