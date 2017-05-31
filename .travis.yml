@@ -4,10 +4,6 @@ services:
 
 sudo: required
 
-env:
-    - distribution: ubuntu
-    - version: 16.04
-
 dist: trusty
 
 branches:
@@ -24,7 +20,7 @@ compiler:
     - gcc
     
 before_install:
-	- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; docker pull ${distribution}:${version}"; fi
+	- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; docker pull ubuntu:16.04; fi
 
 before_script:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5; fi
