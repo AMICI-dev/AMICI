@@ -1,7 +1,4 @@
 language: cpp
-services:
-    - docker
-
 sudo: false
 
 dist: trusty
@@ -15,41 +12,11 @@ matrix:
   include: 
     - os: linux  
       compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
-            - libhdf5-serial-dev
-            - zlib1g-dev
-            - libatlas-base-dev
-            - cmake
-      env: 
-        - CC=gcc-5
-        - CXX=gcc-5
     - os: linux 
       compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-            - libhdf5-serial-dev
-            - zlib1g-dev
-            - libatlas-base-dev
-            - cmake
-      env:
-        - CC=clang-3.7
-        - CXX=clang++-3.7
     - os: osx
       compiler: clang
       before_script: brew install homebrew/science/hdf5
-    
-install: true
 
 script:  ./scripts/run-tests.sh
 
@@ -58,5 +25,12 @@ notifications:
     rooms:
       - icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI#amici-dev
     on_success: change
+    
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+      - zlib1g-dev
+      - libatlas-base-dev
     
    
