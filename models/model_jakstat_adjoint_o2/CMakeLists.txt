@@ -13,6 +13,9 @@ set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 
 find_package(HDF5 COMPONENTS C HL REQUIRED)
+set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
+set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
+
 if(${BLAS} STREQUAL "MKL")
     add_definitions(-DAMICI_BLAS_MKL)
     set(BLAS_LIBRARIES -lmkl CACHE STRING "")
