@@ -353,12 +353,12 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BL
 {
     assert(layout == AMICI_BLAS_ColMajor);
 
-    const long int M_ = M;
-    const long int N_ = N;
-    const long int K_ = K;
-    const long int lda_ = lda;
-    const long int ldb_ = ldb;
-    const long int ldc_ = ldc;
+    const ptrdiff_t M_ = M;
+    const ptrdiff_t N_ = N;
+    const ptrdiff_t K_ = K;
+    const ptrdiff_t lda_ = lda;
+    const ptrdiff_t ldb_ = ldb;
+    const ptrdiff_t ldc_ = ldc;
     const char transA = amici_blasCBlasTransToBlasTrans(TransA);
     const char transB = amici_blasCBlasTransToBlasTrans(TransB);
 
@@ -374,11 +374,11 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const in
 {
     assert(layout == AMICI_BLAS_ColMajor);
 
-    const long int M_ = M;
-    const long int N_ = N;
-    const long int lda_ = lda;
-    const long int incX_ = incX;
-    const long int incY_ = incY;
+    const ptrdiff_t M_ = M;
+    const ptrdiff_t N_ = N;
+    const ptrdiff_t lda_ = lda;
+    const ptrdiff_t incX_ = incX;
+    const ptrdiff_t incY_ = incY;
     const char transA = amici_blasCBlasTransToBlasTrans(TransA);
 
     assert(layout == AMICI_BLAS_ColMajor);
