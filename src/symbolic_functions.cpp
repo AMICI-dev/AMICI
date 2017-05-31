@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cfloat>
+#include <alloca.h>
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
@@ -303,12 +304,12 @@ double am_spline(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double *ts = new double[num]();;
-    double *us = new double[num]();;
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
     
-    double *b = new double[num]();;
-    double *c = new double[num]();;
-    double *d = new double[num]();;
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -330,13 +331,6 @@ double am_spline(double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
-    
-    delete[] ts;
-    delete[] us;
-    
-    delete[] b;
-    delete[] c;
-    delete[] d;
     
     return(uout);
 }
@@ -361,13 +355,13 @@ double am_spline_pos(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double *ts = new double[num]();;
-    double *us = new double[num]();;
-    double *uslog = new double[num]();
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
     
-    double *b = new double[num]();;
-    double *c = new double[num]();;
-    double *d = new double[num]();;
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -389,14 +383,6 @@ double am_spline_pos(double t, int num, ...) {
     
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uout = seval(num, t, ts, uslog, b, c, d);
-    
-    delete[] ts;
-    delete[] us;
-    delete[] uslog;
-    
-    delete[] b;
-    delete[] c;
-    delete[] d;
     
     return(exp(uout));
 }
@@ -421,13 +407,13 @@ double am_Dspline(int id, double t, int num, ...) {
     double ss;
     double dudt;
     
-    double *ts = new double[num]();;
-    double *us = new double[num]();;
-    double *ps = new double[num]();
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *ps = (double*) alloca(num*sizeof(double));
     
-    double *b = new double[num]();;
-    double *c = new double[num]();;
-    double *d = new double[num]();;
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -454,14 +440,6 @@ double am_Dspline(int id, double t, int num, ...) {
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
     
-    delete[] ts;
-    delete[] us;
-    delete[] ps;
-    
-    delete[] b;
-    delete[] c;
-    delete[] d;
-    
     return(uout);
 }
 
@@ -481,14 +459,14 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     
     va_list valist;
     
-    double *ts = new double[num]();;
-    double *us = new double[num]();;
-    double *sus = new double[num]();
-    double *uslog = new double[num]();
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *sus = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
 
-    double *b = new double[num]();;
-    double *c = new double[num]();;
-    double *d = new double[num]();;
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     double uout;
     double ss;
@@ -526,15 +504,6 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     suspline = seval(num, t, ts, sus, b, c, d);
     uout = suspline * uspline_pos / us[did];
     
-    delete[] ts;
-    delete[] us;
-    delete[] sus;
-    delete[] uslog;
-    
-    delete[] b;
-    delete[] c;
-    delete[] d;
-    
     return(uout);
 }
 
@@ -570,15 +539,15 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     
     va_list valist;
     
-    double *ts = new double[num]();;
-    double *us = new double[num]();;
-    double *sus1 = new double[num]();
-    double *sus2 = new double[num]();
-    double *uslog = new double[num]();
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *sus1 = (double*) alloca(num*sizeof(double));
+    double *sus2 = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
     
-    double *b = new double[num]();;
-    double *c = new double[num]();;
-    double *d = new double[num]();;
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     double uout;
     double ss;
@@ -630,16 +599,6 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
         uout = su1spline * su2spline * uspline_pos;
     }
     uout = uout / us[did1] / us[did2];
-    
-    delete[] ts;
-    delete[] us;
-    delete[] sus1;
-    delete[] sus2;
-    delete[] uslog;
-    
-    delete[] b;
-    delete[] c;
-    delete[] d;
     
     return(uout);
 }
