@@ -6,7 +6,7 @@ sudo: required
 
 env:
     - distribution: ubuntu
-	- version: 16.04
+    - version: 16.04
 
 dist: trusty
 
