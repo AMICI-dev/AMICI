@@ -2,12 +2,14 @@
 
 #include "wrapfunctions.h" /* user functions */
 
+#include <cstring>
+#include <assert.h>
+#include <blas.h>
+
 #include <include/edata_accessors.h>
 #include <include/udata_accessors.h>
 #include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
-
-#include <cstring>
 
 /**
  * @ brief initialise matrix and attach to the field
@@ -335,4 +337,54 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
     return(edata);
 }
 
+char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
+    switch (trans) {
+    case AMICI_BLAS_NoTrans:
+        return 'N';
+    case AMICI_BLAS_Trans:
+        return 'T';
+    case AMICI_BLAS_ConjTrans:
+        return 'C';
+    }
+}
 
+void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+                 const double alpha, const double *A, const int lda, const double *B, const int ldb, const double beta, double *C, const int ldc)
+{
+    assert(layout == AMICI_BLAS_ColMajor);
+
+    const long int M_ = M;
+    const long int N_ = N;
+    const long int K_ = K;
+    const long int lda_ = lda;
+    const long int ldb_ = ldb;
+    const long int ldc_ = ldc;
+    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
+    const char transB = amici_blasCBlasTransToBlasTrans(TransB);
+
+#if defined(_WIN32)
+    dgemm(&transA, &transB, &M_, &N_, &K_, &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
+#else
+    dgemm_(&transA, &transB, &M_, &N_, &K_, &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
+#endif
+}
+
+void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const int M, const int N, const double alpha, const double *A, const int lda,
+                 const double *X, const int incX, const double beta, double *Y, const int incY)
+{
+    assert(layout == AMICI_BLAS_ColMajor);
+
+    const long int M_ = M;
+    const long int N_ = N;
+    const long int lda_ = lda;
+    const long int incX_ = incX;
+    const long int incY_ = incY;
+    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
+
+    assert(layout == AMICI_BLAS_ColMajor);
+#if defined(_WIN32)
+    dgemv_(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
+#else
+    dgemv_(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
+#endif
+}

@@ -28,6 +28,10 @@
 #define AMI_NORMAL                1
 #define AMI_ONE_STEP              2
 
+typedef enum {AMICI_BLAS_RowMajor=101, AMICI_BLAS_ColMajor=102} AMICI_BLAS_LAYOUT;
+typedef enum {AMICI_BLAS_NoTrans=111, AMICI_BLAS_Trans=112, AMICI_BLAS_ConjTrans=113} AMICI_BLAS_TRANSPOSE;
+
+
 void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus);
 
 void invalidateReturnData(UserData* udata, ReturnData* rdata);
