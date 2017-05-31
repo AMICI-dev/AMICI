@@ -55,7 +55,6 @@ UserData::UserData(int np,
     z2event = NULL;
     h = NULL;
 
-    // TODO to TempData?
     J = NULL;
     dxdotdp = NULL;
     w = NULL;
@@ -79,7 +78,7 @@ UserData::UserData(int np,
  * @param[out] udata pointer to the user data struct @type UserData
  * @return void
  */
-void UserData::processUserData()
+void UserData::initTemporaryFields()
 {
     if (nx>0) {
         /* initialise temporary jacobian storage */
@@ -96,36 +95,50 @@ void UserData::processUserData()
         stau = new realtype[nplist]();
     }
 
-
     w = new realtype[nw]();
     dwdx = new realtype[ndwdx]();
     dwdp = new realtype[ndwdp]();
 }
 
+void UserData::freeTemporaryFields()
+{
+    if(dxdotdp) delete[] dxdotdp;
+    if(w) delete[] w;
+    if(dwdx) delete[] dwdx;
+    if(dwdp) delete[] dwdp;
+    if(M) delete[] M;
+    if(dfdx) delete[] dfdx;
+    if(stau) delete[] stau;
+    if(J) SparseDestroyMat(J);
+
+    J = NULL;
+    dxdotdp = NULL;
+    w = NULL;
+    dwdx = NULL;
+    dwdp = NULL;
+    M = NULL;
+    dfdx = NULL;
+    stau = NULL;
+}
+
 UserData::~UserData()
 {
+    freeTemporaryFields();
+
 #ifdef AMICI_WITHOUT_MATLAB
-        if(qpositivex) delete[] qpositivex;
-        if(p) delete[] p;
-        if(k) delete[] k;
-        if(ts) delete[] ts;
-        if(pbar) delete[] pbar;
-        if(xbar) delete[] xbar;
-        if(idlist) delete[] idlist;
-        if(x0data) delete[] x0data;
-        if(sx0data) delete[] sx0data;
-        if(z2event) delete[] z2event;
+    if(qpositivex) delete[] qpositivex;
+    if(p) delete[] p;
+    if(k) delete[] k;
+    if(ts) delete[] ts;
+    if(pbar) delete[] pbar;
+    if(xbar) delete[] xbar;
+    if(idlist) delete[] idlist;
+    if(x0data) delete[] x0data;
+    if(sx0data) delete[] sx0data;
+    if(z2event) delete[] z2event;
 #endif
-        if(plist) delete[] plist;
-        if(h) delete[] h;
-        if(dxdotdp) delete[] dxdotdp;
-        if(w) delete[] w;
-        if(dwdx) delete[] dwdx;
-        if(dwdp) delete[] dwdp;
-        if(M) delete[] M;
-        if(dfdx) delete[] dfdx;
-        if(stau) delete[] stau;
-        if(J) SparseDestroyMat(J);
+    if(plist) delete[] plist;
+    if(h) delete[] h;
 }
 
 #ifdef AMICI_WITHOUT_MATLAB

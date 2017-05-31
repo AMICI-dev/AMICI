@@ -41,7 +41,8 @@ public:
              AMI_o2mode o2mode
              );
 
-    void processUserData();
+    void initTemporaryFields();
+    void freeTemporaryFields();
 
     virtual ~UserData();
 

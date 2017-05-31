@@ -31,13 +31,15 @@ static int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dyd
 static int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y_, realtype *sy, realtype *dydp_, realtype *my_, void *user_data);
 
 void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus) {
+    *pstatus = 0;
+    int problem = 0;
+    int iroot = 0;
+    booleantype setupBdone = false;
 
     if(udata->nx <= 0) {
         *pstatus = -99;
         return;
     }
-
-    *pstatus = 0;
 
     TempData *tdata = new TempData();
     if (tdata == NULL) {
@@ -47,33 +49,34 @@ void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata
 
     unscaleParameters(udata);
 
+    udata->initTemporaryFields();
+
     /* pointer to cvodes memory block */
     void *ami_mem = setupAMI(pstatus, udata, tdata);
     if (ami_mem == NULL){
         *pstatus = -96;
-        delete tdata;
-        return;
+        goto freturn2;
     }
 
-    int iroot = 0;
-    booleantype setupBdone = false;
-
-    int problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
+    problem = workForwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot);
     if(problem)
-        goto freturn;
+        goto freturn1;
 
     problem = workBackwardProblem(udata, tdata, rdata, edata, pstatus, ami_mem, &iroot, &setupBdone);
     if(problem)
-        goto freturn;
+        goto freturn1;
 
     applyChainRuleFactorToSimulationResults(udata, rdata, edata);
 
 
-freturn:
+freturn1:
     if(*pstatus<0){
         invalidateReturnData(udata, rdata);
     }
+
+freturn2:
     freeTempDataAmiMem(udata, tdata, ami_mem, setupBdone, *pstatus);
+    udata->freeTemporaryFields();
 }
 
 void invalidateReturnData(UserData* udata, ReturnData* rdata) {

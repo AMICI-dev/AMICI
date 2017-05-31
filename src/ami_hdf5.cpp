@@ -110,8 +110,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     udata->dfdx = NULL;
     udata->stau = NULL;
 
-    udata->processUserData();
-
     return udata;
 }
 
