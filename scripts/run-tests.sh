@@ -68,7 +68,7 @@ TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_ad
 for MODEL in $TESTMODELS; do 
 	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 	cd ${AMICI_PATH}/models/${MODEL}/build
-	cmake DCMAKE_CXX_COMPILER=$CXX_COMPILER ..
+	cmake -DCMAKE_CXX_COMPILER=$CXX_COMPILER ..
 	make
 done;
 
