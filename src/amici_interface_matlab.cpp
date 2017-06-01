@@ -89,6 +89,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 
     if (!prhs[0]) {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
+        return NULL;
     }
     ts = mxGetPr(prhs[0]);
 
@@ -98,6 +99,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 
     if (!prhs[1]) {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
+        return NULL;
     }
     p = mxGetPr(prhs[1]);
 
@@ -105,17 +107,20 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 
     if (!prhs[2]) {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
+        return NULL;
     }
     k = mxGetPr(prhs[2]);
 
     if (!prhs[3]) {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
+        return NULL;
     }
 
     /* plist */
     realtype *plistdata;
     if (!prhs[4]) {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
+        return NULL;
     } else {
         nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
         plistdata = mxGetPr(prhs[4]);
@@ -154,6 +159,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /* pbar */
     if (!prhs[5]) {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
+        return NULL;
     }
 
     pbar = mxGetPr(prhs[5]);
@@ -161,6 +167,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /* xscale */
     if (!prhs[6]) {
         errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
+        return NULL;
     }
 
     xbar = mxGetPr(prhs[6]);
@@ -174,8 +181,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
                 x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
 
                 /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); }
+                if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); return NULL; }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return NULL; }
             }
         }
 
@@ -184,8 +191,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
                 sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
 
                 /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); }
+                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return NULL; }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return NULL; }
             }
         }
     }
@@ -237,6 +244,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
         if(sensi >= AMI_SENSI_ORDER_FIRST && sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provided!");
+            return NULL;
         } else {
             *status = 0;
         }
