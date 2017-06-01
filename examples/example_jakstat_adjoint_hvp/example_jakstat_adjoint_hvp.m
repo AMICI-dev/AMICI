@@ -49,9 +49,9 @@ function example_jakstat_adjoint_hvp()
     t1 = toc;
     
     % Get time for Finite Differences
-    hvp = zeros(17,1);
-    hvp_f = zeros(17,1);
-    hvp_b = zeros(17,1);
+    hvp = zeros(1,17);
+    hvp_f = zeros(1,17);
+    hvp_b = zeros(1,17);
     tic;
 
     sol2 = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options);
