@@ -25,20 +25,9 @@ else
     o2flag = this.o2flag;
 end
 
-try
-    fid = fopen(fullfile(this.wrap_path,'.git','FETCH_HEAD'));
-    str = fgetl(fid);
-    fclose(fid);
-    t_hash = regexp(str,'^([\w]*)','tokens');
-    commit_hash = t_hash{1}{1};
-    t_branch = regexp(str,'branch ''([\w]*)''','tokens');
-    branch = t_branch{1}{1};
-    idx_url = strfind(str,'https://github.com');
-    url = str(idx_url:end);
-catch
+[commit_hash,branch,url] = getCommitHash( this.wrap_path );
+if(isempty(commit_hash))
     commit_hash = '#';
-    branch = 'unknown branch';
-    url = 'unknown repository';
 end
 
 if(o2flag)

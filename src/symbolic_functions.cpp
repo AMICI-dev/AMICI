@@ -19,7 +19,7 @@
 #if _MSC_VER && !__INTEL_COMPILER
 #include <malloca.h>
 #define alloca _alloca
-#elif
+#else
 #include <alloca.h>
 #endif
 #include <include/symbolic_functions.h>

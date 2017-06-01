@@ -53,29 +53,67 @@ function amiwrap( varargin )
     warning('off','symbolic:generate:FunctionNotVerifiedToBeValid')
     %% 
     % computations
+    wrap_path=fileparts(mfilename('fullpath'));
+    addpath(genpath(fullfile(wrap_path,'auxiliary')));
+    addpath(fullfile(wrap_path,'symbolic'));
     
-    % generate modelstruct
-    disp('Generating model struct ...')
-    model = amimodel(symfun,modelname);
-    addpath(fullfile(model.wrap_path,'auxiliary'));
-    addpath(fullfile(model.wrap_path,'symbolic'));
+    % try to load
+    if(exist(symfun,'file'))
+        model_hash = CalcMD5(which(symfun),'File');
+    else
+        model_hash = [];
+    end
+    
+    commit_hash = getCommitHash(wrap_path);
+    
+    try
+        addpath(fullfile(wrap_path,'models',modelname));
+    end
+    if(exist([commit_hash '_' model_hash '.mat'],'file'));
+        load([commit_hash '_' model_hash '.mat']);
+    end
+    
+    if(~exist('model','var'))
+        disp('Generating model struct ...')
+        model = amimodel(symfun,modelname);
+        
+        disp('Parsing model struct ...')
+        model.parseModel();
+        if(~isempty(model_hash) && ~isempty(commit_hash))
+            save([commit_hash '_' model_hash],'model')
+        end
+    end
+    
     switch(o2flag)
         case 0 
-            % do nothing
+            o2string = [];
         case 1
-            disp('Augmenting to second order ...')
-            modelo2 = augmento2(model);
+            o2string = 'o2';
         case 2
-            disp('Augmenting to second order ...')
-            modelo2 = augmento2vec(model);
+            o2string = 'o2vec';
     end
     
-    % do symbolic computations of modelstruct
-    disp('Parsing model struct ...')
-    model.parseModel();
-    if(o2flag)
-        modelo2.parseModel();
+    if(~isempty(o2string))
+        try
+           addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
+        end
+        if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file'));
+            load([commit_hash '_' model_hash '_' o2string '.mat']);
+        end
+        if(~exist('modelo2','var'))
+            disp('Augmenting to second order ...')
+            modelo2 = feval(['augment' o2string],model);
+            disp('Parsing second order ...')
+            modelo2.parseModel();
+            if(~isempty(model_hash) && ~isempty(commit_hash))
+                save(fullfile(odewrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash]),'modelo2')
+            end
+        end
     end
+    
+
+    
+        
     
     % generate C code out of symbolic computations
     disp('Generating C code ...')
@@ -102,22 +140,23 @@ function amiwrap( varargin )
     if(~isempty(tdir))
         clear(['simulate_' modelname ]);
         clear(['ami_' modelname ]);
-        clear(['ami_' modelname '_o2']);
-        [odewrap_path,~,~]=fileparts(which('amiwrap.m'));
-        movefile(fullfile(odewrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
-        movefile(fullfile(odewrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
+        clear(['ami_' modelname o2string]);
+        movefile(fullfile(wrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
+        movefile(fullfile(wrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
+        % make files available in the path
+        tmp = which(fullfile(tdir,['simulate_' modelname '.m']));
+        tmp = which(fullfile(tdir,['ami_' modelname '.' mexext]));
         for fun = model.mfuns
-            copyfile(fullfile(odewrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']))
+            copyfile(fullfile(wrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']))
+            tmp = which(fullfile(tdir,[fun{1} '_' modelname '.m']));
         end
         % clear .m and .mex files from memory
-        switch(o2flag)
-            case 1
-                movefile(fullfile(odewrap_path,'models',[modelname '_o2'],[ 'ami_' modelname '_o2.' mexext]),fullfile(tdir,['ami_' modelname '_o2.' mexext]))
-            case 2
-                movefile(fullfile(odewrap_path,'models',[modelname '_o2vec'],[ 'ami_' modelname '_o2vec.' mexext]),fullfile(tdir,['ami_' modelname '_o2vec.' mexext]))
+        if(~isempty(o2string))
+            movefile(fullfile(wrap_path,'models',[modelname '_' o2string],[ 'ami_' modelname '_' o2string '.' mexext]),fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
+            which(fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]))
         end
     else
-        addpath(fullfile(model.wrap_path,'models',modelname));
+        addpath(fullfile(wrap_path,'models',modelname));
     end
     warning(warningreset);
 end
