@@ -2199,9 +2199,9 @@ int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_V
         realtype *sxTmp = N_VGetArrayPointer(sx[ip]);
 
         // compute sy = 1.0*dydx*sx + 1.0*sy
-        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, ny, nx,
-                    1.0, dydx_, ny, sxTmp, 1,
-                    1.0, &sy[ip * nt * ny + it], nt);
+        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, udata->ny, udata->nx,
+                    1.0, dydx_, udata->ny, sxTmp, 1,
+                    1.0, &sy[ip * udata->nt * udata->ny + it], udata->nt);
     }
 
     return status;
@@ -2246,10 +2246,10 @@ int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, re
 
         // C := alpha*op(A)*op(B) + beta*C,
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
-                    nplist, ng, ny,
-                    1.0, diff, ny,
-                    dJydyTmp, ng,
-                    1.0, multResult, nplist);
+                    udata->nplist, udata->ng, udata->ny,
+                    1.0, diff, udata->ny,
+                    dJydyTmp, udata->ng,
+                    1.0, multResult, udata->nplist);
 
         // sJy += multResult
         for(int ig = 0; ig < udata->ng; ++ig) {

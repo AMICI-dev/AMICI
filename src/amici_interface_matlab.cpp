@@ -145,8 +145,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         }
     }
 
-    processUserData(udata);
-
     return(udata);
 }
 
