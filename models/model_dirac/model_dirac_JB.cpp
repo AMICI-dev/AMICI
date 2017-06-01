@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_dirac_dwdx.h"
 #include "model_dirac_w.h"
 
@@ -15,9 +14,9 @@ realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   memset(JB->data,0,sizeof(realtype)*4);
 status = w_model_dirac(t,x,NULL,user_data);
 status = dwdx_model_dirac(t,x,NULL,user_data);
-  JB->data[0+0*2] = p[0];
-  JB->data[0+1*2] = -p[2];
-  JB->data[1+1*2] = p[3];
+  JB->data[0+0*2] = udata->p[0];
+  JB->data[0+1*2] = -udata->p[2];
+  JB->data[1+1*2] = udata->p[3];
 return(status);
 
 }

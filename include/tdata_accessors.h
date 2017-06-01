@@ -1,13 +1,13 @@
 #define t tdata->am_t
 
-#define x tdata->am_x
+//#define x tdata->am_x
 #define x_old tdata->am_x_old
 #define x_disc tdata->am_x_disc
 #define xdot_disc tdata->am_xdot_disc
 #define xdot_old_disc tdata->am_xdot_old_disc
 #define dx tdata->am_dx
 #define dx_old tdata->am_dx_old
-#define xdot tdata->am_xdot
+//#define xdot tdata->am_xdot
 #define xdot_old tdata->am_xdot_old
 #define xB tdata->am_xB
 #define xB_old tdata->am_xB_old
@@ -30,8 +30,8 @@
 #define drdp tdata->am_drdp
 #define drdx tdata->am_drdx
 #define drvaldx tdata->am_drvaldx
-#define dydp tdata->am_dydp
-#define dydx tdata->am_dydx
+//#define dydp tdata->am_dydp
+//#define dydx tdata->am_dydx
 #define sigma_y tdata->am_sigma_y
 #define dsigma_ydp tdata->am_dsigma_ydp
 #define sigma_z tdata->am_sigma_z

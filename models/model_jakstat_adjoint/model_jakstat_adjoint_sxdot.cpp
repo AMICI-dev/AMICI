@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_JSparse.h"
 #include "model_jakstat_adjoint_dxdotdp.h"
 #include "model_jakstat_adjoint_w.h"
@@ -16,18 +15,18 @@ realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*9);
 if(ip == 0) {
-    status = JSparse_model_jakstat_adjoint(t,x,xdot,tmp_J,user_data,NULL,NULL,NULL);
-    status = dxdotdp_model_jakstat_adjoint(t,tmp_dxdotdp,x,NULL,user_data);
+    status = JSparse_model_jakstat_adjoint(t,x,xdot,udata->J,user_data,NULL,NULL,NULL);
+    status = dxdotdp_model_jakstat_adjoint(t,udata->dxdotdp,x,NULL,user_data);
 }
-  sxdot_tmp[0] = tmp_dxdotdp[0 + ip*9]+sx_tmp[0]*tmp_J->data[0]+sx_tmp[8]*tmp_J->data[16];
-  sxdot_tmp[1] = tmp_dxdotdp[1 + ip*9]+sx_tmp[0]*tmp_J->data[1]+sx_tmp[1]*tmp_J->data[2];
-  sxdot_tmp[2] = tmp_dxdotdp[2 + ip*9]+sx_tmp[1]*tmp_J->data[3]+sx_tmp[2]*tmp_J->data[4];
-  sxdot_tmp[3] = tmp_dxdotdp[3 + ip*9]+sx_tmp[2]*tmp_J->data[5]+sx_tmp[3]*tmp_J->data[6];
-  sxdot_tmp[4] = tmp_dxdotdp[4 + ip*9]+sx_tmp[3]*tmp_J->data[7]+sx_tmp[4]*tmp_J->data[8];
-  sxdot_tmp[5] = tmp_dxdotdp[5 + ip*9]+sx_tmp[4]*tmp_J->data[9]+sx_tmp[5]*tmp_J->data[10];
-  sxdot_tmp[6] = tmp_dxdotdp[6 + ip*9]+sx_tmp[5]*tmp_J->data[11]+sx_tmp[6]*tmp_J->data[12];
-  sxdot_tmp[7] = tmp_dxdotdp[7 + ip*9]+sx_tmp[6]*tmp_J->data[13]+sx_tmp[7]*tmp_J->data[14];
-  sxdot_tmp[8] = tmp_dxdotdp[8 + ip*9]+sx_tmp[7]*tmp_J->data[15]+sx_tmp[8]*tmp_J->data[17];
+  sxdot_tmp[0] = udata->dxdotdp[0 + ip*udata->nx]+sx_tmp[0]*udata->J->data[0]+sx_tmp[8]*udata->J->data[16];
+  sxdot_tmp[1] = udata->dxdotdp[1 + ip*udata->nx]+sx_tmp[0]*udata->J->data[1]+sx_tmp[1]*udata->J->data[2];
+  sxdot_tmp[2] = udata->dxdotdp[2 + ip*udata->nx]+sx_tmp[1]*udata->J->data[3]+sx_tmp[2]*udata->J->data[4];
+  sxdot_tmp[3] = udata->dxdotdp[3 + ip*udata->nx]+sx_tmp[2]*udata->J->data[5]+sx_tmp[3]*udata->J->data[6];
+  sxdot_tmp[4] = udata->dxdotdp[4 + ip*udata->nx]+sx_tmp[3]*udata->J->data[7]+sx_tmp[4]*udata->J->data[8];
+  sxdot_tmp[5] = udata->dxdotdp[5 + ip*udata->nx]+sx_tmp[4]*udata->J->data[9]+sx_tmp[5]*udata->J->data[10];
+  sxdot_tmp[6] = udata->dxdotdp[6 + ip*udata->nx]+sx_tmp[5]*udata->J->data[11]+sx_tmp[6]*udata->J->data[12];
+  sxdot_tmp[7] = udata->dxdotdp[7 + ip*udata->nx]+sx_tmp[6]*udata->J->data[13]+sx_tmp[7]*udata->J->data[14];
+  sxdot_tmp[8] = udata->dxdotdp[8 + ip*udata->nx]+sx_tmp[7]*udata->J->data[15]+sx_tmp[8]*udata->J->data[17];
 return(status);
 
 }

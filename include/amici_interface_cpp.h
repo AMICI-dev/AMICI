@@ -18,7 +18,7 @@
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-EXTERNC ReturnData *getSimulationResults(UserData *udata, const ExpData *edata, int *pstatus);
+EXTERNC ReturnData *getSimulationResults(UserData *udata, const ExpData *edata);
 
 /**
  * initReturnData initialises a ReturnData struct

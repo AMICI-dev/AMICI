@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_w.h"
 
 int root_model_jakstat_adjoint(realtype t, N_Vector x, realtype *root, void *user_data) {

@@ -1,79 +1,114 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
-
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
+#include "udata.h"
 
 /** @brief struct that stores all data which is later returned by the mex function
  *
  * NOTE: MATLAB stores multidimensional arrays in column-major order (FORTRAN-style)
  */
-typedef struct rdata {
+class ReturnData {
+public:
+    ReturnData(const UserData *udata);
+
+    virtual ~ReturnData();
 
     /** timepoints */
-    double *am_tsdata;
+    double *ts;
     /** time derivative */
-    double *am_xdotdata;
+    double *xdot;
     /** parameter derivative of time derivative */
-    double *am_dxdotdpdata;
+    double *dxdotdp;
     /** state derivative of observables */
-    double *am_dydxdata;
+    double *dydx;
     /** parameter derivative of observables */
-    double *am_dydpdata;
+    double *dydp;
     /** Jacobian of differential equation right hand side */
-    double *am_Jdata;
+    double *J;
     /** event output */
-    double *am_zdata;
+    double *z;
     /** event output sigma standard deviation */
-    double *am_sigmazdata;
+    double *sigmaz;
     /** parameter derivative of event output */
-    double *am_szdata;
+    double *sz;
     /** parameter derivative of event output standard deviation */
-    double *am_ssigmazdata;
+    double *ssigmaz;
     /** event trigger output */
-    double *am_rzdata;
+    double *rz;
     /** parameter derivative of event trigger output */
-    double *am_srzdata;
+    double *srz;
     /** second order parameter derivative of event trigger output */
-    double *am_s2rzdata;
+    double *s2rz;
     /** state */
-    double *am_xdata;
+    double *x;
     /** parameter derivative of state */
-    double *am_sxdata;
+    double *sx;
     /** observable */
-    double *am_ydata;
+    double *y;
     /** observable standard deviation */
-    double *am_sigmaydata;
+    double *sigmay;
     /** parameter derivative of observable */
-    double *am_sydata;
+    double *sy;
     /** parameter derivative of observable standard deviation */
-    double *am_ssigmaydata;
+    double *ssigmay;
     
     /** number of integration steps forward problem */
-    double *am_numstepsdata;
+    double *numsteps;
     /** number of integration steps backward problem */
-    double *am_numstepsSdata;
+    double *numstepsS;
     /** number of right hand side evaluations forward problem */
-    double *am_numrhsevalsdata;
+    double *numrhsevals;
     /** number of right hand side evaluations backwad problem */
-    double *am_numrhsevalsSdata;
+    double *numrhsevalsS;
     /** employed order forward problem */
-    double *am_orderdata;
+    double *order;
     
     /** likelihood value */
-    double *am_llhdata;
+    double *llh;
     /** chi2 value */
-    double *am_chi2data;
+    double *chi2;
     /** parameter derivative of likelihood */
-    double *am_sllhdata;
+    double *sllh;
     /** second order parameter derivative of likelihood */
-    double *am_s2llhdata;
-    
-} ReturnData;
+    double *s2llh;
 
-EXTERNC void freeReturnData(ReturnData *rdata);
+    double *status;
+
+protected:
+    virtual void initFields(const UserData *udata);
+
+    virtual void initField1(double **fieldPointer, const char *fieldName, int dim);
+
+    /**
+     * @ brief initialise matrix and attach to the field
+     * @ param FIELD name of the field to which the matrix will be attached
+     * @ param D1 number of rows in the matrix
+     * @ param D2 number of columns in the matrix
+     */
+
+    virtual void initField2(double **fieldPointer, const char *fieldName, int dim1, int dim2);
+
+    /**
+     * @ brief initialise 3D tensor and attach to the field
+     * @ param FIELD name of the field to which the tensor will be attached
+     * @ param D1 number of rows in the tensor
+     * @ param D2 number of columns in the tensor
+     * @ param D3 number of elements in the third dimension of the tensor
+     */
+
+    virtual void initField3(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3);
+
+    /**
+     * @ brief initialise 4D tensor and attach to the field
+     * @ param FIELD name of the field to which the tensor will be attached
+     * @ param D1 number of rows in the tensor
+     * @ param D2 number of columns in the tensor
+     * @ param D3 number of elements in the third dimension of the tensor
+     * @ param D4 number of elements in the fourth dimension of the tensor
+     */
+
+    virtual void initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4);
+
+    
+};
 
 #endif /* _MY_RDATA */

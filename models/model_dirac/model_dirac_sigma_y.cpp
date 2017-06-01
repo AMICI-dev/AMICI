@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_dirac_w.h"
 
 int sigma_y_model_dirac(realtype t, realtype *sigma_y, void *user_data) {

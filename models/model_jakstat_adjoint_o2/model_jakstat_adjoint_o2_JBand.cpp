@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_o2_J.h"
 #include "model_jakstat_adjoint_o2_w.h"
 

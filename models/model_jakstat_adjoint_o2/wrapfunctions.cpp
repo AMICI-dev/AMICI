@@ -1,26 +1,25 @@
                 
 #include "wrapfunctions.h"
-#include <include/udata_accessors.h>
                 
-                void init_modeldims(UserData *udata){
-                   np = 17;
-                   nx = 162;
-                   nxtrue = 9;
-                   nk = 2;
-                   ny = 54;
-                   nytrue = 3;
-                   nz = 0;
-                   nztrue = 0;
-                   ne = 0;
-                   ng = 18;
-                   nw = 10;
-                   ndwdx = 2;
-                   ndwdp = 30;
-                   nnz = 384;
-                   ubw = 8;
-                   lbw = 154;
-                   udata->am_pscale = AMI_SCALING_LOG10;
-                   udata->am_o2mode = AMI_O2MODE_FULL;
+    UserData *getUserData(){
+    return new UserData(17,
+                         162,
+                         9,
+                         2,
+                         54,
+                         3,
+                         0,
+                         0,
+                         0,
+                         18,
+                         10,
+                         2,
+                         30,
+                         384,
+                         8,
+                         154,
+                         AMI_SCALING_LOG10,
+                         AMI_O2MODE_FULL);
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_jakstat_adjoint_o2, RCONST(t), x);
@@ -33,7 +32,7 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_jakstat_adjoint_o2, sx);
+                    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_jakstat_adjoint_o2, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){

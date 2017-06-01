@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_dwdx.h"
 #include "model_jakstat_adjoint_w.h"
 
@@ -43,24 +42,24 @@ realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   JB->indexptrs[9] = 18;
 status = w_model_jakstat_adjoint(t,x,NULL,user_data);
 status = dwdx_model_jakstat_adjoint(t,x,NULL,user_data);
-  JB->data[0] = p[0]*w_tmp[0];
-  JB->data[1] = -(k[1]*p[3])/k[0];
-  JB->data[2] = -p[0]*w_tmp[0];
-  JB->data[3] = dwdx_tmp[0]*p[1]*2.0;
-  JB->data[4] = -dwdx_tmp[0]*p[1];
-  JB->data[5] = p[2];
-  JB->data[6] = -(k[0]*p[2])/k[1];
-  JB->data[7] = p[3];
-  JB->data[8] = p[3]*-2.0;
-  JB->data[9] = p[3];
-  JB->data[10] = -p[3];
-  JB->data[11] = p[3];
-  JB->data[12] = -p[3];
-  JB->data[13] = p[3];
-  JB->data[14] = -p[3];
-  JB->data[15] = p[3];
-  JB->data[16] = -p[3];
-  JB->data[17] = p[3];
+  JB->data[0] = udata->p[0]*udata->w[0];
+  JB->data[1] = -(udata->k[1]*udata->p[3])/udata->k[0];
+  JB->data[2] = -udata->p[0]*udata->w[0];
+  JB->data[3] = udata->dwdx[0]*udata->p[1]*2.0;
+  JB->data[4] = -udata->dwdx[0]*udata->p[1];
+  JB->data[5] = udata->p[2];
+  JB->data[6] = -(udata->k[0]*udata->p[2])/udata->k[1];
+  JB->data[7] = udata->p[3];
+  JB->data[8] = udata->p[3]*-2.0;
+  JB->data[9] = udata->p[3];
+  JB->data[10] = -udata->p[3];
+  JB->data[11] = udata->p[3];
+  JB->data[12] = -udata->p[3];
+  JB->data[13] = udata->p[3];
+  JB->data[14] = -udata->p[3];
+  JB->data[15] = udata->p[3];
+  JB->data[16] = -udata->p[3];
+  JB->data[17] = udata->p[3];
 return(status);
 
 }
