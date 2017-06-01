@@ -16,9 +16,9 @@
  */
 #define readOptionScalar(OPTION,TYPE) \
     if(mxGetProperty(prhs[3],0,#OPTION)){ \
-        OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
+        udata->OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
     } else { \
-        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options do not have field " #OPTION "!"); \
         return(NULL); \
     }
 
@@ -29,9 +29,9 @@
  */
 #define readOptionData(OPTION) \
     if(mxGetProperty(prhs[3],0,#OPTION)){ \
-        OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
+        udata->OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
     } else { \
-        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
+        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options do not have field " #OPTION "!"); \
         return(NULL); \
     }
 
@@ -88,16 +88,16 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         udata->plist[ip] = (int)plistdata[ip];
     }
 
-    readOptionScalar(udata->nmaxevent,int)
-    readOptionScalar(udata->tstart,double)
-    readOptionScalar(udata->atol,double)
-    readOptionScalar(udata->rtol,double)
-    readOptionScalar(udata->maxsteps,int)
-    readOptionScalar(udata->lmm,int)
-    readOptionScalar(udata->iter,int)
-    readOptionScalar(udata->interpType,int)
-    readOptionScalar(udata->linsol,int)
-    readOptionScalar(udata->stldet,booleantype)
+    readOptionScalar(nmaxevent,int)
+    readOptionScalar(tstart,double)
+    readOptionScalar(atol,double)
+    readOptionScalar(rtol,double)
+    readOptionScalar(maxsteps,int)
+    readOptionScalar(lmm,int)
+    readOptionScalar(iter,int)
+    readOptionScalar(interpType,int)
+    readOptionScalar(linsol,int)
+    readOptionScalar(stldet,booleantype)
 
     if(mxGetProperty(prhs[3],0,"id")){ \
         udata->idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
@@ -106,12 +106,12 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         return(NULL); \
     }
 
-    readOptionData(udata->z2event)
-    readOptionData(udata->qpositivex)
-    readOptionScalar(udata->sensi,AMI_sensi_order)
-    readOptionScalar(udata->ism,int)
-    readOptionScalar(udata->sensi_meth,AMI_sensi_meth)
-    readOptionScalar(udata->ordering,int)
+    readOptionData(z2event)
+    readOptionData(qpositivex)
+    readOptionScalar(sensi,AMI_sensi_order)
+    readOptionScalar(ism,int)
+    readOptionScalar(sensi_meth,AMI_sensi_meth)
+    readOptionScalar(ordering,int)
 
     /* pbar */
     if (!prhs[5]) {
