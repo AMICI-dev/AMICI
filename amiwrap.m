@@ -106,7 +106,7 @@ function amiwrap( varargin )
             disp('Parsing second order ...')
             modelo2.parseModel();
             if(~isempty(model_hash) && ~isempty(commit_hash))
-                save(fullfile(odewrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash]),'modelo2')
+                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash]),'modelo2')
             end
         end
     end
