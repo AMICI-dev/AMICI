@@ -1,26 +1,25 @@
                 
 #include "wrapfunctions.h"
-#include <include/udata_accessors.h>
                 
-                void init_modeldims(UserData *udata){
-                   np = 4;
-                   nx = 2;
-                   nxtrue = 2;
-                   nk = 0;
-                   ny = 1;
-                   nytrue = 1;
-                   nz = 0;
-                   nztrue = 0;
-                   ne = 2;
-                   ng = 1;
-                   nw = 0;
-                   ndwdx = 0;
-                   ndwdp = 0;
-                   nnz = 3;
-                   ubw = 0;
-                   lbw = 1;
-                   udata->am_pscale = AMI_SCALING_LOG10;
-                   udata->am_o2mode = AMI_O2MODE_NONE;
+    UserData *getUserData(){
+    return new UserData(4,
+                         2,
+                         2,
+                         0,
+                         1,
+                         1,
+                         0,
+                         0,
+                         2,
+                         1,
+                         0,
+                         0,
+                         0,
+                         3,
+                         0,
+                         1,
+                         AMI_SCALING_LOG10,
+                         AMI_O2MODE_NONE);
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_dirac, RCONST(t), x);
@@ -33,7 +32,7 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_dirac, sx);
+                    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_dirac, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){

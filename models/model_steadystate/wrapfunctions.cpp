@@ -1,26 +1,25 @@
                 
 #include "wrapfunctions.h"
-#include <include/udata_accessors.h>
                 
-                void init_modeldims(UserData *udata){
-                   np = 5;
-                   nx = 3;
-                   nxtrue = 3;
-                   nk = 4;
-                   ny = 3;
-                   nytrue = 3;
-                   nz = 0;
-                   nztrue = 0;
-                   ne = 0;
-                   ng = 1;
-                   nw = 2;
-                   ndwdx = 2;
-                   ndwdp = 1;
-                   nnz = 9;
-                   ubw = 2;
-                   lbw = 2;
-                   udata->am_pscale = AMI_SCALING_LOG10;
-                   udata->am_o2mode = AMI_O2MODE_NONE;
+    UserData *getUserData(){
+    return new UserData(5,
+                         3,
+                         3,
+                         4,
+                         3,
+                         3,
+                         0,
+                         0,
+                         0,
+                         1,
+                         2,
+                         2,
+                         1,
+                         9,
+                         2,
+                         2,
+                         AMI_SCALING_LOG10,
+                         AMI_O2MODE_NONE);
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_steadystate, RCONST(t), x);
@@ -33,7 +32,7 @@
                 }
                 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
-                    return CVodeSensInit1(cvode_mem, nplist, sensi_meth, sxdot_model_steadystate, sx);
+                    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_steadystate, sx);
                 }
                 
                 int wrap_RootInit(void *cvode_mem, void *user_data){

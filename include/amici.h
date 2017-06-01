@@ -76,6 +76,4 @@ void freeTempDataAmiMem(UserData *udata, TempData *tdata, void *ami_mem, boolean
 void applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata);
 void unscaleParameters(UserData *udata);
 
-void processUserData(UserData *udata);
-
 #endif /* amici_h */

@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_dirac_w.h"
 
 int deltaxB_model_dirac(realtype t, int ie, realtype *deltaxB, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, void *user_data) {

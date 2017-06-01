@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_jakstat_adjoint_dwdx.h"
 #include "model_jakstat_adjoint_w.h"
 
@@ -43,30 +42,30 @@ J->indexptrs[8] = 16;
 J->indexptrs[9] = 18;
 status = w_model_jakstat_adjoint(t,x,NULL,user_data);
 status = dwdx_model_jakstat_adjoint(t,x,NULL,user_data);
-  J->data[0] = -p[0]*w_tmp[0];
-  J->data[1] = p[0]*w_tmp[0];
-  J->data[2] = dwdx_tmp[0]*p[1]*-2.0;
-  J->data[3] = dwdx_tmp[0]*p[1];
-  J->data[4] = -p[2];
-  J->data[5] = (k[0]*p[2])/k[1];
-  J->data[6] = -p[3];
-  J->data[7] = p[3]*2.0;
-  J->data[8] = -p[3];
-  J->data[9] = p[3];
-  J->data[10] = -p[3];
-  J->data[11] = p[3];
-  J->data[12] = -p[3];
-  J->data[13] = p[3];
-  J->data[14] = -p[3];
-  J->data[15] = p[3];
-  J->data[16] = (k[1]*p[3])/k[0];
-  J->data[17] = -p[3];
+  J->data[0] = -udata->p[0]*udata->w[0];
+  J->data[1] = udata->p[0]*udata->w[0];
+  J->data[2] = udata->dwdx[0]*udata->p[1]*-2.0;
+  J->data[3] = udata->dwdx[0]*udata->p[1];
+  J->data[4] = -udata->p[2];
+  J->data[5] = (udata->k[0]*udata->p[2])/udata->k[1];
+  J->data[6] = -udata->p[3];
+  J->data[7] = udata->p[3]*2.0;
+  J->data[8] = -udata->p[3];
+  J->data[9] = udata->p[3];
+  J->data[10] = -udata->p[3];
+  J->data[11] = udata->p[3];
+  J->data[12] = -udata->p[3];
+  J->data[13] = udata->p[3];
+  J->data[14] = -udata->p[3];
+  J->data[15] = udata->p[3];
+  J->data[16] = (udata->k[1]*udata->p[3])/udata->k[0];
+  J->data[17] = -udata->p[3];
 for(inz = 0; inz<18; inz++) {
    if(amiIsNaN(J->data[inz])) {
        J->data[inz] = 0;
-       if(!udata->am_nan_JSparse) {
+       if(!udata->nan_JSparse) {
            warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           udata->am_nan_JSparse = TRUE;
+           udata->nan_JSparse = TRUE;
        }
    }
    if(amiIsInf(J->data[inz])) {
