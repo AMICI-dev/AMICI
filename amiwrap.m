@@ -1,5 +1,5 @@
 function amiwrap( varargin )
-    % AMIWRAP generates c mex files for the simulation of systems of differential equations via CVODES and IDAS.
+    % AMIWRAP generates c++ mex files for the simulation of systems of differential equations via CVODES and IDAS.
     %
     % Parameters:
     %  varargin:
@@ -57,6 +57,8 @@ function amiwrap( varargin )
     % generate modelstruct
     disp('Generating model struct ...')
     model = amimodel(symfun,modelname);
+    addpath(fullfile(model.wrap_path,'auxiliary'));
+    addpath(fullfile(model.wrap_path,'symbolic'));
     switch(o2flag)
         case 0 
             % do nothing
@@ -114,7 +116,8 @@ function amiwrap( varargin )
             case 2
                 movefile(fullfile(odewrap_path,'models',[modelname '_o2vec'],[ 'ami_' modelname '_o2vec.' mexext]),fullfile(tdir,['ami_' modelname '_o2vec.' mexext]))
         end
-
+    else
+        addpath(fullfile(model.wrap_path,'models',modelname));
     end
     warning(warningreset);
 end
