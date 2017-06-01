@@ -8,6 +8,8 @@
  */
 class ReturnData {
 public:
+    ReturnData();
+
     ReturnData(const UserData *udata);
 
     virtual ~ReturnData();

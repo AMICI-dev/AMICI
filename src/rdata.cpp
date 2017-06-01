@@ -1,12 +1,16 @@
 
 #include "include/rdata.h"
 
-ReturnData::ReturnData(const UserData *udata)
+ReturnData::ReturnData()
 {
     ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = NULL;
     sy = ssigmay = numsteps = numstepsS = numrhsevals = numrhsevalsS = order = llh = chi2 = sllh = s2llh = NULL;
     status = NULL;
+}
 
+ReturnData::ReturnData(const UserData *udata)
+{
+    ReturnData();
     initFields(udata);
 }
 

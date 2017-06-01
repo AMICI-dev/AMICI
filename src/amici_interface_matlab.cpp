@@ -314,9 +314,9 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BL
 #endif
 }
 
-ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData(udata)
+ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 {
-
+    initFields(udata);
 }
 
 void ReturnDataMatlab::initFields(const UserData *udata)
