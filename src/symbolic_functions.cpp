@@ -16,7 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cfloat>
-#if _MSC_VER<=1700
+#if _MSC_VER && !__INTEL_COMPILER
 #include <malloca.h>
 #define alloca _alloca
 #elif
