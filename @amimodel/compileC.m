@@ -364,17 +364,9 @@ function compileC(this)
             this.cfun(1).qBdot = 1;
         end
     end
-    if(this.cfun(1).w)
-        this.recompile = 1;
-    end
-    
-    recompileWrapFunction = false; 
-    % if any of the functions in this.funs is recompiled, we also need to
-    % recompile the wrapfunction object
      
     for j=1:length(this.funs)
         if(this.cfun(1).(this.funs{j}))
-            recompileWrapFunction = true;
             fprintf([this.funs{j} ' | ']);
             eval(['mex ' DEBUG COPT ...
                 ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
@@ -453,12 +445,6 @@ function compileC(this)
         includesstr ...
         ])
 
-    
-    
-    
-    
-
-    
 function result = isnewer(ver1str,ver2str)
     % isnewer checks whether the version indicated in ver1str is newer than
     % the on in ver2str

@@ -66,9 +66,10 @@ function amiwrap( varargin )
     
     commit_hash = getCommitHash(wrap_path);
     
-    try
-        addpath(fullfile(wrap_path,'models',modelname));
+    if(~exist(fullfile(wrap_path,'models',modelname),'dir'))
+        mkdir(fullfile(wrap_path,'models',modelname));
     end
+    addpath(fullfile(wrap_path,'models',modelname));
     if(exist([commit_hash '_' model_hash '.mat'],'file'));
         load([commit_hash '_' model_hash '.mat']);
     end
@@ -80,7 +81,7 @@ function amiwrap( varargin )
         disp('Parsing model struct ...')
         model.parseModel();
         if(~isempty(model_hash) && ~isempty(commit_hash))
-            save([commit_hash '_' model_hash],'model')
+            save(fullfile(wrap_path,'models',modelname,[commit_hash '_' model_hash]),'model')
         end
     end
     
@@ -95,6 +96,9 @@ function amiwrap( varargin )
     
     if(~isempty(o2string))
         try
+            if(~exist(fullfile(wrap_path,'models',[modelname '_' o2string]),'dir'))
+                mkdir(fullfile(wrap_path,'models',[modelname '_' o2string]));
+            end
            addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
         end
         if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file'));
@@ -106,7 +110,7 @@ function amiwrap( varargin )
             disp('Parsing second order ...')
             modelo2.parseModel();
             if(~isempty(model_hash) && ~isempty(commit_hash))
-                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash]),'modelo2')
+                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2string]),'modelo2')
             end
         end
     end
