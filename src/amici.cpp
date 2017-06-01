@@ -2,12 +2,7 @@
  * @file   amici.cpp
  * @brief  core routines for integration
  */
-#ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
-#else
-#include <cblas.h>
-#endif
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -17,6 +12,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#include <stdio.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
@@ -26,6 +22,18 @@
 
 /** return value for successful execution */
 #define AMI_SUCCESS               0
+
+void amici_dgemv(AMICI_BLAS_LAYOUT layout,
+                 AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,
+                 const double alpha, const double *A, const int lda,
+                 const double *X, const int incX, const double beta,
+                 double *Y, const int incY);
+
+void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
+                 AMICI_BLAS_TRANSPOSE TransB, const int M, const int N,
+                 const int K, const double alpha, const double *A,
+                 const int lda, const double *B, const int ldb,
+                 const double beta, double *C, const int ldc);
 
 static int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_Vector *sx, void *user_data);
 static int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y_, realtype *sy, realtype *dydp_, realtype *my_, void *user_data);
@@ -2191,9 +2199,9 @@ int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dydp_, N_V
         realtype *sxTmp = N_VGetArrayPointer(sx[ip]);
 
         // compute sy = 1.0*dydx*sx + 1.0*sy
-        cblas_dgemv(CblasColMajor, CblasNoTrans, udata->ny, udata->nx,
-                    1.0, dydx_, udata->ny, sxTmp, 1,
-                    1.0, &sy[ip * udata->nt * udata->ny + it], udata->nt);
+        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, ny, nx,
+                    1.0, dydx_, ny, sxTmp, 1,
+                    1.0, &sy[ip * nt * ny + it], nt);
     }
 
     return status;
@@ -2237,12 +2245,11 @@ int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, re
                 multResult[ip + udata->np * ig] = dJydp[iyt + ip * udata->nytrue + ig * udata->nytrue * udata->nplist];
 
         // C := alpha*op(A)*op(B) + beta*C,
-        cblas_dgemm(CblasColMajor, CblasTrans, CblasTrans,
-                    udata->nplist, udata->ng, udata->ny,
-                    1.0, diff, udata->ny,
-                    dJydyTmp, udata->ng,
-                    1.0, multResult, udata->nplist);
-
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
+                    nplist, ng, ny,
+                    1.0, diff, ny,
+                    dJydyTmp, ng,
+                    1.0, multResult, nplist);
 
         // sJy += multResult
         for(int ig = 0; ig < udata->ng; ++ig) {
