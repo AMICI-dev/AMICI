@@ -5,7 +5,6 @@
 #define EXTERNC extern "C"
 #else
 #define EXTERNC
-#include <stdbool.h>
 #endif
 
 /** @brief struct that carries all information about experimental data */

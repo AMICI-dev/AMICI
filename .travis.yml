@@ -1,6 +1,5 @@
 language: cpp
-
-sudo: required
+sudo: false
 
 dist: trusty
 
@@ -9,21 +8,21 @@ branches:
     - master
     - staging
 
-os:
-  - linux
-  - osx
+matrix:
+  include: 
+    - os: linux  
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - libhdf5-serial-dev
+            - zlib1g-dev
+            - libatlas-base-dev
+    - os: osx
+      compiler: clang
+      before_script: brew install homebrew/science/hdf5
 
-compiler:
-    - clang
-    - gcc
-
-before_script:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/hdf5 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev ; fi
-    
-install: true
-
-script: ./scripts/run-tests.sh
+script:  ./scripts/run-tests.sh
 
 notifications:
   slack: 

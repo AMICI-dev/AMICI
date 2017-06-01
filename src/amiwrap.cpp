@@ -5,11 +5,11 @@
  * This file defines the fuction mexFunction which is executed upon calling the mex file from matlab
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #define _USE_MATH_DEFINES /* MS definition of PI and other constants */
-#include <math.h>
+#include <cmath>
 #ifndef M_PI /* define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif

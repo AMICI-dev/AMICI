@@ -5,7 +5,7 @@
 #include <include/rdata.h>
 #include <include/edata.h>
 #include <include/tdata.h>
-#include <stdbool.h>
+#include <cstdbool>
 
 /* linear solvers */
 #define AMI_DENSE       1
