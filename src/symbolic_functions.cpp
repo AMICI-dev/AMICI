@@ -6,26 +6,17 @@
  */
 
 
-#if (_MSC_VER >= 1000)
-#define fmax(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-#define fmin(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-#endif
-
-#include <stdarg.h>
-#include <math.h>
+#include <cstdarg>
+#include <algorithm>
+#include <cmath>
 #ifndef AMICI_WITHOUT_MATLAB
     #include <mex.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <float.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cfloat>
+#include <alloca.h>
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
@@ -39,23 +30,23 @@
 
 
 int amiIsNaN(double what) {
-    #ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxIsNaN(what);
-    #else
-    return isnan(what);
-    #endif
+#else
+    return std::isnan(what);
+#endif
 }
 
 int amiIsInf(double what) {
-    #ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxIsInf(what);
-    #else
-    return isinf(what);
-    #endif
+#else
+    return std::isinf(what);
+#endif
 }
 
 double amiGetNaN() {
-#ifdef mex_h
+#if defined mex_typedefs_h || defined mex_h
     return mxGetNaN();
 #else
     return INFINITY;
@@ -205,12 +196,18 @@ double sign(double x) {
  *
  * @param a value1 @type double
  * @param b value2 @type double
- * @param c bogus parameter do ensure correct parsing as a function @type double
+ * @param c bogus parameter to ensure correct parsing as a function @type double
  * @return if(a < b) then a else b @type double
  *
  */
 double am_min(double a, double b, double c) {
-    return(fmin(a,b));
+    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
+    if(anan || bnan) {
+        if(anan && !bnan) return b;
+        if(!anan && bnan) return a;
+        return a;
+    }
+    return(std::min(a,b));
 }
 
 /**
@@ -219,7 +216,7 @@ double am_min(double a, double b, double c) {
  * @param id argument index for differentiation
  * @param a value1 @type double
  * @param b value2 @type double
- * @param c bogus parameter do ensure correct parsing as a function @type double
+ * @param c bogus parameter to ensure correct parsing as a function @type double
  * @return id == 1:  if(a < b) then 1 else 0 @type double
  * @return id == 2:  if(a < b) then 0 else 1 @type double
  *
@@ -245,12 +242,18 @@ double Dam_min(int id,double a, double b, double c) {
  *
  * @param a value1 @type double
  * @param b value2 @type double
- * @param c bogus parameter do ensure correct parsing as a function @type double
+ * @param c bogus parameter to ensure correct parsing as a function @type double
  * @return if(a > b) then a else b @type double
  *
  */
 double am_max(double a, double b, double c) {
-    return(fmax(a,b));
+    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
+    if(anan || bnan) {
+        if(anan && !bnan) return b;
+        if(!anan && bnan) return a;
+        return a;
+    }
+    return(std::max(a,b));
 }
 
 /**
@@ -259,7 +262,7 @@ double am_max(double a, double b, double c) {
  * @param id argument index for differentiation
  * @param a value1 @type double
  * @param b value2 @type double
- * @param c bogus parameter do ensure correct parsing as a function @type double
+ * @param c bogus parameter to ensure correct parsing as a function @type double
  * @return id == 1:  if(a > b) then 1 else 0 @type double
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
@@ -301,12 +304,12 @@ double am_spline(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -352,13 +355,13 @@ double am_spline_pos(double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
-    double uslog[num];
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -404,13 +407,13 @@ double am_Dspline(int id, double t, int num, ...) {
     double ss;
     double dudt;
     
-    double ts[num];
-    double us[num];
-    double ps[num];
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *ps = (double*) alloca(num*sizeof(double));
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     int i;
     int j;
@@ -456,14 +459,14 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     
     va_list valist;
     
-    double ts[num];
-    double us[num];
-    double sus[num];
-    double uslog[num];
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *sus = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
 
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     double uout;
     double ss;
@@ -536,15 +539,15 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     
     va_list valist;
     
-    double ts[num];
-    double us[num];
-    double sus1[num];
-    double sus2[num];
-    double uslog[num];
+    double *ts = (double*) alloca(num*sizeof(double));
+    double *us = (double*) alloca(num*sizeof(double));
+    double *sus1 = (double*) alloca(num*sizeof(double));
+    double *sus2 = (double*) alloca(num*sizeof(double));
+    double *uslog = (double*) alloca(num*sizeof(double));
     
-    double b[num];
-    double c[num];
-    double d[num];
+    double *b = (double*) alloca(num*sizeof(double));
+    double *c = (double*) alloca(num*sizeof(double));
+    double *d = (double*) alloca(num*sizeof(double));
     
     double uout;
     double ss;
@@ -596,5 +599,6 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
         uout = su1spline * su2spline * uspline_pos;
     }
     uout = uout / us[did1] / us[did2];
+    
     return(uout);
 }

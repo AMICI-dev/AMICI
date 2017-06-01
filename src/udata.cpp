@@ -1,6 +1,6 @@
 #include "include/udata.h"
 #include <include/udata_accessors.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cstring>
 
 UserData *getDefaultUserData() {

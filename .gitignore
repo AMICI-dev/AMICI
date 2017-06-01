@@ -196,3 +196,5 @@ tests/sbml-test-suite/
 tests/sedml-test-suite/
 
 examples/example_7/simulate_model_example_7.m
+
+examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint.m
