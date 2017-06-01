@@ -5,7 +5,7 @@
 #include <cstring>
 #include <assert.h>
 #include <blas.h>
-
+#include <new>
 #include <include/edata_accessors.h>
 #include <include/tdata_accessors.h>
 
@@ -160,7 +160,7 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double
 
     ReturnDataMatlab *rdata = (ReturnDataMatlab*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
-    *rdata = ReturnDataMatlab(udata);
+    new(rdata) ReturnDataMatlab(udata);
     plhs[0] = rdata->mxsol;
 
     return(rdata);
