@@ -7,48 +7,7 @@
 #include <blas.h>
 
 #include <include/edata_accessors.h>
-#include <include/udata_accessors.h>
-#include <include/rdata_accessors.h>
 #include <include/tdata_accessors.h>
-
-/**
- * @ brief initialise matrix and attach to the field
- * @ param FIELD name of the field to which the matrix will be attached
- * @ param D1 number of rows in the matrix
- * @ param D2 number of columns in the matrix
- */
-#define initField2(FIELD,D1,D2) \
-    mxArray *mx ## FIELD = mxCreateDoubleMatrix(D1,D2,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
-/**
- * @ brief initialise 3D tensor and attach to the field
- * @ param FIELD name of the field to which the tensor will be attached
- * @ param D1 number of rows in the tensor
- * @ param D2 number of columns in the tensor
- * @ param D3 number of elements in the third dimension of the tensor
- */
-#define initField3(FIELD,D1,D2,D3) \
-    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3)}; \
-    mxArray *mx ## FIELD = mxCreateNumericArray(3,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
-/**
- * @ brief initialise 4D tensor and attach to the field
- * @ param FIELD name of the field to which the tensor will be attached
- * @ param D1 number of rows in the tensor
- * @ param D2 number of columns in the tensor
- * @ param D3 number of elements in the third dimension of the tensor
- * @ param D4 number of elements in the fourth dimension of the tensor
- */
-#define initField4(FIELD,D1,D2,D3,D4) \
-    mwSize dims ## FIELD[] = {(mwSize)(D1), (mwSize)(D2), (mwSize)(D3), (mwSize)(D4)}; \
-    mxArray *mx ## FIELD = mxCreateNumericArray(4,dims ## FIELD,mxDOUBLE_CLASS,mxREAL); \
-    FIELD ## data = mxGetPr(mx ## FIELD); \
-    mxSetField(mxsol,0,#FIELD,mx ## FIELD)
-
 
 /**
  * @ brief extract information from a property of a matlab class (scalar)
@@ -80,10 +39,8 @@
 
 UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     /* User udata structure */
-    UserData *udata = new UserData();
+    UserData *udata = getUserData();
     if(udata==NULL) return NULL;
-
-    init_modeldims(udata);
 
     /* time */
 
@@ -91,9 +48,9 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
         return NULL;
     }
-    ts = mxGetPr(prhs[0]);
+    udata->ts = mxGetPr(prhs[0]);
 
-    nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
+    udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
 
     /* parameters */
 
@@ -101,7 +58,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
         return NULL;
     }
-    p = mxGetPr(prhs[1]);
+    udata->p = mxGetPr(prhs[1]);
 
     /* constants */
 
@@ -109,7 +66,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
         return NULL;
     }
-    k = mxGetPr(prhs[2]);
+    udata->k = mxGetPr(prhs[2]);
 
     if (!prhs[3]) {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
@@ -122,39 +79,39 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
         return NULL;
     } else {
-        nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
+        udata->nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
         plistdata = mxGetPr(prhs[4]);
     }
 
-    plist = new int[nplist]();
-    for (int ip=0; ip<nplist; ip++) {
-        plist[ip] = (int)plistdata[ip];
+    udata->plist = new int[udata->nplist]();
+    for (int ip=0; ip<udata->nplist; ip++) {
+        udata->plist[ip] = (int)plistdata[ip];
     }
 
-    readOptionScalar(nmaxevent,int)
-    readOptionScalar(tstart,double)
-    readOptionScalar(atol,double)
-    readOptionScalar(rtol,double)
-    readOptionScalar(maxsteps,int)
-    readOptionScalar(lmm,int)
-    readOptionScalar(iter,int)
-    readOptionScalar(interpType,int)
-    readOptionScalar(linsol,int)
-    readOptionScalar(stldet,booleantype)
+    readOptionScalar(udata->nmaxevent,int)
+    readOptionScalar(udata->tstart,double)
+    readOptionScalar(udata->atol,double)
+    readOptionScalar(udata->rtol,double)
+    readOptionScalar(udata->maxsteps,int)
+    readOptionScalar(udata->lmm,int)
+    readOptionScalar(udata->iter,int)
+    readOptionScalar(udata->interpType,int)
+    readOptionScalar(udata->linsol,int)
+    readOptionScalar(udata->stldet,booleantype)
 
     if(mxGetProperty(prhs[3],0,"id")){ \
-        idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
+        udata->idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
     } else { \
         warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
         return(NULL); \
     }
 
-    readOptionData(z2event)
-    readOptionData(qpositivex)
-    readOptionScalar(sensi,AMI_sensi_order)
-    readOptionScalar(ism,int)
-    readOptionScalar(sensi_meth,AMI_sensi_meth)
-    readOptionScalar(ordering,int)
+    readOptionData(udata->z2event)
+    readOptionData(udata->qpositivex)
+    readOptionScalar(udata->sensi,AMI_sensi_order)
+    readOptionScalar(udata->ism,int)
+    readOptionScalar(udata->sensi_meth,AMI_sensi_meth)
+    readOptionScalar(udata->ordering,int)
 
     /* pbar */
     if (!prhs[5]) {
@@ -162,7 +119,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         return NULL;
     }
 
-    pbar = mxGetPr(prhs[5]);
+    udata->pbar = mxGetPr(prhs[5]);
 
     /* xscale */
     if (!prhs[6]) {
@@ -170,61 +127,41 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         return NULL;
     }
 
-    xbar = mxGetPr(prhs[6]);
+    udata->xbar = mxGetPr(prhs[6]);
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
-    x0data = NULL;
-    sx0data = NULL;
     if (prhs[7]) {
         if(mxGetField(prhs[7], 0 ,"x0")) {
             if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
-                x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
+                udata->x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
 
                 /* check dimensions */
                 if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); return NULL; }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return NULL; }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return NULL; }
             }
         }
 
         if(mxGetField(prhs[7], 0 ,"sx0")) {
             if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
-                sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
+                udata->sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
 
                 /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return NULL; }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return NULL; }
+                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return NULL; }
+                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return NULL; }
             }
         }
     }
-
-    processUserData(udata);
 
     return(udata);
 }
 
 
-ReturnData *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
+ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
 
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-
-    /* Return rdata structure */
-    ReturnData *rdata = (ReturnData*) mxMalloc(sizeof *rdata);
+    ReturnDataMatlab *rdata = (ReturnDataMatlab*) mxMalloc(sizeof *rdata);
     if (rdata == NULL) return(NULL);
-
-    memset(rdata, 0, sizeof(*rdata));
-
-    mxArray *mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
-    plhs[0] = mxsol;
-
-    #include "include/amici_init_return_data_fields.h"
-
-    mxArray *mxstatus = mxCreateDoubleMatrix(1,1,mxREAL);
-    mxSetPr(mxstatus,pstatus);
-    mxSetField(mxsol,0,"status",mxstatus);
-
-    mxArray *mxts = mxCreateDoubleMatrix(nt,1,mxREAL);
-    tsdata = mxGetPr(mxts);
-    mxSetField(mxsol,0,"t",mxts);
+    *rdata = ReturnDataMatlab(udata);
+    plhs[0] = rdata->mxsol;
 
     return(rdata);
 }
@@ -242,7 +179,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
     ExpData *edata; /* returned rdata struct */
 
     if ((mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0) || !prhs[8]) {
-        if(sensi >= AMI_SENSI_ORDER_FIRST && sensi_meth == AMI_SENSI_ASA) {
+        if(udata->sensi >= AMI_SENSI_ORDER_FIRST && udata->sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provided!");
             return NULL;
         } else {
@@ -289,50 +226,50 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int
             return NULL;
         }
 
-        if (nmyt != nt) {
-            sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,nt);
+        if (nmyt != udata->nt) {
+            sprintf(errmsg,"Number of time-points in data matrix does (%i) not match provided time vector (%i)",nmyt,udata->nt);
             errMsgIdAndTxt("AMICI:mex:data:nty",errmsg);
             return NULL;
         }
 
-        if (nysigmat != nt) {
-            sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,nt);
+        if (nysigmat != udata->nt) {
+            sprintf(errmsg,"Number of time-points in data-sigma matrix (%i) does not match provided time vector (%i)",nysigmat,udata->nt);
             errMsgIdAndTxt("AMICI:mex:data:ntsdy",errmsg);
             return NULL;
         }
 
-        if (nmyy != nytrue) {
-            sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,nytrue);
+        if (nmyy != udata->nytrue) {
+            sprintf(errmsg,"Number of observables in data matrix (%i) does not match model ny (%i)",nmyy,udata->nytrue);
             errMsgIdAndTxt("AMICI:mex:data:nyy",errmsg);
             return NULL;
         }
 
-        if (nysigmay != nytrue) {
-            sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,nytrue);
+        if (nysigmay != udata->nytrue) {
+            sprintf(errmsg,"Number of observables in data-sigma matrix (%i) does not match model ny (%i)",nysigmay,udata->nytrue);
             errMsgIdAndTxt("AMICI:mex:data:nysdy",errmsg);
             return NULL;
         }
 
-        if (nmzt != nmaxevent) {
-            sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,nmaxevent);
+        if (nmzt != udata->nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event matrix (%i) does not match provided nmaxevent (%i)",nmzt,udata->nmaxevent);
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz",errmsg);
             return NULL;
         }
 
-        if (nzsigmat != nmaxevent) {
-            sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,nmaxevent);
+        if (nzsigmat != udata->nmaxevent) {
+            sprintf(errmsg,"Number of time-points in event-sigma matrix (%i) does not match provided nmaxevent (%i)",nzsigmat,udata->nmaxevent);
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz",errmsg);
             return NULL;
         }
 
-        if (nmzy != nztrue) {
-            sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,nztrue);
+        if (nmzy != udata->nztrue) {
+            sprintf(errmsg,"Number of events in event matrix (%i) does not match provided nz (%i)",nmzy,udata->nztrue);
             errMsgIdAndTxt("AMICI:mex:data:nenz",errmsg);
             return NULL;
         }
 
-        if (nzsigmay != nztrue) {
-            sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,nztrue);
+        if (nzsigmay != udata->nztrue) {
+            sprintf(errmsg,"Number of events in event-sigma matrix (%i) does not match provided nz (%i)",nzsigmay,udata->nztrue);
             errMsgIdAndTxt("AMICI:mex:data:nensdz",errmsg);
             return NULL;
         }
@@ -375,6 +312,52 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BL
 #else
     dgemm_(&transA, &transB, &M_, &N_, &K_, &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
 #endif
+}
+
+ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData(udata)
+{
+
+}
+
+void ReturnDataMatlab::initFields(const UserData *udata)
+{
+    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+
+    ReturnData::initFields(udata);
+}
+
+void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName, int dim)
+{
+    mxArray *array = mxCreateDoubleMatrix(dim, 1, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
+}
+
+void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName, int dim1, int dim2)
+{
+    mxArray *array = mxCreateDoubleMatrix(dim1, dim2, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+}
+
+void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3)
+{
+    mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
+    mxArray *array = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
+}
+
+void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4)
+{
+    mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3), (mwSize)(dim4)};
+    mxArray *array = mxCreateNumericArray(4, dims, mxDOUBLE_CLASS, mxREAL);
+    *fieldPointer = mxGetPr(array);
+    mxSetField(mxsol, 0, fieldName, array);
+
 }
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const int M, const int N, const double alpha, const double *A, const int lda,

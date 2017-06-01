@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include <include/tdata.h>
 #include <include/tdata_accessors.h>
 #undef t
@@ -22,8 +21,8 @@ int status = 0;
 UserData *udata = (UserData*) user_data;
 TempData *tdata = (TempData*) temp_data;
 int ip;
-for(ip = 0; ip<nplist; ip++) {
-switch (plist[ip]) {
+for(ip = 0; ip<udata->nplist; ip++) {
+switch (udata->plist[ip]) {
 }
 }
 return(status);

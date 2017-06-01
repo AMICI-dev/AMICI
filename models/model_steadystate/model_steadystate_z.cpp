@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_steadystate_w.h"
 
 int z_model_steadystate(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data) {

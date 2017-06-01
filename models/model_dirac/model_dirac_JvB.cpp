@@ -2,7 +2,6 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
-#include <include/udata_accessors.h>
 #include "model_dirac_w.h"
 
 int JvB_model_dirac(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB) {
@@ -15,8 +14,8 @@ realtype *vB_tmp = N_VGetArrayPointer(vB);
 realtype *JvB_tmp = N_VGetArrayPointer(JvB);
 memset(JvB_tmp,0,sizeof(realtype)*2);
 status = w_model_dirac(t,x,NULL,user_data);
-  JvB_tmp[0] = p[0]*vB_tmp[0]-p[2]*vB_tmp[1];
-  JvB_tmp[1] = p[3]*vB_tmp[1];
+  JvB_tmp[0] = udata->p[0]*vB_tmp[0]-udata->p[2]*vB_tmp[1];
+  JvB_tmp[1] = udata->p[3]*vB_tmp[1];
 return(status);
 
 }
