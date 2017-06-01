@@ -16,10 +16,10 @@
 #include <cstdio>
 #include <cstring>
 #include <cfloat>
-#if _MSC_VER && !__INTEL_COMPILER
+#if _MSC_VER<=1700
 #include <malloca.h>
 #define alloca _alloca
-#else
+#elif
 #include <alloca.h>
 #endif
 #include <include/symbolic_functions.h>
