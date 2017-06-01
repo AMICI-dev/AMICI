@@ -587,7 +587,7 @@ function generateCMakeFile(this)
     fprintf(fid, 'project(%s)\n', this.modelname);
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
     fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
-    fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
+    fprintf(fid, 'set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
