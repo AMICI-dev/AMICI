@@ -49,9 +49,9 @@ function example_jakstat_adjoint_hvp()
     t1 = toc;
     
     % Get time for Finite Differences
-    hvp = zeros(1,17);
-    hvp_f = zeros(1,17);
-    hvp_b = zeros(1,17);
+    hvp = zeros(17,1);
+    hvp_f = zeros(17,1);
+    hvp_b = zeros(17,1);
     tic;
 
     sol2 = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options);
@@ -83,7 +83,7 @@ if(usejava('jvm'))
     figure();
     
     subplot(1,2,1);
-    bar([abs((sol.s2llh-hvp)./sol.s2llh),abs((sol.s2llh-hvp_f)./sol.s2llh),abs((sol.s2llh-hvp_b)./sol.s2llh),abs((sol.s2llh-solf.s2llh)./sol.s2llh)])
+    bar([abs((sol.s2llh-transpose(hvp))./sol.s2llh);abs((sol.s2llh-transpose(hvp_f))./sol.s2llh);abs((sol.s2llh-transpose(hvp_b))./sol.s2llh);abs((sol.s2llh-solf.s2llh)./sol.s2llh)]')
     hold on
     set(gca,'YScale','log')
     ylim([1e-16,1e0])

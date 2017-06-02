@@ -146,19 +146,19 @@ function amiwrap( varargin )
         clear(['simulate_' modelname ]);
         clear(['ami_' modelname ]);
         clear(['ami_' modelname o2string]);
-        movefile(fullfile(wrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']))
-        movefile(fullfile(wrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]))
+        movefile(fullfile(wrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']));
+        movefile(fullfile(wrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]));
         % make files available in the path
         tmp = which(fullfile(tdir,['simulate_' modelname '.m']));
         tmp = which(fullfile(tdir,['ami_' modelname '.' mexext]));
         for fun = model.mfuns
-            copyfile(fullfile(wrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']))
+            copyfile(fullfile(wrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']));
             tmp = which(fullfile(tdir,[fun{1} '_' modelname '.m']));
         end
         % clear .m and .mex files from memory
         if(~isempty(o2string))
             movefile(fullfile(wrap_path,'models',[modelname '_' o2string],[ 'ami_' modelname '_' o2string '.' mexext]),fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
-            which(fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]))
+            tmp = which(fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
         end
     else
         addpath(fullfile(wrap_path,'models',modelname));

@@ -220,7 +220,7 @@ ExpData expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int 
     ExpData *edata = &_edata; // for accessor macros
 
     // Data provided / required?
-    if ((!prhs[8] || mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0)) {
+    if ((!prhs[8] || (mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0))) {
         if(udata->sensi >= AMI_SENSI_ORDER_FIRST && udata->sensi_meth == AMI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provided!");
         } else {
