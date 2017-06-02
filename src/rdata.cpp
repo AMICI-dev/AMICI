@@ -56,7 +56,7 @@ void ReturnData::initFields(const UserData *udata)
     initField1(&status, "status", 1);
     initField1(&ts, "t", udata->nt);
     initField1(&llh, "llh", 1);
-    initField1(&chi2, "chi", 1);
+    initField1(&chi2, "chi2", 1);
     initField2(&numsteps, "numsteps",udata->nt, 1);
     initField2(&numrhsevals, "numrhsevals", udata->nt, 1);
     initField2(&order, "order", udata->nt,1);
