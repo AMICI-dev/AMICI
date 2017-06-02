@@ -78,8 +78,7 @@ function amiwrap( varargin )
         disp('Generating model struct ...')
         model = amimodel(symfun,modelname);
         
-        disp('Parsing model struct ...')
-        model.parseModel();
+
         if(~isempty(model_hash) && ~isempty(commit_hash))
             save(fullfile(wrap_path,'models',modelname,[commit_hash '_' model_hash]),'model')
         end
@@ -107,18 +106,20 @@ function amiwrap( varargin )
         if(~exist('modelo2','var'))
             disp('Augmenting to second order ...')
             modelo2 = feval(['augment' o2string],model);
-            disp('Parsing second order ...')
-            modelo2.parseModel();
+            
+            
             if(~isempty(model_hash) && ~isempty(commit_hash))
                 save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2string]),'modelo2')
             end
         end
     end
     
+    disp('Parsing model struct ...')
+    model.parseModel();
+    if(o2flag)
+        modelo2.parseModel();
+    end
 
-    
-        
-    
     % generate C code out of symbolic computations
     disp('Generating C code ...')
     model.generateC();
