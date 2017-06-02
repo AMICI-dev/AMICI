@@ -20,20 +20,20 @@
 #define EXTERNC
 #endif
 
-EXTERNC         UserData *getUserData();
-                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
-                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);
-                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);
-                int wrap_RootInit(void *cvode_mem, void *user_data);
-                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);
-                int wrap_SetDenseJacFn(void *cvode_mem);
-                int wrap_SetSparseJacFn(void *cvode_mem);
-                int wrap_SetBandJacFn(void *cvode_mem);
-                int wrap_SetJacTimesVecFn(void *cvode_mem);
-                int wrap_SetDenseJacFnB(void *cvode_mem,int which);
-                int wrap_SetSparseJacFnB(void *cvode_mem,int which);
-                int wrap_SetBandJacFnB(void *cvode_mem,int which);
-                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
+UserData getUserData();
+int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
+int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);
+int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);
+int wrap_RootInit(void *cvode_mem, void *user_data);
+int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);
+int wrap_SetDenseJacFn(void *cvode_mem);
+int wrap_SetSparseJacFn(void *cvode_mem);
+int wrap_SetBandJacFn(void *cvode_mem);
+int wrap_SetJacTimesVecFn(void *cvode_mem);
+int wrap_SetDenseJacFnB(void *cvode_mem,int which);
+int wrap_SetSparseJacFnB(void *cvode_mem,int which);
+int wrap_SetBandJacFnB(void *cvode_mem,int which);
+int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
                 int fx0(N_Vector x0, void *user_data);
                 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
                 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);

@@ -364,17 +364,9 @@ function compileC(this)
             this.cfun(1).qBdot = 1;
         end
     end
-    if(this.cfun(1).w)
-        this.recompile = 1;
-    end
-    
-    recompileWrapFunction = false; 
-    % if any of the functions in this.funs is recompiled, we also need to
-    % recompile the wrapfunction object
      
     for j=1:length(this.funs)
         if(this.cfun(1).(this.funs{j}))
-            recompileWrapFunction = true;
             fprintf([this.funs{j} ' | ']);
             eval(['mex ' DEBUG COPT ...
                 ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
@@ -400,8 +392,10 @@ function compileC(this)
         includesstr]);
     
     % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
+    try
     movefile(fullfile(this.wrap_path,'models',this.modelname,'hashes_new.mat'),...
         fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'f');
+    end
     
 
     fprintf('amici | ');
@@ -426,14 +420,7 @@ function compileC(this)
             fullfile(this.wrap_path,'src','amici.cpp') ' ' ...
             includesstr]);
     end
-    
-    if(this.nxtrue == this.nx)
-        eval(['mex ' DEBUG ' ' COPT ...
-            ' -c -outdir ' fullfile(this.wrap_path,'src') ' ' ...
-            fullfile(this.wrap_path,'src','amiwrap.cpp') ' ' ...
-            includesstr]);
-    end
-    
+        
     if(this.nxtrue == this.nx)
         eval(['mex ' DEBUG ' ' COPT ...
             ' -c -outdir ' fullfile(this.wrap_path,'src') ' ' ...
@@ -443,7 +430,6 @@ function compileC(this)
 
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
         ' -output ' fullfile(this.wrap_path,'models',this.modelname,['ami_' this.modelname]) ...
-        ' "' fullfile(this.wrap_path,'src',['amiwrap' o_suffix]) '"' ...
         ' "' fullfile(this.wrap_path,'src',['amici' o_suffix]) '"' ...
         ' "' fullfile(this.wrap_path,'src',['amici_interface_matlab' o_suffix]) '"' ...
         ' "' fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]) '"' ...
@@ -451,12 +437,6 @@ function compileC(this)
         includesstr ...
         ])
 
-    
-    
-    
-    
-
-    
 function result = isnewer(ver1str,ver2str)
     % isnewer checks whether the version indicated in ver1str is newer than
     % the on in ver2str

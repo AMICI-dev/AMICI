@@ -344,8 +344,8 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp')
 fprintf(fid,'                \n');
 fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'                \n');
-fprintf(fid,'    UserData *getUserData(){\n');
-fprintf(fid,['    return new UserData(' num2str(this.np) ',\n']);
+fprintf(fid,'    UserData getUserData(){\n');
+fprintf(fid,['    return UserData(' num2str(this.np) ',\n']);
 fprintf(fid,['                         ' num2str(this.nx) ',\n']);
 fprintf(fid,['                         ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                         ' num2str(this.nk) ',\n']);
@@ -519,20 +519,20 @@ fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'EXTERNC         UserData *getUserData();\n');
-fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
-fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
-fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
-fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data);\n');
-fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
-fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'UserData getUserData();\n');
+fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
+fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
+fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
+fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data);\n');
+fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
+fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)
@@ -587,7 +587,7 @@ function generateCMakeFile(this)
     fprintf(fid, 'project(%s)\n', this.modelname);
     fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
     fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
-    fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
+    fprintf(fid, 'set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function")\n');
     fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
     
     fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');

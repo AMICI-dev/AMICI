@@ -1,17 +1,25 @@
 
 #include "include/rdata.h"
 
-ReturnData::ReturnData(const UserData *udata)
+ReturnData::ReturnData()
 {
     ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = NULL;
     sy = ssigmay = numsteps = numstepsS = numrhsevals = numrhsevalsS = order = llh = chi2 = sllh = s2llh = NULL;
     status = NULL;
 
+    freeFieldsOnDestruction = true;
+}
+
+ReturnData::ReturnData(const UserData *udata) : ReturnData()
+{
     initFields(udata);
 }
 
 ReturnData::~ReturnData()
 {
+    if(!freeFieldsOnDestruction)
+        return;
+
     if(ts) delete[] ts;
     if(xdot) delete[] xdot;
     if(dxdotdp) delete[] dxdotdp;
@@ -47,8 +55,8 @@ void ReturnData::initFields(const UserData *udata)
 {
     initField1(&status, "status", 1);
     initField1(&ts, "t", udata->nt);
-    initField2(&llh, "llh", 1, 1);
-    initField2(&chi2, "chi", 1, 1);
+    initField1(&llh, "llh", 1);
+    initField1(&chi2, "chi2", 1);
     initField2(&numsteps, "numsteps",udata->nt, 1);
     initField2(&numrhsevals, "numrhsevals", udata->nt, 1);
     initField2(&order, "order", udata->nt,1);

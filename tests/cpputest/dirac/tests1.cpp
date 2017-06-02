@@ -19,7 +19,7 @@ TEST_GROUP(groupDirac)
 
 
 UserData *getTestUserData() {
-    UserData *udata = getUserData();
+    UserData *udata = new UserData(getUserData());
 
     udata->qpositivex = new double[udata->nx];
     udata->p = new double[udata->np];

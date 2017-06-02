@@ -8,6 +8,8 @@
  */
 class ReturnData {
 public:
+    ReturnData();
+
     ReturnData(const UserData *udata);
 
     virtual ~ReturnData();
@@ -108,6 +110,7 @@ protected:
 
     virtual void initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4);
 
+    bool freeFieldsOnDestruction;
     
 };
 
