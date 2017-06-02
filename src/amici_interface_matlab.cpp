@@ -42,122 +42,144 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     if(udata==NULL) return NULL;
 
     /* time */
-    if (!prhs[0]) {
+    if (prhs[0]) {
+        udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
+        udata->ts = new realtype[udata->nt];
+        memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(realtype) * udata->nt);
+    } else {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
-        return NULL;
+        goto freturn;
     }
 
-    udata->ts = mxGetPr(prhs[0]);
-    udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
 
     /* parameters */
-    if (!prhs[1]) {
+    if (prhs[1]) {
+        udata->p = new realtype[udata->np];
+        memcpy(udata->ts, mxGetPr(prhs[1]), sizeof(realtype) * udata->np);
+    } else {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
-        return NULL;
+        goto freturn;
     }
 
-    udata->p = mxGetPr(prhs[1]);
 
     /* constants */
-    if (!prhs[2]) {
+    if (prhs[2]) {
+        int lenK = (int) mxGetM(prhs[2]) * mxGetN(prhs[2]);
+        udata->k = new realtype[lenK];
+        memcpy(udata->k, mxGetPr(prhs[2]), sizeof(realtype) * lenK);
+
+    } else {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
-        return NULL;
+        goto freturn;
     }
 
-    udata->k = mxGetPr(prhs[2]);
+    /* options */
+    if (prhs[3]) {
+        readOptionScalar(nmaxevent,int)
+        readOptionScalar(tstart,double)
+        readOptionScalar(atol,double)
+        readOptionScalar(rtol,double)
+        readOptionScalar(maxsteps,int)
+        readOptionScalar(lmm,int)
+        readOptionScalar(iter,int)
+        readOptionScalar(interpType,int)
+        readOptionScalar(linsol,int)
+        readOptionScalar(stldet,booleantype)
 
-    if (!prhs[3]) {
+        if(mxGetProperty(prhs[3],0,"id")){
+            mxArray *idlist = mxGetProperty(prhs[3],0,"id");
+            int lenIdlist = (int) mxGetM(idlist) * mxGetN(idlist);
+            udata->idlist = new realtype[lenIdlist];
+            memcpy(udata->idlist, mxGetData(idlist), sizeof(realtype) * lenIdlist);
+        } else {
+            warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");
+            goto freturn;
+        }
+
+        readOptionData(z2event)
+        readOptionData(qpositivex)
+        readOptionScalar(sensi,AMI_sensi_order)
+        readOptionScalar(ism,int)
+        readOptionScalar(sensi_meth,AMI_sensi_meth)
+        readOptionScalar(ordering,int)
+
+    } else {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
-        return NULL;
+        goto freturn;
     }
 
     /* plist */
-    realtype *plistdata;
-    if (!prhs[4]) {
-        errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
-        return NULL;
-    } else {
+    if (prhs[4]) {
         udata->nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
-        plistdata = mxGetPr(prhs[4]);
+        udata->plist = new int[udata->nplist]();
+        realtype *plistdata = mxGetPr(prhs[4]);
+
+        for (int ip = 0; ip < udata->nplist; ip++) {
+            udata->plist[ip] = (int)plistdata[ip];
+        }
+
+    } else {
+        errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
+        goto freturn;
     }
-
-    udata->plist = new int[udata->nplist]();
-    for (int ip=0; ip<udata->nplist; ip++) {
-        udata->plist[ip] = (int)plistdata[ip];
-    }
-
-    readOptionScalar(nmaxevent,int)
-    readOptionScalar(tstart,double)
-    readOptionScalar(atol,double)
-    readOptionScalar(rtol,double)
-    readOptionScalar(maxsteps,int)
-    readOptionScalar(lmm,int)
-    readOptionScalar(iter,int)
-    readOptionScalar(interpType,int)
-    readOptionScalar(linsol,int)
-    readOptionScalar(stldet,booleantype)
-
-    if(mxGetProperty(prhs[3],0,"id")){ \
-        udata->idlist = (double *) mxGetData(mxGetProperty(prhs[3],0,"id")); \
-    } else { \
-        warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!"); \
-        return(NULL); \
-    }
-
-    readOptionData(z2event)
-    readOptionData(qpositivex)
-    readOptionScalar(sensi,AMI_sensi_order)
-    readOptionScalar(ism,int)
-    readOptionScalar(sensi_meth,AMI_sensi_meth)
-    readOptionScalar(ordering,int)
 
     /* pbar */
-    if (!prhs[5]) {
+    if (prhs[5]) {
+        int lenPBar = (int) mxGetM(prhs[5]) * mxGetN(prhs[5]);
+        udata->pbar = new realtype[lenPBar]();
+        memcpy(udata->pbar, mxGetPr(prhs[5]), sizeof(realtype) * lenPBar);
+    } else {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
-        return NULL;
+        goto freturn;
     }
-
-    udata->pbar = mxGetPr(prhs[5]);
 
     /* xscale */
-    if (!prhs[6]) {
+    if (prhs[6]) {
+        int lenXBar = (int) mxGetM(prhs[6]) * mxGetN(prhs[6]);
+        udata->xbar = new realtype[lenXBar]();
+        memcpy(udata->xbar, mxGetPr(prhs[6]), sizeof(realtype) * lenXBar);
+    } else {
         errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
-        return NULL;
+        goto freturn;
     }
-
-    udata->xbar = mxGetPr(prhs[6]);
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
     if (prhs[7]) {
-        if(mxGetField(prhs[7], 0 ,"x0")) {
-            if ((mxGetM(mxGetField(prhs[7], 0 ,"x0")) * mxGetN(mxGetField(prhs[7], 0 ,"x0")))>0) {
-                udata->x0data = mxGetPr(mxGetField(prhs[7], 0 ,"x0"));
+        mxArray *x0 = mxGetField(prhs[7], 0 ,"x0");
+        if(x0) {
+            /* check dimensions */
+            if(mxGetN(x0) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); goto freturn; }
+            if(mxGetM(x0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); goto freturn; }
 
-                /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"x0")) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); return NULL; }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"x0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return NULL; }
+            if ((mxGetM(x0) * mxGetN(x0)) > 0) {
+                udata->x0data = new realtype[udata->nx];
+                memcpy(udata->x0data, mxGetPr(x0), sizeof(realtype) * udata->nx);
             }
         }
 
-        if(mxGetField(prhs[7], 0 ,"sx0")) {
-            if ((mxGetM(mxGetField(prhs[7], 0 ,"sx0")) * mxGetN(mxGetField(prhs[7], 0 ,"sx0")))>0) {
-                udata->sx0data = mxGetPr(mxGetField(prhs[7], 0 ,"sx0"));
+        mxArray *sx0 = mxGetField(prhs[7], 0 ,"sx0");
+        if(sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
+            /* check dimensions */
+            if(mxGetN(sx0) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); goto freturn; }
+            if(mxGetM(sx0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); goto freturn; }
 
-                /* check dimensions */
-                if(mxGetN(mxGetField(prhs[7], 0 ,"sx0")) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return NULL; }
-                if(mxGetM(mxGetField(prhs[7], 0 ,"sx0")) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return NULL; }
-            }
+            udata->sx0data = new realtype[udata->nx * udata->nplist];
+            memcpy(udata->sx0data, mxGetPr(sx0), sizeof(realtype) * udata->nx * udata->nplist);
         }
     }
 
     return(udata);
+
+freturn:
+    delete udata;
+    return NULL;
 }
 
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status) {
     int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
 
-    char *errmsg;
+    char *errmsg
     errmsg = new char[200]();
 
     *status = -97;
