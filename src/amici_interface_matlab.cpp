@@ -154,16 +154,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     return(udata);
 }
 
-
-ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus) {
-    ReturnDataMatlab *rdata =  new ReturnDataMatlab(udata);
-
-    plhs[0] = rdata->mxsol;
-
-    return(rdata);
-}
-
-
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status) {
     int nmyt = 0, nmyy = 0, nysigmat = 0, nysigmay = 0; /* integers with problem dimensionality */
     int nmzt = 0, nmzy = 0, nzsigmat = 0, nzsigmay = 0; /* integers with problem dimensionality */
