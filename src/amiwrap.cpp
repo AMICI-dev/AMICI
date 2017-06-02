@@ -32,16 +32,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     UserData *udata = nullptr; /* user data */
     ExpData *edata = nullptr; /* experimental data */
+    ReturnDataMatlab rdata(udata);
+    plhs[0] = rdata.mxsol;
 
     /* return status flag */
-    int status;
-    double *pstatus = (double *) mxMalloc(sizeof(double));
+    int status = 0;
 
     udata = userDataFromMatlabCall(prhs);
     if (udata == NULL) {
-        /* goto freturn will fail here as freeXXXXData routines will fail*/
-        *pstatus = -98;
-        return;
+        status = -98;
+        goto freturn1;
     }
 
     /* options */
@@ -49,20 +49,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
     }
 
-    ReturnDataMatlab rdata(udata);
-    plhs[0] = rdata.mxsol;
-
-    if (udata->nx>0) {
+    if (udata->nx > 0) {
         edata = expDataFromMatlabCall(prhs, udata, &status);
         if (status != 0) {
-            goto freturn;
+            goto freturn2;
         }
     }
 
     runAmiciSimulation(udata, edata, &rdata, &status);
 
-freturn:
-    delete udata;
+freturn2:
+    if(udata->nx > 0) delete udata;
     delete edata;
-    *pstatus = (double) status;
+freturn1:
+    *rdata.status = (double) status;
 }

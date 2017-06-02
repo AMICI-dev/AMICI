@@ -42,29 +42,28 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     if(udata==NULL) return NULL;
 
     /* time */
-
     if (!prhs[0]) {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
         return NULL;
     }
-    udata->ts = mxGetPr(prhs[0]);
 
+    udata->ts = mxGetPr(prhs[0]);
     udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
 
     /* parameters */
-
     if (!prhs[1]) {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
         return NULL;
     }
+
     udata->p = mxGetPr(prhs[1]);
 
     /* constants */
-
     if (!prhs[2]) {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
         return NULL;
     }
+
     udata->k = mxGetPr(prhs[2]);
 
     if (!prhs[3]) {
