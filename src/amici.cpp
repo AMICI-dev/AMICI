@@ -39,7 +39,7 @@ static int fsy(realtype t_, int it, realtype *sy, realtype *dydx_, realtype *dyd
 static int fsJy(realtype t_, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y_, realtype *sy, realtype *dydp_, realtype *my_, void *user_data);
 
 void runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, int *pstatus) {
-    if(edata->am_my == 0)
+    if(edata && edata->am_my == 0)
         edata = NULL;
 
     *pstatus = 0;
