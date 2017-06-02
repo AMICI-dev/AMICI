@@ -1,8 +1,8 @@
                 
 #include "wrapfunctions.h"
                 
-    UserData *getUserData(){
-    return new UserData(4,
+    UserData getUserData(){
+    return UserData(4,
                          2,
                          2,
                          0,

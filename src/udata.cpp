@@ -125,7 +125,6 @@ UserData::~UserData()
 {
     freeTemporaryFields();
 
-#ifdef AMICI_WITHOUT_MATLAB
     if(qpositivex) delete[] qpositivex;
     if(p) delete[] p;
     if(k) delete[] k;
@@ -136,7 +135,6 @@ UserData::~UserData()
     if(x0data) delete[] x0data;
     if(sx0data) delete[] sx0data;
     if(z2event) delete[] z2event;
-#endif
     if(plist) delete[] plist;
     if(h) delete[] h;
 }

@@ -11,7 +11,7 @@ class ReturnDataMatlab;
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
  * @return udata: struct containing all provided user data @type UserData
  */
-UserData *userDataFromMatlabCall(const mxArray *prhs[]);
+UserData userDataFromMatlabCall(const mxArray *prhs[], int *status);
 
 /**
  * setupReturnData initialises the return data struct

@@ -15,10 +15,10 @@
  */
 #define readOptionScalar(OPTION,TYPE) \
     if(mxGetProperty(prhs[3],0,#OPTION)){ \
-        udata->OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
+        udata.OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3],0,#OPTION)); \
     } else { \
         warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options do not have field " #OPTION "!"); \
-        return(NULL); \
+        return(udata); \
     }
 
 
@@ -28,49 +28,49 @@
  */
 #define readOptionData(OPTION) \
     if(mxGetProperty(prhs[3],0,#OPTION)){ \
-        udata->OPTION = (double *) mxGetData(mxGetProperty(prhs[3],0,#OPTION)); \
+        mxArray *a = mxGetProperty(prhs[3],0,#OPTION); \
+        int len = (int) mxGetM(a) * mxGetN(a); \
+        udata.OPTION = new realtype[len]; \
+        memcpy(udata.OPTION, mxGetData(a), sizeof(realtype) * len); \
     } else { \
         warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options do not have field " #OPTION "!"); \
-        return(NULL); \
+        return(udata); \
     }
 
 
+UserData userDataFromMatlabCall(const mxArray *prhs[], int *status) {
+    *status = -98;
 
-UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
-    /* User udata structure */
-    UserData *udata = getUserData();
-    if(udata==NULL) return NULL;
+    UserData udata = getUserData();
 
     /* time */
     if (prhs[0]) {
-        udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
-        udata->ts = new realtype[udata->nt];
-        memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(realtype) * udata->nt);
+        udata.nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
+        udata.ts = new realtype[udata.nt];
+        memcpy(udata.ts, mxGetPr(prhs[0]), sizeof(realtype) * udata.nt);
     } else {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
-        goto freturn;
+        return udata;
     }
-
 
     /* parameters */
     if (prhs[1]) {
-        udata->p = new realtype[udata->np];
-        memcpy(udata->ts, mxGetPr(prhs[1]), sizeof(realtype) * udata->np);
+        udata.p = new realtype[udata.np];
+        memcpy(udata.p, mxGetPr(prhs[1]), sizeof(realtype) * udata.np);
     } else {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
-        goto freturn;
+        return udata;
     }
-
 
     /* constants */
     if (prhs[2]) {
         int lenK = (int) mxGetM(prhs[2]) * mxGetN(prhs[2]);
-        udata->k = new realtype[lenK];
-        memcpy(udata->k, mxGetPr(prhs[2]), sizeof(realtype) * lenK);
+        udata.k = new realtype[lenK];
+        memcpy(udata.k, mxGetPr(prhs[2]), sizeof(realtype) * lenK);
 
     } else {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
-        goto freturn;
+        return udata;
     }
 
     /* options */
@@ -89,11 +89,11 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         if(mxGetProperty(prhs[3],0,"id")){
             mxArray *idlist = mxGetProperty(prhs[3],0,"id");
             int lenIdlist = (int) mxGetM(idlist) * mxGetN(idlist);
-            udata->idlist = new realtype[lenIdlist];
-            memcpy(udata->idlist, mxGetData(idlist), sizeof(realtype) * lenIdlist);
+            udata.idlist = new realtype[lenIdlist];
+            memcpy(udata.idlist, mxGetData(idlist), sizeof(realtype) * lenIdlist);
         } else {
             warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");
-            goto freturn;
+            return udata;
         }
 
         readOptionData(z2event)
@@ -105,42 +105,42 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
 
     } else {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
-        goto freturn;
+        return udata;
     }
 
     /* plist */
     if (prhs[4]) {
-        udata->nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
-        udata->plist = new int[udata->nplist]();
+        udata.nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
+        udata.plist = new int[udata.nplist]();
         realtype *plistdata = mxGetPr(prhs[4]);
 
-        for (int ip = 0; ip < udata->nplist; ip++) {
-            udata->plist[ip] = (int)plistdata[ip];
+        for (int ip = 0; ip < udata.nplist; ip++) {
+            udata.plist[ip] = (int)plistdata[ip];
         }
 
     } else {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
-        goto freturn;
+        return udata;
     }
 
     /* pbar */
     if (prhs[5]) {
         int lenPBar = (int) mxGetM(prhs[5]) * mxGetN(prhs[5]);
-        udata->pbar = new realtype[lenPBar]();
-        memcpy(udata->pbar, mxGetPr(prhs[5]), sizeof(realtype) * lenPBar);
+        udata.pbar = new realtype[lenPBar]();
+        memcpy(udata.pbar, mxGetPr(prhs[5]), sizeof(realtype) * lenPBar);
     } else {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
-        goto freturn;
+        return udata;
     }
 
     /* xscale */
     if (prhs[6]) {
         int lenXBar = (int) mxGetM(prhs[6]) * mxGetN(prhs[6]);
-        udata->xbar = new realtype[lenXBar]();
-        memcpy(udata->xbar, mxGetPr(prhs[6]), sizeof(realtype) * lenXBar);
+        udata.xbar = new realtype[lenXBar]();
+        memcpy(udata.xbar, mxGetPr(prhs[6]), sizeof(realtype) * lenXBar);
     } else {
         errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
-        goto freturn;
+        return udata;
     }
 
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
@@ -148,31 +148,29 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         mxArray *x0 = mxGetField(prhs[7], 0 ,"x0");
         if(x0) {
             /* check dimensions */
-            if(mxGetN(x0) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); goto freturn; }
-            if(mxGetM(x0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); goto freturn; }
+            if(mxGetN(x0) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); return udata; }
+            if(mxGetM(x0) != udata.nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return udata; }
 
             if ((mxGetM(x0) * mxGetN(x0)) > 0) {
-                udata->x0data = new realtype[udata->nx];
-                memcpy(udata->x0data, mxGetPr(x0), sizeof(realtype) * udata->nx);
+                udata.x0data = new realtype[udata.nx];
+                memcpy(udata.x0data, mxGetPr(x0), sizeof(realtype) * udata.nx);
             }
         }
 
         mxArray *sx0 = mxGetField(prhs[7], 0 ,"sx0");
         if(sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
-            if(mxGetN(sx0) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); goto freturn; }
-            if(mxGetM(sx0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); goto freturn; }
+            if(mxGetN(sx0) != udata.nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return udata; }
+            if(mxGetM(sx0) != udata.nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return udata; }
 
-            udata->sx0data = new realtype[udata->nx * udata->nplist];
-            memcpy(udata->sx0data, mxGetPr(sx0), sizeof(realtype) * udata->nx * udata->nplist);
+            udata.sx0data = new realtype[udata.nx * udata.nplist];
+            memcpy(udata.sx0data, mxGetPr(sx0), sizeof(realtype) * udata.nx * udata.nplist);
         }
     }
 
-    return(udata);
+    *status = 0;
 
-freturn:
-    delete udata;
-    return NULL;
+    return(udata);
 }
 
 ExpData expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status) {
@@ -309,6 +307,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BL
 
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 {
+    freeFieldsOnDestruction = false;
     initFields(udata);
 }
 

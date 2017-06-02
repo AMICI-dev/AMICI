@@ -16,7 +16,6 @@
 #include <mex.h>
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici_interface_matlab.h> /* amici functions */
-#include <include/edata_accessors.h>
 
 
 /*!
@@ -29,37 +28,19 @@
  * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    
-    UserData *udata = nullptr; /* user data */
-    ReturnDataMatlab rdata(udata);
-    plhs[0] = rdata.mxsol;
-
     /* return status flag */
     int status = 0;
 
-    udata = userDataFromMatlabCall(prhs);
-    if (udata == NULL) {
-        status = -98;
-        goto freturn1;
+    UserData udata = userDataFromMatlabCall(prhs, &status);
+    ReturnDataMatlab rdata(&udata);
+
+    plhs[0] = rdata.mxsol;
+
+    if(status == 0 && udata.nx > 0) {
+        ExpData edata = expDataFromMatlabCall(prhs, &udata, &status);
+        if (status == 0)
+            runAmiciSimulation(&udata, &edata, &rdata, &status);
     }
 
-    /* options */
-    if (!prhs[3]) {
-        mexErrMsgIdAndTxt("AMICI:mex:options","No options provided!");
-    }
-
-    if (udata->nx > 0) {
-        ExpData edata = expDataFromMatlabCall(prhs, udata, &status);
-        if (status != 0) {
-            goto freturn2;
-        }
-
-        runAmiciSimulation(udata, &edata, &rdata, &status);
-    }
-
-freturn2:
-    if(udata->nx > 0)
-        delete udata;
-freturn1:
     *rdata.status = (double) status;
 }
