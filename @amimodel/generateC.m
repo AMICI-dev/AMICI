@@ -519,20 +519,20 @@ fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'EXTERNC         UserData getUserData();\n');
-fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
-fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
-fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
-fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data);\n');
-fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
-fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'UserData getUserData();\n');
+fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
+fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
+fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
+fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data);\n');
+fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
+fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)
