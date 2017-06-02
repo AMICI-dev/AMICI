@@ -31,7 +31,6 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     UserData *udata = nullptr; /* user data */
-    ExpData *edata = nullptr; /* experimental data */
     ReturnDataMatlab rdata(udata);
     plhs[0] = rdata.mxsol;
 
@@ -50,17 +49,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     if (udata->nx > 0) {
-        edata = expDataFromMatlabCall(prhs, udata, &status);
+        ExpData edata = expDataFromMatlabCall(prhs, udata, &status);
         if (status != 0) {
             goto freturn2;
         }
+
+        runAmiciSimulation(udata, &edata, &rdata, &status);
     }
 
-    runAmiciSimulation(udata, edata, &rdata, &status);
-
 freturn2:
-    if(udata->nx > 0) delete udata;
-    delete edata;
+    if(udata->nx > 0)
+        delete udata;
 freturn1:
     *rdata.status = (double) status;
 }

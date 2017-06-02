@@ -29,7 +29,7 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double
  * @param[out] status non-zero on failure, zero on success
  * @return edata: experimental data struct @type ExpData
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status);
+ExpData expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status);
 
 
 class ReturnDataMatlab : public ReturnData {
