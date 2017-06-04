@@ -29,6 +29,11 @@ typedef enum AMI_sensi_meth_TAG {
 class UserData {
 
 public:
+    /**
+     * @brief Default constructor for testing and serialization
+     */
+    UserData();
+
     UserData(int np,
              int nx, int nxtrue,
              int nk,
@@ -210,6 +215,8 @@ public:
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype nan_qBdot;
         
+protected:
+    void init();
 };
 
 #ifdef AMICI_WITHOUT_MATLAB

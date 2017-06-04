@@ -3,6 +3,20 @@
 #include <cstring>
 
 
+UserData::UserData() :
+    np(0),
+    nx(0), nxtrue(0), nk(0),
+    ny(0), nytrue(0),
+    nz(0), nztrue(0),
+    ne(0), ng(0),
+    nw(0), ndwdx(0),
+    ndwdp(0), nnz(0),
+    ubw(0), lbw(0),
+    pscale(AMI_SCALING_NONE), o2mode(AMI_O2MODE_NONE)
+{
+    init();
+}
+
 UserData::UserData(int np,
                    int nx, int nxtrue,
                    int nk,
@@ -23,53 +37,7 @@ UserData::UserData(int np,
     ubw(ubw), lbw(lbw),
     pscale(pscale), o2mode(o2mode)
 {
-
-    qpositivex = NULL;
-    plist = NULL;
-    nplist = 0;
-    nt = 0;
-    p = NULL;
-    k = NULL;
-    ts = NULL;
-    tstart = 0;
-    pbar = NULL;
-    xbar = NULL;
-    idlist = NULL;
-    sensi = AMI_SENSI_ORDER_NONE;
-    atol = 1e-16;
-    rtol = 1e-8;
-    maxsteps = 0;
-    ism = 1;
-    nmaxevent = 10;
-
-    sensi_meth = AMI_SENSI_FSA;
-    linsol = 9;
-    interpType = 1;
-    lmm = 2;
-    iter = 2;
-    stldet = true;
-    x0data = NULL;
-
-    sx0data = NULL;
-    ordering = 0;
-    z2event = NULL;
-    h = NULL;
-
-    J = NULL;
-    dxdotdp = NULL;
-    w = NULL;
-    dwdx = NULL;
-    dwdp = NULL;
-    M = NULL;
-    dfdx = NULL;
-    stau = NULL;
-
-    nan_dxdotdp = false;
-    nan_J = false;
-    nan_JSparse = false;
-    nan_xdot = false;
-    nan_xBdot = false;
-    nan_qBdot = false;
+    init();
 }
 
 /**
@@ -137,6 +105,56 @@ UserData::~UserData()
     if(z2event) delete[] z2event;
     if(plist) delete[] plist;
     if(h) delete[] h;
+}
+
+void UserData::init()
+{
+    qpositivex = NULL;
+    plist = NULL;
+    nplist = 0;
+    nt = 0;
+    p = NULL;
+    k = NULL;
+    ts = NULL;
+    tstart = 0;
+    pbar = NULL;
+    xbar = NULL;
+    idlist = NULL;
+    sensi = AMI_SENSI_ORDER_NONE;
+    atol = 1e-16;
+    rtol = 1e-8;
+    maxsteps = 0;
+    ism = 1;
+    nmaxevent = 10;
+
+    sensi_meth = AMI_SENSI_FSA;
+    linsol = 9;
+    interpType = 1;
+    lmm = 2;
+    iter = 2;
+    stldet = true;
+    x0data = NULL;
+
+    sx0data = NULL;
+    ordering = 0;
+    z2event = NULL;
+    h = NULL;
+
+    nan_dxdotdp = false;
+    nan_J = false;
+    nan_JSparse = false;
+    nan_xdot = false;
+    nan_xBdot = false;
+    nan_qBdot = false;
+
+    J = NULL;
+    dxdotdp = NULL;
+    w = NULL;
+    dwdx = NULL;
+    dwdp = NULL;
+    M = NULL;
+    dfdx = NULL;
+    stau = NULL;
 }
 
 #ifdef AMICI_WITHOUT_MATLAB
