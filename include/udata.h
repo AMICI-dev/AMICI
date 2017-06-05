@@ -56,14 +56,14 @@ public:
     const int    np;
     /** number of fixed parameters */
     const int    nk;
-    /** number of observables */
-    const int    ny;
-    /** number of observables in the unaugmented system */
-    const int    nytrue;
     /** number of states */
     const int    nx;
     /** number of states in the unaugmented system */
     const int    nxtrue;
+    /** number of observables */
+    const int    ny;
+    /** number of observables in the unaugmented system */
+    const int    nytrue;
     /** number of event outputs */
     const int    nz;
     /** number of event outputs in the unaugmented system */
@@ -78,14 +78,14 @@ public:
     const int    ndwdp;
     /** number of nonzero entries in jacobian */
     const int    nnz;
-    /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
-    const AMI_o2mode o2mode;
     /** dimension of the augmented objective function for 2nd order ASA */
     const int    ng;
     /** upper bandwith of the jacobian */
     const int ubw;
     /** lower bandwith of the jacobian */
     const int lbw;
+    /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
+    const AMI_o2mode o2mode;
 
     /* Options */
 

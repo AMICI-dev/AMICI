@@ -4,15 +4,15 @@
 
 
 UserData::UserData() :
-    np(0),
-    nx(0), nxtrue(0), nk(0),
+    np(0), nk(0),
+    nx(0), nxtrue(0),
     ny(0), nytrue(0),
     nz(0), nztrue(0),
-    ne(0), ng(0),
-    nw(0), ndwdx(0),
-    ndwdp(0), nnz(0),
+    ne(0), nw(0),
+    ndwdx(0), ndwdp(0),
+    nnz(0), ng(0),
     ubw(0), lbw(0),
-    pscale(AMI_SCALING_NONE), o2mode(AMI_O2MODE_NONE)
+    o2mode(AMI_O2MODE_NONE), pscale(AMI_SCALING_NONE)
 {
     init();
 }
@@ -27,15 +27,15 @@ UserData::UserData(int np,
                    int ubw, int lbw,
                    AMI_parameter_scaling pscale,
                    AMI_o2mode o2mode) :
-    np(np),
-    nx(nx), nxtrue(nxtrue), nk(nk),
+    np(np), nk(nk),
+    nx(nx), nxtrue(nxtrue),
     ny(ny), nytrue(nytrue),
     nz(nz), nztrue(nztrue),
-    ne(ne), ng(ng),
-    nw(nw), ndwdx(ndwdx),
-    ndwdp(ndwdp), nnz(nnz),
+    ne(ne), nw(nw),
+    ndwdx(ndwdx), ndwdp(ndwdp),
+    nnz(nnz),ng(ng),
     ubw(ubw), lbw(lbw),
-    pscale(pscale), o2mode(o2mode)
+    o2mode(o2mode), pscale(pscale)
 {
     init();
 }
