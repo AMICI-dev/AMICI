@@ -10,8 +10,10 @@ ReturnData::ReturnData()
     freeFieldsOnDestruction = true;
 }
 
-ReturnData::ReturnData(const UserData *udata) : ReturnData()
+ReturnData::ReturnData(const UserData *udata)
 {
+    ReturnData();
+
     initFields(udata);
 }
 
