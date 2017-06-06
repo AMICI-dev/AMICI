@@ -11,6 +11,13 @@ function amiwrap( varargin )
     % Return values:
     %  void
     
+    
+    %% 
+    % check for MSVS
+    if(strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Windows'))
+        warning('AMICI does not officially support Microsoft Visual Studio Compilers. If the compilation fails, we recommend using MinGW.')
+    end
+    
     %%
     % check inputs
     if(nargin<2)
