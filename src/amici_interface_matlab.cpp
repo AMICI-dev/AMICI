@@ -65,9 +65,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int status = 0;
 
     UserData udata = userDataFromMatlabCall(prhs, &status);
-    ReturnDataMatlab rdata(&udata);
 
+    ReturnDataMatlab rdata(&udata);
     plhs[0] = rdata.mxsol;
+    if(*rdata.status != 0)
+        return;
 
     if(status == 0 && udata.nx > 0) {
         ExpData edata = expDataFromMatlabCall(prhs, &udata, &status);
@@ -355,47 +357,58 @@ ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 
 void ReturnDataMatlab::initFields(const UserData *udata)
 {
-    const char *field_names_sol[] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
-    mxsol = mxCreateStructMatrix(1,1,29,field_names_sol);
+    const int numFields = 29;
+    const char *field_names_sol[numFields] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+
+    mxsol = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
     ReturnData::initFields(udata);
 }
 
 void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName, int dim)
 {
-    mxArray *array;
-    array = mxCreateDoubleMatrix(dim, 1, mxREAL);
+    mxArray *array = mxCreateDoubleMatrix(dim, 1, mxREAL);
     *fieldPointer = mxGetPr(array);
     mxSetField(mxsol, 0, fieldName, array);
 
+    array = mxGetField(mxsol, 0, fieldName);
+    if(status && array == NULL)
+        *status = -99;
 }
 
 void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName, int dim1, int dim2)
 {
-    mxArray *array;
-    array = mxCreateDoubleMatrix(dim1, dim2, mxREAL);
+    mxArray *array = mxCreateDoubleMatrix(dim1, dim2, mxREAL);
     *fieldPointer = mxGetPr(array);
     mxSetField(mxsol, 0, fieldName, array);
+
+    array = mxGetField(mxsol, 0, fieldName);
+    if(status && array == NULL)
+        *status = -99;
 }
 
 void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3)
 {
     mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
-    mxArray *array;
-    array = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
+    mxArray *array = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
     *fieldPointer = mxGetPr(array);
     mxSetField(mxsol, 0, fieldName, array);
 
+    array = mxGetField(mxsol, 0, fieldName);
+    if(status && array == NULL)
+        *status = -99;
 }
 
 void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4)
 {
     mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3), (mwSize)(dim4)};
-    mxArray *array;
-    array = mxCreateNumericArray(4, dims, mxDOUBLE_CLASS, mxREAL);
+    mxArray *array = mxCreateNumericArray(4, dims, mxDOUBLE_CLASS, mxREAL);
     *fieldPointer = mxGetPr(array);
     mxSetField(mxsol, 0, fieldName, array);
 
+    array = mxGetField(mxsol, 0, fieldName);
+    if(status && array == NULL)
+        *status = -99;
 }
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const int M, const int N, const double alpha, const double *A, const int lda,
