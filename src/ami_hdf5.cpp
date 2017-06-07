@@ -422,7 +422,7 @@ herr_t AMI_HDF5_createAndWriteDouble3DAttribute(hid_t dataset, const char *attri
 void AMI_HDF5_setAttributeIntFromDouble(hid_t file_id, const char *obj_name, const char *attr_name, const double *bufferDouble, size_t size)
 {
     int intBuffer[size];
-    for(int i = 0; i < size; ++i)
+    for(int i = 0; (unsigned) i < size; ++i)
         intBuffer[i] = bufferDouble[i];
 
     H5LTset_attribute_int(file_id, obj_name, attr_name, intBuffer, size);

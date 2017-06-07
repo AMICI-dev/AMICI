@@ -20,14 +20,4 @@
 
 EXTERNC ReturnData *getSimulationResults(UserData *udata, const ExpData *edata);
 
-/**
- * initReturnData initialises a ReturnData struct
- *
- * @param[in] udata pointer to the user data struct @type UserData
- * @param[out] pstatus flag indicating success of execution @type *int
- * @return rdata initialized return data struct @type ReturnData
- */
-
-EXTERNC ReturnData *initReturnData(const UserData *udata, int *pstatus);
-
 #endif

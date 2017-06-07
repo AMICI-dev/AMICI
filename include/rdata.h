@@ -12,6 +12,8 @@ public:
 
     ReturnData(const UserData *udata);
 
+    virtual void setDefaults();
+
     virtual ~ReturnData();
 
     /** timepoints */

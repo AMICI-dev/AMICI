@@ -17,7 +17,7 @@
 #include <cstring>
 #include <cfloat>
 #if _MSC_VER && !__INTEL_COMPILER
-#include <malloca.h>
+#include <malloc.h>
 #define alloca _alloca
 #else
 #include <alloca.h>
