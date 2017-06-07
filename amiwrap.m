@@ -11,6 +11,13 @@ function amiwrap( varargin )
     % Return values:
     %  void
     
+    
+    %% 
+    % check for MSVS
+    if(strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Windows'))
+        warning('AMICI does not officially support Microsoft Visual Studio Compilers. If the compilation fails, we recommend using MinGW.')
+    end
+    
     %%
     % check inputs
     if(nargin<2)
@@ -58,8 +65,12 @@ function amiwrap( varargin )
     addpath(fullfile(wrap_path,'symbolic'));
     
     % try to load
-    if(exist(symfun,'file'))
-        model_hash = CalcMD5(which(symfun),'File');
+    if(~isstruct(symfun))
+        if(exist(symfun,'file'))
+            model_hash = CalcMD5(which(symfun),'File');
+        else
+            model_hash = [];
+        end
     else
         model_hash = [];
     end
