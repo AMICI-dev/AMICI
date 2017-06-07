@@ -65,8 +65,12 @@ function amiwrap( varargin )
     addpath(fullfile(wrap_path,'symbolic'));
     
     % try to load
-    if(exist(symfun,'file'))
-        model_hash = CalcMD5(which(symfun),'File');
+    if(~isstruct(symfun))
+        if(exist(symfun,'file'))
+            model_hash = CalcMD5(which(symfun),'File');
+        else
+            model_hash = [];
+        end
     else
         model_hash = [];
     end
