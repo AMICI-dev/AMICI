@@ -127,7 +127,7 @@ classdef amimodel < handle
                 AM = symfun;
             else
                 if(isa(symfun,'char'))
-                    if(exist(symfun,'file'))
+                    if(exist(symfun,'file')==2)
                         fun = str2func(symfun);
                         model = fun();
                     else

@@ -66,7 +66,7 @@ function amiwrap( varargin )
     
     % try to load
     if(~isstruct(symfun))
-        if(exist(symfun,'file'))
+        if(exist(symfun,'file')==2)
             model_hash = CalcMD5(which(symfun),'File');
         else
             model_hash = [];
@@ -81,7 +81,7 @@ function amiwrap( varargin )
         mkdir(fullfile(wrap_path,'models',modelname));
     end
     addpath(fullfile(wrap_path,'models',modelname));
-    if(exist([commit_hash '_' model_hash '.mat'],'file'));
+    if(exist([commit_hash '_' model_hash '.mat'],'file')==2);
         load([commit_hash '_' model_hash '.mat']);
     end
     
@@ -111,7 +111,7 @@ function amiwrap( varargin )
             end
            addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
         end
-        if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file'));
+        if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file')==2);
             load([commit_hash '_' model_hash '_' o2string '.mat']);
         end
         if(~exist('modelo2','var'))
