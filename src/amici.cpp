@@ -1653,7 +1653,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
         if(udata->sensi_meth == AMI_SENSI_FSA && udata->sensi >= AMI_SENSI_ORDER_FIRST) {
             *status = AMISetStopTime(ami_mem, udata->ts[it]);
         }
-        if (*status == 0) {
+        if (*status == AMI_SUCCESS) {
             /* only integrate if no errors occured */
             if(udata->ts[it] > udata->tstart) {
                 while (t<udata->ts[it]) {
@@ -1675,22 +1675,21 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                         if (*status == -22) {
                             /* clustering of roots => turn off rootfinding */
                             AMIRootInit(ami_mem, 0, NULL);
-                            *status = 0;
+                            *status = AMI_SUCCESS;
                         }
                         /* integration error occured */
-                        if (*status<0) {
-                            return *status;
-                        }
+                        if (*status < AMI_SUCCESS) goto freturn1;
+                        
                         if (*status==AMI_ROOT_RETURN) {
                             handleEvent(status, iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                            if (*status != AMI_SUCCESS) return *status;
+                            if (*status != AMI_SUCCESS) goto freturn1;
                         }
                     }
                 }
             }
 
             handleDataPoint(status, it, ami_mem, udata, rdata, edata, tdata);
-            if (*status != AMI_SUCCESS) return *status;
+            if (*status != AMI_SUCCESS) goto freturn1;
 
 
         } else {
@@ -1706,6 +1705,10 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
 
     return 0;
+    
+freturn1:
+    storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
+    return *status;
 }
 
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *status, void *ami_mem, int *iroot, booleantype *setupBdone) {
