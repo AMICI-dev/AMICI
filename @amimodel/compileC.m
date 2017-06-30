@@ -312,7 +312,7 @@ function compileC(this)
     
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
-    cppsrc = {'symbolic_functions','spline','edata','rdata','udata'};
+    cppsrc = {'symbolic_functions','spline','edata','rdata','udata','tdata'};
     for srcfile = cppsrc
         if(this.recompile)
             recompile = 1;

@@ -55,3 +55,11 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const in
 {
     cblas_dgemv((CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A, lda, X, incX, beta, Y, incY);
 }
+
+int ExpData::expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
+    return AMICI_ERROR_EDATA;
+}
+
+int UserData::userDataFromMatlabCall(const mxArray *prhs[]) {
+    return AMICI_ERROR_UDATA;
+}

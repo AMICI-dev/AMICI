@@ -16,17 +16,13 @@
 #include <colamd.h>
 #include <btf.h>
 
+#include <include/amici.h>
+
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
 #define EXTERNC
 #endif
-
-EXTERNC void warnMsgIdAndTxt(
-    const char * identifier, /* string with error message identifier */
-    const char * err_msg,    /* string with error message printf-style format */
-    ...                      /* any additional arguments */
-    );
 
 static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
     char buffer[250];

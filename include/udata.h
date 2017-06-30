@@ -8,21 +8,21 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
-typedef enum AMI_parameter_scaling_TAG {
-    AMI_SCALING_NONE, AMI_SCALING_LN, AMI_SCALING_LOG10
-} AMI_parameter_scaling;
+typedef enum AMICI_parameter_scaling_TAG {
+    AMICI_SCALING_NONE, AMICI_SCALING_LN, AMICI_SCALING_LOG10
+} AMICI_parameter_scaling;
 
-typedef enum AMI_o2mode_TAG {
-    AMI_O2MODE_NONE, AMI_O2MODE_FULL, AMI_O2MODE_DIR
-} AMI_o2mode;
+typedef enum AMICI_o2mode_TAG {
+    AMICI_O2MODE_NONE, AMICI_O2MODE_FULL, AMICI_O2MODE_DIR
+} AMICI_o2mode;
 
-typedef enum AMI_sensi_order_TAG {
-    AMI_SENSI_ORDER_NONE, AMI_SENSI_ORDER_FIRST, AMI_SENSI_ORDER_SECOND
-} AMI_sensi_order;
+typedef enum AMICI_sensi_order_TAG {
+    AMICI_SENSI_ORDER_NONE, AMICI_SENSI_ORDER_FIRST, AMICI_SENSI_ORDER_SECOND
+} AMICI_sensi_order;
 
-typedef enum AMI_sensi_meth_TAG {
-    AMI_SENSI_NONE, AMI_SENSI_FSA, AMI_SENSI_ASA, AMI_SENSI_SS
-} AMI_sensi_meth;
+typedef enum AMICI_sensi_meth_TAG {
+    AMICI_SENSI_NONE, AMICI_SENSI_FSA, AMICI_SENSI_ASA, AMICI_SENSI_SS
+} AMICI_sensi_meth;
 
 
 /** @brief struct that stores all user provided data */
@@ -42,8 +42,8 @@ public:
              int ne, int ng,
              int nw, int ndwdx, int ndwdp, int nnz,
              int ubw, int lbw,
-             AMI_parameter_scaling pscale,
-             AMI_o2mode o2mode
+             AMICI_parameter_scaling pscale,
+             AMICI_o2mode o2mode
              );
 
     void initTemporaryFields();
@@ -85,7 +85,7 @@ public:
     /** lower bandwith of the jacobian */
     const int lbw;
     /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
-    const AMI_o2mode o2mode;
+    const AMICI_o2mode o2mode;
 
     /* Options */
 
@@ -104,7 +104,7 @@ public:
     int    nt;
 
     /** parametrization of parameters p */
-    AMI_parameter_scaling pscale;
+    AMICI_parameter_scaling pscale;
 
     /** parameter array */
     double *p;
@@ -125,7 +125,7 @@ public:
     double *idlist;
     
     /** flag indicating whether sensitivities are supposed to be computed */
-    AMI_sensi_order sensi;
+    AMICI_sensi_order sensi;
     /** absolute tolerances for integration */
     double atol;
     /** relative tolerances for integration */
@@ -143,7 +143,7 @@ public:
     /*!
      * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
      */
-    AMI_sensi_meth sensi_meth;
+    AMICI_sensi_meth sensi_meth;
     /** linear solver specification */
     int linsol;
     /** interpolation type */
@@ -183,7 +183,7 @@ public:
     double *z2event;
     
     /** flag indicating whether a certain heaviside function should be active or not */
-    double *h;
+    realtype *h;
     
     /** tempory storage of Jacobian data across functions */
     SlsMat J;

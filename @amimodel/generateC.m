@@ -33,18 +33,6 @@ for ifun = this.funs
         end
         if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
             fprintf(fid,'#include <include/tdata.h>\n');
-            fprintf(fid,'#include <include/tdata_accessors.h>\n');
-            % avoid conflicts
-            fprintf(fid,'#undef t\n');
-            fprintf(fid,'#undef x\n');
-            fprintf(fid,'#undef x_tmp\n');
-            fprintf(fid,'#undef dzdp\n');
-            fprintf(fid,'#undef dzdx\n');
-            fprintf(fid,'#undef dx\n');
-            fprintf(fid,'#undef sigma_y\n');
-            fprintf(fid,'#undef sigma_z\n');
-            fprintf(fid,'#undef dsigma_ydp\n');
-            fprintf(fid,'#undef dsigma_zdp\n');
         end
         if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
@@ -363,22 +351,22 @@ fprintf(fid,['                         ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                         ' num2str(this.lbw) ',\n']);
 switch(this.param)
     case 'lin'
-fprintf(fid,['                         AMI_SCALING_NONE,\n']);
+fprintf(fid,['                         AMICI_SCALING_NONE,\n']);
     case 'log'
-fprintf(fid,['                         AMI_SCALING_LN,\n']);
+fprintf(fid,['                         AMICI_SCALING_LN,\n']);
     case 'log10'
-fprintf(fid,['                         AMI_SCALING_LOG10,\n']);
+fprintf(fid,['                         AMICI_SCALING_LOG10,\n']);
     otherwise
         disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
-fprintf(fid,['                   udata->pscale = AMI_SCALING_NONE;\n']);     
+fprintf(fid,['                   udata->pscale = AMICI_SCALING_NONE;\n']);     
 end
 switch(this.o2flag)
     case 1
-fprintf(fid,['                         AMI_O2MODE_FULL);\n']);
+fprintf(fid,['                         AMICI_O2MODE_FULL);\n']);
     case 2
-fprintf(fid,['                         AMI_O2MODE_DIR);\n']);
+fprintf(fid,['                         AMICI_O2MODE_DIR);\n']);
     otherwise
-fprintf(fid,['                         AMI_O2MODE_NONE);\n']);
+fprintf(fid,['                         AMICI_O2MODE_NONE);\n']);
 end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');

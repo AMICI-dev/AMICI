@@ -8,143 +8,126 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
+#include <include/udata.h>
+
 /** @brief struct that provides temporary storage for different variables */
-typedef struct tdata {
-    /** current time */
-    realtype am_t;
+class TempData {
     
+public:
+    
+    /**
+     * @brief Default constructor
+     */
+    TempData(const UserData *udata);
+    ~TempData();
+    
+    /** current time */
+    realtype t;
     
     /** state vector */
-    N_Vector am_x; 
+    N_Vector x; 
     /** old state vector */
-    N_Vector am_x_old;
+    N_Vector x_old;
     /** array of state vectors at discontinuities*/
-    N_Vector *am_x_disc;
+    N_Vector *x_disc;
     /** array of differential state vectors at discontinuities*/
-    N_Vector *am_xdot_disc;
+    N_Vector *xdot_disc;
     /** array of old differential state vectors at discontinuities*/
-    N_Vector *am_xdot_old_disc;
+    N_Vector *xdot_old_disc;
     /** differential state vector */
-    N_Vector am_dx;
+    N_Vector dx;
     /** old differential state vector */
-    N_Vector am_dx_old;
+    N_Vector dx_old;
     /** time derivative state vector */
-    N_Vector am_xdot;
+    N_Vector xdot;
     /** old time derivative state vector */
-    N_Vector am_xdot_old;
+    N_Vector xdot_old;
     /** adjoint state vector */
-    N_Vector am_xB;
+    N_Vector xB;
     /** old adjoint state vector */
-    N_Vector am_xB_old;
+    N_Vector xB_old;
     /** differential adjoint state vector */
-    N_Vector am_dxB; 
+    N_Vector dxB; 
     /** quadrature state vector */
-    N_Vector am_xQB;
+    N_Vector xQB;
     /** old quadrature state vector */
-    N_Vector am_xQB_old;
+    N_Vector xQB_old;
     /** sensitivity state vector array */
-    N_Vector *am_sx; 
+    N_Vector *sx; 
     /** differential sensitivity state vector array */
-    N_Vector *am_sdx; 
-    /** index indicating DAE equations vector */
-    N_Vector am_id;
+    N_Vector *sdx; 
     /** Jacobian */
-    DlsMat am_Jtmp;
+    DlsMat Jtmp;
     
     /** parameter derivative of likelihood array */
-    realtype *am_llhS0;
+    realtype *llhS0;
     /** data likelihood */
-    realtype *am_g;
+    realtype *g;
     /** parameter derivative of data likelihood */
-    realtype *am_dgdp;
+    realtype *dgdp;
     /** observable derivative of data likelihood */
-    realtype *am_dgdy;
+    realtype *dgdy;
     /** state derivative of data likelihood */
-    realtype *am_dgdx;
+    realtype *dgdx;
     /** event likelihood */
-    realtype *am_r;
+    realtype *r;
     /** parameter derivative of event likelihood */
-    realtype *am_drdp;
+    realtype *drdp;
     /** state derivative of event likelihood */
-    realtype *am_drdx;
-    /** root function likelihood */
-    realtype am_rval; 
-    /** parameter derivative of root function likelihood */
-    realtype *am_drvaldp;
-    /** state derivative of root function likelihood */
-    realtype *am_drvaldx;
+    realtype *drdx;
     /** state derivative of event */
-    realtype *am_dzdx;
+    realtype *dzdx;
     /** parameter derivative of event */
-    realtype *am_dzdp;
+    realtype *dzdp;
     /** parameter derivative of observable */
-    realtype *am_dydp;
+    realtype *dydp;
     /** state derivative of observable */
-    realtype *am_dydx;
+    realtype *dydx;
     /** initial sensitivity of observable */
-    realtype *am_yS0;
+    realtype *yS0;
     /** data standard deviation */
-    realtype *am_sigma_y;
+    realtype *sigmay;
     /** parameter derivative of data standard deviation */
-    realtype *am_dsigma_ydp;
+    realtype *dsigmaydp;
     /** event standard deviation */
-    realtype *am_sigma_z;
+    realtype *sigmaz;
     /** parameter derivative of event standard deviation */
-    realtype *am_dsigma_zdp;
-    
-    /** state array */
-    realtype *am_x_tmp;
-    /** sensitivity state array */
-    realtype *am_sx_tmp;
-    /** differential state array */
-    realtype *am_dx_tmp;
-    /** differential sensitivity state array */
-    realtype *am_sdx_tmp;
-    /** time derivative state array */
-    realtype *am_xdot_tmp;
-    /** differential adjoint state array */
-    realtype *am_xB_tmp;
-    /** quadrature state array */
-    realtype *am_xQB_tmp;
-    /** differential adjoint state array */
-    realtype *am_dxB_tmp;
-    /** index indicating DAE equations array */
-    realtype *am_id_tmp;
-    /** temporary storage for heaviside flags to check whether a secondary event has fired */
-    realtype *am_h_tmp;
+    realtype *dsigmazdp;
 
-    
     /** array of flags indicating which root has beend found */
     /*!
     array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
     */
-    int *am_rootsfound;
+    int *rootsfound;
     /** array of index which root has been found */
-    int *am_rootidx;
+    int *rootidx;
     /** array of number of found roots for a certain event type */
-    int *am_nroots;
+    int *nroots;
     /** array of values of the root function */
-    double *am_rootvals;
-    
-    
+    realtype *rootvals;
+    /** temporary rootval storage to check crossing in secondary event */
+    realtype *h;
+
     /** change in x */
-    realtype *am_deltax;
+    realtype *deltax;
     /** change in sx */
-    realtype *am_deltasx;
+    realtype *deltasx;
     /** change in xB */
-    realtype *am_deltaxB;
+    realtype *deltaxB;
     /** change in qB */
-    realtype *am_deltaqB;
- 
+    realtype *deltaqB;
     
     /** integer for indexing of backwards problems */
-    int am_which;
+    int which;
     
     /** array containing the time-points of discontinuities*/
-    realtype *am_discs; 
+    realtype *discs; 
     /** array containing the index of discontinuities */
-    realtype *am_irdiscs; 
-
-	} TempData;
+    realtype *irdiscs; 
+    
+    /** number of parameters, copied from udata, necessary for deallocation */
+    int nplist;
+    
+	};
 
 #endif /* _MY_TDATA */

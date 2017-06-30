@@ -1,7 +1,7 @@
 #include "include/udata.h"
+
 #include <cstdio>
 #include <cstring>
-
 
 UserData::UserData() :
     np(0), nk(0),
@@ -12,7 +12,7 @@ UserData::UserData() :
     ndwdx(0), ndwdp(0),
     nnz(0), ng(0),
     ubw(0), lbw(0),
-    o2mode(AMI_O2MODE_NONE), pscale(AMI_SCALING_NONE)
+    o2mode(AMICI_O2MODE_NONE), pscale(AMICI_SCALING_NONE)
 {
     init();
 }
@@ -25,8 +25,8 @@ UserData::UserData(int np,
                    int ne, int ng,
                    int nw, int ndwdx, int ndwdp, int nnz,
                    int ubw, int lbw,
-                   AMI_parameter_scaling pscale,
-                   AMI_o2mode o2mode) :
+                   AMICI_parameter_scaling pscale,
+                   AMICI_o2mode o2mode) :
     np(np), nk(nk),
     nx(nx), nxtrue(nxtrue),
     ny(ny), nytrue(nytrue),
@@ -54,18 +54,20 @@ void UserData::initTemporaryFields()
         M = new realtype[nx*nx]();
         dfdx = new realtype[nx*nx]();
     }
-    if (sensi >= AMI_SENSI_ORDER_FIRST) {
+    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* initialise temporary dxdotdp storage */
         dxdotdp = new realtype[nx*nplist]();
     }
     if (ne>0) {
         /* initialise temporary stau storage */
         stau = new realtype[nplist]();
+        h = new realtype[ne]();
     }
 
     w = new realtype[nw]();
     dwdx = new realtype[ndwdx]();
     dwdp = new realtype[ndwdp]();
+    
 }
 
 void UserData::freeTemporaryFields()
@@ -120,14 +122,14 @@ void UserData::init()
     pbar = NULL;
     xbar = NULL;
     idlist = NULL;
-    sensi = AMI_SENSI_ORDER_NONE;
+    sensi = AMICI_SENSI_ORDER_NONE;
     atol = 1e-16;
     rtol = 1e-8;
     maxsteps = 0;
     ism = 1;
     nmaxevent = 10;
 
-    sensi_meth = AMI_SENSI_FSA;
+    sensi_meth = AMICI_SENSI_FSA;
     linsol = 9;
     interpType = 1;
     lmm = 2;

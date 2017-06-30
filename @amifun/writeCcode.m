@@ -99,7 +99,7 @@ elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','sJz','dJzdz'})))
     if(any(any(nonzero)))
         fprintf(fid,['int iz;\n']);
         for iz = 1:model.nztrue
-            fprintf(fid,['if(!amiIsNaN(mz[' num2str(iz-1) '*udata->nmaxevent+nroots[ie]])){\n']);
+            fprintf(fid,['if(!amiIsNaN(mz[' num2str(iz-1) '*udata->nmaxevent+tdata->nroots[ie]])){\n']);
             fprintf(fid,['    iz = ' num2str(iz-1) ';\n']);
             tmpfun.sym = permute(this.sym(iz,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
