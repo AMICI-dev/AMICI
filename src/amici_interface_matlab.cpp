@@ -421,3 +421,7 @@ int ExpData::expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata)
     return AMICI_SUCCESS;
 }
 
+int ExpData::expDataFromCppCall(const char* hdffile, const UserData *udata) {
+    return AMICI_ERROR_EDATA;
+}
+

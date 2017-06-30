@@ -60,6 +60,6 @@ int ExpData::expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata)
     return AMICI_ERROR_EDATA;
 }
 
-int UserData::userDataFromMatlabCall(const mxArray *prhs[]) {
-    return AMICI_ERROR_UDATA;
+int ExpData::expDataFromCppCall(const char* hdffile, const UserData *udata) {
+    AMI_HDF5_readSimulationExpData(this, hdffile, udata, "/data")
 }

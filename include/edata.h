@@ -19,6 +19,7 @@ public:
     ~ExpData();
 
     int expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata);
+    int expDataFromCppCall(const char* hdffile, const UserData *udata);
     
     /** observed data */
     double *my;

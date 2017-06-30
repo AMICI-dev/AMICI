@@ -115,14 +115,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 }
 
 
-ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject) {
-    ExpData *edata = new ExpData();
-    if (edata == NULL) {
-        return(NULL);
-    }
-
-    mz = NULL;
-    zsigma = NULL;
+void AMI_HDF5_readSimulationExpData(ExpData *edata, const char* hdffile, UserData *udata, const char* dataObject) {
 
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -146,8 +139,6 @@ ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, co
         }
     }
     H5Fclose(file_id);
-
-    return(edata);
 }
 
 void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, const char* hdffile, const char* datasetPath) {
