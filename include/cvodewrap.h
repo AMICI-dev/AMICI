@@ -261,7 +261,7 @@ static int AMIGetNumRhsEvals(void *mem, long int *numrhsevals) {
     return CVodeGetNumRhsEvals(mem,numrhsevals);
 }
 
-static int AMIGetNumErrTestFails(void *mem,int *numerrtestfails) {
+static int AMIGetNumErrTestFails(void *mem, long int *numerrtestfails) {
     return CVodeGetNumErrTestFails(mem,numerrtestfails);
 }
 
