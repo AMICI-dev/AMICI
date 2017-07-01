@@ -21,8 +21,8 @@ static int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp,
 static int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data);
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata) {
-    if (edata && edata->my == 0)
-    edata = NULL;
+    if(!udata) return AMICI_ERROR_UDATA;
+    if(!rdata) return AMICI_ERROR_RDATA;
     
     int status = AMICI_SUCCESS;
     int iroot = 0;
@@ -34,7 +34,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     TempData *tdata = new TempData(udata);
     
     status = unscaleParameters(udata);
-
     if (status == AMICI_SUCCESS) udata->initTemporaryFields();
     
     /* pointer to cvodes memory block */
@@ -46,9 +45,9 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
 
     if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot);
     if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot);
-    if (status == AMICI_SUCCESS) status = applyChainRuleFactorToSimulationResults(udata, rdata, edata);
     
-    if (status<AMICI_SUCCESS) invalidateReturnData(udata, rdata);
+    if (status == AMICI_SUCCESS) status = applyChainRuleFactorToSimulationResults(udata, rdata, edata);
+    if (status < AMICI_SUCCESS) invalidateReturnData(udata, rdata);
 
     if (ami_mem) AMIFree(&ami_mem);
     

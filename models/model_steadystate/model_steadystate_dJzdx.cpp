@@ -3,17 +3,6 @@
 #include <string.h>
 #include <include/udata.h>
 #include <include/tdata.h>
-#include <include/tdata_accessors.h>
-#undef t
-#undef x
-#undef x_tmp
-#undef dzdp
-#undef dzdx
-#undef dx
-#undef sigma_y
-#undef sigma_z
-#undef dsigma_ydp
-#undef dsigma_zdp
 #include "model_steadystate_w.h"
 
 int dJzdx_model_steadystate(realtype t, int ie, realtype *dJzdx, realtype *z, N_Vector x, realtype *dzdx, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data) {

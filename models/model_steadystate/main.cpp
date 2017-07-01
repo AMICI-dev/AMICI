@@ -60,17 +60,12 @@ int main(int argc, char **argv)
     }
 
     // Read ExpData (experimental data for model) from HDF5 file
-    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data");
-    if (edata == NULL) {
-        delete udata;
-        return 1;
-    }
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data")
 
     // Run the simulation
     ReturnData *rdata = getSimulationResults(udata, edata);
     if (rdata == NULL) {
-        freeExpData(edata);
-        delete udata;
+        if(udata) delete udata;
         return 1;
     }
 
@@ -82,8 +77,8 @@ int main(int argc, char **argv)
 
     // Free memory
     freeExpData(edata);
-    delete udata;
-    delete rdata;
+    if(udata) delete udata;
+    if(rdata) delete rdata;
 
     return 0;
 }
