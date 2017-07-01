@@ -178,13 +178,21 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
     // are double, but should write as int:
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", rdata->numsteps, udata->nt);
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", rdata->numrhsevals, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numerrtestfails", rdata->numerrtestfails, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, udata->nt);
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", rdata->order, udata->nt);
 
-    if(rdata->numstepsS)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", rdata->numstepsS, udata->nt);
+    if(rdata->numstepsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsB", rdata->numstepsB, udata->nt);
 
-    if(rdata->numrhsevalsS)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", rdata->numrhsevalsS, udata->nt);
+    if(rdata->numrhsevalsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsB", rdata->numrhsevalsB, udata->nt);
+    
+    if(rdata->numerrtestfailsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numerrtestfailsB", rdata->numerrtestfailsB, udata->nt);
+    
+    if(rdata->numnonlinsolvconvfailsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, udata->nt);
 
     AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", rdata->J, udata->nx, udata->nx);
     AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", rdata->x, udata->nt, udata->nx);
