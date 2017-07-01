@@ -6,10 +6,13 @@
 
 
 ExpData::ExpData(const UserData *udata) {
-    my = new double[udata->nt*udata->ny]();
-    sigmay = new double[udata->nt*udata->ny]();
-    mz = new double[udata->nmaxevent*udata->nz]();
-    sigmaz = new double[udata->nmaxevent*udata->nz]();
+    my = sigmay = mz = sigmaz = NULL;
+    if(udata){
+        my = new double[udata->nt*udata->nytrue]();
+        sigmay = new double[udata->nt*udata->nytrue]();
+        mz = new double[udata->nmaxevent*udata->nztrue]();
+        sigmaz = new double[udata->nmaxevent*udata->nztrue]();
+    }
 }
 
 ExpData::~ExpData() {

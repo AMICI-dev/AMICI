@@ -32,8 +32,7 @@ ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
 
     ReturnData *rdata = new ReturnData(udata);
 
-    int status;
-    runAmiciSimulation(udata, edata, rdata, &status);
+    int status = runAmiciSimulation(udata, edata, rdata);
     *rdata->status = status;
 
     if(originalParams) {
@@ -54,12 +53,4 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const in
                  const double *X, const int incX, const double beta, double *Y, const int incY)
 {
     cblas_dgemv((CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A, lda, X, incX, beta, Y, incY);
-}
-
-int ExpData::expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
-    return AMICI_ERROR_EDATA;
-}
-
-int ExpData::expDataFromCppCall(const char* hdffile, const UserData *udata) {
-    AMI_HDF5_readSimulationExpData(this, hdffile, udata, "/data")
 }

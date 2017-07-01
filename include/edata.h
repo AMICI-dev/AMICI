@@ -2,12 +2,6 @@
 #ifndef _MY_EDATA
 #define _MY_EDATA
 
-#ifdef AMICI_WITHOUT_MATLAB
-#define mxArray double
-#else
-#include <mex.h>
-#endif
-
 /** @brief struct that carries all information about experimental data */
 class ExpData {
 
@@ -17,9 +11,6 @@ public:
      */
     ExpData(const UserData *udata);
     ~ExpData();
-
-    int expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata);
-    int expDataFromCppCall(const char* hdffile, const UserData *udata);
     
     /** observed data */
     double *my;

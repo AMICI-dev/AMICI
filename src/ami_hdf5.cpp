@@ -115,30 +115,34 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 }
 
 
-void AMI_HDF5_readSimulationExpData(ExpData *edata, const char* hdffile, UserData *udata, const char* dataObject) {
+ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject) {
 
+    ExpData *edata(udata);
+    
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n;
 
     if(H5Lexists(file_id, dataObject, 0)) {
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &(edata->my), &m, &n);
         assert(n == (unsigned) udata->nt);
         assert(m == (unsigned) udata->nytrue);
 
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &(edata->ysigma), &m, &n);
         assert(n == (unsigned) udata->nt);
         assert(m == (unsigned) udata->nytrue);
 
         if(udata->nz) {
-            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &(edata->mz), &m, &n);
             assert(m * n == (unsigned) (udata->nt * udata->nz));
 
-            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &(edata->zsigma), &m, &n);
             assert(m * n == (unsigned) (udata->nt * udata->nz));
         }
     }
     H5Fclose(file_id);
+    
+    return edata;
 }
 
 void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, const char* hdffile, const char* datasetPath) {
