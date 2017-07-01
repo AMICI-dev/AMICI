@@ -59,18 +59,25 @@ return NULL; \
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* return status flag */
-
+    if(nlhs != 1) { errMsgIdAndTxt("AMICI:mex","Incorrect number of output arguments (must be 1)!"); return;};
+    if(nrhs <  8) { errMsgIdAndTxt("AMICI:mex","Incorrect number of input arguments (must be at least 7)!"); return;};
+    
     UserData *udata = userDataFromMatlabCall(prhs);
 
     ReturnDataMatlab *rdata = new ReturnDataMatlab(udata);
     plhs[0] = rdata->mxsol;
     if(*(rdata->status) != AMICI_SUCCESS)
         return;
-
-    ExpData *edata = expDataFromMatlabCall(prhs, udata);
     
-    if(udata->nx > 0) {
-        *(rdata->status) = (double) runAmiciSimulation(udata, edata, rdata);
+    ExpData *edata = NULL;
+    if(nrhs >=  8) {
+        edata = expDataFromMatlabCall(prhs, udata);
+    }
+    
+    if(udata) {
+        if(udata->nx > 0) {
+            *(rdata->status) = (double) runAmiciSimulation(udata, edata, rdata);
+        }
     }
 
     if(udata) delete udata;
@@ -83,37 +90,46 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
     UserData *udata = new UserData(getUserData());
     
     /* time */
-    if (prhs[0]) {
+    if (prhs[0] || mxGetM(prhs[0]) * mxGetN(prhs[0]) == 0 ) {
         udata->nt = (int) mxGetM(prhs[0]) * mxGetN(prhs[0]);
-        udata->ts = new realtype[udata->nt];
-        memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(realtype) * udata->nt);
+        udata->ts = new double[udata->nt];
+        memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(double) * udata->nt);
     } else {
         errMsgIdAndTxt("AMICI:mex:tout","No time vector provided!");
         return NULL;
     }
     
     /* parameters */
-    if (prhs[1]) {
-        udata->p = new realtype[udata->np];
-        memcpy(udata->p, mxGetPr(prhs[1]), sizeof(realtype) * udata->np);
+    if(mxGetPr(prhs[1])) {
+        if(mxGetM(prhs[1]) * mxGetN(prhs[1]) == udata->np) {
+            udata->p = new double[udata->np];
+            memcpy(udata->p, mxGetPr(prhs[1]), sizeof(double) * udata->np);
+        } else {
+            errMsgIdAndTxt("AMICI:mex:theta","Provided parameter vector has incorrect length!");
+            return NULL;
+        }
     } else {
         errMsgIdAndTxt("AMICI:mex:theta","No parameter vector provided!");
         return NULL;
     }
     
     /* constants */
-    if (prhs[2]) {
-        int lenK = (int) mxGetM(prhs[2]) * mxGetN(prhs[2]);
-        udata->k = new realtype[lenK];
-        memcpy(udata->k, mxGetPr(prhs[2]), sizeof(realtype) * lenK);
-        
+    if(mxGetPr(prhs[2])) {
+        if(mxGetM(prhs[2]) * mxGetN(prhs[2]) == udata->nk) {
+            udata->k = new double[udata->nk];
+            memcpy(udata->k, mxGetPr(prhs[2]), sizeof(double) * udata->nk);
+        } else {
+            errMsgIdAndTxt("AMICI:mex:kappa","Provided constant vector has incorrect length!");
+            return NULL;
+        }
     } else {
         errMsgIdAndTxt("AMICI:mex:kappa","No constant vector provided!");
         return NULL;
     }
+
     
     /* options */
-    if (prhs[3]) {
+    if (mxGetPr(prhs[3])) {
         readOptionScalar(nmaxevent,int)
         readOptionScalar(tstart,double)
         readOptionScalar(atol,double)
@@ -125,11 +141,12 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         readOptionScalar(linsol,int)
         readOptionScalar(stldet,booleantype)
         
-        if(mxGetProperty(prhs[3],0,"id")){
-            mxArray *idlist = mxGetProperty(prhs[3],0,"id");
-            int lenIdlist = (int) mxGetM(idlist) * mxGetN(idlist);
-            udata->idlist = new realtype[lenIdlist];
-            memcpy(udata->idlist, mxGetData(idlist), sizeof(realtype) * lenIdlist);
+        mxArray *idlist = mxGetProperty(prhs[3],0,"id");
+        if(idlist){
+            if(mxGetM(idlist) * mxGetN(idlist) == udata->nx) {
+                udata->idlist = new double[udata->nx];
+                memcpy(udata->idlist, mxGetData(idlist), sizeof(double) * udata->nx);
+            }
         } else {
             warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");
             return NULL;
@@ -141,14 +158,13 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         readOptionScalar(ism,int)
         readOptionScalar(sensi_meth,AMICI_sensi_meth)
         readOptionScalar(ordering,int)
-        
     } else {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
         return NULL;
     }
     
     /* plist */
-    if (prhs[4]) {
+    if (mxGetPr(prhs[4])) {
         udata->nplist = (int) mxGetM(prhs[4]) * mxGetN(prhs[4]);
         udata->plist = new int[udata->nplist]();
         realtype *plistdata = mxGetPr(prhs[4]);
@@ -156,43 +172,51 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
         for (int ip = 0; ip < udata->nplist; ip++) {
             udata->plist[ip] = (int)plistdata[ip];
         }
-        
     } else {
         errMsgIdAndTxt("AMICI:mex:plist","No parameter list provided!");
         return NULL;
     }
     
     /* pbar */
-    if (prhs[5]) {
-        int lenPBar = (int) mxGetM(prhs[5]) * mxGetN(prhs[5]);
-        udata->pbar = new realtype[lenPBar]();
-        memcpy(udata->pbar, mxGetPr(prhs[5]), sizeof(realtype) * lenPBar);
+    if (mxGetPr(prhs[5])) {
+        if(mxGetM(prhs[5]) * mxGetN(prhs[5]) == udata->nplist) {
+            udata->pbar = new double[udata->nplist]();
+            memcpy(udata->pbar, mxGetPr(prhs[5]), sizeof(double) * udata->nplist);
+        } else {
+            errMsgIdAndTxt("AMICI:mex:pbar","Provided parameter scales have incorrect length!");
+            return NULL;
+        }
     } else {
         errMsgIdAndTxt("AMICI:mex:pbar","No parameter scales provided!");
         return NULL;
     }
     
     /* xscale */
-    if (prhs[6]) {
-        int lenXBar = (int) mxGetM(prhs[6]) * mxGetN(prhs[6]);
-        udata->xbar = new realtype[lenXBar]();
-        memcpy(udata->xbar, mxGetPr(prhs[6]), sizeof(realtype) * lenXBar);
+    /* this check previously always failed (xscale was empty all along). Commented out until implemented
+    if (mxGetPr(prhs[6])) {
+        if( mxGetM(prhs[6]) * mxGetN(prhs[6]) == udata->nx) {
+            udata->xbar = new double[udata->nx]();
+            memcpy(udata->xbar, mxGetPr(prhs[6]), sizeof(double) * udata->nx);
+        } else {
+            errMsgIdAndTxt("AMICI:mex:xbar","Provided state scales have incorrect length!");
+            return NULL;
+        }
     } else {
         errMsgIdAndTxt("AMICI:mex:xscale","No state scales provided!");
         return NULL;
-    }
+    }*/
     
     /* Check, if initial states and sensitivities are passed by user or must be calculated */
-    if (prhs[7]) {
+    if (mxGetPr(prhs[7])) {
         mxArray *x0 = mxGetField(prhs[7], 0 ,"x0");
-        if(x0) {
+        if(x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
             /* check dimensions */
             if(mxGetN(x0) != 1) { errMsgIdAndTxt("AMICI:mex:x0","Number of rows in x0 field must be equal to 1!"); return NULL; }
             if(mxGetM(x0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:x0","Number of columns in x0 field does not agree with number of model states!"); return NULL; }
             
             if ((mxGetM(x0) * mxGetN(x0)) > 0) {
-                udata->x0data = new realtype[udata->nx];
-                memcpy(udata->x0data, mxGetPr(x0), sizeof(realtype) * udata->nx);
+                udata->x0data = new double[udata->nx];
+                memcpy(udata->x0data, mxGetPr(x0), sizeof(double) * udata->nx);
             }
         }
         
@@ -202,8 +226,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[]) {
             if(mxGetN(sx0) != udata->nplist) { errMsgIdAndTxt("AMICI:mex:sx0","Number of rows in sx0 field does not agree with number of model parameters!"); return NULL; }
             if(mxGetM(sx0) != udata->nx) { errMsgIdAndTxt("AMICI:mex:sx0","Number of columns in sx0 field does not agree with number of model states!"); return NULL; }
             
-            udata->sx0data = new realtype[udata->nx * udata->nplist];
-            memcpy(udata->sx0data, mxGetPr(sx0), sizeof(realtype) * udata->nx * udata->nplist);
+            udata->sx0data = new double[udata->nx * udata->nplist];
+            memcpy(udata->sx0data, mxGetPr(sx0), sizeof(double) * udata->nx * udata->nplist);
         }
     }
     return udata;
@@ -327,9 +351,10 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const in
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
     
     ExpData *edata = new ExpData(udata);
+    if(edata->my == NULL) return NULL;
     
     // Data provided / required?
-    if ((!prhs[8] || (mxGetM(prhs[8]) == 0 && mxGetN(prhs[8]) == 0))) {
+    if (!mxGetPr(prhs[8])) {
         if(udata->sensi >= AMICI_SENSI_ORDER_FIRST && udata->sensi_meth == AMICI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data","No data provided!");
             return NULL;

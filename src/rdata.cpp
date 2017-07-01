@@ -65,8 +65,8 @@ ReturnData::~ReturnData()
 
 void ReturnData::initFields(const UserData *udata)
 {
+    initField1(&status, "status", 1);
     if(udata) {
-        initField1(&status, "status", 1);
         initField1(&ts, "t", udata->nt);
         initField1(&llh, "llh", 1);
         initField1(&chi2, "chi2", 1);
