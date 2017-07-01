@@ -39,7 +39,7 @@ public:
              int nk,
              int ny, int nytrue,
              int nz, int nztrue,
-             int ne, int ng,
+             int ne, int nJ,
              int nw, int ndwdx, int ndwdp, int nnz,
              int ubw, int lbw,
              AMICI_parameter_scaling pscale,
@@ -79,7 +79,7 @@ public:
     /** number of nonzero entries in jacobian */
     const int    nnz;
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int    ng;
+    const int    nJ;
     /** upper bandwith of the jacobian */
     const int ubw;
     /** lower bandwith of the jacobian */

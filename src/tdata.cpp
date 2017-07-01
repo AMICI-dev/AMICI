@@ -9,15 +9,15 @@ TempData::TempData(const UserData *udata) {
     x = x_old = dx = dx_old = xdot = xdot_old = NULL;
     sx = sdx = NULL;
     Jtmp = NULL;
-    dydx = dydp = dgdp = dgdx = dgdy = dzdp = dzdx = drdp = drdx = NULL;
+    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = dJzdp = dJzdx = NULL;
     dsigmaydp = dsigmazdp = llhS0 = NULL;
     
     which = 0;
     
     nplist = udata->nplist;
     
-    g = new realtype[udata->ng]();
-    r = new realtype[udata->ng]();
+    Jy = new realtype[udata->nJ]();
+    Jz = new realtype[udata->nJ]();
     
     sigmay = new realtype[udata->ny]();
     
@@ -41,7 +41,7 @@ TempData::TempData(const UserData *udata) {
     deltax = new realtype[udata->nx]();
     deltasx = new realtype[udata->nx*udata->nplist]();
     deltaxB = new realtype[udata->nx]();
-    deltaqB = new realtype[udata->ng*udata->nplist]();
+    deltaqB = new realtype[udata->nJ*udata->nplist]();
     sigmaz = new realtype[udata->nz]();
 
     
@@ -49,13 +49,13 @@ TempData::TempData(const UserData *udata) {
     if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         dydx = new realtype[udata->ny * udata->nx]();
         dydp = new realtype[udata->ny * udata->nplist]();
-        dgdp = new realtype[udata->ng * udata->nplist * udata->nytrue]();
-        dgdx = new realtype[udata->ng * udata->nxtrue * udata->nt]();
-        dgdy = new realtype[udata->nytrue * udata->ng * udata->ny]();
+        dJydp = new realtype[udata->nJ * udata->nplist * udata->nytrue]();
+        dJydx = new realtype[udata->nJ * udata->nxtrue * udata->nt]();
+        dJydy = new realtype[udata->nytrue * udata->nJ * udata->ny]();
         dzdp = new realtype[udata->nz*udata->nplist]();
         dzdx = new realtype[udata->nz*udata->nx]();
-        drdp = new realtype[udata->ng * udata->nplist * udata->nztrue * udata->nmaxevent]();
-        drdx = new realtype[udata->ng * udata->nx * udata->nztrue * udata->nmaxevent]();
+        dJzdp = new realtype[udata->nJ * udata->nplist * udata->nztrue * udata->nmaxevent]();
+        dJzdx = new realtype[udata->nJ * udata->nx * udata->nztrue * udata->nmaxevent]();
         
         dsigmaydp = new realtype[udata->ny * udata->nplist]();
         dsigmazdp = new realtype[udata->nz * udata->nplist]();
@@ -66,7 +66,7 @@ TempData::TempData(const UserData *udata) {
         }
         
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            llhS0 = new realtype[udata->ng * udata->nplist]();
+            llhS0 = new realtype[udata->nJ * udata->nplist]();
             if(udata->ne > 0 && udata->nmaxevent > 0 && x) {
                 x_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
                 xdot_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
@@ -76,8 +76,8 @@ TempData::TempData(const UserData *udata) {
                 xB = N_VNew_Serial(udata->nx);
                 xB_old = N_VNew_Serial(udata->nx);
                 dxB = N_VNew_Serial(udata->nx);
-                xQB = N_VNew_Serial(udata->ng * udata->nplist);
-                xQB_old = N_VNew_Serial(udata->ng * udata->nplist);
+                xQB = N_VNew_Serial(udata->nJ * udata->nplist);
+                xQB_old = N_VNew_Serial(udata->nJ * udata->nplist);
             }
         }
     }
@@ -103,8 +103,8 @@ TempData::~TempData() {
     if(sx) N_VDestroyVectorArray_Serial(sx,nplist);
     if(sdx) N_VDestroyVectorArray_Serial(sdx,nplist);
     
-    if(g) delete[] g;
-    if(r) delete[] r;
+    if(Jy) delete[] Jy;
+    if(Jz) delete[] Jz;
         
     
     if(rootsfound) delete[] rootsfound;
@@ -122,11 +122,11 @@ TempData::~TempData() {
     if(sigmay)    delete[] sigmay;
     if(dydx) delete[] dydx;
     if(dydp) delete[] dydp;
-    if(dgdp) delete[] dgdp;
-    if(dgdy) delete[] dgdy;
-    if(dgdx) delete[] dgdx;
-    if(drdp) delete[] drdp;
-    if(drdx) delete[] drdx;
+    if(dJydp) delete[] dJydp;
+    if(dJydy) delete[] dJydy;
+    if(dJydx) delete[] dJydx;
+    if(dJzdp) delete[] dJzdp;
+    if(dJzdx) delete[] dJzdx;
     if(dzdp) delete[] dzdp;
     if(dzdx) delete[] dzdx;
     if(dsigmaydp) delete[] dsigmaydp;

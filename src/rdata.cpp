@@ -128,7 +128,7 @@ void ReturnData::initFields(const UserData *udata)
             }
             
             if(udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-                initField2(&s2llh, "s2llh", udata->ng-1,udata->nplist);
+                initField2(&s2llh, "s2llh", udata->nJ-1,udata->nplist);
             }
         }
     }

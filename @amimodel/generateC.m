@@ -212,7 +212,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->ng; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->nJ; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->nan_qBdot) {\n');

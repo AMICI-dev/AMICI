@@ -62,19 +62,19 @@ public:
     /** parameter derivative of likelihood array */
     realtype *llhS0;
     /** data likelihood */
-    realtype *g;
+    realtype *Jy;
     /** parameter derivative of data likelihood */
-    realtype *dgdp;
+    realtype *dJydp;
     /** observable derivative of data likelihood */
-    realtype *dgdy;
+    realtype *dJydy;
     /** state derivative of data likelihood */
-    realtype *dgdx;
+    realtype *dJydx;
     /** event likelihood */
-    realtype *r;
+    realtype *Jz;
     /** parameter derivative of event likelihood */
-    realtype *drdp;
+    realtype *dJzdp;
     /** state derivative of event likelihood */
-    realtype *drdx;
+    realtype *dJzdx;
     /** state derivative of event */
     realtype *dzdx;
     /** parameter derivative of event */

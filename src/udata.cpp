@@ -10,7 +10,7 @@ UserData::UserData() :
     nz(0), nztrue(0),
     ne(0), nw(0),
     ndwdx(0), ndwdp(0),
-    nnz(0), ng(0),
+    nnz(0), nJ(0),
     ubw(0), lbw(0),
     o2mode(AMICI_O2MODE_NONE), pscale(AMICI_SCALING_NONE)
 {
@@ -22,7 +22,7 @@ UserData::UserData(int np,
                    int nk,
                    int ny, int nytrue,
                    int nz, int nztrue,
-                   int ne, int ng,
+                   int ne, int nJ,
                    int nw, int ndwdx, int ndwdp, int nnz,
                    int ubw, int lbw,
                    AMICI_parameter_scaling pscale,
@@ -33,7 +33,7 @@ UserData::UserData(int np,
     nz(nz), nztrue(nztrue),
     ne(ne), nw(nw),
     ndwdx(ndwdx), ndwdp(ndwdp),
-    nnz(nnz),ng(ng),
+    nnz(nnz),nJ(nJ),
     ubw(ubw), lbw(lbw),
     o2mode(o2mode), pscale(pscale)
 {
@@ -172,7 +172,7 @@ void printUserData(UserData *udata) {
     printf("nztrue: %d\n", udata->nztrue);
     printf("ne: %d\n", udata->ne);
     printf("nt: %d\n", udata->nt);
-    printf("ng: %d\n", udata->ng);
+    printf("nJ: %d\n", udata->nJ);
     printf("nw: %d\n", udata->nw);
     printf("ndwdx: %d\n", udata->ndwdx);
     printf("nnz: %d\n", udata->nnz);

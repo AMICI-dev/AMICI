@@ -8,7 +8,7 @@ int dJydp_model_steadystate(realtype t, int it, realtype *dJydp, realtype *y, N_
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(dJydp,0,sizeof(realtype)*udata->nytrue*udata->nplist*udata->ng);
+memset(dJydp,0,sizeof(realtype)*udata->nytrue*udata->nplist*udata->nJ);
 status = w_model_steadystate(t,x,NULL,user_data);
 return(status);
 

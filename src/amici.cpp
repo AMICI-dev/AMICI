@@ -70,7 +70,7 @@ void invalidateReturnData(UserData* udata, ReturnData* rdata) {
     fillArray(rdata->sllh, udata->nplist, amiGetNaN());
     
     if (rdata->s2llh)
-    fillArray(rdata->s2llh, udata->nplist*(udata->ng-1), amiGetNaN());
+    fillArray(rdata->s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
 }
 
 void *setupAMI(UserData *udata, TempData *tdata) {
@@ -294,14 +294,14 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     memset(xB_tmp,0,sizeof(realtype)*udata->nx);
     for (ix=0; ix<udata->nx; ix++) {
-        xB_tmp[ix] += tdata->dgdx[udata->nt-1+ix*udata->nt];
+        xB_tmp[ix] += tdata->dJydx[udata->nt-1+ix*udata->nt];
     }
     
     if (tdata->dxB == NULL) return AMICI_ERROR_SETUPB;
     memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*udata->nx);
     
     if (tdata->xQB == NULL) return AMICI_ERROR_SETUPB;
-    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*udata->ng*udata->nplist);
+    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*udata->nJ*udata->nplist);
     
     /* create backward problem */
     if (udata->lmm>2||udata->lmm<1) {
@@ -511,7 +511,7 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
     status = fsy(udata->ts[it],it,rdata->sy,tdata->dydx,tdata->dydp,tdata->sx,udata);
     if(status != AMICI_SUCCESS) return status;
     if (edata) {
-        status = fsJy(udata->ts[it],it,rdata->sllh,rdata->s2llh,tdata->dgdy,tdata->dgdp,rdata->y,tdata->sigmay,rdata->sy,tdata->dydp,edata->my,udata);
+        status = fsJy(udata->ts[it],it,rdata->sllh,rdata->s2llh,tdata->dJydy,tdata->dJydp,rdata->y,tdata->sigmay,rdata->sy,tdata->dydp,edata->my,udata);
         if(status != AMICI_SUCCESS) return status;
     }
     return status;
@@ -534,7 +534,7 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
      * @return status flag indicating success of execution @type int
      */
     
-    int iy,ip,ig;
+    int iy,ip,iJ;
     int status = AMICI_SUCCESS;
     
     status = fdydx(udata->ts[it],it,tdata->dydx,tdata->x,udata);
@@ -555,30 +555,30 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
                 rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
             }
         }
-        status = fdJydp(udata->ts[it],it,tdata->dgdp,rdata->y,tdata->x,tdata->dydp,edata->my,tdata->sigmay,tdata->dsigmaydp,udata);
+        status = fdJydp(udata->ts[it],it,tdata->dJydp,rdata->y,tdata->x,tdata->dydp,edata->my,tdata->sigmay,tdata->dsigmaydp,udata);
         if(status != AMICI_SUCCESS) return status;
         
         
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            for(ig=0; ig<udata->ng; ig++) {
+            for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
                     for(iy=0; iy < udata->nytrue; iy++) {
-                        if (ig==0) {
+                        if (iJ==0) {
                             if (udata->ny>0) {
-                                rdata->sllh[ip] -= tdata->dgdp[iy + ip*udata->nytrue];
+                                rdata->sllh[ip] -= tdata->dJydp[iy + ip*udata->nytrue];
                             }
                         } else {
                             if (udata->ny>0) {
-                                rdata->s2llh[(ig-1)*udata->nplist + ip] -= tdata->dgdp[(ig*udata->nplist + ip)*udata->nytrue + iy];
+                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[(iJ*udata->nplist + ip)*udata->nytrue + iy];
                             }
                         }
                     }
                 }
             }
         }
-        status = fdJydy(udata->ts[it],it,tdata->dgdy,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
+        status = fdJydy(udata->ts[it],it,tdata->dJydy,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
         if(status != AMICI_SUCCESS) return status;
-        status = fdJydx(udata->ts[it],it,tdata->dgdx,rdata->y,tdata->x,tdata->dydx,edata->my,tdata->sigmay,udata);
+        status = fdJydx(udata->ts[it],it,tdata->dJydx,rdata->y,tdata->x,tdata->dydx,edata->my,tdata->sigmay,udata);
         if(status != AMICI_SUCCESS) return status;
     }
     return status;
@@ -619,7 +619,7 @@ int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, con
             }
             rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
         }
-        status = fJy(udata->ts[it],it,tdata->g,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
+        status = fJy(udata->ts[it],it,tdata->Jy,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
         if(status != AMICI_SUCCESS) return status;
     } else {
         status = fsigma_y(tdata->t,tdata->sigmay,udata);
@@ -734,9 +734,9 @@ int getEventSensisASA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata,
                     rdata->ssigmaz[tdata->nroots[ie] + udata->nmaxevent*(iz+udata->nz*ip)] = tdata->dsigmazdp[iz+udata->nz*ip];
                 }
                 
-                status = fdJzdp(tdata->t,ie,tdata->drdp,rdata->z,tdata->x,tdata->dzdp,edata->mz,tdata->sigmaz,tdata->dsigmazdp,udata,tdata);
+                status = fdJzdp(tdata->t,ie,tdata->dJzdp,rdata->z,tdata->x,tdata->dzdp,edata->mz,tdata->sigmaz,tdata->dsigmazdp,udata,tdata);
                 if(status != AMICI_SUCCESS) return status;
-                status = fdJzdx(tdata->t,ie,tdata->drdx,rdata->z,tdata->x,tdata->dzdx,edata->mz,tdata->sigmaz,udata,tdata);
+                status = fdJzdx(tdata->t,ie,tdata->dJzdx,rdata->z,tdata->x,tdata->dzdx,edata->mz,tdata->sigmaz,udata,tdata);
                 if(status != AMICI_SUCCESS) return status;
             }
         }
@@ -803,7 +803,7 @@ int getEventObjective(int ie, void *ami_mem, UserData *udata, ReturnData *rdata,
                 status = getEventSigma(ie, iz, ami_mem, udata, rdata, edata, tdata);
                 if(status != AMICI_SUCCESS) return status;
                 if (!amiIsNaN(edata->mz[iz*udata->nmaxevent+tdata->nroots[ie]])) {
-                    tdata->r[0] += 0.5*log(2*pi*pow(tdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz],2))
+                    tdata->Jz[0] += 0.5*log(2*pi*pow(tdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz],2))
                     + 0.5*pow( ( rdata->z[tdata->nroots[ie] + udata->nmaxevent*iz] - edata->mz[tdata->nroots[ie] + udata->nmaxevent*iz] )/tdata->sigmaz[iz] , 2);
                     *rdata->chi2 += pow( ( rdata->z[tdata->nroots[ie] + udata->nmaxevent*iz] - edata->mz[tdata->nroots[ie] + udata->nmaxevent*iz] )/tdata->sigmaz[iz] , 2);
                 }
@@ -989,7 +989,7 @@ int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
     
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     for (ix=0; ix<udata->nx; ix++) {
-        xB_tmp[ix] += tdata->dgdx[it+ix*udata->nt];
+        xB_tmp[ix] += tdata->dJydx[it+ix*udata->nt];
     }
     return getDiagnosisB(it,ami_mem,udata,rdata,tdata);
 }
@@ -1176,7 +1176,7 @@ int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
      * @return status flag indicating success of execution @type int
      */
     
-    int ie, ix, ip, ig;
+    int ie, ix, ip, iJ;
     int status = AMICI_SUCCESS;
     
     
@@ -1199,13 +1199,13 @@ int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
             for (ix=0; ix<udata->nx; ix++) {
                 xB_tmp[ix] += tdata->deltaxB[ix];
                 if (udata->nz>0) {
-                    xB_tmp[ix] += tdata->drdx[tdata->nroots[ie] + udata->nmaxevent*ix];
+                    xB_tmp[ix] += tdata->dJzdx[tdata->nroots[ie] + udata->nmaxevent*ix];
                 }
             }
             
-            for (ig=0; ig<udata->ng; ig++) {
+            for (iJ=0; iJ<udata->nJ; iJ++) {
                 for (ip=0; ip<udata->nplist; ip++) {
-                    xQB_tmp[ig*udata->nplist+ip] += tdata->deltaqB[ig*udata->nplist+ip];
+                    xQB_tmp[iJ*udata->nplist+ip] += tdata->deltaqB[iJ*udata->nplist+ip];
                 }
             }
             
@@ -1678,11 +1678,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                         realtype *xB_tmp = NV_DATA_S(tdata->xB);
                         realtype *sx_tmp;
                         
-                        int ig;
-                        for (ig=0; ig<udata->ng; ig++) {
-                            if (ig==0) {
+                        int iJ;
+                        for (iJ=0; iJ<udata->nJ; iJ++) {
+                            if (iJ==0) {
                                 for (ip=0; ip<udata->nplist; ip++) {
-                                    tdata->llhS0[ig*udata->nplist + ip] = 0.0;
+                                    tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                                     for (ix = 0; ix < udata->nxtrue; ix++) {
                                         tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
@@ -1690,12 +1690,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 }
                             } else {
                                 for (ip=0; ip<udata->nplist; ip++) {
-                                    tdata->llhS0[ig*udata->nplist + ip] = 0.0;
+                                    tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                                     for (ix = 0; ix < udata->nxtrue; ix++) {
-                                        tdata->llhS0[ig*udata->nplist + ip] = tdata->llhS0[ig*udata->nplist + ip]
-                                        + xB_tmp[ig*udata->nxtrue + ix] * sx_tmp[ix]
-                                        + xB_tmp[ix] * sx_tmp[ig*udata->nxtrue + ix];
+                                        tdata->llhS0[iJ*udata->nplist + ip] = tdata->llhS0[iJ*udata->nplist + ip]
+                                        + xB_tmp[iJ*udata->nxtrue + ix] * sx_tmp[ix]
+                                        + xB_tmp[ix] * sx_tmp[iJ*udata->nxtrue + ix];
                                     }
                                 }
                             }
@@ -1703,42 +1703,42 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                         
                         realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
                         
-                        for(ig=0; ig<udata->ng; ig++) {
+                        for(iJ=0; iJ<udata->nJ; iJ++) {
                             for(ip=0; ip < udata->nplist; ip++) {
-                                if (ig==0) {
+                                if (iJ==0) {
                                     rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
                                     if (udata->nz>0) {
-                                        rdata->sllh[ip] -= tdata->drdp[ip];
+                                        rdata->sllh[ip] -= tdata->dJzdp[ip];
                                     }
                                 } else {
-                                    rdata->s2llh[(ig-1)*udata->nplist + ip] -= tdata->llhS0[ig*udata->nplist + ip] + xQB_tmp[ig*udata->nplist + ip];
+                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->llhS0[iJ*udata->nplist + ip] + xQB_tmp[iJ*udata->nplist + ip];
                                     if (udata->nz>0) {
-                                        rdata->s2llh[(ig-1)*udata->nplist + ip] -= tdata->drdp[ig*udata->nplist + ip];
+                                        rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[iJ*udata->nplist + ip];
                                     }
                                 }
                             }
                         }
                         
                     } else {
-                        int ig;
-                        for(ig=0; ig<udata->ng; ig++) {
+                        int iJ;
+                        for(iJ=0; iJ<udata->nJ; iJ++) {
                             for(ip=0; ip < udata->nplist; ip++) {
-                                if (ig==0) {
+                                if (iJ==0) {
                                     rdata->sllh[ip] = amiGetNaN();
                                 } else {
-                                    rdata->s2llh[(ig-1)*udata->nplist + ip] = amiGetNaN();
+                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
                                 }
                             }
                         }
                     }
                 } else {
-                    int ig;
-                    for(ig=0; ig<udata->ng; ig++) {
+                    int iJ;
+                    for(iJ=0; iJ<udata->nJ; iJ++) {
                         for(ip=0; ip < udata->nplist; ip++) {
-                            if (ig==0) {
+                            if (iJ==0) {
                                 rdata->sllh[ip] = amiGetNaN();
                             } else {
-                                rdata->s2llh[(ig-1)*udata->nplist + ip] = amiGetNaN();
+                                rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
                             }
                         }
                     }
@@ -1749,7 +1749,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
     
     /* evaluate likelihood */
     if (edata) {
-        *rdata->llh = - tdata->g[0] - tdata->r[0];
+        *rdata->llh = - tdata->Jy[0] - tdata->Jz[0];
     } else {
         *rdata->llh = amiGetNaN();
     }
@@ -1913,10 +1913,10 @@ rdata->s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
             if (rdata->s2llh) {
                 if (rdata->sllh) {
                     for(int ip = 0; ip < udata->nplist; ++ip) {
-                        for(int ig = 1; ig < udata->ng; ++ig) {
-                            rdata->s2llh[ip*udata->nplist+(ig-1)] *= pcoefficient[ip]*augcoefficient[ig-1];
-                            if (udata->plist[ip] == ig-1)
-                            rdata->s2llh[ip*udata->nplist+(ig-1)] += rdata->sllh[ip]*coefficient;
+                        for(int iJ = 1; iJ < udata->nJ; ++iJ) {
+                            rdata->s2llh[ip*udata->nplist+(iJ-1)] *= pcoefficient[ip]*augcoefficient[iJ-1];
+                            if (udata->plist[ip] == iJ-1)
+                            rdata->s2llh[ip*udata->nplist+(iJ-1)] += rdata->sllh[ip]*coefficient;
                         }
                     }
                 }
@@ -1926,12 +1926,12 @@ rdata->s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
 #define s2ChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if (rdata->s ## QUANT ) \
 for(int ip = 0; ip < udata->nplist; ++ip) \
-for(int ig = 1; ig < udata->ng; ++ig) \
+for(int iJ = 1; iJ < udata->nJ; ++iJ) \
 for(int IND1 = 0; IND1 < N1T; ++IND1) \
 for(int IND2 = 0; IND2 < N2; ++IND2){ \
-rdata->s ## QUANT [(ip*N1 + ig*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*augcoefficient[ig-1]; \
-if (udata->plist[ip]==ig-1) \
-rdata->s  ## QUANT [(ip*N1 + ig*N1T + IND1)*N2 + IND2] += rdata->s ## QUANT [(ip*N1 + IND1)*N2 + IND2]*coefficient;}
+rdata->s ## QUANT [(ip*N1 + iJ*N1T + IND1)*N2 + IND2] *= pcoefficient[ip]*augcoefficient[iJ-1]; \
+if (udata->plist[ip]==iJ-1) \
+rdata->s  ## QUANT [(ip*N1 + iJ*N1T + IND1)*N2 + IND2] += rdata->s ## QUANT [(ip*N1 + IND1)*N2 + IND2]*coefficient;}
         
         s2ChainRule(x,ix,udata->nxtrue,udata->nx,it,udata->nt)
         s2ChainRule(y,iy,udata->nytrue,udata->ny,it,udata->nt)
@@ -2009,11 +2009,11 @@ int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, rea
     diff[iy + ip * udata->ny] = sy[ip * udata->nt * udata->ny + iy * udata->nt + it] - dydp[iy + ip * udata->ny];
     
     // sJy          nplist x ng
-    // dJydp=dgdp   nytrue x nplist x ng
-    // dJydy=dgdy   nytrue x ng x ny
+    // dJydp=dJydp   nytrue x nplist x ng
+    // dJydy=dJydy   nytrue x ng x ny
     
-    realtype *dJydyTmp = new realtype[udata->ng * udata->ny];
-    realtype *multResult = new realtype[udata->nplist * udata->ng];
+    realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
+    realtype *multResult = new realtype[udata->nplist * udata->nJ];
     
     for(int iyt = 0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(my[udata->nt * iyt + it]))
@@ -2021,31 +2021,31 @@ int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, rea
         
         // copy current (iyt) dJydy slice
         // dJydyTmp     ng x ny
-        for(int ig = 0; ig < udata->ng; ++ig)
-        for(int iy = 0; iy < udata->ny; ++iy)
-        dJydyTmp[ig + iy * udata->ng] = dJydy[iyt + ig * udata->nytrue + iy * udata->nytrue * udata->ng];
+        for(int iJ = 0; iJ < udata->nJ; ++iJ)
+            for(int iy = 0; iy < udata->ny; ++iy)
+                dJydyTmp[iJ + iy * udata->nJ] = dJydy[iyt + iJ * udata->nytrue + iy * udata->nytrue * udata->nJ];
         
         // compute multResult = (dJydyTmp * diff)' + dJydp == diff' * dJydyTmp' + dJydp
         // copy dJydp slice (iyt) to result
         for(int ip = 0; ip < udata->nplist; ++ip)
-        for(int ig = 0; ig < udata->ng; ++ig)
-        multResult[ip + udata->np * ig] = dJydp[iyt + ip * udata->nytrue + ig * udata->nytrue * udata->nplist];
+            for(int iJ = 0; iJ < udata->nJ; ++iJ)
+                multResult[ip + udata->np * iJ] = dJydp[iyt + ip * udata->nytrue + iJ * udata->nytrue * udata->nplist];
         
         // C := alpha*op(A)*op(B) + beta*C,
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
-                    udata->nplist, udata->ng, udata->ny,
+                    udata->nplist, udata->nJ, udata->ny,
                     1.0, diff, udata->ny,
-                    dJydyTmp, udata->ng,
+                    dJydyTmp, udata->nJ,
                     1.0, multResult, udata->nplist);
         
         // sJy += multResult
-        for(int ig = 0; ig < udata->ng; ++ig) {
-            if (ig == 0)
+        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+            if (iJ == 0)
             for(int ip = 0; ip < udata->nplist; ++ip)
-            sJy[ip] -= multResult[ip];
+                sJy[ip] -= multResult[ip];
             else
-            for(int ip = 0; ip < udata->nplist; ++ip)
-            s2Jy[ip + udata->nplist * (ig - 1)] -= multResult[ip+ udata->nplist * ig];
+                for(int ip = 0; ip < udata->nplist; ++ip)
+                    s2Jy[ip + udata->nplist * (iJ - 1)] -= multResult[ip+ udata->nplist * iJ];
         }
         
         
