@@ -261,8 +261,12 @@ static int AMIGetNumRhsEvals(void *mem, long int *numrhsevals) {
     return CVodeGetNumRhsEvals(mem,numrhsevals);
 }
 
-static int AMIGetLastOrder(void *mem,int *order) {
-    return CVodeGetLastOrder(mem,order);
+static int AMIGetNumErrTestFails(void *mem,int *numerrtestfails) {
+    return CVodeGetNumErrTestFails(mem,numerrtestfails);
+}
+
+static int AMIGetNumNonlinSolvConvFails(void *mem, long int *numnonlinsolvconvfails) {
+    return CVodeGetNumNonlinSolvConvFails(mem,numnonlinsolvconvfails);
 }
 
 static void *AMIGetAdjBmem(void *mem, int which) {

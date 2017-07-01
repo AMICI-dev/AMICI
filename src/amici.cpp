@@ -1424,18 +1424,26 @@ int getDiagnosis(int it, void *ami_mem, UserData *udata, ReturnData *rdata) {
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @return status flag indicating success of execution @type int
      */
-    long int numsteps, numrhsevals;
+    long int number;
     int status = AMICI_SUCCESS;
     int order;
     
     
-    status = AMIGetNumSteps(ami_mem, &numsteps);
+    status = AMIGetNumSteps(ami_mem, &number);
     if (status != AMICI_SUCCESS) return status;
-    rdata->numsteps[it] = (double) numsteps;
+    rdata->numsteps[it] = (double) number;
     
-    status = AMIGetNumRhsEvals(ami_mem, &numrhsevals);
+    status = AMIGetNumRhsEvals(ami_mem, &number);
     if (status != AMICI_SUCCESS) return status;
-    rdata->numrhsevals[it] = (double) numrhsevals;
+    rdata->numrhsevals[it] = (double) number;
+    
+    status = AMIGetNumErrTestFails(ami_mem, &number);
+    if (status != AMICI_SUCCESS) return status;
+    rdata->numerrtestfails[it] = (double) number;
+    
+    status = AMIGetNumNonlinSolvConvFails(ami_mem, &number);
+    if (status != AMICI_SUCCESS) return status;
+    rdata->numnonlinsolvconvfails[it] = (double) number;
     
     status = AMIGetLastOrder(ami_mem, &order);
     if (status != AMICI_SUCCESS) return status;
@@ -1459,20 +1467,28 @@ int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, Tem
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
      */
-    long int numsteps, numrhsevals;
+    long int number;
     int status = AMICI_SUCCESS;
     
     void *ami_memB;
     
     ami_memB = AMIGetAdjBmem(ami_mem, tdata->which);
     
-    status = AMIGetNumSteps(ami_memB, &numsteps);
+    status = AMIGetNumSteps(ami_memB, &number);
     if (status != AMICI_SUCCESS) return status;
-    rdata->numstepsS[it] = (double) numsteps;
+    rdata->numstepsB[it] = (double) number;
     
-    status = AMIGetNumRhsEvals(ami_memB, &numrhsevals);
+    status = AMIGetNumRhsEvals(ami_memB, &number);
     if (status != AMICI_SUCCESS) return status;
-    rdata->numrhsevalsS[it] = (double) numrhsevals;
+    rdata->numrhsevalsB[it] = (double) number;
+    
+    status = AMIGetNumErrTestFails(ami_memB, &number);
+    if (status != AMICI_SUCCESS) return status;
+    rdata->numerrtestfailsB[it] = (double) number;
+    
+    status = AMIGetNumNonlinSolvConvFails(ami_memB, &number);
+    if (status != AMICI_SUCCESS) return status;
+    rdata->numnonlinsolvconvfailsB[it] = (double) number;
     
     return status;
 }

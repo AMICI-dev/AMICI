@@ -261,6 +261,14 @@ static int AMIGetNumRhsEvals(void *mem, long int *numrhsevals) {
     return IDAGetNumResEvals(mem,numrhsevals);
 }
 
+static int AMIGetNumErrTestFails(void *mem,int *numerrtestfails) {
+    return IDAGetNumErrTestFails(mem,numerrtestfails);
+}
+
+static int AMIGetNumNonlinSolvConvFails(void *mem, long int *numnonlinsolvconvfails) {
+    return IDAGetNumNonlinSolvConvFails(mem,numnonlinsolvconvfails);
+}
+
 static int AMIGetLastOrder(void *mem,int *order) {
     return IDAGetLastOrder(mem,order);
 }

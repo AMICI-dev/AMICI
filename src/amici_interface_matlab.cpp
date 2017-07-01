@@ -250,8 +250,8 @@ ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 
 void ReturnDataMatlab::initFields(const UserData *udata)
 {
-    const int numFields = 29;
-    const char *field_names_sol[numFields] = {"status","llh","sllh","s2llh","chi2","t","numsteps","numrhsevals","order","numstepsS","numrhsevalsS","rz","z","x","y","srz","sz","sx","sy","s2rz","sigmay","ssigmay","sigmaz","ssigmaz","xdot","J","dydp","dydx","dxdotdp"};
+    const int numFields = 33;
+    const char *field_names_sol[numFields] = {"status","llh","sllh","s2llh","chi2","t","x","sx","y","sy","sigmay","ssigmay","z","sz","sigmaz","ssigmaz","rz","srz","s2rz","xdot","J","dydp","dydx","dxdotdp","numsteps","numrhsevals","numerrtestfails","numnonlinsolvconvfails","order","numstepsB","numrhsevalsB","numerrtestfailsB","numnonlinsolvconvfailsB"};
 
     mxsol = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
