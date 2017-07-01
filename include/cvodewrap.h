@@ -269,6 +269,10 @@ static int AMIGetNumNonlinSolvConvFails(void *mem, long int *numnonlinsolvconvfa
     return CVodeGetNumNonlinSolvConvFails(mem,numnonlinsolvconvfails);
 }
 
+static int AMIGetLastOrder(void *mem,int *order) {
+    return CVodeGetLastOrder(mem,order);
+}
+
 static void *AMIGetAdjBmem(void *mem, int which) {
     return CVodeGetAdjCVodeBmem(mem,which);
 }
