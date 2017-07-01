@@ -30,7 +30,6 @@ TEST(groupSteadystate, testSimulation) {
     verifyReturnData("/model_steadystate/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
     delete udata;
 }
 
@@ -45,7 +44,6 @@ TEST(groupSteadystate, testSensitivityForward) {
     verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
     delete udata;
 }
 

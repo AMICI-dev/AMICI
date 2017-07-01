@@ -4,10 +4,8 @@
 #include <cstdio>
 #include <unistd.h>
 
-ExpData *getTestExpData() {
-    ExpData *edata = new ExpData;
-    memset(edata, 0, sizeof(*edata));
-
+ExpData *getTestExpData(const UserData *udata) {
+    ExpData *edata = new ExpData(udata);
     return edata;
 }
 

@@ -48,9 +48,11 @@ TEST(groupDirac, testCreateAndFreeUserData) {
  */
 
 TEST(groupDirac, testCreateAndFreeExpData) {
-    ExpData *edata = getTestExpData();
-
-    freeExpData(edata);
+    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMICI_SCALING_NONE, AMICI_O2MODE_NONE);
+    
+    ExpData *edata = getTestExpData(&udata);
+    
+    delete edata;
 }
 
 /*
@@ -58,10 +60,10 @@ TEST(groupDirac, testCreateAndFreeExpData) {
  */
 
 TEST(groupDirac, testCreateAndFreeReturnData) {
-    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMI_SCALING_NONE, AMI_O2MODE_NONE);
+    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMICI_SCALING_NONE, AMICI_O2MODE_NONE);
     ReturnData *rdata = new ReturnData(&udata);
 
-   delete rdata;
+    delete rdata;
 }
 
 
@@ -78,7 +80,6 @@ TEST(groupDirac, testSimulation) {
     verifyReturnData("/model_dirac/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
     delete udata;
 }
 
@@ -98,7 +99,6 @@ TEST(groupDirac, testSensitivityForward) {
     verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
     delete udata;
 }
 
