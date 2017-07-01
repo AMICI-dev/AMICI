@@ -57,7 +57,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     checkEqualArray(expected, rdata->x, udata->nt * udata->nxtrue, atol, rtol);
     delete[] expected;
 
-//    CHECK_EQUAL(AMI_O2MODE_FULL, udata->o2mode);
+//    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
 
     if(AMI_HDF5_attributeExists(file_id, resultPath, "J")) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "J", &expected, &m, &n);
@@ -89,7 +89,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     checkEqualArray(expected, rdata->xdot, udata->nxtrue, atol, rtol);
     delete[] expected;
 
-    if(udata->sensi >= AMI_SENSI_ORDER_FIRST) {
+    if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         verifyReturnDataSensitivities(file_id, resultPath, rdata, udata, atol, rtol);
     } else {
         POINTERS_EQUAL(NULL, rdata->sllh);
@@ -117,7 +117,7 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
 //        checkEqualArray(expected, rdata->numstepsS, udata->nt, epsilon, blab);
 //        delete[] expected;
 
-    if(udata->sensi_meth == AMI_SENSI_FSA) {
+    if(udata->sensi_meth == AMICI_SENSI_FSA) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
         for(int ip = 0; ip < udata->nplist; ++ip)
             checkEqualArray(&expected[ip * udata->nt * udata->nxtrue],
@@ -140,7 +140,7 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
                 udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
 
-    if(udata->sensi >= AMI_SENSI_ORDER_SECOND) {
+    if(udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "s2llh", &expected, &m, &n);
         checkEqualArray(expected, rdata->s2llh, udata->nplist * udata->nplist, atol, rtol);
         delete[] expected;

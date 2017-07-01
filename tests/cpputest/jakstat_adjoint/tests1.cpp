@@ -57,6 +57,7 @@ TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
     verifyReturnData("/model_jakstat_adjoint/sensiadjoint/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
+    delete edata;
     delete udata;
 }
 

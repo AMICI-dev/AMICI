@@ -1,5 +1,5 @@
-#ifndef _am_wrapfunctions_h
-#define _am_wrapfunctions_h
+#ifndef _amici_wrapfunctions_h
+#define _amici_wrapfunctions_h
 #include <math.h>
 #ifndef AMICI_WITHOUT_MATLAB
 #include <mex.h>
@@ -72,4 +72,4 @@ int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
                 int fdJzdx(realtype t, int ie, realtype *dJzdx, realtype *z, N_Vector x, realtype *dzdx, realtype *mz, realtype *sigma_z, void *user_data, void *temp_data);
                 int fdJzdp(realtype t, int ie, realtype *dJzdp, realtype *z, N_Vector x, realtype *dzdp, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data);
                 int fsJz(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
-#endif /* _LW_cvodewrapfunctions */
+#endif /* _amici_wrapfunctions_h */

@@ -484,8 +484,8 @@ fclose(fid);
 %
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
-fprintf(fid,'#ifndef _am_wrapfunctions_h\n');
-fprintf(fid,'#define _am_wrapfunctions_h\n');
+fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
+fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'#ifndef AMICI_WITHOUT_MATLAB\n');
 fprintf(fid,'#include <mex.h>\n');
@@ -531,7 +531,7 @@ for iffun = ffuns
     end
     fprintf(fid,['                int f' iffun{1} fun.fargstr ';\n']);
 end
-fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
+fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
 
 fprintf('CMakeLists | ');

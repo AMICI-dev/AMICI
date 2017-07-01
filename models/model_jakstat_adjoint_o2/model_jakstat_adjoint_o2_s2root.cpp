@@ -2,11 +2,13 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
+#include <include/tdata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int s2root_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data) {
+int s2root_model_jakstat_adjoint_o2(realtype t, int ie, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data, void *temp_data) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) temp_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;

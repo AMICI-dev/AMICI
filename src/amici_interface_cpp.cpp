@@ -8,9 +8,6 @@
 #include <cblas.h>
 #endif
 
-#include <include/edata_accessors.h>
-#include <include/tdata_accessors.h>
-
 #include <cstring>
 
 #define initField2(FIELD,D1,D2) \
@@ -25,7 +22,7 @@ FIELD ## data = new double[(D1) * (D2) * (D3) * (D4)]();
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
     double *originalParams = NULL;
 
-    if(udata->pscale != AMI_SCALING_NONE) {
+    if(udata->pscale != AMICI_SCALING_NONE) {
         originalParams = (double *) malloc(sizeof(double) * udata->np);
         memcpy(originalParams, udata->p, sizeof(double) * udata->np);
     }
