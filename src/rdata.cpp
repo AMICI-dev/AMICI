@@ -17,7 +17,7 @@ void ReturnData::setDefaults()
 {
     ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = NULL;
     sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order = llh = chi2 = sllh = s2llh = NULL;
-    numerrtestfails = numnonlinsolvconvfails = NULL;
+    numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB = numnonlinsolvconvfailsB = NULL;
     status = NULL;
 
     freeFieldsOnDestruction = true;
