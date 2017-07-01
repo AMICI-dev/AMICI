@@ -93,8 +93,8 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         verifyReturnDataSensitivities(file_id, resultPath, rdata, udata, atol, rtol);
     } else {
         POINTERS_EQUAL(NULL, rdata->sllh);
-        POINTERS_EQUAL(NULL, rdata->numrhsevalsS);
-        POINTERS_EQUAL(NULL, rdata->numstepsS);
+        //POINTERS_EQUAL(NULL, rdata->numrhsevalsB);
+        //POINTERS_EQUAL(NULL, rdata->numstepsB);
         POINTERS_EQUAL(NULL, rdata->s2llh);
     }
 
