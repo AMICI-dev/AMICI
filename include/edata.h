@@ -19,7 +19,9 @@ public:
     
     /** observed events */
     double *mz;
-    /** standard deviation of observed events */
+    /** observed roots */
+    double *mrz;
+    /** standard deviation of observed events/roots */
     double *sigmaz;
 };
 
