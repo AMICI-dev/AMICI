@@ -60,10 +60,13 @@ ${MODEL_DIR}/model_dirac_dJydx.cpp
 ${MODEL_DIR}/model_dirac_dJydy.cpp
 ${MODEL_DIR}/model_dirac_dJzdp.cpp
 ${MODEL_DIR}/model_dirac_dJzdx.cpp
+${MODEL_DIR}/model_dirac_dJzdz.cpp
 ${MODEL_DIR}/model_dirac_deltaqB.cpp
 ${MODEL_DIR}/model_dirac_deltasx.cpp
 ${MODEL_DIR}/model_dirac_deltax.cpp
 ${MODEL_DIR}/model_dirac_deltaxB.cpp
+${MODEL_DIR}/model_dirac_drootdp.cpp
+${MODEL_DIR}/model_dirac_drootdx.cpp
 ${MODEL_DIR}/model_dirac_dsigma_ydp.cpp
 ${MODEL_DIR}/model_dirac_dsigma_zdp.cpp
 ${MODEL_DIR}/model_dirac_dwdp.cpp
@@ -75,7 +78,6 @@ ${MODEL_DIR}/model_dirac_dzdp.cpp
 ${MODEL_DIR}/model_dirac_dzdx.cpp
 ${MODEL_DIR}/model_dirac_qBdot.cpp
 ${MODEL_DIR}/model_dirac_root.cpp
-${MODEL_DIR}/model_dirac_sJz.cpp
 ${MODEL_DIR}/model_dirac_sigma_y.cpp
 ${MODEL_DIR}/model_dirac_sigma_z.cpp
 ${MODEL_DIR}/model_dirac_sroot.cpp

@@ -27,7 +27,7 @@ function [this,model] = getSyms(this,model)
             xs = cell(nx,1);
             % fill cell array
             for j=1:nx
-                xs{j} = sprintf('x_%i',j-1);
+                xs{j} = sprintf('var_x_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(xs);
@@ -38,7 +38,7 @@ function [this,model] = getSyms(this,model)
             dxs = cell(nx,1);
             % fill cell array
             for j=1:nx
-                dxs{j} = sprintf('dx_%i',j-1);
+                dxs{j} = sprintf('var_dx_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(dxs);
@@ -48,7 +48,7 @@ function [this,model] = getSyms(this,model)
             ps = cell(np,1);
             % fill cell array
             for j=1:np
-                ps{j} = sprintf('p_%i',j-1);
+                ps{j} = sprintf('var_p_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(ps);
@@ -59,7 +59,7 @@ function [this,model] = getSyms(this,model)
             ks = cell(nk,1);
             % fill cell array
             for j=1:nk
-                ks{j} = sprintf('k_%i',j-1);
+                ks{j} = sprintf('var_k_%i',j-1);
             end
             % transform into symbolic expression
             this.sym = sym(ks);
@@ -69,7 +69,7 @@ function [this,model] = getSyms(this,model)
             sxs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                sxs{j} = sprintf('sx_%i', j-1);
+                sxs{j} = sprintf('var_sx_%i', j-1);
             end
             % transform into symbolic expression
             this.sym = repmat(sym(sxs),[1,np]);
@@ -81,7 +81,7 @@ function [this,model] = getSyms(this,model)
             % fill cell array
             for j = 1:nx
                 for i = 1:np
-                    sdx{j,i} = sprintf('sdx_%i', j-1);
+                    sdx{j,i} = sprintf('var_sdx_%i', j-1);
                 end
             end
             % transform into symbolic expression
@@ -92,7 +92,7 @@ function [this,model] = getSyms(this,model)
             xBs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                xBs{j} = sprintf('xB_%i', j-1);
+                xBs{j} = sprintf('var_xB_%i', j-1);
             end
             % transform into symbolic expression
             this.sym = sym(xBs);
@@ -102,7 +102,7 @@ function [this,model] = getSyms(this,model)
             dxBs = cell(nx,1);
             % fill cell array
             for j = 1:nx
-                dxBs{j} = sprintf('dxB_%i', j-1);
+                dxBs{j} = sprintf('var_dxB_%i', j-1);
             end
             % transform into symbolic expression
             this.sym = sym(dxBs);
@@ -128,8 +128,7 @@ function [this,model] = getSyms(this,model)
                         model.minflag = true;
                     end
                 end
-            end
-            
+            end          
             
         case 'x0'
             this.sym = model.sym.x0;
@@ -324,7 +323,7 @@ function [this,model] = getSyms(this,model)
             Js = sym(zeros(length(idx),1));
             % fill cells with strings
             for iJ = 1:length(idx)
-                Js(iJ) = sym(sprintf('tmp_J%i',iJ-1));
+                Js(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
             end
             % create full symbolic matrix
             this.strsym = sym(zeros(nx,nx));
@@ -358,7 +357,7 @@ function [this,model] = getSyms(this,model)
             dxdotdps = cell(nx,1);
             % fill cells with strings
             for ix = 1:nx
-                dxdotdps{ix} = sprintf('tmp_dxdotdp%i',ix-1);
+                dxdotdps{ix} = sprintf('tmp_dxdotdp_%i',ix-1);
             end
             % create full symbolic array
             this.strsym = sym(dxdotdps);
@@ -397,7 +396,7 @@ function [this,model] = getSyms(this,model)
             vs = cell(nx,1);
             % fill cells
             for j=1:nx
-                vs{j} = sprintf('v_%i',j-1);
+                vs{j} = sprintf('var_v_%i',j-1);
             end
             % transform to symbolic variable
             vs = sym(vs);
@@ -409,7 +408,7 @@ function [this,model] = getSyms(this,model)
             vs = cell(nx,1);
             % fill cells
             for j=1:nx
-                vs{j} = sprintf('v_%i',j-1);
+                vs{j} = sprintf('var_vB_%i',j-1);
             end
             % transform to symbolic variable
             vs = sym(vs);
@@ -536,7 +535,7 @@ function [this,model] = getSyms(this,model)
             staus = cell(1,np);
             % fill cells
             for j=1:np
-                staus{j} = sprintf('stau_%i',j-1);
+                staus{j} = sprintf('var_stau_%i',j-1);
             end
             % transform to symbolic variable
             staus = sym(staus);

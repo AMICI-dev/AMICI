@@ -31,8 +31,14 @@ for ifun = this.funs
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
         end
-        if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
+        if( strfind(this.fun.(ifun{1}).argstr,'tdata') )
             fprintf(fid,'#include <include/tdata.h>\n');
+        end
+        if( strfind(this.fun.(ifun{1}).argstr,'rdata') )
+            fprintf(fid,'#include <include/rdata.h>\n');
+        end
+        if( strfind(this.fun.(ifun{1}).argstr,'edata') )
+            fprintf(fid,'#include <include/edata.h>\n');
         end
         if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
@@ -65,9 +71,6 @@ for ifun = this.funs
             if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
                 fprintf(fid,'UserData *udata = (UserData*) user_data;\n');
             end
-            if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
-                fprintf(fid,'TempData *tdata = (TempData*) temp_data;\n');
-            end
             this.fun.(ifun{1}).printLocalVars(this,fid);
             if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
                 if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
@@ -81,7 +84,7 @@ for ifun = this.funs
                     fprintf(fid,'int ip;\n');
                     fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,udata->dxdotdp,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
                     fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[udata->plist[ip]]);\n');
                     fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[udata->plist[ip]]);\n');
@@ -92,7 +95,7 @@ for ifun = this.funs
                 else
                     fprintf(fid,'if(ip == 0) {\n');
                     fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,udata->J,user_data,NULL,NULL,NULL);\n']);
-                    fprintf(fid,['    status = dxdotdp_' this.modelname '(t,udata->dxdotdp,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'}\n');
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end
@@ -131,15 +134,15 @@ for ifun = this.funs
             end
             if(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
-                fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                fprintf(fid,['       if(amiIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
-                fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
+                fprintf(fid,'   for(ix = 0; ix<udata->nx; ix++) {\n');
+                fprintf(fid,'       if(amiIsNaN(udata->dxdotdp[ix+ip*udata->nx])) {\n');
+                fprintf(fid,'           udata->dxdotdp[ix+ip*udata->nx] = 0;\n');
                 fprintf(fid,'           if(!udata->nan_dxdotdp) {\n');
                 fprintf(fid,'               warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'               udata->nan_dxdotdp = TRUE;\n');
                 fprintf(fid,'           }\n');
                 fprintf(fid,'       }\n');
-                fprintf(fid,['       if(amiIsInf(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
+                fprintf(fid,'       if(amiIsInf(udata->dxdotdp[ix+ip*udata->nx])) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                 fprintf(fid,'           return(-1);\n');
                 fprintf(fid,'       }\n');
@@ -442,10 +445,10 @@ end
 fprintf(fid,'                }\n');
 
 ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','sroot','s2root','stau',...
-    'y','dydp','dydx','z','sz','sz_tf','dzdp','dzdx',...
+    'y','dydp','dydx','z','sz','sz_tf','dzdp','dzdx','drootdp','drootdx',...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
-    'Jy','Jz','dJydx','dJydy','dJydp','dJzdx','dJzdp','sJz'};
+    'Jy','Jz','dJydx','dJydy','dJydp','dJzdx','dJzdp','dJzdz'};
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
@@ -558,6 +561,9 @@ function argstr = removeTypes(argstr)
 argstr = strrep(argstr,'realtype','');
 argstr = strrep(argstr,'int','');
 argstr = strrep(argstr,'void','');
+argstr = strrep(argstr,'TempData','');
+argstr = strrep(argstr,'ReturnData','');
+argstr = strrep(argstr,'const ExpData','');
 argstr = strrep(argstr,'N_Vector','');
 argstr = strrep(argstr,'long','');
 argstr = strrep(argstr,'DlsMat','');

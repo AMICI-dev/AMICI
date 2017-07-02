@@ -87,7 +87,7 @@ elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','dJydy'})))
     if(any(any(nonzero)))
         fprintf(fid,['int iy;\n']);
         for iy = 1:model.nytrue
-            fprintf(fid,['if(!amiIsNaN(my[' num2str(iy-1) '* udata->nt+it])){\n']);
+            fprintf(fid,['if(!amiIsNaN(edata->my[' num2str(iy-1) '* udata->nt+it])){\n']);
             fprintf(fid,['    iy = ' num2str(iy-1) ';\n']);
             tmpfun.sym = permute(this.sym(iy,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);

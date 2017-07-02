@@ -9,6 +9,10 @@ function [ this ] = getCVar(this)
     switch(this.funstr)
         case 'J'
             this.cvar =  'Jdata';
+        case 'Jv'
+            this.cvar =  'Jv_tmp';
+        case 'JvB'
+            this.cvar =  'JvB_tmp';
         case 'JSparse'
             this.cvar =  'Jdata';
         case 'JB'
@@ -18,7 +22,7 @@ function [ this ] = getCVar(this)
         case 'w'
             this.cvar =  'udata->w';
         case 'dwdx'
-            this.cvar =  'dwdx';
+            this.cvar =  'udata->dwdx';
         case 'dwdp'
             this.cvar =  'udata->dwdp';
         case 'M'
@@ -28,7 +32,7 @@ function [ this ] = getCVar(this)
         case 'sz_tf'
             this.cvar =  'sz';
         otherwise
-            this.cvar = this.funstr;
+            this.cvar = ['var_' this.funstr];
     end
 end
 

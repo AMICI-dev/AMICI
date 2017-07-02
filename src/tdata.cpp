@@ -9,7 +9,7 @@ TempData::TempData(const UserData *udata) {
     x = x_old = dx = dx_old = xdot = xdot_old = NULL;
     sx = sdx = NULL;
     Jtmp = NULL;
-    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = dJzdp = dJzdx = NULL;
+    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp = dJzdx = dJzdz = NULL;
     dsigmaydp = dsigmazdp = llhS0 = NULL;
     
     which = 0;
@@ -51,11 +51,14 @@ TempData::TempData(const UserData *udata) {
         dydp = new realtype[udata->ny * udata->nplist]();
         dJydp = new realtype[udata->nJ * udata->nplist * udata->nytrue]();
         dJydx = new realtype[udata->nJ * udata->nxtrue * udata->nt]();
-        dJydy = new realtype[udata->nytrue * udata->nJ * udata->ny]();
-        dzdp = new realtype[udata->nz*udata->nplist]();
+        dJydy = new realtype[udata->nJ * udata->nytrue * udata->ny]();
         dzdx = new realtype[udata->nz*udata->nx]();
-        dJzdp = new realtype[udata->nJ * udata->nplist * udata->nztrue * udata->nmaxevent]();
-        dJzdx = new realtype[udata->nJ * udata->nx * udata->nztrue * udata->nmaxevent]();
+        dzdp = new realtype[udata->nz*udata->nplist]();
+        drzdx = new realtype[udata->nz*udata->nx]();
+        drzdp = new realtype[udata->nz*udata->nplist]();
+        dJzdp = new realtype[udata->nJ * udata->nplist * udata->nztrue]();
+        dJzdx = new realtype[udata->nJ * udata->nxtrue * udata->nmaxevent]();
+        dJzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         
         dsigmaydp = new realtype[udata->ny * udata->nplist]();
         dsigmazdp = new realtype[udata->nz * udata->nplist]();
@@ -126,9 +129,12 @@ TempData::~TempData() {
     if(dJydy) delete[] dJydy;
     if(dJydx) delete[] dJydx;
     if(dJzdp) delete[] dJzdp;
+    if(dJzdz) delete[] dJzdz;
     if(dJzdx) delete[] dJzdx;
     if(dzdp) delete[] dzdp;
     if(dzdx) delete[] dzdx;
+    if(drzdp) delete[] drzdp;
+    if(drzdx) delete[] drzdx;
     if(dsigmaydp) delete[] dsigmaydp;
     if(dsigmazdp) delete[] dsigmazdp;
         

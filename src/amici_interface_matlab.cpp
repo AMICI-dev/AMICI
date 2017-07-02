@@ -417,7 +417,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz", errmsg);
             return NULL;
         }
-        memcpy(edata->mz,mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Y")),nz_mz*ne_mz*sizeof(double));
+        memcpy(edata->mz,mxGetPr(mxGetProperty(prhs[8], 0 ,"Z")),nz_mz*ne_mz*sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
         return NULL;
