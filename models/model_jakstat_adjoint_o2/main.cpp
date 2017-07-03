@@ -41,7 +41,7 @@ void printReturnData(ReturnData *rdata, UserData *udata);
 
 
 int main(int argc, char **argv)
-{  
+{
     // HDF5 file to read and write data (full path)
     const char *hdffile;
 
@@ -61,16 +61,12 @@ int main(int argc, char **argv)
 
     // Read ExpData (experimental data for model) from HDF5 file
     ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data");
-    if (edata == NULL) {
-        delete udata;
-        return 1;
-    }
 
     // Run the simulation
     ReturnData *rdata = getSimulationResults(udata, edata);
     if (rdata == NULL) {
-        freeExpData(edata);
-        delete udata;
+        if(edata) delete edata;
+        if(udata) delete udata;
         return 1;
     }
 
@@ -81,9 +77,9 @@ int main(int argc, char **argv)
     AMI_HDF5_writeReturnData(rdata, udata, hdffile, "/solution");
 
     // Free memory
-    freeExpData(edata);
-    delete udata;
-    delete rdata;
+    if(edata) delete edata;
+    if(udata) delete udata;
+    if(rdata) delete rdata;
 
     return 0;
 }

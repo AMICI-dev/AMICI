@@ -25,7 +25,7 @@ function amiwrap( varargin )
     end
     modelname = varargin{1}; % this is the target modelname
     if(~ischar(modelname))
-        error(' modelname must be a string')
+        error('modelname must be a string.')
     end
     symfun = varargin{2}; % this is the function which generates the symbolic struct
     if nargin > 2
@@ -83,6 +83,7 @@ function amiwrap( varargin )
     addpath(fullfile(wrap_path,'models',modelname));
     if(exist([commit_hash '_' model_hash '.mat'],'file')==2);
         load([commit_hash '_' model_hash '.mat']);
+        model.updateModelName(modelname);
     end
     
     if(~exist('model','var'))
@@ -113,6 +114,7 @@ function amiwrap( varargin )
         end
         if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file')==2);
             load([commit_hash '_' model_hash '_' o2string '.mat']);
+            modelo2.updateModelName([modelname '_' o2string]);
         end
         if(~exist('modelo2','var'))
             disp('Augmenting to second order ...')

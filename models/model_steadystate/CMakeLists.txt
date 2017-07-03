@@ -41,6 +41,7 @@ ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
+${AMICI_DIR}/src/tdata.cpp
 ${AMICI_DIR}/src/edata.cpp
 ${AMICI_DIR}/src/ami_hdf5.cpp
 ${AMICI_DIR}/src/spline.cpp

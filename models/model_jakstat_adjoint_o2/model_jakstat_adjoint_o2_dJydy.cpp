@@ -8,7 +8,7 @@ int dJydy_model_jakstat_adjoint_o2(realtype t, int it, realtype *dJydy, realtype
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->ng);
+memset(dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->nJ);
 status = w_model_jakstat_adjoint_o2(t,x,NULL,user_data);
 int iy;
 if(!amiIsNaN(my[0* udata->nt+it])){

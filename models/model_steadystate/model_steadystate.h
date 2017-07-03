@@ -80,18 +80,18 @@ int root_model_steadystate(realtype t, N_Vector x, realtype *root, void *user_da
 int sJz_model_steadystate(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
 int sigma_y_model_steadystate(realtype t, realtype *sigma_y, void *user_data);
 int sigma_z_model_steadystate(realtype t, int ie, realtype *sigma_z, void *user_data);
-int sroot_model_steadystate(realtype t, int ie, int *nroots, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data);
+int sroot_model_steadystate(realtype t, int ie, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
 int stau_model_steadystate(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
 int sx0_model_steadystate(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_steadystate(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-int sz_model_steadystate(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
-int sz_tf_model_steadystate(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
+int sz_model_steadystate(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
+int sz_tf_model_steadystate(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
 int w_model_steadystate(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int x0_model_steadystate(N_Vector x0, void *user_data);
 int xBdot_model_steadystate(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);
 int xdot_model_steadystate(realtype t, N_Vector x, N_Vector xdot, void *user_data);
 int y_model_steadystate(realtype t, int it, realtype *y, N_Vector x, void *user_data);
-int z_model_steadystate(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data);
+int z_model_steadystate(realtype t, int ie, realtype *z, N_Vector x, void *user_data, void *temp_data);
 
 
 #endif /* _am_model_steadystate_h */

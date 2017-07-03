@@ -343,17 +343,17 @@ fprintf(fid,'end\n');
 
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
+    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
         case 2
-            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
     end
     fprintf(fid,'end\n');
 else
-    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar,xscale,init,data);\n']);
+    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
 end
 
 if(o2flag)

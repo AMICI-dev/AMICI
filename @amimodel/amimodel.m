@@ -216,6 +216,16 @@ classdef amimodel < handle
             this.fun.xdot.sym = xdot;
         end
         
+        function updateModelName(this,modelname)
+            % updateModelName updates the modelname
+            %
+            % Parameters:
+            %  modelname: new modelname
+            %
+            % Return values:
+            this.modelname = modelname;
+        end
+        
         parseModel(this)
         
         generateC(this)

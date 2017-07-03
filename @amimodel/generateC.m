@@ -33,18 +33,6 @@ for ifun = this.funs
         end
         if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
             fprintf(fid,'#include <include/tdata.h>\n');
-            fprintf(fid,'#include <include/tdata_accessors.h>\n');
-            % avoid conflicts
-            fprintf(fid,'#undef t\n');
-            fprintf(fid,'#undef x\n');
-            fprintf(fid,'#undef x_tmp\n');
-            fprintf(fid,'#undef dzdp\n');
-            fprintf(fid,'#undef dzdx\n');
-            fprintf(fid,'#undef dx\n');
-            fprintf(fid,'#undef sigma_y\n');
-            fprintf(fid,'#undef sigma_z\n');
-            fprintf(fid,'#undef dsigma_ydp\n');
-            fprintf(fid,'#undef dsigma_zdp\n');
         end
         if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
@@ -224,7 +212,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->ng; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->nJ; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!udata->nan_qBdot) {\n');
@@ -363,22 +351,22 @@ fprintf(fid,['                         ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                         ' num2str(this.lbw) ',\n']);
 switch(this.param)
     case 'lin'
-fprintf(fid,['                         AMI_SCALING_NONE,\n']);
+fprintf(fid,['                         AMICI_SCALING_NONE,\n']);
     case 'log'
-fprintf(fid,['                         AMI_SCALING_LN,\n']);
+fprintf(fid,['                         AMICI_SCALING_LN,\n']);
     case 'log10'
-fprintf(fid,['                         AMI_SCALING_LOG10,\n']);
+fprintf(fid,['                         AMICI_SCALING_LOG10,\n']);
     otherwise
         disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
-fprintf(fid,['                   udata->pscale = AMI_SCALING_NONE;\n']);     
+fprintf(fid,['                   udata->pscale = AMICI_SCALING_NONE;\n']);     
 end
 switch(this.o2flag)
     case 1
-fprintf(fid,['                         AMI_O2MODE_FULL);\n']);
+fprintf(fid,['                         AMICI_O2MODE_FULL);\n']);
     case 2
-fprintf(fid,['                         AMI_O2MODE_DIR);\n']);
+fprintf(fid,['                         AMICI_O2MODE_DIR);\n']);
     otherwise
-fprintf(fid,['                         AMI_O2MODE_NONE);\n']);
+fprintf(fid,['                         AMICI_O2MODE_NONE);\n']);
 end
 fprintf(fid,'                }\n');
 fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
@@ -496,8 +484,8 @@ fclose(fid);
 %
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
-fprintf(fid,'#ifndef _am_wrapfunctions_h\n');
-fprintf(fid,'#define _am_wrapfunctions_h\n');
+fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
+fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'#ifndef AMICI_WITHOUT_MATLAB\n');
 fprintf(fid,'#include <mex.h>\n');
@@ -543,7 +531,7 @@ for iffun = ffuns
     end
     fprintf(fid,['                int f' iffun{1} fun.fargstr ';\n']);
 end
-fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
+fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
 
 fprintf('CMakeLists | ');
@@ -630,6 +618,7 @@ function generateCMakeFile(this)
             '${AMICI_DIR}/src/amici.cpp', ...
             '${AMICI_DIR}/src/udata.cpp', ...
             '${AMICI_DIR}/src/rdata.cpp', ...
+            '${AMICI_DIR}/src/tdata.cpp', ...
             '${AMICI_DIR}/src/edata.cpp', ...
             '${AMICI_DIR}/src/ami_hdf5.cpp', ...
             '${AMICI_DIR}/src/spline.cpp', ...
