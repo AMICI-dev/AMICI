@@ -9,27 +9,27 @@ class ReturnDataMatlab;
 /**
  * @brief userDataFromMatlabCall extracts information from the matlab call and returns the corresponding UserData struct
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @return udata: struct containing all provided user data @type UserData
+ * @return udata: struct containing all provided user data @type *UserData
  */
-UserData userDataFromMatlabCall(const mxArray *prhs[], int *status);
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
 
 /**
  * setupReturnData initialises the return data struct
  * @param[in] plhs user input @type mxArray
  * @param[in] udata pointer to the user data struct @type UserData
  * @param[out] pstatus pointer to the flag indicating the execution status @type double
- * @return rdata: return data struct @type ReturnData
+ * @return rdata: return data struct @type *ReturnData
  */
-ReturnDataMatlab *setupReturnData(mxArray *plhs[], const UserData *udata, double *pstatus);
+ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs, const UserData *udata);
 
 /**
  * expDataFromMatlabCall initialises the experimental data struct
  * @param[in] prhs user input @type *mxArray
  * @param[in] udata pointer to the user data struct @type UserData
  * @param[out] status non-zero on failure, zero on success
- * @return edata: experimental data struct @type ExpData
+ * @return edata: experimental data struct @type *ExpData
  */
-ExpData expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, int *status);
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata);
 
 
 class ReturnDataMatlab : public ReturnData {

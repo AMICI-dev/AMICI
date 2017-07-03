@@ -14,7 +14,7 @@
 #include <iostream>
 #endif
 
-ExpData *getTestExpData();
+ExpData *getTestExpData(const UserData *udata);
 
 bool withinTolerance(double expected, double actual, double atol, double rtol);
 

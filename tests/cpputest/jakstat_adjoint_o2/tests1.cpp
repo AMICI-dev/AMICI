@@ -31,7 +31,7 @@ TEST(groupJakstatAdjointO2, testSensitivity2) {
     verifyReturnData("/model_jakstat_adjoint/sensi2forward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
+    delete edata;
     delete udata;
 }
 

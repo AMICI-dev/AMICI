@@ -78,22 +78,22 @@ int dzdp_model_jakstat_adjoint_o2(realtype t, int ie, realtype *dzdp, N_Vector x
 int dzdx_model_jakstat_adjoint_o2(realtype t, int ie, realtype *dzdx, N_Vector x, void *user_data);
 int qBdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
 int root_model_jakstat_adjoint_o2(realtype t, N_Vector x, realtype *root, void *user_data);
-int s2root_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data);
+int s2root_model_jakstat_adjoint_o2(realtype t, int ie, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
 int sJz_model_jakstat_adjoint_o2(realtype t, int ie, realtype *sJz, realtype *s2Jz, realtype *dJzdz, realtype *dJzdp, realtype *sz, realtype *dzdp, realtype *mz, void *user_data, void *temp_data);
 int sigma_y_model_jakstat_adjoint_o2(realtype t, realtype *sigma_y, void *user_data);
 int sigma_z_model_jakstat_adjoint_o2(realtype t, int ie, realtype *sigma_z, void *user_data);
-int sroot_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data);
+int sroot_model_jakstat_adjoint_o2(realtype t, int ie, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
 int stau_model_jakstat_adjoint_o2(realtype t, int ie, realtype *stau, N_Vector x, N_Vector *sx, void *user_data);
 int sx0_model_jakstat_adjoint_o2(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_jakstat_adjoint_o2(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-int sz_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
-int sz_tf_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data);
+int sz_model_jakstat_adjoint_o2(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
+int sz_tf_model_jakstat_adjoint_o2(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data);
 int w_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int x0_model_jakstat_adjoint_o2(N_Vector x0, void *user_data);
 int xBdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);
 int xdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xdot, void *user_data);
 int y_model_jakstat_adjoint_o2(realtype t, int it, realtype *y, N_Vector x, void *user_data);
-int z_model_jakstat_adjoint_o2(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data);
+int z_model_jakstat_adjoint_o2(realtype t, int ie, realtype *z, N_Vector x, void *user_data, void *temp_data);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_h */

@@ -28,7 +28,6 @@ TEST(groupJakstatAdjoint, testSimulation) {
     verifyReturnData("/model_jakstat_adjoint/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
     delete udata;
 }
 
@@ -43,7 +42,7 @@ TEST(groupJakstatAdjoint, testSensitivityForward) {
     verifyReturnData("/model_jakstat_adjoint/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
+    delete edata;
     delete udata;
 }
 
@@ -58,7 +57,7 @@ TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
     verifyReturnData("/model_jakstat_adjoint/sensiadjoint/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
     delete rdata;
-    freeExpData(edata);
+    delete edata;
     delete udata;
 }
 
