@@ -9,8 +9,11 @@ public:
     /**
      * @brief Default constructor
      */
+    ExpData();
     ExpData(const UserData *udata);
     ~ExpData();
+    
+    void setDefaults();
     
     /** observed data */
     double *my;
