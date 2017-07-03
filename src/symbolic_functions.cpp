@@ -16,7 +16,10 @@
 #include <cstdio>
 #include <cstring>
 #include <cfloat>
-#if defined(WIN32) || defined(__WIN32) || defined(__WIN32__)
+#if _MSC_VER && !__INTEL_COMPILER
+    #include <malloc.h>
+    #define alloca _alloca
+#elif defined(WIN32) || defined(__WIN32) || defined(__WIN32__)
     // For alloca().
     #include <malloc.h>
 #else
