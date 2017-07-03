@@ -1554,22 +1554,17 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                             AMIRootInit(ami_mem, 0, NULL);
                             status = AMICI_SUCCESS;
                         }
-                        /* integration error occured */
-                        if (status<AMICI_SUCCESS) {
-                            return status;
-                        }
                         if (status==AMICI_ROOT_RETURN) {
                             status = handleEvent(iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                            if (status != AMICI_SUCCESS) return status;
+                            if (status != AMICI_SUCCESS) goto freturn;
                         }
+                        /* integration error occured */
+                        if (status != AMICI_SUCCESS) goto freturn;
                     }
                 }
             }
-            
             status = handleDataPoint(it, ami_mem, udata, rdata, edata, tdata);
-            if (status != AMICI_SUCCESS) return status;
-            
-            
+            if (status != AMICI_SUCCESS) goto freturn;
         } else {
             for(ix=0; ix < udata->nx; ix++) rdata->x[ix*udata->nt+it] = amiGetNaN();
         }
@@ -1580,9 +1575,9 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
         fillEventOutput(ami_mem, udata, rdata, edata, tdata);
     }
     
+freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
-    
-    return AMICI_SUCCESS;
+    return status;
 }
 
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot) {

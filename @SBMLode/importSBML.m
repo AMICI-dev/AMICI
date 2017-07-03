@@ -259,19 +259,18 @@ if(length({model.reaction.id})>0)
     if(model.SBML_level>=3)
         reactant_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.reactant},'UniformOutput',false);
 %         reactant_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.reactant},'UniformOutput',false);
-        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@getId,{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.product},'UniformOutput',false);
 %         product_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.product},'UniformOutput',false);
-        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@getId,{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
-        math_expr = @(y) cleanedsym(y.math);
         symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
         reactant_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.reactant},'UniformOutput',false);
-        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@getId,{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.product},'UniformOutput',false);
-        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@getId,{model.reaction.product},'UniformOutput',false);
     end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
@@ -744,5 +743,21 @@ for iy = 1:length(y)
         end
     end
 end
+end
+
+function expr = math_expr(y)
+    if(isfield(y,'math'))
+    expr = cleanedsym(y.math);
+    else
+    expr = cleanedsym();       
+    end
+end
+
+function id = getId(x)
+    if(isfield(x,'id'))
+        id = {x.id};
+    else
+        id = {x.species};
+    end
 end
 
