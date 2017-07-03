@@ -18,8 +18,8 @@
                          9,
                          2,
                          2,
-                         AMI_SCALING_LOG10,
-                         AMI_O2MODE_NONE);
+                         AMICI_SCALING_LOG10,
+                         AMICI_O2MODE_NONE);
                 }
                 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
                     return CVodeInit(cvode_mem, xdot_model_steadystate, RCONST(t), x);
@@ -92,11 +92,11 @@
                     return root_model_steadystate(t, x, root, user_data);
                 }
                 
-                int fsroot(realtype t, int ie, int *nroots, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data){
-                    return sroot_model_steadystate(t, ie, nroots, sroot, x, sx, user_data);
+                int fsroot(realtype t, int ie, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data, void *temp_data){
+                    return sroot_model_steadystate(t, ie, sroot, x, sx, user_data, temp_data);
                 }
                 
-                int fs2root(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data){
+                int fs2root(realtype t, int ie, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data, void *temp_data){
                     warnMsgIdAndTxt("AMICI:mex:s2root:NotAvailable","ERROR: The function s2root was called but not compiled for this model.");
                     return(-1);
                 }
@@ -117,16 +117,16 @@
                     return dydx_model_steadystate(t, it, dydx, x, user_data);
                 }
                 
-                int fz(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data){
-                    return z_model_steadystate(t, ie, nroots, z, x, user_data);
+                int fz(realtype t, int ie, realtype *z, N_Vector x, void *user_data, void *temp_data){
+                    return z_model_steadystate(t, ie, z, x, user_data, temp_data);
                 }
                 
-                int fsz(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data){
-                    return sz_model_steadystate(t, ie, nroots, sz, x, sx, user_data);
+                int fsz(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data){
+                    return sz_model_steadystate(t, ie, sz, x, sx, user_data, temp_data);
                 }
                 
-                int fsz_tf(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data){
-                    return sz_tf_model_steadystate(t, ie, nroots, sz, x, sx, user_data);
+                int fsz_tf(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data){
+                    return sz_tf_model_steadystate(t, ie, sz, x, sx, user_data, temp_data);
                 }
                 
                 int fdzdp(realtype t, int ie, realtype *dzdp, N_Vector x, void *user_data){

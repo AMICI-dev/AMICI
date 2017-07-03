@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
@@ -41,6 +41,7 @@ ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
+${AMICI_DIR}/src/tdata.cpp
 ${AMICI_DIR}/src/edata.cpp
 ${AMICI_DIR}/src/ami_hdf5.cpp
 ${AMICI_DIR}/src/spline.cpp

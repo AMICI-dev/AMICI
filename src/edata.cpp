@@ -1,12 +1,30 @@
 #include "include/edata.h"
-#include<include/edata_accessors.h>
 
-void freeExpData(ExpData *edata) {
-    if(edata) {
-        if(my) delete[] my;
-        if(ysigma) delete[] ysigma;
-        if(mz) delete[] mz;
-        if(zsigma) delete[] zsigma;
-        delete edata;
+#include <include/udata.h>
+#include <include/amici.h>
+
+ExpData::ExpData() {
+    setDefaults();
+}
+
+ExpData::ExpData(const UserData *udata) {
+    setDefaults();
+    if(udata){
+        my = new double[udata->nt*udata->nytrue]();
+        sigmay = new double[udata->nt*udata->nytrue]();
+        mz = new double[udata->nmaxevent*udata->nztrue]();
+        sigmaz = new double[udata->nmaxevent*udata->nztrue]();
     }
+}
+
+void ExpData::setDefaults()
+{
+    my = sigmay = mz = sigmaz = NULL;
+}
+
+ExpData::~ExpData() {
+    if(my) delete[] my;
+    if(sigmay) delete[] sigmay;
+    if(mz) delete[] mz;
+    if(sigmaz) delete[] sigmaz;
 }

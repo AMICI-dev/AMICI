@@ -46,7 +46,7 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xBdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'qBdot'
-            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*udata->ng);\n');
+            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*udata->nJ);\n');
         case 'x0'
             fprintf(fid,['memset(x0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
             fprintf(fid,['realtype t = udata->tstart;\n']);
@@ -113,7 +113,7 @@ function printLocalVars(this,model,fid)
         case 'deltaxB'
             fprintf(fid,['memset(deltaxB,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaqB'
-            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*udata->nplist*udata->ng);\n']);
+            fprintf(fid,['memset(deltaqB,0,sizeof(realtype)*udata->nplist*udata->nJ);\n']);
         case 'deltasx'
             fprintf(fid,['memset(deltasx,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'stau'
@@ -140,9 +140,9 @@ function printLocalVars(this,model,fid)
         case 'dJydx'
             % nothing
         case 'dJydy'
-            fprintf(fid,['memset(dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->ng);\n']);
+            fprintf(fid,['memset(dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->nJ);\n']);
         case 'dJydp'
-            fprintf(fid,['memset(dJydp,0,sizeof(realtype)*udata->nytrue*udata->nplist*udata->ng);\n']);
+            fprintf(fid,['memset(dJydp,0,sizeof(realtype)*udata->nytrue*udata->nplist*udata->nJ);\n']);
         case 'Jz'
             % nothing
         case 'dJzdx'

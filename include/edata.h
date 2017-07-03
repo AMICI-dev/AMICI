@@ -1,25 +1,29 @@
+#include "include/udata.h"
 #ifndef _MY_EDATA
 #define _MY_EDATA
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
-
 /** @brief struct that carries all information about experimental data */
-typedef struct edata {
+class ExpData {
+
+public:
+    /**
+     * @brief Default constructor
+     */
+    ExpData();
+    ExpData(const UserData *udata);
+    ~ExpData();
+    
+    void setDefaults();
+    
     /** observed data */
-    double *am_my; 
+    double *my;
     /** standard deviation of observed data */
-    double *am_ysigma; 
+    double *sigmay;
     
     /** observed events */
-    double *am_mz; 
+    double *mz;
     /** standard deviation of observed events */
-    double *am_zsigma;
-} ExpData;
-
-EXTERNC void freeExpData(ExpData *edata);
+    double *sigmaz;
+};
 
 #endif /* _MY_EDATA */

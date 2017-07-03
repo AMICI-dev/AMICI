@@ -78,11 +78,11 @@ function this = getArgs(this,model)
         case 'y'
             this.argstr = '(realtype t, int it, realtype *y, N_Vector x, void *user_data)';
         case 'z'
-            this.argstr = '(realtype t, int ie, int *nroots, realtype *z, N_Vector x, void *user_data)';
+            this.argstr = '(realtype t, int ie, realtype *z, N_Vector x, void *user_data, void *temp_data)';
         case 'sz'
-            this.argstr = '(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data)';
+            this.argstr = '(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data)';
         case 'sz_tf'
-            this.argstr = '(realtype t, int ie, int *nroots, realtype *sz, N_Vector x, N_Vector *sx, void *user_data)';
+            this.argstr = '(realtype t, int ie, realtype *sz, N_Vector x, N_Vector *sx, void *user_data, void *temp_data)';
         case 'dydp'
             this.argstr = '(realtype t, int it, realtype *dydp, N_Vector x, void *user_data)';
         case 'dydx'
@@ -114,9 +114,9 @@ function this = getArgs(this,model)
         case 'root'
             this.argstr = ['(realtype t, N_Vector x,' dxvec ' realtype *root, void *user_data)'];
         case 'sroot'
-            this.argstr = '(realtype t, int ie, int *nroots, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data)';
+            this.argstr = '(realtype t, int ie, realtype *sroot, N_Vector x, N_Vector *sx, void *user_data, void *temp_data)';
         case 's2root'
-            this.argstr = '(realtype t, int ie, int *nroots, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data)';
+            this.argstr = '(realtype t, int ie, realtype *s2root, N_Vector x, N_Vector *sx, void *user_data, void *temp_data)';
         case 'Jy'
             this.argstr = '(realtype t, int it, realtype *Jy, realtype *y, N_Vector x, realtype *my, realtype *sigma_y, void *user_data)';
         case 'dJydx'

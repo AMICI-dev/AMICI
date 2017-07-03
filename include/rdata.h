@@ -58,11 +58,19 @@ public:
     /** number of integration steps forward problem */
     double *numsteps;
     /** number of integration steps backward problem */
-    double *numstepsS;
+    double *numstepsB;
     /** number of right hand side evaluations forward problem */
     double *numrhsevals;
     /** number of right hand side evaluations backwad problem */
-    double *numrhsevalsS;
+    double *numrhsevalsB;
+    /** number of error test failures forward problem */
+    double *numerrtestfails;
+    /** number of error test failures backwad problem */
+    double *numerrtestfailsB;
+    /** number of linear solver convergence failures forward problem */
+    double *numnonlinsolvconvfails;
+    /** number of linear solver convergence failures backwad problem */
+    double *numnonlinsolvconvfailsB;
     /** employed order forward problem */
     double *order;
     

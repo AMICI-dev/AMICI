@@ -2,6 +2,7 @@
 #include "include/amici_interface_cpp.h"
 
 #include <cassert>
+#include <cstring>
 #ifdef AMI_HDF5_H_DEBUG
 #include <cexecinfo>
 #endif
@@ -9,8 +10,6 @@
 
 #include "wrapfunctions.h"
 #include "include/symbolic_functions.h"
-
-#include "include/edata_accessors.h"
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char* datasetPath) {
 
@@ -42,8 +41,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     udata->stldet     = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
     udata->interpType = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
     udata->ism        = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
-    udata->sensi_meth = (AMI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
-    udata->sensi      = (AMI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
+    udata->sensi_meth = (AMICI_sensi_meth) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth");
+    udata->sensi      = (AMICI_sensi_order) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi");
     udata->nmaxevent  = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
     udata->ordering   = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 
@@ -116,38 +115,44 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 
 
 ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject) {
-    ExpData *edata = new ExpData();
-    if (edata == NULL) {
-        return(NULL);
-    }
 
-    mz = NULL;
-    zsigma = NULL;
-
+    ExpData *edata = new ExpData(udata);
+    
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     hsize_t m, n;
 
     if(H5Lexists(file_id, dataObject, 0)) {
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &my, &m, &n);
+        double *tmp_data;
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &tmp_data, &m, &n);
         assert(n == (unsigned) udata->nt);
         assert(m == (unsigned) udata->nytrue);
-
-        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &ysigma, &m, &n);
+        memcpy(edata->my,tmp_data,udata->nt * udata->nytrue * sizeof(double));
+        delete[] tmp_data;
+        
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y", &tmp_data, &m, &n);
         assert(n == (unsigned) udata->nt);
         assert(m == (unsigned) udata->nytrue);
+        memcpy(edata->sigmay,tmp_data,udata->nt * udata->nytrue * sizeof(double));
+        delete[] tmp_data;
 
         if(udata->nz) {
-            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &mz, &m, &n);
-            assert(m * n == (unsigned) (udata->nt * udata->nz));
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Z", &tmp_data, &m, &n);
+            assert(n == (unsigned) udata->nmaxevent);
+            assert(m == (unsigned) udata->nztrue);
+            memcpy(edata->mz,tmp_data,udata->nmaxevent * udata->nztrue * sizeof(double));
+            delete[] tmp_data;
 
-            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &zsigma, &m, &n);
-            assert(m * n == (unsigned) (udata->nt * udata->nz));
+            AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z", &tmp_data, &m, &n);
+            assert(n == (unsigned) udata->nmaxevent);
+            assert(m == (unsigned) udata->nztrue);
+            memcpy(edata->sigmaz,tmp_data,udata->nmaxevent * udata->nztrue * sizeof(double));
+            delete[] tmp_data;
         }
     }
     H5Fclose(file_id);
-
-    return(edata);
+    
+    return edata;
 }
 
 void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, const char* hdffile, const char* datasetPath) {
@@ -173,13 +178,21 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
     // are double, but should write as int:
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numsteps", rdata->numsteps, udata->nt);
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevals", rdata->numrhsevals, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numerrtestfails", rdata->numerrtestfails, udata->nt);
+    AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, udata->nt);
     AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "order", rdata->order, udata->nt);
 
-    if(rdata->numstepsS)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsS", rdata->numstepsS, udata->nt);
+    if(rdata->numstepsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numstepsB", rdata->numstepsB, udata->nt);
 
-    if(rdata->numrhsevalsS)
-        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsS", rdata->numrhsevalsS, udata->nt);
+    if(rdata->numrhsevalsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numrhsevalsB", rdata->numrhsevalsB, udata->nt);
+    
+    if(rdata->numerrtestfailsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numerrtestfailsB", rdata->numerrtestfailsB, udata->nt);
+    
+    if(rdata->numnonlinsolvconvfailsB)
+        AMI_HDF5_setAttributeIntFromDouble(file_id, datasetPath, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, udata->nt);
 
     AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "J", rdata->J, udata->nx, udata->nx);
     AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "x", rdata->x, udata->nt, udata->nx);
