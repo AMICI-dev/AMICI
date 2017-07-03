@@ -82,15 +82,17 @@ void *setupAMI(UserData *udata, TempData *tdata) {
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block
      */
-    void *ami_mem; /* pointer to ami memory block */
+    void *ami_mem = NULL; /* pointer to ami memory block */
+    N_Vector id;
+    
     
     tdata->t = udata->tstart;
     
     if (udata->nx > 0) {
         /* initialise states */
-        if (tdata->x == NULL) return(NULL);
+        if (tdata->x == NULL) goto freturn;
         if (udata->x0data == NULL) {
-            if (fx0(tdata->x, udata) != AMICI_SUCCESS) return(NULL);
+            if (fx0(tdata->x, udata) != AMICI_SUCCESS) goto freturn;
         } else {
             int ix;
             realtype *x_tmp = NV_DATA_S(tdata->x);
@@ -98,43 +100,45 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                 x_tmp[ix] = (realtype) udata->x0data[ix];
             }
         }
-        if (fdx0(tdata->x, tdata->dx, udata) != AMICI_SUCCESS) return(NULL);
+        if (fdx0(tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
         
         /* initialise heaviside variables */
-        if (initHeaviside(udata,tdata) != AMICI_SUCCESS) return(NULL);
+        if (initHeaviside(udata,tdata) != AMICI_SUCCESS) goto freturn;
         
     }
     
     /* Create AMIS object */
-    if (udata->lmm>2||udata->lmm<1) {
+    if (udata->lmm != CV_ADAMS && udata->lmm != CV_BDF) {
         errMsgIdAndTxt("AMICI:mex:lmm","Illegal value for lmm!");
+        goto freturn;
     }
-    if (udata->iter>2||udata->iter<1) {
+    if (udata->iter != CV_NEWTON && udata->iter != CV_FUNCTIONAL) {
         errMsgIdAndTxt("AMICI:mex:iter","Illegal value for iter!");
+        goto freturn;
     }
     ami_mem = AMICreate(udata->lmm, udata->iter);
-    if (ami_mem == NULL) return(NULL);
+    if (ami_mem == NULL) goto freturn;
     
     /* Initialize AMIS solver*/
-    if (wrap_init(ami_mem, tdata->x, tdata->dx, udata->tstart) != AMICI_SUCCESS) return(NULL);
+    if (wrap_init(ami_mem, tdata->x, tdata->dx, udata->tstart) != AMICI_SUCCESS) goto freturn;
     
     /* Specify integration tolerances */
-    if (AMISStolerances(ami_mem, RCONST(udata->rtol), RCONST(udata->atol)) != AMICI_SUCCESS) return(NULL);
+    if (AMISStolerances(ami_mem, RCONST(udata->rtol), RCONST(udata->atol)) != AMICI_SUCCESS) goto freturn;
     
     /* Set optional inputs */
-    if (AMISetErrHandlerFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+    if (AMISetErrHandlerFn(ami_mem) != AMICI_SUCCESS) goto freturn;
     
     /* attaches userdata*/
-    if (AMISetUserData(ami_mem, udata) != AMICI_SUCCESS) return(NULL);
+    if (AMISetUserData(ami_mem, udata) != AMICI_SUCCESS) goto freturn;
     
     /* specify maximal number of steps */
-    if (AMISetMaxNumSteps(ami_mem, udata->maxsteps) != AMICI_SUCCESS) return(NULL);
+    if (AMISetMaxNumSteps(ami_mem, udata->maxsteps) != AMICI_SUCCESS) goto freturn;
     
     /* activates stability limit detection */
-    if (AMISetStabLimDet(ami_mem, udata->stldet) != AMICI_SUCCESS) return(NULL);
+    if (AMISetStabLimDet(ami_mem, udata->stldet) != AMICI_SUCCESS) goto freturn;
     
     if (udata->ne > 0) {
-        if (wrap_RootInit(ami_mem, udata) != AMICI_SUCCESS) return(NULL);
+        if (wrap_RootInit(ami_mem, udata) != AMICI_SUCCESS) goto freturn;
     }
     
     /* Attach linear solver module */
@@ -143,16 +147,16 @@ void *setupAMI(UserData *udata, TempData *tdata) {
             /* DIRECT SOLVERS */
             
         case AMICI_DENSE:
-            if (AMIDense(ami_mem, udata->nx) != AMICI_SUCCESS) return(NULL);
+            if (AMIDense(ami_mem, udata->nx) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetDenseJacFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetDenseJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
         case AMICI_BAND:
-            if (AMIBand(ami_mem, udata->nx, udata->ubw, udata->lbw) != AMICI_SUCCESS) return(NULL);
+            if (AMIBand(ami_mem, udata->nx, udata->ubw, udata->lbw) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetBandJacFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetBandJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
@@ -178,41 +182,41 @@ void *setupAMI(UserData *udata, TempData *tdata) {
              break;*/
             
         case AMICI_DIAG:
-            if (AMIDiag(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (AMIDiag(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
             /* ITERATIVE SOLVERS */
             
         case AMICI_SPGMR:
-            if (AMISpgmr(ami_mem, PREC_NONE, 5) != AMICI_SUCCESS) return(NULL);
+            if (AMISpgmr(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
         case AMICI_SPBCG:
-            if (AMISpbcg(ami_mem, PREC_NONE, 5) != AMICI_SUCCESS) return(NULL);
+            if (AMISpbcg(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
         case AMICI_SPTFQMR:
-            if (AMISptfqmr(ami_mem, PREC_NONE, 5) != AMICI_SUCCESS) return(NULL);
+            if (AMISptfqmr(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
             break;
             
             /* SPARSE SOLVERS */
             
         case AMICI_KLU:
-            if (AMIKLU(ami_mem, udata->nx, udata->nnz, CSC_MAT) != AMICI_SUCCESS) return(NULL);
+            if (AMIKLU(ami_mem, udata->nx, udata->nnz, CSC_MAT) != AMICI_SUCCESS) goto freturn;
             
-            if (wrap_SetSparseJacFn(ami_mem) != AMICI_SUCCESS) return(NULL);
+            if (wrap_SetSparseJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
             
-            if (AMIKLUSetOrdering(ami_mem, udata->ordering) != AMICI_SUCCESS) return(NULL);
+            if (AMIKLUSetOrdering(ami_mem, udata->ordering) != AMICI_SUCCESS) goto freturn;
             
             break;
             
@@ -229,7 +233,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                 realtype *sx_tmp;
                 
                 if (!udata->sx0data) {
-                    if (fsx0(tdata->sx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) return(NULL);
+                    if (fsx0(tdata->sx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
                 } else {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
@@ -241,37 +245,41 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                     }
                 }
                 
-                if (fsdx0(tdata->sdx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) return(NULL);
+                if (fsdx0(tdata->sdx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
                 
                 /* Activate sensitivity calculations */
-                if (wrap_SensInit1(ami_mem, tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS) return(NULL);
+                if (wrap_SensInit1(ami_mem, tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS) goto freturn;
                 
                 /* Set sensitivity analysis optional inputs */
-                if (AMISetSensParams(ami_mem, udata->p, udata->pbar, udata->plist) != AMICI_SUCCESS) return(NULL);
+                if (AMISetSensParams(ami_mem, udata->p, udata->pbar, udata->plist) != AMICI_SUCCESS) goto freturn;
                 
-                if (AMISetSensErrCon(ami_mem, TRUE) != AMICI_SUCCESS) return(NULL);
+                if (AMISetSensErrCon(ami_mem, TRUE) != AMICI_SUCCESS) goto freturn;
                 
-                if (AMISensEEtolerances(ami_mem) != AMICI_SUCCESS) return(NULL);
+                if (AMISensEEtolerances(ami_mem) != AMICI_SUCCESS) goto freturn;
             }
         }
         
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             if (udata->nx>0) {
                 /* Allocate space for the adjoint computation */
-                if (AMIAdjInit(ami_mem, udata->maxsteps, udata->interpType) != AMICI_SUCCESS) return(NULL);
+                if (AMIAdjInit(ami_mem, udata->maxsteps, udata->interpType) != AMICI_SUCCESS) goto freturn;
             }
         }
         
     }
     
-    N_Vector id = N_VNew_Serial(udata->nx);
+    id = N_VNew_Serial(udata->nx);
     memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(realtype));
     
-    if (AMISetId(ami_mem, id) != AMICI_SUCCESS) return(NULL);
+    if (AMISetId(ami_mem, id) != AMICI_SUCCESS) goto freturn;
     
-    if (AMISetSuppressAlg(ami_mem, TRUE) != AMICI_SUCCESS) return(NULL);
+    if (AMISetSuppressAlg(ami_mem, TRUE) != AMICI_SUCCESS) goto freturn;
     
     return(ami_mem);
+    
+freturn:
+    if(ami_mem) AMIFree(&ami_mem);
+    return NULL;
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -393,7 +401,7 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
             /* ITERATIVE SOLVERS */
             
         case AMICI_SPGMR:
-            status = AMISpgmrB(ami_mem, tdata->which, PREC_NONE, 5);
+            status = AMISpgmrB(ami_mem, tdata->which, PREC_NONE, CVSPILS_MAXL);
             if(status != AMICI_SUCCESS) return status;
             
             status = wrap_SetJacTimesVecFnB(ami_mem, tdata->which);
@@ -402,7 +410,7 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
             break;
             
         case AMICI_SPBCG:
-            status = AMISpbcgB(ami_mem, tdata->which, PREC_NONE, 5);
+            status = AMISpbcgB(ami_mem, tdata->which, PREC_NONE, CVSPILS_MAXL);
             if(status != AMICI_SUCCESS) return status;
             
             status = wrap_SetJacTimesVecFnB(ami_mem, tdata->which);
@@ -411,7 +419,7 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
             break;
             
         case AMICI_SPTFQMR:
-            status = AMISptfqmrB(ami_mem, tdata->which, PREC_NONE, 5);
+            status = AMISptfqmrB(ami_mem, tdata->which, PREC_NONE, CVSPILS_MAXL);
             if(status != AMICI_SUCCESS) return status;
             
             status = wrap_SetJacTimesVecFnB(ami_mem, tdata->which);
@@ -1597,22 +1605,17 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                             AMIRootInit(ami_mem, 0, NULL);
                             status = AMICI_SUCCESS;
                         }
-                        /* integration error occured */
-                        if (status<AMICI_SUCCESS) {
-                            return status;
-                        }
                         if (status==AMICI_ROOT_RETURN) {
                             status = handleEvent(iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0);
-                            if (status != AMICI_SUCCESS) return status;
+                            if (status != AMICI_SUCCESS) goto freturn;
                         }
+                        /* integration error occured */
+                        if (status != AMICI_SUCCESS) goto freturn;
                     }
                 }
             }
-            
             status = handleDataPoint(it, ami_mem, udata, rdata, edata, tdata);
-            if (status != AMICI_SUCCESS) return status;
-            
-            
+            if (status != AMICI_SUCCESS) goto freturn;
         } else {
             for(ix=0; ix < udata->nx; ix++) rdata->x[ix*udata->nt+it] = amiGetNaN();
         }
@@ -1623,9 +1626,9 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
         getEventOutput_tf(ami_mem, udata, rdata, edata, tdata);
     }
     
+freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
-    
-    return AMICI_SUCCESS;
+    return status;
 }
 
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot) {

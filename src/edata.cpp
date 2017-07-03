@@ -3,10 +3,12 @@
 #include <include/udata.h>
 #include <include/amici.h>
 
-
+ExpData::ExpData() {
+    setDefaults();
+}
 
 ExpData::ExpData(const UserData *udata) {
-    my = sigmay = mz = sigmaz = NULL;
+    setDefaults();
     if(udata){
         my = new double[udata->nt*udata->nytrue]();
         sigmay = new double[udata->nt*udata->nytrue]();
@@ -14,6 +16,11 @@ ExpData::ExpData(const UserData *udata) {
         mrz = new double[udata->nmaxevent*udata->nztrue]();
         sigmaz = new double[udata->nmaxevent*udata->nztrue]();
     }
+}
+
+void ExpData::setDefaults()
+{
+    my = sigmay = mz = sigmaz = NULL;
 }
 
 ExpData::~ExpData() {
