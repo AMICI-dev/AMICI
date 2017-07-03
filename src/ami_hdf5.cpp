@@ -241,7 +241,8 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
 double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id, const char* optionsObject, const char* attributeName) {
     double doubleScalar;
 
-    H5LTget_attribute_double(file_id, optionsObject, attributeName, &doubleScalar);
+    herr_t status = H5LTget_attribute_double(file_id, optionsObject, attributeName, &doubleScalar);
+    assert(status >= 0);
 
 #ifdef AMI_HDF5_H_DEBUG
     printf("%s: %e\n", attributeName, doubleScalar);
