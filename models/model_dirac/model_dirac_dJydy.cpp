@@ -13,6 +13,11 @@ UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->nJ);
 status = w_model_dirac(t,x,NULL,user_data);
+int iy;
+if(!amiIsNaN(edata->my[0* udata->nt+it])){
+    iy = 0;
+  tdata->dJydy[0] += 1.0/(tdata->sigmay[0]*tdata->sigmay[0])*(edata->my[it+udata->nt*0]*2.0-rdata->y[it + udata->nt*0]*2.0)*-5.0E-1;
+}
 return(status);
 
 }

@@ -17,17 +17,17 @@ status = dwdp_model_dirac(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  qBdot_tmp[0] = x_tmp[0]*xB_tmp[0];
+  qBdot_tmp[ip] = x_tmp[0]*xB_tmp[0];
 
   } break;
 
   case 2: {
-  qBdot_tmp[0] = -x_tmp[0]*xB_tmp[1];
+  qBdot_tmp[ip] = -x_tmp[0]*xB_tmp[1];
 
   } break;
 
   case 3: {
-  qBdot_tmp[0] = x_tmp[1]*xB_tmp[1];
+  qBdot_tmp[ip] = x_tmp[1]*xB_tmp[1];
 
   } break;
 
