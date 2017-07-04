@@ -1008,17 +1008,6 @@ int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, c
             rdata->x[it+udata->nt*ix] = x_tmp[ix];
         }
         
-        if (it == udata->nt-1) {
-            if (udata->sensi_meth == AMICI_SENSI_SS) {
-                status = fdxdotdp(udata->ts[it],tdata->x,tdata->dx,udata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdydp(udata->ts[it],it,tdata->x,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdydx(udata->ts[it],it,tdata->x,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-            }
-        }
-        
         if (udata->ts[it] > udata->tstart) {
             status = getDiagnosis(it, ami_mem, udata, rdata);
             if(status != AMICI_SUCCESS) return status;
@@ -1826,18 +1815,26 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
                 if (status != AMICI_SUCCESS) return status;
                 realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
                 if (rdata->xdot)
-                if (xdot_tmp)
-                memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+                    if (xdot_tmp)
+                        memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+                if (udata->sensi_meth == AMICI_SENSI_SS) {
+                    status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dxdotdp)
+                        memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->np*sizeof(realtype));
+                    
+                    status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dydp)
+                        memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->np*sizeof(realtype));
+                    
+                    status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dydx)
+                        memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
+                }
+
             }
-        }
-    }
-    if (udata) {
-        if (udata->nx>0) {
-            status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
-            if (status != AMICI_SUCCESS) return status;
-            if (rdata->J)
-            if (tdata->Jtmp->data)
-            memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
         }
     }
     return AMICI_SUCCESS;

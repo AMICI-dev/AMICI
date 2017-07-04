@@ -94,7 +94,7 @@ elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','dJydy'})))
             fprintf(fid,'}\n');
         end
     end
-elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','sJz','dJzdz'})))
+elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','dJzdz'})))
     tmpfun = this;
     if(any(any(nonzero)))
         fprintf(fid,['int iz;\n']);

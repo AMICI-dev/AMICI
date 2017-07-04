@@ -92,7 +92,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'xdot_old_([0-9]+)','xdot_old_tmp[$1]');
             cstr = regexprep(cstr,'xdot_([0-9]+)','xdot_tmp[$1]');
             cstr = regexprep(cstr,'var_xB_([0-9]+)','xB_tmp[$1]');
-            cstr = regexprep(cstr,'var_qBdot_([0-9]+)','qBdot_tmp\[$1]');
+            cstr = regexprep(cstr,'var_qBdot_([0-9]+)','qBdot_tmp\[ip]');
             cstr = regexprep(cstr,'var_v_([0-9]+)', 'v_tmp[$1]');
             cstr = regexprep(cstr,'var_vB_([0-9]+)', 'vB_tmp[$1]');
             cstr = strrep(cstr, 'Jdata[', 'J->data[');
@@ -149,20 +149,18 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dsdzdp_([0-9]+)','tdata->dsigmazdp[ip*udata->nz + $1]');
             cstr = regexprep(cstr,'var_Jy_([0-9]+)','tdata->Jy[$1]');
             cstr = regexprep(cstr,'var_Jz_([0-9]+)','tdata->Jz[$1]');
-            cstr = regexprep(cstr,'var_dJydx\[([0-9]+)\]','tdata->dJydx[it+$1*udata->nt]');
-            cstr = regexprep(cstr,'var_dJzdx\[([0-9]+)\]','tdata->dJzdx[tdata->nroots[ie]+$1*udata->nmaxevent]');
-            cstr = regexprep(cstr,'var_dJydy\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydy[iy+($2*$3+$1)*udata-nytrue]');
-            cstr = regexprep(cstr,'var_dJzdz\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdz[iz+($2*$3+$1)*udata-nztrue]');
-            cstr = regexprep(cstr,'var_dJydp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydp[iy+($2*$3+$1)*udata-nytrue]');
-            cstr = regexprep(cstr,'var_dJzdp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdp[iz+($2*$3+$1)*udata-nztrue]');
+            cstr = regexprep(cstr,'var_dJydy_([0-9]+)','tdata->dJydy[$1]');
+            cstr = regexprep(cstr,'var_dJzdz_([0-9]+)','tdata->dJzdz[$1]');
+            cstr = regexprep(cstr,'var_dJydx\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydx[it+($2*$3+$1)*udata->nt]');
+            cstr = regexprep(cstr,'var_dJzdx\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdx[tdata->nroots[ie]+($2*$3+$1)*udata->nmaxevent]');
+            cstr = regexprep(cstr,'var_dJydy\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydy[iy+($2*$3+$1)*udata->nytrue]');
+            cstr = regexprep(cstr,'var_dJzdz\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdz[iz+($2*$3+$1)*udata->nztrue]');
+            cstr = regexprep(cstr,'var_dJydp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydp[iy+($2*$3+$1)*udata->nytrue]');
+            cstr = regexprep(cstr,'var_dJzdp\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdp[iz+($2*$3+$1)*udata->nztrue]');
             
             if(~isempty(strfind(this.cvar,'Jy')) || ~isempty(strfind(this.cvar,'Jz')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');
                 cstr = regexprep(cstr,'mz_([0-9]+)','mz[tdata->nroots[ie]+udata->nmaxevent*$1]');
-                cstr = regexprep(cstr,'sigma_y_([0-9]+)','tdata->sigmay[$1]');
-                cstr = regexprep(cstr,'sigma_z_([0-9]+)','tdata->sigmaz[$1]');
-                cstr = regexprep(cstr,'y_([0-9]+)','rdata->y[it + udata->nt*$1]');
-                cstr = regexprep(cstr,'z_([0-9]+)','rdata->z[tdata->nroots[ie]+udata->nmaxevent*$1]');
                 cstr = strrep(cstr,'=','+=');
             end
         end

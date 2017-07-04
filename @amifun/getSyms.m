@@ -623,6 +623,7 @@ function [this,model] = getSyms(this,model)
                 this.sym(:,ievent) = -transpose(squeeze(model.fun.ddeltaxdx.sym(:,ievent,:)))*model.fun.xB.sym;
             end
             
+            
         case 'z'
             if(nevent>0)
                 this.sym = transpose([model.event.z]);
@@ -747,7 +748,10 @@ function [this,model] = getSyms(this,model)
             this.sym = model.sym.Jy;
             % replace unify symbolic expression
             this = unifySyms(this,model);
-            this.sym = mysubs(this.sym,model.sym.y,model.fun.y.strsym);
+            tmp = arrayfun(@(iy)sym(sprintf('y_%i',iy-1)),1:ny,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[tmp{:}],model.fun.y.strsym);
+            tmp = arrayfun(@(iy)sym(sprintf('sigma_y_%i',iy-1)),1:ny,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_y.strsym);
         case 'dJydy'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
             for iy = 1 : model.nytrue
@@ -781,6 +785,10 @@ function [this,model] = getSyms(this,model)
         case 'Jz'
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
+            tmp = arrayfun(@(iz)sym(sprintf('z_%i',iz-1)),1:nz,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[tmp{:}],model.fun.z.strsym);
+            tmp = arrayfun(@(iz)sym(sprintf('sigma_z_%i',iz-1)),1:nz,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_z.strsym);
         case 'dJzdz'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
