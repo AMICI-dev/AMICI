@@ -60,10 +60,13 @@ ${MODEL_DIR}/model_steadystate_dJydx.cpp
 ${MODEL_DIR}/model_steadystate_dJydy.cpp
 ${MODEL_DIR}/model_steadystate_dJzdp.cpp
 ${MODEL_DIR}/model_steadystate_dJzdx.cpp
+${MODEL_DIR}/model_steadystate_dJzdz.cpp
 ${MODEL_DIR}/model_steadystate_deltaqB.cpp
 ${MODEL_DIR}/model_steadystate_deltasx.cpp
 ${MODEL_DIR}/model_steadystate_deltax.cpp
 ${MODEL_DIR}/model_steadystate_deltaxB.cpp
+${MODEL_DIR}/model_steadystate_drootdp.cpp
+${MODEL_DIR}/model_steadystate_drootdx.cpp
 ${MODEL_DIR}/model_steadystate_dsigma_ydp.cpp
 ${MODEL_DIR}/model_steadystate_dsigma_zdp.cpp
 ${MODEL_DIR}/model_steadystate_dwdp.cpp
@@ -75,7 +78,6 @@ ${MODEL_DIR}/model_steadystate_dzdp.cpp
 ${MODEL_DIR}/model_steadystate_dzdx.cpp
 ${MODEL_DIR}/model_steadystate_qBdot.cpp
 ${MODEL_DIR}/model_steadystate_root.cpp
-${MODEL_DIR}/model_steadystate_sJz.cpp
 ${MODEL_DIR}/model_steadystate_sigma_y.cpp
 ${MODEL_DIR}/model_steadystate_sigma_z.cpp
 ${MODEL_DIR}/model_steadystate_sroot.cpp

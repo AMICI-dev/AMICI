@@ -19,12 +19,6 @@ function [ this ] = getCVar(this)
             this.cvar =  'JBdata';
         case 'JSparseB'
             this.cvar =  'JBdata';
-        case 'w'
-            this.cvar =  'udata->w';
-        case 'dwdx'
-            this.cvar =  'udata->dwdx';
-        case 'dwdp'
-            this.cvar =  'udata->dwdp';
         case 'M'
             this.cvar =  'udata->M';
         case 'dfdx'

@@ -223,7 +223,7 @@ function [this,model] = getSyms(this,model)
             ts = cell(nw,1);
             % fill cell array
             for iw = 1:nw
-                ws{iw} = sprintf('w_%i', iw-1);
+                ws{iw} = sprintf('var_w_%i', iw-1);
             end
             % transform into symbolic expression
             this.strsym = sym(ws);
@@ -256,7 +256,7 @@ function [this,model] = getSyms(this,model)
                 this.strsym = sym(zeros(size(jacx)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
-                        this.strsym(idx_w(iw)) = sym(sprintf('dwdx_%i', iw-1));
+                        this.strsym(idx_w(iw)) = sym(sprintf('var_dwdx_%i', iw-1));
                     end
                     model.ndwdx = length(idx_w);
                     % update dwdx with simplified expressions, here we can exploit
@@ -283,7 +283,7 @@ function [this,model] = getSyms(this,model)
                 this.strsym = sym(zeros(size(jacp)));
                 if(numel(idx_w)>0)
                     for iw = 1:length(idx_w)
-                        this.strsym(idx_w(iw)) = sym(sprintf('dwdp_%i', iw-1));
+                        this.strsym(idx_w(iw)) = sym(sprintf('var_dwdp_%i', iw-1));
                     end
                     model.ndwdp = length(idx_w);
                     % update dwdx with simplified expressions, here we can exploit

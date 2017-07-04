@@ -102,6 +102,9 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr, 'Jv_tmp_([0-9]+)', 'Jv_tmp[$1]');
             cstr = regexprep(cstr, 'JvB_tmp_([0-9]+)', 'JvB_tmp[$1]');
             cstr = regexprep(cstr,'var_x0_([0-9]+)','x0_tmp\[$1\]');
+            cstr = regexprep(cstr,'var_dx0_([0-9]+)','dx0_tmp\[$1\]');
+            cstr = regexprep(cstr,'var_sx0_([0-9]+)','sx0_tmp\[$1\]');
+            cstr = regexprep(cstr,'var_sdx0_([0-9]+)','sdx0_tmp\[$1\]');
             cstr = regexprep(cstr,'var_root_([0-9]+)', 'root[$1]');
             
             cstr = regexprep(cstr,'var_p_([0-9]+)','udata->p[$1]');
@@ -123,11 +126,14 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_s2root([0-9]+)','rdata->s2root[tdata->nroots[ie] + udata->nmaxevent*($1 + ip*udata->nz * udata->nplist)]');
             
             
-            cstr = strrep(cstr,'var_dydx[','tdata->dydx[');
-            cstr = strrep(cstr,'var_dzdx[','tdata->dzdx[');
+
             cstr = strrep(cstr,'var_drootdx[','tdata->drzdx[');
             
-            cstr = regexprep(cstr,'var_dydp_([0-9]+)','tdata->dydp[ip*udata->ny + $1]');
+            cstr = strrep(cstr,'var_dydx[','tdata->dydx[');
+            cstr = strrep(cstr,'var_dzdx[','tdata->dzdx[');
+            cstr = regexprep(cstr,'var_dydx_([0-9]+)','tdata->dydx[$1]');
+            cstr = regexprep(cstr,'var_dzdx_([0-9]+)','tdata->dzdx[$1]');
+            cstr = regexprep(cstr,'var_dydp_([0-9]+)','tdata->dydp[ip*udata->ny + $1]');    
             cstr = regexprep(cstr,'var_dzdp_([0-9]+)','tdata->dzdp[ip*udata->nz + $1]');
             cstr = regexprep(cstr,'var_drootdp_([0-9]+)','tdata->drzdp[ip*udata->nz + $1]');
             cstr = regexprep(cstr,'var_deltax_([0-9]+)','tdata->deltax[$1]');

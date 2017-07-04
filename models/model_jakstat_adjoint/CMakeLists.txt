@@ -60,10 +60,13 @@ ${MODEL_DIR}/model_jakstat_adjoint_dJydx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJzdx.cpp
+${MODEL_DIR}/model_jakstat_adjoint_dJzdz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltaqB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltasx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltax.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltaxB.cpp
+${MODEL_DIR}/model_jakstat_adjoint_drootdp.cpp
+${MODEL_DIR}/model_jakstat_adjoint_drootdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dsigma_ydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dsigma_zdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dwdp.cpp
@@ -75,7 +78,6 @@ ${MODEL_DIR}/model_jakstat_adjoint_dzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sJz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_z.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sroot.cpp
