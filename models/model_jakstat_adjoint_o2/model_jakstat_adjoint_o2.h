@@ -11,11 +11,9 @@
 #include "model_jakstat_adjoint_o2_JvB.h"
 #include "model_jakstat_adjoint_o2_Jy.h"
 #include "model_jakstat_adjoint_o2_Jz.h"
-#include "model_jakstat_adjoint_o2_dJydp.h"
-#include "model_jakstat_adjoint_o2_dJydx.h"
+#include "model_jakstat_adjoint_o2_dJydsigma.h"
 #include "model_jakstat_adjoint_o2_dJydy.h"
-#include "model_jakstat_adjoint_o2_dJzdp.h"
-#include "model_jakstat_adjoint_o2_dJzdx.h"
+#include "model_jakstat_adjoint_o2_dJzdsigma.h"
 #include "model_jakstat_adjoint_o2_dJzdz.h"
 #include "model_jakstat_adjoint_o2_deltaqB.h"
 #include "model_jakstat_adjoint_o2_deltasx.h"
@@ -42,7 +40,6 @@
 #include "model_jakstat_adjoint_o2_sx0.h"
 #include "model_jakstat_adjoint_o2_sxdot.h"
 #include "model_jakstat_adjoint_o2_sz.h"
-#include "model_jakstat_adjoint_o2_sz_tf.h"
 #include "model_jakstat_adjoint_o2_w.h"
 #include "model_jakstat_adjoint_o2_x0.h"
 #include "model_jakstat_adjoint_o2_xBdot.h"
@@ -60,11 +57,9 @@ int Jv_model_jakstat_adjoint_o2(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
 int JvB_model_jakstat_adjoint_o2(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 int Jy_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int Jz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
-int dJydp_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int dJydx_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int dJydsigma_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int dJydy_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int dJzdp_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdp, void *user_data, TempData *tdata, ReturnData *rdata);
-int dJzdx_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdx,  void *user_data, TempData *tdata, ReturnData *rdata);
+int dJzdsigma_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
 int deltaqB_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata);
 int deltasx_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, void *user_data, TempData *tdata);
@@ -91,7 +86,6 @@ int stau_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, 
 int sx0_model_jakstat_adjoint_o2(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_jakstat_adjoint_o2(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 int sz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata);
-int sz_tf_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata);
 int w_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int x0_model_jakstat_adjoint_o2(N_Vector x0, void *user_data);
 int xBdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);

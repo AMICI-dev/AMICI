@@ -68,10 +68,8 @@ int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
                 int fdsigma_zdp(realtype t, int ie, void *user_data, TempData *tdata);
                 int fJy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
                 int fJz(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
-                int fdJydx(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
                 int fdJydy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-                int fdJydp(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-                int fdJzdx(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdx,  void *user_data, TempData *tdata, ReturnData *rdata);
-                int fdJzdp(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdp, void *user_data, TempData *tdata, ReturnData *rdata);
+                int fdJydsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
                 int fdJzdz(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
+                int fdJzdsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 #endif /* _amici_wrapfunctions_h */

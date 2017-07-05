@@ -10,7 +10,7 @@ TempData::TempData(const UserData *udata) {
     sx = sdx = NULL;
     Jtmp = NULL;
     dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp = dJzdx = dJzdz = NULL;
-    dsigmaydp = dsigmazdp = llhS0 = NULL;
+    dJydsigma = dJzdsigma = dsigmaydp = dsigmazdp = llhS0 = NULL;
     
     which = 0;
     
@@ -52,6 +52,7 @@ TempData::TempData(const UserData *udata) {
         dJydp = new realtype[udata->nJ * udata->nplist * udata->nytrue]();
         dJydx = new realtype[udata->nJ * udata->nxtrue * udata->nt]();
         dJydy = new realtype[udata->nJ * udata->nytrue * udata->ny]();
+        dJydsigma = new realtype[udata->nJ * udata->nytrue * udata->ny]();
         dzdx = new realtype[udata->nz*udata->nx]();
         dzdp = new realtype[udata->nz*udata->nplist]();
         drzdx = new realtype[udata->nz*udata->nx]();
@@ -59,6 +60,7 @@ TempData::TempData(const UserData *udata) {
         dJzdp = new realtype[udata->nJ * udata->nplist * udata->nztrue]();
         dJzdx = new realtype[udata->nJ * udata->nxtrue * udata->nmaxevent]();
         dJzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
+        dJzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         
         dsigmaydp = new realtype[udata->ny * udata->nplist]();
         dsigmazdp = new realtype[udata->nz * udata->nplist]();
@@ -127,9 +129,11 @@ TempData::~TempData() {
     if(dydp) delete[] dydp;
     if(dJydp) delete[] dJydp;
     if(dJydy) delete[] dJydy;
+    if(dJydsigma) delete[] dJydsigma;
     if(dJydx) delete[] dJydx;
     if(dJzdp) delete[] dJzdp;
     if(dJzdz) delete[] dJzdz;
+    if(dJzdsigma) delete[] dJzdsigma;
     if(dJzdx) delete[] dJzdx;
     if(dzdp) delete[] dzdp;
     if(dzdx) delete[] dzdx;

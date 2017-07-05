@@ -729,12 +729,6 @@ function [this,model] = getSyms(this,model)
             % transform into symbolic expression
             this.strsym = sym(szs);
             
-        case 'sz_tf'
-
-            this.sym = ...
-                + jacobian(model.fun.z.sym,p) ...
-                + jacobian(model.fun.z.sym,x)*sx;
-            
         case 'JBand'
             %do nothing
         case 'JBandB'
@@ -758,30 +752,11 @@ function [this,model] = getSyms(this,model)
                 this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.y.strsym);
             end
             this = makeStrSyms(this);
-        case 'dJydx'
-            this.sym = sym(zeros(model.nytrue, model.nxtrue, model.ng));
-            dJydy_tmp = sym(zeros(model.ng, model.ny));
-            for iy = 1 : model.nytrue
-                dJydy_tmp(:,:) = model.fun.dJydy.sym(iy,:,:);
-                this.sym(iy,:,:) = transpose(dJydy_tmp * model.fun.dydx.strsym(:,1:model.nxtrue));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
-            end
         case 'dJydsigma'
             this.sym = sym(zeros(model.nytrue, model.ng, model.nytrue));
             for iy = 1 : model.nytrue
                 this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.sigma_y.strsym(1:model.nytrue));
             end
-        case 'dJydp'
-            this.sym = sym(zeros(model.nytrue, model.np, model.ng));
-            for iy = 1 : model.nytrue
-                dJydsigma_tmp(:,:) = model.fun.dJydsigma.sym(iy,:,:);
-                this.sym(iy,:,:) = transpose(permute(model.fun.dJydy.sym(iy,:,:),[2,3,1]) * model.fun.dydp.strsym ...
-                    + permute(model.fun.dJydsigma.sym(iy,:,:),[2,3,1]) * model.fun.dsigma_ydp.strsym(1:model.nytrue,:));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
-            end            
-            this = makeStrSyms(this);
         case 'Jz'
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
@@ -795,41 +770,11 @@ function [this,model] = getSyms(this,model)
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
             this = makeStrSyms(this);
-        case 'dJzdx'
-            this.sym = sym(zeros(model.nztrue, model.ng, model.nxtrue));
-            dJzdz_tmp = sym(zeros(model.ng, model.nz));
-            for iz = 1 : model.nztrue
-                dJzdz_tmp(:,:) = model.fun.dJzdz.sym(iz,:,:);
-                this.sym(iz,:,:) = transpose(dJzdz_tmp * model.fun.dzdx.strsym(:,1:model.nxtrue));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
-            end
         case 'dJzdsigma'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nztrue));
             for iz = 1 : model.nztrue
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym(1:model.nztrue));
             end
-        case 'dJzdp'
-            this.sym = sym(zeros(model.nztrue, model.ng,  model.np));
-            for iz = 1 : model.nztrue
-                dJzdsigma_tmp(:,:) = model.fun.dJzdsigma.sym(iz,:,:);
-                this.sym(iz,:,:) = transpose(permute(model.fun.dJzdz.sym(iz,:,:),[2,3,1]) * model.fun.dzdp.strsym ...
-                    + permute(model.fun.dJzdsigma.sym(iz,:,:),[2,3,1]) * model.fun.dsigma_zdp.strsym(1:model.nztrue,:));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
-            end            
-            this = makeStrSyms(this);
-        case 'sJz'
-            this.sym = sym(zeros(model.nztrue, model.ng, model.np));
-            dJzdz_tmp = sym(zeros(model.ng, model.nz));
-            for iz = 1 : model.nztrue
-                dJzdz_tmp(:,:) = model.fun.dJzdz.strsym(iz,:,:);
-                this.sym(iz,:,:) = transpose(dJzdz_tmp*(model.fun.sz.strsym-model.fun.dzdp.strsym));
-                % Transposition is necessary to have things sorted
-                % correctly in gccode.m
-            end
-            this.sym = this.sym + model.fun.dJzdp.strsym;
-            
             
         otherwise
             error('unknown function name')

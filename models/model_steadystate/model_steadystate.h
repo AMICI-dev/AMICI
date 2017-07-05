@@ -11,11 +11,9 @@
 #include "model_steadystate_JvB.h"
 #include "model_steadystate_Jy.h"
 #include "model_steadystate_Jz.h"
-#include "model_steadystate_dJydp.h"
-#include "model_steadystate_dJydx.h"
+#include "model_steadystate_dJydsigma.h"
 #include "model_steadystate_dJydy.h"
-#include "model_steadystate_dJzdp.h"
-#include "model_steadystate_dJzdx.h"
+#include "model_steadystate_dJzdsigma.h"
 #include "model_steadystate_dJzdz.h"
 #include "model_steadystate_deltaqB.h"
 #include "model_steadystate_deltasx.h"
@@ -41,7 +39,6 @@
 #include "model_steadystate_sx0.h"
 #include "model_steadystate_sxdot.h"
 #include "model_steadystate_sz.h"
-#include "model_steadystate_sz_tf.h"
 #include "model_steadystate_w.h"
 #include "model_steadystate_x0.h"
 #include "model_steadystate_xBdot.h"
@@ -59,11 +56,9 @@ int Jv_model_steadystate(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vect
 int JvB_model_steadystate(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 int Jy_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int Jz_model_steadystate(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
-int dJydp_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int dJydx_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int dJydsigma_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int dJydy_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int dJzdp_model_steadystate(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdp, void *user_data, TempData *tdata, ReturnData *rdata);
-int dJzdx_model_steadystate(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdx,  void *user_data, TempData *tdata, ReturnData *rdata);
+int dJzdsigma_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int dJzdz_model_steadystate(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata);
 int deltaqB_model_steadystate(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata);
 int deltasx_model_steadystate(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, void *user_data, TempData *tdata);
@@ -89,7 +84,6 @@ int stau_model_steadystate(realtype t, int ie, N_Vector x, N_Vector *sx, void *u
 int sx0_model_steadystate(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int sxdot_model_steadystate(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 int sz_model_steadystate(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata);
-int sz_tf_model_steadystate(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata);
 int w_model_steadystate(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int x0_model_steadystate(N_Vector x0, void *user_data);
 int xBdot_model_steadystate(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);

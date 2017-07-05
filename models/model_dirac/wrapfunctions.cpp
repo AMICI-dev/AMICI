@@ -126,7 +126,8 @@
                 }
                 
                 int fsz_tf(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-                    return sz_tf_model_dirac(t, ie, x, sx, user_data, tdata, rdata);
+                    warnMsgIdAndTxt("AMICI:mex:sz_tf:NotAvailable","ERROR: The function sz_tf was called but not compiled for this model.");
+                    return(-1);
                 }
                 
                 int fdzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
@@ -201,27 +202,19 @@
                     return Jz_model_dirac(t, ie, x, z, mz, user_data, tdata, rdata);
                 }
                 
-                int fdJydx(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-                    return dJydx_model_dirac(t, it, x, user_data, tdata, edata, rdata);
-                }
-                
                 int fdJydy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
                     return dJydy_model_dirac(t, it, x, user_data, tdata, edata, rdata);
                 }
                 
-                int fdJydp(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-                    return dJydp_model_dirac(t, it, x, user_data, tdata, edata, rdata);
-                }
-                
-                int fdJzdx(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdx,  void *user_data, TempData *tdata, ReturnData *rdata){
-                    return dJzdx_model_dirac(t, ie, x, z, mz, dzdx, user_data, tdata, rdata);
-                }
-                
-                int fdJzdp(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdp, void *user_data, TempData *tdata, ReturnData *rdata){
-                    return dJzdp_model_dirac(t, ie, x, z, mz, dzdp, user_data, tdata, rdata);
+                int fdJydsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJydsigma_model_dirac(t, it, x, user_data, tdata, edata, rdata);
                 }
                 
                 int fdJzdz(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata){
                     return dJzdz_model_dirac(t, ie, x, z, mz, user_data, tdata, rdata);
+                }
+                
+                int fdJzdsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJzdsigma_model_dirac(t, it, x, user_data, tdata, edata, rdata);
                 }
                 

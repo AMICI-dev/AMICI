@@ -82,7 +82,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         end
         fprintf(fid,'              } \n');
     end
-elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','dJydy'})))
+elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
     tmpfun = this;
     if(any(any(nonzero)))
         fprintf(fid,['int iy;\n']);
@@ -94,7 +94,7 @@ elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','dJydy'})))
             fprintf(fid,'}\n');
         end
     end
-elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','dJzdz'})))
+elseif(any(strcmp(this.funstr,{'Jz','dJzdsigma','dJzdz'})))
     tmpfun = this;
     if(any(any(nonzero)))
         fprintf(fid,['int iz;\n']);

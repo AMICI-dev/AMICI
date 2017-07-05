@@ -54,7 +54,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(any(strcmp(this.funstr,{'J','JB','dJydx','dJydy','dJzdz','dJzdx','dydx','dzdx','drootdx','M','dfdx'}) ))
+            if(any(strcmp(this.funstr,{'J','JB','dJydsigma','dJydy','dJzdsigma','dJzdz','dydx','dzdx','drootdx','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '_$1']);
@@ -151,12 +151,12 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_Jz_([0-9]+)','tdata->Jz[$1]');
             cstr = regexprep(cstr,'var_dJydy_([0-9]+)','tdata->dJydy[$1]');
             cstr = regexprep(cstr,'var_dJzdz_([0-9]+)','tdata->dJzdz[$1]');
-            cstr = regexprep(cstr,'var_dJydx\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydx[it+($2*$3+$1)*udata->nt]');
-            cstr = regexprep(cstr,'var_dJzdx\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdx[tdata->nroots[ie]+($2*$3+$1)*udata->nmaxevent]');
+            cstr = regexprep(cstr,'var_dJydsigma_([0-9]+)','tdata->dJydsigma[$1]');
+            cstr = regexprep(cstr,'var_dJzdsigma_([0-9]+)','tdata->dJzdsigma[$1]');
             cstr = regexprep(cstr,'var_dJydy\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydy[iy+($2*$3+$1)*udata->nytrue]');
             cstr = regexprep(cstr,'var_dJzdz\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdz[iz+($2*$3+$1)*udata->nztrue]');
-            cstr = regexprep(cstr,'var_dJydp_([0-9]+)','tdata->dJydp[iy+ip*udata->nytrue]');
-            cstr = regexprep(cstr,'var_dJzdp_([0-9]+)','tdata->dJzdp[iz+ip*udata->nztrue]');
+            cstr = regexprep(cstr,'var_dJydsigma\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydsigma[iy+($2*$3+$1)*udata->nytrue]');
+            cstr = regexprep(cstr,'var_dJzdsigma\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdsigma[iz+($2*$3+$1)*udata->nztrue]');
             
             if(~isempty(strfind(this.cvar,'Jy')) || ~isempty(strfind(this.cvar,'Jz')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');

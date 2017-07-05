@@ -136,10 +136,10 @@ if(this.steadystate)
 end
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sz','sz_tf','deltasx','stau','sroot','dJydy','dJydx','dJydp','dJzdz','dJzdx','dJzdp','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drootdx','drootdp'};
+    funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','sroot','dJydy','dJydsigma','dJzdz','dJzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drootdx','drootdp'};
 end
 if(this.adjoint)
-    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drootdx','drootdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydx','dJydp','dJzdx','dJzdp','dwdp','dxdotdp','dydp'};
+    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drootdx','drootdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dwdp','dxdotdp','dydp'};
 end
 if(this.o2flag)
     funs = {funs{:},'s2root'};
