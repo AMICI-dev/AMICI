@@ -22,7 +22,8 @@ matrix:
       compiler: clang
       before_script: brew install homebrew/science/hdf5
 
-script:  ./scripts/run-tests.sh
+script:  
+    - ./scripts/run-tests.sh
 
 notifications:
   slack: 

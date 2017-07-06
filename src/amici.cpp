@@ -88,7 +88,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
      * @return ami_mem pointer to the cvodes/idas memory block
      */
     void *ami_mem = NULL; /* pointer to ami memory block */
-    N_Vector id;
+    N_Vector id = NULL;
     
     
     tdata->t = udata->tstart;
@@ -274,15 +274,17 @@ void *setupAMI(UserData *udata, TempData *tdata) {
     }
     
     id = N_VNew_Serial(udata->nx);
-    memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(realtype));
+    memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(double));
     
     if (AMISetId(ami_mem, id) != AMICI_SUCCESS) goto freturn;
+    if(id) N_VDestroy_Serial(id);
     
     if (AMISetSuppressAlg(ami_mem, TRUE) != AMICI_SUCCESS) goto freturn;
     
     return(ami_mem);
     
 freturn:
+    if(id) N_VDestroy_Serial(id);
     if(ami_mem) AMIFree(&ami_mem);
     return NULL;
 }
@@ -507,6 +509,8 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
         }
         status = fdJydy(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
+        status = fdJydsigma(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
         status = fdJydx(it,udata,tdata,edata);
         if(status != AMICI_SUCCESS) return status;
         status = fdJydp(it,udata,tdata,edata,rdata);
@@ -517,11 +521,11 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
                     for(iy=0; iy < udata->nytrue; iy++) {
                         if (iJ==0) {
                             if (udata->ny>0) {
-                                rdata->sllh[ip] -= tdata->dJydp[iy + ip*udata->nytrue];
+                                rdata->sllh[ip] -= tdata->dJydp[ip + iy*udata->nplist];
                             }
                         } else {
                             if (udata->ny>0) {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[(iJ*udata->nplist + ip)*udata->nytrue + iy];
+                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[(iJ*udata->nytrue + iy)*udata->nplist + ip];
                             }
                         }
                     }
@@ -574,7 +578,14 @@ int prepEventSensis(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, c
                 }
             }
         }
-        
+        status = fdJzdz(tdata->t,ie,tdata->x,rdata->z,edata->mz,udata,tdata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdsigma(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdx(ie,udata,tdata,edata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdp(ie,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
@@ -592,12 +603,6 @@ int prepEventSensis(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, c
                 }
             }
         }
-        status = fdJzdz(tdata->t,ie,tdata->x,rdata->z,edata->mz,udata,tdata,rdata);
-        if(status != AMICI_SUCCESS) return status;
-        status = fdJzdx(ie,udata,tdata,edata);
-        if(status != AMICI_SUCCESS) return status;
-        status = fdJzdp(ie,udata,tdata,edata,rdata);
-        if(status != AMICI_SUCCESS) return status;
     }
     return status;
 }
@@ -647,6 +652,14 @@ int prepEventSensis_tf(int ie, void *ami_mem, UserData *udata, ReturnData *rdata
                 }
             }
         }
+        status = fdJzdz(tdata->t,ie,tdata->x,rdata->z,edata->mz,udata,tdata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdsigma(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdx(ie,udata,tdata,edata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdp(ie,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
@@ -664,12 +677,6 @@ int prepEventSensis_tf(int ie, void *ami_mem, UserData *udata, ReturnData *rdata
                 }
             }
         }
-        status = fdJzdz(tdata->t,ie,tdata->x,rdata->z,edata->mz,udata,tdata,rdata);
-        if(status != AMICI_SUCCESS) return status;
-        status = fdJzdx(ie,udata,tdata,edata);
-        if(status != AMICI_SUCCESS) return status;
-        status = fdJzdp(ie,udata,tdata,edata,rdata);
-        if(status != AMICI_SUCCESS) return status;
     }
     return status;
 }
@@ -699,13 +706,12 @@ int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, con
     if(status != AMICI_SUCCESS) return status;
     
     if (edata) {
+        status = fsigma_y(tdata->t,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
         for (iy=0; iy<udata->nytrue; iy++) {
             /* extract the value for the standard deviation, if the data value is NaN, use
              the parameter value. Store this value in the return struct */
-            if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                status = fsigma_y(tdata->t,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-            } else {
+            if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
                 tdata->sigmay[iy] = edata->sigmay[iy*udata->nt+it];
             }
             rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
@@ -757,12 +763,11 @@ int getEventOutput(realtype *tlastroot, void *ami_mem, UserData *udata, ReturnDa
                 if(status != AMICI_SUCCESS) return status;
                 
                 if (edata) {
+                    status = fsigma_z(tdata->t,ie,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
                     for (iz=0; iz<udata->nztrue; iz++) {
                         if (udata->z2event[iz]-1 == ie) {
-                            if (amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
-                                status = fsigma_z(tdata->t,ie,udata,tdata);
-                                if(status != AMICI_SUCCESS) return status;
-                            } else {
+                            if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
                                 tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
                             }
                             rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
@@ -816,7 +821,19 @@ int getEventOutput_tf(void *ami_mem, UserData *udata, ReturnData *rdata, const E
                 status = fz(tdata->t,ie,tdata->x,udata,tdata,rdata);
                 if(status != AMICI_SUCCESS) return status;
                 
-                if(edata) {
+                if (edata) {
+                    status = fsigma_z(tdata->t,ie,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    
+                    for (iz=0; iz<udata->nztrue; iz++) {
+                        if (udata->z2event[iz]-1 == ie) {
+                            if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
+                                tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
+                            }
+                            rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
+                        }
+                    }
+                    
                     for (iz=0; iz<udata->nztrue; iz++) {
                         if (udata->z2event[iz]-1 == ie) {
                             rdata->rz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->rootvals[ie];
@@ -2100,11 +2117,11 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
                 rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJydp[ip + udata->nplist * iJ];
     }
     
-delete[] dJydxTmp;
-delete[] multResult;
-delete[] sxTmp;
-
-return(status);
+    delete[] dJydxTmp;
+    delete[] multResult;
+    delete[] sxTmp;
+    
+    return(status);
 }
 
 int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
@@ -2114,9 +2131,11 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     // dydp          ny x nplist
     // dJydp         nJ x nplist
     
-    realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
-    realtype *dJydsigmaTmp = new realtype[udata->nJ * udata->ny];
-    realtype *ssigmay = new realtype[udata->ny * udata->nplist];
+    memset(tdata->dJydp,0,udata->nJ * udata->nplist * sizeof(double));
+    
+    realtype *dJydyTmp = new double[udata->nJ * udata->ny];
+    realtype *dJydsigmaTmp = new double[udata->nJ * udata->ny];
+    realtype *ssigmay = new double[udata->ny * udata->nplist];
     
     // copy current (it) ssigma slice
     for(int iy = 0; iy < udata->ny; ++iy)
@@ -2132,8 +2151,8 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
         // dJydsigmaTmp nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ) {
             for(int iy = 0; iy < udata->ny; ++iy) {
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + iJ * udata->nytrue + iy * udata->nytrue * udata->nJ];
-                dJydsigmaTmp[iJ + iy * udata->nJ] = tdata->dJydsigma[iyt + iJ * udata->nytrue + iy * udata->nytrue * udata->nJ];
+                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+                dJydsigmaTmp[iJ + iy * udata->nJ] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
             }
         }
         
@@ -2150,6 +2169,8 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
                     1.0, tdata->dJydp, udata->nplist);
     }
     delete[] dJydyTmp;
+    delete[] dJydsigmaTmp;
+    delete[] ssigmay;
     
     return(status);
 }
@@ -2163,6 +2184,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     
     realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
     realtype *multResult = new realtype[udata->nJ * udata->nx]();
+    
     for(int iyt=0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
             continue;
@@ -2171,13 +2193,13 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
         // dJydyTmp     nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
             for(int iy = 0; iy < udata->ny; ++iy)
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + iJ * udata->nytrue + iy * udata->nytrue * udata->nJ];
+                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
-                    udata->nplist, udata->nJ, udata->ny,
-                    1.0, tdata->dydp, udata->ny,
+                    udata->nx, udata->nJ, udata->ny,
+                    1.0, tdata->dydx, udata->ny,
                     dJydyTmp, udata->nJ,
-                    1.0, multResult, udata->nplist);
+                    1.0, multResult, udata->nx);
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)
@@ -2246,9 +2268,11 @@ static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
     // dzdp          nz x nplist
     // dJzdp         nJ x nplist
     
-    realtype *dJzdzTmp = new realtype[udata->nJ * udata->nz];
-    realtype *dJzdsigmaTmp = new realtype[udata->nJ * udata->nz];
-    realtype *ssigmaz = new realtype[udata->nz * udata->nplist];
+    memset(tdata->dJzdp,0,udata->nJ * udata->nplist * sizeof(double));
+    
+    realtype *dJzdzTmp = new double[udata->nJ * udata->nz];
+    realtype *dJzdsigmaTmp = new double[udata->nJ * udata->nz];
+    realtype *ssigmaz = new double[udata->nz * udata->nplist];
     
     // copy current (it) ssigma slice
     for(int iz = 0; iz < udata->nz; ++iz)
@@ -2306,10 +2330,10 @@ static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata
                 dJzdzTmp[iJ + iz * udata->nJ] = tdata->dJzdz[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ];
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
-                    udata->nplist, udata->nJ, udata->nz,
+                    udata->nx, udata->nJ, udata->nz,
                     1.0, tdata->dzdx, udata->nz,
                     dJzdzTmp, udata->nJ,
-                    1.0, multResult, udata->nplist);
+                    1.0, multResult, udata->nx);
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)

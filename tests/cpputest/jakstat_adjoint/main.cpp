@@ -7,6 +7,6 @@
 int main(int argc, char** argv)
 {
     srand(time(NULL));
-
+    MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
     return CommandLineTestRunner::RunAllTests(argc, argv);
 }

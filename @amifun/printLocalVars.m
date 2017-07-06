@@ -142,15 +142,15 @@ function printLocalVars(this,model,fid)
         case 'Jy'
             % nothing
         case 'dJydy'
-            fprintf(fid,['memset(tdata->dJydy,0,sizeof(realtype)*udata->nytrue*udata->nytrue*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJydy,0,sizeof(realtype)*udata->ny*udata->nytrue*udata->nJ);\n']);
         case 'dJydsigma'
-            % nothing
+            fprintf(fid,['memset(tdata->dJydsigma,0,sizeof(realtype)*udata->nytrue*udata->ny*udata->nJ);\n']);
         case 'Jz'
             % nothing
         case 'dJzdz'
-            % nothing
+            fprintf(fid,['memset(tdata->dJzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);\n']);
         case 'dJzdsigma'
-            % nothing
+            fprintf(fid,['memset(tdata->dJzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
         case 'w'
             fprintf(fid,['memset(udata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
         case 'dwdx'

@@ -68,7 +68,8 @@ TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_ad
 for MODEL in $TESTMODELS; do 
 	mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 	cd ${AMICI_PATH}/models/${MODEL}/build
-	cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+	cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=Debug ..
+# make clean
 	make
 done;
 
@@ -78,10 +79,17 @@ done;
 cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=Debug ..
+# make clean
 make
 
 # Run tests
 export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
 
 ctest -V
+cd /Users/F.Froehlich/Documents/MATLAB/AMICI/tests/cpputest/build/dirac
+valgrind --tool=memcheck ./model_dirac_test
+cd /Users/F.Froehlich/Documents/MATLAB/AMICI/tests/cpputest/build/jakstat_adjoint
+valgrind --tool=memcheck ./model_jakstat_adjoint_test
+cd /Users/F.Froehlich/Documents/MATLAB/AMICI/tests/cpputest/build/jakstat_adjoint_o2
+valgrind --tool=memcheck ./model_jakstat_adjoint_o2_test

@@ -161,7 +161,9 @@ function this = gccode(this,model,fid)
             if(~isempty(strfind(this.cvar,'Jy')) || ~isempty(strfind(this.cvar,'Jz')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');
                 cstr = regexprep(cstr,'mz_([0-9]+)','mz[tdata->nroots[ie]+udata->nmaxevent*$1]');
-                cstr = strrep(cstr,'=','+=');
+                if(strcmp(this.cvar,'var_Jy') || strcmp(this.cvar,'var_Jy'))
+                    cstr = strrep(cstr,'=','+=');
+                end
             end
         end
         
