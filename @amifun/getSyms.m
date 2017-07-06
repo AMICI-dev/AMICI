@@ -751,6 +751,7 @@ function [this,model] = getSyms(this,model)
             for iy = 1 : model.nytrue
                 this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.y.strsym);
             end
+            
             this = makeStrSyms(this);
         case 'dJydsigma'
             this.sym = sym(zeros(model.nytrue, model.ng, model.nytrue));

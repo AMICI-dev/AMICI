@@ -76,9 +76,9 @@ TempData::TempData(const UserData *udata) {
                 xdot_old_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
             }
             if(udata->nx > 0 && udata->nplist > 0) {
-                xB = N_VNew_Serial(udata->nx);
-                xB_old = N_VNew_Serial(udata->nx);
-                dxB = N_VNew_Serial(udata->nx);
+                xB = N_VNew_Serial(udata->nxtrue * udata->nJ);
+                xB_old = N_VNew_Serial(udata->nxtrue * udata->nJ);
+                dxB = N_VNew_Serial(udata->nxtrue * udata->nJ);
                 xQB = N_VNew_Serial(udata->nJ * udata->nplist);
                 xQB_old = N_VNew_Serial(udata->nJ * udata->nplist);
             }

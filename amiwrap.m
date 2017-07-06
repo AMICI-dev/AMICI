@@ -106,14 +106,15 @@ function amiwrap( varargin )
     end
     
     if(~isempty(o2string))
+        o2_hash = CalcMD5(fullfile(wrap_path,'amimodel',['augment' o2string '.m']));
         try
             if(~exist(fullfile(wrap_path,'models',[modelname '_' o2string]),'dir'))
                 mkdir(fullfile(wrap_path,'models',[modelname '_' o2string]));
             end
            addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
         end
-        if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file')==2);
-            load([commit_hash '_' model_hash '_' o2string '.mat']);
+        if(exist([commit_hash '_' model_hash '_' o2_hash '.mat'],'file')==2);
+            load([commit_hash '_' model_hash '_' o2_hash '.mat']);
             modelo2.updateModelName([modelname '_' o2string]);
         end
         if(~exist('modelo2','var'))
@@ -122,7 +123,7 @@ function amiwrap( varargin )
             
             
             if(~isempty(model_hash) && ~isempty(commit_hash))
-                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2string]),'modelo2')
+                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2_hash]),'modelo2')
             end
         end
     end

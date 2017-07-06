@@ -311,7 +311,7 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
     if(!tdata->xB) return AMICI_ERROR_SETUPB;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if(!xB_tmp) return AMICI_ERROR_SETUPB;
-    memset(xB_tmp,0,sizeof(realtype)*udata->nx);
+    memset(xB_tmp,0,sizeof(realtype)*udata->nxtrue*udata->nJ);
     for (ix=0; ix<udata->nx; ix++) {
         xB_tmp[ix] += tdata->dJydx[udata->nt-1+ix*udata->nt];
     }
@@ -524,11 +524,11 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
                 for(ip=0; ip < udata->nplist; ip++) {
                     if (iJ==0) {
                         if (udata->ny>0) {
-                            rdata->sllh[ip] -= tdata->dJydp[ip];
+                            rdata->sllh[ip] -= tdata->dJydp[udata->nJ * ip];
                         }
                     } else {
                         if (udata->ny>0) {
-                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[iJ*udata->nplist + ip];
+                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[iJ + udata->nJ * ip];
                         }
                     }
                 }
@@ -1043,12 +1043,12 @@ int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
      * @return status flag indicating success of execution @type int
      */
     
-    int ix;
-    
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if(!xB_tmp) return AMICI_ERROR_DATA;
-    for (ix=0; ix<udata->nx; ix++) {
-        xB_tmp[ix] += tdata->dJydx[it+ix*udata->nt];
+    for (int ix=0; ix<udata->nxtrue; ix++) {
+        for(int iJ=0; iJ<udata->nJ; iJ++)
+            // we only need the 1:nxtrue slice here!
+            xB_tmp[iJ * udata->nxtrue + ix] += tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it];
     }
     return getDiagnosisB(it,ami_mem,udata,rdata,tdata);
 }
@@ -2103,7 +2103,7 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
         for(int ip = 0; ip < udata->nplist; ++ip)
             sxTmp[ix + ip * udata->nx] = rdata->sx[(ip * udata->nx + ix ) * udata->nt + it];
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            dJydxTmp[iJ + ix * udata->nJ] = tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it];
+            dJydxTmp[iJ + ix * udata->nJ] = tdata->dJydx[(iJ + ix * udata->nJ ) * udata->nt + it];
     }
     
     // C := alpha*op(A)*op(B) + beta*C,
@@ -2122,10 +2122,10 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
     for(int iJ = 0; iJ < udata->nJ; ++iJ) {
         if (iJ == 0)
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->sllh[ip] -= multResult[ip] + tdata->dJydp[ip];
+                rdata->sllh[ip] -= multResult[ip] + tdata->dJydp[udata->nJ * ip];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJydp[ip + udata->nplist * iJ];
+                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJydp[iJ + udata->nJ * ip];
     }
     
     delete[] dJydxTmp;
@@ -2157,8 +2157,8 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
         // dJydsigmaTmp nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ) {
             for(int iy = 0; iy < udata->ny; ++iy) {
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
-                dJydsigmaTmp[iJ + iy * udata->nJ] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
+                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+                dJydsigmaTmp[iy + iJ * udata->ny] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
             }
         }
         
@@ -2199,7 +2199,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
         // dJydyTmp     nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
             for(int iy = 0; iy < udata->ny; ++iy)
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
                     udata->nx, udata->nJ, udata->ny,
@@ -2209,7 +2209,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)
-            tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it] = multResult[iJ * udata->nx + ix];
+            tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it] = multResult[iJ * udata->nx + ix]; //transpose
     
     delete[] dJydyTmp;
     delete[] multResult;
