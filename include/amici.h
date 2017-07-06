@@ -34,6 +34,7 @@
 #define AMICI_ERROR_SS                 -89
 #define AMICI_ERROR_DATA               -88
 #define AMICI_ERROR_EVENT              -87
+#define AMICI_ERROR_SIMULATION         -86
 #define AMICI_SUCCESS           CV_SUCCESS 
 #define AMICI_DATA_RETURN  CV_TSTOP_RETURN
 #define AMICI_ROOT_RETURN   CV_ROOT_RETURN

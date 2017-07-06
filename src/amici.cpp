@@ -101,6 +101,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
         } else {
             int ix;
             realtype *x_tmp = NV_DATA_S(tdata->x);
+            if(!x_tmp) return AMICI_ERROR_SETUP;
             for (ix=0; ix < udata->nx; ix++) {
                 x_tmp[ix] = (realtype) udata->x0data[ix];
             }
@@ -243,6 +244,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
                         sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                        if(!sx_tmp) return AMICI_ERROR_FSA;
                         int ix;
                         for (ix=0; ix<udata->nx; ix++) {
                             sx_tmp[ix] = (realtype) udata->sx0data[ix + udata->nx*ip];
@@ -306,17 +308,20 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
     int status = AMICI_SUCCESS;
     
     /* write initial conditions */
-    if (tdata->xB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->xB) return AMICI_ERROR_SETUPB;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
+    if(!xB_tmp) return AMICI_ERROR_SETUPB;
     memset(xB_tmp,0,sizeof(realtype)*udata->nx);
     for (ix=0; ix<udata->nx; ix++) {
         xB_tmp[ix] += tdata->dJydx[udata->nt-1+ix*udata->nt];
     }
     
-    if (tdata->dxB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->dxB) return AMICI_ERROR_SETUPB;
+    if(!NV_DATA_S(tdata->dxB) return AMICI_ERROR_SETUPB
     memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*udata->nx);
     
-    if (tdata->xQB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->xQB) return AMICI_ERROR_SETUPB;
+    if(!NV_DATA_S(tdata->xQB)) return AMICI_ERROR_SETUPB;
     memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*udata->nJ*udata->nplist);
     
     /* create backward problem */
@@ -891,6 +896,7 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
             }
             
             sx_tmp = NV_DATA_S(tdata->sx[ip]);
+            if(!sx_tmp) return AMICI_ERROR_FSA;
             for(ix=0; ix < udata->nx; ix++) {
                 rdata->sx[(ip*udata->nx + ix)*udata->nt + it] = sx_tmp[ix];
             }
@@ -1014,6 +1020,7 @@ int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, c
     rdata->ts[it] = udata->ts[it];
     if (udata->nx>0) {
         realtype *x_tmp = NV_DATA_S(tdata->x);
+        if(!x_tmp) return AMICI_ERROR_DATA;
         for (ix=0; ix<udata->nx; ix++) {
             rdata->x[it+udata->nt*ix] = x_tmp[ix];
         }
@@ -1046,6 +1053,7 @@ int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
     int ix;
     
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
+    if(!xB_tmp) return AMICI_ERROR_DATA;
     for (ix=0; ix<udata->nx; ix++) {
         xB_tmp[ix] += tdata->dJydx[it+ix*udata->nt];
     }
@@ -1243,7 +1251,9 @@ int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
     N_VScale(1.0,tdata->xQB,tdata->xQB_old);
     
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
+    if(!xB_tmp) return AMICI_ERROR_EVENT;
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
+    if(!xQB_tmp) return AMICI_ERROR_DATA;
     
     for (ie=0; ie<udata->ne; ie++) {
         
@@ -1343,6 +1353,7 @@ int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
             if (status != AMICI_SUCCESS) return status;
             
             x_tmp = NV_DATA_S(tdata->x);
+            if(!x_tmp) return AMICI_ERROR_EVENT;
             for (ix=0; ix<udata->nx; ix++) {
                 x_tmp[ix] += tdata->deltax[ix];
             }
@@ -1376,6 +1387,7 @@ int applyEventSensiBolusFSA(void *ami_mem, UserData *udata, TempData *tdata) {
             
             for (ip=0; ip<udata->nplist; ip++) {
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                if(!sx_tmp) return AMICI_ERROR_FSA;
                 for (ix=0; ix<udata->nx; ix++) {
                     sx_tmp[ix] += tdata->deltasx[ix + udata->nx*ip];
                 }
@@ -1599,6 +1611,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                     }
                     if (udata->nx>0) {
                         x_tmp = NV_DATA_S(tdata->x);
+                        if(!x_tmp) return AMICI_ERROR_SIMULATION;
                         if (status == -22) {
                             /* clustering of roots => turn off rootfinding */
                             AMIRootInit(ami_mem, 0, NULL);
@@ -1729,6 +1742,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                     if (status == AMICI_SUCCESS) {
                         
                         realtype *xB_tmp = NV_DATA_S(tdata->xB);
+                        if(!xB_tmp) return AMICI_ERROR_ASA;
                         realtype *sx_tmp;
                         
                         int iJ;
@@ -1737,6 +1751,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 for (ip=0; ip<udata->nplist; ip++) {
                                     tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                                    if(!sx_tmp) return AMICI_ERROR_ASA;
                                     for (ix = 0; ix < udata->nxtrue; ix++) {
                                         tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                                     }
@@ -1745,6 +1760,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 for (ip=0; ip<udata->nplist; ip++) {
                                     tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                                    if(!sx_tmp) return AMICI_ERROR_ASA;
                                     for (ix = 0; ix < udata->nxtrue; ix++) {
                                         tdata->llhS0[iJ*udata->nplist + ip] = tdata->llhS0[iJ*udata->nplist + ip]
                                         + xB_tmp[iJ*udata->nxtrue + ix] * sx_tmp[ix]
@@ -1755,6 +1771,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                         }
                         
                         realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
+                        if(!xQB_tmp) return AMICI_ERROR_ASA;
                         
                         for(iJ=0; iJ<udata->nJ; iJ++) {
                             for(ip=0; ip < udata->nplist; ip++) {
@@ -1828,6 +1845,7 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
                 status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
                 if (status != AMICI_SUCCESS) return status;
                 realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
+                if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
                 if (rdata->xdot)
                     memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
                 
@@ -2229,6 +2247,7 @@ static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, 
     realtype *sx_tmp;
     for(int ip = 0; ip < udata->nplist; ++ip){
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
+        if(!sx_tmp) return AMICI_ERROR_FSA;
         for(int ix = 0; ix < udata->nx; ++ix)
             sxTmp[ix + ip * udata->nx] = sx_tmp[ix];
     }
