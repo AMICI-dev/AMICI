@@ -101,7 +101,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
         } else {
             int ix;
             realtype *x_tmp = NV_DATA_S(tdata->x);
-            if(!x_tmp) return AMICI_ERROR_SETUP;
+            if(!x_tmp) goto freturn;
             for (ix=0; ix < udata->nx; ix++) {
                 x_tmp[ix] = (realtype) udata->x0data[ix];
             }
@@ -244,7 +244,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
                         sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                        if(!sx_tmp) return AMICI_ERROR_FSA;
+                        if(!sx_tmp) goto freturn;
                         int ix;
                         for (ix=0; ix<udata->nx; ix++) {
                             sx_tmp[ix] = (realtype) udata->sx0data[ix + udata->nx*ip];
@@ -317,7 +317,7 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
     }
     
     if(!tdata->dxB) return AMICI_ERROR_SETUPB;
-    if(!NV_DATA_S(tdata->dxB) return AMICI_ERROR_SETUPB
+    if(!NV_DATA_S(tdata->dxB)) return AMICI_ERROR_SETUPB;
     memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*udata->nx);
     
     if(!tdata->xQB) return AMICI_ERROR_SETUPB;

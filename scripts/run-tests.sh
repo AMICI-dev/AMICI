@@ -93,4 +93,4 @@ ctest -V
 #cd /Users/F.Froehlich/Documents/MATLAB/AMICI/tests/cpputest/build/jakstat_adjoint
 #valgrind --tool=memcheck ./model_jakstat_adjoint_test
 cd /Users/F.Froehlich/Documents/MATLAB/AMICI/tests/cpputest/build/jakstat_adjoint_o2
-valgrind --tool=memcheck --main-stacksize=100000000 ./model_jakstat_adjoint_o2_test
+valgrind --main-stacksize=100000000 --track-origins=yes --track-origins=yes --tool=memcheck  ./model_jakstat_adjoint_o2_test
