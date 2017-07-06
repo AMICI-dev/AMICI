@@ -2125,7 +2125,7 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
                 rdata->sllh[ip] -= multResult[ip] + tdata->dJydp[udata->nJ * ip];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJydp[iJ + udata->nJ * ip];
+                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJydp[iJ + udata->nJ * ip]; //transpose dJydp
     }
     
     delete[] dJydxTmp;
@@ -2146,7 +2146,6 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     
     realtype *dJydyTmp = new double[udata->nJ * udata->ny];
     realtype *dJydsigmaTmp = new double[udata->nJ * udata->ny];
-    realtype *ssigmay = new double[udata->ny * udata->nplist];
     
     for(int iyt=0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
@@ -2157,8 +2156,8 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
         // dJydsigmaTmp nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ) {
             for(int iy = 0; iy < udata->ny; ++iy) {
-                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
-                dJydsigmaTmp[iy + iJ * udata->ny] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
+                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue]; //transpose
+                dJydsigmaTmp[iy + iJ * udata->ny] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue]; //transpose
             }
         }
         
@@ -2176,7 +2175,6 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     }
     delete[] dJydyTmp;
     delete[] dJydsigmaTmp;
-    delete[] ssigmay;
     
     return(status);
 }
@@ -2199,7 +2197,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
         // dJydyTmp     nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
             for(int iy = 0; iy < udata->ny; ++iy)
-                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+                dJydyTmp[iy + iJ * udata->ny] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue]; // transpose
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
                     udata->nx, udata->nJ, udata->ny,
@@ -2209,7 +2207,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)
-            tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it] = multResult[iJ * udata->nx + ix]; //transpose
+            tdata->dJydx[(iJ * udata->nx + ix ) * udata->nt + it] = multResult[iJ * udata->nx + ix];
     
     delete[] dJydyTmp;
     delete[] multResult;
@@ -2242,7 +2240,7 @@ static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, 
     
     for(int ix = 0; ix < udata->nx; ++ix)
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            dJzdxTmp[iJ + ix * udata->nJ] = tdata->dJzdx[(iJ * udata->nx + ix ) * udata->nmaxevent + tdata->nroots[ie]];
+            dJzdxTmp[iJ + ix * udata->nJ] = tdata->dJzdx[(iJ + ix * udata->nJ) * udata->nmaxevent + tdata->nroots[ie]];
     
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
@@ -2258,7 +2256,7 @@ static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, 
                 rdata->sllh[ip] -= multResult[ip] + tdata->dJzdp[ip];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJzdp[ip + udata->nplist * iJ];
+                rdata->s2llh[ip + udata->nplist * (iJ - 1)] -= multResult[ip + udata->nplist * iJ] + tdata->dJzdp[iJ + udata->nJ * ip]; //transpose dJydp
     }
 
 delete[] dJzdxTmp;
@@ -2279,12 +2277,6 @@ static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
     
     realtype *dJzdzTmp = new double[udata->nJ * udata->nz];
     realtype *dJzdsigmaTmp = new double[udata->nJ * udata->nz];
-    realtype *ssigmaz = new double[udata->nz * udata->nplist];
-    
-    // copy current (it) ssigma slice
-    for(int iz = 0; iz < udata->nz; ++iz)
-        for(int ip = 0; ip < udata->nplist; ++ip)
-            ssigmaz[ip * udata->nz + iz] = rdata->ssigmaz[(ip * udata->nz + iz) * udata->nmaxevent + tdata->nroots[ie]];
     
     for(int izt=0; izt < udata->nztrue; ++izt) {
         if (amiIsNaN(edata->mz[udata->nmaxevent * izt + tdata->nroots[ie]]))
@@ -2295,8 +2287,8 @@ static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
         // dJzdsigmaTmp nJ x nz
         for(int iJ = 0; iJ < udata->nJ; ++iJ) {
             for(int iz = 0; iz < udata->nz; ++iz) {
-                dJzdzTmp[iJ + iz * udata->nJ] = tdata->dJzdz[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ];
-                dJzdsigmaTmp[iJ + iz * udata->nJ] = tdata->dJzdsigma[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ];
+                dJzdzTmp[iz + iJ * udata->nz] = tdata->dJzdz[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ]; // transpose
+                dJzdsigmaTmp[iz + iJ * udata->nz] = tdata->dJzdsigma[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ]; //transpose
             }
         }
         
@@ -2313,6 +2305,8 @@ static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
                     1.0, tdata->dJzdp, udata->nplist);
     }
     delete[] dJzdzTmp;
+    delete[] dJzdsigmaTmp;
+    
     
     return(status);
 }
@@ -2334,7 +2328,7 @@ static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata
         // dJzdzTmp     nJ x ny
         for(int iJ = 0; iJ < udata->nJ; ++iJ)
             for(int iz = 0; iz < udata->nz; ++iz)
-                dJzdzTmp[iJ + iz * udata->nJ] = tdata->dJzdz[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ];
+                dJzdzTmp[iz + iJ * udata->nz] = tdata->dJzdz[izt + iJ * udata->nztrue + iz * udata->nztrue * udata->nJ]; // transpose
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
                     udata->nx, udata->nJ, udata->nz,
