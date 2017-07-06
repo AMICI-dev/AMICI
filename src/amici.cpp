@@ -499,11 +499,10 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
     status = fdydp(udata->ts[it],it,tdata->x,udata,tdata);
     if(status != AMICI_SUCCESS) return status;
     if (edata) {
+        status = fdsigma_ydp(tdata->t,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
         for (iy=0; iy<udata->nytrue; iy++) {
-            if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                status = fdsigma_ydp(tdata->t,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-            } else {
+            if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
                 for (ip=0; ip<udata->nplist; ip++) {
                     tdata->dsigmaydp[ip*udata->ny+iy] = 0;
                 }
@@ -523,15 +522,13 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
-                    for(iy=0; iy < udata->nytrue; iy++) {
-                        if (iJ==0) {
-                            if (udata->ny>0) {
-                                rdata->sllh[ip] -= tdata->dJydp[ip + iy*udata->nplist];
-                            }
-                        } else {
-                            if (udata->ny>0) {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[(iJ*udata->nytrue + iy)*udata->nplist + ip];
-                            }
+                    if (iJ==0) {
+                        if (udata->ny>0) {
+                            rdata->sllh[ip] -= tdata->dJydp[ip];
+                        }
+                    } else {
+                        if (udata->ny>0) {
+                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[iJ*udata->nplist + ip];
                         }
                     }
                 }
@@ -594,15 +591,13 @@ int prepEventSensis(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, c
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
-                    for(iz=0; iz < udata->nztrue; iz++) {
-                        if (iJ==0) {
-                            if (udata->nz>0) {
-                                rdata->sllh[ip] -= tdata->dJzdp[iz + ip*udata->nztrue];
-                            }
-                        } else {
-                            if (udata->nz>0) {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[(iJ*udata->nplist + ip)*udata->nztrue + iz];
-                            }
+                    if (iJ==0) {
+                        if (udata->nz>0) {
+                            rdata->sllh[ip] -= tdata->dJzdp[ip];
+                        }
+                    } else {
+                        if (udata->nz>0) {
+                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[iJ*udata->nplist + ip];
                         }
                     }
                 }
@@ -668,15 +663,13 @@ int prepEventSensis_tf(int ie, void *ami_mem, UserData *udata, ReturnData *rdata
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
-                    for(iz=0; iz < udata->nztrue; iz++) {
-                        if (iJ==0) {
-                            if (udata->nz>0) {
-                                rdata->sllh[ip] -= tdata->dJzdp[iz + ip*udata->nztrue];
-                            }
-                        } else {
-                            if (udata->nz>0) {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[(iJ*udata->nplist + ip)*udata->nztrue + iz];
-                            }
+                    if (iJ==0) {
+                        if (udata->nz>0) {
+                            rdata->sllh[ip] -= tdata->dJzdp[ip];
+                        }
+                    } else {
+                        if (udata->nz>0) {
+                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[iJ*udata->nplist + ip];
                         }
                     }
                 }
@@ -2155,11 +2148,6 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     realtype *dJydsigmaTmp = new double[udata->nJ * udata->ny];
     realtype *ssigmay = new double[udata->ny * udata->nplist];
     
-    // copy current (it) ssigma slice
-    for(int iy = 0; iy < udata->ny; ++iy)
-        for(int ip = 0; ip < udata->nplist; ++ip)
-            ssigmay[ip * udata->ny + iy] = rdata->ssigmay[(ip * udata->ny + iy) * udata->nt + it];
-    
     for(int iyt=0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
             continue;
@@ -2182,7 +2170,7 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
                     udata->nplist, udata->nJ, udata->ny,
-                    1.0, ssigmay, udata->ny,
+                    1.0, tdata->dsigmaydp, udata->ny,
                     dJydsigmaTmp, udata->nJ,
                     1.0, tdata->dJydp, udata->nplist);
     }
@@ -2320,7 +2308,7 @@ static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
         
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
                     udata->nplist, udata->nJ, udata->nz,
-                    1.0, ssigmaz, udata->nz,
+                    1.0, tdata->dsigmazdp, udata->nz,
                     dJzdsigmaTmp, udata->nJ,
                     1.0, tdata->dJzdp, udata->nplist);
     }

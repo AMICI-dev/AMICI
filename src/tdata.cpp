@@ -18,9 +18,9 @@ TempData::TempData(const UserData *udata) {
     
     Jy = new realtype[udata->nJ]();
     Jz = new realtype[udata->nJ]();
-    
     sigmay = new realtype[udata->ny]();
-    
+    sigmaz = new realtype[udata->nz]();
+
     if(udata->nx>0) {
         x = N_VNew_Serial(udata->nx);
         x_old = N_VNew_Serial(udata->nx);
@@ -42,23 +42,21 @@ TempData::TempData(const UserData *udata) {
     deltasx = new realtype[udata->nx*udata->nplist]();
     deltaxB = new realtype[udata->nx]();
     deltaqB = new realtype[udata->nJ*udata->nplist]();
-    sigmaz = new realtype[udata->nz]();
-
     
     /* SENSITIVITIES */
     if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         dydx = new realtype[udata->ny * udata->nx]();
         dydp = new realtype[udata->ny * udata->nplist]();
-        dJydp = new realtype[udata->nJ * udata->nplist * udata->nytrue]();
-        dJydx = new realtype[udata->nJ * udata->nxtrue * udata->nt]();
+        dJydp = new realtype[udata->nJ * udata->nplist]();
+        dJydx = new realtype[udata->nJ * udata->nx * udata->nt]();
         dJydy = new realtype[udata->nJ * udata->nytrue * udata->ny]();
         dJydsigma = new realtype[udata->nJ * udata->nytrue * udata->ny]();
         dzdx = new realtype[udata->nz*udata->nx]();
         dzdp = new realtype[udata->nz*udata->nplist]();
         drzdx = new realtype[udata->nz*udata->nx]();
         drzdp = new realtype[udata->nz*udata->nplist]();
-        dJzdp = new realtype[udata->nJ * udata->nplist * udata->nztrue]();
-        dJzdx = new realtype[udata->nJ * udata->nxtrue * udata->nmaxevent]();
+        dJzdp = new realtype[udata->nJ * udata->nplist]();
+        dJzdx = new realtype[udata->nJ * udata->nx * udata->nmaxevent]();
         dJzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         dJzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         
