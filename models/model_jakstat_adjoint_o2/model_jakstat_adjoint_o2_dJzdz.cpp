@@ -10,6 +10,7 @@ int dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, realtype *z, 
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
+memset(tdata->dJzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);
 status = w_model_jakstat_adjoint_o2(t,x,NULL,user_data);
 return(status);
 
