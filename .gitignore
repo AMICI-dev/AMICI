@@ -17,18 +17,6 @@ tests/cpputest/build/*
 
 ThirdParty/*
 
-*.o
-
-doc/*
-
-debug_amici/*
-
-models/*
-
-!models/model_dirac
-
-models/model_dirac/build/*
-
 doc/*
 
 fonts/*
@@ -40,6 +28,48 @@ src/doc/*
 stylesheets/*
 
 images/*
+
+doc/*
+
+debug_amici/*
+
+models/*
+
+!models/model_dirac
+
+models/model_dirac/build/*
+
+!models/model_steadystate
+
+models/model_steadystate/build/*
+
+!models/model_jakstat_adjoint
+
+models/model_jakstat_adjoint/build/*
+
+!models/model_jakstat_adjoint_o2
+
+models/model_jakstat_adjoint_o2/build/*
+
+.DS_Store
+
+index.html
+
+Makefile
+
+AMICI.mlappinstall
+
+cmake_install.cmake
+
+CMakeCache.txt
+
+*.a
+
+*.txt
+
+*.o
+
+*.o
 
 *.eps
 
@@ -67,15 +97,7 @@ images/*
 
 *.json
 
-index.html
-
-AMICI.mlappinstall
-
 *.mat
-
-examples/example_5/example_model_5_paper.m
-
-index.html
 
 *.js
 
@@ -85,11 +107,25 @@ index.html
 
 *.json
 
-examples/geneExpression/simulate_geneExpression.m
-
 *.m~
 
 *.plist
+
+*.make
+
+*.cmake
+
+*.bin
+
+scripts/CMakeFiles
+
+tests/sbml-test-suite/
+
+tests/sedml-test-suite/
+
+examples/example_5/example_model_5_paper.m
+
+examples/geneExpression/simulate_geneExpression.m
 
 examples/example_events/simulate_model_events.m
 
@@ -172,28 +208,6 @@ examples/example_adjoint_hessian/simulate_model_adjoint_hessian.m
 examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecProd.m
 
 examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m
-
-models/model_dirac/.DS_Store
-
-*.o
-
-cmake_install.cmake
-
-CMakeCache.txt
-
-*.a
-
-model_dirac
-
-Makefile
-
-scripts/CMakeFiles
-
-*.txt
-
-tests/sbml-test-suite/
-
-tests/sedml-test-suite/
 
 examples/example_7/simulate_model_example_7.m
 
