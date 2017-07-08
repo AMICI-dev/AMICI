@@ -4,7 +4,7 @@ function example_neuron()
 
 [exdir,~,~]=fileparts(which('example_neuron.m'));
 % compile the model
-amiwrap('model_neuron','model_neuron_syms',exdir)
+amiwrap('model_neuron','model_neuron_syms',exdir,1)
 
 %%
 % SIMULATION
@@ -86,13 +86,15 @@ end
 %%
 % FORWARD SENSITIVITY ANALYSIS
 
-options.sensi = 1;
+options.sensi = 2;
 options.sens_ind = 1:length(p);
 
 sol = simulate_model_neuron(t,log10(p),k,D,options);
 
 %%
 % FINITE DIFFERENCES
+
+options.sensi = 1;
 
 eps = 1e-4;
 xi = log10(p);
@@ -101,7 +103,10 @@ for ip = 1:4;
     xip(options.sens_ind(ip)) = xip(options.sens_ind(ip)) + eps;
     solp = simulate_model_neuron(t,xip,k,D,options);
     sz_fd(:,:,ip) = (solp.z - sol.z)/eps;
+    s2z_fd(:,:,:,ip) = (solp.sz - sol.sz)/eps;
+    s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
     sllh_fd(ip,1) = (solp.llh - sol.llh)/eps;
+    s2llh_fd(ip,:) = (solp.sllh - sol.sllh)/eps;
 end
 
 %%
@@ -139,7 +144,7 @@ if(usejava('jvm'))
     
     subplot(2,2,3)
     hold on
-    plot(sol.sllh,sllh_fd,'ko')
+    plot(abs(sol.sllh),abs(sllh_fd),'ko')
     hold on
     plot([1e-5,1e5],[1e-5,1e5],'k:')
     xlim([1e-5,1e5])
@@ -148,19 +153,79 @@ if(usejava('jvm'))
     ylabel('sllh_{fd}')
     set(gca,'YScale','log')
     set(gca,'XScale','log')
-    title('llh sensitivity')
+    title('abs llh sensitivity')
     box on
     axis square
         
     subplot(2,2,4)
-    plot(sol.sllh,abs(sol.sllh-sllh_fd),'ro')
+    plot(abs(sol.sllh),abs(sol.sllh-sllh_fd),'ro')
     hold on
     plot([1e-5,1e5],[1e-5,1e5],'k:')
     xlim([1e-5,1e5])
     ylim([1e-5,1e5])
     xlabel('sllh')
     ylabel('error sllh')
-    title('llh sensitivity')
+    title('abs llh sensitivity')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    set(gcf,'Position',[100 300 1200 500])
+    
+     figure
+    subplot(2,2,1)
+    hold on
+    plot(abs(sol.s2z(:)),abs(s2z_fd(:)),'bo')
+    hold on
+    plot([1e-5,1e40],[1e-5,1e40],'k:')
+    xlim([1e-5,1e40])
+    ylim([1e-5,1e40])
+    title('second order event output sensitivity')
+    xlabel('sz')
+    ylabel('sz_{fd}')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,2,2)
+    plot(abs(sol.s2z(:)),abs(sol.s2z(:)-s2z_fd(:)),'ro')
+    hold on
+    plot([1e-5,1e40],[1e-5,1e40],'k:')
+    xlim([1e-5,1e40])
+    ylim([1e-5,1e40])
+    title('second order event output sensitivity')
+    xlabel('sz')
+    ylabel('error')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,2,3)
+    hold on
+    plot(abs(sol.s2llh),abs(s2llh_fd),'ko')
+    hold on
+    plot([1e-5,1e5],[1e-5,1e5],'k:')
+    xlim([1e-5,1e5])
+    ylim([1e-5,1e5])
+    xlabel('sllh')
+    ylabel('sllh_{fd}')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    title('abs llh sensitivity')
+    box on
+    axis square
+        
+    subplot(2,2,4)
+    plot(abs(sol.s2llh),abs(sol.s2llh-s2llh_fd),'ro')
+    hold on
+    plot([1e-5,1e5],[1e-5,1e5],'k:')
+    xlim([1e-5,1e5])
+    ylim([1e-5,1e5])
+    xlabel('sllh')
+    ylabel('error sllh')
+    title('abs llh sensitivity')
     set(gca,'YScale','log')
     set(gca,'XScale','log')
     box on

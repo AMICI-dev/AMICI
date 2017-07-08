@@ -158,10 +158,12 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dJydsigma\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJydsigma[iy+($2*$3+$1)*udata->nytrue]');
             cstr = regexprep(cstr,'var_dJzdsigma\[([0-9]+)\+([0-9]+)\*([0-9]+)\]','tdata->dJzdsigma[iz+($2*$3+$1)*udata->nztrue]');
             
+            cstr = regexprep(cstr,'var_s2root_([0-9]+)','rdata->s2rz[$1]');
+            
             if(~isempty(strfind(this.cvar,'Jy')) || ~isempty(strfind(this.cvar,'Jz')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');
                 cstr = regexprep(cstr,'mz_([0-9]+)','mz[tdata->nroots[ie]+udata->nmaxevent*$1]');
-                if(strcmp(this.cvar,'var_Jy') || strcmp(this.cvar,'var_Jy'))
+                if(strcmp(this.cvar,'var_Jy') || strcmp(this.cvar,'var_Jz'))
                     cstr = strrep(cstr,'=','+=');
                 end
             end

@@ -176,6 +176,11 @@ fprintf(fid,'end\n');
 fprintf(fid,'if(isempty(options_ami.sens_ind))\n');
 fprintf(fid,['    options_ami.sens_ind = 1:' num2str(np) ';\n']);
 fprintf(fid,['end\n']);
+if(o2flag == 0)
+fprintf(fid,'if(options_ami.sensi>1)\n');
+fprintf(fid,'    error(''Second order sensitivities were requested but not computed'');\n');
+fprintf(fid,'end\n');
+end
 fprintf(fid,'if(options_ami.sensi<2)\n');
 fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n']);
 if(o2flag > 0)
@@ -403,10 +408,18 @@ if(o2flag)
     fprintf(fid,['        sol.sx = sol.sx(:,1:' num2str(nxtrue) ',:);\n']);
     fprintf(fid,['        sol.sy = sol.sy(:,1:' num2str(nytrue) ',:);\n']);
     fprintf(fid,['        sol.ssigmay = sol.ssigmay(:,1:' num2str(nytrue) ',:);\n']);
+    fprintf(fid,['        if(iz>0)\n']);
+    fprintf(fid,['            sol.sz = sz;\n']);
+    fprintf(fid,['            sol.ssigmaz = ssigmaz;\n']);
+    fprintf(fid,['            sol.srz = srz;\n']);
+    fprintf(fid,'         end\n');
     fprintf(fid,'    end\n');
     fprintf(fid,['    sol.x = sol.x(:,1:' num2str(nxtrue) ');\n']);
     fprintf(fid,['    sol.y = sol.y(:,1:' num2str(nytrue) ');\n']);
     fprintf(fid,['    sol.sigmay = sol.sigmay(:,1:' num2str(nytrue) ');\n']);
+    fprintf(fid,['    sol.z = sol.z(:,1:' num2str(nztrue) ');\n']);
+    fprintf(fid,['    sol.rz = sol.rz(:,1:' num2str(nztrue) ');\n']);
+    fprintf(fid,['    sol.sigmaz = sol.sigmaz(:,1:' num2str(nztrue) ');\n']);
     fprintf(fid,'end\n');
 end
 

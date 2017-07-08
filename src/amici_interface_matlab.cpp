@@ -158,6 +158,9 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
             if(mxGetM(idlist) * mxGetN(idlist) == udata->nx) {
                 udata->idlist = new double[udata->nx];
                 memcpy(udata->idlist, mxGetData(idlist), sizeof(double) * udata->nx);
+            } else {
+                errMsgIdAndTxt("AMICI:mex:idlist","Provided idlist has incorrect length!");
+                goto freturn;
             }
         } else {
             warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");

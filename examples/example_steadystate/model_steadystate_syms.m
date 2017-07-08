@@ -24,7 +24,6 @@ model.sym.p = [p1,p2,p3,p4,p5];
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10'; 
-model.debug = true;
 
 
 %%

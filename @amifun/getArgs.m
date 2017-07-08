@@ -132,7 +132,7 @@ function this = getArgs(this,model)
         case 'dJzdz'
             this.argstr = '(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata)';
         case 'dJzdsigma'
-            this.argstr = '(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
         case 'w'
             this.argstr = ['(realtype t, N_Vector x, N_Vector dx, void *user_data)'];
         case 'dwdp'

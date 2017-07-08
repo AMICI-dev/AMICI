@@ -1,7 +1,7 @@
 % simulate_model_neuron.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
-%   this routine was generated using AMICI commit # in branch unknown branch in repo unknown repository.
+%   this routine was generated using AMICI commit da8c6555ecb3b74c7f33412fd16e47e55ac38349 in branch feature_proper_fJz in repo https://github.com/ICB-DCM/AMICI.
 %
 % USAGE:
 % ======
@@ -130,6 +130,8 @@ if(isempty(options_ami.sens_ind))
 end
 if(options_ami.sensi<2)
     options_ami.id = transpose([0  0]);
+else
+    options_ami.id = transpose([0  0  0  0  0  0  0  0  0  0]);
 end
 options_ami.z2event = [1]; % MUST NOT CHANGE THIS VALUE
 
@@ -142,7 +144,10 @@ end
 chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);
 
 if(nargout>1)
-    if(nargout>4)
+    if(nargout>6)
+        options_ami.sensi = 2;
+        options_ami.sensi_meth = 'forward';
+    elseif(nargout>4)
         options_ami.sensi = 1;
         options_ami.sensi_meth = 'forward';
     else
@@ -159,7 +164,11 @@ nplist = length(options_ami.sens_ind); % MUST NOT CHANGE THIS VALUE
 if(nplist == 0)
     options_ami.sensi = 0;
 end
-nxfull = 2;
+if(options_ami.sensi > 1)
+    nxfull = 10;
+else
+    nxfull = 2;
+end
 if(isempty(options_ami.qpositivex))
     options_ami.qpositivex = zeros(nxfull,1);
 else
@@ -225,7 +234,48 @@ if(~isempty(options_ami.sx0))
     end
     init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor(:),[2,1]));
 end
-sol = ami_model_neuron(tout,theta(1:4),kappa(1:2),options_ami,plist,pbar,xscale,init,data);
+if(options_ami.sensi<2)
+    sol = ami_model_neuron(tout,theta(1:4),kappa(1:2),options_ami,plist,pbar(plist+1),xscale,init,data);
+else
+    sol = ami_model_neuron_o2(tout,theta(1:4),kappa(1:2),options_ami,plist,pbar(plist+1),xscale,init,data);
+end
+if(options_ami.sensi == 2)
+    if(~(options_ami.sensi_meth==2))
+        sz = zeros(size(sol.z,1),1,length(theta(options_ami.sens_ind)));
+        ssigmaz = zeros(size(sol.z,1),1,length(theta(options_ami.sens_ind)));
+        srz = zeros(size(sol.z,1),1,length(theta(options_ami.sens_ind)));
+        for iz = 1:1
+            sz(:,iz,:) = sol.sz(:,2*iz-1,:);
+            ssigmaz(:,iz,:) = sol.ssigmaz(:,2*iz-1,:);
+            srz(:,iz,:) = sol.srz(:,2*iz-1,:);
+        end
+        sol.s2x = reshape(sol.sx(:,3:end,:),length(tout),2,4,length(options_ami.sens_ind));
+        sol.s2y = reshape(sol.sy(:,2:end,:),length(tout),1,4,length(options_ami.sens_ind));
+        sol.s2sigmay = reshape(sol.ssigmay(:,2:end,:),length(tout),1,4,length(options_ami.sens_ind));
+        s2z = zeros(size(sol.z,1),1,4,length(options_ami.sens_ind));
+        s2sigmaz = zeros(size(sol.z,1),1,4,length(options_ami.sens_ind));
+        s2rz = zeros(size(sol.z,1),1,4,length(options_ami.sens_ind));
+        for iz = 1:1
+            sol.s2z(:,iz,:,:) = reshape(sol.sz(:,((iz-1)*(4+1)+2):((iz-1)*(4+1)+4+1),:),options_ami.nmaxevent,1,4,length(options_ami.sens_ind));
+            sol.s2sigmaz(:,iz,:,:) = reshape(sol.ssigmaz(:,((iz-1)*(4+1)+2):((iz-1)*(4+1)+4+1),:),options_ami.nmaxevent,1,4,length(options_ami.sens_ind));
+            sol.s2rz(:,iz,:,:) = reshape(sol.srz(:,((iz-1)*(4+1)+2):((iz-1)*(4+1)+4+1),:),options_ami.nmaxevent,1,4,length(options_ami.sens_ind));
+        end
+        sol.sx = sol.sx(:,1:2,:);
+        sol.sy = sol.sy(:,1:1,:);
+        sol.ssigmay = sol.ssigmay(:,1:1,:);
+        if(iz>0)
+            sol.sz = sz;
+            sol.ssigmaz = ssigmaz;
+            sol.srz = srz;
+         end
+    end
+    sol.x = sol.x(:,1:2);
+    sol.y = sol.y(:,1:1);
+    sol.sigmay = sol.sigmay(:,1:1);
+    sol.z = sol.z(:,1:1);
+    sol.rz = sol.rz(:,1:1);
+    sol.sigmaz = sol.sigmaz(:,1:1);
+end
 if(options_ami.sensi_meth == 3)
     sol.sx = -sol.J\sol.dxdotdp;
     sol.sy = sol.dydx*sol.sx + sol.dydp;
@@ -238,6 +288,10 @@ if(nargout>1)
     if(nargout>4)
         varargout{5} = sol.sx;
         varargout{6} = sol.sy;
+        if(nargout>6)
+            varargout{7} = sol.s2x;
+            varargout{8} = sol.s2y;
+        end
     end
 else
     varargout{1} = sol;
