@@ -76,16 +76,38 @@ function example_jakstat_adjoint()
     
     if(usejava('jvm'))
     figure
-    bar([abs((sol.sllh-fd_grad)./sol.sllh),abs((sol.sllh-solf.sllh)./sol.sllh)])
+    subplot(1,2,1)
+    plot(abs(solf.sllh),abs(fd_grad),'rx')
+    hold on
+    plot(abs(solf.sllh),abs(sol.sllh),'bo')
     hold on
     set(gca,'YScale','log')
-    ylim([1e-12,1e0])
+    set(gca,'XScale','log')
+    ylim([1e-2,1e2])
+    xlim([1e-2,1e2])
+    plot([1e-2,1e2],[1e-2,1e2],'k:')
+    legend('finite differences','adjoint sensitivities','Location','best')
     box on
+    axis square
+    xlabel('absolute value forward sensitivity gradient entries')
+    ylabel('absolute value gradient entries')
+    
+    subplot(1,2,2)
+    plot(abs(solf.s2llh(:)),abs(fd_hess(:)),'rx')
     hold on
-%     plot([1e-2,1e2],[1e-2,1e2],'k:')
-    xlabel('parameter index')
-    ylabel('relative difference to adjoint sensitivities')
-    legend('finite differences','forward sensitivities')
+    plot(abs(solf.s2llh(:)),abs(sol.s2llh(:)),'bo')
+    hold on
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    ylim([1e-5,1e3])
+    xlim([1e-5,1e3])
+    plot([1e-5,1e3],[1e-5,1e3],'k:')
+    legend('finite differences','adjoint sensitivities','Location','best')
+    box on
+    axis square
+    xlabel('absolute value forward sensitivity hessian entries')
+    ylabel('absolute value hessian entries')
+    
     set(gcf,'Position',[100 300 1200 500])
     end
     

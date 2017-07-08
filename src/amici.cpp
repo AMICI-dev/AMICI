@@ -523,11 +523,11 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
                 for(ip=0; ip < udata->nplist; ip++) {
                     if (iJ==0) {
                         if (udata->ny>0) {
-                            rdata->sllh[ip] -= tdata->dJydp[udata->nJ * ip];
+                            rdata->sllh[ip] -= tdata->dJydp[ip * udata->nJ];
                         }
                     } else {
                         if (udata->ny>0) {
-                            rdata->s2llh[ip + (iJ - 1)*udata->nplist] -= tdata->dJydp[iJ + udata->nJ * ip];
+                            rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJydp[iJ + ip * udata->nJ];
                         }
                     }
                 }
