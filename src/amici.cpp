@@ -2125,7 +2125,7 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
                 rdata->sllh[ip] -= multResult[ip * udata->nJ] + tdata->dJydp[ip * udata->nJ];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[(iJ - 1) + ip * udata->nJ ] -= multResult[iJ + ip * udata->nJ] + tdata->dJydp[iJ + ip * udata->nJ];
+                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= multResult[iJ + ip * udata->nJ] + tdata->dJydp[iJ + ip * udata->nJ];
     }
     
     delete[] dJydxTmp;
