@@ -527,7 +527,7 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
                         }
                     } else {
                         if (udata->ny>0) {
-                            rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[iJ + udata->nJ * ip];
+                            rdata->s2llh[ip + (iJ - 1)*udata->nplist] -= tdata->dJydp[iJ + udata->nJ * ip];
                         }
                     }
                 }
@@ -1266,7 +1266,7 @@ int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
             
             for (iJ=0; iJ<udata->nJ; ++iJ) {
                 for (ip=0; ip<udata->nplist; ++ip) {
-                    xQB_tmp[iJ*udata->nplist+ip] += tdata->deltaqB[iJ*udata->nplist+ip];
+                    xQB_tmp[ip + iJ*udata->nplist] += tdata->deltaqB[ip + iJ*udata->nplist];
                 }
             }
             
@@ -1741,23 +1741,23 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                         int iJ;
                         for (iJ=0; iJ<udata->nJ; iJ++) {
                             if (iJ==0) {
-                                for (ip=0; ip<udata->nplist; ip++) {
+                                for (ip=0; ip<udata->nplist; ++ip) {
                                     tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                                     if(!sx_tmp) return AMICI_ERROR_ASA;
-                                    for (ix = 0; ix < udata->nxtrue; ix++) {
+                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
                                         tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                                     }
                                 }
                             } else {
-                                for (ip=0; ip<udata->nplist; ip++) {
-                                    tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
+                                for (ip=0; ip<udata->nplist; ++ip) {
+                                    tdata->llhS0[ip + iJ * udata->nplist] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                                     if(!sx_tmp) return AMICI_ERROR_ASA;
-                                    for (ix = 0; ix < udata->nxtrue; ix++) {
-                                        tdata->llhS0[iJ*udata->nplist + ip] = tdata->llhS0[iJ*udata->nplist + ip]
-                                        + xB_tmp[iJ*udata->nxtrue + ix] * sx_tmp[ix]
-                                        + xB_tmp[ix] * sx_tmp[iJ*udata->nxtrue + ix];
+                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
+                                        tdata->llhS0[ip + iJ * udata->nplist] = tdata->llhS0[ip + iJ * udata->nplist]
+                                        + xB_tmp[ix + iJ * udata->nxtrue] * sx_tmp[ix]
+                                        + xB_tmp[ix] * sx_tmp[ix + iJ * udata->nxtrue];
                                     }
                                 }
                             }
@@ -1771,7 +1771,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 if (iJ==0) {
                                     rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
                                 } else {
-                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->llhS0[iJ*udata->nplist + ip] + xQB_tmp[iJ*udata->nplist + ip];
+                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
                                 }
                             }
                         }
@@ -1783,7 +1783,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 if (iJ==0) {
                                     rdata->sllh[ip] = amiGetNaN();
                                 } else {
-                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
+                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
                                 }
                             }
                         }
@@ -1795,7 +1795,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                             if (iJ==0) {
                                 rdata->sllh[ip] = amiGetNaN();
                             } else {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
+                                rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
                             }
                         }
                     }
@@ -2256,7 +2256,7 @@ static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, 
                 rdata->sllh[ip] -= multResult[ip] + tdata->dJzdp[ip];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[ip + (iJ - 1)*udata->nplist] -= multResult[iJ + ip*udata->nJ] + tdata->dJzdp[iJ + ip*udata->nJ];
+                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= multResult[iJ + ip*udata->nJ] + tdata->dJzdp[iJ + ip*udata->nJ];
     }
 
 delete[] dJzdxTmp;
