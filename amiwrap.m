@@ -106,7 +106,7 @@ function amiwrap( varargin )
     end
     
     if(~isempty(o2string))
-        o2_hash = CalcMD5(fullfile(wrap_path,'amimodel',['augment' o2string '.m']));
+        o2_hash = CalcMD5(fullfile(wrap_path,'@amimodel',['augment' o2string '.m']),'File');
         try
             if(~exist(fullfile(wrap_path,'models',[modelname '_' o2string]),'dir'))
                 mkdir(fullfile(wrap_path,'models',[modelname '_' o2string]));

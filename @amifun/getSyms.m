@@ -142,7 +142,7 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_y'
             this.sym = model.sym.sigma_y;
-            this = makeStrSyms(this);
+            this = makeStrSymsFull(this);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -654,11 +654,9 @@ function [this,model] = getSyms(this,model)
             
         case 'dzdx'
             this.sym = jacobian(model.fun.z.sym,x);
-            
             for iz = 1:nz
                 this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
             end
-            
             this = makeStrSyms(this);
             
         case 'dzdt'
@@ -748,15 +746,13 @@ function [this,model] = getSyms(this,model)
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_y.strsym);
         case 'dJydy'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
-            for iy = 1 : model.nytrue
-                this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.y.strsym);
+            for iyt = 1 : model.nytrue
+                this.sym(iyt,:,:) = jacobian(model.fun.Jy.sym(iyt,:),model.fun.y.strsym);
             end
-            
-            this = makeStrSyms(this);
         case 'dJydsigma'
-            this.sym = sym(zeros(model.nytrue, model.ng, model.nytrue));
-            for iy = 1 : model.nytrue
-                this.sym(iy,:,:) = jacobian(model.fun.Jy.sym(iy,:),model.fun.sigma_y.strsym(1:model.nytrue));
+            this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
+            for iyt = 1 : model.nytrue
+                this.sym(iyt,:,:) = jacobian(model.fun.Jy.sym(iyt,:),model.fun.sigma_y.strsym);
             end
         case 'Jz'
             this.sym = model.sym.Jz;
@@ -776,7 +772,6 @@ function [this,model] = getSyms(this,model)
             for iz = 1 : model.nztrue
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym(1:model.nztrue));
             end
-            
         otherwise
             error('unknown function name')
     end

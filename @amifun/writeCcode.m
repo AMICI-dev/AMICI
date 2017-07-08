@@ -84,7 +84,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
     end
 elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
     tmpfun = this;
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         fprintf(fid,['int iy;\n']);
         for iy = 1:model.nytrue
             fprintf(fid,['if(!amiIsNaN(edata->my[' num2str(iy-1) '* udata->nt+it])){\n']);
@@ -96,7 +96,7 @@ elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
     end
 elseif(any(strcmp(this.funstr,{'Jz','dJzdsigma','dJzdz'})))
     tmpfun = this;
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         fprintf(fid,['int iz;\n']);
         for iz = 1:model.nztrue
             fprintf(fid,['if(!amiIsNaN(mz[' num2str(iz-1) '*udata->nmaxevent+tdata->nroots[ie]])){\n']);
@@ -107,7 +107,7 @@ elseif(any(strcmp(this.funstr,{'Jz','dJzdsigma','dJzdz'})))
         end
     end
 else
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         this.gccode(model,fid);
     end
 end
