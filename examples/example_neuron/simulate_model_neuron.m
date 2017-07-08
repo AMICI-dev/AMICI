@@ -1,7 +1,7 @@
 % simulate_model_neuron.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
-%   this routine was generated using AMICI commit da8c6555ecb3b74c7f33412fd16e47e55ac38349 in branch feature_proper_fJz in repo https://github.com/ICB-DCM/AMICI.
+%   this routine was generated using AMICI commit 838782decd10c1d010876610305c8252e6b8a991 in branch feature_proper_fJz in repo https://github.com/ICB-DCM/AMICI.
 %
 % USAGE:
 % ======
