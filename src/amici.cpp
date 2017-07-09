@@ -479,12 +479,11 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
      *
      * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -540,12 +539,11 @@ int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, co
     return status;
 }
 
-int prepEventSensis(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
      *
      * @param[in] ie index of current event @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -664,7 +662,7 @@ int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, con
         }
     }
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        status = prepDataSensis(it, ami_mem, udata, rdata, edata, tdata);
+        status = prepDataSensis(it, udata, rdata, edata, tdata);
         if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_FSA) {
             status = getDataSensisFSA(it, ami_mem, udata, rdata, edata, tdata);
@@ -678,12 +676,11 @@ int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, con
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getEventOutput(realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventOutput extracts output information for events
      *
      * @param[in] tlastroot timepoint of last occured event @type *realtype
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -728,10 +725,10 @@ int getEventOutput(realtype *tlastroot, void *ami_mem, UserData *udata, ReturnDa
                 }
                 
                 if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                    status = prepEventSensis(ie, ami_mem, udata, rdata, edata, tdata);
+                    status = prepEventSensis(ie, udata, rdata, edata, tdata);
                     if(status != AMICI_SUCCESS) return status;
                     if (udata->sensi_meth == AMICI_SENSI_FSA) {
-                        status = getEventSensisFSA(ie, ami_mem, udata, rdata, edata, tdata);
+                        status = getEventSensisFSA(ie, udata, rdata, edata, tdata);
                         if(status != AMICI_SUCCESS) return status;
                     }
                 }
@@ -811,12 +808,11 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getEventSensisFSA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventSensisFSA extracts event information for forward sensitivity analysis
      *
      * @param[in] ie index of event type @type int
-     * @param[in] ami_mem pointer to the solver memory block @type void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -964,7 +960,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
         *tlastroot = tdata->t;
     }
     
-    status = getEventOutput(tlastroot, ami_mem, udata, rdata, edata, tdata);
+    status = getEventOutput(tlastroot, udata, rdata, edata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
@@ -999,7 +995,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
     status = updateHeaviside(udata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
-    status = applyEventBolus(ami_mem, udata, tdata);
+    status = applyEventBolus(udata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
     if (*iroot<udata->nmaxevent*udata->ne) {
@@ -1018,7 +1014,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
             status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
             if (status != AMICI_SUCCESS) return status;
             
-            status = applyEventSensiBolusFSA(ami_mem, udata, tdata);
+            status = applyEventSensiBolusFSA(udata, tdata);
             if (status != AMICI_SUCCESS) return status;
         }
     }
@@ -1076,13 +1072,12 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
+int handleEventB(int iroot, UserData *udata, TempData *tdata) {
     /**
      * handleEventB executes everything necessary for the handling of events for the backward problem
      *
      * @param[out] status flag indicating success of execution @type int
      * @param[out] iroot index of event @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1179,12 +1174,10 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
+int applyEventBolus( UserData *udata, TempData *tdata) {
     /**
      * applyEventBolus applies the event bolus to the current state
      *
-     * @param[out] status flag indicating success of execution @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1213,11 +1206,10 @@ int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int applyEventSensiBolusFSA(void *ami_mem, UserData *udata, TempData *tdata) {
+int applyEventSensiBolusFSA(UserData *udata, TempData *tdata) {
     /**
      * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
      *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1482,7 +1474,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
     
     /* fill events */
     if (udata->ne>0) {
-        getEventOutput(&tlastroot, ami_mem, udata, rdata, edata, tdata);
+        getEventOutput(&tlastroot, udata, rdata, edata, tdata);
     }
     
 freturn:
@@ -1538,7 +1530,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                             if (udata->nmaxevent>0){
                                 if ((*iroot)>=0){
                                     if (tnext == tdata->discs[*iroot]) {
-                                        handleEventB(*iroot, ami_mem, udata, tdata);
+                                        handleEventB(*iroot, udata, tdata);
                                         (*iroot)--;
                                     }
                                 }
