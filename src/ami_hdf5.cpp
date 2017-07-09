@@ -253,6 +253,9 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
     if(rdata->z)
         AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "z", rdata->z, udata->nmaxevent, udata->nz);
     
+    if(rdata->rz)
+        AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "rz", rdata->rz, udata->nmaxevent, udata->nz);
+    
     if(rdata->sigmay)
         AMI_HDF5_createAndWriteDouble2DAttribute(dataset, "sigmay", rdata->sigmay, udata->nt, udata->ny);
     

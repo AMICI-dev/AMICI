@@ -713,13 +713,14 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
                             rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
                         }
                     }
-                    status = frz(tdata->t,ie,tdata->x,udata,tdata,rdata);
-                    if(status != AMICI_SUCCESS) return status;
                     
                     status = fJz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
                     if(status != AMICI_SUCCESS) return status;
                     
                     if (tdata->t == udata->ts[udata->nt-1]) { // call from fillEvent at last timepoint, add regularization based on rz
+                        status = frz(tdata->t,ie,tdata->x,udata,tdata,rdata);
+                        if(status != AMICI_SUCCESS) return status;
+                        
                         status = fJrz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
                         if(status != AMICI_SUCCESS) return status;
                     }
