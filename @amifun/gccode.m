@@ -125,9 +125,9 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_sy_([0-9]+)','rdata->sy[it+ udata->nt*($1+ip * udata->ny)]');
             cstr = regexprep(cstr,'var_sz_([0-9]+)','rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*udata->nz + $1)]');
            
-            cstr = regexprep(cstr,'var_dydx[_\[]*([0-9\+\*]+)\][\]]*','tdata->dydx[$1]'); % matches both _... and [...]
-            cstr = regexprep(cstr,'var_dzdx[_\[]*([0-9\+\*]+)\][\]]*','tdata->dzdx[$1]');
-            cstr = regexprep(cstr,'var_drzdx[_\[]*([0-9\+\*]+)\][\]]*','tdata->drzdx[$1]'); 
+            cstr = regexprep(cstr,'var_dydx[_\[]*([0-9\+\*]+)[\]]*','tdata->dydx[$1]'); % matches both _... and [...]
+            cstr = regexprep(cstr,'var_dzdx[_\[]*([0-9\+\*]+)[\]]*','tdata->dzdx[$1]');
+            cstr = regexprep(cstr,'var_drzdx[_\[]*([0-9\+\*]+)[\]]*','tdata->drzdx[$1]'); 
             cstr = regexprep(cstr,'var_dydp_([0-9]+)','tdata->dydp[ip*udata->ny + $1]');    
             cstr = regexprep(cstr,'var_dzdp_([0-9]+)','tdata->dzdp[ip*udata->nz + $1]');
             cstr = regexprep(cstr,'var_drzdp_([0-9]+)','tdata->drzdp[ip*udata->nz + $1]');

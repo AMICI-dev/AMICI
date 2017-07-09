@@ -120,7 +120,7 @@ function [modelo2] = augmento2(this)
     augmodel.sym.Jy = [this.sym.Jy,SJy];
     augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.Jrz = [this.sym.Jrz,SJrz];
-    if(this.nevent>0)
+    if(numel([this.event.z]))
         augmodel.sym.rz = [this.fun.rz.sym,Srz];
     end
     augmodel.sym.p = this.sym.p;
