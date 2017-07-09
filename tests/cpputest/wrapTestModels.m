@@ -39,6 +39,19 @@ function [ output_args ] = wrapTestModels( input_args )
         cd(fileparts(mfilename('fullpath')));
     end
 
+    %% EXAMPLE NEURON
+    cd([amiciPath '/examples/example_neuron/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_neuron.m'));
+        amiwrap('model_neuron', 'model_neuron_syms', exdir, 1);
+    catch err
+        disp(err.message)
+        cd(fileparts(mfilename('fullpath')));
+    end
+
+    
+    
     cd(fileparts(mfilename('fullpath')));
     
 end

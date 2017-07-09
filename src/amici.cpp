@@ -706,6 +706,7 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
                     if(status != AMICI_SUCCESS) return status;
                     for (int iz=0; iz<udata->nztrue; iz++) {
                         if (udata->z2event[iz]-1 == ie) {
+                            
                             if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
                                 tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
                             }

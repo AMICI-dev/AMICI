@@ -7,6 +7,5 @@
 int main(int argc, char** argv)
 {
     srand(time(NULL));
-    
     return CommandLineTestRunner::RunAllTests(argc, argv);
 }
