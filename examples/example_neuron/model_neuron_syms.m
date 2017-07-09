@@ -1,7 +1,6 @@
 function model = neuron_syms()
     
     model.param = 'log10';
-    model.debug = true;
     
     syms a b c d 
     

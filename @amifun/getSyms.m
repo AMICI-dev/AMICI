@@ -148,7 +148,7 @@ function [this,model] = getSyms(this,model)
             
         case 'sigma_z'
             this.sym = model.sym.sigma_z;
-            this = makeStrSyms(this);
+            this = makeStrSymsFull(this);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             
@@ -496,6 +496,15 @@ function [this,model] = getSyms(this,model)
             
         case 'sroot'
             this.sym = model.fun.drootdp.sym + model.fun.drootdx.sym*sx;
+            
+        case 'srz'
+            if(isfield(model.sym,'rz')) % user defined input or from augmentation
+                this.sym = jacobian(model.fun.rz.sym,p) + jacobian(model.fun.rz.sym,x)*sx;
+            else
+                for iz = 1:length(model.z2event)
+                    this.sym(iz,:) = model.fun.sroot.sym(model.z2event(iz),:);
+                end
+            end
           
         case 's2root'
             switch(model.o2flag)
@@ -643,20 +652,40 @@ function [this,model] = getSyms(this,model)
             end
             this = makeStrSymsFull(this);
             
+        case 'rz'
+            this.sym = zeros(size(model.fun.z.sym));
+            if(isfield(model.sym,'rz'))
+                this.sym = model.sym.rz;
+            else
+                for iz = 1:length(model.z2event)
+                    this.sym = model.fun.root.sym(model.z2event(iz));
+                end
+            end
+            this = unifySyms(this,model);
+            this = makeStrSymsFull(this);
+            
         case 'dzdp'
             this.sym = jacobian(model.fun.z.sym,p);
                 
             for iz = 1:nz
-                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudp.sym(model.z2event(iz),:);
+                this.sym(iz,:) = this.sym(iz,:) + diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudp.sym(model.z2event(iz),:);
             end
             % create cell array of same size
+            this = makeStrSyms(this);
+            
+        case 'drzdp'
+            this.sym = jacobian(model.fun.rz.sym,p);
             this = makeStrSyms(this);
             
         case 'dzdx'
             this.sym = jacobian(model.fun.z.sym,x);
             for iz = 1:nz
-                this.sym(iz,:) = diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
+                this.sym(iz,:) = this.sym(iz,:)+ diff(model.fun.z.sym(iz),sym('t'))*model.fun.dtaudx.sym(model.z2event(iz),:);
             end
+            this = makeStrSyms(this);
+            
+        case 'drzdx'
+            this.sym = jacobian(model.fun.rz.sym,x);
             this = makeStrSyms(this);
             
         case 'dzdt'
@@ -757,7 +786,14 @@ function [this,model] = getSyms(this,model)
         case 'Jz'
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
-            tmp = arrayfun(@(iz)sym(sprintf('z_%i',iz-1)),1:nz,'UniformOutput',false);
+            z = arrayfun(@(iz)sym(sprintf('z_%i',iz-1)),1:nz,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[z{:}],model.fun.z.strsym);
+            tmp = arrayfun(@(iz)sym(sprintf('sigma_z_%i',iz-1)),1:nz,'UniformOutput',false);
+            this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_z.strsym);
+        case 'Jrz'
+            this.sym = model.sym.Jrz;
+            this = unifySyms(this,model);
+            tmp = arrayfun(@(iz)sym(sprintf('rz_%i',iz-1)),1:nz,'UniformOutput',false);
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.z.strsym);
             tmp = arrayfun(@(iz)sym(sprintf('sigma_z_%i',iz-1)),1:nz,'UniformOutput',false);
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_z.strsym);
@@ -767,11 +803,23 @@ function [this,model] = getSyms(this,model)
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
             this = makeStrSyms(this);
-        case 'dJzdsigma'
-            this.sym = sym(zeros(model.nztrue, model.ng, model.nztrue));
+        case 'dJrzdz'
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
-                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym(1:model.nztrue));
+                this.sym(iz,:,:) = jacobian(model.fun.Jrz.sym(iz,:),model.fun.rz.strsym);
             end
+            this = makeStrSyms(this);
+        case 'dJzdsigma'
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
+            for iz = 1 : model.nztrue
+                this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym);
+            end
+        case 'dJrzdsigma'
+            this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
+            for iz = 1 : model.nztrue
+                this.sym(iz,:,:) = jacobian(model.fun.Jrz.sym(iz,:),model.fun.sigma_z.strsym);
+            end
+            
         otherwise
             error('unknown function name')
     end
@@ -783,9 +831,7 @@ function this = unifySyms(this,model)
     %
     % Parameters:
     %  model: model definition object @type amimodel
-    if(ismember('x',this.deps))
-        this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
-    end
+    this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
     this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
 end

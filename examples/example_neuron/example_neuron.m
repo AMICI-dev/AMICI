@@ -32,7 +32,7 @@ D = amidata(length(t),1,size(sol.z(sol.z<t(end)),2),size(sol.z(sol.z<t(end)),1),
 
 rng(0);
 D.Z = sol.z(sol.z<t(end));
-% t = linspace(0,D.Z(end)-0.1,100);
+t = linspace(0,D.Z(end)-0.1,100);
 D.Z = D.Z + 0.5*randn(size(D.Z));
 D.Z(3) = NaN;
 D.Sigma_Z = 0.5*ones(size(D.Z)); 
@@ -96,7 +96,19 @@ sol = simulate_model_neuron(t,log10(p),k,D,options);
 
 options.sensi = 1;
 
-eps = 1e-4;
+eps = 1e-5;
+xi = log10(p);
+for ip = 1:4;
+    xip = xi;
+    xip(options.sens_ind(ip)) = xip(options.sens_ind(ip)) + eps;
+    solp = simulate_model_neuron(t,xip,k,D,options);
+    srz_fd(:,:,ip) = (solp.rz - sol.rz)/eps;
+    s2rz_fd(:,:,:,ip) = (solp.srz - sol.srz)/eps;
+    sllh_fd(ip,1) = (solp.llh - sol.llh)/eps;
+    s2llh_fd(ip,:) = (solp.sllh - sol.sllh)/eps;
+end
+
+eps = 1e-3;
 xi = log10(p);
 for ip = 1:4;
     xip = xi;
@@ -104,16 +116,13 @@ for ip = 1:4;
     solp = simulate_model_neuron(t,xip,k,D,options);
     sz_fd(:,:,ip) = (solp.z - sol.z)/eps;
     s2z_fd(:,:,:,ip) = (solp.sz - sol.sz)/eps;
-    s2x_fd(:,:,:,ip) = (solp.sx - sol.sx)/eps;
-    sllh_fd(ip,1) = (solp.llh - sol.llh)/eps;
-    s2llh_fd(ip,:) = (solp.sllh - sol.sllh)/eps;
 end
 
 %%
 % PLOTTING
 if(usejava('jvm'))
     figure
-    subplot(2,2,1)
+    subplot(2,3,1)
     hold on
     plot(abs(sol.sz(:)),abs(sz_fd(:)),'bo')
     hold on
@@ -128,7 +137,7 @@ if(usejava('jvm'))
     box on
     axis square
     
-    subplot(2,2,2)
+    subplot(2,3,4)
     plot(abs(sol.sz(:)),abs(sol.sz(:)-sz_fd(:)),'ro')
     hold on
     plot([1e-5,1e5],[1e-5,1e5],'k:')
@@ -142,13 +151,42 @@ if(usejava('jvm'))
     box on
     axis square
     
-    subplot(2,2,3)
+    subplot(2,3,2)
+    hold on
+    plot(abs(sol.srz(:)),abs(srz_fd(:)),'bo')
+    hold on
+    plot([1e2,1e5],[1e2,1e5],'k:')
+    xlim([1e2,1e5])
+    ylim([1e2,1e5])
+    title('event root sensitivity')
+    xlabel('srz')
+    ylabel('srz_{fd}')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,3,5)
+    plot(abs(sol.srz(:)),abs(sol.srz(:)-srz_fd(:)),'ro')
+    hold on
+    plot([1e2,1e5],[1e2,1e5],'k:')
+    xlim([1e2,1e5])
+    ylim([1e2,1e5])
+    title('event root sensitivity')
+    xlabel('srz')
+    ylabel('error')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,3,3)
     hold on
     plot(abs(sol.sllh),abs(sllh_fd),'ko')
     hold on
-    plot([1e-5,1e5],[1e-5,1e5],'k:')
-    xlim([1e-5,1e5])
-    ylim([1e-5,1e5])
+    plot([1e3,1e7],[1e3,1e7],'k:')
+    xlim([1e3,1e7])
+    ylim([1e3,1e7])
     xlabel('sllh')
     ylabel('sllh_{fd}')
     set(gca,'YScale','log')
@@ -157,12 +195,12 @@ if(usejava('jvm'))
     box on
     axis square
         
-    subplot(2,2,4)
+    subplot(2,3,6)
     plot(abs(sol.sllh),abs(sol.sllh-sllh_fd),'ro')
     hold on
-    plot([1e-5,1e5],[1e-5,1e5],'k:')
-    xlim([1e-5,1e5])
-    ylim([1e-5,1e5])
+    plot([1e3,1e7],[1e3,1e7],'k:')
+    xlim([1e3,1e7])
+    ylim([1e3,1e7])
     xlabel('sllh')
     ylabel('error sllh')
     title('abs llh sensitivity')
@@ -172,14 +210,14 @@ if(usejava('jvm'))
     axis square
     set(gcf,'Position',[100 300 1200 500])
     
-     figure
-    subplot(2,2,1)
+    figure
+    subplot(2,3,1)
     hold on
     plot(abs(sol.s2z(:)),abs(s2z_fd(:)),'bo')
     hold on
-    plot([1e-5,1e40],[1e-5,1e40],'k:')
-    xlim([1e-5,1e40])
-    ylim([1e-5,1e40])
+    plot([1e-5,1e5],[1e-5,1e5],'k:')
+    xlim([1e-5,1e5])
+    ylim([1e-5,1e5])
     title('second order event output sensitivity')
     xlabel('sz')
     ylabel('sz_{fd}')
@@ -188,12 +226,12 @@ if(usejava('jvm'))
     box on
     axis square
     
-    subplot(2,2,2)
+    subplot(2,3,4)
     plot(abs(sol.s2z(:)),abs(sol.s2z(:)-s2z_fd(:)),'ro')
     hold on
-    plot([1e-5,1e40],[1e-5,1e40],'k:')
-    xlim([1e-5,1e40])
-    ylim([1e-5,1e40])
+    plot([1e-5,1e5],[1e-5,1e5],'k:')
+    xlim([1e-5,1e5])
+    ylim([1e-5,1e5])
     title('second order event output sensitivity')
     xlabel('sz')
     ylabel('error')
@@ -202,13 +240,42 @@ if(usejava('jvm'))
     box on
     axis square
     
-    subplot(2,2,3)
+    subplot(2,3,2)
+    hold on
+    plot(abs(sol.s2rz(:)),abs(s2rz_fd(:)),'bo')
+    hold on
+    plot([1e5,1e8],[1e5,1e8],'k:')
+    xlim([1e5,1e8])
+    ylim([1e5,1e8])
+    title('second order event output sensitivity')
+    xlabel('sz')
+    ylabel('sz_{fd}')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,3,5)
+    plot(abs(sol.s2rz(:)),abs(sol.s2rz(:)-s2rz_fd(:)),'ro')
+    hold on
+    plot([1e5,1e8],[1e5,1e8],'k:')
+    xlim([1e5,1e8])
+    ylim([1e5,1e8])
+    title('second order event output sensitivity')
+    xlabel('sz')
+    ylabel('error')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    box on
+    axis square
+    
+    subplot(2,3,3)
     hold on
     plot(abs(sol.s2llh),abs(s2llh_fd),'ko')
     hold on
-    plot([1e-5,1e5],[1e-5,1e5],'k:')
-    xlim([1e-5,1e5])
-    ylim([1e-5,1e5])
+    plot([1e2,1e10],[1e2,1e10],'k:')
+    xlim([1e2,1e10])
+    ylim([1e2,1e10])
     xlabel('sllh')
     ylabel('sllh_{fd}')
     set(gca,'YScale','log')
@@ -217,12 +284,12 @@ if(usejava('jvm'))
     box on
     axis square
         
-    subplot(2,2,4)
+    subplot(2,3,6)
     plot(abs(sol.s2llh),abs(sol.s2llh-s2llh_fd),'ro')
     hold on
-    plot([1e-5,1e5],[1e-5,1e5],'k:')
-    xlim([1e-5,1e5])
-    ylim([1e-5,1e5])
+    plot([1e2,1e10],[1e2,1e10],'k:')
+    xlim([1e2,1e10])
+    ylim([1e2,1e10])
     xlabel('sllh')
     ylabel('error sllh')
     title('abs llh sensitivity')

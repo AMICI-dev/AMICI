@@ -81,6 +81,10 @@ public:
     realtype *dJzdz;
     /** event sigma derivative of event likelihood */
     realtype *dJzdsigma;
+    /** event ouput derivative of event likelihood at final timepoint */
+    realtype *dJrzdz;
+    /** event sigma derivative of event likelihood at final timepoint */
+    realtype *dJrzdsigma;
     /** state derivative of event output */
     realtype *dzdx;
     /** parameter derivative of event output */

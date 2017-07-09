@@ -274,5 +274,26 @@ if(~isfield(this.sym,'Jz'))
     end
 end
 
+z = sym(arrayfun(@(iz) ['z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_z = sym(arrayfun(@(iz) ['var_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+this.sym.Jz = subs(this.sym.Jz,z,var_z);
+this.sym.Jz = subs(this.sym.Jz,sigma_z,var_sigma_z);
+
+rz = sym(arrayfun(@(iz) ['rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+mz = sym(arrayfun(@(iz) ['mz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_rz = sym(arrayfun(@(iz) ['var_rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+if(~isfield(this.sym,'Jrz'))
+    for iz = 1:length([this.event.z])
+        tmp = subs(this.sym.Jz(iz,:),var_z,var_rz);
+        this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz)))); 
+    end
+end
+
+this.sym.Jrz = subs(this.sym.Jrz,rz,var_rz);
+
 end
 

@@ -36,11 +36,16 @@ function [modelo2] = augmento2(this)
     % generate deltasx
     this.getFun([],'deltasx');
     this.getFun([],'sz');
+    this.getFun([],'srz');
     for ievent = 1:this.nevent;
         if(numel(this.event(ievent).z)>0)
             Sz = this.fun.sz.sym(this.z2event==ievent,:);
             for ip = 1:np
                 Sz(:,ip) = subs(Sz(:,ip),this.fun.sx.sym(:,ip),Sx(:,ip));
+            end
+            Srz = this.fun.srz.sym(this.z2event==ievent,:);
+            for ip = 1:np
+                Srz(:,ip) = subs(Srz(:,ip),this.fun.sx.sym(:,ip),Sx(:,ip));
             end
             znew = [this.event(ievent).z,reshape(Sz,[sum(this.z2event==ievent),np])];
         else
@@ -48,11 +53,11 @@ function [modelo2] = augmento2(this)
         end
         tmp=subs(this.fun.deltasx.sym(:,:,ievent),this.fun.xdot.strsym_old,this.fun.xdot.sym);
         tmp=subs(tmp,this.fun.xdot.strsym,subs(this.fun.xdot.sym,this.fun.x.sym,this.fun.x.sym+this.event(ievent).bolus));
-        tmp=subs(tmp,this.fun.stau.strsym,this.fun.stau.sym(ievent,:))
+        tmp=subs(tmp,this.fun.stau.strsym,this.fun.stau.sym(ievent,:));
         for ip = 1:np
             tmp(:,ip)=subs(tmp(:,ip),this.fun.sx.sym(:,ip), Sx(:,ip));
         end
-        bolusnew = [this.event(ievent).bolus;reshape(tmp,[numel(Sx),1])];
+        bolusnew = [this.event(ievent).bolus;tmp(:)];
         % replace sx by augmented x
         for ip = 1:np
             bolusnew(this.nxtrue*ip+(1:this.nxtrue)) = mysubs(bolusnew(this.nxtrue*ip+(1:this.nxtrue)), this.fun.sx.sym(:,ip),Sx(:,ip));
@@ -74,29 +79,48 @@ function [modelo2] = augmento2(this)
     SJy = jacobian(this.fun.Jy.sym,this.sym.p) ...
         + jacobian(this.fun.Jy.sym,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
         + jacobian(this.fun.Jy.sym,this.fun.y.strsym)*aug_y_strsym;
-    this.getFun([],'dsigma_zdp');
     
+    this.getFun([],'dsigma_zdp');
+    this.getFun([],'rz');
     this.getFun([],'Jz');
-    this.getFun([],'dzdp');   
+    tmp = arrayfun(@(x) sym(['var_z_' num2str(x)]),0:(augmodel.nztrue*(1+np)-1),'UniformOutput',false);
+    tmp = transpose([tmp{:}]);
+    aug_z_strsym =  reshape(tmp((augmodel.nztrue+1):end),[augmodel.nztrue,np]);% the update Jz must not contain any
+    % references to x (otherwise we have to deal with sx in sJy), thus
+    % we replace sy with the corresponding augmented y that we are about to
+    % create
     SJz = jacobian(this.fun.Jz.sym,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
         SJz = SJz + jacobian(this.fun.Jz.sym,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-              + jacobian(this.fun.Jz.sym,this.fun.z.strsym)*Sz;   
+              + jacobian(this.fun.Jz.sym,this.fun.z.strsym)*aug_z_strsym;   
+    end
+    this.getFun([],'Jrz');
+    tmp = arrayfun(@(x) sym(['var_rz_' num2str(x)]),0:(augmodel.nztrue*(1+np)-1),'UniformOutput',false);
+    tmp = transpose([tmp{:}]);
+    aug_rz_strsym =  reshape(tmp((augmodel.nztrue+1):end),[augmodel.nztrue,np]);% the update Jz must not contain any
+    % references to x (otherwise we have to deal with sx in sJy), thus
+    % we replace sy with the corresponding augmented y that we are about to
+    % create
+    SJrz = jacobian(this.fun.Jrz.sym,this.sym.p);
+    if(~isempty(this.fun.sigma_z.strsym))
+        SJrz = SJrz + jacobian(this.fun.Jrz.sym,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
+              + jacobian(this.fun.Jrz.sym,this.fun.rz.strsym)*aug_rz_strsym;   
     end
     
     % augment sigmas
     this.getFun([],'sigma_y');
     this.getFun([],'sigma_z');
-    
     S0 = jacobian(this.sym.x0,this.sym.p);
     
-    augmodel.sym.x = [this.sym.x;reshape(Sx,[numel(Sx),1])];
-    augmodel.sym.xdot = [this.sym.xdot;reshape(Sdot,[numel(Sdot),1])];
+    augmodel.sym.x = [this.sym.x;Sx(:)];
+    augmodel.sym.xdot = [this.sym.xdot;Sdot(:)];
     augmodel.sym.f = augmodel.sym.xdot;
-    augmodel.sym.y = [this.sym.y;reshape(Sy,[numel(Sy),1])];
-    augmodel.sym.x0 = [this.sym.x0;reshape(S0,[numel(S0),1])];
+    augmodel.sym.y = [this.sym.y;Sy(:)];
+    augmodel.sym.x0 = [this.sym.x0;S0(:)];
     augmodel.sym.Jy = [this.sym.Jy,SJy];
     augmodel.sym.Jz = [this.sym.Jz,SJz];
+    augmodel.sym.Jrz = [this.sym.Jrz,SJrz];
+    augmodel.sym.rz = [this.fun.rz.sym,Srz];
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
     augmodel.sym.sigma_y = [transpose(this.sym.sigma_y(:)), reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];

@@ -9,8 +9,8 @@ TempData::TempData(const UserData *udata) {
     x = x_old = dx = dx_old = xdot = xdot_old = NULL;
     sx = sdx = NULL;
     Jtmp = NULL;
-    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp = dJzdx = dJzdz = NULL;
-    dJydsigma = dJzdsigma = dsigmaydp = dsigmazdp = llhS0 = NULL;
+    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp = dJzdx = dJzdz = dJrzdz = NULL;
+    dJydsigma = dJzdsigma = dJrzdsigma = dsigmaydp = dsigmazdp = llhS0 = NULL;
     
     which = 0;
     
@@ -59,6 +59,8 @@ TempData::TempData(const UserData *udata) {
         dJzdx = new realtype[udata->nJ * udata->nx * udata->nmaxevent]();
         dJzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         dJzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
+        dJrzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
+        dJrzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
         
         dsigmaydp = new realtype[udata->ny * udata->nplist]();
         dsigmazdp = new realtype[udata->nz * udata->nplist]();
@@ -132,6 +134,8 @@ TempData::~TempData() {
     if(dJzdp) delete[] dJzdp;
     if(dJzdz) delete[] dJzdz;
     if(dJzdsigma) delete[] dJzdsigma;
+    if(dJrzdz) delete[] dJrzdz;
+    if(dJrzdsigma) delete[] dJrzdsigma;
     if(dJzdx) delete[] dJzdx;
     if(dzdp) delete[] dzdp;
     if(dzdx) delete[] dzdx;

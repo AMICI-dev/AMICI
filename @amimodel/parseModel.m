@@ -90,6 +90,7 @@ this.HTable(1).sigma_y = CalcMD5(char(this.sym.sigma_y));
 this.HTable(1).sigma_z = CalcMD5(char(this.sym.sigma_z));
 this.HTable(1).Jy = CalcMD5(char(this.sym.Jy));
 this.HTable(1).Jz = CalcMD5(char(this.sym.Jz));
+this.HTable(1).Jrz = CalcMD5(char(this.sym.Jrz));
 
 % check if code generation changed
 codegen_amifun = {'gccode','getArgs','getCVar','getFArgs',...
@@ -129,20 +130,17 @@ if(this.recompile)
 end
 % compute functions
 
-funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','y','z','deltax','root','Jy','Jz','sigma_y','sigma_z'};
+funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
 
 if(this.steadystate)
     funs = {funs{:},'dwdp','dxdotdp','dydp'};
 end
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','sroot','dJydy','dJydsigma','dJzdz','dJzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drootdx','drootdp'};
+    funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
 end
 if(this.adjoint)
-    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drootdx','drootdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dwdp','dxdotdp','dydp'};
-end
-if(this.o2flag)
-    funs = {funs{:},'s2root'};
+    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
 end
 
 if(strcmp(this.wtype,'iw'))

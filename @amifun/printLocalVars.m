@@ -100,17 +100,19 @@ function printLocalVars(this,model,fid)
             % nothing
         case 'z'
             % nothing
+        case 'rz'
+            % nothing
         case 'sz'
             % nothing
-        case 'sz_tf'
+        case 'srz'
             % nothing
         case 'dzdp'
             % nothing
         case 'dzdx'
             % nothing
-        case 'drootdp'
+        case 'drzdp'
             % nothing
-        case 'drootdx'
+        case 'drzdx'
             % nothing
         case 'deltax'
             fprintf(fid,['memset(tdata->deltax,0,sizeof(realtype)*' num2str(nx) ');\n']);
@@ -126,10 +128,6 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(udata->dxdotdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'root'
-            % nothing
-        case 'sroot'
-            % nothing
-        case 's2root'
             % nothing
         case 'sigma_y'
             fprintf(fid,['memset(tdata->sigmay,0,sizeof(realtype)*' num2str(model.ny) ');\n']);
@@ -147,10 +145,16 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(tdata->dJydsigma,0,sizeof(realtype)*udata->nytrue*udata->ny*udata->nJ);\n']);
         case 'Jz'
             % nothing
+        case 'Jrz'
+            % nothing
         case 'dJzdz'
             fprintf(fid,['memset(tdata->dJzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);\n']);
+        case 'dJrzdz'
+            fprintf(fid,['memset(tdata->dJrzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);\n']);
         case 'dJzdsigma'
             fprintf(fid,['memset(tdata->dJzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
+        case 'dJrzdsigma'
+            fprintf(fid,['memset(tdata->dJrzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
         case 'w'
             fprintf(fid,['memset(udata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
         case 'dwdx'
