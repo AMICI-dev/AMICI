@@ -41,10 +41,13 @@ ${MODEL_DIR}/model_jakstat_adjoint_JBand.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JBandB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JSparse.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JSparseB.cpp
+${MODEL_DIR}/model_jakstat_adjoint_Jrz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_Jv.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JvB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_Jy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_Jz.cpp
+${MODEL_DIR}/model_jakstat_adjoint_dJrzdsigma.cpp
+${MODEL_DIR}/model_jakstat_adjoint_dJrzdz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydsigma.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJzdsigma.cpp
@@ -53,8 +56,8 @@ ${MODEL_DIR}/model_jakstat_adjoint_deltaqB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltasx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltax.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_deltaxB.cpp
-${MODEL_DIR}/model_jakstat_adjoint_drootdp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_drootdx.cpp
+${MODEL_DIR}/model_jakstat_adjoint_drzdp.cpp
+${MODEL_DIR}/model_jakstat_adjoint_drzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dsigma_ydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dsigma_zdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dwdp.cpp
@@ -66,9 +69,10 @@ ${MODEL_DIR}/model_jakstat_adjoint_dzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_root.cpp
+${MODEL_DIR}/model_jakstat_adjoint_rz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sigma_z.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sroot.cpp
+${MODEL_DIR}/model_jakstat_adjoint_srz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_stau.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sxdot.cpp

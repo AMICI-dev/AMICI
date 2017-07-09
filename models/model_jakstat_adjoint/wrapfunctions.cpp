@@ -92,13 +92,12 @@
                     return root_model_jakstat_adjoint(t, x, root, user_data);
                 }
                 
-                int fsroot(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-                    return sroot_model_jakstat_adjoint(t, ie, x, sx, user_data, tdata, rdata);
+                int frz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata){
+                    return rz_model_jakstat_adjoint(t, ie, x, user_data, tdata, rdata);
                 }
                 
-                int fs2root(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-                    warnMsgIdAndTxt("AMICI:mex:s2root:NotAvailable","ERROR: The function s2root was called but not compiled for this model.");
-                    return(-1);
+                int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
+                    return srz_model_jakstat_adjoint(t, ie, x, sx, user_data, tdata, rdata);
                 }
                 
                 int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata){
@@ -125,11 +124,6 @@
                     return sz_model_jakstat_adjoint(t, ie, x, sx, user_data, tdata, rdata);
                 }
                 
-                int fsz_tf(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-                    warnMsgIdAndTxt("AMICI:mex:sz_tf:NotAvailable","ERROR: The function sz_tf was called but not compiled for this model.");
-                    return(-1);
-                }
-                
                 int fdzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
                     return dzdp_model_jakstat_adjoint(t, ie, x, user_data, tdata);
                 }
@@ -138,12 +132,12 @@
                     return dzdx_model_jakstat_adjoint(t, ie, x, user_data, tdata);
                 }
                 
-                int fdrootdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-                    return drootdp_model_jakstat_adjoint(t, ie, x, user_data, tdata);
+                int fdrzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
+                    return drzdp_model_jakstat_adjoint(t, ie, x, user_data, tdata);
                 }
                 
-                int fdrootdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-                    return drootdx_model_jakstat_adjoint(t, ie, x, user_data, tdata);
+                int fdrzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
+                    return drzdx_model_jakstat_adjoint(t, ie, x, user_data, tdata);
                 }
                 
                 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){
@@ -198,8 +192,12 @@
                     return Jy_model_jakstat_adjoint(t, it, x, user_data, tdata, edata, rdata);
                 }
                 
-                int fJz(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata){
-                    return Jz_model_jakstat_adjoint(t, ie, x, z, mz, user_data, tdata, rdata);
+                int fJz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return Jz_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
+                }
+                
+                int fJrz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return Jrz_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
                 }
                 
                 int fdJydy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
@@ -210,11 +208,19 @@
                     return dJydsigma_model_jakstat_adjoint(t, it, x, user_data, tdata, edata, rdata);
                 }
                 
-                int fdJzdz(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata){
-                    return dJzdz_model_jakstat_adjoint(t, ie, x, z, mz, user_data, tdata, rdata);
+                int fdJzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJzdz_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
                 }
                 
-                int fdJzdsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-                    return dJzdsigma_model_jakstat_adjoint(t, it, x, user_data, tdata, edata, rdata);
+                int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJzdsigma_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
+                }
+                
+                int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJrzdz_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
+                }
+                
+                int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+                    return dJrzdsigma_model_jakstat_adjoint(t, ie, x, user_data, tdata, edata, rdata);
                 }
                 

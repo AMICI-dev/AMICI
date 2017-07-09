@@ -17,27 +17,27 @@ status = dwdp_model_steadystate(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  qBdot_tmp[ip] = udata->w[1]*xB_tmp[0]*2.0-udata->w[1]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = udata->w[1]*xB_tmp[0]*2.0-udata->w[1]*xB_tmp[1];
 
   } break;
 
   case 1: {
-  qBdot_tmp[ip] = x_tmp[0]*x_tmp[1]*xB_tmp[0]+x_tmp[0]*x_tmp[1]*xB_tmp[1]-x_tmp[0]*x_tmp[1]*xB_tmp[2];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[0]*x_tmp[1]*xB_tmp[0]+x_tmp[0]*x_tmp[1]*xB_tmp[1]-x_tmp[0]*x_tmp[1]*xB_tmp[2];
 
   } break;
 
   case 2: {
-  qBdot_tmp[ip] = x_tmp[1]*xB_tmp[0]*-2.0+x_tmp[1]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[1]*xB_tmp[0]*-2.0+x_tmp[1]*xB_tmp[1];
 
   } break;
 
   case 3: {
-  qBdot_tmp[ip] = -xB_tmp[0]*udata->dwdp[0]-xB_tmp[1]*udata->dwdp[0]+xB_tmp[2]*udata->dwdp[0];
+  qBdot_tmp[ip + udata->nplist*0] = -xB_tmp[0]*udata->dwdp[0]-xB_tmp[1]*udata->dwdp[0]+xB_tmp[2]*udata->dwdp[0];
 
   } break;
 
   case 4: {
-  qBdot_tmp[ip] = -xB_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = -xB_tmp[0];
 
   } break;
 

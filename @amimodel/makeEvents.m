@@ -287,6 +287,7 @@ mz = sym(arrayfun(@(iz) ['mz_' num2str(iz-1)],1:length([this.event.z]),'UniformO
 var_rz = sym(arrayfun(@(iz) ['var_rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
 
 if(~isfield(this.sym,'Jrz'))
+    this.sym.Jrz = sym(zeros(size(this.sym.Jz)));
     for iz = 1:length([this.event.z])
         tmp = subs(this.sym.Jz(iz,:),var_z,var_rz);
         this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz)))); 

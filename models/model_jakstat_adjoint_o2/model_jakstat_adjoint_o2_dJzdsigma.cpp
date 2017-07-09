@@ -7,7 +7,7 @@
 #include <include/edata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dJzdsigma_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+int dJzdsigma_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);

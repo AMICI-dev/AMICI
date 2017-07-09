@@ -4,9 +4,10 @@
 #include <include/udata.h>
 #include <include/tdata.h>
 #include <include/rdata.h>
+#include <include/edata.h>
 #include "model_dirac_w.h"
 
-int Jz_model_dirac(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, void *user_data, TempData *tdata, ReturnData *rdata) {
+int Jz_model_dirac(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);

@@ -16,7 +16,7 @@ status = w_model_dirac(t,x,NULL,user_data);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;
-  tdata->dJydy[0] = 1.0/(tdata->sigmay[0]*tdata->sigmay[0])*(edata->my[it+udata->nt*0]*2.0-rdata->y[it + udata->nt*0]*2.0)*-5.0E-1;
+  tdata->dJydy[iy+(0)*udata->nytrue] = 1.0/(tdata->sigmay[0]*tdata->sigmay[0])*(edata->my[it+udata->nt*0]*2.0-rdata->y[it + udata->nt*0]*2.0)*-5.0E-1;
 }
 return(status);
 

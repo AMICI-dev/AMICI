@@ -16,15 +16,15 @@ status = w_model_jakstat_adjoint(t,x,NULL,user_data);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;
-  tdata->dJydsigma[iy+(0*1+0)*udata->nytrue] = 1.0/(tdata->sigmay[0]*tdata->sigmay[0]*tdata->sigmay[0])*pow(edata->my[it+udata->nt*0]-rdata->y[it + udata->nt*0],2.0)*-1.0+1.0/tdata->sigmay[0];
+  tdata->dJydsigma[iy+(0+0*1)*udata->nytrue] = 1.0/(tdata->sigmay[0]*tdata->sigmay[0]*tdata->sigmay[0])*pow(edata->my[it+udata->nt*0]-rdata->y[it + udata->nt*0],2.0)*-1.0+1.0/tdata->sigmay[0];
 }
 if(!amiIsNaN(edata->my[1* udata->nt+it])){
     iy = 1;
-  tdata->dJydsigma[iy+(1*1+0)*udata->nytrue] = 1.0/(tdata->sigmay[1]*tdata->sigmay[1]*tdata->sigmay[1])*pow(edata->my[it+udata->nt*1]-rdata->y[it + udata->nt*1],2.0)*-1.0+1.0/tdata->sigmay[1];
+  tdata->dJydsigma[iy+(0+1*1)*udata->nytrue] = 1.0/(tdata->sigmay[1]*tdata->sigmay[1]*tdata->sigmay[1])*pow(edata->my[it+udata->nt*1]-rdata->y[it + udata->nt*1],2.0)*-1.0+1.0/tdata->sigmay[1];
 }
 if(!amiIsNaN(edata->my[2* udata->nt+it])){
     iy = 2;
-  tdata->dJydsigma[iy+(2*1+0)*udata->nytrue] = 1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*pow(edata->my[it+udata->nt*2]-rdata->y[it + udata->nt*2],2.0)*-1.0+1.0/tdata->sigmay[2];
+  tdata->dJydsigma[iy+(0+2*1)*udata->nytrue] = 1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*pow(edata->my[it+udata->nt*2]-rdata->y[it + udata->nt*2],2.0)*-1.0+1.0/tdata->sigmay[2];
 }
 return(status);
 

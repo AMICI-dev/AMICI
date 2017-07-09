@@ -7,7 +7,7 @@
 #include <include/edata.h>
 #include "model_steadystate_w.h"
 
-int dJzdsigma_model_steadystate(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+int dJzdsigma_model_steadystate(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);

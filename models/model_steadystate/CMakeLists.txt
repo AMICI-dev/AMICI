@@ -41,10 +41,13 @@ ${MODEL_DIR}/model_steadystate_JBand.cpp
 ${MODEL_DIR}/model_steadystate_JBandB.cpp
 ${MODEL_DIR}/model_steadystate_JSparse.cpp
 ${MODEL_DIR}/model_steadystate_JSparseB.cpp
+${MODEL_DIR}/model_steadystate_Jrz.cpp
 ${MODEL_DIR}/model_steadystate_Jv.cpp
 ${MODEL_DIR}/model_steadystate_JvB.cpp
 ${MODEL_DIR}/model_steadystate_Jy.cpp
 ${MODEL_DIR}/model_steadystate_Jz.cpp
+${MODEL_DIR}/model_steadystate_dJrzdsigma.cpp
+${MODEL_DIR}/model_steadystate_dJrzdz.cpp
 ${MODEL_DIR}/model_steadystate_dJydsigma.cpp
 ${MODEL_DIR}/model_steadystate_dJydy.cpp
 ${MODEL_DIR}/model_steadystate_dJzdsigma.cpp
@@ -53,8 +56,8 @@ ${MODEL_DIR}/model_steadystate_deltaqB.cpp
 ${MODEL_DIR}/model_steadystate_deltasx.cpp
 ${MODEL_DIR}/model_steadystate_deltax.cpp
 ${MODEL_DIR}/model_steadystate_deltaxB.cpp
-${MODEL_DIR}/model_steadystate_drootdp.cpp
-${MODEL_DIR}/model_steadystate_drootdx.cpp
+${MODEL_DIR}/model_steadystate_drzdp.cpp
+${MODEL_DIR}/model_steadystate_drzdx.cpp
 ${MODEL_DIR}/model_steadystate_dsigma_ydp.cpp
 ${MODEL_DIR}/model_steadystate_dsigma_zdp.cpp
 ${MODEL_DIR}/model_steadystate_dwdp.cpp
@@ -66,9 +69,10 @@ ${MODEL_DIR}/model_steadystate_dzdp.cpp
 ${MODEL_DIR}/model_steadystate_dzdx.cpp
 ${MODEL_DIR}/model_steadystate_qBdot.cpp
 ${MODEL_DIR}/model_steadystate_root.cpp
+${MODEL_DIR}/model_steadystate_rz.cpp
 ${MODEL_DIR}/model_steadystate_sigma_y.cpp
 ${MODEL_DIR}/model_steadystate_sigma_z.cpp
-${MODEL_DIR}/model_steadystate_sroot.cpp
+${MODEL_DIR}/model_steadystate_srz.cpp
 ${MODEL_DIR}/model_steadystate_stau.cpp
 ${MODEL_DIR}/model_steadystate_sx0.cpp
 ${MODEL_DIR}/model_steadystate_sxdot.cpp

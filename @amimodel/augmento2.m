@@ -120,7 +120,9 @@ function [modelo2] = augmento2(this)
     augmodel.sym.Jy = [this.sym.Jy,SJy];
     augmodel.sym.Jz = [this.sym.Jz,SJz];
     augmodel.sym.Jrz = [this.sym.Jrz,SJrz];
-    augmodel.sym.rz = [this.fun.rz.sym,Srz];
+    if(this.nevent>0)
+        augmodel.sym.rz = [this.fun.rz.sym,Srz];
+    end
     augmodel.sym.p = this.sym.p;
     augmodel.sym.k = this.sym.k;
     augmodel.sym.sigma_y = [transpose(this.sym.sigma_y(:)), reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];

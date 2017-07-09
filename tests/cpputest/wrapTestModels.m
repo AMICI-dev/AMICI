@@ -12,7 +12,8 @@ function [ output_args ] = wrapTestModels( input_args )
     try
         [exdir,~,~]=fileparts(which('example_steadystate.m'));
         amiwrap('model_steadystate','model_steadystate_syms',exdir);
-    catch
+    catch err
+        disp(err.message)
         cd(fileparts(mfilename('fullpath')));
     end
     
@@ -22,7 +23,8 @@ function [ output_args ] = wrapTestModels( input_args )
     try
         [exdir,~,~]=fileparts(which('example_dirac.m'));
         amiwrap('model_dirac','model_dirac_syms',exdir);
-    catch
+    catch err
+        disp(err.message)
         cd(fileparts(mfilename('fullpath')));
     end
     
@@ -32,7 +34,8 @@ function [ output_args ] = wrapTestModels( input_args )
     try
         [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
         amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir, 1);
-    catch
+    catch err
+        disp(err.message)
         cd(fileparts(mfilename('fullpath')));
     end
 
