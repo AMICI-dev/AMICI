@@ -69,14 +69,14 @@ function amiwrap( varargin )
         CalcMD5('TEST','char','hex');
     catch
         try
-            addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
+            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
             CalcMD5('TEST','char','hex');
         catch
             disp('CalcMD5 has not been compiled yet. Compiling now!')
             tmpdir = pwd;
-            cd(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
-            mex(fullfile(this.wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
-            addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
+            cd(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            mex(fullfile(wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
+            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
             cd(tmpdir);
         end
     end
