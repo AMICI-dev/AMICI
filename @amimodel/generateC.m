@@ -570,74 +570,37 @@ end
 
 
 function generateCMakeFile(this)
-    CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
-    fid = fopen(CMakeFileName,'w');
-    fprintf(fid, 'project(%s)\n', this.modelname);
-    fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n\n');
-    fprintf(fid, 'set(CMAKE_BUILD_TYPE Release)\n\n');
-    fprintf(fid, 'set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function")\n');
-    fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
-    
-    fprintf(fid, 'set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")\n');
-    fprintf(fid, 'set(MODEL_DIR "${AMICI_DIR}/models/%s")\n', this.modelname);
-    fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")\n');
-    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")\n\n');
-    fprintf(fid, 'find_package(HDF5 COMPONENTS C HL REQUIRED)\n');
-
-    fprintf(fid, 'set(BLAS "CBLAS" CACHE STRING "BLAS library to use")\n');
-    fprintf(fid, 'set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")\n\n');
-    fprintf(fid, 'if(${BLAS} STREQUAL "MKL")\n');
-    fprintf(fid, '    add_definitions(-DAMICI_BLAS_MKL)\n');
-    fprintf(fid, '    set(BLAS_LIBRARIES -lmkl CACHE STRING "")\n');
-    fprintf(fid, '    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")\n');
-    fprintf(fid, 'else()\n');
-    fprintf(fid, '    add_definitions(-DAMICI_BLAS_CBLAS)\n');
-    fprintf(fid, '    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")\n');
-    fprintf(fid, '    set(BLAS_LIBRARIES -lcblas CACHE STRING "")\n');
-    fprintf(fid, 'endif()\n\n');
-
-    %includes
     includeDirs = {'${AMICI_DIR}', ...
         '${CMAKE_CURRENT_SOURCE_DIR}',  ...
         '${MODEL_DIR}',  ...
         '${HDF5_INCLUDE_DIRS}',  ...
         '${AMICI_DIR}/sundials/include',  ...
         '${SUITESPARSE_DIR}/include', ...
-    };
+        };
+    includeStr = '';
     for d = includeDirs
-        fprintf(fid, 'include_directories("%s")\n', d{1});
+        includeStr = [ includeStr, sprintf('include_directories("%s")\n', d{1}) ];
     end
-    fprintf(fid, '\n');
     
-    % library 
-    fprintf(fid, '\nset(SRC_LIST_LIB\n');
-    for f = {'${MODEL_DIR}/wrapfunctions.cpp', ...
-            '${AMICI_DIR}/src/symbolic_functions.cpp', ...
-            '${AMICI_DIR}/src/amici_interface_cpp.cpp', ...
-            '${AMICI_DIR}/src/amici.cpp', ...
-            '${AMICI_DIR}/src/udata.cpp', ...
-            '${AMICI_DIR}/src/rdata.cpp', ...
-            '${AMICI_DIR}/src/tdata.cpp', ...
-            '${AMICI_DIR}/src/edata.cpp', ...
-            '${AMICI_DIR}/src/ami_hdf5.cpp', ...
-            '${AMICI_DIR}/src/spline.cpp', ...
-            }
-        fprintf(fid, '%s\n', f{1});
-    end
+    sourceStr = '';
     for j=1:length(this.funs)
-        %if(this.cppfun(1).(this.funs{j}))
-             funcName = this.funs{j};
-             fprintf(fid, '${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName);
-       % end
+        funcName = this.funs{j};
+        sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName) ];
     end
-    fprintf(fid, ')\n\n');
     
-    fprintf(fid, 'add_library(${PROJECT_NAME} ${SRC_LIST_LIB})\n\n');
-
-    fprintf(fid, 'if(APPLE)\n    set(SHARED_OBJECT_EXTENSION .dylib)\nelse()\n    set(SHARED_OBJECT_EXTENSION .so)\nendif()\n\n');
+    amiciSources = {'${MODEL_DIR}/wrapfunctions.cpp', ...
+        '${AMICI_DIR}/src/symbolic_functions.cpp', ...
+        '${AMICI_DIR}/src/amici_interface_cpp.cpp', ...
+        '${AMICI_DIR}/src/amici.cpp', ...
+        '${AMICI_DIR}/src/udata.cpp', ...
+        '${AMICI_DIR}/src/rdata.cpp', ...
+        '${AMICI_DIR}/src/tdata.cpp', ...
+        '${AMICI_DIR}/src/edata.cpp', ...
+        '${AMICI_DIR}/src/ami_hdf5.cpp', ...
+        '${AMICI_DIR}/src/spline.cpp', ...
+        };
+    sourceStr = [ sourceStr, strjoin(amiciSources, '\n') ];
     
-    fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
     libs = {
         '${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}', ...
         '${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}', ...
@@ -651,19 +614,16 @@ function generateCMakeFile(this)
         '-lpthread -ldl -lz -lcblas', ...
         '-lm'
         };
-    for l = libs
-        fprintf(fid, '"%s"\n', l{1});
-    end
-    fprintf(fid, ')\n');
+    libStr = strjoin(libs, '\n');
     
-    % executable
-    fprintf(fid, '\nset(SRC_LIST_EXE main.cpp)\n\n');
-
-    fprintf(fid, 'add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})\n\n');
-    
-    fprintf(fid, 'target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})\n\n');
-    
-    fclose(fid);
+    t = template();
+    t.add('TPL_MODELNAME', this.modelname);
+    t.add('TPL_INCLUDES', includeStr);
+    t.add('TPL_SOURCES', sourceStr);
+    t.add('TPL_LIBRARIES', libStr);
+    CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
+    CMakeTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/CMakeLists.template.txt');
+    t.replace(CMakeTemplateFileName, CMakeFileName);
 end
 
 function generateMainC(this)
