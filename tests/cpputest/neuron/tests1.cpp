@@ -25,7 +25,7 @@ TEST(groupNeuron, testSimulation) {
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_neuron/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_neuron/nosensi/results", rdata, udata, 10*TEST_ATOL, 10*TEST_RTOL);
 
     delete rdata;
     delete edata;
@@ -40,7 +40,7 @@ TEST(groupNeuron, testSensitivityForward) {
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_neuron/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_neuron/sensiforward/results", rdata, udata, 10*TEST_ATOL, 10*TEST_RTOL);
 
     delete rdata;
     delete edata;

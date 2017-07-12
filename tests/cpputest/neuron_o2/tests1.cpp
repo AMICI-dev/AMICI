@@ -28,7 +28,7 @@ TEST(groupNeuronO2, testSensitivity2) {
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_neuron/sensi2forward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_neuron/sensi2forward/results", rdata, udata, 10*TEST_ATOL, 10*TEST_RTOL);
 
     delete rdata;
     delete edata;
