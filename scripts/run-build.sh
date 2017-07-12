@@ -126,4 +126,4 @@ fi
 # Run tests
 export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
 
-cd ../../../
+cd ${AMICI_PATH}
