@@ -1,5 +1,5 @@
 #!/bin/bash
-AMICI_PATH="`dirname \"$0\"`"
+AMICI_PATH="`dirname \"$BASH_SOURCE\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
 # Build dependencies
@@ -126,5 +126,7 @@ fi
 
 # Run tests
 export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
+
+echo $DYLD_LIBRARY_PATH
 
 cd ${AMICI_PATH}

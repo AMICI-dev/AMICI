@@ -13,6 +13,8 @@ build/*
 
 tests/cpputest/build/*
 
+tests/cpputest/Testing/*
+
 ThirdParty/*
 
 doc/*

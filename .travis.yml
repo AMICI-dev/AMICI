@@ -23,7 +23,7 @@ matrix:
       before_script: brew install homebrew/science/hdf5
 
 install:
-    - ./scripts/run-build.sh
+    - source ./scripts/run-build.sh
 
 script:  
     - ./scripts/run-tests.sh
