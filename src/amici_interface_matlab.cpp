@@ -302,8 +302,7 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const in
     const ptrdiff_t incX_ = incX;
     const ptrdiff_t incY_ = incY;
     const char transA = amici_blasCBlasTransToBlasTrans(TransA);
-    
-    assert(layout == AMICI_BLAS_ColMajor);
+
 #if defined(_WIN32)
     dgemv(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
 #else

@@ -1795,7 +1795,7 @@ int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *r
                         for(int ip = 0; ip < udata->nplist; ++ip)
                             for(int iz = 0; iz < udata->nztrue; ++iz)
                                 for(int it = 0; it < udata->nt; ++it)
-                                    rdata->sy[(ip * udata->nztrue + iz)*udata->nt + it] = rdata->z[(udata->nztrue + ip*udata->nztrue + iz)*udata->nt + it];
+                                    rdata->sz[(ip * udata->nztrue + iz)*udata->nt + it] = rdata->z[(udata->nztrue + ip*udata->nztrue + iz)*udata->nt + it];
                 
             }
         }
@@ -1824,12 +1824,12 @@ rdata->s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
         if (rdata->dxdotdp)
             for(int ip = 0; ip < udata->nplist; ++ip)
                 for(int ix = 0; ix < udata->nx; ++ix)
-                    rdata->dxdotdp[ip*udata->nxtrue + ix] *= pcoefficient[ip];
+                    rdata->dxdotdp[ix + ip*udata->nxtrue] *= pcoefficient[ip];
         
         if (rdata->dydp)
             for(int ip = 0; ip < udata->nplist; ++ip)
                 for(int iy = 0; iy < udata->ny; ++iy)
-                    rdata->dydp[ip*udata->nxtrue + iy] *= pcoefficient[ip];
+                    rdata->dydp[iy + ip*udata->nytrue] *= pcoefficient[ip];
     }
     if (udata->o2mode == AMICI_O2MODE_FULL) { //full
         if (edata){
@@ -1937,9 +1937,9 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
     // dJydx        nt x nJ x nx
     // sx           nt x nx x nplist
     
-    realtype *multResult = new double[udata->nJ * udata->nplist]();
-    realtype *dJydxTmp = new double[udata->nJ * udata->nx];
-    realtype *sxTmp = new double[udata->nplist * udata->nx];
+    double *multResult = new double[udata->nJ * udata->nplist];
+    double *dJydxTmp = new double[udata->nJ * udata->nx];
+    double *sxTmp = new double[udata->nplist * udata->nx];
     for(int ix = 0; ix < udata->nx; ++ix){
         for(int ip = 0; ip < udata->nplist; ++ip)
             sxTmp[ix + ip * udata->nx] = rdata->sx[it + (ix + ip * udata->nx ) * udata->nt];
@@ -1952,7 +1952,7 @@ static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
                 udata->nJ, udata->nplist, udata->nx,
                 1.0, dJydxTmp, udata->nJ,
                 sxTmp, udata->nx,
-                1.0, multResult, udata->nJ);
+                0.0, multResult, udata->nJ);
     
     // multResult    nJ x nplist
     // dJydp         nJ x nplist
@@ -2028,7 +2028,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     // dJydx         nt x nJ x nx
     
     realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
-    realtype *multResult = new realtype[udata->nJ * udata->nx]();
+    realtype *multResult = new realtype[udata->nJ * udata->nx];
     
     for(int iyt=0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
@@ -2044,7 +2044,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
                     udata->nJ, udata->nx, udata->ny,
                     1.0, dJydyTmp, udata->nJ,
                     tdata->dydx, udata->ny,
-                    1.0, multResult, udata->nJ);
+                    0.0, multResult, udata->nJ);
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)

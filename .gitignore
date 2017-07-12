@@ -222,3 +222,5 @@ examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint_hdf.m
 examples/example_steadystate/simulate_model_steadystate_hdf.m
 
 examples/example_neuron/simulate_model_neuron_hdf.m
+
+examples/example_neuron/simulate_model_jakstat_adjoint_hdf.m
