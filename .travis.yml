@@ -23,9 +23,7 @@ matrix:
       before_script: brew install homebrew/science/hdf5
 
 install:
-    - ./scripts/run-build-sundials.sh
-    - ./scripts/run-build-cpputest.sh
-    - ./scripts/run-build-tests.sh
+    - ./scripts/run-build.sh
 
 script:  
     - ./tests/cpputest/ctest -V
