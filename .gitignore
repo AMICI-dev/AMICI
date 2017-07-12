@@ -11,8 +11,6 @@ CMakeFiles/*
 
 build/*
 
-tests/dirac/build/*
-
 tests/cpputest/build/*
 
 ThirdParty/*
@@ -22,6 +20,8 @@ doc/*
 fonts/*
 
 mtoc/*
+
+sed-ml/*
 
 src/doc/*
 
@@ -51,6 +51,14 @@ models/model_jakstat_adjoint/build/*
 
 models/model_jakstat_adjoint_o2/build/*
 
+!models/model_neuron
+
+models/model_neuron/build/*
+
+!models/model_neuron_o2
+
+models/model_neuron_o2/build/*
+
 .DS_Store
 
 index.html
@@ -64,10 +72,6 @@ cmake_install.cmake
 CMakeCache.txt
 
 *.a
-
-*.txt
-
-*.o
 
 *.o
 
@@ -117,7 +121,9 @@ CMakeCache.txt
 
 *.bin
 
-scripts/CMakeFiles
+*.csv
+
+*.log
 
 tests/sbml-test-suite/
 
@@ -131,8 +137,6 @@ examples/example_events/simulate_model_events.m
 
 examples/example_steadystate/simulate_model_steadystate.m
 
-test/constant_events.m
-
 examples/example_dirac/simulate_model_dirac.m
 
 examples/example_dirac_secondorder/simulate_model_dirac_secondorder.m
@@ -143,17 +147,11 @@ examples/example_adjoint/simulate_model_adjoint.m
 
 examples/example_adjoint/simulate_model_adjoint.m
 
-*.log
-
 examples/example_nested_events/simulate_model_nested_events.m
 
 examples/example_dirac_secondorder_vectmult/simulate_model_dirac_secondorder_vectmult.m
 
 examples/example_jakstat_adjoint/simulate_model_jakstat.m
-
-sed-ml/*
-
-*.csv
 
 examples/example_events/dxdotdp_model_events.m
 
