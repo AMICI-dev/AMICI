@@ -2028,7 +2028,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     // dJydx         nt x nJ x nx
     
     realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
-    realtype *multResult = new realtype[udata->nJ * udata->nx];
+    realtype *multResult = new realtype[udata->nJ * udata->nx]();
     
     for(int iyt=0; iyt < udata->nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
@@ -2044,7 +2044,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
                     udata->nJ, udata->nx, udata->ny,
                     1.0, dJydyTmp, udata->nJ,
                     tdata->dydx, udata->ny,
-                    0.0, multResult, udata->nJ);
+                    1.0, multResult, udata->nJ);
     }
     for(int iJ = 0; iJ < udata->nJ; ++iJ)
         for(int ix = 0; ix < udata->nx; ++ix)
