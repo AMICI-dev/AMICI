@@ -1,4 +1,4 @@
-language: cpp
+.language: cpp
 sudo: false
 
 dist: trusty
@@ -23,7 +23,7 @@ matrix:
       before_install: brew install homebrew/science/hdf5
 
 install:
-    - source ./scripts/run-build.sh
+    - ./scripts/run-build.sh
 
 script:  
     - ./scripts/run-cpputest.sh

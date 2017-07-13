@@ -123,10 +123,6 @@ if [ $? -ne 0 ] ; then
 exit 1
 fi
 
-
-# Run tests
-export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"
-
-echo $DYLD_LIBRARY_PATH
-
 cd ${AMICI_PATH}
+
+echo 'export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib' > scripts/env.sh
