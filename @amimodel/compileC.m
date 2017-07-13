@@ -114,7 +114,7 @@ function compileC(this)
     % generate compile flags for the rest
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
     if(this.debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall -std=c++0x'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++0x -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -175,23 +175,22 @@ function compileC(this)
             this.cfun(1).qBdot = 1;
         end
     end
-     
-    for j=1:length(this.funs)
-        if(this.cfun(1).(this.funs{j}))
-            fprintf([this.funs{j} ' | ']);
-            eval(['mex ' DEBUG COPT ...
-                ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
-                fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']) ' ' ...
-                includesstr ...
-                ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"']);
-            hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']));
-            hash = [hash DEBUG];
-            fid = fopen(...
-                fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
-                ),'w');
-            fprintf(fid,hash);
-            fclose(fid);
-        end
+    
+    if(this.cfun(1).(this.funs{j}))
+        fprintf(['ffuns | ']);
+        ffuns = cellfun(@(x) fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' x '.cpp']),this.funs,'UniformOutput',false);
+        eval(['mex ' DEBUG COPT ...
+            ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
+            strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
+            includesstr ...
+            ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"']);
+        hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']));
+        hash = [hash DEBUG];
+        fid = fopen(...
+            fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
+            ),'w');
+        fprintf(fid,hash);
+        fclose(fid);
     end
     
     % compile the wrapfunctions object

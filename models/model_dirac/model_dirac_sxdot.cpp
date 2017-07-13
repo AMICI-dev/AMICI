@@ -16,10 +16,10 @@ realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*2);
 if(ip == 0) {
     status = JSparse_model_dirac(t,x,xdot,udata->J,user_data,NULL,NULL,NULL);
-    status = dxdotdp_model_dirac(t,udata->dxdotdp,x,NULL,user_data);
+    status = dxdotdp_model_dirac(t,x,NULL,user_data);
 }
-  sxdot_tmp[0] = udata->dxdotdp[0 + ip*udata->nx]+sx_tmp[0]*udata->J->data[0];
-  sxdot_tmp[1] = udata->dxdotdp[1 + ip*udata->nx]+sx_tmp[0]*udata->J->data[1]+sx_tmp[1]*udata->J->data[2];
+  sxdot_tmp[0] = udata->dxdotdp[0 + ip*udata->nx]+udata->J->data[0]*sx_tmp[0];
+  sxdot_tmp[1] = udata->dxdotdp[1 + ip*udata->nx]+udata->J->data[1]*sx_tmp[0]+udata->J->data[2]*sx_tmp[1];
 return(status);
 
 }

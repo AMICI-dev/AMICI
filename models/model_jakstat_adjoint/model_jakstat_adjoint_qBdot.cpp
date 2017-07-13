@@ -17,7 +17,7 @@ status = dwdp_model_jakstat_adjoint(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->w[0]*xB_tmp[0]*x_tmp[0]-udata->w[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->w[0]*x_tmp[0]*xB_tmp[0]-udata->w[0]*x_tmp[0]*xB_tmp[1];
 
   } break;
 
@@ -27,37 +27,37 @@ switch (udata->plist[ip]) {
   } break;
 
   case 2: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[2]*x_tmp[2]-(udata->k[0]*xB_tmp[3]*x_tmp[2])/udata->k[1];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[2]*xB_tmp[2]-(udata->k[0]*x_tmp[2]*xB_tmp[3])/udata->k[1];
 
   } break;
 
   case 3: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[3]*x_tmp[3]-xB_tmp[5]*(x_tmp[4]-x_tmp[5])-xB_tmp[6]*(x_tmp[5]-x_tmp[6])-xB_tmp[7]*(x_tmp[6]-x_tmp[7])-xB_tmp[8]*(x_tmp[7]-x_tmp[8])-xB_tmp[4]*(x_tmp[3]*2.0-x_tmp[4])-(udata->k[1]*xB_tmp[0]*x_tmp[8])/udata->k[0];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[3]*xB_tmp[3]-xB_tmp[5]*(x_tmp[4]-x_tmp[5])-xB_tmp[6]*(x_tmp[5]-x_tmp[6])-xB_tmp[7]*(x_tmp[6]-x_tmp[7])-xB_tmp[8]*(x_tmp[7]-x_tmp[8])-xB_tmp[4]*(x_tmp[3]*2.0-x_tmp[4])-(udata->k[1]*x_tmp[8]*xB_tmp[0])/udata->k[0];
 
   } break;
 
   case 5: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->dwdp[0]*udata->p[0]*xB_tmp[0]*x_tmp[0]-udata->dwdp[0]*udata->p[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*udata->dwdp[0]-udata->p[0]*x_tmp[0]*xB_tmp[1]*udata->dwdp[0];
 
   } break;
 
   case 6: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->dwdp[1]*udata->p[0]*xB_tmp[0]*x_tmp[0]-udata->dwdp[1]*udata->p[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*udata->dwdp[1]-udata->p[0]*x_tmp[0]*xB_tmp[1]*udata->dwdp[1];
 
   } break;
 
   case 7: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->dwdp[2]*udata->p[0]*xB_tmp[0]*x_tmp[0]-udata->dwdp[2]*udata->p[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*udata->dwdp[2]-udata->p[0]*x_tmp[0]*xB_tmp[1]*udata->dwdp[2];
 
   } break;
 
   case 8: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->dwdp[3]*udata->p[0]*xB_tmp[0]*x_tmp[0]-udata->dwdp[3]*udata->p[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*udata->dwdp[3]-udata->p[0]*x_tmp[0]*xB_tmp[1]*udata->dwdp[3];
 
   } break;
 
   case 9: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->dwdp[4]*udata->p[0]*xB_tmp[0]*x_tmp[0]-udata->dwdp[4]*udata->p[0]*xB_tmp[1]*x_tmp[0];
+  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*udata->dwdp[4]-udata->p[0]*x_tmp[0]*xB_tmp[1]*udata->dwdp[4];
 
   } break;
 

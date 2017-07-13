@@ -67,6 +67,8 @@ public:
     realtype *dJydp;
     /** observable derivative of data likelihood */
     realtype *dJydy;
+    /** observable sigma derivative of data likelihood */
+    realtype *dJydsigma;
     /** state derivative of data likelihood */
     realtype *dJydx;
     /** event likelihood */
@@ -75,10 +77,22 @@ public:
     realtype *dJzdp;
     /** state derivative of event likelihood */
     realtype *dJzdx;
-    /** state derivative of event */
+    /** event ouput derivative of event likelihood */
+    realtype *dJzdz;
+    /** event sigma derivative of event likelihood */
+    realtype *dJzdsigma;
+    /** event ouput derivative of event likelihood at final timepoint */
+    realtype *dJrzdz;
+    /** event sigma derivative of event likelihood at final timepoint */
+    realtype *dJrzdsigma;
+    /** state derivative of event output */
     realtype *dzdx;
-    /** parameter derivative of event */
+    /** parameter derivative of event output */
     realtype *dzdp;
+    /** state derivative of event timepoint */
+    realtype *drzdx;
+    /** parameter derivative of event timepoint */
+    realtype *drzdp;
     /** parameter derivative of observable */
     realtype *dydp;
     /** state derivative of observable */

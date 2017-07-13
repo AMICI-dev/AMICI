@@ -34,6 +34,7 @@
 #define AMICI_ERROR_SS                 -89
 #define AMICI_ERROR_DATA               -88
 #define AMICI_ERROR_EVENT              -87
+#define AMICI_ERROR_SIMULATION         -86
 #define AMICI_SUCCESS           CV_SUCCESS 
 #define AMICI_DATA_RETURN  CV_TSTOP_RETURN
 #define AMICI_ROOT_RETURN   CV_ROOT_RETURN
@@ -63,26 +64,22 @@ void invalidateReturnData(UserData* udata, ReturnData* rdata);
 void *setupAMI(UserData *udata, TempData *tdata);
 int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata);
 
+int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+
 int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-int getDataSensisASA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-
-int getEventSensisFSA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
-int getEventSensisASA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-
-int getEventSigma(int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-int getEventObjective(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
 int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-int getEventOutput(realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-int fillEventOutput(void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 
 int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag);
 int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int handleEventB(int iroot, UserData *udata, TempData *tdata);
 int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
-int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata);
 
-int applyEventBolus(void *ami_mem, UserData *udata, TempData *tdata);
-int applyEventSensiBolusFSA(void *ami_mem, UserData *udata, TempData *tdata);
+int applyEventBolus(UserData *udata, TempData *tdata);
+int applyEventSensiBolusFSA( UserData *udata, TempData *tdata);
 
 realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata);
 

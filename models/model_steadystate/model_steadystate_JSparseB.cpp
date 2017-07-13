@@ -27,15 +27,15 @@ realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   JB->indexptrs[3] = 9;
 status = w_model_steadystate(t,x,NULL,user_data);
 status = dwdx_model_steadystate(t,x,NULL,user_data);
-  JB->data[0] = udata->dwdx[0]*udata->p[0]*2.0+udata->p[1]*x_tmp[1];
+  JB->data[0] = udata->p[1]*x_tmp[1]+udata->p[0]*udata->dwdx[0]*2.0;
   JB->data[1] = udata->p[2]*-2.0+udata->p[1]*x_tmp[0];
   JB->data[2] = -udata->dwdx[1];
-  JB->data[3] = -udata->dwdx[0]*udata->p[0]+udata->p[1]*x_tmp[1];
+  JB->data[3] = udata->p[1]*x_tmp[1]-udata->p[0]*udata->dwdx[0];
   JB->data[4] = udata->p[2]+udata->p[1]*x_tmp[0];
   JB->data[5] = -udata->dwdx[1];
   JB->data[6] = -udata->p[1]*x_tmp[1];
   JB->data[7] = -udata->p[1]*x_tmp[0];
-  JB->data[8] = udata->dwdx[1]+udata->k[3];
+  JB->data[8] = udata->k[3]+udata->dwdx[1];
 return(status);
 
 }

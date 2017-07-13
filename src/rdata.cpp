@@ -107,7 +107,7 @@ void ReturnData::initFields(const UserData *udata)
                 if((udata->nz>0) & (udata->ne>0)){
                     initField3(&srz, "srz", udata->nmaxevent,udata->nz,udata->nplist);
                     if(udata->sensi >= AMICI_SENSI_ORDER_SECOND){
-                        initField4(&s2rz, "s2rz", udata->nmaxevent,udata->nz,udata->nplist,udata->nplist);
+                        initField4(&s2rz, "s2rz", udata->nmaxevent,udata->nztrue,udata->nplist,udata->nplist);
                     }
                     initField3(&sz, "sz", udata->nmaxevent,udata->nz,udata->nplist);
                     initField3(&ssigmaz, "ssigmaz", udata->nmaxevent,udata->nz,udata->nplist);
