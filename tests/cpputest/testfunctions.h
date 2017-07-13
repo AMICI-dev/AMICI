@@ -3,8 +3,11 @@
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
+#include <hdf5.h>
 
-#include "include/ami_hdf5.h"
+class UserData;
+class ReturnData;
+class ExpData;
 
 #define HDFFILE "../../expectedResults.h5"
 #define TEST_ATOL 1e-10

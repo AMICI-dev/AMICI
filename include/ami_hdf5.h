@@ -3,7 +3,6 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
-#include <include/amici_interface_cpp.h>
 
 #undef AMI_HDF5_H_DEBUG
 
@@ -12,6 +11,10 @@
 #else
 #define EXTERNC
 #endif
+
+class UserData;
+class ReturnData;
+class ExpData;
 
 /* Functions for reading and writing AMICI data to/from HDF5 files. */
 

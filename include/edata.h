@@ -1,6 +1,7 @@
-#include "include/udata.h"
 #ifndef _MY_EDATA
 #define _MY_EDATA
+
+class UserData;
 
 /** @brief struct that carries all information about experimental data */
 class ExpData {

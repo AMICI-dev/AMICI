@@ -8,7 +8,7 @@
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
 
-#include <include/udata.h>
+class UserData;
 
 /** @brief struct that provides temporary storage for different variables */
 class TempData {

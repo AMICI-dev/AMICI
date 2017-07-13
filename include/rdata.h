@@ -1,6 +1,7 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
-#include "udata.h"
+
+class UserData;
 
 /** @brief struct that stores all data which is later returned by the mex function
  *
