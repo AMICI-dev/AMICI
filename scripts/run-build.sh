@@ -125,4 +125,4 @@ fi
 
 cd ${AMICI_PATH}
 
-echo 'export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib' > scripts/env.sh
+echo 'export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib"' > scripts/env.sh
