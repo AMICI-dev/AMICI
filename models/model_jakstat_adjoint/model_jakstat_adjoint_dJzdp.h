@@ -1,7 +1,7 @@
 #ifndef _am_model_jakstat_adjoint_dJzdp_h
 #define _am_model_jakstat_adjoint_dJzdp_h
 
-int dJzdp_model_jakstat_adjoint(realtype t, int ie, realtype *dJzdp, realtype *z, N_Vector x, realtype *dzdp, realtype *mz, realtype *sigma_z, realtype *dsigma_zdp, void *user_data, void *temp_data);
+int dJzdp_model_jakstat_adjoint(realtype t, int ie, N_Vector x, realtype *z, realtype *mz, realtype *dzdp, void *user_data, TempData *tdata, ReturnData *rdata);
 
 
 #endif /* _am_model_jakstat_adjoint_dJzdp_h */

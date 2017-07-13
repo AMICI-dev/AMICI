@@ -1,4 +1,4 @@
-language: cpp
+.language: cpp
 sudo: false
 
 dist: trusty
@@ -20,9 +20,13 @@ matrix:
             - libatlas-base-dev
     - os: osx
       compiler: clang
-      before_script: brew install homebrew/science/hdf5
+      before_install: brew install homebrew/science/hdf5
 
-script:  ./scripts/run-tests.sh
+install:
+    - ./scripts/run-build.sh
+
+script:  
+    - ./scripts/run-cpputest.sh
 
 notifications:
   slack: 

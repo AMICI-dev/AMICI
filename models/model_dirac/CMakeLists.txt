@@ -3,6 +3,7 @@ project(model_dirac)
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
+
 add_definitions(-DAMICI_WITHOUT_MATLAB)
     
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
@@ -44,19 +45,23 @@ ${MODEL_DIR}/model_dirac_JBand.cpp
 ${MODEL_DIR}/model_dirac_JBandB.cpp
 ${MODEL_DIR}/model_dirac_JSparse.cpp
 ${MODEL_DIR}/model_dirac_JSparseB.cpp
+${MODEL_DIR}/model_dirac_Jrz.cpp
 ${MODEL_DIR}/model_dirac_Jv.cpp
 ${MODEL_DIR}/model_dirac_JvB.cpp
 ${MODEL_DIR}/model_dirac_Jy.cpp
 ${MODEL_DIR}/model_dirac_Jz.cpp
-${MODEL_DIR}/model_dirac_dJydp.cpp
-${MODEL_DIR}/model_dirac_dJydx.cpp
+${MODEL_DIR}/model_dirac_dJrzdsigma.cpp
+${MODEL_DIR}/model_dirac_dJrzdz.cpp
+${MODEL_DIR}/model_dirac_dJydsigma.cpp
 ${MODEL_DIR}/model_dirac_dJydy.cpp
-${MODEL_DIR}/model_dirac_dJzdp.cpp
-${MODEL_DIR}/model_dirac_dJzdx.cpp
+${MODEL_DIR}/model_dirac_dJzdsigma.cpp
+${MODEL_DIR}/model_dirac_dJzdz.cpp
 ${MODEL_DIR}/model_dirac_deltaqB.cpp
 ${MODEL_DIR}/model_dirac_deltasx.cpp
 ${MODEL_DIR}/model_dirac_deltax.cpp
 ${MODEL_DIR}/model_dirac_deltaxB.cpp
+${MODEL_DIR}/model_dirac_drzdp.cpp
+${MODEL_DIR}/model_dirac_drzdx.cpp
 ${MODEL_DIR}/model_dirac_dsigma_ydp.cpp
 ${MODEL_DIR}/model_dirac_dsigma_zdp.cpp
 ${MODEL_DIR}/model_dirac_dwdp.cpp
@@ -68,15 +73,14 @@ ${MODEL_DIR}/model_dirac_dzdp.cpp
 ${MODEL_DIR}/model_dirac_dzdx.cpp
 ${MODEL_DIR}/model_dirac_qBdot.cpp
 ${MODEL_DIR}/model_dirac_root.cpp
-${MODEL_DIR}/model_dirac_sJz.cpp
+${MODEL_DIR}/model_dirac_rz.cpp
 ${MODEL_DIR}/model_dirac_sigma_y.cpp
 ${MODEL_DIR}/model_dirac_sigma_z.cpp
-${MODEL_DIR}/model_dirac_sroot.cpp
+${MODEL_DIR}/model_dirac_srz.cpp
 ${MODEL_DIR}/model_dirac_stau.cpp
 ${MODEL_DIR}/model_dirac_sx0.cpp
 ${MODEL_DIR}/model_dirac_sxdot.cpp
 ${MODEL_DIR}/model_dirac_sz.cpp
-${MODEL_DIR}/model_dirac_sz_tf.cpp
 ${MODEL_DIR}/model_dirac_w.cpp
 ${MODEL_DIR}/model_dirac_x0.cpp
 ${MODEL_DIR}/model_dirac_xBdot.cpp
@@ -112,8 +116,7 @@ ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
 ${HDF5_HL_LIBRARIES}
 ${HDF5_C_LIBRARIES}
 ${BLAS_LIBRARIES}
--lpthread -ldl -lz
--lm)
+-lpthread -ldl -lz -lm)
 
 set(SRC_LIST_EXE main.cpp)
 

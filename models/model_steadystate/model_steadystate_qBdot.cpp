@@ -22,17 +22,17 @@ switch (udata->plist[ip]) {
   } break;
 
   case 1: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[0]*x_tmp[0]*x_tmp[1]+xB_tmp[1]*x_tmp[0]*x_tmp[1]-xB_tmp[2]*x_tmp[0]*x_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[0]*x_tmp[1]*xB_tmp[0]+x_tmp[0]*x_tmp[1]*xB_tmp[1]-x_tmp[0]*x_tmp[1]*xB_tmp[2];
 
   } break;
 
   case 2: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[0]*x_tmp[1]*-2.0+xB_tmp[1]*x_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = x_tmp[1]*xB_tmp[0]*-2.0+x_tmp[1]*xB_tmp[1];
 
   } break;
 
   case 3: {
-  qBdot_tmp[ip + udata->nplist*0] = -udata->dwdp[0]*xB_tmp[0]-udata->dwdp[0]*xB_tmp[1]+udata->dwdp[0]*xB_tmp[2];
+  qBdot_tmp[ip + udata->nplist*0] = -xB_tmp[0]*udata->dwdp[0]-xB_tmp[1]*udata->dwdp[0]+xB_tmp[2]*udata->dwdp[0];
 
   } break;
 

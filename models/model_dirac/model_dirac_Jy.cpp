@@ -2,17 +2,20 @@
 #include <include/symbolic_functions.h>
 #include <string.h>
 #include <include/udata.h>
+#include <include/tdata.h>
+#include <include/rdata.h>
+#include <include/edata.h>
 #include "model_dirac_w.h"
 
-int Jy_model_dirac(realtype t, int it, realtype *Jy, realtype *y, N_Vector x, realtype *my, realtype *sigma_y, void *user_data) {
+int Jy_model_dirac(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
 int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 status = w_model_dirac(t,x,NULL,user_data);
 int iy;
-if(!amiIsNaN(my[0* udata->nt+it])){
+if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;
-  Jy[0] += amilog((sigma_y[0]*sigma_y[0])*3.141592653589793*2.0)*5.0E-1+1.0/(sigma_y[0]*sigma_y[0])*pow(my[it+udata->nt*0]-y[it+udata->nt*0],2.0)*5.0E-1;
+  tdata->Jy[0] += amilog((tdata->sigmay[0]*tdata->sigmay[0])*3.141592653589793*2.0)*5.0E-1+1.0/(tdata->sigmay[0]*tdata->sigmay[0])*pow(edata->my[it+udata->nt*0]-rdata->y[it + udata->nt*0],2.0)*5.0E-1;
 }
 return(status);
 

@@ -3,6 +3,7 @@ project(model_jakstat_adjoint_o2)
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
+
 add_definitions(-DAMICI_WITHOUT_MATLAB)
     
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
@@ -44,19 +45,23 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_JBand.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JBandB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JSparse.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JSparseB.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_Jrz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_Jv.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JvB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_Jy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_Jz.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJydp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJydx.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dJrzdsigma.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dJrzdz.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dJydsigma.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dJydy.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJzdp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJzdx.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dJzdsigma.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dJzdz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_deltaqB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_deltasx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_deltax.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_deltaxB.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_drzdp.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_drzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dsigma_ydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dsigma_zdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dwdp.cpp
@@ -68,16 +73,14 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_dzdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dzdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_qBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_s2root.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sJz.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_rz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sigma_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sigma_z.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sroot.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_srz.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_stau.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sxdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sz.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sz_tf.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_w.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_x0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_xBdot.cpp
@@ -113,8 +116,7 @@ ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
 ${HDF5_HL_LIBRARIES}
 ${HDF5_C_LIBRARIES}
 ${BLAS_LIBRARIES}
--lpthread -ldl -lz
--lm)
+-lpthread -ldl -lz -lm)
 
 set(SRC_LIST_EXE main.cpp)
 

@@ -17,8 +17,14 @@
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 
-static int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data);
-static int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigma_y, realtype *sy, realtype *dydp, realtype *my, void *user_data);
+static int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
+static int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
+static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+static int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+static int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
+static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata) {
     if(!udata) return AMICI_ERROR_UDATA;
@@ -42,13 +48,13 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
         status = AMICI_ERROR_SETUP;
         goto freturn;
     }
-
+    
     if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot);
     if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot);
     
     if (status == AMICI_SUCCESS) status = applyChainRuleFactorToSimulationResults(udata, rdata, edata);
     if (status < AMICI_SUCCESS) invalidateReturnData(udata, rdata);
-
+    
     if (ami_mem) AMIFree(&ami_mem);
     
 freturn:
@@ -64,13 +70,13 @@ void invalidateReturnData(UserData* udata, ReturnData* rdata) {
      * @param[out] rdata pointer to the return data struct @type ReturnData
      */
     if (rdata->llh)
-    *rdata->llh = amiGetNaN();
+        *rdata->llh = amiGetNaN();
     
     if (rdata->sllh)
-    fillArray(rdata->sllh, udata->nplist, amiGetNaN());
+        fillArray(rdata->sllh, udata->nplist, amiGetNaN());
     
     if (rdata->s2llh)
-    fillArray(rdata->s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
+        fillArray(rdata->s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
 }
 
 void *setupAMI(UserData *udata, TempData *tdata) {
@@ -82,7 +88,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
      * @return ami_mem pointer to the cvodes/idas memory block
      */
     void *ami_mem = NULL; /* pointer to ami memory block */
-    N_Vector id;
+    N_Vector id = NULL;
     
     
     tdata->t = udata->tstart;
@@ -95,6 +101,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
         } else {
             int ix;
             realtype *x_tmp = NV_DATA_S(tdata->x);
+            if(!x_tmp) goto freturn;
             for (ix=0; ix < udata->nx; ix++) {
                 x_tmp[ix] = (realtype) udata->x0data[ix];
             }
@@ -237,6 +244,7 @@ void *setupAMI(UserData *udata, TempData *tdata) {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
                         sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                        if(!sx_tmp) goto freturn;
                         int ix;
                         for (ix=0; ix<udata->nx; ix++) {
                             sx_tmp[ix] = (realtype) udata->sx0data[ix + udata->nx*ip];
@@ -268,15 +276,19 @@ void *setupAMI(UserData *udata, TempData *tdata) {
     }
     
     id = N_VNew_Serial(udata->nx);
-    memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(realtype));
+    if(!id) goto freturn;
+    if(!udata->idlist) goto freturn;
+    memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(double));
     
     if (AMISetId(ami_mem, id) != AMICI_SUCCESS) goto freturn;
+    if(id) N_VDestroy_Serial(id);
     
     if (AMISetSuppressAlg(ami_mem, TRUE) != AMICI_SUCCESS) goto freturn;
     
     return(ami_mem);
     
 freturn:
+    if(id) N_VDestroy_Serial(id);
     if(ami_mem) AMIFree(&ami_mem);
     return NULL;
 }
@@ -294,21 +306,23 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
      */
-    int ix;
     int status = AMICI_SUCCESS;
     
     /* write initial conditions */
-    if (tdata->xB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->xB) return AMICI_ERROR_SETUPB;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    memset(xB_tmp,0,sizeof(realtype)*udata->nx);
-    for (ix=0; ix<udata->nx; ix++) {
-        xB_tmp[ix] += tdata->dJydx[udata->nt-1+ix*udata->nt];
-    }
+    if(!xB_tmp) return AMICI_ERROR_SETUPB;
+    memset(xB_tmp,0,sizeof(realtype)*udata->nxtrue*udata->nJ);
+    for (int ix=0; ix<udata->nxtrue; ++ix)
+        for (int iJ=0; iJ<udata->nJ; ++iJ)
+            xB_tmp[ix + iJ * udata->nxtrue] += tdata->dJydx[udata->nt-1 + (iJ + ix * udata->nJ) * udata->nt];
     
-    if (tdata->dxB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->dxB) return AMICI_ERROR_SETUPB;
+    if(!NV_DATA_S(tdata->dxB)) return AMICI_ERROR_SETUPB;
     memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*udata->nx);
     
-    if (tdata->xQB == NULL) return AMICI_ERROR_SETUPB;
+    if(!tdata->xQB) return AMICI_ERROR_SETUPB;
+    if(!NV_DATA_S(tdata->xQB)) return AMICI_ERROR_SETUPB;
     memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*udata->nJ*udata->nplist);
     
     /* create backward problem */
@@ -465,6 +479,272 @@ int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+    /**
+     * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
+     *
+     * @param[in] it index of current timepoint @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+    
+    int iy,ip,iJ;
+    int status = AMICI_SUCCESS;
+    
+    status = fdydx(udata->ts[it],it,tdata->x,udata,tdata);
+    if(status != AMICI_SUCCESS) return status;
+    status = fdydp(udata->ts[it],it,tdata->x,udata,tdata);
+    if(status != AMICI_SUCCESS) return status;
+    if (edata) {
+        status = fdsigma_ydp(tdata->t,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+        for (iy=0; iy<udata->nytrue; iy++) {
+            if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
+                for (ip=0; ip<udata->nplist; ip++) {
+                    tdata->dsigmaydp[ip*udata->ny+iy] = 0;
+                }
+            }
+            for (ip=0; ip<udata->nplist; ip++) {
+                rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
+            }
+        }
+        status = fdJydy(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJydsigma(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJydx(it,udata,tdata,edata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJydp(it,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        if (udata->sensi_meth == AMICI_SENSI_ASA) {
+            for(iJ=0; iJ<udata->nJ; iJ++) {
+                for(ip=0; ip < udata->nplist; ip++) {
+                    if (iJ==0) {
+                        if (udata->ny>0) {
+                            rdata->sllh[ip] -= tdata->dJydp[ip * udata->nJ];
+                        }
+                    } else {
+                        if (udata->ny>0) {
+                            rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJydp[iJ + ip * udata->nJ];
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+    return status;
+}
+
+int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+    /**
+     * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
+     *
+     * @param[in] ie index of current event @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+    
+    int iz,ip,iJ;
+    int status = AMICI_SUCCESS;
+    if (edata) {
+        for (iz=0; iz<udata->nztrue; iz++) {
+            if ( udata->z2event[iz]-1 == ie ){
+                if (!amiIsNaN(edata->mz[iz*udata->nmaxevent+tdata->nroots[ie]])) {
+                    status = fdzdp(tdata->t,ie,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    status = fdzdx(tdata->t,ie,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if (tdata->t == udata->ts[udata->nt-1]) {
+                        status = fdrzdp(tdata->t,ie,tdata->x,udata,tdata);
+                        if(status != AMICI_SUCCESS) return status;
+                        status = fdrzdx(tdata->t,ie,tdata->x,udata,tdata);
+                        if(status != AMICI_SUCCESS) return status;
+                    }
+                    /* extract the value for the standard deviation, if the data value is NaN, use
+                     the parameter value. Store this value in the return struct */
+                    if (amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
+                        status = fdsigma_zdp(tdata->t,ie,udata,tdata);
+                        if(status != AMICI_SUCCESS) return status;
+                    } else {
+                        for (ip=0; ip<udata->nplist; ip++) {
+                            tdata->dsigmazdp[iz+udata->nz*ip] = 0;
+                        }
+                        tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
+                    }
+                    rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
+                    for (ip=0; ip<udata->nplist; ip++) {
+                        rdata->ssigmaz[tdata->nroots[ie] + udata->nmaxevent*(iz+udata->nz*ip)] = tdata->dsigmazdp[iz+udata->nz*ip];
+                    }
+                }
+            }
+        }
+        status = fdJzdz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdsigma(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        if (tdata->t == udata->ts[udata->nt-1]) {
+            status = fdJrzdz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+            if(status != AMICI_SUCCESS) return status;
+            status = fdJrzdsigma(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+            if(status != AMICI_SUCCESS) return status;
+        }
+        status = fdJzdx(ie,udata,tdata,edata);
+        if(status != AMICI_SUCCESS) return status;
+        status = fdJzdp(ie,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        if (udata->sensi_meth == AMICI_SENSI_ASA) {
+            for(iJ=0; iJ<udata->nJ; iJ++) {
+                for(ip=0; ip < udata->nplist; ip++) {
+                    if (iJ==0) {
+                        if (udata->nz>0) {
+                            rdata->sllh[ip] -= tdata->dJzdp[ip];
+                        }
+                    } else {
+                        if (udata->nz>0) {
+                            rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJzdp[iJ + ip*udata->nJ];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return status;
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+    /**
+     * getDataOutput extracts output information for data-points
+     *
+     * @param[in] it index of current timepoint @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+    
+    int iy;
+    int status = AMICI_SUCCESS;
+    
+    status = fy(udata->ts[it],it,tdata->x,udata,rdata);
+    if(status != AMICI_SUCCESS) return status;
+    
+    if (edata) {
+        status = fsigma_y(tdata->t,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+        for (iy=0; iy<udata->nytrue; iy++) {
+            /* extract the value for the standard deviation, if the data value is NaN, use
+             the parameter value. Store this value in the return struct */
+            if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
+                tdata->sigmay[iy] = edata->sigmay[iy*udata->nt+it];
+            }
+            rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
+        }
+        status = fJy(udata->ts[it],it,tdata->x,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+    } else {
+        status = fsigma_y(tdata->t,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+        for (iy=0; iy<udata->nytrue; iy++) {
+            rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
+        }
+    }
+    if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        status = prepDataSensis(it, udata, rdata, edata, tdata);
+        if(status != AMICI_SUCCESS) return status;
+        if (udata->sensi_meth == AMICI_SENSI_FSA) {
+            status = getDataSensisFSA(it, ami_mem, udata, rdata, edata, tdata);
+            if(status != AMICI_SUCCESS) return status;
+        }
+    }
+    return AMICI_SUCCESS;
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
+    /**
+     * getEventOutput extracts output information for events
+     *
+     * @param[in] tlastroot timepoint of last occured event @type *realtype
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+    int status = AMICI_SUCCESS;
+    
+    if (tdata->t == udata->ts[udata->nt-1]) { // call from fillEvent at last timepoint
+        status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata);
+        if(status != AMICI_SUCCESS) return status;
+    }
+    
+    /* EVENT OUTPUT */
+    for (int ie=0; ie<udata->ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
+        if (tdata->nroots[ie]<udata->nmaxevent) {
+            if (tdata->rootsfound[ie] == 1 || tdata->t == udata->ts[udata->nt-1]) { /* only consider transitions false -> true  or event filling*/
+                status = fz(tdata->t,ie,tdata->x,udata,tdata,rdata);
+                if(status != AMICI_SUCCESS) return status;
+                
+                if (edata) {
+                    status = fsigma_z(tdata->t,ie,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    for (int iz=0; iz<udata->nztrue; iz++) {
+                        if (udata->z2event[iz]-1 == ie) {
+                            
+                            if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
+                                tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
+                            }
+                            rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
+                        }
+                    }
+                    
+                    status = fJz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    
+                    if (tdata->t == udata->ts[udata->nt-1]) { // call from fillEvent at last timepoint, add regularization based on rz
+                        status = frz(tdata->t,ie,tdata->x,udata,tdata,rdata);
+                        if(status != AMICI_SUCCESS) return status;
+                        
+                        status = fJrz(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
+                        if(status != AMICI_SUCCESS) return status;
+                    }
+                }
+                
+                if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                    status = prepEventSensis(ie, udata, rdata, edata, tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if (udata->sensi_meth == AMICI_SENSI_FSA) {
+                        status = getEventSensisFSA(ie, udata, rdata, edata, tdata);
+                        if(status != AMICI_SUCCESS) return status;
+                    }
+                }
+                tdata->nroots[ie]++;
+            }
+        }
+    }
+    return status;
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
 int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
@@ -491,6 +771,7 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
             }
             
             sx_tmp = NV_DATA_S(tdata->sx[ip]);
+            if(!sx_tmp) return AMICI_ERROR_FSA;
             for(ix=0; ix < udata->nx; ix++) {
                 rdata->sx[(ip*udata->nx + ix)*udata->nt + it] = sx_tmp[ix];
             }
@@ -500,7 +781,7 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
     for (iy=0; iy<udata->nytrue; iy++) {
         if (edata){
             if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                status = fdsigma_ydp(tdata->t,tdata->dsigmaydp,udata);
+                status = fdsigma_ydp(tdata->t,udata,tdata);
                 if(status != AMICI_SUCCESS) return status;
             } else {
                 for (ip=0; ip<udata->nplist; ip++) {
@@ -516,10 +797,10 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
             }
         }
     }
-    status = fsy(udata->ts[it],it,rdata->sy,tdata->dydx,tdata->dydp,tdata->sx,udata);
+    status = fsy(it,udata,tdata,rdata);
     if(status != AMICI_SUCCESS) return status;
     if (edata) {
-        status = fsJy(udata->ts[it],it,rdata->sllh,rdata->s2llh,tdata->dJydy,tdata->dJydp,rdata->y,tdata->sigmay,rdata->sy,tdata->dydp,edata->my,udata);
+        status = fsJy(it,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
     }
     return status;
@@ -529,405 +810,35 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
-     *
-     * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int iy,ip,iJ;
-    int status = AMICI_SUCCESS;
-    
-    status = fdydx(udata->ts[it],it,tdata->dydx,tdata->x,udata);
-    if(status != AMICI_SUCCESS) return status;
-    status = fdydp(udata->ts[it],it,tdata->dydp,tdata->x,udata);
-    if(status != AMICI_SUCCESS) return status;
-    if (edata) {
-        for (iy=0; iy<udata->nytrue; iy++) {
-            if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                status = fdsigma_ydp(tdata->t,tdata->dsigmaydp,udata);
-                if(status != AMICI_SUCCESS) return status;
-            } else {
-                for (ip=0; ip<udata->nplist; ip++) {
-                    tdata->dsigmaydp[ip*udata->ny+iy] = 0;
-                }
-            }
-            for (ip=0; ip<udata->nplist; ip++) {
-                rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
-            }
-        }
-        status = fdJydp(udata->ts[it],it,tdata->dJydp,rdata->y,tdata->x,tdata->dydp,edata->my,tdata->sigmay,tdata->dsigmaydp,udata);
-        if(status != AMICI_SUCCESS) return status;
-        
-        
-        if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            for(iJ=0; iJ<udata->nJ; iJ++) {
-                for(ip=0; ip < udata->nplist; ip++) {
-                    for(iy=0; iy < udata->nytrue; iy++) {
-                        if (iJ==0) {
-                            if (udata->ny>0) {
-                                rdata->sllh[ip] -= tdata->dJydp[iy + ip*udata->nytrue];
-                            }
-                        } else {
-                            if (udata->ny>0) {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJydp[(iJ*udata->nplist + ip)*udata->nytrue + iy];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        status = fdJydy(udata->ts[it],it,tdata->dJydy,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
-        if(status != AMICI_SUCCESS) return status;
-        status = fdJydx(udata->ts[it],it,tdata->dJydx,rdata->y,tdata->x,tdata->dydx,edata->my,tdata->sigmay,udata);
-        if(status != AMICI_SUCCESS) return status;
-    }
-    return status;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * getDataOutput extracts output information for data-points
-     *
-     * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int iy;
-    int status = AMICI_SUCCESS;
-    
-    status = fy(udata->ts[it],it,rdata->y,tdata->x,udata);
-    if(status != AMICI_SUCCESS) return status;
-    
-    if (edata) {
-        for (iy=0; iy<udata->nytrue; iy++) {
-            /* extract the value for the standard deviation, if the data value is NaN, use
-             the parameter value. Store this value in the return struct */
-            if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                status = fsigma_y(tdata->t,tdata->sigmay,udata);
-                if(status != AMICI_SUCCESS) return status;
-            } else {
-                tdata->sigmay[iy] = edata->sigmay[iy*udata->nt+it];
-            }
-            rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
-        }
-        status = fJy(udata->ts[it],it,tdata->Jy,rdata->y,tdata->x,edata->my,tdata->sigmay,udata);
-        if(status != AMICI_SUCCESS) return status;
-    } else {
-        status = fsigma_y(tdata->t,tdata->sigmay,udata);
-        if(status != AMICI_SUCCESS) return status;
-        for (iy=0; iy<udata->nytrue; iy++) {
-            rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
-        }
-    }
-    if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        status = prepDataSensis(it, ami_mem, udata, rdata, edata, tdata);
-        if(status != AMICI_SUCCESS) return status;
-        if (udata->sensi_meth == AMICI_SENSI_FSA) {
-            status = getDataSensisFSA(it, ami_mem, udata, rdata, edata, tdata);
-            if(status != AMICI_SUCCESS) return status;
-        }
-    }
-    return AMICI_SUCCESS;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventSensisFSA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
+int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
     /**
      * getEventSensisFSA extracts event information for forward sensitivity analysis
      *
      * @param[in] ie index of event type @type int
-     * @param[in] ami_mem pointer to the solver memory block @type void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    return fsz(tdata->t,ie,rdata->sz,tdata->x,tdata->sx,udata,tdata);
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventSensisFSA_tf(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata) {
-    /**
-     * getEventSensisFSA_tf extracts event information for forward sensitivity
-     *     analysis for events that happen at the end of the considered interval
-     *
-     * @param[in] ie index of event type @type int
-     * @param[in] ami_mem pointer to the solver memory block @type void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int status = AMICI_SUCCESS;
-    
-    status = fsz_tf(tdata->t,ie,rdata->sz,tdata->x,tdata->sx,udata,tdata);
-    if(status != AMICI_SUCCESS) return status;
-    
-    status = fsroot(tdata->t,ie,rdata->srz,tdata->x,tdata->sx,udata,tdata);
-    if(status != AMICI_SUCCESS) return status;
-    
-    if (udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-        if (fs2root(tdata->t,ie,rdata->s2rz,tdata->x,tdata->sx,udata,tdata)!= AMICI_SUCCESS) return AMICI_ERROR_FSA;
-    }
-    
-    return status;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventSensisASA(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * getEventSensisASA extracts event information for adjoint sensitivity analysis
-     *
-     * @param[in] ie index of event type @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
      */
-    int ip, iz;
     int status = AMICI_SUCCESS;
     
-    for (iz=0; iz<udata->nztrue; iz++) {
-        if ( udata->z2event[iz]-1 == ie ){
-            if (!amiIsNaN(edata->mz[iz*udata->nmaxevent+tdata->nroots[ie]])) {
-                status = fdzdp(tdata->t,ie,tdata->dzdp,tdata->x,udata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdzdx(tdata->t,ie,tdata->dzdx,tdata->x,udata);
-                if(status != AMICI_SUCCESS) return status;
-                /* extract the value for the standard deviation, if the data value is NaN, use
-                 the parameter value. Store this value in the return struct */
-                if (amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
-                    status = fsigma_z(tdata->t,ie,tdata->sigmaz,udata);
-                    if(status != AMICI_SUCCESS) return status;
-                    status = fdsigma_zdp(tdata->t,ie,tdata->dsigmazdp,udata);
-                    if(status != AMICI_SUCCESS) return status;
-                } else {
-                    for (ip=0; ip<udata->nplist; ip++) {
-                        tdata->dsigmazdp[iz+udata->nz*ip] = 0;
-                    }
-                    tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
-                }
-                rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
-                for (ip=0; ip<udata->nplist; ip++) {
-                    rdata->ssigmaz[tdata->nroots[ie] + udata->nmaxevent*(iz+udata->nz*ip)] = tdata->dsigmazdp[iz+udata->nz*ip];
-                }
-                
-                status = fdJzdp(tdata->t,ie,tdata->dJzdp,rdata->z,tdata->x,tdata->dzdp,edata->mz,tdata->sigmaz,tdata->dsigmazdp,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdJzdx(tdata->t,ie,tdata->dJzdx,rdata->z,tdata->x,tdata->dzdx,edata->mz,tdata->sigmaz,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-            }
-        }
-    }
-    return AMICI_SUCCESS;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventSigma(int ie, int iz, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * getEventSigma extracts fills sigmaz either from the user defined function or from user input
-     *
-     * @param[in] ie event type index @type int
-     * @param[in] iz event output index @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int status = AMICI_SUCCESS;
-    
-    /* extract the value for the standard deviation, if the data value is NaN, use
-     the parameter value. Store this value in the return struct */
-    if (amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
-        status = fsigma_z(tdata->t,ie,tdata->sigmaz,udata);
+    if (tdata->t == udata->ts[udata->nt-1]) { // call from fillEvent at last timepoint
+        status = fsz_tf(ie,udata,tdata,rdata);
+        if(status != AMICI_SUCCESS) return status;
+        
+        status = fsrz(tdata->t,ie,tdata->x,tdata->sx,udata,tdata,rdata);
         if(status != AMICI_SUCCESS) return status;
     } else {
-        tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
+        status = fsz(tdata->t,ie,tdata->x,tdata->sx,udata,tdata,rdata);
+        if(status != AMICI_SUCCESS) return status;
     }
-    rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
-    
-    return status;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventObjective(int ie, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * getEventObjective updates the objective function on the occurence of an event
-     *
-     * @param[in] ie event type index @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int status = AMICI_SUCCESS;
     
     if (edata) {
-        int iz;
-        for (iz=0; iz<udata->nztrue; iz++) {
-            if (udata->z2event[iz]-1 == ie) {
-                status = getEventSigma(ie, iz, ami_mem, udata, rdata, edata, tdata);
-                if(status != AMICI_SUCCESS) return status;
-                if (!amiIsNaN(edata->mz[iz*udata->nmaxevent+tdata->nroots[ie]])) {
-                    tdata->Jz[0] += 0.5*log(2*pi*pow(tdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz],2))
-                    + 0.5*pow( ( rdata->z[tdata->nroots[ie] + udata->nmaxevent*iz] - edata->mz[tdata->nroots[ie] + udata->nmaxevent*iz] )/tdata->sigmaz[iz] , 2);
-                    *rdata->chi2 += pow( ( rdata->z[tdata->nroots[ie] + udata->nmaxevent*iz] - edata->mz[tdata->nroots[ie] + udata->nmaxevent*iz] )/tdata->sigmaz[iz] , 2);
-                }
-            }
-        }
+        status = fsJz(ie,udata,tdata,edata,rdata);
+        if(status != AMICI_SUCCESS) return status;
     }
-    return status;
-    
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int getEventOutput(realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * getEventOutput extracts output information for events
-     *
-     * @param[in] tlastroot timepoint of last occured event @type *realtype
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    int iz, ie;
-    int status = AMICI_SUCCESS;
-    
-    /* EVENT OUTPUT */
-    for (ie=0; ie<udata->ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-        if (tdata->nroots[ie]<udata->nmaxevent) {
-            if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
-                status = fz(tdata->t,ie,rdata->z,tdata->x,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-                if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                    if (udata->sensi_meth == AMICI_SENSI_ASA) {
-                        status = getEventSensisASA(ie, ami_mem, udata, rdata, edata, tdata);
-                        if(status != AMICI_SUCCESS) return status;
-                    } else {
-                        status = getEventSensisFSA(ie, ami_mem, udata, rdata, tdata);
-                        if(status != AMICI_SUCCESS) return status;
-                    }
-                }
-                
-                if (edata) {
-                    for (iz=0; iz<udata->nztrue; iz++) {
-                        if (udata->z2event[iz]-1 == ie) {
-                            status = getEventSigma(ie, iz, ami_mem,udata,rdata,edata,tdata);
-                            if(status != AMICI_SUCCESS) return status;
-                        }
-                    }
-                    status = getEventObjective(ie, ami_mem, udata, rdata, edata, tdata);
-                    if(status != AMICI_SUCCESS) return status;
-                }
-                
-                tdata->nroots[ie]++;
-            }
-        }
-    }
-    return status;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int fillEventOutput(void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata) {
-    /**
-     * fillEventOutput fills missing roots at last timepoint
-     *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] edata pointer to the experimental data struct @type ExpData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int ie,iz;
-    int status = AMICI_SUCCESS;
-    
-    status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata);
-    if(status != AMICI_SUCCESS) return status;
-    
-    /* EVENT OUTPUT */
-    if (udata->nztrue>0) {
-        for (ie=0; ie<udata->ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
-            while (tdata->nroots[ie]<udata->nmaxevent) {
-                status = fz(tdata->t,ie,rdata->z,tdata->x,udata,tdata);
-                if(status != AMICI_SUCCESS) return status;
-                
-                
-                for (iz=0; iz<udata->nztrue; iz++) {
-                    if (udata->z2event[iz]-1 == ie) {
-                        rdata->rz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->rootvals[ie];
-                    }
-                }
-                
-                status = getEventObjective(ie, ami_mem, udata, rdata, edata, tdata);
-                if(status != AMICI_SUCCESS) return status;
-                
-                if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                    if (udata->sensi_meth == AMICI_SENSI_ASA) {
-                        status = getEventSensisASA(ie, ami_mem, udata, rdata, edata, tdata);
-                        if(status != AMICI_SUCCESS) return status;
-                    } else {
-                        status = getEventSensisFSA_tf(ie, ami_mem, udata, rdata, tdata);
-                        if(status != AMICI_SUCCESS) return status;
-                    }
-                }
-                tdata->nroots[ie]++;
-            }
-        }
-    }
-    return status;
+    return AMICI_SUCCESS;
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -953,19 +864,9 @@ int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, c
     rdata->ts[it] = udata->ts[it];
     if (udata->nx>0) {
         realtype *x_tmp = NV_DATA_S(tdata->x);
+        if(!x_tmp) return AMICI_ERROR_DATA;
         for (ix=0; ix<udata->nx; ix++) {
             rdata->x[it+udata->nt*ix] = x_tmp[ix];
-        }
-        
-        if (it == udata->nt-1) {
-            if (udata->sensi_meth == AMICI_SENSI_SS) {
-                status = fdxdotdp(udata->ts[it],rdata->dxdotdp,tdata->x,tdata->dx,udata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdydp(udata->ts[it],it,rdata->dydp,tdata->x,udata);
-                if(status != AMICI_SUCCESS) return status;
-                status = fdydx(udata->ts[it],it,rdata->dydx,tdata->x,udata);
-                if(status != AMICI_SUCCESS) return status;
-            }
         }
         
         if (udata->ts[it] > udata->tstart) {
@@ -993,11 +894,12 @@ int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
      * @return status flag indicating success of execution @type int
      */
     
-    int ix;
-    
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    for (ix=0; ix<udata->nx; ix++) {
-        xB_tmp[ix] += tdata->dJydx[it+ix*udata->nt];
+    if(!xB_tmp) return AMICI_ERROR_DATA;
+    for (int ix=0; ix<udata->nxtrue; ix++) {
+        for(int iJ=0; iJ<udata->nJ; iJ++)
+            // we only need the 1:nxtrue slice here!
+            xB_tmp[ix + iJ * udata->nxtrue] += tdata->dJydx[it + (iJ + ix * udata->nJ) * udata->nt];
     }
     return getDiagnosisB(it,ami_mem,udata,rdata,tdata);
 }
@@ -1060,7 +962,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
         *tlastroot = tdata->t;
     }
     
-    status = getEventOutput(tlastroot, ami_mem, udata, rdata, edata, tdata);
+    status = getEventOutput(tlastroot, udata, rdata, edata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
@@ -1076,7 +978,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
             if (seflag == 0) {
                 for (ie = 0; ie<udata->ne; ie++) {
                     if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
-                        fstau(tdata->t,ie,udata->stau,tdata->x,tdata->sx,udata);
+                        fstau(tdata->t,ie,tdata->x,tdata->sx,udata,tdata);
                     }
                 }
             }
@@ -1095,7 +997,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
     status = updateHeaviside(udata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
-    status = applyEventBolus(ami_mem, udata, tdata);
+    status = applyEventBolus(udata, tdata);
     if (status != AMICI_SUCCESS) return status;
     
     if (*iroot<udata->nmaxevent*udata->ne) {
@@ -1114,7 +1016,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
             status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
             if (status != AMICI_SUCCESS) return status;
             
-            status = applyEventSensiBolusFSA(ami_mem, udata, tdata);
+            status = applyEventSensiBolusFSA(udata, tdata);
             if (status != AMICI_SUCCESS) return status;
         }
     }
@@ -1172,13 +1074,12 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
+int handleEventB(int iroot, UserData *udata, TempData *tdata) {
     /**
      * handleEventB executes everything necessary for the handling of events for the backward problem
      *
      * @param[out] status flag indicating success of execution @type int
      * @param[out] iroot index of event @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1193,27 +1094,30 @@ int handleEventB(int iroot, void *ami_mem, UserData *udata, TempData *tdata) {
     N_VScale(1.0,tdata->xQB,tdata->xQB_old);
     
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
+    if(!xB_tmp) return AMICI_ERROR_EVENT;
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
+    if(!xQB_tmp) return AMICI_ERROR_DATA;
     
     for (ie=0; ie<udata->ne; ie++) {
         
         if (tdata->rootidx[iroot*udata->ne + ie] != 0) {
             
-            status = fdeltaqB(tdata->t,ie,tdata->deltaqB,tdata->x_disc[iroot],tdata->xB_old,tdata->xQB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],udata);
+            status = fdeltaqB(tdata->t,ie,tdata->x_disc[iroot],tdata->xB_old,tdata->xQB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],udata,tdata);
             if (status != AMICI_SUCCESS) return status;
-            status = fdeltaxB(tdata->t,ie,tdata->deltaxB,tdata->x_disc[iroot],tdata->xB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],udata);
+            status = fdeltaxB(tdata->t,ie,tdata->x_disc[iroot],tdata->xB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],udata,tdata);
             if (status != AMICI_SUCCESS) return status;
             
-            for (ix=0; ix<udata->nx; ix++) {
-                xB_tmp[ix] += tdata->deltaxB[ix];
+            for (ix=0; ix<udata->nxtrue; ++ix) {
+                for (int iJ = 0; iJ < udata->nJ; ++iJ)
+                    xB_tmp[ix + iJ*udata->nxtrue] += tdata->deltaxB[ix + iJ*udata->nxtrue];
                 if (udata->nz>0) {
-                    xB_tmp[ix] += tdata->dJzdx[tdata->nroots[ie] + udata->nmaxevent*ix];
+                    xB_tmp[ix + iJ*udata->nxtrue] += tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
                 }
             }
             
-            for (iJ=0; iJ<udata->nJ; iJ++) {
-                for (ip=0; ip<udata->nplist; ip++) {
-                    xQB_tmp[iJ*udata->nplist+ip] += tdata->deltaqB[iJ*udata->nplist+ip];
+            for (iJ=0; iJ<udata->nJ; ++iJ) {
+                for (ip=0; ip<udata->nplist; ++ip) {
+                    xQB_tmp[ip + iJ*udata->nplist] += tdata->deltaqB[ip + iJ*udata->nplist];
                 }
             }
             
@@ -1272,12 +1176,10 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
+int applyEventBolus( UserData *udata, TempData *tdata) {
     /**
      * applyEventBolus applies the event bolus to the current state
      *
-     * @param[out] status flag indicating success of execution @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1289,10 +1191,11 @@ int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
     
     for (ie=0; ie<udata->ne; ie++){
         if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
-            status = fdeltax(tdata->t,ie,tdata->deltax,tdata->x,tdata->xdot,tdata->xdot_old,udata);
+            status = fdeltax(tdata->t,ie,tdata->x,tdata->xdot,tdata->xdot_old,udata,tdata);
             if (status != AMICI_SUCCESS) return status;
             
             x_tmp = NV_DATA_S(tdata->x);
+            if(!x_tmp) return AMICI_ERROR_EVENT;
             for (ix=0; ix<udata->nx; ix++) {
                 x_tmp[ix] += tdata->deltax[ix];
             }
@@ -1305,11 +1208,10 @@ int applyEventBolus( void *ami_mem, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int applyEventSensiBolusFSA(void *ami_mem, UserData *udata, TempData *tdata) {
+int applyEventSensiBolusFSA(UserData *udata, TempData *tdata) {
     /**
      * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
      *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -1321,11 +1223,12 @@ int applyEventSensiBolusFSA(void *ami_mem, UserData *udata, TempData *tdata) {
     
     for (ie=0; ie<udata->ne; ie++){
         if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
-            status = fdeltasx(tdata->t,ie,tdata->deltasx,tdata->x_old,tdata->xdot,tdata->xdot_old,tdata->sx,udata);
+            status = fdeltasx(tdata->t,ie,tdata->x_old,tdata->xdot,tdata->xdot_old,tdata->sx,udata,tdata);
             if (status != AMICI_SUCCESS) return status;
             
             for (ip=0; ip<udata->nplist; ip++) {
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                if(!sx_tmp) return AMICI_ERROR_FSA;
                 for (ix=0; ix<udata->nx; ix++) {
                     sx_tmp[ix] += tdata->deltasx[ix + udata->nx*ip];
                 }
@@ -1382,7 +1285,7 @@ int updateHeaviside(UserData *udata, TempData *tdata) {
      */
     
     int ie;
-
+    
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding it will give
      the right update to the heaviside variables */
     
@@ -1549,6 +1452,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                     }
                     if (udata->nx>0) {
                         x_tmp = NV_DATA_S(tdata->x);
+                        if(!x_tmp) return AMICI_ERROR_SIMULATION;
                         if (status == -22) {
                             /* clustering of roots => turn off rootfinding */
                             AMIRootInit(ami_mem, 0, NULL);
@@ -1572,7 +1476,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
     
     /* fill events */
     if (udata->ne>0) {
-        fillEventOutput(ami_mem, udata, rdata, edata, tdata);
+        getEventOutput(&tlastroot, udata, rdata, edata, tdata);
     }
     
 freturn:
@@ -1628,7 +1532,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                             if (udata->nmaxevent>0){
                                 if ((*iroot)>=0){
                                     if (tnext == tdata->discs[*iroot]) {
-                                        handleEventB(*iroot, ami_mem, udata, tdata);
+                                        handleEventB(*iroot, udata, tdata);
                                         (*iroot)--;
                                     }
                                 }
@@ -1679,45 +1583,43 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                     if (status == AMICI_SUCCESS) {
                         
                         realtype *xB_tmp = NV_DATA_S(tdata->xB);
+                        if(!xB_tmp) return AMICI_ERROR_ASA;
                         realtype *sx_tmp;
                         
                         int iJ;
                         for (iJ=0; iJ<udata->nJ; iJ++) {
                             if (iJ==0) {
-                                for (ip=0; ip<udata->nplist; ip++) {
+                                for (ip=0; ip<udata->nplist; ++ip) {
                                     tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                                    for (ix = 0; ix < udata->nxtrue; ix++) {
+                                    if(!sx_tmp) return AMICI_ERROR_ASA;
+                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
                                         tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                                     }
                                 }
                             } else {
-                                for (ip=0; ip<udata->nplist; ip++) {
-                                    tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
+                                for (ip=0; ip<udata->nplist; ++ip) {
+                                    tdata->llhS0[ip + iJ * udata->nplist] = 0.0;
                                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                                    for (ix = 0; ix < udata->nxtrue; ix++) {
-                                        tdata->llhS0[iJ*udata->nplist + ip] = tdata->llhS0[iJ*udata->nplist + ip]
-                                        + xB_tmp[iJ*udata->nxtrue + ix] * sx_tmp[ix]
-                                        + xB_tmp[ix] * sx_tmp[iJ*udata->nxtrue + ix];
+                                    if(!sx_tmp) return AMICI_ERROR_ASA;
+                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
+                                        tdata->llhS0[ip + iJ * udata->nplist] = tdata->llhS0[ip + iJ * udata->nplist]
+                                        + xB_tmp[ix + iJ * udata->nxtrue] * sx_tmp[ix]
+                                        + xB_tmp[ix] * sx_tmp[ix + iJ * udata->nxtrue];
                                     }
                                 }
                             }
                         }
                         
                         realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
+                        if(!xQB_tmp) return AMICI_ERROR_ASA;
                         
                         for(iJ=0; iJ<udata->nJ; iJ++) {
                             for(ip=0; ip < udata->nplist; ip++) {
                                 if (iJ==0) {
                                     rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
-                                    if (udata->nz>0) {
-                                        rdata->sllh[ip] -= tdata->dJzdp[ip];
-                                    }
                                 } else {
-                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->llhS0[iJ*udata->nplist + ip] + xQB_tmp[iJ*udata->nplist + ip];
-                                    if (udata->nz>0) {
-                                        rdata->s2llh[(iJ-1)*udata->nplist + ip] -= tdata->dJzdp[iJ*udata->nplist + ip];
-                                    }
+                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
                                 }
                             }
                         }
@@ -1729,7 +1631,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                                 if (iJ==0) {
                                     rdata->sllh[ip] = amiGetNaN();
                                 } else {
-                                    rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
+                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
                                 }
                             }
                         }
@@ -1741,7 +1643,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                             if (iJ==0) {
                                 rdata->sllh[ip] = amiGetNaN();
                             } else {
-                                rdata->s2llh[(iJ-1)*udata->nplist + ip] = amiGetNaN();
+                                rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
                             }
                         }
                     }
@@ -1777,22 +1679,40 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     if (udata) {
         if (tdata) {
             if (udata->nx>0){
+                /*
+                 entries in rdata are actually (double) while entries in tdata are (realtype)
+                 we should perform proper casting here.
+                 */
                 status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
                 if (status != AMICI_SUCCESS) return status;
                 realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
+                if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
                 if (rdata->xdot)
-                if (xdot_tmp)
-                memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+                    memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+                
+                status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
+                if (status != AMICI_SUCCESS) return status;
+                if (rdata->J)
+                    memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
+                
+                if (udata->sensi_meth == AMICI_SENSI_SS) {
+                    status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dxdotdp)
+                        memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
+                    
+                    status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dydp)
+                        memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
+                    
+                    status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+                    if(status != AMICI_SUCCESS) return status;
+                    if(rdata->dydx)
+                        memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
+                }
+                
             }
-        }
-    }
-    if (udata) {
-        if (udata->nx>0) {
-            status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
-            if (status != AMICI_SUCCESS) return status;
-            if (rdata->J)
-            if (tdata->Jtmp->data)
-            memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
         }
     }
     return AMICI_SUCCESS;
@@ -1807,7 +1727,7 @@ int unscaleParameters(UserData *udata) {
             break;
         case AMICI_SCALING_LN:
             for(int ip = 0; ip < udata->np; ++ip)
-            udata->p[ip] = exp(udata->p[ip]);
+                udata->p[ip] = exp(udata->p[ip]);
             break;
         case AMICI_SCALING_NONE:
             //this should never be reached
@@ -1819,7 +1739,7 @@ int unscaleParameters(UserData *udata) {
 int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata)
 {
     if (udata->pscale == AMICI_SCALING_NONE)
-    return AMICI_SUCCESS;
+        return AMICI_SUCCESS;
     
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
@@ -1832,20 +1752,20 @@ int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *r
         case AMICI_SCALING_LOG10:
             coefficient = log(10.0);
             for(int ip = 0; ip < udata->nplist; ++ip)
-            pcoefficient[ip] = udata->p[udata->plist[ip]]*log(10);
+                pcoefficient[ip] = udata->p[udata->plist[ip]]*log(10);
             if (udata->sensi == 2)
-            if (udata->o2mode == AMICI_O2MODE_FULL)
-            for(int ip = 0; ip < udata->np; ++ip)
-            augcoefficient[ip] = udata->p[ip]*log(10);
+                if (udata->o2mode == AMICI_O2MODE_FULL)
+                    for(int ip = 0; ip < udata->np; ++ip)
+                        augcoefficient[ip] = udata->p[ip]*log(10);
             break;
         case AMICI_SCALING_LN:
             coefficient = 1.0;
             for(int ip = 0; ip < udata->nplist; ++ip)
-            pcoefficient[ip] = udata->p[udata->plist[ip]];
+                pcoefficient[ip] = udata->p[udata->plist[ip]];
             if (udata->sensi == 2)
-            if (udata->o2mode == AMICI_O2MODE_FULL)
-            for(int ip = 0; ip < udata->np; ++ip)
-            augcoefficient[ip] = udata->p[ip];
+                if (udata->o2mode == AMICI_O2MODE_FULL)
+                    for(int ip = 0; ip < udata->np; ++ip)
+                        augcoefficient[ip] = udata->p[ip];
             break;
         case AMICI_SCALING_NONE:
             //this should never be reached
@@ -1857,33 +1777,33 @@ int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *r
         if (udata->sensi == AMICI_SENSI_ORDER_SECOND){
             if (udata->sensi_meth == AMICI_SENSI_ASA){
                 if (rdata->x)
-                if (rdata->sx)
-                for(int ip = 0; ip < udata->nplist; ++ip)
-                for(int ix = 0; ix < udata->nxtrue; ++ix)
-                for(int it = 0; it < udata->nt; ++it)
-                rdata->sx[(ip*udata->nxtrue + ix)*udata->nt + it] = rdata->x[(udata->nxtrue + ip*udata->nxtrue + ix)*udata->nt + it];
+                    if (rdata->sx)
+                        for(int ip = 0; ip < udata->nplist; ++ip)
+                            for(int ix = 0; ix < udata->nxtrue; ++ix)
+                                for(int it = 0; it < udata->nt; ++it)
+                                    rdata->sx[(ip*udata->nxtrue + ix)*udata->nt + it] = rdata->x[(udata->nxtrue + ip*udata->nxtrue + ix)*udata->nt + it];
                 
                 if (rdata->y)
-                if (rdata->sy)
-                for(int ip = 0; ip < udata->nplist; ++ip)
-                for(int iy = 0; iy < udata->nytrue; ++iy)
-                for(int it = 0; it < udata->nt; ++it)
-                rdata->sy[(ip*udata->nytrue + iy)*udata->nt + it] = rdata->y[(udata->nytrue + ip*udata->nytrue + iy)*udata->nt + it];
+                    if (rdata->sy)
+                        for(int ip = 0; ip < udata->nplist; ++ip)
+                            for(int iy = 0; iy < udata->nytrue; ++iy)
+                                for(int it = 0; it < udata->nt; ++it)
+                                    rdata->sy[(ip*udata->nytrue + iy)*udata->nt + it] = rdata->y[(udata->nytrue + ip*udata->nytrue + iy)*udata->nt + it];
                 
                 if (rdata->z)
-                if (rdata->sz)
-                for(int ip = 0; ip < udata->nplist; ++ip)
-                for(int iz = 0; iz < udata->nztrue; ++iz)
-                for(int it = 0; it < udata->nt; ++it)
-                rdata->sy[(ip * udata->nztrue + iz)*udata->nt + it] = rdata->z[(udata->nztrue + ip*udata->nztrue + iz)*udata->nt + it];
+                    if (rdata->sz)
+                        for(int ip = 0; ip < udata->nplist; ++ip)
+                            for(int iz = 0; iz < udata->nztrue; ++iz)
+                                for(int it = 0; it < udata->nt; ++it)
+                                    rdata->sz[(ip * udata->nztrue + iz)*udata->nt + it] = rdata->z[(udata->nztrue + ip*udata->nztrue + iz)*udata->nt + it];
                 
             }
         }
         
         if (edata) {
             if (rdata->sllh)
-            for(int ip = 0; ip < udata->nplist; ++ip)
-            rdata->sllh[ip] *= pcoefficient[ip];
+                for(int ip = 0; ip < udata->nplist; ++ip)
+                    rdata->sllh[ip] *= pcoefficient[ip];
         }
         
 #define chainRule(QUANT,IND1,N1T,N1,IND2,N2) \
@@ -1902,14 +1822,14 @@ rdata->s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
     }
     if (udata->sensi_meth == AMICI_SENSI_SS) {
         if (rdata->dxdotdp)
-        for(int ip = 0; ip < udata->nplist; ++ip)
-        for(int ix = 0; ix < udata->nx; ++ix)
-        rdata->dxdotdp[ip*udata->nxtrue + ix] *= pcoefficient[ip];
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                for(int ix = 0; ix < udata->nx; ++ix)
+                    rdata->dxdotdp[ix + ip*udata->nxtrue] *= pcoefficient[ip];
         
         if (rdata->dydp)
-        for(int ip = 0; ip < udata->nplist; ++ip)
-        for(int iy = 0; iy < udata->ny; ++iy)
-        rdata->dydp[ip*udata->nxtrue + iy] *= pcoefficient[ip];
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                for(int iy = 0; iy < udata->ny; ++iy)
+                    rdata->dydp[iy + ip*udata->nytrue] *= pcoefficient[ip];
     }
     if (udata->o2mode == AMICI_O2MODE_FULL) { //full
         if (edata){
@@ -1919,7 +1839,7 @@ rdata->s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
                         for(int iJ = 1; iJ < udata->nJ; ++iJ) {
                             rdata->s2llh[ip*udata->nplist+(iJ-1)] *= pcoefficient[ip]*augcoefficient[iJ-1];
                             if (udata->plist[ip] == iJ-1)
-                            rdata->s2llh[ip*udata->nplist+(iJ-1)] += rdata->sllh[ip]*coefficient;
+                                rdata->s2llh[ip*udata->nplist+(iJ-1)] += rdata->sllh[ip]*coefficient;
                         }
                     }
                 }
@@ -1975,88 +1895,339 @@ rdata->s ## QUANT [(ip*N1 + N1T + IND1)*N2 + IND2] += udata->k[udata->nk-udata->
     return AMICI_SUCCESS;
 }
 
-int fsy(realtype t, int it, realtype *sy, realtype *dydx, realtype *dydp, N_Vector *sx, void *user_data){
+int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata){
     // Compute sy = dydx * sx + dydp
     
     int status = AMICI_SUCCESS;
-    UserData *udata = (UserData*) user_data;
     
     for(int ip = 0; ip < udata->nplist; ++ip) {
         for(int iy = 0; iy < udata->ny; ++iy)
-        // copy dydp to sy
-        sy[ip * udata->nt * udata->ny + iy * udata->nt + it] = dydp[iy + ip * udata->ny];
+            // copy dydp to sy
+            rdata->sy[ip * udata->nt * udata->ny + iy * udata->nt + it] = tdata->dydp[iy + ip * udata->ny];
         
-        realtype *sxTmp = N_VGetArrayPointer(sx[ip]);
+        realtype *sx_tmp = N_VGetArrayPointer(tdata->sx[ip]);
         
         // compute sy = 1.0*dydx*sx + 1.0*sy
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, udata->ny, udata->nx,
-                    1.0, dydx, udata->ny, sxTmp, 1,
-                    1.0, &sy[ip * udata->nt * udata->ny + it], udata->nt);
+                    1.0, tdata->dydx, udata->ny, sx_tmp, 1,
+                    1.0, &rdata->sy[it + ip * udata->nt * udata->ny], udata->nt);
     }
     
     return status;
 }
 
-int fsJy(realtype t, int it, realtype *sJy, realtype *s2Jy, realtype *dJydy, realtype *dJydp, realtype *y, realtype *sigmay, realtype *sy, realtype *dydp, realtype *my, void *user_data) {
+int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata){
+    // Compute sz = dzdx * sz + dzdp
+    
     int status = AMICI_SUCCESS;
-    UserData *udata = (UserData*) user_data;
     
-    // Compute sy-dydp for current 'it'
-    // dydp         ny x nplist
-    // sy           nt x ny x nṕlist
-    // dydp part needs to be substracted as it is already contained in dJydp
-    // we only need to account for sensitivities here
-    realtype *diff = new realtype[udata->ny * udata->nplist];
-    for(int iy = 0; iy < udata->ny; ++iy)
-    for(int ip = 0; ip < udata->nplist; ++ip)
-    diff[iy + ip * udata->ny] = sy[ip * udata->nt * udata->ny + iy * udata->nt + it] - dydp[iy + ip * udata->ny];
-    
-    // sJy          nplist x ng
-    // dJydp=dJydp   nytrue x nplist x ng
-    // dJydy=dJydy   nytrue x ng x ny
-    
-    realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
-    realtype *multResult = new realtype[udata->nplist * udata->nJ];
-    
-    for(int iyt = 0; iyt < udata->nytrue; ++iyt) {
-        if (amiIsNaN(my[udata->nt * iyt + it]))
-        continue;
-        
-        // copy current (iyt) dJydy slice
-        // dJydyTmp     ng x ny
-        for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            for(int iy = 0; iy < udata->ny; ++iy)
-                dJydyTmp[iJ + iy * udata->nJ] = dJydy[iyt + iJ * udata->nytrue + iy * udata->nytrue * udata->nJ];
-        
-        // compute multResult = (dJydyTmp * diff)' + dJydp == diff' * dJydyTmp' + dJydp
-        // copy dJydp slice (iyt) to result
-        for(int ip = 0; ip < udata->nplist; ++ip)
-            for(int iJ = 0; iJ < udata->nJ; ++iJ)
-                multResult[ip + udata->np * iJ] = dJydp[iyt + ip * udata->nytrue + iJ * udata->nytrue * udata->nplist];
-        
-        // C := alpha*op(A)*op(B) + beta*C,
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_Trans,
-                    udata->nplist, udata->nJ, udata->ny,
-                    1.0, diff, udata->ny,
-                    dJydyTmp, udata->nJ,
-                    1.0, multResult, udata->nplist);
-        
-        // sJy += multResult
-        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-            if (iJ == 0)
-            for(int ip = 0; ip < udata->nplist; ++ip)
-                sJy[ip] -= multResult[ip];
-            else
-                for(int ip = 0; ip < udata->nplist; ++ip)
-                    s2Jy[ip + udata->nplist * (iJ - 1)] -= multResult[ip+ udata->nplist * iJ];
-        }
-        
-        
+    for(int ip = 0; ip < udata->nplist; ++ip) {
+        for(int iz = 0; iz < udata->nz; ++iz)
+            // copy dydp to sy
+            rdata->sz[tdata->nroots[ie] + (iz + ip * udata->nz) * udata->nmaxevent ] = 0;
     }
-    delete[] dJydyTmp;
+    
+    return status;
+}
+
+static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+    int status = AMICI_SUCCESS;
+    
+    // Compute dJydx*sx for current 'it'
+    // dJydx        nt x nJ x nx
+    // sx           nt x nx x nplist
+    
+    double *multResult = new double[udata->nJ * udata->nplist];
+    double *dJydxTmp = new double[udata->nJ * udata->nx];
+    double *sxTmp = new double[udata->nplist * udata->nx];
+    for(int ix = 0; ix < udata->nx; ++ix){
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            sxTmp[ix + ip * udata->nx] = rdata->sx[it + (ix + ip * udata->nx ) * udata->nt];
+        for(int iJ = 0; iJ < udata->nJ; ++iJ)
+            dJydxTmp[iJ + ix * udata->nJ] = tdata->dJydx[it + (iJ + ix * udata->nJ ) * udata->nt];
+    }
+    
+    // C := alpha*op(A)*op(B) + beta*C,
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                udata->nJ, udata->nplist, udata->nx,
+                1.0, dJydxTmp, udata->nJ,
+                sxTmp, udata->nx,
+                0.0, multResult, udata->nJ);
+    
+    // multResult    nJ x nplist
+    // dJydp         nJ x nplist
+    // dJydxTmp      nJ x nx
+    // sxTmp         nx x nplist
+    
+    // sJy += multResult + dJydp
+    for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+        if (iJ == 0)
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                rdata->sllh[ip] -= multResult[ip * udata->nJ] + tdata->dJydp[ip * udata->nJ];
+        else
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= multResult[iJ + ip * udata->nJ] + tdata->dJydp[iJ + ip * udata->nJ];
+    }
+    
+    delete[] dJydxTmp;
     delete[] multResult;
-    delete[] diff;
+    delete[] sxTmp;
     
     return(status);
 }
 
+int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+    int status = AMICI_SUCCESS;
+    
+    // dJydy         nytrue x nJ x ny
+    // dydp          ny x nplist
+    // dJydp         nJ x nplist
+    
+    memset(tdata->dJydp,0,udata->nJ * udata->nplist * sizeof(double));
+    
+    realtype *dJydyTmp = new double[udata->nJ * udata->ny];
+    realtype *dJydsigmaTmp = new double[udata->nJ * udata->ny];
+    
+    for(int iyt=0; iyt < udata->nytrue; ++iyt) {
+        if (amiIsNaN(edata->my[udata->nt * iyt + it]))
+            continue;
+        
+        // copy current (iyt) dJydy and dJydsigma slices
+        // dJydyTmp     nJ x ny
+        // dJydsigmaTmp nJ x ny
+        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+            for(int iy = 0; iy < udata->ny; ++iy) {
+                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+                dJydsigmaTmp[iJ + iy * udata->nJ] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
+            }
+        }
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    udata->nJ, udata->nplist, udata->ny,
+                    1.0, dJydyTmp, udata->nJ,
+                    tdata->dydp, udata->ny,
+                    1.0, tdata->dJydp, udata->nJ);
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    udata->nJ, udata->nplist, udata->ny,
+                    1.0, dJydsigmaTmp, udata->nJ,
+                    tdata->dsigmaydp, udata->ny,
+                    1.0, tdata->dJydp, udata->nJ);
+    }
+    delete[] dJydyTmp;
+    delete[] dJydsigmaTmp;
+    
+    return(status);
+}
+
+int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
+    int status = AMICI_SUCCESS;
+    
+    // dJydy         nytrue x nJ x ny
+    // dydx          ny x nx
+    // dJydx         nt x nJ x nx
+    
+    realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
+    realtype *multResult = new realtype[udata->nJ * udata->nx]();
+    
+    for(int iyt=0; iyt < udata->nytrue; ++iyt) {
+        if (amiIsNaN(edata->my[udata->nt * iyt + it]))
+            continue;
+        
+        // copy current (iyt) dJydy slice
+        // dJydyTmp     nJ x ny
+        for(int iJ = 0; iJ < udata->nJ; ++iJ)
+            for(int iy = 0; iy < udata->ny; ++iy)
+                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    udata->nJ, udata->nx, udata->ny,
+                    1.0, dJydyTmp, udata->nJ,
+                    tdata->dydx, udata->ny,
+                    1.0, multResult, udata->nJ);
+    }
+    for(int iJ = 0; iJ < udata->nJ; ++iJ)
+        for(int ix = 0; ix < udata->nx; ++ix)
+            tdata->dJydx[it + (iJ + ix * udata->nJ) * udata->nt] = multResult[iJ + ix * udata->nJ];
+    
+    delete[] dJydyTmp;
+    delete[] multResult;
+    
+    return(status);
+}
+
+static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+    int status = AMICI_SUCCESS;
+    
+    // sJz           nJ x nplist
+    // dJzdp         nJ x nplist
+    // dJzdx         nmaxevent x nJ x nx
+    // sx            nt x nx x nplist
+    
+    // Compute dJzdx*sx for current 'ie'
+    // dJzdx        nt x nJ x nx
+    // sx           nt x nx x nplist
+    
+    realtype *multResult = new realtype[udata->nJ * udata->nplist]();
+    realtype *dJzdxTmp = new realtype[udata->nJ * udata->nx];
+    realtype *sxTmp = new realtype[udata->nplist * udata->nx];
+    realtype *sx_tmp;
+    for(int ip = 0; ip < udata->nplist; ++ip){
+        sx_tmp = NV_DATA_S(tdata->sx[ip]);
+        if(!sx_tmp) return AMICI_ERROR_FSA;
+        for(int ix = 0; ix < udata->nx; ++ix)
+            sxTmp[ix + ip * udata->nx] = sx_tmp[ix];
+    }
+    
+    for(int ix = 0; ix < udata->nx; ++ix)
+        for(int iJ = 0; iJ < udata->nJ; ++iJ)
+            dJzdxTmp[iJ + ix * udata->nJ] = tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
+    
+    // C := alpha*op(A)*op(B) + beta*C,
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                udata->nJ, udata->nplist, udata->nx,
+                1.0, dJzdxTmp, udata->nJ,
+                sxTmp, udata->nx,
+                1.0, multResult, udata->nJ);
+    
+    // sJy += multResult + dJydp
+    for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+        if (iJ == 0)
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                rdata->sllh[ip] -= multResult[ip * udata->nJ] + tdata->dJzdp[ip * udata->nJ];
+        else
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1)] -= multResult[iJ + ip*udata->nJ] + tdata->dJzdp[iJ + ip*udata->nJ];
+    }
+
+delete[] dJzdxTmp;
+delete[] multResult;
+delete[] sxTmp;
+
+return(status);
+}
+
+static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+    int status = AMICI_SUCCESS;
+    
+    // dJzdz         nztrue x nJ x nz
+    // dJzdsigma     nztrue x nJ x nz
+    // dzdp          nz x nplist
+    // dJzdp         nJ x nplist
+    
+    memset(tdata->dJzdp,0,udata->nJ * udata->nplist * sizeof(double));
+    
+    realtype *dJzdzTmp = new double[udata->nJ * udata->nz];
+    realtype *dJzdsigmaTmp = new double[udata->nJ * udata->nz];
+    realtype *dJrzdsigmaTmp = NULL;
+    if (tdata->t == udata->ts[udata->nt-1]) {
+        dJrzdsigmaTmp = new double[udata->nJ * udata->nz];
+    }
+    
+    for(int izt=0; izt < udata->nztrue; ++izt) {
+        if (amiIsNaN(edata->mz[tdata->nroots[ie] + izt * udata->nmaxevent]))
+            continue;
+        
+        // copy current (izt) dJzdz and dJzdsigma slices
+        // dJzdzTmp     nJ x nz
+        // dJzdsigmaTmp nJ x nz
+
+        
+        if (tdata->t < udata->ts[udata->nt-1]) {
+            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+                for(int iz = 0; iz < udata->nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+                }
+            }
+        } else {
+            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+                for(int iz = 0; iz < udata->nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJrzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+                    dJrzdsigmaTmp[iJ  + iz * udata->nJ] = tdata->dJrzdsigma[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+                }
+            }
+            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                        udata->nJ, udata->nplist, udata->nz,
+                        1.0, dJrzdsigmaTmp, udata->nJ,
+                        tdata->dsigmazdp, udata->nz,
+                        1.0, tdata->dJzdp, udata->nJ);
+        }
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    udata->nJ, udata->nplist, udata->nz,
+                    1.0, dJzdzTmp, udata->nJ,
+                    tdata->dzdp, udata->nz,
+                    1.0, tdata->dJzdp, udata->nJ);
+        
+        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+            for(int iz = 0; iz < udata->nz; ++iz) {
+                dJzdsigmaTmp[iJ  + iz * udata->nJ] = tdata->dJzdsigma[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+            }
+        }
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    udata->nJ, udata->nplist, udata->nz,
+                    1.0, dJzdsigmaTmp, udata->nJ,
+                    tdata->dsigmazdp, udata->nz,
+                    1.0, tdata->dJzdp, udata->nJ);
+        
+    }
+    delete[] dJzdzTmp;
+    delete[] dJzdsigmaTmp;
+    if(dJrzdsigmaTmp) delete[] dJrzdsigmaTmp;
+    
+    
+    return(status);
+}
+
+static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata) {
+    int status = AMICI_SUCCESS;
+    
+    // dJzdz         nztrue x nJ x nz
+    // dzdx          nz x nx
+    // dJzdx         nmaxevent x nJ x nx
+    
+    realtype *dJzdzTmp = new realtype[udata->nJ * udata->nz];
+    realtype *multResult = new realtype[udata->nJ * udata->nx]();
+    for(int izt=0; izt < udata->nztrue; ++izt) {
+        if (amiIsNaN(edata->mz[tdata->nroots[ie] + izt * udata->nmaxevent]))
+            continue;
+        
+        // copy current (izt) dJzdz slice
+        // dJzdzTmp     nJ x nz
+        if (tdata->t < udata->ts[udata->nt-1]) {
+            for(int iJ = 0; iJ < udata->nJ; ++iJ)
+                for(int iz = 0; iz < udata->nz; ++iz)
+                    dJzdzTmp[iJ + iz * udata->nJ] = tdata->dJzdz[izt + (iJ + iz * udata->nJ) * udata->nztrue];
+            
+            
+            
+            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                        udata->nJ, udata->nx, udata->nz,
+                        1.0, dJzdzTmp, udata->nJ,
+                        tdata->dzdx, udata->nz,
+                        1.0, multResult, udata->nJ);
+        } else {
+            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+                for(int iz = 0; iz < udata->nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJrzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+                }
+            }
+            
+            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                        udata->nJ, udata->nx, udata->nz,
+                        1.0, dJzdzTmp, udata->nJ,
+                        tdata->drzdx, udata->nz,
+                        1.0, multResult, udata->nJ);
+        }
+
+    }
+    for(int iJ = 0; iJ < udata->nJ; ++iJ)
+        for(int ix = 0; ix < udata->nx; ++ix)
+            tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ ) * udata->nmaxevent] = multResult[iJ + ix * udata->nJ];
+    
+    delete[] dJzdzTmp;
+    delete[] multResult;
+    
+    return(status);
+}
