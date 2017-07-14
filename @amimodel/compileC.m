@@ -80,9 +80,12 @@ function compileC(this)
         end
     end
     
-    if(this.cfun(1).(this.funs{j}))
+    
+    funsForRecompile = this.funs(structfun(@(x) logical(x), this.cfun(1)));
+    if(numel(funsForRecompile))
         fprintf(['ffuns | ']);
-        ffuns = cellfun(@(x) fullfile(modelSourceFolder,[this.modelname '_' x '.cpp']),this.funs,'UniformOutput',false);
+        
+        ffuns = cellfun(@(x) fullfile(modelSourceFolder,[this.modelname '_' x '.cpp']),funsForRecompile,'UniformOutput',false);
         eval(['mex ' DEBUG COPT ...
             ' -c -outdir ' modelSourceFolder ' ' ...
             strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
