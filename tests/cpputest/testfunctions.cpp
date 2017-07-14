@@ -1,5 +1,5 @@
 #include "testfunctions.h"
-#include "include/ami_hdf5.h"
+#include <include/amici_hdf5.h>
 #include "include/amici_interface_cpp.h"
 #include <cstring>
 #include <execinfo.h>

@@ -6,7 +6,7 @@
 
 #include "wrapfunctions.h" /* model specific functions */
 #include <include/amici_interface_cpp.h> /* AMICI API */
-#include <include/ami_hdf5.h>  /* AMICI HDF5 I/O functions */
+#include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
 
 /* This is a scaffold for a stand-alone AMICI simulation executable demonstrating
  * use of the AMICI C++ API.
