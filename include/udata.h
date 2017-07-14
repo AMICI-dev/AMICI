@@ -84,7 +84,7 @@ public:
     const int ubw;
     /** lower bandwith of the jacobian */
     const int lbw;
-    /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
     const AMICI_o2mode o2mode;
 
     /* Options */
@@ -214,13 +214,11 @@ public:
     booleantype nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype nan_qBdot;
-        
+
+    void print();
+
 protected:
     void init();
 };
-
-#ifdef AMICI_WITHOUT_MATLAB
-void printUserData(UserData *udata);
-#endif
 
 #endif /* _MY_UDATA */
