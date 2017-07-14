@@ -2,8 +2,8 @@ project(model_jakstat_adjoint_o2)
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
     
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
@@ -29,11 +29,13 @@ endif()
 
 include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${MODEL_DIR}")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${SUITESPARSE_DIR}/include")
 
+if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
+    include_directories(${BLAS_INCLUDE_DIRS})
+endif()
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_o2_J.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JB.cpp
@@ -83,15 +85,17 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_xBdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_xdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_y.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_z.cpp
+
 ${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
+${AMICI_DIR}/src/amici_misc.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
 ${AMICI_DIR}/src/tdata.cpp
 ${AMICI_DIR}/src/edata.cpp
-${AMICI_DIR}/src/ami_hdf5.cpp
+${AMICI_DIR}/src/amici_hdf5.cpp
 ${AMICI_DIR}/src/spline.cpp)
     
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
@@ -102,17 +106,19 @@ else()
     set(SHARED_OBJECT_EXTENSION .so)
 endif()
     
-target_link_libraries(${PROJECT_NAME} ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
-${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
-${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
-${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
-${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
-${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}
-${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
-${HDF5_HL_LIBRARIES}
-${HDF5_C_LIBRARIES}
--lpthread -ldl -lz -lcblas
--lm)
+target_link_libraries(${PROJECT_NAME}
+    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
+    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
+    ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
+    ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
+    ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
+    ${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}
+    ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
+    ${HDF5_HL_LIBRARIES}
+    ${HDF5_C_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    -lpthread -ldl -lz -lm
+)
 
 set(SRC_LIST_EXE main.cpp)
 

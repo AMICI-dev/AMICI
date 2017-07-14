@@ -2,6 +2,7 @@
 #define AMICI_INTERFACE_CPP_H
 
 #include "include/amici.h"
+#include "include/amici_misc.h"
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"
