@@ -103,7 +103,8 @@ function compileC(this)
         ' -c -outdir ' modelSourceFolder ' ' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
         includesstr]);
-    
+    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' o_suffix]) '"'];
+
     % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
     try
     movefile(fullfile(modelSourceFolder,'hashes_new.mat'),...
@@ -134,26 +135,21 @@ function compileC(this)
     if(this.nxtrue == this.nx)
         amiciSourceList = '';
         for ii = 1:numel(amiciSourceBaseNames)
-            amiciSourceList = [amiciSourceList, '"', fullfile(this.wrap_path, 'src', [amiciSourceBaseNames{ii}, '.cpp']), '" '];
+            amiciSourceList = [amiciSourceList, '"', fullfile(amiciSourcePath, [amiciSourceBaseNames{ii}, '.cpp']), '" '];
         end
         eval(['mex ' DEBUG COPT ...
             ' -c -outdir ' fullfile(this.wrap_path,'src') ' ' ...
             amiciSourceList ' ' includesstr]);
     end
     
-    amiciObjectList = '';
     for ii = 1:numel(amiciSourceBaseNames)
-        amiciObjectList = [amiciObjectList, ' "', fullfile(this.wrap_path, 'src', [amiciSourceBaseNames{ii}, o_suffix]), '" '];
+        objectsstr = [objectsstr, ' "', fullfile(amiciSourcePath, [amiciSourceBaseNames{ii}, o_suffix]), '" '];
     end
 
     % Link object files
+    mexFilename = fullfile(modelSourceFolder,['ami_' this.modelname]);
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
-        ' -output ' fullfile(modelSourceFolder,['ami_' this.modelname]) ...
-        amiciObjectList ...
-        ' "' fullfile(modelSourceFolder,['wrapfunctions' o_suffix]) '"' ...
-        objectsstr ...
-        includesstr ...
-        ])
+        ' -output ' mexFilename ' ' objectsstr])
 end    
 
 function [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver)
