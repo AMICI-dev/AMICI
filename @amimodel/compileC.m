@@ -10,6 +10,7 @@ function compileC(this)
         o_suffix = '.o';
     end
     
+    amiciSourcePath = fullfile(this.wrap_path,'src');
     modelSourceFolder = fullfile(this.wrap_path,'models',this.modelname);
 
     [objectsstr, includesstr] = compileAMICIDependencies(this.wrap_path, o_suffix);
@@ -36,28 +37,20 @@ function compileC(this)
     % file, check this hash against the contained hash
     cppsrc = {'symbolic_functions','spline','edata','rdata','udata','tdata', 'amici_interface_matlab', 'amici_misc'};
     for srcfile = cppsrc
-        if(this.recompile)
-            recompile = 1;
-        else
-            recompile = checkHash(fullfile(this.wrap_path,'src',srcfile{1}),o_suffix,DEBUG);
-        end
+        baseFilename = fullfile(amiciSourcePath,srcfile{1});
+        
+        recompile = this.recompile || checkHash(baseFilename,o_suffix,DEBUG);
+       
         if(recompile)
             fprintf([srcfile{1} ' | ']);
             eval(['mex ' DEBUG COPT ...
-                ' -c -outdir ' fullfile(this.wrap_path,'src') ...
+                ' -c -outdir ' amiciSourcePath ...
                 includesstr ' '...
-                fullfile(this.wrap_path,'src',[srcfile{1} '.cpp'])]);
-            hash = getFileHash(fullfile(this.wrap_path,'src',[srcfile{1} '.cpp']));
-            hash = [hash DEBUG];
-            fid = fopen(fullfile(this.wrap_path,'src',[srcfile{1} '_' mexext '.md5']),'w');
-            fprintf(fid,hash);
-            fclose(fid);
+                [baseFilename '.cpp']]);
+            updateFileHash(baseFilename, DEBUG);
         end
-        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'src',[srcfile{1} o_suffix]),'"');
-    end
-    
-    
-    
+        objectsstr = strcat(objectsstr,' "', [baseFilename o_suffix],'"');
+    end  
     
     % do the same for all the this.funs
     for j=1:length(this.funs)
@@ -94,7 +87,7 @@ function compileC(this)
             ' -c -outdir ' modelSourceFolder ' ' ...
             strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
             includesstr ...
-            ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"']);
+            ' "' fullfile(amiciSourcePath,['symbolic_functions' o_suffix]) '"']);
         hash = getFileHash(fullfile(modelSourceFolder,[this.modelname '_' this.funs{j} '.cpp']));
         hash = [hash DEBUG];
         fid = fopen(...
@@ -436,7 +429,14 @@ function hash = getFileHash(file)
     %  hash: md5 hash of the provided file @type string
     hash = CalcMD5(file,'File','hex');
 end    
-    
+
+function updateFileHash(baseFilename, DEBUG)
+    hash = getFileHash([baseFilename '.cpp']);
+    hash = [hash DEBUG];
+    fid = fopen([baseFilename '_' mexext '.md5'],'w');
+    fprintf(fid,hash);
+    fclose(fid);
+end
     
 function recompile = checkHash(filestr,o_suffix,DEBUG)
     % checkHash checks whether filestr.cpp  has already been compiled as
