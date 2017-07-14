@@ -16,6 +16,7 @@
 #include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
+#include <include/amici_misc.h>
 
 static int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
 static int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
