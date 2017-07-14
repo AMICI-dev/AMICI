@@ -85,7 +85,8 @@ ${MODEL_DIR}/model_neuron_xBdot.cpp
 ${MODEL_DIR}/model_neuron_xdot.cpp
 ${MODEL_DIR}/model_neuron_y.cpp
 ${MODEL_DIR}/model_neuron_z.cpp
- ${MODEL_DIR}/wrapfunctions.cpp
+
+${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp

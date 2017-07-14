@@ -85,7 +85,8 @@ ${MODEL_DIR}/model_steadystate_xBdot.cpp
 ${MODEL_DIR}/model_steadystate_xdot.cpp
 ${MODEL_DIR}/model_steadystate_y.cpp
 ${MODEL_DIR}/model_steadystate_z.cpp
- ${MODEL_DIR}/wrapfunctions.cpp
+
+${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
