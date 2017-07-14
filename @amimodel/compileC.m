@@ -21,23 +21,7 @@ function compileC(this)
     [del_sundials, del_ssparse, del_lapack] = checkVersions(this, sundials_ver, ssparse_ver, lapack_ver);
     
     sources_sundials = getSourcesSundials();
-    sourcesstr_sundials = '';
-    for j=1:length(sources_sundials)
-        sourcesstr_sundials = strcat(sourcesstr_sundials,' "',fullfile(sundials_path,sources_sundials{j}),'"');
-    end
-    
     sources_ssparse = getSourcesSSparse();
-    sourcesstr_ssparse = '';
-    for j=1:length(sources_ssparse)
-        sourcesstr_ssparse = strcat(sourcesstr_ssparse,' "', fullfile(ssparse_path,sources_ssparse{j}),'"');
-    end
-    
-    sourcesstr_funs = '';
-    for j=1:length(this.funs)
-        sourcesstr_funs = strcat(sourcesstr_funs,...
-            ' "', fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.c']),'"');
-    end
-    
     objects_sundials = getObjectsSundials();
     if(ispc)
         objects_sundials = strrep(objects_sundials, '.o', '.obj');
@@ -47,7 +31,6 @@ function compileC(this)
     if(ispc)
         objects_ssparse = strrep(objects_ssparse, '.o', '.obj');
     end
-    
     
     % assemble objectsstr
     objectsstr = '';
