@@ -490,9 +490,6 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
-fprintf(fid,'#ifndef AMICI_WITHOUT_MATLAB\n');
-fprintf(fid,'#include <mex.h>\n');
-fprintf(fid,'#endif\n');
 fprintf(fid,'\n');
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/cvodewrap.h>\n');

@@ -1,9 +1,6 @@
 #ifndef _amici_wrapfunctions_h
 #define _amici_wrapfunctions_h
 #include <math.h>
-#ifndef AMICI_WITHOUT_MATLAB
-#include <mex.h>
-#endif
 
 #include <include/cvodewrap.h>
 
