@@ -54,13 +54,13 @@ function compileC(this)
     
     % do the same for all the this.funs
     for j=1:length(this.funs)
-        if(this.recompile)
-            recompile = 1;
-        else
-            recompile = checkHash(fullfile(modelSourceFolder,[this.modelname '_' this.funs{j}]),o_suffix,DEBUG);
-        end
+        baseFilename = fullfile(modelSourceFolder,[this.modelname '_' this.funs{j}]);
+
+        recompile = this.recompile || checkHash(baseFilename,o_suffix,DEBUG);
+
         this.cfun(1).(this.funs{j}) = recompile;
     end
+    
     % flag dependencies for recompilation
     if(this.cfun(1).J)
         this.cfun(1).JBand = 1;
@@ -88,13 +88,8 @@ function compileC(this)
             strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
             includesstr ...
             ' "' fullfile(amiciSourcePath,['symbolic_functions' o_suffix]) '"']);
-        hash = getFileHash(fullfile(modelSourceFolder,[this.modelname '_' this.funs{j} '.cpp']));
-        hash = [hash DEBUG];
-        fid = fopen(...
-            fullfile(modelSourceFolder,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
-            ),'w');
-        fprintf(fid,hash);
-        fclose(fid);
+        
+        updateFileHash(baseFilename, DEBUG);
     end
     
     % compile the wrapfunctions object
