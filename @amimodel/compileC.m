@@ -4,96 +4,22 @@ function compileC(this)
     % Return values:
     %  this: model definition object @type amimodel
     
-    sundials_path = fullfile(this.wrap_path,'sundials');
-    sundials_ver = '2.7.0';
-    
-    ssparse_path = fullfile(this.wrap_path,'SuiteSparse');
-    ssparse_ver = '4.5.3';
-    
-    lapack_path = fullfile(this.wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
-    lapack_ver = '3.5.0';
-    
-    % compile directory
-    if(~exist(fullfile(this.wrap_path,'models',mexext), 'dir'))
-        mkdir(fullfile(this.wrap_path,'models',mexext))
-    end
-    
-    [del_sundials, del_ssparse, del_lapack] = checkVersions(this, sundials_ver, ssparse_ver, lapack_ver);
-    
-    sources_sundials = getSourcesSundials();
-    sources_ssparse = getSourcesSSparse();
-    objects_sundials = getObjectsSundials();
-    if(ispc)
-        objects_sundials = strrep(objects_sundials, '.o', '.obj');
-    end
-    
-    objects_ssparse = getObjectsSSparse();
-    if(ispc)
-        objects_ssparse = strrep(objects_ssparse, '.o', '.obj');
-    end
-    
-    % assemble objectsstr
-    objectsstr = '';
-    for j=1:length(objects_sundials)
-        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,objects_sundials{j}),'"');
-    end
-    
-    for j=1:length(objects_ssparse)
-        objectsstr = strcat(objectsstr,' "',fullfile(this.wrap_path,'models',mexext,objects_ssparse{j}),'"');
-    end
-    
     if(ispc)
         o_suffix = '.obj';
     else
         o_suffix = '.o';
     end
     
+    [objectsstr, includesstr] = compileAMICIDependencies(this.wrap_path, o_suffix);
+    
+    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'models', this.modelname ), '"');
+
+    % append model object files
     for j=1:length(this.funs)
         objectsstr = strcat(objectsstr,...
             ' "',fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
     end
-    
-    includesstr = '';
-    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'models', this.modelname ), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'src'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'KLU','Include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'AMD','Include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'COLAMD','Include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'BTF','Include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'SuiteSparse_config'), '"');
-    
-    % compile all the sundials objects if we haven't done so yet
-    for j=1:length(sources_sundials)
-        if(~exist(fullfile(this.wrap_path,'models',mexext,objects_sundials{j}), 'file') || del_sundials)
-            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir '...
-                fullfile(this.wrap_path,'models',mexext) ...
-                includesstr ' ' ...
-                fullfile(sundials_path,sources_sundials{j})]);
-        end
-    end
-    
-    % compile all the sundials objects if we haven't done so yet
-    for j=1:length(sources_ssparse)
-        if(~exist(fullfile(this.wrap_path,'models',mexext,objects_ssparse{j}), 'file') || del_ssparse)
-            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' ...
-                fullfile(this.wrap_path,'models',mexext) ...
-                includesstr ' ' ...
-                fullfile(ssparse_path,sources_ssparse{j})]);
-        end
-    end
-    
-    % only write versions.txt if we are done compiling 
-    fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
-    fprintf(fid,[sundials_ver '\r']);
-    fprintf(fid,[ssparse_ver '\r']);
-    fprintf(fid,[lapack_ver '\r']);
-    fclose(fid);
-      
-    
+
     % generate compile flags for the rest
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
     if(this.debug)
@@ -233,20 +159,20 @@ function compileC(this)
         ])
 end    
 
-function [del_sundials, del_ssparse, del_lapack] = checkVersions(this, sundials_ver, ssparse_ver, lapack_ver)
+function [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver)
     % read version number from versions.txt and decide whether object have to
     % be regenerated
-    if(~exist(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'file'))
+    if(~exist(version_file,'file'))
         del_sundials = true;
         del_ssparse = true;
         del_lapack = true;
-        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'w');
+        fid = fopen(version_file,'w');
         fprintf(fid,[sundials_ver '\r']);
         fprintf(fid,[ssparse_ver '\r']);
         fprintf(fid,[lapack_ver '\r']);
         fclose(fid);
     else
-        fid = fopen(fullfile(this.wrap_path,'models',mexext,'versions.txt'),'r');
+        fid = fopen(version_file,'r');
         sundials_objver = fgetl(fid);
         ssparse_objver = fgetl(fid);
         lapack_objver = fgetl(fid);
@@ -354,7 +280,7 @@ function sources_ssparse = getSourcesSSparse()
         };
 end
 
-function objects_ssparse = getObjectsSSparse()
+function objects_ssparse = getObjectsSSparse(o_suffix)
     
     objects_ssparse = {
         'klu_analyze_given.o';
@@ -393,9 +319,13 @@ function objects_ssparse = getObjectsSSparse()
         'btf_strongcomp.o';
         'SuiteSparse_config.o';
         };
+    
+    if(~strcmp(o_suffix, '.o'))
+        strrep(objects_ssparse, '.o', o_suffix);
+    end
 end
 
-function objects_sundials = getObjectsSundials()
+function objects_sundials = getObjectsSundials(o_suffix)
     objects_sundials = {
         %    'cvodes_lapack.o';
         'cvodes_band.o';
@@ -441,6 +371,10 @@ function objects_sundials = getObjectsSundials()
         'sundials_math.o';
         'nvector_serial.o';
         };
+    
+    if(~strcmp(o_suffix, '.o'))
+        strrep(objects_sundials, '.o', o_suffix);
+    end
 end
 
 function result = isnewer(ver1str,ver2str)
@@ -534,4 +468,78 @@ function recompile = checkHash(filestr,o_suffix,DEBUG)
             end
         end
     end
+end
+
+
+function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, o_suffix)
+
+    sundials_path = fullfile(wrap_path,'sundials');
+    sundials_ver = '2.7.0';
+    
+    ssparse_path = fullfile(wrap_path,'SuiteSparse');
+    ssparse_ver = '4.5.3';
+    
+    lapack_path = fullfile(wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
+    lapack_ver = '3.5.0';
+    
+    % compile directory
+    if(~exist(fullfile(wrap_path,'models',mexext), 'dir'))
+        mkdir(fullfile(wrap_path,'models',mexext))
+    end
+    
+    version_file = fullfile(wrap_path,'models',mexext,'versions.txt');
+    [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver);
+    
+    % assemble objectsstr
+    objectsstr = '';
+    objects_sundials = getObjectsSundials(o_suffix);
+    for j=1:length(objects_sundials)
+        objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',mexext,objects_sundials{j}),'"');
+    end
+    
+    objects_ssparse = getObjectsSSparse(o_suffix);
+    for j=1:length(objects_ssparse)
+        objectsstr = strcat(objectsstr,' "',fullfile(wrap_path,'models',mexext,objects_ssparse{j}),'"');
+    end
+        
+    includesstr = '';
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'src'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'KLU','Include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'AMD','Include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'COLAMD','Include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'BTF','Include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'SuiteSparse_config'), '"');
+    
+    % compile all the sundials objects if we haven't done so yet
+    sources_sundials = getSourcesSundials();
+    for j=1:length(sources_sundials)
+        if(~exist(fullfile(wrap_path,'models',mexext,objects_sundials{j}), 'file') || del_sundials)
+            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir '...
+                fullfile(wrap_path,'models',mexext) ...
+                includesstr ' ' ...
+                fullfile(sundials_path,sources_sundials{j})]);
+        end
+    end
+    
+    % compile all the suitesparse objects if we haven't done so yet
+    sources_ssparse = getSourcesSSparse();
+    for j=1:length(sources_ssparse)
+        if(~exist(fullfile(wrap_path,'models',mexext,objects_ssparse{j}), 'file') || del_ssparse)
+            eval(['mex COPTIMFLAGS=''-O3 -DNDEBUG'' -c -outdir ' ...
+                fullfile(wrap_path,'models',mexext) ...
+                includesstr ' ' ...
+                fullfile(ssparse_path,sources_ssparse{j})]);
+        end
+    end
+    
+    % only write versions.txt if we are done compiling 
+    fid = fopen(fullfile(wrap_path,'models',mexext,'versions.txt'),'w');
+    fprintf(fid,[sundials_ver '\r']);
+    fprintf(fid,[ssparse_ver '\r']);
+    fprintf(fid,[lapack_ver '\r']);
+    fclose(fid);
 end
