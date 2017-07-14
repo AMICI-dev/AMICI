@@ -159,7 +159,6 @@ void UserData::init()
     stau = NULL;
 }
 
-#ifdef AMICI_WITHOUT_MATLAB
 void printUserData(UserData *udata) {
     printf("qpositivex: %p\n", udata->qpositivex);
     printf("plist: %p\n", udata->plist);
@@ -204,4 +203,3 @@ void printUserData(UserData *udata) {
     printf("z2event: %p\n", udata->z2event);
     printf("h: %p\n", udata->h);
 }
-#endif
