@@ -10,14 +10,16 @@ function compileC(this)
         o_suffix = '.o';
     end
     
+    modelSourceFolder = fullfile(this.wrap_path,'models',this.modelname);
+
     [objectsstr, includesstr] = compileAMICIDependencies(this.wrap_path, o_suffix);
-    
-    includesstr = strcat(includesstr,' -I"', fullfile(this.wrap_path, 'models', this.modelname ), '"');
+        
+    includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
 
     % append model object files
     for j=1:length(this.funs)
         objectsstr = strcat(objectsstr,...
-            ' "',fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} o_suffix]),'"');
+            ' "',fullfile(modelSourceFolder, [this.modelname '_' this.funs{j} o_suffix]),'"');
     end
 
     % generate compile flags for the rest
@@ -62,7 +64,7 @@ function compileC(this)
         if(this.recompile)
             recompile = 1;
         else
-            recompile = checkHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j}]),o_suffix,DEBUG);
+            recompile = checkHash(fullfile(modelSourceFolder,[this.modelname '_' this.funs{j}]),o_suffix,DEBUG);
         end
         this.cfun(1).(this.funs{j}) = recompile;
     end
@@ -87,16 +89,16 @@ function compileC(this)
     
     if(this.cfun(1).(this.funs{j}))
         fprintf(['ffuns | ']);
-        ffuns = cellfun(@(x) fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' x '.cpp']),this.funs,'UniformOutput',false);
+        ffuns = cellfun(@(x) fullfile(modelSourceFolder,[this.modelname '_' x '.cpp']),this.funs,'UniformOutput',false);
         eval(['mex ' DEBUG COPT ...
-            ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
+            ' -c -outdir ' modelSourceFolder ' ' ...
             strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
             includesstr ...
             ' "' fullfile(this.wrap_path,'src',['symbolic_functions' o_suffix]) '"']);
-        hash = getFileHash(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '.cpp']));
+        hash = getFileHash(fullfile(modelSourceFolder,[this.modelname '_' this.funs{j} '.cpp']));
         hash = [hash DEBUG];
         fid = fopen(...
-            fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
+            fullfile(modelSourceFolder,[this.modelname '_' this.funs{j} '_' mexext '.md5']...
             ),'w');
         fprintf(fid,hash);
         fclose(fid);
@@ -106,14 +108,14 @@ function compileC(this)
     
     fprintf('wrapfunctions | '); 
     eval(['mex ' DEBUG COPT ...
-        ' -c -outdir ' fullfile(this.wrap_path,'models',this.modelname) ' ' ...
-        fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp') ' ' ...
+        ' -c -outdir ' modelSourceFolder ' ' ...
+        fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
         includesstr]);
     
     % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
     try
-    movefile(fullfile(this.wrap_path,'models',this.modelname,'hashes_new.mat'),...
-        fullfile(this.wrap_path,'models',this.modelname,'hashes.mat'),'f');
+    movefile(fullfile(modelSourceFolder,'hashes_new.mat'),...
+        fullfile(modelSourceFolder,'hashes.mat'),'f');
     end
     
 
@@ -151,9 +153,9 @@ function compileC(this)
     end
 
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
-        ' -output ' fullfile(this.wrap_path,'models',this.modelname,['ami_' this.modelname]) ...
+        ' -output ' fullfile(modelSourceFolder,['ami_' this.modelname]) ...
         amiciObjectList ...
-        ' "' fullfile(this.wrap_path,'models',this.modelname,['wrapfunctions' o_suffix]) '"' ...
+        ' "' fullfile(modelSourceFolder,['wrapfunctions' o_suffix]) '"' ...
         objectsstr ...
         includesstr ...
         ])
