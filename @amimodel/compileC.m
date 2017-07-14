@@ -34,7 +34,7 @@ function compileC(this)
     
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
-    cppsrc = {'symbolic_functions','spline','edata','rdata','udata','tdata'};
+    cppsrc = {'symbolic_functions','spline','edata','rdata','udata','tdata', 'amici_interface_matlab', 'amici_misc'};
     for srcfile = cppsrc
         if(this.recompile)
             recompile = 1;
@@ -135,7 +135,9 @@ function compileC(this)
         end
     end
     
-    amiciSourceBaseNames = {'amici'; 'amici_interface_matlab'; 'amici_misc'};
+    % AMICI files which need to be recompiled, because of model-dependent
+    % includes
+    amiciSourceBaseNames = {'amici'};
 
     if(this.nxtrue == this.nx)
         amiciSourceList = '';
@@ -152,6 +154,7 @@ function compileC(this)
         amiciObjectList = [amiciObjectList, ' "', fullfile(this.wrap_path, 'src', [amiciSourceBaseNames{ii}, o_suffix]), '" '];
     end
 
+    % Link object files
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
         ' -output ' fullfile(modelSourceFolder,['ami_' this.modelname]) ...
         amiciObjectList ...
