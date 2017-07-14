@@ -83,16 +83,17 @@ function compileC(this)
     
     funsForRecompile = this.funs(structfun(@(x) logical(x), this.cfun(1)));
     if(numel(funsForRecompile))
-        fprintf(['ffuns | ']);
+        fprintf('ffuns | ');
+
+        sources = cellfun(@(x) fullfile(modelSourceFolder,[this.modelname '_' x '.cpp']),funsForRecompile,'UniformOutput',false);
+        sources = strjoin(sources,' ');
         
-        ffuns = cellfun(@(x) fullfile(modelSourceFolder,[this.modelname '_' x '.cpp']),funsForRecompile,'UniformOutput',false);
         eval(['mex ' DEBUG COPT ...
             ' -c -outdir ' modelSourceFolder ' ' ...
-            strrep(strcat(ffuns{:}),'.cpp','.cpp ') ' ' ...
-            includesstr ...
-            ' "' fullfile(amiciSourcePath,['symbolic_functions' o_suffix]) '"']);
+            sources ' ' ...
+            includesstr ]);
         
-        updateFileHash(baseFilename, DEBUG);
+        cellfun(@(x) updateFileHash(fullfile(modelSourceFolder,[this.modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
     end
     
     % compile the wrapfunctions object
