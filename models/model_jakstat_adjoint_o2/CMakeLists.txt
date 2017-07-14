@@ -91,6 +91,7 @@ ${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
+${AMICI_DIR}/src/amici_misc.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
 ${AMICI_DIR}/src/tdata.cpp
@@ -116,7 +117,8 @@ ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
 ${HDF5_HL_LIBRARIES}
 ${HDF5_C_LIBRARIES}
 ${BLAS_LIBRARIES}
--lpthread -ldl -lz -lm)
+-lpthread -ldl -lz
+-lm)
 
 set(SRC_LIST_EXE main.cpp)
 

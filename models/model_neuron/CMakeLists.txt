@@ -2,8 +2,8 @@ project(model_neuron)
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable")
 add_definitions(-DAMICI_WITHOUT_MATLAB)
     
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
@@ -34,6 +34,10 @@ include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${SUITESPARSE_DIR}/include")
 
+
+if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
+    include_dictories(${BLAS_INCLUDE_DIRS})
+endif()
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_J.cpp
 ${MODEL_DIR}/model_neuron_JB.cpp
@@ -87,6 +91,7 @@ ${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
 ${AMICI_DIR}/src/amici.cpp
+${AMICI_DIR}/src/amici_misc.cpp
 ${AMICI_DIR}/src/udata.cpp
 ${AMICI_DIR}/src/rdata.cpp
 ${AMICI_DIR}/src/tdata.cpp
@@ -111,7 +116,8 @@ ${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}
 ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
 ${HDF5_HL_LIBRARIES}
 ${HDF5_C_LIBRARIES}
--lpthread -ldl -lz -lcblas
+${BLAS_LIBRARIES}
+-lpthread -ldl -lz
 -lm)
 
 set(SRC_LIST_EXE main.cpp)
