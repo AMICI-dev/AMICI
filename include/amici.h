@@ -94,7 +94,6 @@ int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, Tem
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
-int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,
