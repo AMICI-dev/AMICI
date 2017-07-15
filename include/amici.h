@@ -6,6 +6,7 @@
 #include <include/edata.h>
 #include <include/tdata.h>
 #include <cstdbool>
+#include <cvodes/cvodes.h>
 
 /* linear solvers */
 #define AMICI_DENSE       1
@@ -94,7 +95,6 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata);
-int unscaleParameters(UserData *udata);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,

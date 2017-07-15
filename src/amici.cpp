@@ -40,7 +40,7 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     
     TempData *tdata = new TempData(udata);
     
-    status = unscaleParameters(udata);
+    status = udata->unscaleParameters();
     if (status == AMICI_SUCCESS) udata->initTemporaryFields();
     
     /* pointer to cvodes memory block */
@@ -1719,23 +1719,6 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     return AMICI_SUCCESS;
 }
 
-int unscaleParameters(UserData *udata) {
-    switch(udata->pscale) {
-        case AMICI_SCALING_LOG10:
-            for(int ip = 0; ip < udata->np; ++ip) {
-                udata->p[ip] = pow(10, udata->p[ip]);
-            }
-            break;
-        case AMICI_SCALING_LN:
-            for(int ip = 0; ip < udata->np; ++ip)
-                udata->p[ip] = exp(udata->p[ip]);
-            break;
-        case AMICI_SCALING_NONE:
-            //this should never be reached
-            break;
-    }
-    return AMICI_SUCCESS;
-}
 
 int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata)
 {

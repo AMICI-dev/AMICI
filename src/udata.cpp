@@ -91,6 +91,25 @@ void UserData::freeTemporaryFields()
     stau = NULL;
 }
 
+int UserData::unscaleParameters()
+{
+    switch(pscale) {
+        case AMICI_SCALING_LOG10:
+            for(int ip = 0; ip < np; ++ip) {
+                p[ip] = pow(10, p[ip]);
+            }
+            break;
+        case AMICI_SCALING_LN:
+            for(int ip = 0; ip < np; ++ip)
+                p[ip] = exp(p[ip]);
+            break;
+        case AMICI_SCALING_NONE:
+            //this should never be reached
+            break;
+    }
+    return AMICI_SUCCESS;
+}
+
 UserData::~UserData()
 {
     freeTemporaryFields();
