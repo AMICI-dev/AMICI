@@ -21,6 +21,9 @@ public:
      */
     void invalidate(const UserData *udata);
 
+    void setLikelihoodSensitivityFirstOrderNaN(const UserData *udata);
+    void setLikelihoodSensitivitySecondOrderNaN(const UserData *udata);
+
     virtual ~ReturnData();
 
     /** timepoints */

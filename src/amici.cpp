@@ -1614,28 +1614,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
                         }
                         
                     } else {
-                        int iJ;
-                        for(iJ=0; iJ<udata->nJ; iJ++) {
-                            for(ip=0; ip < udata->nplist; ip++) {
-                                if (iJ==0) {
-                                    rdata->sllh[ip] = amiGetNaN();
-                                } else {
-                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
-                                }
-                            }
-                        }
+                        setLikelihoodSensitivityFirstOrderNaN(udata);
+                        setLikelihoodSensitivitySecondOrderNaN(udata);
                     }
                 } else {
-                    int iJ;
-                    for(iJ=0; iJ<udata->nJ; iJ++) {
-                        for(ip=0; ip < udata->nplist; ip++) {
-                            if (iJ==0) {
-                                rdata->sllh[ip] = amiGetNaN();
-                            } else {
-                                rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] = amiGetNaN();
-                            }
-                        }
-                    }
+                    setLikelihoodSensitivityFirstOrderNaN(udata);
+                    setLikelihoodSensitivitySecondOrderNaN(udata);
                 }
             }
         }

@@ -31,11 +31,21 @@ void ReturnData::invalidate(const UserData *udata)
         *llh = amiGetNaN();
 
     if (sllh)
-        fillArray(sllh, udata->nplist, amiGetNaN());
+        setLikelihoodSensitivityFirstOrderNaN(udata);
 
     if (s2llh)
-        fillArray(s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
+        setLikelihoodSensitivitySecondOrderNaN(udata);
 
+}
+
+void ReturnData::setLikelihoodSensitivityFirstOrderNaN(const UserData *udata)
+{
+    fillArray(sllh, udata->nplist, amiGetNaN());
+}
+
+void ReturnData::setLikelihoodSensitivitySecondOrderNaN(const UserData *udata)
+{
+    fillArray(s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
 }
 
 ReturnData::~ReturnData()
