@@ -1,7 +1,7 @@
 #include "include/edata.h"
 
 #include <include/udata.h>
-#include <include/amici.h>
+#include "include/amici_defines.h"
 
 ExpData::ExpData() {
     setDefaults();

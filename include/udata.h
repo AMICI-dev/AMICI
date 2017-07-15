@@ -1,6 +1,6 @@
 #ifndef _MY_UDATA
 #define _MY_UDATA
-#include "include/amici.h"
+#include "include/amici_defines.h"
 
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
