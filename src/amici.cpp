@@ -1491,140 +1491,141 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
     int status = AMICI_SUCCESS;
     double tnext;
     
-    if (udata->nx>0) {
-        if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            if (udata->sensi_meth == AMICI_SENSI_ASA) {
-                if (status == AMICI_SUCCESS) {
-                    setupAMIB(ami_mem, udata, tdata);
-                    
-                    it = udata->nt-2;
-                    (*iroot)--;
-                    while (it>=0 || *iroot>=0) {
-                        
-                        /* check if next timepoint is a discontinuity or a data-point */
-                        tnext = getTnext(tdata->discs, *iroot, udata->ts, it, udata);
-                        
-                        if (tnext<tdata->t) {
-                            status = AMISolveB(ami_mem, tnext, AMICI_NORMAL);
-                            if (status != AMICI_SUCCESS) return status;
-                            
-                            
-                            status = AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
-                            if (status != AMICI_SUCCESS) return status;
-                            status = AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
-                            if (status != AMICI_SUCCESS) return status;
-                        }
-                        
-                        /* handle discontinuity */
-                        
-                        if (udata->ne>0){
-                            if (udata->nmaxevent>0){
-                                if ((*iroot)>=0){
-                                    if (tnext == tdata->discs[*iroot]) {
-                                        handleEventB(*iroot, udata, tdata);
-                                        (*iroot)--;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        /* handle data-point */
-                        
-                        if (tnext == udata->ts[it]) {
-                            handleDataPointB(it, ami_mem, udata, rdata, tdata);
-                            it--;
-                        }
-                        
-                        /* reinit states */
-                        status = AMIReInitB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
-                        if (status != AMICI_SUCCESS) return status;
-                        
-                        status = AMIQuadReInitB(ami_mem, tdata->which, tdata->xQB);
-                        if (status != AMICI_SUCCESS) return status;
-                        
-                        status = AMICalcICB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
-                        if (status != AMICI_SUCCESS) return status;
-                    }
-                    
-                    /* we still need to integrate from first datapoint to tstart */
-                    if (tdata->t>udata->tstart) {
-                        if (status == AMICI_SUCCESS) {
-                            if (udata->nx>0) {
-                                /* solve for backward problems */
-                                status = AMISolveB(ami_mem, udata->tstart, AMICI_NORMAL);
-                                if (status != AMICI_SUCCESS) return status;
-                                
-                                status = AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
-                                if (status != AMICI_SUCCESS) return status;
-                                status = AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
-                                if (status != AMICI_SUCCESS) return status;
-                            }
+    if (udata->nx <= 0
+            || udata->sensi < AMICI_SENSI_ORDER_FIRST
+            || udata->sensi_meth != AMICI_SENSI_ASA) {
+        goto llh;
+    }
+    if (status == AMICI_SUCCESS) {
+        setupAMIB(ami_mem, udata, tdata);
+
+        it = udata->nt-2;
+        (*iroot)--;
+        while (it>=0 || *iroot>=0) {
+
+            /* check if next timepoint is a discontinuity or a data-point */
+            tnext = getTnext(tdata->discs, *iroot, udata->ts, it, udata);
+
+            if (tnext<tdata->t) {
+                status = AMISolveB(ami_mem, tnext, AMICI_NORMAL);
+                if (status != AMICI_SUCCESS) return status;
+
+
+                status = AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
+                if (status != AMICI_SUCCESS) return status;
+                status = AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
+                if (status != AMICI_SUCCESS) return status;
+            }
+
+            /* handle discontinuity */
+
+            if (udata->ne>0){
+                if (udata->nmaxevent>0){
+                    if ((*iroot)>=0){
+                        if (tnext == tdata->discs[*iroot]) {
+                            handleEventB(*iroot, udata, tdata);
+                            (*iroot)--;
                         }
                     }
-                    
-                    status = fx0(tdata->x,udata);
+                }
+            }
+
+            /* handle data-point */
+
+            if (tnext == udata->ts[it]) {
+                handleDataPointB(it, ami_mem, udata, rdata, tdata);
+                it--;
+            }
+
+            /* reinit states */
+            status = AMIReInitB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
+            if (status != AMICI_SUCCESS) return status;
+
+            status = AMIQuadReInitB(ami_mem, tdata->which, tdata->xQB);
+            if (status != AMICI_SUCCESS) return status;
+
+            status = AMICalcICB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
+            if (status != AMICI_SUCCESS) return status;
+        }
+
+        /* we still need to integrate from first datapoint to tstart */
+        if (tdata->t>udata->tstart) {
+            if (status == AMICI_SUCCESS) {
+                if (udata->nx>0) {
+                    /* solve for backward problems */
+                    status = AMISolveB(ami_mem, udata->tstart, AMICI_NORMAL);
                     if (status != AMICI_SUCCESS) return status;
-                    status = fdx0(tdata->x,tdata->dx,udata);
+
+                    status = AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
                     if (status != AMICI_SUCCESS) return status;
-                    status = fsx0(tdata->sx, tdata->x, tdata->dx, udata);
+                    status = AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
                     if (status != AMICI_SUCCESS) return status;
-                    
-                    if (status == AMICI_SUCCESS) {
-                        
-                        realtype *xB_tmp = NV_DATA_S(tdata->xB);
-                        if(!xB_tmp) return AMICI_ERROR_ASA;
-                        realtype *sx_tmp;
-                        
-                        int iJ;
-                        for (iJ=0; iJ<udata->nJ; iJ++) {
-                            if (iJ==0) {
-                                for (ip=0; ip<udata->nplist; ++ip) {
-                                    tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
-                                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                                    if(!sx_tmp) return AMICI_ERROR_ASA;
-                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
-                                        tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
-                                    }
-                                }
-                            } else {
-                                for (ip=0; ip<udata->nplist; ++ip) {
-                                    tdata->llhS0[ip + iJ * udata->nplist] = 0.0;
-                                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                                    if(!sx_tmp) return AMICI_ERROR_ASA;
-                                    for (ix = 0; ix < udata->nxtrue; ++ix) {
-                                        tdata->llhS0[ip + iJ * udata->nplist] = tdata->llhS0[ip + iJ * udata->nplist]
-                                        + xB_tmp[ix + iJ * udata->nxtrue] * sx_tmp[ix]
-                                        + xB_tmp[ix] * sx_tmp[ix + iJ * udata->nxtrue];
-                                    }
-                                }
-                            }
-                        }
-                        
-                        realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
-                        if(!xQB_tmp) return AMICI_ERROR_ASA;
-                        
-                        for(iJ=0; iJ<udata->nJ; iJ++) {
-                            for(ip=0; ip < udata->nplist; ip++) {
-                                if (iJ==0) {
-                                    rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
-                                } else {
-                                    rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
-                                }
-                            }
-                        }
-                        
-                    } else {
-                        setLikelihoodSensitivityFirstOrderNaN(udata);
-                        setLikelihoodSensitivitySecondOrderNaN(udata);
-                    }
-                } else {
-                    setLikelihoodSensitivityFirstOrderNaN(udata);
-                    setLikelihoodSensitivitySecondOrderNaN(udata);
                 }
             }
         }
+
+        status = fx0(tdata->x,udata);
+        if (status != AMICI_SUCCESS) return status;
+        status = fdx0(tdata->x,tdata->dx,udata);
+        if (status != AMICI_SUCCESS) return status;
+        status = fsx0(tdata->sx, tdata->x, tdata->dx, udata);
+        if (status != AMICI_SUCCESS) return status;
+
+        if (status == AMICI_SUCCESS) {
+
+            realtype *xB_tmp = NV_DATA_S(tdata->xB);
+            if(!xB_tmp) return AMICI_ERROR_ASA;
+            realtype *sx_tmp;
+
+            int iJ;
+            for (iJ=0; iJ<udata->nJ; iJ++) {
+                if (iJ==0) {
+                    for (ip=0; ip<udata->nplist; ++ip) {
+                        tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
+                        sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                        if(!sx_tmp) return AMICI_ERROR_ASA;
+                        for (ix = 0; ix < udata->nxtrue; ++ix) {
+                            tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                        }
+                    }
+                } else {
+                    for (ip=0; ip<udata->nplist; ++ip) {
+                        tdata->llhS0[ip + iJ * udata->nplist] = 0.0;
+                        sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                        if(!sx_tmp) return AMICI_ERROR_ASA;
+                        for (ix = 0; ix < udata->nxtrue; ++ix) {
+                            tdata->llhS0[ip + iJ * udata->nplist] = tdata->llhS0[ip + iJ * udata->nplist]
+                                    + xB_tmp[ix + iJ * udata->nxtrue] * sx_tmp[ix]
+                                    + xB_tmp[ix] * sx_tmp[ix + iJ * udata->nxtrue];
+                        }
+                    }
+                }
+            }
+
+            realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
+            if(!xQB_tmp) return AMICI_ERROR_ASA;
+
+            for(iJ=0; iJ<udata->nJ; iJ++) {
+                for(ip=0; ip < udata->nplist; ip++) {
+                    if (iJ==0) {
+                        rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
+                    } else {
+                        rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
+                    }
+                }
+            }
+
+        } else {
+            rdata->setLikelihoodSensitivityFirstOrderNaN(udata);
+            rdata->setLikelihoodSensitivitySecondOrderNaN(udata);
+        }
+    } else {
+        rdata->setLikelihoodSensitivityFirstOrderNaN(udata);
+        rdata->setLikelihoodSensitivitySecondOrderNaN(udata);
     }
-    
+
+
+llh:
     /* evaluate likelihood */
     if (edata) {
         *rdata->llh = - tdata->Jy[0] - tdata->Jz[0];
