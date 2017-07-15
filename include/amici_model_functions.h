@@ -1,19 +1,15 @@
-#ifndef _amici_wrapfunctions_h
-#define _amici_wrapfunctions_h
-#include <math.h>
+#ifndef AMICI_MODEL_FUNCTIONS_H
+#define AMICI_MODEL_FUNCTIONS_H
 
-#include "model_steadystate.h"
+#include <sundials/sundials_types.h>
+#include <sundials/sundials_nvector.h>
+#include <sundials/sundials_sparse.h>
+#include <sundials/sundials_direct.h>
 
-#include <include/udata.h>
-
-
-#define pi M_PI
-
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
+class UserData;
+class ReturnData;
+class TempData;
+class ExpData;
 
 UserData getUserData();
 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
@@ -69,4 +65,7 @@ int fdJzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, con
 int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-#endif /* _amici_wrapfunctions_h */
+
+
+
+#endif // AMICI_MODEL_FUNCTIONS_H

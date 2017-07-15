@@ -43,6 +43,8 @@
 #define AMICI_NORMAL             CV_NORMAL
 #define AMICI_ONE_STEP         CV_ONE_STEP
 
+typedef double realtype;
+
 typedef enum {AMICI_BLAS_RowMajor=101, AMICI_BLAS_ColMajor=102} AMICI_BLAS_LAYOUT;
 typedef enum {AMICI_BLAS_NoTrans=111, AMICI_BLAS_Trans=112, AMICI_BLAS_ConjTrans=113} AMICI_BLAS_TRANSPOSE;
 

@@ -2,8 +2,6 @@
 #define _amici_wrapfunctions_h
 #include <math.h>
 
-#include <include/cvodewrap.h>
-
 #include "model_dirac.h"
 
 #include <include/udata.h>

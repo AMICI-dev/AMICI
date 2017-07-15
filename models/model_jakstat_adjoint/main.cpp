@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "wrapfunctions.h" /* model specific functions */
+#include "include/amici_model_functions.h" /* model-provided functions */
 #include <include/amici_interface_cpp.h> /* AMICI API */
 #include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
 

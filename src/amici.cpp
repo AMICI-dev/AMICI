@@ -13,10 +13,14 @@
 #endif
 
 #include <stdio.h>
-#include "wrapfunctions.h" /* user functions */
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
+
+#include <sundials/sundials_spgmr.h>
+#include <cvodes/cvodes_spils.h>
+#include <include/amici_solver_wrap.h>
+#include <include/amici_model_functions.h>
 
 static int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
 static int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);

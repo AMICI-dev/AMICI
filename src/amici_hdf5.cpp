@@ -12,7 +12,7 @@
 #endif
 #include <unistd.h>
 
-#include "wrapfunctions.h"
+#include "include/amici_model_functions.h"
 #include "include/symbolic_functions.h"
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char* datasetPath) {

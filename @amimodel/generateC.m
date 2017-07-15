@@ -285,6 +285,11 @@ for ifun = this.funs
     fprintf(fid,['#ifndef _am_' this.modelname '_' ifun{1} '_h\n']);
     fprintf(fid,['#define _am_' this.modelname '_' ifun{1} '_h\n']);
     fprintf(fid,'\n');
+    fprintf(fid,'#include <sundials/sundials_types.h>\n');
+    fprintf(fid,'#include <sundials/sundials_nvector.h>\n');
+    fprintf(fid,'#include <sundials/sundials_sparse.h>\n');
+    fprintf(fid,'#include <sundials/sundials_direct.h>\n\n');
+    fprintf(fid,'class UserData;\nclass ReturnData;\nclass TempData;\nclass ExpData;\n\n');
     fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
     fprintf(fid,'\n');
     fprintf(fid,'\n');
@@ -334,6 +339,12 @@ fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 
 fprintf(fid,'#include "wrapfunctions.h"\n\n');
+if(~strcmp(this.wtype,'iw'))
+    fprintf(fid,'#include <include/cvodewrap.h>\n');
+else
+    fprintf(fid,'#include <include/idawrap.h>\n');
+end
+fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData(){\n');
 fprintf(fid,['    return UserData(' num2str(this.np) ',\n']);
 fprintf(fid,['                    ' num2str(this.nx) ',\n']);
@@ -486,12 +497,6 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
-fprintf(fid,'\n');
-if(~strcmp(this.wtype,'iw'))
-    fprintf(fid,'#include <include/cvodewrap.h>\n');
-else
-    fprintf(fid,'#include <include/idawrap.h>\n');
-end
 fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 fprintf(fid,'\n');
