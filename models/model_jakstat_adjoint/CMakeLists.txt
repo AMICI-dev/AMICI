@@ -89,6 +89,7 @@ ${MODEL_DIR}/model_jakstat_adjoint_z.cpp
 ${MODEL_DIR}/wrapfunctions.cpp
 ${AMICI_DIR}/src/symbolic_functions.cpp
 ${AMICI_DIR}/src/amici_interface_cpp.cpp
+${AMICI_DIR}/src/amici_model_functions.cpp
 ${AMICI_DIR}/src/amici.cpp
 ${AMICI_DIR}/src/amici_misc.cpp
 ${AMICI_DIR}/src/udata.cpp

@@ -35,7 +35,7 @@ function compileC(this)
     
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
-    cppsrc = {'amici', 'symbolic_functions','spline','edata','rdata','udata','tdata', 'amici_interface_matlab', 'amici_misc'};
+    cppsrc = {'amici', 'symbolic_functions','spline','edata','rdata','udata','tdata', 'amici_interface_matlab', 'amici_misc', 'amici_model_functions'};
     for srcfile = cppsrc
         baseFilename = fullfile(amiciSourcePath,srcfile{1});
         

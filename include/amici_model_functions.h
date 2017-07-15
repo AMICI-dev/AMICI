@@ -11,6 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
+// Modell-specific functions
 UserData getUserData();
 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
 int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);
@@ -66,6 +67,13 @@ int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata,
 int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-
-
+// Generic implementations
+int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
+int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
+int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
+int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 #endif // AMICI_MODEL_FUNCTIONS_H
