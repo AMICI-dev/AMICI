@@ -1487,7 +1487,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
      * @return int status flag
      */
     int ix, it, ip;
-    int status = rdata->status;
+    int status = (int) *rdata->status;
     double tnext;
     
     if (udata->nx <= 0
