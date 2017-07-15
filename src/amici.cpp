@@ -1482,13 +1482,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] edata pointer to the experimental data struct @type ExpData
-     * @param[out] status flag indicating success of execution @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] iroot pointer to the current root index, the value pointed to will be decreased during the forward solve
      * @return int status flag
      */
     int ix, it, ip;
-    int status = AMICI_SUCCESS;
+    int status = rdata->status;
     double tnext;
     
     if (udata->nx <= 0
@@ -1496,6 +1495,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
             || udata->sensi_meth != AMICI_SENSI_ASA) {
         goto llh;
     }
+
     if (status == AMICI_SUCCESS) {
         setupAMIB(ami_mem, udata, tdata);
 
