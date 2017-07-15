@@ -1,6 +1,7 @@
-
 #include "include/rdata.h"
 #include "include/udata.h"
+#include "include/amici_misc.h"
+#include "include/symbolic_functions.h"
 
 ReturnData::ReturnData()
 {
@@ -22,6 +23,19 @@ void ReturnData::setDefaults()
     status = NULL;
 
     freeFieldsOnDestruction = true;
+}
+
+void ReturnData::invalidate(const UserData *udata)
+{
+    if (llh)
+        *llh = amiGetNaN();
+
+    if (sllh)
+        fillArray(sllh, udata->nplist, amiGetNaN());
+
+    if (s2llh)
+        fillArray(s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
+
 }
 
 ReturnData::~ReturnData()

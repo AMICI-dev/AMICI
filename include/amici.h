@@ -60,8 +60,6 @@ void warnMsgIdAndTxt(
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
 
-void invalidateReturnData(UserData* udata, ReturnData* rdata);
-
 void *setupAMI(UserData *udata, TempData *tdata);
 int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata);
 

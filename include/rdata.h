@@ -15,6 +15,12 @@ public:
 
     virtual void setDefaults();
 
+    /**
+     * @brief performs all necessary actions to reset return data upon integration failure
+     * @param[in] udata pointer to the user data struct @type UserData
+     */
+    void invalidate(const UserData *udata);
+
     virtual ~ReturnData();
 
     /** timepoints */

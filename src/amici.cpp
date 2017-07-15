@@ -54,7 +54,7 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot);
     
     if (status == AMICI_SUCCESS) status = applyChainRuleFactorToSimulationResults(udata, rdata, edata);
-    if (status < AMICI_SUCCESS) invalidateReturnData(udata, rdata);
+    if (status < AMICI_SUCCESS) rdata->invalidate(udata);
     
     if (ami_mem) AMIFree(&ami_mem);
     
@@ -62,22 +62,6 @@ freturn:
     udata->freeTemporaryFields();
     delete tdata;
     return status;
-}
-
-void invalidateReturnData(UserData* udata, ReturnData* rdata) {
-    /**
-     * @brief performs all necessary actions to reset return data upon integration failure
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     */
-    if (rdata->llh)
-        *rdata->llh = amiGetNaN();
-    
-    if (rdata->sllh)
-        fillArray(rdata->sllh, udata->nplist, amiGetNaN());
-    
-    if (rdata->s2llh)
-        fillArray(rdata->s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
 }
 
 void *setupAMI(UserData *udata, TempData *tdata) {
