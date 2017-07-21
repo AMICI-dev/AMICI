@@ -33,24 +33,26 @@ function compileC(this)
             ' "',fullfile(modelSourceFolder, [this.modelname '_' this.funs{j} o_suffix]),'"');
     end    
     
+    % Recompile AMICI base files if necessary
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
-    cppsrc = {'amici', 'symbolic_functions','spline','edata','rdata','udata','tdata', 'amici_interface_matlab', 'amici_misc', 'amici_model_functions'};
-    for srcfile = cppsrc
-        baseFilename = fullfile(amiciSourcePath,srcfile{1});
-        
-        recompile = this.recompile || checkHash(baseFilename,o_suffix,DEBUG);
-       
-        if(recompile)
-            fprintf([srcfile{1} ' | ']);
-            eval(['mex ' DEBUG COPT ...
-                ' -c -outdir ' amiciSourcePath ...
-                includesstr ' '...
-                [baseFilename '.cpp']]);
-            updateFileHash(baseFilename, DEBUG);
+    cppsrc = {'amici', 'symbolic_functions','spline', ...
+        'edata','rdata','udata','tdata', ...
+        'amici_interface_matlab', 'amici_misc', 'amici_model_functions'};
+    sourcesForRecompile = cppsrc(cellfun(@(x) this.recompile || checkHash(fullfile(amiciSourcePath, x), o_suffix, DEBUG), cppsrc));
+    if(numel(sourcesForRecompile))
+        fprintf('AMICI base files | ');
+        sourceStr = '';
+        for j = 1:numel(sourcesForRecompile)
+            baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
+            sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
+            objectsstr = [objectsstr, ' "', baseFilename, o_suffix, '"'];
         end
-        objectsstr = strcat(objectsstr,' "', [baseFilename o_suffix],'"');
-    end  
+        eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
+            includesstr ' ' sourceStr]);
+        cellfun(@(x) updateFileHash(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
+    end
+    
     
     % do the same for all the this.funs
     for j=1:length(this.funs)
