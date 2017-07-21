@@ -35,7 +35,40 @@ function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, o_suffi
     for j=1:length(objects_ssparse)
         objectsstr = strcat(objectsstr,' "',fullfile(objectFolder,objects_ssparse{j}),'"');
     end
-        
+
+    includesstr = getIncludeString(wrap_path, sundials_path, ssparse_path);
+    
+    % collect files that need to be recompiled
+    sources_sundials = getSourcesSundials();
+    sourcesToCompile = '';
+    for j=1:length(sources_sundials)
+        if(del_sundials || ~exist(fullfile(objectFolder,objects_sundials{j}), 'file'))
+            sourcesToCompile = [sourcesToCompile, ' ', fullfile(sundials_path,sources_sundials{j})];
+        end
+    end
+    sources_ssparse = getSourcesSSparse();
+    for j=1:length(sources_ssparse)
+        if(del_ssparse || ~exist(fullfile(objectFolder,objects_ssparse{j}), 'file'))
+            sourcesToCompile = [sourcesToCompile, ' ', fullfile(ssparse_path,sources_ssparse{j})];
+        end
+    end
+    
+    % compile
+    if(~strcmp(sourcesToCompile, ''))
+        eval(['mex ' DEBUG ' ' COPT ' -c -outdir ' ...
+            objectFolder ...
+            includesstr ' ' sourcesToCompile ]);
+    end
+    
+    % only write versions.txt if we are done compiling 
+    fid = fopen(version_file,'w');
+    fprintf(fid,[sundials_ver '\r']);
+    fprintf(fid,[ssparse_ver '\r']);
+    fprintf(fid,[lapack_ver '\r']);
+    fclose(fid); 
+end
+
+function includesstr = getIncludeString(wrap_path, sundials_path, ssparse_path)
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
@@ -47,35 +80,6 @@ function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, o_suffi
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'COLAMD','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'BTF','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'SuiteSparse_config'), '"');
-    
-    % compile all the sundials objects if we haven't done so yet
-    sources_sundials = getSourcesSundials();
-    for j=1:length(sources_sundials)
-        if(~exist(fullfile(objectFolder,objects_sundials{j}), 'file') || del_sundials)
-            eval(['mex ' DEBUG ' ' COPT ' -c -outdir '...
-                objectFolder ...
-                includesstr ' ' ...
-                fullfile(sundials_path,sources_sundials{j})]);
-        end
-    end
-    
-    % compile all the suitesparse objects if we haven't done so yet
-    sources_ssparse = getSourcesSSparse();
-    for j=1:length(sources_ssparse)
-        if(~exist(fullfile(objectFolder,objects_ssparse{j}), 'file') || del_ssparse)
-            eval(['mex ' DEBUG ' ' COPT ' -c -outdir '...
-                objectFolder ...
-                includesstr ' ' ...
-                fullfile(ssparse_path,sources_ssparse{j})]);
-        end
-    end
-    
-    % only write versions.txt if we are done compiling 
-    fid = fopen(version_file,'w');
-    fprintf(fid,[sundials_ver '\r']);
-    fprintf(fid,[ssparse_ver '\r']);
-    fprintf(fid,[lapack_ver '\r']);
-    fclose(fid); 
 end
 
 
