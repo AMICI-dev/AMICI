@@ -4,15 +4,13 @@ function compileC(this)
     % Return values:
     %  this: model definition object @type amimodel
     
+    objectFileSuffix = '.o';
     if(ispc)
-        o_suffix = '.obj';
-    else
-        o_suffix = '.o';
+        objectFileSuffix = '.obj';
     end
     
     amiciSourcePath = fullfile(this.wrap_path,'src');
     modelSourceFolder = fullfile(this.wrap_path,'models',this.modelname);
-
     
     % compile flags
     COPT = ['COPTIMFLAGS=''' this.coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
@@ -23,43 +21,35 @@ function compileC(this)
         DEBUG = '';
     end
     
-    [objectsstr, includesstr] = compileAMICIDependencies(this.wrap_path, o_suffix, COPT, DEBUG);
-        
+    %% Third party libraries
+    [objectsstr, includesstr] = compileAMICIDependencies(this.wrap_path, objectFileSuffix, COPT, DEBUG);
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
-
-    % append model object files
-    for j=1:length(this.funs)
-        objectsstr = strcat(objectsstr,...
-            ' "',fullfile(modelSourceFolder, [this.modelname '_' this.funs{j} o_suffix]),'"');
-    end    
-    
-    % Recompile AMICI base files if necessary
+   
+    %% Recompile AMICI base files if necessary
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
         'edata','rdata','udata','tdata', ...
         'amici_interface_matlab', 'amici_misc', 'amici_model_functions'};
-    sourcesForRecompile = cppsrc(cellfun(@(x) this.recompile || checkHash(fullfile(amiciSourcePath, x), o_suffix, DEBUG), cppsrc));
+    objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
+    objectsstr = [objectsstr, strjoin(objectArray, ' ')];
+    sourcesForRecompile = cppsrc(cellfun(@(x) this.recompile || checkHash(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
     if(numel(sourcesForRecompile))
         fprintf('AMICI base files | ');
         sourceStr = '';
         for j = 1:numel(sourcesForRecompile)
             baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
             sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
-            objectsstr = [objectsstr, ' "', baseFilename, o_suffix, '"'];
         end
         eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
             includesstr ' ' sourceStr]);
         cellfun(@(x) updateFileHash(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
     end
     
-    
-    % do the same for all the this.funs
+    %% Model-specific files
     for j=1:length(this.funs)
         baseFilename = fullfile(modelSourceFolder,[this.modelname '_' this.funs{j}]);
-
-        recompile = this.recompile || checkHash(baseFilename,o_suffix,DEBUG);
-
+        recompile = this.recompile || checkHash(baseFilename,objectFileSuffix,DEBUG);
         this.cfun(1).(this.funs{j}) = recompile;
     end
     
@@ -82,7 +72,6 @@ function compileC(this)
         end
     end
     
-    
     funsForRecompile = this.funs(structfun(@(x) logical(x), this.cfun(1)));
     if(numel(funsForRecompile))
         fprintf('ffuns | ');
@@ -98,23 +87,28 @@ function compileC(this)
         cellfun(@(x) updateFileHash(fullfile(modelSourceFolder,[this.modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
     end
     
-    % compile the wrapfunctions object
+    % append model object files
+    for j=1:length(this.funs)
+        objectsstr = strcat(objectsstr,...
+            ' "',fullfile(modelSourceFolder, [this.modelname '_' this.funs{j} objectFileSuffix]),'"');
+    end    
     
+    % compile the wrapfunctions object
     fprintf('wrapfunctions | '); 
     eval(['mex ' DEBUG COPT ...
         ' -c -outdir ' modelSourceFolder ' ' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
         includesstr]);
-    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' o_suffix]) '"'];
+    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
-    % now we have compiled everything model specific, so we can replace hashes.mat to prevent recompilation
+    % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try
-    movefile(fullfile(modelSourceFolder,'hashes_new.mat'),...
+        movefile(fullfile(modelSourceFolder,'hashes_new.mat'),...
         fullfile(modelSourceFolder,'hashes.mat'),'f');
     end
     
-
-    fprintf('amici | ');
+    %% Linking
+    fprintf('linking | ');
 
     if(isunix)
         if(~ismac)
@@ -129,8 +123,7 @@ function compileC(this)
             CLIBS = [];
         end
     end
-
-    % Link object files
+    
     mexFilename = fullfile(modelSourceFolder,['ami_' this.modelname]);
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
         ' -output ' mexFilename ' ' objectsstr])
