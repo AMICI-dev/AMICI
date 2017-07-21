@@ -1,4 +1,5 @@
 #include "include/amici_interface_cpp.h"
+#include "include/amici.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
