@@ -1,5 +1,7 @@
 #include "wrapfunctions.h"
 
+#include <include/cvodewrap.h>
+
 UserData getUserData(){
     return UserData(4,
                     2,

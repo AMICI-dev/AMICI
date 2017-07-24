@@ -4,6 +4,7 @@
 #include <cstring>
 #include <execinfo.h>
 #include <cstdio>
+#include <cmath>
 #include <unistd.h>
 
 ExpData *getTestExpData(const UserData *udata) {
@@ -52,7 +53,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
 
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
     // TODO: ignores Inf and NaN results; need to check with format in HDF5
-    if(! isinf(*rdata->llh) || isnan(*rdata->llh))
+    if(! std::isinf(*rdata->llh) || std::isnan(*rdata->llh))
         CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);

@@ -6,44 +6,16 @@
 #include <include/edata.h>
 #include <include/tdata.h>
 #include <cstdbool>
+#include <cvodes/cvodes.h>
 
-/* linear solvers */
-#define AMICI_DENSE       1
-#define AMICI_BAND        2
-#define AMICI_LAPACKDENSE 3
-#define AMICI_LAPACKBAND  4
-#define AMICI_DIAG        5
-#define AMICI_SPGMR       6
-#define AMICI_SPBCG       7
-#define AMICI_SPTFQMR     8
-#define AMICI_KLU         9
+#include <include/amici_defines.h>
 
-#define AMICI_ONEOUTPUT   5
-
-
-#define AMICI_ERROR_UDATA              -99
-#define AMICI_ERROR_EDATA              -98
-#define AMICI_ERROR_RDATA              -97
-#define AMICI_ERROR_TDATA              -96
-#define AMICI_ERROR_SETUP              -95
-#define AMICI_ERROR_SETUPB             -94
-#define AMICI_ERROR_NOTHINGTODO        -93
-#define AMICI_ERROR_FSA                -92
-#define AMICI_ERROR_ASA                -91
-#define AMICI_ERROR_SA                 -90
-#define AMICI_ERROR_SS                 -89
-#define AMICI_ERROR_DATA               -88
-#define AMICI_ERROR_EVENT              -87
-#define AMICI_ERROR_SIMULATION         -86
-#define AMICI_SUCCESS           CV_SUCCESS 
-#define AMICI_DATA_RETURN  CV_TSTOP_RETURN
-#define AMICI_ROOT_RETURN   CV_ROOT_RETURN
-
-#define AMICI_NORMAL             CV_NORMAL
-#define AMICI_ONE_STEP         CV_ONE_STEP
-
-typedef enum {AMICI_BLAS_RowMajor=101, AMICI_BLAS_ColMajor=102} AMICI_BLAS_LAYOUT;
-typedef enum {AMICI_BLAS_NoTrans=111, AMICI_BLAS_Trans=112, AMICI_BLAS_ConjTrans=113} AMICI_BLAS_TRANSPOSE;
+// ensure definitions are in sync
+static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
+static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN, "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
+static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
+static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
+static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 
 void errMsgIdAndTxt(
                             const char * identifier, /* string with error message identifier */
@@ -58,8 +30,6 @@ void warnMsgIdAndTxt(
 );
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
-
-void invalidateReturnData(UserData* udata, ReturnData* rdata);
 
 void *setupAMI(UserData *udata, TempData *tdata);
 int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata);
@@ -93,8 +63,6 @@ int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, Tem
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
-int applyChainRuleFactorToSimulationResults(const UserData *udata, ReturnData *rdata, const ExpData *edata);
-int unscaleParameters(UserData *udata);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,

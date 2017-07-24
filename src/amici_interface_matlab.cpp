@@ -6,7 +6,7 @@
  */
 
 #include "include/amici_interface_matlab.h"
-#include "wrapfunctions.h" /* user functions */
+#include "include/amici_model_functions.h"
 
 #include <cstring>
 #include <assert.h>

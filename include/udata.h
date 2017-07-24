@@ -1,5 +1,6 @@
 #ifndef _MY_UDATA
 #define _MY_UDATA
+#include "include/amici_defines.h"
 
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
@@ -7,6 +8,7 @@
 #include <sundials/sundials_types.h> /* def. of type realtype */
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
+#include <cmath>
 
 typedef enum AMICI_parameter_scaling_TAG {
     AMICI_SCALING_NONE, AMICI_SCALING_LN, AMICI_SCALING_LOG10
@@ -48,6 +50,8 @@ public:
 
     void initTemporaryFields();
     void freeTemporaryFields();
+
+    int unscaleParameters();
 
     virtual ~UserData();
 
