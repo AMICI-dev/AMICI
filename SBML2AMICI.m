@@ -11,6 +11,8 @@ function  SBML2AMICI( filename, modelname )
     if(nargin<2)
         modelname = filename;
     end
+    wrap_path=fileparts(mfilename('fullpath'));
+    addpath(fullfile(wrap_path,'SBMLimporter'));
     ODE = SBMLode(filename);
     ODE.writeAMICI(modelname);
     pnom = ODE.pnom;
