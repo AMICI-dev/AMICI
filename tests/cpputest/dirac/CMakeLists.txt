@@ -14,6 +14,7 @@ include_directories("${MODEL_DIR}")
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
+${AMICI_DIR}/build/libamici.a
 ${AMICI_DIR}/models/model_dirac/build/libmodel_dirac.a
 ${CPPUTEST_LIBRARY}
 "${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}"
