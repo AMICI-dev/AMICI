@@ -14,6 +14,15 @@ set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 
 find_package(HDF5 COMPONENTS C HL REQUIRED)
 
+set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
+set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
+
+if(${BLAS} STREQUAL "MKL")
+    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
+else()
+    set(BLAS_LIBRARIES -lcblas CACHE STRING "")
+endif()
+
 include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${HDF5_INCLUDE_DIRS}")
