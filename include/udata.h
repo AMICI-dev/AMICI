@@ -1,5 +1,6 @@
 #ifndef _MY_UDATA
 #define _MY_UDATA
+#include "include/amici_defines.h"
 
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
@@ -7,182 +8,227 @@
 #include <sundials/sundials_types.h> /* def. of type realtype */
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
+#include <cmath>
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
+typedef enum AMICI_parameter_scaling_TAG {
+    AMICI_SCALING_NONE, AMICI_SCALING_LN, AMICI_SCALING_LOG10
+} AMICI_parameter_scaling;
+
+typedef enum AMICI_o2mode_TAG {
+    AMICI_O2MODE_NONE, AMICI_O2MODE_FULL, AMICI_O2MODE_DIR
+} AMICI_o2mode;
+
+typedef enum AMICI_sensi_order_TAG {
+    AMICI_SENSI_ORDER_NONE, AMICI_SENSI_ORDER_FIRST, AMICI_SENSI_ORDER_SECOND
+} AMICI_sensi_order;
+
+typedef enum AMICI_sensi_meth_TAG {
+    AMICI_SENSI_NONE, AMICI_SENSI_FSA, AMICI_SENSI_ASA, AMICI_SENSI_SS
+} AMICI_sensi_meth;
+
 
 /** @brief struct that stores all user provided data */
-typedef struct user_data {
-    /** positivity flag */
-    double *am_qpositivex;
-    
-    /** parameter reordering */
-    int    *am_plist;
-    /** number of parameters */
-    int    am_np;
-    /** number of observables */
-    int    am_ny;
-    /** number of observables in the unaugmented system */
-    int    am_nytrue;
+class UserData {
+
+public:
+    /**
+     * @brief Default constructor for testing and serialization
+     */
+    UserData();
+
+    UserData(int np,
+             int nx, int nxtrue,
+             int nk,
+             int ny, int nytrue,
+             int nz, int nztrue,
+             int ne, int nJ,
+             int nw, int ndwdx, int ndwdp, int nnz,
+             int ubw, int lbw,
+             AMICI_parameter_scaling pscale,
+             AMICI_o2mode o2mode
+             );
+
+    void initTemporaryFields();
+    void freeTemporaryFields();
+
+    int unscaleParameters();
+
+    virtual ~UserData();
+
+    /* Model dimensions */
+    /** total number of model parameters */
+    const int    np;
+    /** number of fixed parameters */
+    const int    nk;
     /** number of states */
-    int    am_nx;
+    const int    nx;
     /** number of states in the unaugmented system */
-    int    am_nxtrue;
+    const int    nxtrue;
+    /** number of observables */
+    const int    ny;
+    /** number of observables in the unaugmented system */
+    const int    nytrue;
     /** number of event outputs */
-    int    am_nz;
+    const int    nz;
     /** number of event outputs in the unaugmented system */
-    int    am_nztrue;
+    const int    nztrue;
     /** number of events */
-    int    am_ne;
-    /** number of timepoints */
-    int    am_nt;
-    /** dimension of the augmented objective function for 2nd order ASA */
-    int    am_ng;    
+    const int    ne;
     /** number of common expressions */
-    int    am_nw;
+    const int    nw;
     /** number of derivatives of common expressions wrt x */
-    int    am_ndwdx;
+    const int    ndwdx;
     /** number of derivatives of common expressions wrt p */
-    int    am_ndwdp;
+    const int    ndwdp;
     /** number of nonzero entries in jacobian */
-    int    am_nnz;
+    const int    nnz;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    const int    nJ;
+    /** upper bandwith of the jacobian */
+    const int ubw;
+    /** lower bandwith of the jacobian */
+    const int lbw;
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
+    const AMICI_o2mode o2mode;
+
+    /* Options */
+
     /** maximal number of events to track */
-    int    am_nmaxevent;
-    
+    int    nmaxevent;
+
+    /** positivity flag */
+    double *qpositivex;
+
+    /** parameter selection and reordering */
+    int    *plist;
+    /** number of parameters in plist */
+    int    nplist;
+
+    /** number of timepoints */
+    int    nt;
+
+    /** parametrization of parameters p */
+    AMICI_parameter_scaling pscale;
+
     /** parameter array */
-    double *am_p;
+    double *p;
     /** constants array */
-    double *am_k;
+    double *k;
     
     /** starting time */
-    double am_tstart;
+    double tstart;
     /** timepoints */
-    double *am_ts;
+    double *ts;
     
     /** scaling of parameters */
-    double *am_pbar;
+    double *pbar;
     /** scaling of states */
-    double *am_xbar;
+    double *xbar;
     
     /** flag array for DAE equations */
-    double *am_idlist;
+    double *idlist;
     
     /** flag indicating whether sensitivities are supposed to be computed */
-    int am_sensi;
+    AMICI_sensi_order sensi;
     /** absolute tolerances for integration */
-    double am_atol;
+    double atol;
     /** relative tolerances for integration */
-    double am_rtol;
+    double rtol;
     /** maximum number of allowed integration steps */
-    int am_maxsteps;
+    int maxsteps;
     /** maximum number of allowed Newton steps for steady state computation */
-    int am_ns_maxsteps;
+    int newton_maxsteps;
     /** maximum number of allowed linear steps per Newton step for steady state computation */
-    int am_ns_maxlinsteps;
+    int newton_maxlinsteps;
     
     /** internal sensitivity method */
     /*!
      * a flag used to select the sensitivity solution method. Its value can be CV SIMULTANEOUS or CV STAGGERED. Only applies for Forward Sensitivities.
      */
-    int am_ism;
+    int ism;
     
     /** method for sensitivity computation */
     /*!
      * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
      */
-    int am_sensi_meth;
+    AMICI_sensi_meth sensi_meth;
     /** linear solver specification */
-    int am_linsol;
+    int linsol;
     /** interpolation type */
     /*!
      * specifies the interpolation type for the forward problem solution which is then used for the backwards problem. can be either CV_POLYNOMIAL or CV_HERMITE
      */
-    int am_interpType;
+    int interpType;
     
     /** linear multistep method */
     /*!
      * specifies the linear multistep method and may be one of two possible values: CV ADAMS or CV BDF.
      */
-    int am_lmm;
+    int lmm;
     
     /** nonlinear solver */
     /*!
      * specifies the type of nonlinear solver iteration and may be either CV NEWTON or CV FUNCTIONAL.
      */
-    int am_iter;
+    int iter;
     
     /** flag controlling stability limit detection */
-    booleantype am_stldet;
+    booleantype stldet;
     
-    /** upper bandwith of the jacobian */
-    int am_ubw;
-    /** lower bandwith of the jacobian */
-    int am_lbw;
     
-    /** flag for state initialisation */
-    /*!
-     * flag which determines whether analytic state initialisation or provided initialisation should be used
-     */
-    booleantype am_bx0;
-    
-    /** flag for sensitivity initialisation */
-    /*!
-     * flag which determines whether analytic sensitivities initialisation or provided initialisation should be used
-     */
-    booleantype am_bsx0;
-    
+
     /** state initialisation */
-    double *am_x0data;
+    double *x0data;
     
     /** sensitivity initialisation */
-    double *am_sx0data;
+    double *sx0data;
     
     
     /** state ordering */
-    int am_ordering;
+    int ordering;
     
     /** index indicating to which event an event output belongs */
-    double *am_z2event;
+    double *z2event;
     
     /** flag indicating whether a certain heaviside function should be active or not */
-    double *am_h;
+    realtype *h;
     
     /** tempory storage of Jacobian data across functions */
-    SlsMat am_J;
+    SlsMat J;
     /** tempory storage of dxdotdp data across functions */
-    realtype *am_dxdotdp;
+    realtype *dxdotdp;
     /** tempory storage of w data across functions */
-    realtype *am_w;
+    realtype *w;
     /** tempory storage of dwdx data across functions */
-    realtype *am_dwdx;
+    realtype *dwdx;
     /** tempory storage of dwdp data across functions */
-    realtype *am_dwdp;
+    realtype *dwdp;
     /** tempory storage of M data across functions */
-    realtype *am_M;
+    realtype *M;
     /** tempory storage of dfdx data across functions */
-    realtype *am_dfdx;
+    realtype *dfdx;
     /** tempory storage of stau data across functions */
-    realtype *am_stau;
+    realtype *stau;
 
     /** flag indicating whether a NaN in dxdotdp has been reported */
-    booleantype am_nan_dxdotdp;
+    booleantype nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */
-    booleantype am_nan_J;
+    booleantype nan_J;
     /** flag indicating whether a NaN in JSparse has been reported */
-    booleantype am_nan_JDiag;
-    /** flag indicating whether a NaN in JSparse has been reported */
-    booleantype am_nan_JSparse;
+    booleantype nan_JSparse;
+    /** flag indicating whether a NaN in JDiag has been reported */
+    booleantype nan_JDiag;
     /** flag indicating whether a NaN in xdot has been reported */
-    booleantype am_nan_xdot;
+    booleantype nan_xdot;
     /** flag indicating whether a NaN in xBdot has been reported */
-    booleantype am_nan_xBdot;
+    booleantype nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
-    booleantype am_nan_qBdot;
-} UserData;
+    booleantype nan_qBdot;
 
-EXTERNC void freeUserData(UserData *udata);
+    void print();
+
+protected:
+    void init();
+};
 
 #endif /* _MY_UDATA */

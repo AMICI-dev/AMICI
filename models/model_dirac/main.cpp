@@ -1,104 +1,136 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include "wrapfunctions.h" /* user functions */
-#include "include/symbolic_functions.h"
-#include <include/amici.h> /* amici functions */
-#include <src/ami_hdf5.h>
-#include <include/udata_accessors.h>
-#include <include/rdata_accessors.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
+#include <cmath>
 
-void processUserData(UserData *udata);
+#include "include/amici_model_functions.h" /* model-provided functions */
+#include <include/amici_interface_cpp.h> /* AMICI API */
+#include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
+
+/* This is a scaffold for a stand-alone AMICI simulation executable demonstrating
+ * use of the AMICI C++ API.
+ *
+ * This program reads AMICI options from an HDF5 file, prints some results
+ * and writes additional results to an HDF5 file. The name of the HDF5 file
+ * is expected as single command line argument.
+ *
+ * An initial HDF5 file with the required fields can be generated using MATLAB by adding the following lines
+ * at the end of simulate_${MODEL_NAME}.m file just before the final "end":
+ *
+ *    %% Write data that is passed to AMICI to HDF5
+ *    hdffile = fullfile(pwd, 'mydata.h5');
+ *    structToHDF5Attribute(hdffile, '/options', options_ami);
+ *    h5writeatt(hdffile, '/options', 'ts', tout);
+ *    h5writeatt(hdffile, '/options', 'nt', numel(tout));
+ *    h5writeatt(hdffile, '/options', 'theta', theta);
+ *    h5writeatt(hdffile, '/options', 'kappa', kappa);
+ *    if(~isempty(data))
+ *      structToHDF5Attribute(hdffile, '/data', data);
+ *    end
+ *
+ * ... and then running a simulation from MATLAB as usual.
+ *
+ * Default UserData settings can be written to an HDF5 file with:
+ *     structToHDF5Attribute('test.h5', '/options', amioption())
+ */
+
+// Function prototypes
 void processReturnData(ReturnData *rdata, UserData *udata);
 void printReturnData(ReturnData *rdata, UserData *udata);
 
+
 int main(int argc, char **argv)
-{  
+{
+    // HDF5 file to read and write data (full path)
     const char *hdffile;
 
+    // Check command line arguments
     if(argc != 2) {
-        fprintf(stderr, "Error: must provide input file as first and only argument.\n");
+        fprintf(stderr, "Error: must provide HDF5 input file as first and only argument.\n");
         return 1;
     } else {
         hdffile = argv[1];
     }
     
-    UserData *udata = readSimulationUserData(hdffile);
+    // Read UserData (AMICI settings and model parameters) from HDF5 file
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile, "/options");
     if (udata == NULL) {
         return 1;
     }
 
-    ExpData *edata = readSimulationExpData(hdffile, udata);
-    if (edata == NULL) {
-        freeUserData(udata);
-        return 1;
-    }
+    // Read ExpData (experimental data for model) from HDF5 file
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data");
 
-    int status = 0;
-    ReturnData *rdata = getSimulationResults(udata, edata, &status);
+    // Run the simulation
+    ReturnData *rdata = getSimulationResults(udata, edata);
     if (rdata == NULL) {
-        freeExpData(edata);
-        freeUserData(udata);
+        if(edata) delete edata;
+        if(udata) delete udata;
         return 1;
     }
 
+    // Do something with the simulation results
     processReturnData(rdata, udata);
-    writeReturnData(hdffile, rdata, udata);
 
-    freeExpData(edata);
-    freeUserData(udata);
-    freeReturnData(rdata);
+    // Save simulation results to HDF5 file
+    AMI_HDF5_writeReturnData(rdata, udata, hdffile, "/solution");
+
+    // Free memory
+    if(edata) delete edata;
+    if(udata) delete udata;
+    if(rdata) delete rdata;
 
     return 0;
 }
 
 
 void processReturnData(ReturnData *rdata, UserData *udata) {
+    // show some the simulation results
     printReturnData(rdata, udata);
 }
 
 void printReturnData(ReturnData *rdata, UserData *udata) {
+    //Print of some the simulation results
 
-    printf("tsdata: ");
-    printArray(tsdata, nt);
+    printf("Timepoints (tsdata): ");
+    printArray(rdata->ts, udata->nt);
 
-
-    printf("\n\nxdata\n");
-    for(int i = 0; i < nx; ++i) {
-        for(int j = 0; j < nt; ++j)
-            printf("%e\t", rdata->am_xdata[j +  nt * i]);
+    printf("\n\nStates (xdata):\n");
+    for(int i = 0; i < udata->nx; ++i) {
+        for(int j = 0; j < udata->nt; ++j)
+            printf("%e\t", rdata->x[j +  udata->nt * i]);
         printf("\n");
     }
 
-    printf("\nydata\n");
-    for(int i = 0; i < ny; ++i) {
-        for(int j = 0; j < nt; ++j)
-            printf("%e\t", rdata->am_ydata[j +  nt * i]);
+    printf("\nObservables (ydata):\n");
+    for(int i = 0; i < udata->ny; ++i) {
+        for(int j = 0; j < udata->nt; ++j)
+            printf("%e\t", rdata->y[j +  udata->nt * i]);
         printf("\n");
     }
 
-    printf("\n\nxdotdata: ");
-    for(int i = 0; i < nx; ++i)
-        printf("%e\t", rdata->am_xdotdata[i]);
+    printf("\n\ndx/dt (xdotdata):\n");
+    for(int i = 0; i < udata->nx; ++i)
+        printf("%e\t", rdata->xdot[i]);
 
-
-
-    printf("\njdata\n");
-    for(int i = 0; i < nx; ++i) {
-        for(int j = 0; j < nx; ++j)
-            printf("%e\t", rdata->am_Jdata[i + nx * j]);
-        printf("\n");
-    }
+//    printf("\nJacobian (jdata)\n");
+//    for(int i = 0; i < nx; ++i) {
+//        for(int j = 0; j < nx; ++j)
+//            printf("%e\t", rdata->J[i + nx * j]);
+//        printf("\n");
+//    }
 
     printf("\nnumsteps: \t\t");
-    printfArray(numstepsdata, nt, "%.0f ");
+    printfArray(rdata->numsteps, udata->nt, "%.0f ");
+
     printf("\nnumrhsevalsdata: \t");
-    printfArray(numrhsevalsdata, nt, "%.0f ");
+    printfArray(rdata->numrhsevals, udata->nt, "%.0f ");
+
     printf("\norder: \t\t");
-    printfArray(orderdata, nt, "%.0f ");
+    printfArray(rdata->order, udata->nt, "%.0f ");
+
     printf("\n");
-    printf("llh: %e\n", *llhdata);
+    printf("Loglikelihood (llh): %e\n", *rdata->llh);
 }
 

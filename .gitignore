@@ -11,7 +11,25 @@ CMakeFiles/*
 
 build/*
 
-*.o
+tests/cpputest/build/*
+
+tests/cpputest/Testing/*
+
+ThirdParty/*
+
+doc/*
+
+fonts/*
+
+mtoc/*
+
+sed-ml/*
+
+src/doc/*
+
+stylesheets/*
+
+images/*
 
 doc/*
 
@@ -21,17 +39,43 @@ models/*
 
 !models/model_dirac
 
-doc/*
+models/model_dirac/build/*
 
-fonts/*
+!models/model_steadystate
 
-mtoc/*
+models/model_steadystate/build/*
 
-src/doc/*
+!models/model_jakstat_adjoint
 
-stylesheets/*
+models/model_jakstat_adjoint/build/*
 
-images/*
+!models/model_jakstat_adjoint_o2
+
+models/model_jakstat_adjoint_o2/build/*
+
+!models/model_neuron
+
+models/model_neuron/build/*
+
+!models/model_neuron_o2
+
+models/model_neuron_o2/build/*
+
+.DS_Store
+
+index.html
+
+Makefile
+
+AMICI.mlappinstall
+
+cmake_install.cmake
+
+CMakeCache.txt
+
+*.a
+
+*.o
 
 *.eps
 
@@ -59,23 +103,7 @@ images/*
 
 *.json
 
-index.html
-
-AMICI.mlappinstall
-
 *.mat
-
-mtoc/makeExampleDoc.m
-
-mtoc/makeDocumentation.m
-
-examples/example_5/example_model_5_paper.m
-
-mtoc/makeDocumentation.m
-
-mtoc/makeDocumentation.m
-
-index.html
 
 *.js
 
@@ -85,17 +113,31 @@ index.html
 
 *.json
 
-examples/geneExpression/simulate_geneExpression.m
-
 *.m~
 
 *.plist
 
+*.make
+
+*.cmake
+
+*.bin
+
+*.csv
+
+*.log
+
+tests/sbml-test-suite/
+
+tests/sedml-test-suite/
+
+examples/example_5/example_model_5_paper.m
+
+examples/geneExpression/simulate_geneExpression.m
+
 examples/example_events/simulate_model_events.m
 
 examples/example_steadystate/simulate_model_steadystate.m
-
-test/constant_events.m
 
 examples/example_dirac/simulate_model_dirac.m
 
@@ -107,21 +149,11 @@ examples/example_adjoint/simulate_model_adjoint.m
 
 examples/example_adjoint/simulate_model_adjoint.m
 
-*.log
-
 examples/example_nested_events/simulate_model_nested_events.m
 
 examples/example_dirac_secondorder_vectmult/simulate_model_dirac_secondorder_vectmult.m
 
 examples/example_jakstat_adjoint/simulate_model_jakstat.m
-
-unitTests/CustomSBMLTestsuite/*
-
-sed-ml/*
-
-unitTests/SBMLresults/00144-results.csv
-
-*.csv
 
 examples/example_events/dxdotdp_model_events.m
 
@@ -177,47 +209,18 @@ examples/example_dirac_adjoint_hessVecProd/simulate_model_dirac_adjoint_hessVecP
 
 examples/example_jakstat_adjoint_hvp/simulate_model_jakstat_adjoint_hvp.m
 
-models/model_dirac/.DS_Store
-
-*.o
-
-models/model_dirac/dxdotdp_model_dirac.m
-
-models/model_dirac/J_model_dirac.m
-
-models/model_dirac/wrapfunctions.c
-
-cmake_install.cmake
-
-CMakeCache.txt
-
-*.a
-
-model_dirac
-
-Makefile
-
-scripts/CMakeFiles
-
-
-unitTests/SBMLTest_log.txt
-
-unitTests/SBMLTest_log_04-Jan-2017.txt
-
-unitTests/SBMLTest_log_05-Jan-2017.txt
-
-*.txt
-
-src/symbolic_functions.o-f5eb52a8
-
-src/symbolic_functions.o-bea7fd73
-
-src/amici.o-404f292d
-
-unitTests/sbml-test-suite/
-
-tests/sbml-test-suite/
-
-tests/sedml-test-suite/
-
 examples/example_7/simulate_model_example_7.m
+
+examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint.m
+
+examples/example_neuron/simulate_model_neuron.m
+
+examples/example_dirac/simulate_model_dirac_hdf.m
+
+examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint_hdf.m
+
+examples/example_steadystate/simulate_model_steadystate_hdf.m
+
+examples/example_neuron/simulate_model_neuron_hdf.m
+
+examples/example_neuron/simulate_model_jakstat_adjoint_hdf.m

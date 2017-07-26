@@ -1,6 +1,5 @@
-language: cpp
-
-sudo: required
+.language: cpp
+sudo: false
 
 dist: trusty
 
@@ -9,16 +8,25 @@ branches:
     - master
     - staging
 
-compiler:
-    - clang
-    - gcc
-    
-before_script:
-    - sudo apt-get install libhdf5-serial-dev zlib1g-dev
-    
-install: true
+matrix:
+  include: 
+    - os: linux  
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - libhdf5-serial-dev
+            - zlib1g-dev
+            - libatlas-base-dev
+    - os: osx
+      compiler: clang
+      before_install: brew install homebrew/science/hdf5
 
-script: ./scripts/run-tests.sh
+install:
+    - ./scripts/run-build.sh
+
+script:  
+    - ./scripts/run-cpputest.sh
 
 notifications:
   slack: 

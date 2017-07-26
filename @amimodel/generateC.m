@@ -30,22 +30,15 @@ for ifun = this.funs
         fprintf(fid,'#include <string.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
-            fprintf(fid,'#include <include/udata_accessors.h>\n');
         end
-        if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
+        if( strfind(this.fun.(ifun{1}).argstr,'tdata') )
             fprintf(fid,'#include <include/tdata.h>\n');
-            fprintf(fid,'#include <include/tdata_accessors.h>\n');
-            % avoid conflicts
-            fprintf(fid,'#undef t\n');
-            fprintf(fid,'#undef x\n');
-            fprintf(fid,'#undef x_tmp\n');
-            fprintf(fid,'#undef dzdp\n');
-            fprintf(fid,'#undef dzdx\n');
-            fprintf(fid,'#undef dx\n');
-            fprintf(fid,'#undef sigma_y\n');
-            fprintf(fid,'#undef sigma_z\n');
-            fprintf(fid,'#undef dsigma_ydp\n');
-            fprintf(fid,'#undef dsigma_zdp\n');
+        end
+        if( strfind(this.fun.(ifun{1}).argstr,'rdata') )
+            fprintf(fid,'#include <include/rdata.h>\n');
+        end
+        if( strfind(this.fun.(ifun{1}).argstr,'edata') )
+            fprintf(fid,'#include <include/edata.h>\n');
         end
         if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['#include "' this.modelname '_J.h"\n']);
@@ -78,9 +71,6 @@ for ifun = this.funs
             if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
                 fprintf(fid,'UserData *udata = (UserData*) user_data;\n');
             end
-            if( strfind(this.fun.(ifun{1}).argstr,'temp_data') )
-                fprintf(fid,'TempData *tdata = (TempData*) temp_data;\n');
-            end
             this.fun.(ifun{1}).printLocalVars(this,fid);
             if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
                 if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
@@ -94,25 +84,25 @@ for ifun = this.funs
                     fprintf(fid,'int ip;\n');
                     fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
-                    fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[plist[ip]]);\n');
-                    fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[plist[ip]]);\n');
+                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
+                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[udata->plist[ip]]);\n');
+                    fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[udata->plist[ip]]);\n');
+                    fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[udata->plist[ip]]);\n');
                     fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                     this.fun.(ifun{1}).writeCcode(this,fid);
                     fprintf(fid,'}\n');
                 else
                     fprintf(fid,'if(ip == 0) {\n');
-                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tmp_J,user_data,NULL,NULL,NULL);\n']);
-                    fprintf(fid,['    status = dxdotdp_' this.modelname '(t,tmp_dxdotdp,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,udata->J,user_data,NULL,NULL,NULL);\n']);
+                    fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'}\n');
                     this.fun.(ifun{1}).writeCcode(this,fid);
                 end
             elseif( strcmp(ifun{1},'qBdot') )
                 fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                fprintf(fid,'switch (plist[ip]) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
+                fprintf(fid,'switch (udata->plist[ip]) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
@@ -120,19 +110,19 @@ for ifun = this.funs
                 if( strcmp(ifun{1},'dxdotdp'))
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
                 if(ismember('*sx',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[plist[ip]]);\n');
+                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[ip]);\n');
                 end
                 if(ismember('*sx0',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[plist[ip]]);\n');
+                    fprintf(fid,'sx0_tmp = N_VGetArrayPointer(sx0[ip]);\n');
                     fprintf(fid,['memset(sx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 if(ismember('*sdx0',this.fun.(ifun{1}).nvecs))
-                    fprintf(fid,'sdx0_tmp = N_VGetArrayPointer(sdx0[plist[ip]]);\n');
+                    fprintf(fid,'sdx0_tmp = N_VGetArrayPointer(sdx0[ip]);\n');
                     fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
-                fprintf(fid,'switch (plist[ip]) {\n');
+                fprintf(fid,'switch (udata->plist[ip]) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
@@ -143,16 +133,16 @@ for ifun = this.funs
                 this.fun.(ifun{1}).writeCcode(this,fid);
             end
             if(strcmp(ifun{1},'dxdotdp'))
-                fprintf(fid,'for(ip = 0; ip<np; ip++) {\n');
-                fprintf(fid,['   for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
-                fprintf(fid,['       if(amiIsNaN(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
-                fprintf(fid,['           dxdotdp[ix+ip*' num2str(this.nx) '] = 0;\n']);
-                fprintf(fid,'           if(!udata->am_nan_dxdotdp) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
+                fprintf(fid,'   for(ix = 0; ix<udata->nx; ix++) {\n');
+                fprintf(fid,'       if(amiIsNaN(udata->dxdotdp[ix+ip*udata->nx])) {\n');
+                fprintf(fid,'           udata->dxdotdp[ix+ip*udata->nx] = 0;\n');
+                fprintf(fid,'           if(!udata->nan_dxdotdp) {\n');
                 fprintf(fid,'               warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'               udata->am_nan_dxdotdp = TRUE;\n');
+                fprintf(fid,'               udata->nan_dxdotdp = TRUE;\n');
                 fprintf(fid,'           }\n');
                 fprintf(fid,'       }\n');
-                fprintf(fid,['       if(amiIsInf(dxdotdp[ix+ip*' num2str(this.nx) '])) {\n']);
+                fprintf(fid,'       if(amiIsInf(udata->dxdotdp[ix+ip*udata->nx])) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                 fprintf(fid,'           return(-1);\n');
                 fprintf(fid,'       }\n');
@@ -164,16 +154,16 @@ for ifun = this.funs
                     fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                     fprintf(fid,'   if(amiIsNaN(xdot_tmp[ix])) {\n');
                     fprintf(fid,'       xdot_tmp[ix] = 0;\n');
-                    fprintf(fid,'       if(!udata->am_nan_xdot) {\n');
+                    fprintf(fid,'       if(!udata->nan_xdot) {\n');
                     fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                    fprintf(fid,'           udata->am_nan_xdot = TRUE;\n');
+                    fprintf(fid,'           udata->nan_xdot = TRUE;\n');
                     fprintf(fid,'       }\n');
                     fprintf(fid,'   }\n');
                     fprintf(fid,'   if(amiIsInf(xdot_tmp[ix])) {\n');
                     fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");\n');
                     fprintf(fid,'       return(-1);\n');
                     fprintf(fid,'   }');
-                    fprintf(fid,'   if(qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {\n');
+                    fprintf(fid,'   if(udata->qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {\n');
                     fprintf(fid,'       xdot_tmp[ix] = -xdot_tmp[ix];\n');
                     fprintf(fid,'   }\n');
                     fprintf(fid,'}\n');
@@ -183,9 +173,9 @@ for ifun = this.funs
                 fprintf(fid,['for(inz = 0; inz<' num2str(this.nnz) '; inz++) {\n']);
                 fprintf(fid,'   if(amiIsNaN(J->data[inz])) {\n');
                 fprintf(fid,'       J->data[inz] = 0;\n');
-                fprintf(fid,'       if(!udata->am_nan_JSparse) {\n');
+                fprintf(fid,'       if(!udata->nan_JSparse) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'           udata->am_nan_JSparse = TRUE;\n');
+                fprintf(fid,'           udata->nan_JSparse = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'   if(amiIsInf(J->data[inz])) {\n');
@@ -198,9 +188,9 @@ for ifun = this.funs
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx^2) '; ix++) {\n']);
                 fprintf(fid,'   if(amiIsNaN(J->data[ix])) {\n');
                 fprintf(fid,'       J->data[ix] = 0;\n');
-                fprintf(fid,'       if(!udata->am_nan_J) {\n');
+                fprintf(fid,'       if(!udata->nan_J) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'           udata->am_nan_J = TRUE;\n');
+                fprintf(fid,'           udata->nan_J = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'   if(amiIsInf(J->data[ix])) {\n');
@@ -228,9 +218,9 @@ for ifun = this.funs
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                 fprintf(fid,'   if(amiIsNaN(xBdot_tmp[ix])) {\n');
                 fprintf(fid,'       xBdot_tmp[ix] = 0;');
-                fprintf(fid,'       if(!udata->am_nan_xBdot) {\n');
+                fprintf(fid,'       if(!udata->nan_xBdot) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fxBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'           udata->am_nan_xBdot = TRUE;\n');
+                fprintf(fid,'           udata->nan_xBdot = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }');
                 fprintf(fid,'   if(amiIsInf(xBdot_tmp[ix])) {\n');
@@ -240,12 +230,12 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<np*ng; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->nJ; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
-                fprintf(fid,'       if(!udata->am_nan_qBdot) {\n');
+                fprintf(fid,'       if(!udata->nan_qBdot) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'           udata->am_nan_qBdot = TRUE;\n');
+                fprintf(fid,'           udata->nan_qBdot = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }');
                 fprintf(fid,'   if(amiIsInf(qBdot_tmp[ip])) {\n');
@@ -310,6 +300,11 @@ for ifun = this.funs
     fprintf(fid,['#ifndef _am_' this.modelname '_' ifun{1} '_h\n']);
     fprintf(fid,['#define _am_' this.modelname '_' ifun{1} '_h\n']);
     fprintf(fid,'\n');
+    fprintf(fid,'#include <sundials/sundials_types.h>\n');
+    fprintf(fid,'#include <sundials/sundials_nvector.h>\n');
+    fprintf(fid,'#include <sundials/sundials_sparse.h>\n');
+    fprintf(fid,'#include <sundials/sundials_direct.h>\n\n');
+    fprintf(fid,'class UserData;\nclass ReturnData;\nclass TempData;\nclass ExpData;\n\n');
     fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
     fprintf(fid,'\n');
     fprintf(fid,'\n');
@@ -357,103 +352,126 @@ end
 
 fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
-fprintf(fid,'                \n');
-fprintf(fid,'#include "wrapfunctions.h"\n');
-fprintf(fid,'#include <include/udata_accessors.h>\n');
-fprintf(fid,'                \n');
-fprintf(fid,'                void init_modeldims(UserData *udata){\n');
-fprintf(fid,['                   nx = ' num2str(this.nx) ';\n']);
-fprintf(fid,['                   nxtrue = ' num2str(this.nxtrue) ';\n']);
-fprintf(fid,['                   ny = ' num2str(this.ny) ';\n']);
-fprintf(fid,['                   nytrue = ' num2str(this.nytrue) ';\n']);
-fprintf(fid,['                   nz = ' num2str(this.nz) ';\n']);
-fprintf(fid,['                   nztrue = ' num2str(this.nztrue) ';\n']);
-fprintf(fid,['                   ne = ' num2str(this.nevent) ';\n']);
-fprintf(fid,['                   ng = ' num2str(this.ng) ';\n']);
-fprintf(fid,['                   nw = ' num2str(this.nw) ';\n']);
-fprintf(fid,['                   ndwdx = ' num2str(this.ndwdx) ';\n']);
-fprintf(fid,['                   ndwdp = ' num2str(this.ndwdp) ';\n']);
-fprintf(fid,['                   nnz = ' num2str(this.nnz) ';\n']);
-fprintf(fid,['                   ubw = ' num2str(this.ubw) ';\n']);
-fprintf(fid,['                   lbw = ' num2str(this.lbw) ';\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
-fprintf(fid,['                    return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){\n');
-if(this.adjoint)
-    fprintf(fid,['                    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
+
+fprintf(fid,'#include "wrapfunctions.h"\n\n');
+if(~strcmp(this.wtype,'iw'))
+    fprintf(fid,'#include <include/cvodewrap.h>\n');
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'#include <include/idawrap.h>\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
+fprintf(fid,'\n');
+fprintf(fid,'UserData getUserData(){\n');
+fprintf(fid,['    return UserData(' num2str(this.np) ',\n']);
+fprintf(fid,['                    ' num2str(this.nx) ',\n']);
+fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nk) ',\n']);
+fprintf(fid,['                    ' num2str(this.ny) ',\n']);
+fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nz) ',\n']);
+fprintf(fid,['                    ' num2str(this.nztrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nevent) ',\n']);
+fprintf(fid,['                    ' num2str(this.ng) ',\n']);
+fprintf(fid,['                    ' num2str(this.nw) ',\n']);
+fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
+fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
+fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
+fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
+fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
+switch(this.param)
+    case 'lin'
+        fprintf(fid,'                    AMICI_SCALING_NONE,\n');
+    case 'log'
+        fprintf(fid,'                    AMICI_SCALING_LN,\n');
+    case 'log10'
+        fprintf(fid,'                    AMICI_SCALING_LOG10,\n');
+    otherwise
+        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
+        fprintf(fid,'                    AMICI_SCALING_NONE;\n');
+end
+switch(this.o2flag)
+    case 1
+        fprintf(fid,'                    AMICI_O2MODE_FULL);\n');
+    case 2
+        fprintf(fid,'                    AMICI_O2MODE_DIR);\n');
+    otherwise
+        fprintf(fid,'                    AMICI_O2MODE_NONE);\n');
+end
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
+fprintf(fid,['   return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){\n');
 if(this.adjoint)
-    fprintf(fid,['                    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
+    fprintf(fid,['    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
+if(this.adjoint)
+    fprintf(fid,['    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
+else
+    fprintf(fid,'    return -1;\n');
+end
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
     fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-    fprintf(fid,['                    return ' AMI 'SensInit' one '(cvode_mem, np, sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
+    fprintf(fid,['    return ' AMI 'SensInit' one '(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                \n');
-fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data){\n');
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data){\n');
 fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-fprintf(fid,['                    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                \n');
-fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem){\n');
-fprintf(fid,['                    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem){\n');
-fprintf(fid,['                    return ' prefix 'SlsSetSparseJacFn(cvode_mem, JSparse_' this.modelname ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem){\n');
-fprintf(fid,['                    return ' prefix 'DlsSetBandJacFn(cvode_mem, JBand_' this.modelname ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFn(void *cvode_mem){\n');
-fprintf(fid,['                    return ' prefix 'SpilsSetJacTimesVecFn(cvode_mem, Jv_' this.modelname ');\n']);
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetDenseJacFnB(void *cvode_mem,int which){\n');
+fprintf(fid,['    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem){\n');
+fprintf(fid,['    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem){\n');
+fprintf(fid,['    return ' prefix 'SlsSetSparseJacFn(cvode_mem, JSparse_' this.modelname ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem){\n');
+fprintf(fid,['    return ' prefix 'DlsSetBandJacFn(cvode_mem, JBand_' this.modelname ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem){\n');
+fprintf(fid,['    return ' prefix 'SpilsSetJacTimesVecFn(cvode_mem, Jv_' this.modelname ');\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which){\n');
 if(this.adjoint)
-    fprintf(fid,['                    return ' prefix 'DlsSetDenseJacFnB(cvode_mem, which, JB_' this.modelname ');\n']);
+    fprintf(fid,['    return ' prefix 'DlsSetDenseJacFnB(cvode_mem, which, JB_' this.modelname ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which){\n');
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which){\n');
 if(this.adjoint)
-    fprintf(fid,['                    return ' prefix 'SlsSetSparseJacFnB(cvode_mem, which, JSparseB_' this.modelname ');\n']);
+    fprintf(fid,['    return ' prefix 'SlsSetSparseJacFnB(cvode_mem, which, JSparseB_' this.modelname ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which){\n');
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which){\n');
 if(this.adjoint)
-    fprintf(fid,['                    return ' prefix 'DlsSetBandJacFnB(cvode_mem, which, JBandB_' this.modelname ');\n']);
+    fprintf(fid,['    return ' prefix 'DlsSetBandJacFnB(cvode_mem, which, JBandB_' this.modelname ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){\n');
+fprintf(fid,'}\n\n');
+fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){\n');
 if(this.adjoint)
-    fprintf(fid,['                    return ' prefix 'SpilsSetJacTimesVecFnB(cvode_mem, which, JvB_' this.modelname ');\n']);
+    fprintf(fid,['    return ' prefix 'SpilsSetJacTimesVecFnB(cvode_mem, which, JvB_' this.modelname ');\n']);
 else
-    fprintf(fid,'                    return(-1);\n');
+    fprintf(fid,'    return -1;\n');
 end
-fprintf(fid,'                }\n');
+fprintf(fid,'}\n\n');
 
-ffuns = {'x0','dx0','sx0','sdx0','J','JDiag','JB','Jv','root','sroot','s2root','stau',...
-    'y','sy','dydp','dydx','z','sz','sz_tf','dzdp','dzdx',...
+ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','root','rz','srz','stau',...
+    'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx',...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
-    'Jy','Jz','dJydx','dJydy','dJydp','dJzdx','dJzdp','sJy','sJz'};
+    'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma'};
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
@@ -463,23 +481,22 @@ for iffun = ffuns
     else
         fun = amifun(iffun{1},this);
     end
-    fprintf(fid,['                int f' iffun{1} fun.fargstr '{\n']);
+    fprintf(fid,['int f' iffun{1} fun.fargstr '{\n']);
     % if the function was generated, we can return it, otherwise return
     % an error
     if(ismember(iffun{1},this.funs))
-        fprintf(fid,['                    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
+        fprintf(fid,['    return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
     else
         if(strcmp(iffun{1},'sx0') || strcmp(iffun{1},'dx0') || strcmp(iffun{1},'sdx0'))
             % these two should always work, if they are not required
             % they should act as placeholders
-            fprintf(fid,'                    return(0);\n');
+            fprintf(fid,'    return 0;\n');
         else
-            fprintf(fid,['                    warnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");\n']);
-            fprintf(fid,'                    return(-1);\n');
+            fprintf(fid,['    warnMsgIdAndTxt("AMICI:mex:' iffun{1} ':NotAvailable","ERROR: The function ' iffun{1} ' was called but not compiled for this model.");\n']);
+            fprintf(fid,'    return -1;\n');
         end
     end
-    fprintf(fid,'                }\n');
-    fprintf(fid,'                \n');
+    fprintf(fid,'}\n\n');
 end
 
 fclose(fid);
@@ -492,18 +509,9 @@ fclose(fid);
 %
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
-fprintf(fid,'#ifndef _am_wrapfunctions_h\n');
-fprintf(fid,'#define _am_wrapfunctions_h\n');
+fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
+fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
-fprintf(fid,'#ifndef AMICI_WITHOUT_MATLAB\n');
-fprintf(fid,'#include <mex.h>\n');
-fprintf(fid,'#endif\n');
-fprintf(fid,'\n');
-if(~strcmp(this.wtype,'iw'))
-    fprintf(fid,'#include <include/cvodewrap.h>\n');
-else
-    fprintf(fid,'#include <include/idawrap.h>\n');
-end
 fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 fprintf(fid,'\n');
@@ -513,21 +521,22 @@ fprintf(fid,'\n');
 
 fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
+fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'                void init_modeldims(UserData *udata);\n');
-fprintf(fid,'                int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
-fprintf(fid,'                int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
-fprintf(fid,'                int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
-fprintf(fid,'                int wrap_RootInit(void *cvode_mem, void *user_data);\n');
-fprintf(fid,'                int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
-fprintf(fid,'                int wrap_SetDenseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetSparseJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetBandJacFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
-fprintf(fid,'                int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'                int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'UserData getUserData();\n');
+fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
+fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
+fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
+fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data);\n');
+fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
+fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
+fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)
@@ -536,9 +545,9 @@ for iffun = ffuns
     else
         fun = amifun(iffun{1},this);
     end
-    fprintf(fid,['                int f' iffun{1} fun.fargstr ';\n']);
+    fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
 end
-fprintf(fid,'#endif /* _LW_cvodewrapfunctions */\n');
+fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
 
 fprintf('CMakeLists | ');
@@ -565,6 +574,9 @@ function argstr = removeTypes(argstr)
 argstr = strrep(argstr,'realtype','');
 argstr = strrep(argstr,'int','');
 argstr = strrep(argstr,'void','');
+argstr = strrep(argstr,'TempData','');
+argstr = strrep(argstr,'ReturnData','');
+argstr = strrep(argstr,'const ExpData','');
 argstr = strrep(argstr,'N_Vector','');
 argstr = strrep(argstr,'long','');
 argstr = strrep(argstr,'DlsMat','');
@@ -577,80 +589,18 @@ end
 
 
 function generateCMakeFile(this)
-    CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
-    fid = fopen(CMakeFileName,'w');
-    fprintf(fid, 'project(%s)\n', this.modelname);
-    fprintf(fid, 'cmake_minimum_required(VERSION 2.8)\n');
-    fprintf(fid, 'set(cmake_build_type Debug)\n');
-    fprintf(fid, 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function")\n');
-    fprintf(fid, 'add_definitions(-DAMICI_WITHOUT_MATLAB)\n\n');
-    
-    fprintf(fid, 'set(AMICI_DIR "%s")\n', fileparts(fileparts(mfilename('fullpath'))));
-    fprintf(fid, 'set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/")\n');
-    fprintf(fid, 'set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/install/lib")\n');
-    fprintf(fid, 'set(HDF_LIB_DIR "/usr/lib/x86_64-linux-gnu/hdf5/serial")\n');
-    fprintf(fid, 'set(HDF_INCLUDE_DIR "/usr/include/hdf5/serial/")\n');
-
-    % sources
-    fprintf(fid, '\nset(SRC_LIST\n');
-    for f = {'main.cpp', 'wrapfunctions.cpp', ...
-            '${AMICI_DIR}/src/symbolic_functions.cpp', ...
-            '${AMICI_DIR}/src/amici.cpp', ...
-            '${AMICI_DIR}/src/udata.cpp', ...
-            '${AMICI_DIR}/src/rdata.cpp', ...
-            '${AMICI_DIR}/src/edata.cpp', ...
-            '${AMICI_DIR}/src/ami_hdf5.cpp', ...
-            }
-        fprintf(fid, '%s\n', f{1});
-    end
+    sourceStr = '';
     for j=1:length(this.funs)
-        %if(this.cppfun(1).(this.funs{j}))
-             funcName = this.funs{j};
-             fprintf(fid, '%s_%s.cpp\n', this.modelname, funcName);
-       % end
-    end
-    fprintf(fid, ')\n\n');
-    
-    %includes
-    includeDirs = {'${AMICI_DIR}', ...
-        '${CMAKE_CURRENT_SOURCE_DIR}',  ...
-        '${AMICI_DIR}/sundials/include',  ...
-        '${SUITESPARSE_DIR}/KLU/Include', ...
-        '${SUITESPARSE_DIR}/AMD/Include', ...
-        '${SUITESPARSE_DIR}/SuiteSparse_config', ...
-        '${SUITESPARSE_DIR}/COLAMD/Include', ...
-        '${SUITESPARSE_DIR}/BTF/Include', ...
-        '/usr/include/hdf5/serial/'
-    };
-    for d = includeDirs
-        fprintf(fid, 'include_directories("%s")\n', d{1});
+        funcName = this.funs{j};
+        sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName) ];
     end
     
-    fprintf(fid, '\n');
-    fprintf(fid, 'add_executable(${PROJECT_NAME} ${SRC_LIST})\n\n');
-
-    %libraries
-    fprintf(fid, 'target_link_libraries(${PROJECT_NAME}\n');
-    libs = {
-        '${SUNDIALS_LIB_DIR}/libsundials_nvecserial.so', ...
-        '${SUNDIALS_LIB_DIR}/libsundials_cvodes.so', ...
-        '${SUITESPARSE_LIB_DIR}/lib/libcolamd.so', ...
-        '${SUITESPARSE_LIB_DIR}/KLU/Lib/libklu.a', ...
-        '${SUITESPARSE_LIB_DIR}/BTF/Lib/libbtf.a', ...
-        '${SUITESPARSE_LIB_DIR}/AMD/Lib/libamd.a', ...
-        '${SUITESPARSE_LIB_DIR}/COLAMD/Lib/libcolamd.a', ...
-        '${SUITESPARSE_LIB_DIR}/SuiteSparse_config/libsuitesparseconfig.a', ...
-        '${HDF_LIB_DIR}/libhdf5_hl.a', ...
-        '${HDF_LIB_DIR}/libhdf5.a', ...
-        '-lpthread -ldl -lz -lsz', ...
-        '-lm'
-        };
-    for l = libs
-        fprintf(fid, '"%s"\n', l{1});
-    end
-    fprintf(fid, ')\n');
-    fclose(fid);
+    t = template();
+    t.add('TPL_MODELNAME', this.modelname);
+    t.add('TPL_SOURCES', sourceStr);
+    CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
+    CMakeTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/CMakeLists.template.txt');
+    t.replace(CMakeTemplateFileName, CMakeFileName);
 end
 
 function generateMainC(this)

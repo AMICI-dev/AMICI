@@ -238,62 +238,6 @@ double seval (int n, double u,
     return (w);
 }
 
-/**
-   Evaluate the derivative of the cubic spline function
-
-   S(x) = B[i] + 2.0 * C[i] * w + 3.0 * D[i] * w**2
-   where w = u - X[i]
-   and   X[i] <= u <= X[i+1]
-   Note that Horner's rule is used.
-   If U < X[0] then i = 0 is used.
-   If U > X[n-1] then i = n-1 is used.
-
-   @param[in] n the number of data points or knots (n >= 2)
-   @param[in] u the abscissa at which the derivative is to be evaluated
-   @param[in] x the abscissas of the knots in strictly increasing order
-   @param[in] b array of spline coefficients computed by spline()
-   @param[in] c array of spline coefficients computed by spline()
-   @param[in] d array of spline coefficients computed by spline()
- 
-   @return the value of the derivative of the spline function at u
-
-   Notes
-     - If u is not in the same interval as the previous call then a
-       binary search is performed to determine the proper interval.
-
-*/
-
-double deriv (int n, double u,
-              double x[],
-              double b[], double c[], double d[])
-{  /* begin function deriv() */
-
-int    i, j, k;
-double w;
-
-if (i >= n-1) i = 0;
-if (i < 0) i = 0;
-
-if ((x[i] > u) || (x[i+1] < u))
-  {  /* ---- perform a binary search ---- */
-  i = 0;
-  j = n;
-  do
-    {
-    k = (i + j) / 2;          /* split the domain to search */
-    if (u < x[k])  j = k;     /* move the upper bound */
-    if (u >= x[k]) i = k;     /* move the lower bound */
-    }                         /* there are no more segments to search */
-  while (j > i+1);
-  }
-
-/* ---- Evaluate the derivative ---- */
-w = u - x[i];
-w = b[i] + w * (2.0 * c[i] + w * 3.0 * d[i]);
-return (w);
-
-} /* end of deriv() */
-
 
 /**
   Integrate the cubic spline function
@@ -331,12 +275,10 @@ double sinteg (int n, double u,
 int    i, j, k;
 double sum, dx;
 
-if (i >= n-1) i = 0;
-if (i < 0)  i = 0;
+i = 0;
 
 if ((x[i] > u) || (x[i+1] < u))
   {  /* ---- perform a binary search ---- */
-  i = 0;
   j = n;
   do
     {

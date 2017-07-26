@@ -1,30 +1,32 @@
 #ifndef _MY_EDATA
 #define _MY_EDATA
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#include <stdbool.h>
-#endif
+class UserData;
 
 /** @brief struct that carries all information about experimental data */
-typedef struct edata {
+class ExpData {
+
+public:
+    /**
+     * @brief Default constructor
+     */
+    ExpData();
+    ExpData(const UserData *udata);
+    ~ExpData();
+    
+    void setDefaults();
+    
     /** observed data */
-    double *am_my; 
+    double *my;
     /** standard deviation of observed data */
-    double *am_ysigma; 
+    double *sigmay;
     
     /** observed events */
-    double *am_mz; 
-    /** standard deviation of observed events */
-    double *am_zsigma;
-    
-    /** boolean indicating whether experimental data was provided */
-    bool am_bexpdata;
-    
-} ExpData;
-
-EXTERNC void freeExpData(ExpData *edata);
+    double *mz;
+    /** observed roots */
+    double *mrz;
+    /** standard deviation of observed events/roots */
+    double *sigmaz;
+};
 
 #endif /* _MY_EDATA */

@@ -61,11 +61,12 @@ classdef amioption < matlab.mixin.CustomDisplay
         ns_maxlinsteps = 150;
         % preequilibration of system via newton solver
         preequil = 0;
+        % mapping of event ouputs to events
+        z2event = double.empty();
     end
     
     properties (Hidden)
-        % mapping of event ouputs to events
-        z2event = double.empty();
+
         % flag for DAE variables
         id = double.empty();
     end

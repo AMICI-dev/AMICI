@@ -6,24 +6,6 @@ function parseModel(this)
 % Return values:
 %
 
-
-% compile CalcMD5 if necessary
-try
-    CalcMD5('TEST','char','hex');
-catch
-    try
-        addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
-        CalcMD5('TEST','char','hex');
-    catch
-        disp('CalcMD5 has not been compiled yet. Compiling now!')
-        tmpdir = pwd;
-        cd(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
-        mex(fullfile(this.wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
-        addpath(fullfile(this.wrap_path,'auxiliary','CalcMD5'))
-        cd(tmpdir);
-    end
-end
-
 % load old hashes
 HTable = this.loadOldHashes();
 
@@ -90,19 +72,22 @@ this.HTable(1).sigma_y = CalcMD5(char(this.sym.sigma_y));
 this.HTable(1).sigma_z = CalcMD5(char(this.sym.sigma_z));
 this.HTable(1).Jy = CalcMD5(char(this.sym.Jy));
 this.HTable(1).Jz = CalcMD5(char(this.sym.Jz));
+this.HTable(1).Jrz = CalcMD5(char(this.sym.Jrz));
 
 % check if code generation changed
-codegen = {'gccode','getArgs','getCVar','getFArgs',...
+codegen_amifun = {'gccode','getArgs','getCVar','getFArgs',...
     'getSensiFlag','getSyms','printLocalVars','writeCcode',...
     'writeCcode_sensi'};
-for ifile = 1:length(codegen)
-    this.HTable(1).(codegen{ifile}) = CalcMD5(which(fullfile(this.wrap_path,'@amifun',[codegen{ifile} '.m'])),'File');
+for ifile = 1:length(codegen_amifun)
+    this.HTable(1).(codegen_amifun{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen_amifun{ifile} '.m']),'File');
 end
-this.HTable(1).generateC = CalcMD5(which(fullfile(this.wrap_path,'@amimodel','generateC.m')),'File');
+codegen_amimodel = {'generateC','makeSyms','makeEvents'};
+for ifile = 1:length(codegen_amimodel)
+    this.HTable(1).(codegen_amimodel{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amimodel',[codegen_amimodel{ifile} '.m']),'File');
+end
 this.HTable(1).udata = CalcMD5(fullfile(this.wrap_path,'include','udata.h'),'File');
 this.HTable(1).tdata = CalcMD5(fullfile(this.wrap_path,'include','tdata.h'),'File');
 
-this.recompile = not(strcmp(this.HTable(1).generateC,HTable.generateC));
 if(not(this.recompile))
     this.recompile = not(strcmp(this.HTable(1).udata,HTable.udata));
 end
@@ -111,8 +96,13 @@ if(not(this.recompile))
 end
 
 ifile = 1;
-while(not(this.recompile) & ifile<=length(codegen))
-    this.recompile = not(strcmp(this.HTable(1).(codegen{ifile}),HTable.(codegen{ifile})));
+while(not(this.recompile) & ifile<=length(codegen_amifun))
+    this.recompile = not(strcmp(this.HTable(1).(codegen_amifun{ifile}),HTable.(codegen_amifun{ifile})));
+    ifile = ifile+1;
+end
+ifile = 1;
+while(not(this.recompile) & ifile<=length(codegen_amimodel))
+    this.recompile = not(strcmp(this.HTable(1).(codegen_amimodel{ifile}),HTable.(codegen_amimodel{ifile})));
     ifile = ifile+1;
 end
 if(this.recompile)
@@ -122,20 +112,18 @@ if(this.recompile)
 end
 % compute functions
 
-funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','JDiag','y','z','deltax','root','Jy','Jz','sigma_y','sigma_z'};
+funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
+
 
 if(this.steadystate)
     funs = {funs{:},'dwdp','dxdotdp','dydp'};
 end
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sy','sz','sz_tf','deltasx','stau','sroot','sJy','dJydy','dJydx','dJydp','sJz','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx'};
+    funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
 end
 if(this.adjoint)
-    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydx','dJydp','dJzdx','dJzdp','dwdp','dxdotdp','dydp'};
-end
-if(this.o2flag)
-    funs = {funs{:},'s2root'};
+    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
 end
 
 if(strcmp(this.wtype,'iw'))

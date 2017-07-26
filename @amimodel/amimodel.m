@@ -127,7 +127,7 @@ classdef amimodel < handle
                 AM = symfun;
             else
                 if(isa(symfun,'char'))
-                    if(exist(symfun,'file'))
+                    if(exist(symfun,'file')==2)
                         fun = str2func(symfun);
                         model = fun();
                     else
@@ -214,6 +214,16 @@ classdef amimodel < handle
             % Return values:
             this.fun.xdot.sym_noopt = this.fun.xdot.sym;
             this.fun.xdot.sym = xdot;
+        end
+        
+        function updateModelName(this,modelname)
+            % updateModelName updates the modelname
+            %
+            % Parameters:
+            %  modelname: new modelname
+            %
+            % Return values:
+            this.modelname = modelname;
         end
         
         parseModel(this)

@@ -17,6 +17,10 @@ for i = 1:numel(fields)
     if isa(d, 'logical')
         d = int32(d);
     end
+    if(prod(size(d)) > 1e4)
+        %disp('skipping')
+        continue;
+    end;
     h5writeatt(hdffile, path, f, d);
 end
 end

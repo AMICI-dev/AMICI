@@ -34,7 +34,7 @@ function [ this ] = getSensiFlag(this)
         case 'dsigma_zdp'
             this.sensiflag = true;
             
-        case 'drootdp'
+        case 'drzdp'
             this.sensiflag = true;
             
         case 'ddeltaxdp'
@@ -52,9 +52,6 @@ function [ this ] = getSensiFlag(this)
         case 'sz'
             this.sensiflag = true;
             
-        case 'sz_tf'
-            this.sensiflag = true;
-            
         case 'dtaudp'
             this.sensiflag = true;
             
@@ -64,19 +61,13 @@ function [ this ] = getSensiFlag(this)
         case 'sroot'
             this.sensiflag = true;
             
-        case 's2root'
+        case 'srz'
             this.sensiflag = true;
             
         case 'sx'
             this.sensiflag = true;
             
         case 'sdx'
-            this.sensiflag = true;
-            
-        case 'sJy'
-            this.sensiflag = false;
-            
-        case 'sJz'
             this.sensiflag = true;
 
         otherwise

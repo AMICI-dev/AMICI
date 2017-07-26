@@ -41,7 +41,7 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = sym(arg);
-            if(ismember(iocc,strfind(tmp_str,'heaviside') + 9))
+            if(ismember(idx_start(iocc),strfind(tmp_str,'dirac') + 5))
                 triggers{end+1} = -sym(arg); % for dirac we need both +to- and -to+ transitions
             end
         end
@@ -78,6 +78,7 @@ if(nevent>0)
     % initialise hflag
     hflags = zeros([nx,nevent]);
     
+    % heaviside
     event_dependency = zeros(nevent);
     for ievent = 1:nevent
         symchar = char(trigger{ievent});
@@ -132,8 +133,9 @@ if(nevent>0)
                 [cfp,t] = coeffs(symvariable,polydirac);
                 if(any(double(t==sym('polydirac'))))
                     tmp_bolus{ievent}(ix) = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac')));
-                    if(~isempty(find(cellfun(@(x) double(x==-trigger{ievent}),trigger))))
-                        tmp_bolus{find(cellfun(@(x) double(x==-trigger{ievent}),trigger))} = tmp_bolus{ievent}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
+                    idx_mirror = find(cellfun(@(x) double(x==-trigger{ievent}),trigger));
+                    if(~isempty(idx_mirror))
+                        tmp_bolus{idx_mirror}(ix) = tmp_bolus{idx_mirror}(ix) + cfp(logical(t==sym('polydirac'))); % for dirac we need both +to- and -to+ transitions
                     end
                 end
                 % remove dirac
@@ -216,9 +218,6 @@ if(nevent>0)
     % want the xdot to be cleaned of any dirac functions
     ievent = 1;
     for ievent = 1:nevent
-        if(logical(subs(trigger{ievent},sym('t'),this.t0)==0))
-            error(['The trigger of event ' num2str(ievent) ' fires at initial timepoint t0 = ' num2str(this.t0) ', which is currently not supported.'])
-        end
         if(not(triggeridx(ievent)))
             if(any(bolus{ievent}~=0))
                 error(['Event ' num2str(ievent) ' has a constant trigger function but non-zero bolus.' ...
@@ -271,9 +270,31 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(zeros(length([this.event.z]),1));
     for iz = 1:length([this.event.z])
-        this.sym.Jz(iz) = sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
+        this.sym.Jz(iz) = sym(['0.5*log(2*pi*sigma_z_' num2str(iz-1) '^2) + 0.5*((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
+
+z = sym(arrayfun(@(iz) ['z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_z = sym(arrayfun(@(iz) ['var_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+this.sym.Jz = subs(this.sym.Jz,z,var_z);
+this.sym.Jz = subs(this.sym.Jz,sigma_z,var_sigma_z);
+
+rz = sym(arrayfun(@(iz) ['rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+mz = sym(arrayfun(@(iz) ['mz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_rz = sym(arrayfun(@(iz) ['var_rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+if(~isfield(this.sym,'Jrz'))
+    this.sym.Jrz = sym(zeros(size(this.sym.Jz)));
+    for iz = 1:length([this.event.z])
+        tmp = subs(this.sym.Jz(iz,:),var_z,var_rz);
+        this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz)))); 
+    end
+end
+
+this.sym.Jrz = subs(this.sym.Jrz,rz,var_rz);
 
 end
 

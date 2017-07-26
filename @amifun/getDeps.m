@@ -81,8 +81,14 @@ function [ this ] = getDeps(this, model)
         case 'drootdp'
             this.deps = {'root','p','drootdx','sx'};
             
+        case 'drzdp'
+            this.deps = {'rz','p',};
+            
         case 'drootdx'
             this.deps = {'root','x'};
+            
+        case 'drzdx'
+            this.deps = {'rz','x',};
             
         case 'drootdt'
             % w is necessary for xdot_noopt
@@ -111,6 +117,12 @@ function [ this ] = getDeps(this, model)
             
         case 'z'
             this.deps = {'x','k','p'};
+            
+        case 'rz'
+            this.deps = {'z','root'};
+            
+        case 'srz'
+            this.deps = {'rz','root','drootdx','drootdp','sx'};
             
         case 'dzdp'
             this.deps = {'z','p','dtaudp'};
@@ -204,30 +216,24 @@ function [ this ] = getDeps(this, model)
             this.deps = {'xdot'};
             
         case 'Jy'
-            this.deps = {'y','sigma_y','p','x'};
+            this.deps = {'y','sigma_y'};
         case 'dJydy'
             this.deps = {'Jy','y'};
-        case 'dJydx'
-            this.deps = {'dJydy','dydx'};
         case 'dJydsigma'
             this.deps = {'Jy','sigma_y'};
-        case 'dJydp'
-            this.deps = {'dJydy','dydp','dJydsigma','dsigma_ydp'};
-        case 'sJy'
-            this.deps = {'dJydp','dJydy','sy'};
             
         case 'Jz'
-            this.deps = {'z','sigma_z','p','x'};
+            this.deps = {'z','sigma_z'};
         case 'dJzdz'
             this.deps = {'Jz','x'};
-        case 'dJzdx'
-            this.deps = {'dJzdz','dzdx'};
         case 'dJzdsigma'
             this.deps = {'Jz','sigma_z'};
-        case 'dJzdp'
-            this.deps = {'dJzdz','dzdp','dJzdsigma','dsigma_zdp'};
-        case 'sJz'
-            this.deps = {'dJzdp','dJzdz','sz'};
+        case 'Jrz'
+            this.deps = {'rz','sigma_z'};
+        case 'dJrzdz'
+            this.deps = {'Jrz','x'};
+        case 'dJrzdsigma'
+            this.deps = {'Jrz','sigma_z'};
             
         case 'w'
             this.deps = {'xdot'};

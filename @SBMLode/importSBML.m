@@ -204,16 +204,26 @@ checkIllegalFunctions(kLaw);
 this.flux = cleanedsym(kLaw);
 this.flux = this.flux(:);
 % add local parameters to global parameters, make them global by
-% extending them by the r[reactionindex]
+% extending them by the reaction_id string
 species_idx = transpose(sym(1:nx));
 if(length({model.reaction.id})>0)
     try
-        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y],{x.parameter.id},'UniformOutput',false)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
+        tmp = cellfun(@(x,y) sym(cellfun(@(x) [x '_' y], ...
+                                 {x.parameter.id}, ...
+                                 'UniformOutput',false)), ...
+                      {model.reaction.kineticLaw}, ...
+                      {model.reaction.id}, ...
+                      'UniformOutput',false);
         plocal = transpose([tmp{:}]);
         tmp = cellfun(@(x) cellfun(@double,{x.parameter.value}),{model.reaction.kineticLaw},'UniformOutput',false);
         pvallocal = transpose([tmp{:}]);
         % replace local parameters by globalized ones
-        tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}),sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),transpose(num2cell(this.flux)),{model.reaction.kineticLaw},arrayfun(@(x) ['r' num2str(x)],1:length({model.reaction.id}),'UniformOutput',false),'UniformOutput',false);
+        tmp = cellfun(@(x,y,z) subs(x,sym({y.parameter.id}), ...
+            sym(cellfun(@(x) [x '_' z],{y.parameter.id},'UniformOutput',false))),...
+            transpose(num2cell(this.flux)),...
+            {model.reaction.kineticLaw},...
+            {model.reaction.id},...
+            'UniformOutput',false);
         this.flux = [tmp{:}];
         this.flux = this.flux(:);
         
@@ -249,19 +259,18 @@ if(length({model.reaction.id})>0)
     if(model.SBML_level>=3)
         reactant_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.reactant},'UniformOutput',false);
 %         reactant_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.reactant},'UniformOutput',false);
-        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@getId,{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) stoich_initAssign_rule(x,initassignments_sym,initassignments_math,rulevars,rulemath),{model.reaction.product},'UniformOutput',false);
 %         product_math = cellfun(@(x) sym({x.stoichiometry}),{model.reaction.product},'UniformOutput',false);
-        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@getId,{model.reaction.product},'UniformOutput',false);
     else
         % addition is necessary due to 1x0 struct that is returned by libSBML which is not properly handled by MATLAB,
         % the concatenation is necessary because MATLAB treats 1x0 structs as empty input
-        math_expr = @(y) cleanedsym(y.math);
         symbolic_expr = @(x) num2cell(cell2sym(cellfun(@(z) math_expr(z),arrayfun(@(y) y.stoichiometryMath,x,'UniformOutput',false),'UniformOutput',false)) + sym(arrayfun(@(y) y.stoichiometry,x)).*arrayfun(@(y) isempty(y.stoichiometryMath),x));
         reactant_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.reactant},'UniformOutput',false);
-        reactant_id = cellfun(@(x) {x.id},{model.reaction.reactant},'UniformOutput',false);
+        reactant_id = cellfun(@getId,{model.reaction.reactant},'UniformOutput',false);
         product_stochiometry = cellfun(@(x) {symbolic_expr(x)},{model.reaction.product},'UniformOutput',false);
-        product_id = cellfun(@(x) {x.id},{model.reaction.product},'UniformOutput',false);
+        product_id = cellfun(@getId,{model.reaction.product},'UniformOutput',false);
     end
     eS = sym(zeros(nx,nr));
     pS = sym(zeros(nx,nr));
@@ -671,7 +680,7 @@ if(nargin>0)
 csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
 csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
 else
-    csym = sym();
+    csym = sym(0);
 end
 end
 
@@ -734,5 +743,21 @@ for iy = 1:length(y)
         end
     end
 end
+end
+
+function expr = math_expr(y)
+    if(isfield(y,'math'))
+    expr = cleanedsym(y.math);
+    else
+    expr = cleanedsym();       
+    end
+end
+
+function id = getId(x)
+    if(isfield(x,'id'))
+        id = {x.id};
+    else
+        id = {x.species};
+    end
 end
 
