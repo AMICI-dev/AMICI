@@ -1389,7 +1389,7 @@ int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, Tem
 /* ------------------------------------------------------------------------------------- */
 
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int *status, int ntry) {
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int status, int ntry) {
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
      *
@@ -1406,18 +1406,24 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     int stat1 = -1;
     
     double res;
+    double rel_res;
     double res_old;
     double gamma = 1.0;
     double tol = 1e-5;
+    realtype *x_tmp;
     
     N_Vector delta;
-    delta = N_VNew_Serial(nx);
+    N_Vector rel_x;
+    delta = N_VNew_Serial(udata->nx);
     N_VConst(0.0, delta);
     
     // Check, how fxdot is used exactly within AMICI
-    fxdot(t, x, dx, xdot, udata);
-    res = sqrt(N_VDotProd(xdot,xdot));
-    if (res < tol) {
+    fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
+    res = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
+    
+    N_VDiv(tdata->xdot, tdata->x, rel_x);
+    rel_res = sqrt(N_VDotProd(rel_x, rel_x));
+    if (res < udata->atol || rel_res < udata->rtol) {
         // Clean up worksapce
         N_VDestroy_Serial(delta);
         
@@ -1426,45 +1432,45 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     }
     
     // compute the inital search direction
-    *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
+    status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
     
     // Copy the current state to the old one, make up a new vector for Jdiag
-    N_VScale(1.0, x, x_old);
-    N_VScale(1.0, xdot, xdot_old);
+    N_VScale(1.0, tdata->x, tdata->x_old);
+    N_VScale(1.0, tdata->xdot, tdata->xdot_old);
     
     // Newton iterations
-    for(inewt=0; inewt<ns_maxsteps; inewt++) {
+    for(inewt=0; inewt<udata->newton_maxsteps; inewt++) {
         
         // Try a full, undamped Newton step
-        N_VLinearSum(1.0, x_old, gamma, delta, x);
+        N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
         
         // Ensure positivity of the state
-        x_tmp = N_VGetArrayPointer(x);
-        for (ix=0; ix<nx; ix++) {
+        x_tmp = N_VGetArrayPointer(tdata->x);
+        for (ix=0; ix<udata->nx; ix++) {
             if (x_tmp[ix] < 0.0) {
                 x_tmp[ix] = 0.0;
             }
         }
         
         // Compute new xdot
-        fxdot(t, x, dx, xdot, udata);
+        fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
         
         // Compute residuals
-        res = N_VDotProd(xdot, xdot);
-        res_old = N_VDotProd(xdot_old, xdot_old);
+        res = N_VDotProd(tdata->xdot, tdata->xdot);
+        res_old = N_VDotProd(tdata->xdot_old, tdata->xdot_old);
         res = sqrt(res);
         res_old = sqrt(res_old);
         
         // if the step was useful, the dampening can be enlarged
         if (res<res_old) {
             // update x and F with x_try and F_try
-            N_VScale(1.0, x, x_old);
-            N_VScale(1.0, xdot, xdot_old);
+            N_VScale(1.0, tdata->x, tdata->x_old);
+            N_VScale(1.0, tdata->xdot, tdata->xdot_old);
             
             // Check condition
-            if (res < tol) {
+            if (res < udata->atol) {
                 // Return number of Newton steps needed
-                ns_numstepsdata[ntry-1] = inewt + 1;
+                rdata->newton_numsteps[ntry-1] = inewt + 1;
                 stat1 = 0;
                 break;
             }
@@ -1475,7 +1481,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                 gamma = fmax(1.0, 2.0*gamma);
             
                 // solve the new linear system
-                *status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
+                status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
             }
         } else {
             gamma = gamma/4.0;
@@ -1506,45 +1512,46 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
     
     int ix, il;
     int stat1 = -1;
-    double tol;
-    double tolb;
     double rho;
     double rho1;
     double alpha;
     double beta;
     double omega;
     double res;
+    double rel_res;
     
     N_Vector ns_p;
     N_Vector ns_h;
     N_Vector ns_t;
     N_Vector ns_s;
     N_Vector ns_r;
+    N_Vector ns_rr;
     N_Vector ns_rt;
     N_Vector ns_v;
     N_Vector ns_Jv;
     N_Vector ns_tmp;
     N_Vector ns_Jdiag;
     
-    ns_p  = N_VNew_Serial(nx);
-    ns_h  = N_VNew_Serial(nx);
-    ns_t  = N_VNew_Serial(nx);
-    ns_s  = N_VNew_Serial(nx);
-    ns_r  = N_VNew_Serial(nx);
-    ns_rt = N_VNew_Serial(nx);
-    ns_v  = N_VNew_Serial(nx);
-    ns_Jv = N_VNew_Serial(nx);
-    ns_tmp = N_VNew_Serial(nx);
-    ns_Jdiag = N_VNew_Serial(nx);
+    ns_p  = N_VNew_Serial(udata->nx);
+    ns_h  = N_VNew_Serial(udata->nx);
+    ns_t  = N_VNew_Serial(udata->nx);
+    ns_s  = N_VNew_Serial(udata->nx);
+    ns_r  = N_VNew_Serial(udata->nx);
+    ns_rr  = N_VNew_Serial(udata->nx);
+    ns_rt = N_VNew_Serial(udata->nx);
+    ns_v  = N_VNew_Serial(udata->nx);
+    ns_Jv = N_VNew_Serial(udata->nx);
+    ns_tmp = N_VNew_Serial(udata->nx);
+    ns_Jdiag = N_VNew_Serial(udata->nx);
     
-     N_VScale(-1.0, xdot, xdot);
+     N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
     // Get the diagonal of the Jacobian for preconditioning
-    fJDiag(t, ns_Jdiag, x, udata);
+    fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
     
     // Ensure positivity of entries in ns_Jdiag
     N_VConst(1.0, ns_p);
-    N_VAbs(ns_Jdiag,ns_tmp);
+    N_VAbs(ns_Jdiag, ns_tmp);
     N_VCompare(1e-15, ns_tmp, ns_tmp);
     N_VLinearSum(-1.0, ns_tmp, 1.0, ns_p, ns_tmp);
     N_VLinearSum(1.0, ns_Jdiag, 1.0, ns_tmp, ns_Jdiag);
@@ -1559,19 +1566,16 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
     omega = 1.0;
     alpha = 1.0;
     
-    // Set tolerances
-    tolb = 1e-8;
-    
     // can be set to 0 at the moment
-    fJv(ns_delta, ns_Jv, t, x, xdot, udata, ns_tmp);
+    fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
     
     // ns_r = xdot - ns_Jv;
-    N_VLinearSum(-1.0, ns_Jv, 1.0, xdot, ns_r);
+    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
     N_VDiv(ns_r, ns_Jdiag, ns_r);
     res = sqrt(N_VDotProd(ns_r, ns_r));
     N_VScale(1.0, ns_r, ns_rt);
     
-    for (il=0; il<ns_maxlinsteps; il++) {
+    for (il = 0; il < udata->newton_maxlinsteps; il++) {
         // Compute factors
         rho1 = rho;
         rho = N_VDotProd(ns_rt, ns_r);
@@ -1582,7 +1586,7 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
         N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
         
         // ns_v = J * ns_p
-        fJv(ns_p, ns_v, t, x, xdot, udata, ns_tmp);
+        fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
         N_VDiv(ns_v, ns_Jdiag, ns_v);
         
         // Compute factor
@@ -1594,7 +1598,7 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
         N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
         
         // ns_t = J * ns_s
-        fJv(ns_s, ns_t, t, x, xdot, udata, ns_tmp);
+        fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
         N_VDiv(ns_t, ns_Jdiag, ns_t);
         
         // Compute factor
@@ -1608,14 +1612,16 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
         // Compute the (unscaled) residual
         N_VProd(ns_r, ns_Jdiag, ns_r);
         res = sqrt(N_VDotProd(ns_r, ns_r));
+        N_VDiv(ns_r, tdata->xdot, ns_rr);
+        rel_res = sqrt(N_VDotProd(ns_rr, ns_rr));
         
         // Test convergence
-        if (res <= tolb) {
+        if (res < 1e-8) {
             // Write number of steps needed
-            ns_numlinstepsdata[(ntry-1)*ns_maxsteps+nnewt] = il + 1;
+            rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = il + 1;
 
             // Return success
-            N_VScale(-1.0, xdot, xdot);
+            N_VScale(-1.0, tdata->xdot, tdata->xdot);
             stat1 = 0;
             break;
         }
@@ -1635,7 +1641,7 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
     N_VDestroy_Serial(ns_Jv);
     N_VDestroy_Serial(ns_tmp);
     N_VDestroy_Serial(ns_Jdiag);
-    N_VScale(-1.0, xdot, xdot);
+    N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
     // Return
     return(stat1);
@@ -1685,8 +1691,8 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                         }
                     } else {
                         if (udata->nx>0) {
-                            if (isinf(ts[it])) {
-                                status = workSteadyStateProblem(udata, tdata, rdata, status, ami_mem, it);
+                            if (isinf(rdata->ts[it])) {
+                                status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it);
                             } else {
                                 status = AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
                             }
@@ -1888,7 +1894,7 @@ set_likelihood:
     return AMICI_SUCCESS;
 }
 
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int *status, void *ami_mem, int it) {
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it) {
     /*
      * tries to determine the steady state of the ODE system by a Newton solver
      uses forward intergration, if the Newton solver fails
@@ -1901,62 +1907,65 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     
     int ntry = 1;
     int ix;
+    int status = (int) *rdata->status;
+    realtype *x_tmp;
     clock_t start, diff;
     
     /* First, try to do Newton steps */
     start = clock();
-    *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
+    status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
     diff = clock() - start;
-    rdata->am_ns_timedata[0] = (double)(diff * 1000) / CLOCKS_PER_SEC;
+    rdata->newton_time[0] = (double)(diff * 1000) / CLOCKS_PER_SEC;
     
-    if (*status == 0) {
+    if (status == AMICI_SUCCESS) {
         // tell workForwardProblem, that tout = inf was reached and set flag for successful integration
-        t = INFINITY;
-        x_tmp = NV_DATA_S(x);
-        for (ix=0; ix<nx; ix++) {
-            xssdata[ix] = x_tmp[ix];
+        tdata->t = INFINITY;
+        x_tmp = NV_DATA_S(tdata->x);
+        for (ix=0; ix<udata->nx; ix++) {
+            rdata->xss[ix] = x_tmp[ix];
         }
-        *newtdata = 1.0;
+        *rdata->newton = 1.0;
         
     } else {
         
         // Try to integrate for finding the steady state
-        *status = AMISolve(ami_mem, RCONST(ts[it]), x, dx, &t, AMI_NORMAL);
-        x_tmp = NV_DATA_S(x);
+        status = AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
+        
+        x_tmp = NV_DATA_S(tdata->x);
         
         // If integration found a steady state
-        if (*status == AMI_ROOT_RETURN) {
-            xssdata = x_tmp;
-            for (ix=0; ix<nx; ix++) {
-                xssdata[ix] = x_tmp[ix];
+        if (status == AMICI_ROOT_RETURN) {
+            rdata->xss = x_tmp;
+            for (ix=0; ix<udata->nx; ix++) {
+                rdata->xss[ix] = x_tmp[ix];
             }
-            *newtdata = 2.0;
+            *rdata->newton = 2.0;
             return(0);
         }
         
         // if mxstep was reached, trigger new Newton Solve
-        if (*status == -1) {
+        if (status == AMICI_SUCCESS) {
             ntry = 2;
             start = clock();
-            *status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
+            status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
             diff = clock() - start;
-            rdata->am_ns_timedata[1] = (double)(diff * 1000) / CLOCKS_PER_SEC;
+            rdata->newton_time[1] = (double)(diff * 1000) / CLOCKS_PER_SEC;
             
-            if (*status == 0) {
+            if (status == AMICI_SUCCESS) {
                 /* store Newton Step */
-                *newtdata = 3.0;
-                x_tmp = NV_DATA_S(x);
-                for (ix=0; ix<nx; ix++) {
-                    xssdata[ix] = x_tmp[ix];
+                *rdata->newton = 3.0;
+                x_tmp = NV_DATA_S(tdata->x);
+                for (ix=0; ix<udata->nx; ix++) {
+                    rdata->xss[ix] = x_tmp[ix];
                 }
             } else {
-                return *status;
+                return status;
             }
         }
         
-        // if some integration error occuredm return the error
-        if (*status<0) {
-            return *status;
+        // if some integration error occured, return the error
+        if (status<0) {
+            return status;
         }
         return(0);
         

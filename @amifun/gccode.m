@@ -152,7 +152,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dJydsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJydsigma[iy+($1)*udata->nytrue]');
             cstr = regexprep(cstr,'var_dJzdsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJzdsigma[iz+($1)*udata->nztrue]');
             cstr = regexprep(cstr,'var_dJrzdsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJrzdsigma[iz+($1)*udata->nztrue]');
-           
+            cstr = strrep(cstr,'var_JDiag','JDiag_tmp');
             
             if(~isempty(strfind(this.cvar,'Jy')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');

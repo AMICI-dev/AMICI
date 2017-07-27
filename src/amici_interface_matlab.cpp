@@ -173,8 +173,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
         readOptionScalar(ism,int)
         readOptionScalar(sensi_meth,AMICI_sensi_meth)
         readOptionScalar(ordering,int)
-        readOptionScalar(ns_maxsteps,int)
-        readOptionScalar(ns_maxlinsteps,int)
+        readOptionScalar(newton_maxsteps,int)
+        readOptionScalar(newton_maxlinsteps,int)
     } else {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
         delete udata;

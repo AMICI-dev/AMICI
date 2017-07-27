@@ -121,10 +121,13 @@ public:
     double *newton_time;
     
     /** number of Newton steps steady state problem */
-    double *anewton_numsteps;
+    double *newton_numsteps;
     
     /** number of linear steps per Newton step steady state problem */
     double *newton_numlinsteps;
+    
+    /** steady state found be Newton solver */
+    double *xss;
     
     /** likelihood value (double[1]) */
     double *llh;

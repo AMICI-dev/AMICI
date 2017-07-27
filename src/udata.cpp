@@ -165,6 +165,7 @@ void UserData::init()
 
     nan_dxdotdp = false;
     nan_J = false;
+    nan_JDiag = false;
     nan_JSparse = false;
     nan_xdot = false;
     nan_xBdot = false;

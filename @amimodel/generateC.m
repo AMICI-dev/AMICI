@@ -203,9 +203,9 @@ for ifun = this.funs
                 fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
                 fprintf(fid,'   if(amiIsNaN(JDiag_tmp[ix])) {\n');
                 fprintf(fid,'       JDiag_tmp[ix] = 0;\n');
-                fprintf(fid,'       if(!udata->am_nan_JDiag) {\n');
+                fprintf(fid,'       if(!udata->nan_JDiag) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value on Jacobian diagonal and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
-                fprintf(fid,'           udata->am_nan_JDiag = TRUE;\n');
+                fprintf(fid,'           udata->nan_JDiag = TRUE;\n');
                 fprintf(fid,'       }\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'   if(amiIsInf(JDiag_tmp[ix])) {\n');
@@ -467,7 +467,7 @@ else
 end
 fprintf(fid,'}\n\n');
 
-ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','root','rz','srz','stau',...
+ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',...
     'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx',...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
