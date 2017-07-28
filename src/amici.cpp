@@ -1414,14 +1414,32 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     
     N_Vector delta;
     N_Vector rel_x;
+    N_Vector tmp_x;
     delta = N_VNew_Serial(udata->nx);
+    rel_x = N_VNew_Serial(udata->nx);
+    tmp_x = N_VNew_Serial(udata->nx);
     N_VConst(0.0, delta);
     
-    // Check, how fxdot is used exactly within AMICI
+    // Check, how fxdot is used exactly within AMICI...
     fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
     res = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
     
-    N_VDiv(tdata->xdot, tdata->x, rel_x);
+    // Check for relative error, but make sure not to divide by 0!
+    // Ensure positivity of the state
+    
+    x_tmp = N_VGetArrayPointer(tdata->x);
+    for(ix=0;ix<udata->nx;ix++) {
+        
+    }
+    N_VScale(1.0, tdata->x, tmp_x);
+    N_VAbs(tmp_x, tmp_x);
+    x_tmp = N_VGetArrayPointer(tmp_x);
+    for (ix=0; ix<udata->nx; ix++) {
+        if (x_tmp[ix] < udata->atol) {
+            x_tmp[ix] = udata->atol;
+        }
+    }
+    N_VDiv(tmp_x, tmp_x, rel_x);
     rel_res = sqrt(N_VDotProd(rel_x, rel_x));
     if (res < udata->atol || rel_res < udata->rtol) {
         // Clean up worksapce
@@ -1691,7 +1709,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                         }
                     } else {
                         if (udata->nx>0) {
-                            if (isinf(rdata->ts[it])) {
+                            if (isinf(udata->ts[it])) {
                                 status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it);
                             } else {
                                 status = AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
