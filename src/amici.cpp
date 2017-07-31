@@ -1435,6 +1435,8 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     if (res < udata->atol || rel_res < udata->rtol) {
         // Clean up worksapce
         N_VDestroy_Serial(delta);
+        N_VDestroy_Serial(rel_x);
+        N_VDestroy_Serial(tmp_x);
         
         // Return Success;
         return (0);
@@ -1499,6 +1501,8 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 
     // Clean up worksapce
     N_VDestroy_Serial(delta);
+    N_VDestroy_Serial(rel_x);
+    N_VDestroy_Serial(tmp_x);
     
     rdata->newton_numsteps[ntry-1] = udata->newton_maxsteps;
     
@@ -1636,11 +1640,14 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     N_VDestroy_Serial(ns_t);
     N_VDestroy_Serial(ns_s);
     N_VDestroy_Serial(ns_r);
+    N_VDestroy_Serial(ns_rr);
     N_VDestroy_Serial(ns_rt);
     N_VDestroy_Serial(ns_v);
     N_VDestroy_Serial(ns_Jv);
     N_VDestroy_Serial(ns_tmp);
     N_VDestroy_Serial(ns_Jdiag);
+    N_VDestroy_Serial(ns_delta);
+    
     N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
     // Return

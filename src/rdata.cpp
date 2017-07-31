@@ -265,7 +265,6 @@ void ReturnData::initFields(const UserData *udata)
         initField2(&numerrtestfails, "numerrtestfails",udata->nt, 1);
         initField2(&numnonlinsolvconvfails, "numnonlinsolvconvfails", udata->nt, 1);
         initField2(&order, "order", udata->nt,1);
-        initField2(&numsteps, "numsteps",udata->nt, 1);
         
         if((udata->nz>0) & (udata->ne>0)){
             initField2(&z, "z", udata->nmaxevent,udata->nz);
