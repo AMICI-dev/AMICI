@@ -1441,7 +1441,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     }
     
     // compute the inital search direction
-    status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
+    status = getNewtonStep(udata, rdata, tdata, ami_mem, ntry, inewt);
     
     // Copy the current state to the old one, make up a new vector for Jdiag
     N_VScale(1.0, tdata->x, tdata->x_old);
@@ -1490,7 +1490,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                 gamma = fmax(1.0, 2.0*gamma);
             
                 // solve the new linear system
-                status = getNewtonStep(delta, udata, rdata, tdata, ami_mem, ntry, inewt);
+                status = getNewtonStep(udata, rdata, tdata, ami_mem, ntry, inewt);
             }
         } else {
             gamma = gamma/4.0;
@@ -1510,8 +1510,8 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt) {
-    /**
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt) {
+     /**
      * getNewtonStep acomputes the Newton Step by solving a linear system
      *
      * @param[in] ami_mem pointer to the solver memory block @type *void
@@ -1521,15 +1521,15 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
      * @return void
      */
     
-    int ix, il;
-    int stat1 = -1;
-    double rho;
-    double rho1;
-    double alpha;
-    double beta;
-    double omega;
-    double res;
-    double rel_res;
+     int il;
+     int stat1 = -1;
+     double rho;
+     double rho1;
+     double alpha;
+     double beta;
+     double omega;
+     double res;
+     double rel_res;
     
      N_Vector ns_p = N_VNew_Serial(udata->nx);
      N_Vector ns_h = N_VNew_Serial(udata->nx);
@@ -1542,6 +1542,7 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
      N_Vector ns_Jv = N_VNew_Serial(udata->nx);
      N_Vector ns_tmp = N_VNew_Serial(udata->nx);
      N_Vector ns_Jdiag = N_VNew_Serial(udata->nx);
+     N_Vector ns_delta = N_VNew_Serial(udata->nx);
     
      N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
