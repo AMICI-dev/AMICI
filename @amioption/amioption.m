@@ -51,11 +51,12 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
+        % mapping of event ouputs to events
+        z2event = double.empty();
     end
     
     properties (Hidden)
-        % mapping of event ouputs to events
-        z2event = double.empty();
+
         % flag for DAE variables
         id = double.empty();
     end

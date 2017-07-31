@@ -6,7 +6,7 @@
  */
 
 #include "include/amici_interface_matlab.h"
-#include "wrapfunctions.h" /* user functions */
+#include "include/amici_model_functions.h"
 
 #include <cstring>
 #include <assert.h>
@@ -158,6 +158,9 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
             if(mxGetM(idlist) * mxGetN(idlist) == udata->nx) {
                 udata->idlist = new double[udata->nx];
                 memcpy(udata->idlist, mxGetData(idlist), sizeof(double) * udata->nx);
+            } else {
+                errMsgIdAndTxt("AMICI:mex:idlist","Provided idlist has incorrect length!");
+                goto freturn;
             }
         } else {
             warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");
@@ -288,6 +291,25 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, AMICI_BL
 #endif
 }
 
+void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const int M, const int N, const double alpha, const double *A, const int lda,
+                 const double *X, const int incX, const double beta, double *Y, const int incY)
+{
+    assert(layout == AMICI_BLAS_ColMajor);
+    
+    const ptrdiff_t M_ = M;
+    const ptrdiff_t N_ = N;
+    const ptrdiff_t lda_ = lda;
+    const ptrdiff_t incX_ = incX;
+    const ptrdiff_t incY_ = incY;
+    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
+
+#if defined(_WIN32)
+    dgemv(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
+#else
+    dgemv_(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
+#endif
+}
+
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 {
     mxsol = NULL;
@@ -349,26 +371,6 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName, 
     array = mxGetField(mxsol, 0, fieldName);
     if(status && array == NULL)
         *status = AMICI_ERROR_RDATA;
-}
-
-void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA, const int M, const int N, const double alpha, const double *A, const int lda,
-                 const double *X, const int incX, const double beta, double *Y, const int incY)
-{
-    assert(layout == AMICI_BLAS_ColMajor);
-
-    const ptrdiff_t M_ = M;
-    const ptrdiff_t N_ = N;
-    const ptrdiff_t lda_ = lda;
-    const ptrdiff_t incX_ = incX;
-    const ptrdiff_t incY_ = incY;
-    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
-
-    assert(layout == AMICI_BLAS_ColMajor);
-#if defined(_WIN32)
-    dgemv(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
-#else
-    dgemv_(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
-#endif
 }
 
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
@@ -440,7 +442,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz", errmsg);
             return NULL;
         }
-        memcpy(edata->mz,mxGetPr(mxGetProperty(prhs[8], 0 ,"Sigma_Y")),nz_mz*ne_mz*sizeof(double));
+        memcpy(edata->mz,mxGetPr(mxGetProperty(prhs[8], 0 ,"Z")),nz_mz*ne_mz*sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Z","Field Z not specified as field in data struct!");
         return NULL;

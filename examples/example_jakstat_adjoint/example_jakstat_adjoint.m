@@ -2,7 +2,7 @@ function example_jakstat_adjoint()
     
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
-    amiwrap('model_jakstat','model_jakstat_adjoint_syms',exdir)
+    amiwrap('model_jakstat','model_jakstat_adjoint_syms',exdir,1)
     
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     
@@ -57,13 +57,13 @@ function example_jakstat_adjoint()
     
     % generate new
     xi_rand = xi + 0.1;
-    options.sensi = 1;
+    options.sensi = 2;
     options.sensi_meth = 'adjoint';
     sol = simulate_model_jakstat([],xi_rand,[],D,options);
     options.sensi_meth = 'forward';
     solf = simulate_model_jakstat([],xi_rand,[],D,options);
     
-    options.sensi = 0;
+    options.sensi = 1;
     eps = 1e-4;
     fd_grad = NaN(length(xi),1);
     for ip = 1:length(xi)
@@ -71,20 +71,43 @@ function example_jakstat_adjoint()
         xip(ip) = xip(ip) + eps;
         psol = simulate_model_jakstat([],xip,[],D,options);
         fd_grad(ip) = (psol.llh-sol.llh)/eps;
+        fd_hess(:,ip) = (psol.sllh-sol.sllh)/eps;
     end
     
     if(usejava('jvm'))
     figure
-    bar([abs((sol.sllh-fd_grad)./sol.sllh),abs((sol.sllh-solf.sllh)./sol.sllh)])
+    subplot(1,2,1)
+    plot(abs(solf.sllh),abs(fd_grad),'rx')
+    hold on
+    plot(abs(solf.sllh),abs(sol.sllh),'bo')
     hold on
     set(gca,'YScale','log')
-    ylim([1e-12,1e0])
+    set(gca,'XScale','log')
+    ylim([1e-2,1e2])
+    xlim([1e-2,1e2])
+    plot([1e-2,1e2],[1e-2,1e2],'k:')
+    legend('finite differences','adjoint sensitivities','Location','best')
     box on
+    axis square
+    xlabel('absolute value forward sensitivity gradient entries')
+    ylabel('absolute value gradient entries')
+    
+    subplot(1,2,2)
+    plot(abs(solf.s2llh(:)),abs(fd_hess(:)),'rx')
     hold on
-%     plot([1e-2,1e2],[1e-2,1e2],'k:')
-    xlabel('parameter index')
-    ylabel('relative difference to adjoint sensitivities')
-    legend('finite differences','forward sensitivities')
+    plot(abs(solf.s2llh(:)),abs(sol.s2llh(:)),'bo')
+    hold on
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    ylim([1e-5,1e3])
+    xlim([1e-5,1e3])
+    plot([1e-5,1e3],[1e-5,1e3],'k:')
+    legend('finite differences','adjoint sensitivities','Location','best')
+    box on
+    axis square
+    xlabel('absolute value forward sensitivity hessian entries')
+    ylabel('absolute value hessian entries')
+    
     set(gcf,'Position',[100 300 1200 500])
     end
     

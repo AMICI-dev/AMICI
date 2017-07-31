@@ -22,22 +22,7 @@ elseif(strcmp(this.funstr,'JSparseB'))
     tmpfun = this;
     tmpfun.sym = model.fun.JB.sym(model.sparseidxB);
     tmpfun.gccode(model,fid);
-elseif(strcmp(this.funstr,'z') || strcmp(this.funstr,'sz'))
-    if(any(nonzero))
-        fprintf(fid,'    switch(ie) { \n');
-        for ievent=1:nevent
-            tmpfun = this;
-            % set all z that do not belong to this event to zero
-            % dont shorten the vector as we need the indices
-            fprintf(fid,['        case ' num2str(ievent-1) ': {\n']);
-            tmpfun.sym(model.z2event~=ievent) = 0;
-            tmpfun.gccode(model,fid);
-            fprintf(fid,'\n');
-            fprintf(fid,'        } break;\n\n');
-        end
-        fprintf(fid,'    } \n');
-    end
-elseif(strcmp(this.funstr,'sroot') || strcmp(this.funstr,'s2root'))
+elseif(ismember(this.funstr,{'z','sz','srz'}))
     if(any(nonzero))
         fprintf(fid,'    switch(ie) { \n');
         for ievent=1:nevent
@@ -82,24 +67,24 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         end
         fprintf(fid,'              } \n');
     end
-elseif(any(strcmp(this.funstr,{'Jy','dJydp','dJydx','dJydy'})))
+elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
     tmpfun = this;
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         fprintf(fid,['int iy;\n']);
         for iy = 1:model.nytrue
-            fprintf(fid,['if(!amiIsNaN(my[' num2str(iy-1) '* udata->nt+it])){\n']);
+            fprintf(fid,['if(!amiIsNaN(edata->my[' num2str(iy-1) '* udata->nt+it])){\n']);
             fprintf(fid,['    iy = ' num2str(iy-1) ';\n']);
             tmpfun.sym = permute(this.sym(iy,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
             fprintf(fid,'}\n');
         end
     end
-elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','sJz','dJzdz'})))
+elseif(any(strcmp(this.funstr,{'Jz','dJzdsigma','dJzdz','Jrz','dJrzdsigma','dJrzdz'})))
     tmpfun = this;
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         fprintf(fid,['int iz;\n']);
         for iz = 1:model.nztrue
-            fprintf(fid,['if(!amiIsNaN(mz[' num2str(iz-1) '*udata->nmaxevent+tdata->nroots[ie]])){\n']);
+            fprintf(fid,['if(!amiIsNaN(edata->mz[' num2str(iz-1) '*udata->nmaxevent+tdata->nroots[ie]])){\n']);
             fprintf(fid,['    iz = ' num2str(iz-1) ';\n']);
             tmpfun.sym = permute(this.sym(iz,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
@@ -107,7 +92,7 @@ elseif(any(strcmp(this.funstr,{'Jz','dJzdp','dJzdx','sJz','dJzdz'})))
         end
     end
 else
-    if(any(any(nonzero)))
+    if(any(any(any(nonzero))))
         this.gccode(model,fid);
     end
 end

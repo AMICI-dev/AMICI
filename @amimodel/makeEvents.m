@@ -269,9 +269,31 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(zeros(length([this.event.z]),1));
     for iz = 1:length([this.event.z])
-        this.sym.Jz(iz) = sym(['log(2*pi*sigma_z_' num2str(iz-1) '^2) + ((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
+        this.sym.Jz(iz) = sym(['0.5*log(2*pi*sigma_z_' num2str(iz-1) '^2) + 0.5*((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
+
+z = sym(arrayfun(@(iz) ['z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_z = sym(arrayfun(@(iz) ['var_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_sigma_z = sym(arrayfun(@(iz) ['sigma_z_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+this.sym.Jz = subs(this.sym.Jz,z,var_z);
+this.sym.Jz = subs(this.sym.Jz,sigma_z,var_sigma_z);
+
+rz = sym(arrayfun(@(iz) ['rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+mz = sym(arrayfun(@(iz) ['mz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+var_rz = sym(arrayfun(@(iz) ['var_rz_' num2str(iz-1)],1:length([this.event.z]),'UniformOutput',false));
+
+if(~isfield(this.sym,'Jrz'))
+    this.sym.Jrz = sym(zeros(size(this.sym.Jz)));
+    for iz = 1:length([this.event.z])
+        tmp = subs(this.sym.Jz(iz,:),var_z,var_rz);
+        this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz)))); 
+    end
+end
+
+this.sym.Jrz = subs(this.sym.Jrz,rz,var_rz);
 
 end
 

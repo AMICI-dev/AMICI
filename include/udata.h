@@ -1,5 +1,6 @@
 #ifndef _MY_UDATA
 #define _MY_UDATA
+#include "include/amici_defines.h"
 
 #include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
@@ -7,6 +8,7 @@
 #include <sundials/sundials_types.h> /* def. of type realtype */
 #include <sundials/sundials_math.h>  /* definition of ABS */
 #include <sundials/sundials_config.h>
+#include <cmath>
 
 typedef enum AMICI_parameter_scaling_TAG {
     AMICI_SCALING_NONE, AMICI_SCALING_LN, AMICI_SCALING_LOG10
@@ -49,6 +51,8 @@ public:
     void initTemporaryFields();
     void freeTemporaryFields();
 
+    int unscaleParameters();
+
     virtual ~UserData();
 
     /* Model dimensions */
@@ -84,7 +88,7 @@ public:
     const int ubw;
     /** lower bandwith of the jacobian */
     const int lbw;
-    /** flag indicating whether for sensi == 2 directional or full second order derivative will be computed */
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
     const AMICI_o2mode o2mode;
 
     /* Options */
@@ -214,13 +218,11 @@ public:
     booleantype nan_xBdot;
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype nan_qBdot;
-        
+
+    void print();
+
 protected:
     void init();
 };
-
-#ifdef AMICI_WITHOUT_MATLAB
-void printUserData(UserData *udata);
-#endif
 
 #endif /* _MY_UDATA */

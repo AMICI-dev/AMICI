@@ -1,7 +1,11 @@
 #ifndef AMICI_INTERFACE_CPP_H
 #define AMICI_INTERFACE_CPP_H
 
-#include "include/amici.h"
+#include "include/amici_misc.h"
+
+#include <include/udata.h>
+#include <include/edata.h>
+#include <include/rdata.h>
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"

@@ -64,6 +64,23 @@ function amiwrap( varargin )
     addpath(genpath(fullfile(wrap_path,'auxiliary')));
     addpath(fullfile(wrap_path,'symbolic'));
     
+    % compile CalcMD5 if necessary
+    try
+        CalcMD5('TEST','char','hex');
+    catch
+        try
+            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            CalcMD5('TEST','char','hex');
+        catch
+            disp('CalcMD5 has not been compiled yet. Compiling now!')
+            tmpdir = pwd;
+            cd(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            mex(fullfile(wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
+            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            cd(tmpdir);
+        end
+    end
+    
     % try to load
     if(~isstruct(symfun))
         if(exist(symfun,'file')==2)
@@ -106,14 +123,15 @@ function amiwrap( varargin )
     end
     
     if(~isempty(o2string))
+        o2_hash = CalcMD5(fullfile(wrap_path,'@amimodel',['augment' o2string '.m']),'File');
         try
             if(~exist(fullfile(wrap_path,'models',[modelname '_' o2string]),'dir'))
                 mkdir(fullfile(wrap_path,'models',[modelname '_' o2string]));
             end
            addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
         end
-        if(exist([commit_hash '_' model_hash '_' o2string '.mat'],'file')==2);
-            load([commit_hash '_' model_hash '_' o2string '.mat']);
+        if(exist([commit_hash '_' model_hash '_' o2_hash '.mat'],'file')==2);
+            load([commit_hash '_' model_hash '_' o2_hash '.mat']);
             modelo2.updateModelName([modelname '_' o2string]);
         end
         if(~exist('modelo2','var'))
@@ -122,7 +140,7 @@ function amiwrap( varargin )
             
             
             if(~isempty(model_hash) && ~isempty(commit_hash))
-                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2string]),'modelo2')
+                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2_hash]),'modelo2')
             end
         end
     end

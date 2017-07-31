@@ -1,6 +1,8 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
-#include "udata.h"
+
+class UserData;
+class ExpData;
 
 /** @brief struct that stores all data which is later returned by the mex function
  *
@@ -14,75 +16,117 @@ public:
 
     virtual void setDefaults();
 
+    /**
+     * @brief performs all necessary actions to reset return data upon integration failure
+     * @param[in] udata pointer to the user data struct @type UserData
+     */
+    void invalidate(const UserData *udata);
+
+    void setLikelihoodSensitivityFirstOrderNaN(const UserData *udata);
+    void setLikelihoodSensitivitySecondOrderNaN(const UserData *udata);
+
+    int applyChainRuleFactorToSimulationResults(const UserData *udata, const ExpData *edata);
+
     virtual ~ReturnData();
 
-    /** timepoints */
+
+    /** timepoints (dimension: nt) */
     double *ts;
-    /** time derivative */
+
+    /** time derivative (dimension: nx) */
     double *xdot;
-    /** parameter derivative of time derivative */
+
+    /** parameter derivative of time derivative (dimension: nx x nplist, column-major) */
     double *dxdotdp;
-    /** state derivative of observables */
+
+    /** state derivative of observables (dimension: ny x nx, column-major) */
     double *dydx;
-    /** parameter derivative of observables */
+
+    /** parameter derivative of observables (dimension: ny x nplist, column-major) */
     double *dydp;
-    /** Jacobian of differential equation right hand side */
+
+    /** Jacobian of differential equation right hand side (dimension: nx x nx, column-major) */
     double *J;
-    /** event output */
+
+    /** event output (dimension: nmaxevent x nz, column-major) */
     double *z;
-    /** event output sigma standard deviation */
+
+    /** event output sigma standard deviation (dimension: nmaxevent x nz, column-major) */
     double *sigmaz;
-    /** parameter derivative of event output */
+
+    /** parameter derivative of event output (dimension: nmaxevent x nz, column-major) */
     double *sz;
-    /** parameter derivative of event output standard deviation */
+
+    /** parameter derivative of event output standard deviation (dimension: nmaxevent x nz, column-major)  */
     double *ssigmaz;
-    /** event trigger output */
+
+    /** event trigger output (dimension: nmaxevent x nz, column-major)*/
     double *rz;
-    /** parameter derivative of event trigger output */
+
+    /** parameter derivative of event trigger output (dimension: nmaxevent x nz x nplist, column-major) */
     double *srz;
-    /** second order parameter derivative of event trigger output */
+
+    /** second order parameter derivative of event trigger output (dimension: nmaxevent x nztrue x nplist x nplist, column-major) */
     double *s2rz;
-    /** state */
+
+    /** state (dimension: nt x nx, column-major) */
     double *x;
-    /** parameter derivative of state */
+
+    /** parameter derivative of state (dimension: nt x nx x nplist, column-major) */
     double *sx;
-    /** observable */
+
+    /** observable (dimension: nt x ny, column-major) */
     double *y;
-    /** observable standard deviation */
+
+    /** observable standard deviation (dimension: nt x ny, column-major) */
     double *sigmay;
-    /** parameter derivative of observable */
+
+    /** parameter derivative of observable (dimension: nt x ny x nplist, column-major) */
     double *sy;
-    /** parameter derivative of observable standard deviation */
+
+    /** parameter derivative of observable standard deviation (dimension: nt x ny x nplist, column-major) */
     double *ssigmay;
     
-    /** number of integration steps forward problem */
+    /** number of integration steps forward problem (dimension: nt) */
     double *numsteps;
-    /** number of integration steps backward problem */
+
+    /** number of integration steps backward problem (dimension: nt) */
     double *numstepsB;
-    /** number of right hand side evaluations forward problem */
+
+    /** number of right hand side evaluations forward problem (dimension: nt) */
     double *numrhsevals;
-    /** number of right hand side evaluations backwad problem */
+
+    /** number of right hand side evaluations backwad problem (dimension: nt) */
     double *numrhsevalsB;
-    /** number of error test failures forward problem */
+
+    /** number of error test failures forward problem (dimension: nt) */
     double *numerrtestfails;
-    /** number of error test failures backwad problem */
+
+    /** number of error test failures backwad problem (dimension: nt) */
     double *numerrtestfailsB;
-    /** number of linear solver convergence failures forward problem */
+
+    /** number of linear solver convergence failures forward problem (dimension: nt) */
     double *numnonlinsolvconvfails;
-    /** number of linear solver convergence failures backwad problem */
+
+    /** number of linear solver convergence failures backwad problem (dimension: nt) */
     double *numnonlinsolvconvfailsB;
-    /** employed order forward problem */
+
+    /** employed order forward problem (dimension: nt) */
     double *order;
     
-    /** likelihood value */
+    /** likelihood value (double[1]) */
     double *llh;
-    /** chi2 value */
+
+    /** chi2 value (double[1]) */
     double *chi2;
-    /** parameter derivative of likelihood */
+
+    /** parameter derivative of likelihood (dimension: nplist) */
     double *sllh;
-    /** second order parameter derivative of likelihood */
+
+    /** second order parameter derivative of likelihood (dimension: (nJ-1) x nplist, column-major) */
     double *s2llh;
 
+    /** status code (double[1]) */
     double *status;
 
 protected:

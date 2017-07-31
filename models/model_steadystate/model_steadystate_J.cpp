@@ -14,15 +14,15 @@ int ix;
 memset(J->data,0,sizeof(realtype)*9);
 status = w_model_steadystate(t,x,NULL,user_data);
 status = dwdx_model_steadystate(t,x,NULL,user_data);
-  J->data[0+0*3] = udata->dwdx[0]*udata->p[0]*-2.0-udata->p[1]*x_tmp[1];
+  J->data[0+0*3] = -udata->p[1]*x_tmp[1]-udata->p[0]*udata->dwdx[0]*2.0;
   J->data[0+1*3] = udata->p[2]*2.0-udata->p[1]*x_tmp[0];
   J->data[0+2*3] = udata->dwdx[1];
-  J->data[1+0*3] = udata->dwdx[0]*udata->p[0]-udata->p[1]*x_tmp[1];
+  J->data[1+0*3] = -udata->p[1]*x_tmp[1]+udata->p[0]*udata->dwdx[0];
   J->data[1+1*3] = -udata->p[2]-udata->p[1]*x_tmp[0];
   J->data[1+2*3] = udata->dwdx[1];
   J->data[2+0*3] = udata->p[1]*x_tmp[1];
   J->data[2+1*3] = udata->p[1]*x_tmp[0];
-  J->data[2+2*3] = -udata->dwdx[1]-udata->k[3];
+  J->data[2+2*3] = -udata->k[3]-udata->dwdx[1];
 for(ix = 0; ix<9; ix++) {
    if(amiIsNaN(J->data[ix])) {
        J->data[ix] = 0;

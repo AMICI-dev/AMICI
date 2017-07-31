@@ -249,5 +249,10 @@ classdef amimodel < handle
         modelo2vec = augmento2vec(this)
         
     end
+    
+    methods(Static)
+        compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, funs, cfun, adjoint)
+    end
+
 end
 
