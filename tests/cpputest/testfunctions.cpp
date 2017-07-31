@@ -1,7 +1,10 @@
 #include "testfunctions.h"
+#include <include/amici_hdf5.h>
+#include "include/amici_interface_cpp.h"
 #include <cstring>
 #include <execinfo.h>
 #include <cstdio>
+#include <cmath>
 #include <unistd.h>
 
 ExpData *getTestExpData(const UserData *udata) {
@@ -9,11 +12,11 @@ ExpData *getTestExpData(const UserData *udata) {
     return edata;
 }
 
-bool withinTolerance(double expected, double actual, double atol, double rtol) {
+bool withinTolerance(double expected, double actual, double atol, double rtol, int index) {
     bool withinTol =  fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
 
     if(!withinTol) {
-        fprintf(stderr, "ERROR: Expected value %e, but was %e.\n",expected, actual);
+        fprintf(stderr, "ERROR: Expected value %e, but was %e at index %d.\n",expected, actual, index);
         fprintf(stderr, "       Relative error: %e (tolerance was %e)\n", fabs((expected - actual) / (rtol + expected)), rtol);
         fprintf(stderr, "       Absolute error: %e (tolerance was %e)\n", fabs(expected - actual), atol);
         printBacktrace(12);
@@ -25,7 +28,7 @@ bool withinTolerance(double expected, double actual, double atol, double rtol) {
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol) {
     for(int i = 0; i < length; ++i)
     {
-        bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol);
+        bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i);
         CHECK_TRUE(withinTol);
     }
 }
@@ -33,7 +36,7 @@ void checkEqualArray(const double *expected, const double *actual, int length, d
 void checkEqualArrayStrided(const double *expected, const double *actual, int length, int strideExpected, int strideActual, double atol, double rtol) {
     for(int i = 0; i < length; ++i)
     {
-        bool withinTol = withinTolerance(expected[i * strideExpected], actual[i * strideActual], atol, rtol);
+        bool withinTol = withinTolerance(expected[i * strideExpected], actual[i * strideActual], atol, rtol, i);
         CHECK_TRUE(withinTol);
     }
 }
@@ -50,8 +53,8 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
 
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
     // TODO: ignores Inf and NaN results; need to check with format in HDF5
-    if(! isinf(*rdata->llh) || isnan(*rdata->llh))
-        CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol));
+    if(! std::isinf(*rdata->llh) || std::isnan(*rdata->llh))
+        CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->x, udata->nt * udata->nxtrue, atol, rtol);
@@ -65,25 +68,24 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         delete[] expected;
     }
 
-//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevals", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->numrhsevals, udata->nt, epsilon, blab);
-//    delete[] expected;
-
-//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numsteps", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->numsteps, udata->nt, epsilon, blab);
-//    delete[] expected;
-
-//    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "order", &expected, &m, &n);
-//    checkEqualArray(expected, rdata->order, udata->nt, atol, rtol);
-//    delete[] expected;
-
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
     checkEqualArray(expected, rdata->y, udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
+    
+    if(udata->nz>0) {
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "z", &expected, &m, &n);
+        checkEqualArray(expected, rdata->z, udata->nmaxevent * udata->nztrue, atol, rtol);
+        delete[] expected;
+        
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "rz", &expected, &m, &n);
+        checkEqualArray(expected, rdata->rz, udata->nmaxevent * udata->nztrue, atol, rtol);
+        delete[] expected;
+        
+        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmaz", &expected, &m, &n);
+        checkEqualArray(expected, rdata->sigmaz, udata->nmaxevent * udata->nztrue, atol, rtol);
+        delete[] expected;
+    }
 
-    AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmay", &expected, &m, &n);
-    checkEqualArray(expected, rdata->sigmay, udata->nt * udata->nytrue, atol, rtol);
-    delete[] expected;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "xdot", &expected, &m, &n);
     checkEqualArray(expected, rdata->xdot, udata->nxtrue, atol, rtol);
@@ -93,8 +95,6 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
         verifyReturnDataSensitivities(file_id, resultPath, rdata, udata, atol, rtol);
     } else {
         POINTERS_EQUAL(NULL, rdata->sllh);
-        //POINTERS_EQUAL(NULL, rdata->numrhsevalsB);
-        //POINTERS_EQUAL(NULL, rdata->numstepsB);
         POINTERS_EQUAL(NULL, rdata->s2llh);
     }
 
@@ -108,14 +108,6 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
     checkEqualArray(expected, rdata->sllh, udata->np, atol, rtol);
     delete[] expected;
-
-//        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numrhsevalsS", &expected, &m, &n);
-//        checkEqualArray(expected, rdata->numrhsevalsS, udata->nt, epsilon, blab);
-//        delete[] expected;
-
-//        AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "numstepsS", &expected, &m, &n);
-//        checkEqualArray(expected, rdata->numstepsS, udata->nt, epsilon, blab);
-//        delete[] expected;
 
     if(udata->sensi_meth == AMICI_SENSI_FSA) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
@@ -131,6 +123,22 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
                     &rdata->sy[ip * udata->nt * udata->ny],
                     udata->nt * udata->nytrue, atol, rtol);
         delete[] expected;
+        
+        if(udata->nz>0) {
+            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sz", &expected, &m, &n, &o);
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                checkEqualArray(&expected[ip * udata->nmaxevent * udata->nztrue],
+                                &rdata->sz[ip * udata->nmaxevent * udata->nz],
+                                udata->nmaxevent * udata->nztrue, atol, rtol);
+            delete[] expected;
+            
+            AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "srz", &expected, &m, &n, &o);
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                checkEqualArray(&expected[ip * udata->nmaxevent * udata->nztrue],
+                                &rdata->srz[ip * udata->nmaxevent * udata->nz],
+                                udata->nmaxevent * udata->nztrue, atol, rtol);
+            delete[] expected;
+        }
     }
 
     AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
@@ -139,10 +147,19 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
                 &rdata->ssigmay[ip * udata->nt * udata->ny],
                 udata->nt * udata->nytrue, atol, rtol);
     delete[] expected;
+    
+    if(udata->nz>0) {
+        AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmaz", &expected, &m, &n, &o);
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            checkEqualArray(&expected[ip * udata->nmaxevent * udata->nztrue],
+                            &rdata->ssigmaz[ip * udata->nmaxevent * udata->nz],
+                            udata->nmaxevent * udata->nztrue, atol, rtol);
+        delete[] expected;
+    }
 
     if(udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "s2llh", &expected, &m, &n);
-        checkEqualArray(expected, rdata->s2llh, udata->nplist * udata->nplist, atol, rtol);
+        checkEqualArray(expected, rdata->s2llh, (udata->nJ-1) * udata->nplist, atol, rtol);
         delete[] expected;
     } else {
         POINTERS_EQUAL(NULL, rdata->s2llh);

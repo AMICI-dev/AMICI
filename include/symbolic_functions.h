@@ -5,11 +5,6 @@
 #include <include/spline.h>
 #include <stdarg.h>
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
 
 double amilog(double x);
 double dirac(double x);
@@ -24,22 +19,13 @@ int amiIsNaN(double what);
 int amiIsInf(double what);
 double amiGetNaN();
 
-EXTERNC void ones(double *destination, int count);
-EXTERNC void zeros(double *destination, int count);
-EXTERNC void fillArray(double *destination, int count, double value);
-EXTERNC double sum(double const *array, int numElements);
-EXTERNC void linSpace(double *destination, double from, double to, int numValues);
-EXTERNC double *linSpaceAlloc(double from, double to, int numValues);
-EXTERNC void printArray(double const *array, int numElements);
-EXTERNC void printfArray(double const *array, int numElements, char const *format);
-
-EXTERNC void errMsgIdAndTxt(
+void errMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
     const char * err_msg,    /* string with error message printf-style format */
     ...                      /* any additional arguments */
     );
 
-EXTERNC void warnMsgIdAndTxt(
+void warnMsgIdAndTxt(
     const char * identifier, /* string with error message identifier */
     const char * err_msg,    /* string with error message printf-style format */
     ...                      /* any additional arguments */

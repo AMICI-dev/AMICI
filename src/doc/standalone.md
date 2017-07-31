@@ -31,7 +31,7 @@ A scaffold for a standalone simulation program is generated in `main.cpp` in the
 
 ## Compiling and linking
 
-The complete AMICI API is available through amici.h; this is the only header file that needs to be included. (There are some accessor macro definitions available in udata_accessors.h, rdata_accessors.h and edata_accessors.h which provide shortcuts for accessing struct members of UserData, ReturnData, ExpData, respectively. `ami_hdf5.h` provides some functions for reading and writing [HDF5](https://support.hdfgroup.org/) files). 
+The complete AMICI API is available through amici.h; this is the only header file that needs to be included. (There are some accessor macro definitions available in udata_accessors.h, rdata_accessors.h and edata_accessors.h which provide shortcuts for accessing struct members of UserData, ReturnData, ExpData, respectively. `amici_hdf5.h` provides some functions for reading and writing [HDF5](https://support.hdfgroup.org/) files). 
 
 You need to compile and link `${AMICI_ROOT_DIR}/models/${MODEL_NAME}/*.cpp`, `${AMICI_ROOT_DIR}/src/*.cpp`, the SUNDIALS and the SUITESPARSE library.
 

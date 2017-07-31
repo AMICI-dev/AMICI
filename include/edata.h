@@ -1,6 +1,7 @@
-#include "include/udata.h"
 #ifndef _MY_EDATA
 #define _MY_EDATA
+
+class UserData;
 
 /** @brief struct that carries all information about experimental data */
 class ExpData {
@@ -22,7 +23,9 @@ public:
     
     /** observed events */
     double *mz;
-    /** standard deviation of observed events */
+    /** observed roots */
+    double *mrz;
+    /** standard deviation of observed events/roots */
     double *sigmaz;
 };
 
