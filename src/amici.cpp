@@ -1410,12 +1410,10 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     double gamma = 1.0;
     realtype *x_tmp;
     
-    N_Vector delta;
-    N_Vector rel_x;
-    N_Vector tmp_x;
-    delta = N_VNew_Serial(udata->nx);
-    rel_x = N_VNew_Serial(udata->nx);
-    tmp_x = N_VNew_Serial(udata->nx);
+    N_Vector delta = N_VNew_Serial(udata->nx);
+    N_Vector rel_x = N_VNew_Serial(udata->nx);
+    N_Vector tmp_x = N_VNew_Serial(udata->nx);
+    
     N_VConst(0.0, delta);
     
     // Check, how fxdot is used exactly within AMICI...
@@ -1533,29 +1531,17 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
     double res;
     double rel_res;
     
-    N_Vector ns_p;
-    N_Vector ns_h;
-    N_Vector ns_t;
-    N_Vector ns_s;
-    N_Vector ns_r;
-    N_Vector ns_rr;
-    N_Vector ns_rt;
-    N_Vector ns_v;
-    N_Vector ns_Jv;
-    N_Vector ns_tmp;
-    N_Vector ns_Jdiag;
-    
-    ns_p  = N_VNew_Serial(udata->nx);
-    ns_h  = N_VNew_Serial(udata->nx);
-    ns_t  = N_VNew_Serial(udata->nx);
-    ns_s  = N_VNew_Serial(udata->nx);
-    ns_r  = N_VNew_Serial(udata->nx);
-    ns_rr  = N_VNew_Serial(udata->nx);
-    ns_rt = N_VNew_Serial(udata->nx);
-    ns_v  = N_VNew_Serial(udata->nx);
-    ns_Jv = N_VNew_Serial(udata->nx);
-    ns_tmp = N_VNew_Serial(udata->nx);
-    ns_Jdiag = N_VNew_Serial(udata->nx);
+     N_Vector ns_p = N_VNew_Serial(udata->nx);
+     N_Vector ns_h = N_VNew_Serial(udata->nx);
+     N_Vector ns_t = N_VNew_Serial(udata->nx);
+     N_Vector ns_s = N_VNew_Serial(udata->nx);
+     N_Vector ns_r = N_VNew_Serial(udata->nx);
+     N_Vector ns_rr = N_VNew_Serial(udata->nx);
+     N_Vector ns_rt = N_VNew_Serial(udata->nx);
+     N_Vector ns_v = N_VNew_Serial(udata->nx);
+     N_Vector ns_Jv = N_VNew_Serial(udata->nx);
+     N_Vector ns_tmp = N_VNew_Serial(udata->nx);
+     N_Vector ns_Jdiag = N_VNew_Serial(udata->nx);
     
      N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
