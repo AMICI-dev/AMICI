@@ -376,7 +376,10 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName, 
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata) {
     
     ExpData *edata = new ExpData(udata);
-    if(edata->my == NULL) return NULL;
+    if(edata->my == NULL) {
+        delete edata;
+        return NULL;
+    }
     
     // Data provided / required?
     if (!mxGetPr(prhs[8])) {
