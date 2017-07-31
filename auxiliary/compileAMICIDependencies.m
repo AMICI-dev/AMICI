@@ -247,7 +247,7 @@ function objects_ssparse = getObjectsSSparse(o_suffix)
         };
     
     if(~strcmp(o_suffix, '.o'))
-        strrep(objects_ssparse, '.o', o_suffix);
+        objects_ssparse = strrep(objects_ssparse, '.o', o_suffix);
     end
 end
 
@@ -299,7 +299,7 @@ function objects_sundials = getObjectsSundials(o_suffix)
         };
     
     if(~strcmp(o_suffix, '.o'))
-        strrep(objects_sundials, '.o', o_suffix);
+        objects_sundials = strrep(objects_sundials, '.o', o_suffix);
     end
 end
 
