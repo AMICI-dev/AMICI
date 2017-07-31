@@ -1409,7 +1409,6 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     double rel_res;
     double res_old;
     double gamma = 1.0;
-    double tol = 1e-5;
     realtype *x_tmp;
     
     N_Vector delta;
@@ -1426,11 +1425,6 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     
     // Check for relative error, but make sure not to divide by 0!
     // Ensure positivity of the state
-    
-    x_tmp = N_VGetArrayPointer(tdata->x);
-    for(ix=0;ix<udata->nx;ix++) {
-        
-    }
     N_VScale(1.0, tdata->x, tmp_x);
     N_VAbs(tmp_x, tmp_x);
     x_tmp = N_VGetArrayPointer(tmp_x);
@@ -1439,7 +1433,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
             x_tmp[ix] = udata->atol;
         }
     }
-    N_VDiv(tmp_x, tmp_x, rel_x);
+    N_VDiv(tdata->xdot, tmp_x, rel_x);
     rel_res = sqrt(N_VDotProd(rel_x, rel_x));
     if (res < udata->atol || rel_res < udata->rtol) {
         // Clean up worksapce
@@ -1504,10 +1498,12 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
         } else {
             gamma = gamma/4.0;
         }
-     }
+    }
 
     // Clean up worksapce
     N_VDestroy_Serial(delta);
+    
+    rdata->newton_numsteps[ntry-1] = udata->newton_maxsteps;
     
     return(stat1);
     
@@ -1634,7 +1630,7 @@ int getNewtonStep(N_Vector ns_delta, UserData *udata, ReturnData *rdata, TempDat
         rel_res = sqrt(N_VDotProd(ns_rr, ns_rr));
         
         // Test convergence
-        if (res < 1e-8) {
+        if (res < udata->atol) {
             // Write number of steps needed
             rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = il + 1;
 
@@ -1926,6 +1922,12 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     int ntry = 1;
     int ix;
     int status = (int) *rdata->status;
+    double res;
+    double rel_res;
+    N_Vector rel_x;
+    N_Vector tmp_x;
+    rel_x = N_VNew_Serial(udata->nx);
+    tmp_x = N_VNew_Serial(udata->nx);
     realtype *x_tmp;
     clock_t start, diff;
     
@@ -1943,20 +1945,38 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
             rdata->xss[ix] = x_tmp[ix];
         }
         *rdata->newton = 1.0;
+        return(0);
         
     } else {
         
         // Try to integrate for finding the steady state
-        status = AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
+        status = AMISolve(ami_mem, 1e6, tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
         
-        x_tmp = NV_DATA_S(tdata->x);
+        // Check the absolute error
+        res = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
+        
+        // Check for relative error, but make sure not to divide by 0!
+        // Ensure positivity of the state
+        N_VScale(1.0, tdata->x, tmp_x);
+        N_VAbs(tmp_x, tmp_x);
+        x_tmp = N_VGetArrayPointer(tmp_x);
+        for (ix=0; ix<udata->nx; ix++) {
+            if (x_tmp[ix] < udata->atol) {
+                x_tmp[ix] = udata->atol;
+            }
+        }
+        N_VDiv(tdata->xdot, tmp_x, rel_x);
+        rel_res = sqrt(N_VDotProd(rel_x, rel_x));
         
         // If integration found a steady state
-        if (status == AMICI_ROOT_RETURN) {
-            rdata->xss = x_tmp;
+        if (res < udata->atol || rel_res < udata->rtol) {
+            x_tmp = N_VGetArrayPointer(tdata->x);
             for (ix=0; ix<udata->nx; ix++) {
                 rdata->xss[ix] = x_tmp[ix];
             }
+            
+            // Set output
+            tdata->t = INFINITY;
             *rdata->newton = 2.0;
             return(0);
         }
@@ -1972,6 +1992,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
             if (status == AMICI_SUCCESS) {
                 /* store Newton Step */
                 *rdata->newton = 3.0;
+                tdata->t = INFINITY;
                 x_tmp = NV_DATA_S(tdata->x);
                 for (ix=0; ix<udata->nx; ix++) {
                     rdata->xss[ix] = x_tmp[ix];

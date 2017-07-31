@@ -278,7 +278,7 @@ void ReturnData::initFields(const UserData *udata)
             initField2(&J, "J", udata->nx,udata->nx);
             initField2(&xss, "xss", 1,udata->nx);
             initField2(&newton, "newton", 1,1);
-            initField2(&newton_numsteps, "newton_numsteps", 1,udata->nx);
+            initField2(&newton_numsteps, "newton_numsteps", 1,2);
             initField2(&newton_numlinsteps, "newton_numlinsteps", udata->newton_maxsteps,2);
             initField2(&newton_time, "newton_time", 1,2);
         }

@@ -41,6 +41,7 @@ set(SRC_LIST_LIB ${MODEL_DIR}/model_dirac_J.cpp
 ${MODEL_DIR}/model_dirac_JB.cpp
 ${MODEL_DIR}/model_dirac_JBand.cpp
 ${MODEL_DIR}/model_dirac_JBandB.cpp
+${MODEL_DIR}/model_dirac_JDiag.cpp
 ${MODEL_DIR}/model_dirac_JSparse.cpp
 ${MODEL_DIR}/model_dirac_JSparseB.cpp
 ${MODEL_DIR}/model_dirac_Jrz.cpp
