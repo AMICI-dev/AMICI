@@ -1065,9 +1065,7 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata) {
      * @return status flag indicating success of execution @type int
      */
     
-    int ie, ix, ip, iJ;
     int status = AMICI_SUCCESS;
-    
     
     /* store current values */
     N_VScale(1.0,tdata->xB,tdata->xB_old);
@@ -1078,7 +1076,7 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata) {
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if(!xQB_tmp) return AMICI_ERROR_DATA;
     
-    for (ie=0; ie<udata->ne; ie++) {
+    for (int ie=0; ie<udata->ne; ie++) {
         
         if (tdata->rootidx[iroot*udata->ne + ie] != 0) {
             
@@ -1087,16 +1085,17 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata) {
             status = fdeltaxB(tdata->t,ie,tdata->x_disc[iroot],tdata->xB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],udata,tdata);
             if (status != AMICI_SUCCESS) return status;
             
-            for (ix=0; ix<udata->nxtrue; ++ix) {
-                for (int iJ = 0; iJ < udata->nJ; ++iJ)
+            for (int ix=0; ix<udata->nxtrue; ++ix) {
+                for (int iJ = 0; iJ < udata->nJ; ++iJ) {
                     xB_tmp[ix + iJ*udata->nxtrue] += tdata->deltaxB[ix + iJ*udata->nxtrue];
-                if (udata->nz>0) {
-                    xB_tmp[ix + iJ*udata->nxtrue] += tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
+                    if (udata->nz>0) {
+                        xB_tmp[ix + iJ*udata->nxtrue] += tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
+                    }
                 }
             }
             
-            for (iJ=0; iJ<udata->nJ; ++iJ) {
-                for (ip=0; ip<udata->nplist; ++ip) {
+            for (int iJ=0; iJ<udata->nJ; ++iJ) {
+                for (int ip=0; ip<udata->nplist; ++ip) {
                     xQB_tmp[ip + iJ*udata->nplist] += tdata->deltaqB[ip + iJ*udata->nplist];
                 }
             }
