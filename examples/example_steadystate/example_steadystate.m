@@ -39,25 +39,25 @@ function example_steadystate
     % PLOTTING
     
     if(usejava('jvm'))
-    figure
-    c_x = get(gca,'ColorOrder');
-    subplot(2,2,1)
-    for ix = 1:size(sol.x,2)
-        plot(t,sol.x(:,ix),'.-','Color',c_x(ix,:))
-        hold on
-        plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:))
-    end
-    legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','Location','NorthEastOutside')
-    legend boxoff
-    xlabel('time t')
-    ylabel('x')
-    box on
-    subplot(2,2,2)
-    plot(t,abs(sol.x-X_ode15s),'--')
-    set(gca,'YScale','log')
-    legend('error x1','error x2','error x3','Location','NorthEastOutside')
-    legend boxoff
-    set(gcf,'Position',[100 300 1200 500])
+        figure
+        c_x = get(gca,'ColorOrder');
+        subplot(2,2,1)
+        for ix = 1:size(sol.x,2)
+            plot(t,sol.x(:,ix),'.-','Color',c_x(ix,:))
+            hold on
+            plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:))
+        end
+        legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','Location','NorthEastOutside')
+        legend boxoff
+        xlabel('time t')
+        ylabel('x')
+        box on
+        subplot(2,2,2)
+        plot(t,abs(sol.x-X_ode15s),'--')
+        set(gca,'YScale','log')
+        legend('error x1','error x2','error x3','Location','NorthEastOutside')
+        legend boxoff
+        set(gcf,'Position',[100 300 1200 500])
     end
     
     %%
@@ -124,6 +124,13 @@ function example_steadystate
         sssens(it,:,:) = solss.sx;
         ssxdot(it,:) = solss.xdot;
     end
+    
+    %% 
+    % STEADY STATE COMPUTATION WITH NEWTON SOLVER
+    options.sensi_meth = 'forward';
+    options.sensi = 0;
+    t_newton = inf;
+    sol_newton = simulate_model_steadystate(t_newton,log10(p),k,[],options);
     
     %%
     % PLOTTING
