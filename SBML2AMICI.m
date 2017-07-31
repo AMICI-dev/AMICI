@@ -12,6 +12,9 @@ function  SBML2AMICI( filename, modelname )
         modelname = filename;
     end
     wrap_path=fileparts(mfilename('fullpath'));
+    if(~exist(fullfile(wrap_path,'SBMLimporter'),'dir'))
+        error('SBMLimporter is not available, try running `git submodule update --init`')
+    end
     addpath(fullfile(wrap_path,'SBMLimporter'));
     ODE = SBMLode(filename);
     ODE.writeAMICI(modelname);
