@@ -77,28 +77,33 @@ if [ $? -ne 0 ] ; then
 exit 1
 fi
 
-
-cd ../../
-
 # Cpputest
 mkdir -p ${AMICI_PATH}/ThirdParty
 cd ${AMICI_PATH}/ThirdParty
 if [ ! -d "cpputest-3.8" ]; then
-if [ ! -e "cpputest-3.8.tar.gz" ]; then
-wget https://github.com/cpputest/cpputest/releases/download/v3.8/cpputest-3.8.tar.gz
-fi
-tar -xzf cpputest-3.8.tar.gz
-cd cpputest-3.8/cpputest_build/
-../configure && make
-if [ $? -ne 0 ] ; then
-exit 1
-fi
-
+    if [ ! -e "cpputest-3.8.tar.gz" ]; then
+        wget https://github.com/cpputest/cpputest/releases/download/v3.8/cpputest-3.8.tar.gz
+    fi
+    tar -xzf cpputest-3.8.tar.gz
+    cd cpputest-3.8/cpputest_build/
+    ../configure && make
+    if [ $? -ne 0 ] ; then
+        exit 1
+    fi
 fi
 
 # done building dependencies
 
 # Prepare tests
+# libamici
+mkdir -p ${AMICI_PATH}/build
+cd ${AMICI_PATH}/build
+cmake ..
+make
+if [ $? -ne 0 ] ; then
+    exit 1
+fi
+
 
 TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_adjoint_o2 model_neuron model_neuron_o2"
 for MODEL in $TESTMODELS; do
