@@ -13,6 +13,7 @@
 #endif
 
 #include <stdio.h>
+#include <time.h>
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
@@ -1658,6 +1659,45 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+int getNewtonOutput(serData *udata, TempData *tdata, ReturnData *rdata, int newton, clock_t starttime) {
+    /**
+     * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] newton integer flag indicating the run of the Newton solver
+     * @param[in] clock_t starttime timer running from the start of Newton solver
+     * @return int status flag indicating success of execution @type int
+     */
+    
+    realtype *x_tmp;
+    clock_t runtime;
+    
+    // Get time for Newton solve
+    runtime = clock() - starttime;
+    rdata->newton_time[0] = (double)(runtime * 1000) / CLOCKS_PER_SEC;
+    
+    // Since the steady state was found, current time is set to infinity
+    tdata->t = INFINITY;
+    
+    // Write output
+    x_tmp = N_VGetArrayPointer(tdata->x);
+    for (int ix=0; ix<udata->nx; ix++) {
+        rdata->xss[ix] = x_tmp[ix];
+    }
+    
+    // Write flag for the Newton solver
+    *rdata->newton = 1.0;
+    
+    return(AMICI_SUCCESS);
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
@@ -1913,35 +1953,22 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
      */
     
     int ntry = 1;
-    int ix;
     int status = (int) *rdata->status;
     double res;
     double rel_res;
-    N_Vector rel_x;
-    N_Vector tmp_x;
-    rel_x = N_VNew_Serial(udata->nx);
-    tmp_x = N_VNew_Serial(udata->nx);
+    N_Vector rel_x = N_VNew_Serial(udata->nx);
+    N_Vector tmp_x = N_VNew_Serial(udata->nx);
     realtype *x_tmp;
-    clock_t start, diff;
+    clock_t starttime;
     
     /* First, try to do Newton steps */
-    start = clock();
+    starttime = clock();
     status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
-    diff = clock() - start;
-    rdata->newton_time[0] = (double)(diff * 1000) / CLOCKS_PER_SEC;
     
     if (status == AMICI_SUCCESS) {
-        // tell workForwardProblem, that tout = inf was reached and set flag for successful integration
-        tdata->t = INFINITY;
-        x_tmp = NV_DATA_S(tdata->x);
-        for (ix=0; ix<udata->nx; ix++) {
-            rdata->xss[ix] = x_tmp[ix];
-        }
-        *rdata->newton = 1.0;
-        return(0);
-        
+        // If the Newton solver found a steady state
+        status = getNewtonOutput(udata, tdata, rdata, 1, starttime);
     } else {
-        
         // Try to integrate for finding the steady state
         status = AMISolve(ami_mem, 1e6, tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
         
@@ -1953,7 +1980,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         N_VScale(1.0, tdata->x, tmp_x);
         N_VAbs(tmp_x, tmp_x);
         x_tmp = N_VGetArrayPointer(tmp_x);
-        for (ix=0; ix<udata->nx; ix++) {
+        for (int ix=0; ix<udata->nx; ix++) {
             if (x_tmp[ix] < udata->atol) {
                 x_tmp[ix] = udata->atol;
             }
@@ -1963,45 +1990,25 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         
         // If integration found a steady state
         if (res < udata->atol || rel_res < udata->rtol) {
-            x_tmp = N_VGetArrayPointer(tdata->x);
-            for (ix=0; ix<udata->nx; ix++) {
-                rdata->xss[ix] = x_tmp[ix];
-            }
-            
-            // Set output
-            tdata->t = INFINITY;
-            *rdata->newton = 2.0;
-            return(0);
+            status = getNewtonOutput(udata, tdata, rdata, 2, starttime);
         }
         
         // if mxstep was reached, trigger new Newton Solve
         if (status == AMICI_SUCCESS) {
             ntry = 2;
-            start = clock();
             status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, status, ntry);
-            diff = clock() - start;
-            rdata->newton_time[1] = (double)(diff * 1000) / CLOCKS_PER_SEC;
             
             if (status == AMICI_SUCCESS) {
-                /* store Newton Step */
-                *rdata->newton = 3.0;
-                tdata->t = INFINITY;
-                x_tmp = NV_DATA_S(tdata->x);
-                for (ix=0; ix<udata->nx; ix++) {
-                    rdata->xss[ix] = x_tmp[ix];
-                }
+                /* If the second Newton solver found a steady state*/
+                status = getNewtonOutput(udata, tdata, rdata, 3, starttime);
             } else {
                 return status;
             }
         }
-        
-        // if some integration error occured, return the error
-        if (status<0) {
-            return status;
-        }
-        return(0);
-        
     }
+    
+    /* if this point was reached, the Newton solver was successful */
+    return(AMICI_SUCCESS);
 }
 
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
