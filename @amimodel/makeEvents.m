@@ -40,22 +40,19 @@ for ix = 1:nx
             % extract argument
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
-            triggers{end+1} = sym(arg);
+            triggers{end+1} = arg;
             if(ismember(idx_start(iocc),strfind(tmp_str,'dirac') + 5))
-                triggers{end+1} = -sym(arg); % for dirac we need both +to- and -to+ transitions
+                triggers{end+1} = ['-(' arg ')']; % for dirac we need both +to- and -to+ transitions
             end
         end
     end
 end
 
 % select the unique ones
-all_triggers = cellfun(@(x) char(x),triggers,'UniformOutput',false);
-utriggers = unique(all_triggers);
+utriggers = unique(triggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
-    % find the original one
-    % transform to char once to get the right ordering
-    trigger{ievent} = sym(char(triggers{find(strcmp(utriggers{itrigger},all_triggers),1)}));
+    trigger{ievent} = sym(utriggers{itrigger});
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
@@ -82,16 +79,18 @@ if(nevent>0)
     event_dependency = zeros(nevent);
     for ievent = 1:nevent
         symchar = char(trigger{ievent});
-        for jevent = 1:nevent
-            % remove the heaviside function and replace by h
-            % variable which is update on event occurrence in the
-            % solver
-            triggerchar = char(trigger{jevent});
-            str_arg_h = ['heaviside(' triggerchar ')' ];
-            event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
-            mtriggerchar = char(-trigger{jevent});
-            str_arg_h = ['heaviside(' mtriggerchar ')' ];
-            event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
+        if(~isempty(strfind(symchar,'heaviside')))
+            for jevent = 1:nevent
+                % remove the heaviside function and replace by h
+                % variable which is update on event occurrence in the
+                % solver
+                triggerchar = char(trigger{jevent});
+                str_arg_h = ['heaviside(' triggerchar ')' ];
+                event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
+                mtriggerchar = char(-trigger{jevent});
+                str_arg_h = ['heaviside(' mtriggerchar ')' ];
+                event_dependency(ievent,jevent) = event_dependency(ievent,jevent) + ~isempty(strfind(symchar,str_arg_h));
+            end
         end
     end
     
