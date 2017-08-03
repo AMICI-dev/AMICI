@@ -32,11 +32,6 @@ int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data
     return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_jakstat_adjoint, sx);
 }
 
-int wrap_RootInit(void *cvode_mem, void *user_data){
-                    UserData *udata = (UserData*) user_data;
-    return CVodeRootInit(cvode_mem, 0, root_model_jakstat_adjoint);
-}
-
 int wrap_SetDenseJacFn(void *cvode_mem){
     return CVDlsSetDenseJacFn(cvode_mem, J_model_jakstat_adjoint);
 }

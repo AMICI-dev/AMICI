@@ -44,6 +44,10 @@ public:
         return CVodeQuadInitB(mem, which, fqBdot, qBdot);
     }
 
+    int wrap_RootInit(void *mem, UserData *udata) {
+        return CVodeRootInit(mem, udata->ne, rootFunction);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return CVodeCreate(lmm,iter);
     }
@@ -285,6 +289,10 @@ public:
                                    N_Vector yB, N_Vector yBdot,
                                    void *user_dataB) {
         return fxBdot(t, y, yB, yBdot, user_dataB);
+    }
+
+    static int rootFunction(realtype t, N_Vector x, realtype *root, void *user_data) {
+        return froot(t, x, NULL, root, user_data);
     }
 
     ~CVodeSolver() {

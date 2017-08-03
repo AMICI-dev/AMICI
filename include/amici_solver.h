@@ -31,6 +31,10 @@ public:
 
     virtual int wrap_qbinit(void *mem, int which, N_Vector qBdot) = 0;
 
+    virtual int wrap_RootInit(void *mem, UserData *udata) = 0;
+
+    virtual int wrap_SensInit1(void *mem, N_Vector *sx, N_Vector *sdx, UserData *udata) = 0;
+
     /**
      * @brief setupAMIs initialises the ami memory object
      * @param[out] status flag indicating success of execution @type int

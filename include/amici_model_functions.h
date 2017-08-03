@@ -15,7 +15,6 @@ class Solver;
 // Modell-specific functions
 UserData getUserData();
 Solver *getSolver();
-int wrap_RootInit(void *cvode_mem, void *user_data);
 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);
 int wrap_SetDenseJacFn(void *cvode_mem);
 int wrap_SetSparseJacFn(void *cvode_mem);
@@ -31,6 +30,7 @@ int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);
 int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int froot(realtype t, N_Vector x, realtype *root, void *user_data);
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
 int frz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata);
 int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata);

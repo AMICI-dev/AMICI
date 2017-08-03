@@ -396,10 +396,7 @@ else
     fprintf(fid,'    return -1;\n');
 end
 fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data){\n');
-fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-fprintf(fid,['    return ' AMI 'RootInit(cvode_mem, ' num2str(this.nevent) ', root_' this.modelname ');\n']);
-fprintf(fid,'}\n\n');
+
 fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem){\n');
 fprintf(fid,['    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
 fprintf(fid,'}\n\n');
