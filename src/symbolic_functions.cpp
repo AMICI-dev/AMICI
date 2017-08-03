@@ -25,12 +25,6 @@
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
-/*! bool return value true */
-#define TRUE 1
-/*! bool return value false */
-#define FALSE 0
-
-
 int amiIsNaN(double what) {
     return std::isnan(what);
 }
