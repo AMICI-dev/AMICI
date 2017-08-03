@@ -1532,11 +1532,15 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     /**
      * getNewtonStep acomputes the Newton Step by solving a linear system
      *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return void
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] ntry intger number of Newton solver try
+     * @param[in] nnewt intger number of Newton steps in the current Newton solver try
+     * @param[out] delta N_Vector solution of the linear system
+     * @return int status flag indicating success of execution @type int
      */
     
      int status = AMICI_ERROR_NEWTON_LINSOLVER;
@@ -1676,8 +1680,8 @@ int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int new
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] newton integer flag indicating the run of the Newton solver
-     * @param[in] clock_t starttime timer running from the start of Newton solver
+     * @param[in] newton_status integer flag indicating the run of the Newton solver
+     * @param[in] run_time double computation time of the Newton solver
      * @return int status flag indicating success of execution @type int
      */
     
@@ -1709,11 +1713,10 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
     /**
      * getNewtonSimulation solves the forward problem, if the first Newton solver run did not succeed.
      *
+     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] newton integer flag indicating the run of the Newton solver
-     * @param[in] clock_t starttime timer running from the start of Newton solver
      * @return int status flag indicating success of execution @type int
      */
     
