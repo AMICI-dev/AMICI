@@ -4,6 +4,7 @@ function generateC(this)
 % Return values:
 %  this: model definition object @type amimodel
 
+% different signatures for cvodes / idas
 if(strcmp(this.wtype,'iw'))
     dxvec = 'dx,';
     rtcj = 'cj,';
@@ -249,16 +250,6 @@ fprintf(fid,'\n');
 for ifun = this.funs
     fprintf(fid,['#include "' this.modelname '_' ifun{1} '.h"\n']);
 end
-fprintf(fid,'\n');
-for ifun = this.funs
-    if(isfield(this.fun,ifun{1}))
-        fun = this.fun.(ifun{1});
-    else
-        fun = amifun(ifun{1},this);
-    end
-    fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
-end
-fprintf(fid,'\n');
 fprintf(fid,'\n');
 fprintf(fid,['#endif /* _am_' this.modelname '_h */\n']);
 fclose(fid);
