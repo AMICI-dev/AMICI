@@ -43,7 +43,7 @@ int amiIsInf(double what) {
 }
 
 double amiGetNaN() {
-    return INFINITY;
+    return NAN;
 }
 
 /**
