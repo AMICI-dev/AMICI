@@ -23,6 +23,10 @@ UserData getUserData(){
                     AMICI_O2MODE_NONE);
 }
 
+Solver *getSolver(){
+    return new CVodeSolver();
+}
+
 int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
    return CVodeInit(cvode_mem, xdot_model_steadystate, RCONST(t), x);
 }

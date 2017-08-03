@@ -383,6 +383,11 @@ switch(this.o2flag)
         fprintf(fid,'                    AMICI_O2MODE_NONE);\n');
 end
 fprintf(fid,'}\n\n');
+
+fprintf(fid,'Solver *getSolver(){\n');
+fprintf(fid,['    return new ' AMI 'Solver();\n']);
+fprintf(fid,'}\n\n');
+
 fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
 fprintf(fid,['   return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
 fprintf(fid,'}\n\n');

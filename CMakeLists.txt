@@ -55,6 +55,7 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/edata.cpp
     ${AMICI_DIR}/src/amici_hdf5.cpp
     ${AMICI_DIR}/src/spline.cpp
+    ${AMICI_DIR}/src/amici_solver.cpp
 )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
