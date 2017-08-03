@@ -1539,8 +1539,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      * @return void
      */
     
-     int il;
-     int stat1 = -1;
+     int status = AMICI_ERROR_NEWTON_LINSOLVER;
      double rho;
      double rho1;
      double alpha;
@@ -1592,7 +1591,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     res = sqrt(N_VDotProd(ns_r, ns_r));
     N_VScale(1.0, ns_r, ns_rt);
     
-    for (il = 0; il < udata->newton_maxlinsteps; il++) {
+    for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps; i_linstep++) {
         // Compute factors
         rho1 = rho;
         rho = N_VDotProd(ns_rt, ns_r);
@@ -1635,11 +1634,11 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
         // Test convergence
         if (res < udata->atol) {
             // Write number of steps needed
-            rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = il + 1;
+            rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = i_linstep + 1;
 
             // Return success
             N_VScale(-1.0, tdata->xdot, tdata->xdot);
-            stat1 = 0;
+            status = AMICI_SUCCESS;
             break;
         }
         
@@ -1663,7 +1662,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
     // Return
-    return(stat1);
+    return(status);
  }
 
 /* ------------------------------------------------------------------------------------- */
@@ -2026,12 +2025,12 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     clock_t starttime;
     
     /* First, try to do Newton steps */
-    run_time = clock();
+    starttime = clock();
     status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 1);
     
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
-        run_time = (double)((run_time - clock()) * 1000) / CLOCKS_PER_SEC;
+        run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
         status = getNewtonOutput(udata, tdata, rdata, 1, run_time);
     } else {
         /* Newton solver did not find a steady state, so try integration */
@@ -2039,14 +2038,14 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
-            run_time = (double)((run_time - clock()) * 1000) / CLOCKS_PER_SEC;
+            run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
             status = getNewtonOutput(udata, tdata, rdata, 2, run_time);
         } else {
             status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 2);
             
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */
-                run_time = (double)((run_time - clock()) * 1000) / CLOCKS_PER_SEC;
+                run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
                 status = getNewtonOutput(udata, tdata, rdata, 3, run_time);
             } else {
                 /* integration error occured */

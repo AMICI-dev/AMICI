@@ -114,7 +114,7 @@ public:
     /** employed order forward problem (dimension: nt) */
     double *order;
     
-    /** flag success of Newton solver */
+    /** flag indicating success of Newton solver */
     double *newton_status;
     
     /* computation time of the Newton solver [s] */
