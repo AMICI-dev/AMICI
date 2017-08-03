@@ -9,8 +9,8 @@ int status = 0;
 UserData *udata = (UserData*) user_data;
 realtype *x_tmp = N_VGetArrayPointer(x);
 status = w_model_dirac(t,x,NULL,user_data);
-  root[0] = -t+udata->p[1];
-  root[1] = t-udata->p[1];
+  root[0] = t-udata->p[1];
+  root[1] = -t+udata->p[1];
 return(status);
 
 }
