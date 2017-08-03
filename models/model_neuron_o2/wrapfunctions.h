@@ -19,7 +19,7 @@ class Solver;
 
 UserData getUserData();
 Solver *getSolver();
-Model *getModel(UserData *udata, ExpData *edata);
+Model *getModel(UserData *udata, const ExpData *edata);
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
@@ -72,7 +72,7 @@ class Model_model_neuron_o2 : public Model {
 public:
     Model_model_neuron_o2() {}
     Model_model_neuron_o2(UserData *udata) : Model(udata) {}
-    Model_model_neuron_o2(UserData *udata, ExpData *edata) : Model(udata, edata) {}
+    Model_model_neuron_o2(UserData *udata, const ExpData *edata) : Model(udata, edata) {}
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return J_model_neuron_o2(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);

@@ -38,31 +38,31 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
 
 int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver);
-int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver);
-int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver);
-int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver);
-int handleEventB(int iroot, UserData *udata, TempData *tdata);
+int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
+int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model);
 int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver);
 
-int applyEventBolus(UserData *udata, TempData *tdata);
-int applyEventSensiBolusFSA( UserData *udata, TempData *tdata);
+int applyEventBolus(UserData *udata, TempData *tdata, Model *model);
+int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
 
 realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata);
 
-int initHeaviside(UserData *udata, TempData *tdata);
+int initHeaviside(UserData *udata, TempData *tdata, Model *model);
 int updateHeaviside(UserData *udata, TempData *tdata);
 int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot, Solver *solver);
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot, Solver *solver);
-int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot, Solver *solver, Model *model);
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot, Solver *solver, Model *model);
+int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,

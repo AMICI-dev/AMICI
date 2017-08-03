@@ -15,16 +15,18 @@ class Model
 public:
     Model() {}
     Model(UserData *udata) : udata(udata) {}
-    Model(UserData *udata, ExpData *edata) : udata(udata), edata(edata) {}
+    Model(UserData *udata, const ExpData *edata) : udata(udata), edata(edata) {}
 
     // TODO model dimensions constructors
+    virtual int fx0(N_Vector x0, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
-    virtual int fdx0(const realtype *k, realtype *x) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdx0(N_Vector x0, N_Vector dx0, void *user_data) { return AMICI_SUCCESS; }
+
+//    virtual int fdx0(const realtype *k, realtype *x) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data) { return AMICI_SUCCESS; }
 
     virtual int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
@@ -98,6 +100,7 @@ public:
 
     virtual int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
+    virtual ~Model() {}
 
     // Generic implementations
     static int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
@@ -118,7 +121,7 @@ public:
 
 
     UserData *udata = NULL;
-    ExpData *edata = NULL;
+    const ExpData *edata = NULL;
 };
 
 #endif // MODEL_H

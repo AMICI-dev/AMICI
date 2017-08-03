@@ -2,13 +2,13 @@
 #include <cstring>
 #include "include/amici.h"
 
-int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
-{
-    UserData *udata = (UserData*) user_data;
-    realtype *x0_tmp = N_VGetArrayPointer(x0);
+//int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
+//{
+//    UserData *udata = (UserData*) user_data;
+//    realtype *x0_tmp = N_VGetArrayPointer(x0);
 
-    return fdx0(udata->k, x0_tmp);
-}
+//    return fdx0(udata->k, x0_tmp);
+//}
 
 int Model::fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp

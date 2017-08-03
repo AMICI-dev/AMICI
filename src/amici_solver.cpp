@@ -2,9 +2,9 @@
 #include "include/amici.h"
 #include <cstdio>
 #include <cstring>
-#include <include/amici_model_functions.h>
+#include <include/amici_model.h>
 
-void *Solver::setupAMI(UserData *udata, TempData *tdata)
+void *Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
     void *ami_mem = NULL; /* pointer to ami memory block */
     N_Vector id = NULL;
@@ -16,7 +16,7 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata)
         /* initialise states */
         if (tdata->x == NULL) goto freturn;
         if (udata->x0data == NULL) {
-            if (fx0(tdata->x, udata) != AMICI_SUCCESS) goto freturn;
+            if (model->fx0(tdata->x, udata) != AMICI_SUCCESS) goto freturn;
         } else {
             int ix;
             realtype *x_tmp = NV_DATA_S(tdata->x);
@@ -25,10 +25,10 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata)
                 x_tmp[ix] = (realtype) udata->x0data[ix];
             }
         }
-        if (fdx0(tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+        if (model->fdx0(tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
 
         /* initialise heaviside variables */
-        if (initHeaviside(udata,tdata) != AMICI_SUCCESS) goto freturn;
+        if (initHeaviside(udata,tdata, model) != AMICI_SUCCESS) goto freturn;
 
     }
 
@@ -158,7 +158,7 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata)
                 realtype *sx_tmp;
 
                 if (!udata->sx0data) {
-                    if (fsx0(tdata->sx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+                    if (model->fsx0(tdata->sx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
                 } else {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
@@ -171,7 +171,7 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata)
                     }
                 }
 
-                if (fsdx0(tdata->sdx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+                if (model->fsdx0(tdata->sdx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
 
                 /* Activate sensitivity calculations */
                 if (wrap_SensInit1(ami_mem, tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS) goto freturn;

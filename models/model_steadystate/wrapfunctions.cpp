@@ -27,7 +27,7 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
-Model *getModel(UserData *udata, ExpData *edata) {
+Model *getModel(UserData *udata, const ExpData *edata) {
     return new Model_model_steadystate(udata, edata);
 }
 

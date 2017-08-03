@@ -64,7 +64,7 @@ public:
      * @return ami_mem pointer to the cvodes/idas memory block
      */
 
-    void *setupAMI(UserData *udata, TempData *tdata);
+    void *setupAMI(UserData *udata, TempData *tdata, Model *model);
 
     /**
      * setupAMIB initialises the AMI memory object for the backwards problem

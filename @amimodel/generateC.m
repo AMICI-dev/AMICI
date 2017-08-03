@@ -345,7 +345,7 @@ else
 end
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'Model *getModel(UserData *udata, ExpData *edata) {\n');
+fprintf(fid,'Model *getModel(UserData *udata, const ExpData *edata) {\n');
     fprintf(fid, ['    return new Model_' this.modelname '(udata, edata);\n']);
 fprintf(fid,'}\n\n');
 
@@ -410,7 +410,7 @@ fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTE
 fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData();\n');
 fprintf(fid,'Solver *getSolver();\n');
-fprintf(fid,'Model *getModel(UserData *udata, ExpData *edata);\n');
+fprintf(fid,'Model *getModel(UserData *udata, const ExpData *edata);\n');
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
@@ -429,7 +429,7 @@ fprintf(fid,['class Model_' this.modelname ' : public Model {\n']);
 fprintf(fid,'public:\n');
 fprintf(fid,['    Model_' this.modelname '() {}\n']);
 fprintf(fid,['    Model_' this.modelname '(UserData *udata) : Model(udata) {}\n']);
-fprintf(fid,['    Model_' this.modelname '(UserData *udata, ExpData *edata) : Model(udata, edata) {}\n']);
+fprintf(fid,['    Model_' this.modelname '(UserData *udata, const ExpData *edata) : Model(udata, edata) {}\n']);
 fprintf(fid,'\n');
 for iffun = this.funs
     % check whether the function was generated, otherwise generate (but
