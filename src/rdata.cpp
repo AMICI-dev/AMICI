@@ -20,7 +20,7 @@ void ReturnData::setDefaults()
     ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = NULL;
     sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order = llh = chi2 = sllh = s2llh = NULL;
     numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB = numnonlinsolvconvfailsB = NULL;
-    newton = newton_time = newton_numsteps = newton_numlinsteps = xss = NULL;
+    newton_status = newton_time = newton_numsteps = newton_numlinsteps = xss = NULL;
     status = NULL;
 
     freeFieldsOnDestruction = true;
@@ -242,7 +242,7 @@ ReturnData::~ReturnData()
     if(numerrtestfailsB) delete [] numerrtestfailsB;
     if(numnonlinsolvconvfailsB) delete [] numnonlinsolvconvfailsB;
     if(xss) delete[] xss;
-    if(newton) delete[] newton;
+    if(newton_status) delete[] newton_status;
     if(newton_numsteps) delete[] newton_numsteps;
     if(newton_numlinsteps) delete[] newton_numlinsteps;
     if(newton_time) delete[] newton_time;
@@ -276,7 +276,7 @@ void ReturnData::initFields(const UserData *udata)
             initField2(&xdot, "xdot", 1,udata->nx);
             initField2(&J, "J", udata->nx,udata->nx);
             initField2(&xss, "xss", 1,udata->nx);
-            initField2(&newton, "newton", 1,1);
+            initField2(&newton_status, "newton_status", 1,1);
             initField2(&newton_numsteps, "newton_numsteps", 1,2);
             initField2(&newton_numlinsteps, "newton_numlinsteps", udata->newton_maxsteps,2);
             initField2(&newton_time, "newton_time", 1,2);

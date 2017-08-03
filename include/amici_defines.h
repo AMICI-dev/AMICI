@@ -31,6 +31,7 @@
 #define AMICI_ERROR_EVENT              -87
 #define AMICI_ERROR_SIMULATION         -86
 #define AMICI_ERROR_NEWTONSOLVER       -85
+#define AMICI_ERROR_NEWTON_LINSOLVER   -84
 #define AMICI_SUCCESS                    0
 #define AMICI_DATA_RETURN                1
 #define AMICI_ROOT_RETURN                2

@@ -247,7 +247,7 @@ classdef amioption < matlab.mixin.CustomDisplay
             this.ns_maxlinsteps = value;
         end
 
-        function this = set.preequil(this,value)
+        function this = set.newton_preeq(this,value)
             assert(isnumeric(value),'The option preequil must have a numeric value!')
             assert(floor(value)==value,'The option preequil must be an integer!')
             assert(value<=2,'Only 0 and 1 are valid options for preequil!')
