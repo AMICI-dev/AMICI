@@ -1638,47 +1638,49 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     
     int status = AMICI_SUCCESS;
     
-    /* store current Jacobian and derivative */
-    if (udata) {
-        if (tdata) {
-            if (udata->nx>0){
-                /*
-                 entries in rdata are actually (double) while entries in tdata are (realtype)
-                 we should perform proper casting here.
-                 */
-                status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
-                if (status != AMICI_SUCCESS) return status;
-                realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
-                if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
-                if (rdata->xdot)
-                    memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
-                
-                status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
-                if (status != AMICI_SUCCESS) return status;
-                if (rdata->J)
-                    memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
-                
-                if (udata->sensi_meth == AMICI_SENSI_SS) {
-                    status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dxdotdp)
-                        memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
-                    
-                    status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dydp)
-                        memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
-                    
-                    status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dydx)
-                        memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
-                }
-                
-            }
-        }
+    if(!udata || !tdata || udata->nx <= 0)
+        return;
+
+    /*
+        entries in rdata are actually (double) while entries in tdata are (realtype)
+        we should perform proper casting here.
+    */
+    status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
+    if (status != AMICI_SUCCESS) return status;
+
+    realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
+    if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
+
+    if (rdata->xdot)
+        memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+
+    status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
+    if (status != AMICI_SUCCESS) return status;
+
+    if (rdata->J)
+        memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
+
+    if (udata->sensi_meth == AMICI_SENSI_SS) {
+        status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dxdotdp)
+            memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
+
+        status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dydp)
+            memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
+
+        status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dydx)
+            memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
     }
-    return AMICI_SUCCESS;
+
+    return status;
 }
 
 
