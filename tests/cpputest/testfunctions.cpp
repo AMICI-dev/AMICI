@@ -15,6 +15,12 @@ ExpData *getTestExpData(const UserData *udata) {
 bool withinTolerance(double expected, double actual, double atol, double rtol, int index) {
     bool withinTol =  fabs(expected - actual) <= atol || fabs((expected - actual) / (rtol + expected)) <= rtol;
 
+    if(!withinTol && std::isnan(expected) && std::isnan(actual))
+        withinTol = true;
+
+    if(!withinTol && std::isinf(expected) && std::isinf(actual))
+        withinTol = true;
+
     if(!withinTol) {
         fprintf(stderr, "ERROR: Expected value %e, but was %e at index %d.\n",expected, actual, index);
         fprintf(stderr, "       Relative error: %e (tolerance was %e)\n", fabs((expected - actual) / (rtol + expected)), rtol);
@@ -52,9 +58,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
     double *expected;
 
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
-    // TODO: ignores Inf and NaN results; need to check with format in HDF5
-    if(! std::isinf(*rdata->llh) || std::isnan(*rdata->llh))
-        CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1));
+    CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
     checkEqualArray(expected, rdata->x, udata->nt * udata->nxtrue, atol, rtol);
