@@ -50,6 +50,38 @@ public:
         return IDASensInit(mem, udata->nplist, udata->sensi_meth, fsxdot, sx, sdx);
     }
 
+    int wrap_SetDenseJacFn(void *mem) {
+        return IDADlsSetDenseJacFn(mem, fJ);
+    }
+
+    int wrap_SetSparseJacFn(void *mem) {
+        return IDASlsSetSparseJacFn(mem, fJSparse);
+    }
+
+    int wrap_SetBandJacFn(void *mem) {
+        return IDADlsSetBandJacFn(mem, fJBand);
+    }
+
+    int wrap_SetJacTimesVecFn(void *mem) {
+        return IDASpilsSetJacTimesVecFn(mem, fJv);
+    }
+
+    int wrap_SetDenseJacFnB(void *mem, int which) {
+        return IDADlsSetDenseJacFnB(mem, which, fJB);
+    }
+
+    int wrap_SetSparseJacFnB(void *mem, int which) {
+        return IDASlsSetSparseJacFnB(mem, which, fJSparseB);
+    }
+
+    int wrap_SetBandJacFnB(void *mem, int which) {
+        return IDADlsSetBandJacFnB(mem, which, fJBandB);
+    }
+
+    int wrap_SetJacTimesVecFnB(void *mem, int which) {
+        return IDASpilsSetJacTimesVecFnB(mem, which, fJvB);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return IDACreate();
     }

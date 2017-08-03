@@ -388,51 +388,12 @@ fprintf(fid,'Solver *getSolver(){\n');
 fprintf(fid,['    return new ' AMI 'Solver();\n']);
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem){\n');
-fprintf(fid,['    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem){\n');
-fprintf(fid,['    return ' prefix 'SlsSetSparseJacFn(cvode_mem, JSparse_' this.modelname ');\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem){\n');
-fprintf(fid,['    return ' prefix 'DlsSetBandJacFn(cvode_mem, JBand_' this.modelname ');\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem){\n');
-fprintf(fid,['    return ' prefix 'SpilsSetJacTimesVecFn(cvode_mem, Jv_' this.modelname ');\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' prefix 'DlsSetDenseJacFnB(cvode_mem, which, JB_' this.modelname ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' prefix 'SlsSetSparseJacFnB(cvode_mem, which, JSparseB_' this.modelname ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' prefix 'DlsSetBandJacFnB(cvode_mem, which, JBandB_' this.modelname ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' prefix 'SpilsSetJacTimesVecFnB(cvode_mem, which, JvB_' this.modelname ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
 
 ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','rz','srz','stau',...
     'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx', 'sxdot', ...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
+    'JSparse', 'JBand', 'Jv', 'JSparseB', 'JBandB', 'JvB', ...
     'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma'};
 
 for iffun = ffuns
@@ -477,7 +438,7 @@ fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 fprintf(fid,'\n');
-fprintf(fid,'#include <include/udata.h>\n');
+fprintf(fid,'class UserData;\nclass Solver;\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
 
@@ -486,19 +447,7 @@ fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData();\n');
-fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);\n');
-fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);\n');
-fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);\n');
-fprintf(fid,'int wrap_RootInit(void *cvode_mem, void *user_data);\n');
-fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);\n');
-fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem);\n');
-fprintf(fid,'int wrap_SetSparseJacFn(void *cvode_mem);\n');
-fprintf(fid,'int wrap_SetBandJacFn(void *cvode_mem);\n');
-fprintf(fid,'int wrap_SetJacTimesVecFn(void *cvode_mem);\n');
-fprintf(fid,'int wrap_SetDenseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'int wrap_SetSparseJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'int wrap_SetBandJacFnB(void *cvode_mem,int which);\n');
-fprintf(fid,'int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);\n');
+fprintf(fid,'Solver *getSolver();\n');
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)

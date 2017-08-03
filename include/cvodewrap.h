@@ -52,6 +52,38 @@ public:
         return CVodeSensInit1(mem, udata->nplist, udata->sensi_meth, fsxdot, sx);
     }
 
+    int wrap_SetDenseJacFn(void *mem) {
+        return CVDlsSetDenseJacFn(mem, J);
+    }
+
+    int wrap_SetSparseJacFn(void *mem) {
+        return CVSlsSetSparseJacFn(mem, fJSparse);
+    }
+
+    int wrap_SetBandJacFn(void *mem) {
+        return CVDlsSetBandJacFn(mem, fJBand);
+    }
+
+    int wrap_SetJacTimesVecFn(void *mem) {
+        return CVSpilsSetJacTimesVecFn(mem, fJv);
+    }
+
+    int wrap_SetDenseJacFnB(void *mem, int which) {
+        return CVDlsSetDenseJacFnB(mem, which, fJB);
+    }
+
+    int wrap_SetSparseJacFnB(void *mem, int which) {
+        return CVSlsSetSparseJacFnB(mem, which, fJSparseB);
+    }
+
+    int wrap_SetBandJacFnB(void *mem, int which) {
+        return CVDlsSetBandJacFnB(mem, which, fJBandB);
+    }
+
+    int wrap_SetJacTimesVecFnB(void *mem, int which) {
+        return CVSpilsSetJacTimesVecFnB(mem, which, fJvB);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return CVodeCreate(lmm,iter);
     }
@@ -297,6 +329,10 @@ public:
 
     static int rootFunction(realtype t, N_Vector x, realtype *root, void *user_data) {
         return froot(t, x, NULL, root, user_data);
+    }
+
+    static int J(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+        return fJ(N, t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2, tmp3);
     }
 
     ~CVodeSolver() {

@@ -4,7 +4,8 @@
 
 #include "model_dirac.h"
 
-#include <include/udata.h>
+class UserData;
+class Solver;
 
 
 #define pi M_PI
@@ -16,19 +17,7 @@
 #endif
 
 UserData getUserData();
-int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t);
-int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t);
-int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot);
-int wrap_RootInit(void *cvode_mem, void *user_data);
-int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data);
-int wrap_SetDenseJacFn(void *cvode_mem);
-int wrap_SetSparseJacFn(void *cvode_mem);
-int wrap_SetBandJacFn(void *cvode_mem);
-int wrap_SetJacTimesVecFn(void *cvode_mem);
-int wrap_SetDenseJacFnB(void *cvode_mem,int which);
-int wrap_SetSparseJacFnB(void *cvode_mem,int which);
-int wrap_SetBandJacFnB(void *cvode_mem,int which);
-int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
+Solver *getSolver();
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
@@ -61,6 +50,12 @@ int fsigma_y(realtype t, void *user_data, TempData *tdata);
 int fdsigma_ydp(realtype t, void *user_data, TempData *tdata);
 int fsigma_z(realtype t, int ie, void *user_data, TempData *tdata);
 int fdsigma_zdp(realtype t, int ie, void *user_data, TempData *tdata);
+int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
+int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 int fJy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fJz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fJrz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);

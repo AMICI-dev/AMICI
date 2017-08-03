@@ -27,38 +27,6 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
-int wrap_SetDenseJacFn(void *cvode_mem){
-    return CVDlsSetDenseJacFn(cvode_mem, J_model_neuron_o2);
-}
-
-int wrap_SetSparseJacFn(void *cvode_mem){
-    return CVSlsSetSparseJacFn(cvode_mem, JSparse_model_neuron_o2);
-}
-
-int wrap_SetBandJacFn(void *cvode_mem){
-    return CVDlsSetBandJacFn(cvode_mem, JBand_model_neuron_o2);
-}
-
-int wrap_SetJacTimesVecFn(void *cvode_mem){
-    return CVSpilsSetJacTimesVecFn(cvode_mem, Jv_model_neuron_o2);
-}
-
-int wrap_SetDenseJacFnB(void *cvode_mem,int which){
-    return CVDlsSetDenseJacFnB(cvode_mem, which, JB_model_neuron_o2);
-}
-
-int wrap_SetSparseJacFnB(void *cvode_mem,int which){
-    return CVSlsSetSparseJacFnB(cvode_mem, which, JSparseB_model_neuron_o2);
-}
-
-int wrap_SetBandJacFnB(void *cvode_mem,int which){
-    return CVDlsSetBandJacFnB(cvode_mem, which, JBandB_model_neuron_o2);
-}
-
-int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){
-    return CVSpilsSetJacTimesVecFnB(cvode_mem, which, JvB_model_neuron_o2);
-}
-
 int fx0(N_Vector x0, void *user_data){
     return x0_model_neuron_o2(x0, user_data);
 }
@@ -185,6 +153,30 @@ int fsigma_z(realtype t, int ie, void *user_data, TempData *tdata){
 
 int fdsigma_zdp(realtype t, int ie, void *user_data, TempData *tdata){
     return dsigma_zdp_model_neuron_o2(t, ie, user_data, tdata);
+}
+
+int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JSparse_model_neuron_o2(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+}
+
+int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JBand_model_neuron_o2(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+}
+
+int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp){
+    return Jv_model_neuron_o2(v, Jv, t, x, xdot, user_data, tmp);
+}
+
+int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JSparseB_model_neuron_o2(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+}
+
+int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JBandB_model_neuron_o2(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+}
+
+int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB){
+    return JvB_model_neuron_o2(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
 }
 
 int fJy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){

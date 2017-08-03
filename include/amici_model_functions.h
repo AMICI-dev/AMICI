@@ -15,14 +15,6 @@ class Solver;
 // Modell-specific functions
 UserData getUserData();
 Solver *getSolver();
-int wrap_SetDenseJacFn(void *cvode_mem);
-int wrap_SetSparseJacFn(void *cvode_mem);
-int wrap_SetBandJacFn(void *cvode_mem);
-int wrap_SetJacTimesVecFn(void *cvode_mem);
-int wrap_SetDenseJacFnB(void *cvode_mem,int which);
-int wrap_SetSparseJacFnB(void *cvode_mem,int which);
-int wrap_SetBandJacFnB(void *cvode_mem,int which);
-int wrap_SetJacTimesVecFnB(void *cvode_mem,int which);
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);

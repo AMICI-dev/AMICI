@@ -28,14 +28,33 @@ public:
     virtual int wrap_binit(void *mem, int which, N_Vector xB, N_Vector dxB, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
-
     virtual int wrap_qbinit(void *mem, int which, N_Vector qBdot) = 0;
 
     virtual int wrap_RootInit(void *mem, UserData *udata) = 0;
 
     // TODO: check if model has forward sensitivities, else return -1
-
     virtual int wrap_SensInit1(void *mem, N_Vector *sx, N_Vector *sdx, UserData *udata) = 0;
+
+    virtual int wrap_SetDenseJacFn(void *mem) = 0;
+
+    virtual int wrap_SetSparseJacFn(void *mem) = 0;
+
+    virtual int wrap_SetBandJacFn(void *mem) = 0;
+
+    virtual int wrap_SetJacTimesVecFn(void *mem) = 0;
+
+    // TODO: check if model has adjoint sensitivities, else return -1
+    virtual int wrap_SetDenseJacFnB(void *mem, int which) = 0;
+
+    // TODO: check if model has adjoint sensitivities, else return -1
+    virtual int wrap_SetSparseJacFnB(void *mem, int which) = 0;
+
+    // TODO: check if model has adjoint sensitivities, else return -1
+    virtual int wrap_SetBandJacFnB(void *mem, int which) = 0;
+
+    // TODO: check if model has adjoint sensitivities, else return -1
+    virtual int wrap_SetJacTimesVecFnB(void *mem, int which) = 0;
+
 
     /**
      * @brief setupAMIs initialises the ami memory object
