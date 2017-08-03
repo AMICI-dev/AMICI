@@ -27,14 +27,6 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
-int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
-   return CVodeInit(cvode_mem, xdot_model_jakstat_adjoint_o2, RCONST(t), x);
-}
-
-int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){
-    return CVodeInitB(cvode_mem, which, xBdot_model_jakstat_adjoint_o2, RCONST(t), xB);
-}
-
 int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){
     return CVodeQuadInitB(cvode_mem, which, qBdot_model_jakstat_adjoint_o2, qBdot);
 }

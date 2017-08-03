@@ -18,6 +18,7 @@
 
 #include <include/amici.h>
 #include <include/amici_solver.h>
+#include <amici_model_functions.h>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -28,6 +29,14 @@ class IDASolver : public Solver
 {
 public:
     IDASolver() {}
+
+    int wrap_init(void *mem, N_Vector x, N_Vector dx, realtype t){
+       return IDAInit(mem, resultFunction, RCONST(t), x, dx);
+    }
+
+    int wrap_binit(void *mem, int which, N_Vector xB, N_Vector dxB, realtype t) {
+        return IDAInitB(mem, which, resultFunctionB, RCONST(t), xB, dxB);
+    }
 
     void *AMICreate(int lmm, int iter) {
         return IDACreate();
@@ -260,6 +269,19 @@ public:
     int AMISetStopTime(void *mem, realtype tstop) {
         return IDASetStopTime(mem, tstop);
     }
+
+    static resultFunction(realtype tt, N_Vector yy, N_Vector yp,
+                          N_Vector rr, void *user_data) {
+        return fxdot(tt, yy, yp, rr, user_data);
+    }
+
+    static int resultFunctionB(realtype tt,
+                               N_Vector yy, N_Vector yp,
+                               N_Vector yyB, N_Vector ypB,
+                                           N_Vector rrB, void *user_dataB) {
+        return fxBdot(tt, yy, yp, yyB, ypB, rrB, user_dataB);
+    }
+
 
     ~IDASolver() {}
 }

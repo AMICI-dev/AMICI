@@ -388,16 +388,6 @@ fprintf(fid,'Solver *getSolver(){\n');
 fprintf(fid,['    return new ' AMI 'Solver();\n']);
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){\n');
-fprintf(fid,['   return ' AMI 'Init(cvode_mem, xdot_' this.modelname ', RCONST(t), x' dx ');\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' AMI 'InitB(cvode_mem, which, xBdot_' this.modelname ', RCONST(t), xB' dxB ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
 fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
 if(this.adjoint)
     fprintf(fid,['    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);

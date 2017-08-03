@@ -18,6 +18,7 @@
 
 #include <include/amici.h>
 #include <include/amici_solver.h>
+#include <include/amici_model_functions.h>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -29,6 +30,14 @@ class CVodeSolver : public Solver
 public:
     CVodeSolver() {
 
+    }
+
+    int wrap_init(void *mem, N_Vector x, N_Vector dx, realtype t) {
+       return CVodeInit(mem, resultFunction, RCONST(t), x);
+    }
+
+    int wrap_binit(void *mem, int which, N_Vector xB, N_Vector dxB, realtype t) {
+        return CVodeInitB(mem, which, resultFunctionB, RCONST(t), xB);
     }
 
     void *AMICreate(int lmm, int iter) {
@@ -261,6 +270,17 @@ public:
 
     int AMISetStopTime(void *mem, realtype tstop) {
         return CVodeSetStopTime(mem, tstop);
+    }
+
+    static int resultFunction(realtype t, N_Vector y,
+                   N_Vector ydot, void *user_data) {
+        return fxdot(t, y, NULL, ydot, user_data);
+    }
+
+    static int resultFunctionB(realtype t, N_Vector y,
+                                   N_Vector yB, N_Vector yBdot,
+                                   void *user_dataB) {
+        return fxBdot(t, y, yB, yBdot, user_dataB);
     }
 
     ~CVodeSolver() {
