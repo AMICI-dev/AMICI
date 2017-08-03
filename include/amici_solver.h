@@ -27,6 +27,10 @@ public:
     // TODO: check if model has adjoint sensitivities, else return -1
     virtual int wrap_binit(void *mem, int which, N_Vector xB, N_Vector dxB, realtype t) = 0;
 
+    // TODO: check if model has adjoint sensitivities, else return -1
+
+    virtual int wrap_qbinit(void *mem, int which, N_Vector qBdot) = 0;
+
     /**
      * @brief setupAMIs initialises the ami memory object
      * @param[out] status flag indicating success of execution @type int

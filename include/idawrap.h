@@ -38,6 +38,10 @@ public:
         return IDAInitB(mem, which, resultFunctionB, RCONST(t), xB, dxB);
     }
 
+    int wrap_qbinit(void *mem, int which, N_Vector qBdot) {
+        return IDAQuadInitB(mem, which, fqBdot, qBdot);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return IDACreate();
     }

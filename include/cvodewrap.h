@@ -40,6 +40,10 @@ public:
         return CVodeInitB(mem, which, resultFunctionB, RCONST(t), xB);
     }
 
+    int wrap_qbinit(void *mem, int which, N_Vector qBdot) {
+        return CVodeQuadInitB(mem, which, fqBdot, qBdot);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return CVodeCreate(lmm,iter);
     }

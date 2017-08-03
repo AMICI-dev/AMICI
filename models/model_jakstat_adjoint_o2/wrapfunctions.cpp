@@ -27,10 +27,6 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
-int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){
-    return CVodeQuadInitB(cvode_mem, which, qBdot_model_jakstat_adjoint_o2, qBdot);
-}
-
 int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
                     UserData *udata = (UserData*) user_data;
     return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_jakstat_adjoint_o2, sx);

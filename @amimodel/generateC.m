@@ -388,13 +388,6 @@ fprintf(fid,'Solver *getSolver(){\n');
 fprintf(fid,['    return new ' AMI 'Solver();\n']);
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){\n');
-if(this.adjoint)
-    fprintf(fid,['    return ' AMI 'QuadInitB(cvode_mem, which, qBdot_' this.modelname ', qBdot);\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
 fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
 if(this.forward)
     fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
