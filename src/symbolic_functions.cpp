@@ -25,9 +25,6 @@
 #include <include/symbolic_functions.h>
 #include <include/spline.h>
 
-
-#undef ts
-
 /*! bool return value true */
 #define TRUE 1
 /*! bool return value false */
