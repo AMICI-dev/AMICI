@@ -5,16 +5,10 @@ function generateC(this)
 %  this: model definition object @type amimodel
 
 if(strcmp(this.wtype,'iw'))
-    xvec = 'x,';
     dxvec = 'dx,';
-    sdxvec = 'sdx,';
-    dxBvec = 'dxB,';
     rtcj = 'cj,';
 else
-    xvec = '';
     dxvec = 'NULL,';
-    sdxvec = '';
-    dxBvec = '';
     rtcj = '';
 end
 

@@ -12,7 +12,6 @@ function this = getArgs(this,model)
     %
     
     if(strcmp(model.wtype,'iw'))
-        xvec = ' N_Vector x,';
         dxvec = ' N_Vector dx,';
         sdxvec = ' N_Vector *sdx,';
         dxBvec = ' N_Vector dxB,';
@@ -21,7 +20,6 @@ function this = getArgs(this,model)
         intip = '';
         tmp3vec = ', N_Vector tmp3';
     else
-        xvec = '';
         dxvec = '';
         sdxvec = '';
         dxBvec = '';
