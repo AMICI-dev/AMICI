@@ -22,6 +22,9 @@
 #include <include/amici_solver_wrap.h>
 #include <include/amici_model_functions.h>
 
+msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
+msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
+
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata) {
     if(!udata) return AMICI_ERROR_UDATA;
     if(!rdata) return AMICI_ERROR_RDATA;
@@ -1457,6 +1460,14 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
     if (udata->ne>0) {
         getEventOutput(&tlastroot, udata, rdata, edata, tdata);
     }
+
+    // set likelihood
+    if (edata) {
+        *rdata->llh = - tdata->Jy[0] - tdata->Jz[0];
+    } else {
+        *rdata->llh = amiGetNaN();
+    }
+
     
 freturn:
     storeJacobianAndDerivativeInReturnData(udata, tdata, rdata);
@@ -1484,7 +1495,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
             || udata->sensi < AMICI_SENSI_ORDER_FIRST
             || udata->sensi_meth != AMICI_SENSI_ASA
             || status != AMICI_SUCCESS) {
-        goto set_likelihood;
+        return status;
     }
 
     setupAMIB(ami_mem, udata, tdata);
@@ -1606,21 +1617,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
         }
 
     }
-
-
-set_likelihood:
     if(status != AMICI_SUCCESS) {
         rdata->setLikelihoodSensitivityFirstOrderNaN(udata);
         rdata->setLikelihoodSensitivitySecondOrderNaN(udata);
     }
 
-    if (edata) {
-        *rdata->llh = - tdata->Jy[0] - tdata->Jz[0];
-    } else {
-        *rdata->llh = amiGetNaN();
-    }
-    
-    return AMICI_SUCCESS;
+    return status;
 }
 
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata) {
@@ -1636,47 +1638,56 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     
     int status = AMICI_SUCCESS;
     
-    /* store current Jacobian and derivative */
-    if (udata) {
-        if (tdata) {
-            if (udata->nx>0){
-                /*
-                 entries in rdata are actually (double) while entries in tdata are (realtype)
-                 we should perform proper casting here.
-                 */
-                status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
-                if (status != AMICI_SUCCESS) return status;
-                realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
-                if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
-                if (rdata->xdot)
-                    memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
-                
-                status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
-                if (status != AMICI_SUCCESS) return status;
-                if (rdata->J)
-                    memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
-                
-                if (udata->sensi_meth == AMICI_SENSI_SS) {
-                    status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dxdotdp)
-                        memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
-                    
-                    status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dydp)
-                        memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
-                    
-                    status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
-                    if(status != AMICI_SUCCESS) return status;
-                    if(rdata->dydx)
-                        memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
-                }
-                
-            }
-        }
+    if(!udata || !tdata || udata->nx <= 0)
+        return status;
+
+    /*
+        entries in rdata are actually (double) while entries in tdata are (realtype)
+        we should perform proper casting here.
+    */
+    status = fxdot(tdata->t,tdata->x,tdata->dx,tdata->xdot,udata);
+    if (status != AMICI_SUCCESS) return status;
+
+    realtype *xdot_tmp = NV_DATA_S(tdata->xdot);
+    if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
+
+    if (rdata->xdot)
+        memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+
+    status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
+    if (status != AMICI_SUCCESS) return status;
+
+    if (rdata->J)
+        memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
+
+    if (udata->sensi_meth == AMICI_SENSI_SS) {
+        status = fdxdotdp(tdata->t,tdata->x,tdata->dx,udata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dxdotdp)
+            memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
+
+        status = fdydp(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dydp)
+            memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
+
+        status = fdydx(tdata->t,udata->nt-1,tdata->x,udata,tdata);
+        if(status != AMICI_SUCCESS) return status;
+
+        if(rdata->dydx)
+            memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
     }
-    return AMICI_SUCCESS;
+
+    return status;
 }
 
 
+void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...) {
+    printf("[Error] %s: %s\n", identifier, msg);
+}
+
+void printWarnMsgIdAndTxt(const char * identifier, const char *msg, ...) {
+    printf("[Warning] %s: %s\n", identifier, msg);
+}

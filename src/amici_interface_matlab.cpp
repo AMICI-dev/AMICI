@@ -58,6 +58,11 @@ goto freturn; \
  * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+    // use matlab error reporting
+    warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
+    errMsgIdAndTxt = &mexErrMsgIdAndTxt;
+
+
     /* ensures that plhs[0] is available */
     if(nlhs != 1) { errMsgIdAndTxt("AMICI:mex","Incorrect number of output arguments (must be 1)!"); return;};
     

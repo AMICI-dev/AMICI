@@ -1,11 +1,6 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
 
-#include <math.h>
-#include <include/spline.h>
-#include <stdarg.h>
-
-
 double amilog(double x);
 double dirac(double x);
 double heaviside(double x);
@@ -18,18 +13,6 @@ double Dam_max(int id,double a, double b, double c);
 int amiIsNaN(double what);
 int amiIsInf(double what);
 double amiGetNaN();
-
-void errMsgIdAndTxt(
-    const char * identifier, /* string with error message identifier */
-    const char * err_msg,    /* string with error message printf-style format */
-    ...                      /* any additional arguments */
-    );
-
-void warnMsgIdAndTxt(
-    const char * identifier, /* string with error message identifier */
-    const char * err_msg,    /* string with error message printf-style format */
-    ...                      /* any additional arguments */
-    );
 
 /* sign */
 double sign(double x);
