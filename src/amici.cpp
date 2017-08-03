@@ -1389,7 +1389,7 @@ int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, Tem
 /* ------------------------------------------------------------------------------------- */
 
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int status, int ntry) {
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int status, int newton_try) {
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
      *
@@ -1401,8 +1401,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
      * @return void
      */
 
-    int ix;
-    int inewt = 0;
+    int i_newtonstep = 0;
     int stat1 = -1;
     
     double res;
@@ -1426,7 +1425,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     N_VScale(1.0, tdata->x, tmp_x);
     N_VAbs(tmp_x, tmp_x);
     x_tmp = N_VGetArrayPointer(tmp_x);
-    for (ix=0; ix<udata->nx; ix++) {
+    for (int ix=0; ix<udata->nx; ix++) {
         if (x_tmp[ix] < udata->atol) {
             x_tmp[ix] = udata->atol;
         }
@@ -1444,14 +1443,14 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     }
     
     // compute the inital search direction
-    status = getNewtonStep(udata, rdata, tdata, ami_mem, ntry, inewt, delta);
+    status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta);
     
     // Copy the current state to the old one, make up a new vector for Jdiag
     N_VScale(1.0, tdata->x, tdata->x_old);
     N_VScale(1.0, tdata->xdot, tdata->xdot_old);
     
     // Newton iterations
-    for(inewt=0; inewt<udata->newton_maxsteps; inewt++) {
+    for(i_newtonstep=0; i_newtonstep<udata->newton_maxsteps; i_newtonstep++) {
         
         // Try a full, undamped Newton step
         N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
@@ -1482,7 +1481,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
             // Check condition
             if (res < udata->atol) {
                 // Return number of Newton steps needed
-                rdata->newton_numsteps[ntry-1] = inewt + 1;
+                rdata->newton_numsteps[newton_try-1] = i_newtonstep + 1;
                 stat1 = 0;
                 break;
             }
@@ -1493,7 +1492,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                 gamma = fmax(1.0, 2.0*gamma);
             
                 // solve the new linear system
-                status = getNewtonStep(udata, rdata, tdata, ami_mem, ntry, inewt, delta);
+                status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta);
             }
         } else {
             gamma = gamma/4.0;
@@ -1505,7 +1504,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     N_VDestroy_Serial(rel_x);
     N_VDestroy_Serial(tmp_x);
     
-    rdata->newton_numsteps[ntry-1] = udata->newton_maxsteps;
+    rdata->newton_numsteps[newton_try-1] = udata->newton_maxsteps;
     
     return(stat1);
     

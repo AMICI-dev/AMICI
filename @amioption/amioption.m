@@ -51,16 +51,18 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
-        % newton solver: linear solver (BiCGStab, GMRES, KLU direct)
-        newton_linsol = 0;
-        % newton solver: preconditioning method (none, diagonal, incomplete LU)
+        % newton solver: linear solver
+        newton_linsol = 10;
+        % newton solver: preconditioning method
+        % (0 = none, 1 = diagonal, 2 = incomplete LU)
         newton_precon = 1;
         % newton solver: maximum newton steps
-        newton_maxsteps = 20;
+        newton_maxsteps = 40;
         % newton solver: maximum linear steps
-        newton_maxlinsteps = 150;
+        newton_maxlinsteps = 100;
         % preequilibration of system via newton solver
-        preequil = 0;
+        % (0 = none, 1 = only states, 2 = states and sensitivities)
+        newton_preeq = 0;
         % mapping of event ouputs to events
         z2event = double.empty();
     end

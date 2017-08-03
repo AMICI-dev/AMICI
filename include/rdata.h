@@ -115,15 +115,15 @@ public:
     double *order;
     
     /** flag success of Newton solver */
-    double *newton;
+    double *newton_status;
     
-    /** number of Newton steps steady state problem */
+    /* computation time of the Newton solver [s] */
     double *newton_time;
     
-    /** number of Newton steps steady state problem */
+    /** number of Newton steps for steady state problem */
     double *newton_numsteps;
     
-    /** number of linear steps per Newton step steady state problem */
+    /** number of linear steps by Newton step for steady state problem */
     double *newton_numlinsteps;
     
     /** steady state found be Newton solver */
