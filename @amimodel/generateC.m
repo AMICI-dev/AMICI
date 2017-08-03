@@ -388,15 +388,6 @@ fprintf(fid,'Solver *getSolver(){\n');
 fprintf(fid,['    return new ' AMI 'Solver();\n']);
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){\n');
-if(this.forward)
-    fprintf(fid,'                    UserData *udata = (UserData*) user_data;\n');
-    fprintf(fid,['    return ' AMI 'SensInit' one '(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_' this.modelname ', sx' sdx ');\n']);
-else
-    fprintf(fid,'    return -1;\n');
-end
-fprintf(fid,'}\n\n');
-
 fprintf(fid,'int wrap_SetDenseJacFn(void *cvode_mem){\n');
 fprintf(fid,['    return ' prefix 'DlsSetDenseJacFn(cvode_mem, J_' this.modelname ');\n']);
 fprintf(fid,'}\n\n');
@@ -439,7 +430,7 @@ end
 fprintf(fid,'}\n\n');
 
 ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','rz','srz','stau',...
-    'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx',...
+    'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx', 'sxdot', ...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
     'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma'};

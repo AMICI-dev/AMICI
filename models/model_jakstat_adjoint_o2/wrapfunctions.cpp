@@ -27,11 +27,6 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
-int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
-                    UserData *udata = (UserData*) user_data;
-    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_jakstat_adjoint_o2, sx);
-}
-
 int wrap_SetDenseJacFn(void *cvode_mem){
     return CVDlsSetDenseJacFn(cvode_mem, J_model_jakstat_adjoint_o2);
 }
@@ -138,6 +133,10 @@ int fdrzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
 
 int fdrzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
     return drzdx_model_jakstat_adjoint_o2(t, ie, x, user_data, tdata);
+}
+
+int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2){
+    return sxdot_model_jakstat_adjoint_o2(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1, tmp2);
 }
 
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){

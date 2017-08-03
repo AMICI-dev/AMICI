@@ -48,6 +48,7 @@ int fdzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata);
 int fdzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata);
 int fdrzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata);
 int fdrzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata);
+int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);
 int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);

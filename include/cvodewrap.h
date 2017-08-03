@@ -48,6 +48,10 @@ public:
         return CVodeRootInit(mem, udata->ne, rootFunction);
     }
 
+    int wrap_SensInit1(void *mem, N_Vector *sx, N_Vector *sdx, UserData *udata) {
+        return CVodeSensInit1(mem, udata->nplist, udata->sensi_meth, fsxdot, sx);
+    }
+
     void *AMICreate(int lmm, int iter) {
         return CVodeCreate(lmm,iter);
     }

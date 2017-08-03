@@ -33,6 +33,8 @@ public:
 
     virtual int wrap_RootInit(void *mem, UserData *udata) = 0;
 
+    // TODO: check if model has forward sensitivities, else return -1
+
     virtual int wrap_SensInit1(void *mem, N_Vector *sx, N_Vector *sdx, UserData *udata) = 0;
 
     /**

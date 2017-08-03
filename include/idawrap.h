@@ -47,7 +47,7 @@ public:
     }
 
     int wrap_SensInit1(void *mem, N_Vector *sx, N_Vector *sdx, UserData *udata) {
-
+        return IDASensInit(mem, udata->nplist, udata->sensi_meth, fsxdot, sx, sdx);
     }
 
     void *AMICreate(int lmm, int iter) {
