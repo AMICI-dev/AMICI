@@ -22,13 +22,14 @@ TEST_GROUP(groupJakstatAdjoint)
 TEST(groupJakstatAdjoint, testSimulation) {
     // read simulation options
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_jakstat_adjoint/nosensi/options");
-    ExpData *edata = NULL;
+    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_jakstat_adjoint/nosensi/data");
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
     verifyReturnData("/model_jakstat_adjoint/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
 
+    delete edata;
     delete rdata;
     delete udata;
 }
