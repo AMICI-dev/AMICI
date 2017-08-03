@@ -22,6 +22,9 @@
 #include <include/amici_solver_wrap.h>
 #include <include/amici_model_functions.h>
 
+msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
+msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
+
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata) {
     if(!udata) return AMICI_ERROR_UDATA;
     if(!rdata) return AMICI_ERROR_RDATA;
@@ -1680,3 +1683,10 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
 }
 
 
+void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...) {
+    printf("[Error] %s: %s\n", identifier, msg);
+}
+
+void printWarnMsgIdAndTxt(const char * identifier, const char *msg, ...) {
+    printf("[Warning] %s: %s\n", identifier, msg);
+}
