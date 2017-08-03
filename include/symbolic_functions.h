@@ -1,11 +1,6 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
 
-#include <math.h>
-#include <include/spline.h>
-#include <stdarg.h>
-
-
 double amilog(double x);
 double dirac(double x);
 double heaviside(double x);

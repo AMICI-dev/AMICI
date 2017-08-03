@@ -5,13 +5,12 @@
  * This file contains definitions of various symbolic functions which
  */
 
-
+#include <include/symbolic_functions.h>
+#include <include/spline.h>
 #include <cstdarg>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <cstdio>
-#include <cstring>
 #include <cfloat>
 #if _MSC_VER && !__INTEL_COMPILER
     #include <malloc.h>
@@ -22,8 +21,6 @@
 #else
     #include <alloca.h>
 #endif
-#include <include/symbolic_functions.h>
-#include <include/spline.h>
 
 int amiIsNaN(double what) {
     return std::isnan(what);
