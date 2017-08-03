@@ -1403,6 +1403,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 
     int i_newtonstep = 0;
     int stat1 = -1;
+    int ix=0;
     
     double res;
     double rel_res;
@@ -1425,7 +1426,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     N_VScale(1.0, tdata->x, tmp_x);
     N_VAbs(tmp_x, tmp_x);
     x_tmp = N_VGetArrayPointer(tmp_x);
-    for (int ix=0; ix<udata->nx; ix++) {
+    for (ix=0; ix<udata->nx; ix++) {
         if (x_tmp[ix] < udata->atol) {
             x_tmp[ix] = udata->atol;
         }
