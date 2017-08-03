@@ -18,7 +18,7 @@
 
 #include <include/amici.h>
 #include <include/amici_solver.h>
-#include <amici_model_functions.h>
+#include <include/amici_model_functions.h>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -314,7 +314,7 @@ public:
         return IDASetStopTime(mem, tstop);
     }
 
-    static resultFunction(realtype tt, N_Vector yy, N_Vector yp,
+    static int resultFunction(realtype tt, N_Vector yy, N_Vector yp,
                           N_Vector rr, void *user_data) {
         return fxdot(tt, yy, yp, rr, user_data);
     }

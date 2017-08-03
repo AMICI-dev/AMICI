@@ -289,38 +289,6 @@ end
 %----------------------------------------------------------------
 %
 
-if(strcmp(this.wtype,'iw'))
-    prefix = 'IDA';
-    AMI = 'IDA';
-    xvec = ' N_Vector x,';
-    dxvec = ' N_Vector dx,';
-    sdxvec = ' N_Vector sdx,';
-    dxBvec = ' N_Vector dxB,';
-    rtcj = ' realtype cj,';
-    x = ', x';
-    dx = ', dx';
-    sdx = ', sdx';
-    dxB = ', dxB';
-    cj = ', cj';
-    s = '*';
-    one = '';
-else
-    prefix = 'CV';
-    AMI = 'CVode';
-    xvec = '';
-    dxvec = '';
-    sdxvec = '';
-    dxBvec = '';
-    rtcj = '';
-    x = '';
-    dx = '';
-    sdx = '';
-    dxB = '';
-    cj = '';
-    s = '';
-    one = '1';
-end
-
 fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 
@@ -370,7 +338,11 @@ end
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'Solver *getSolver(){\n');
-fprintf(fid,['    return new ' AMI 'Solver();\n']);
+if(strcmp(this.wtype,'iw'))
+    fprintf(fid, '    return new IDASolver();\n');
+else
+    fprintf(fid, '    return new CVodeSolver();\n');
+end
 fprintf(fid,'}\n\n');
 
 
