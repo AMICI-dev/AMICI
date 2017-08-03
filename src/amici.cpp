@@ -1639,7 +1639,7 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     int status = AMICI_SUCCESS;
     
     if(!udata || !tdata || udata->nx <= 0)
-        return;
+        return status;
 
     /*
         entries in rdata are actually (double) while entries in tdata are (realtype)
