@@ -9,9 +9,6 @@
 #include <cstdarg>
 #include <algorithm>
 #include <cmath>
-#ifndef AMICI_WITHOUT_MATLAB
-    #include <mex.h>
-#endif
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -38,27 +35,15 @@
 
 
 int amiIsNaN(double what) {
-#if defined mex_typedefs_h || defined mex_h
-    return mxIsNaN(what);
-#else
     return std::isnan(what);
-#endif
 }
 
 int amiIsInf(double what) {
-#if defined mex_typedefs_h || defined mex_h
-    return mxIsInf(what);
-#else
     return std::isinf(what);
-#endif
 }
 
 double amiGetNaN() {
-#if defined mex_typedefs_h || defined mex_h
-    return mxGetNaN();
-#else
     return INFINITY;
-#endif
 }
 
 /**
