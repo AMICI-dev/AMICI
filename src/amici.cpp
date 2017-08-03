@@ -19,6 +19,7 @@
 
 #include <include/amici_model_functions.h>
 #include "include/amici_solver.h"
+#include "include/amici_model.h"
 
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
@@ -109,12 +110,16 @@ int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *ed
         }
         status = fdJydy(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
+
         status = fdJydsigma(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
-        status = fdJydx(it,udata,tdata,edata);
+
+        status = Model::fdJydx(it,udata,tdata,edata);
         if(status != AMICI_SUCCESS) return status;
-        status = fdJydp(it,udata,tdata,edata,rdata);
+
+        status = Model::fdJydp(it,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
+
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
                 for(ip=0; ip < udata->nplist; ip++) {
@@ -191,9 +196,9 @@ int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *e
             status = fdJrzdsigma(tdata->t,ie,tdata->x,udata,tdata,edata,rdata);
             if(status != AMICI_SUCCESS) return status;
         }
-        status = fdJzdx(ie,udata,tdata,edata);
+        status = Model::fdJzdx(ie,udata,tdata,edata);
         if(status != AMICI_SUCCESS) return status;
-        status = fdJzdp(ie,udata,tdata,edata,rdata);
+        status = Model::fdJzdp(ie,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             for(iJ=0; iJ<udata->nJ; iJ++) {
@@ -393,10 +398,10 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
             }
         }
     }
-    status = fsy(it,udata,tdata,rdata);
+    status = Model::fsy(it,udata,tdata,rdata);
     if(status != AMICI_SUCCESS) return status;
     if (edata) {
-        status = fsJy(it,udata,tdata,edata,rdata);
+        status = Model::fsJy(it,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
     }
     return status;
@@ -420,7 +425,7 @@ int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData 
     int status = AMICI_SUCCESS;
     
     if (tdata->t == udata->ts[udata->nt-1]) { // call from fillEvent at last timepoint
-        status = fsz_tf(ie,udata,tdata,rdata);
+        status = Model::fsz_tf(ie,udata,tdata,rdata);
         if(status != AMICI_SUCCESS) return status;
         
         status = fsrz(tdata->t,ie,tdata->x,tdata->sx,udata,tdata,rdata);
@@ -431,7 +436,7 @@ int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData 
     }
     
     if (edata) {
-        status = fsJz(ie,udata,tdata,edata,rdata);
+        status = Model::fsJz(ie,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
     }
     return AMICI_SUCCESS;

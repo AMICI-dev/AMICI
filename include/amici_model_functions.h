@@ -59,13 +59,4 @@ int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata,
 int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-// Generic implementations
-int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
-int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
-int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
-int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 #endif // AMICI_MODEL_FUNCTIONS_H

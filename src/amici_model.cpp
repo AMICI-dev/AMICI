@@ -1,9 +1,16 @@
-#include "include/amici_model_functions.h"
-
-#include "include/amici.h"
+#include "include/amici_model.h"
 #include <cstring>
+#include "include/amici.h"
 
-int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata){
+int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
+{
+    UserData *udata = (UserData*) user_data;
+    realtype *x0_tmp = N_VGetArrayPointer(x0);
+
+    return fdx0(udata->k, x0_tmp);
+}
+
+int Model::fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
 
     int status = AMICI_SUCCESS;
@@ -24,7 +31,8 @@ int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata){
     return status;
 }
 
-int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata){
+
+int Model::fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
 
     int status = AMICI_SUCCESS;
@@ -38,7 +46,8 @@ int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata){
     return status;
 }
 
-int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+
+int Model::fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // Compute dJydx*sx for current 'it'
@@ -84,7 +93,9 @@ int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnD
     return(status);
 }
 
-int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+
+int Model::fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+
     int status = AMICI_SUCCESS;
 
     // dJydy         nytrue x nJ x ny
@@ -128,7 +139,8 @@ int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     return(status);
 }
 
-int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
+
+int Model::fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     int status = AMICI_SUCCESS;
 
     // dJydy         nytrue x nJ x ny
@@ -164,7 +176,7 @@ int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata) {
     return(status);
 }
 
-int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+int Model::fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // sJz           nJ x nplist
@@ -208,14 +220,15 @@ int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnD
                 rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1)] -= multResult[iJ + ip*udata->nJ] + tdata->dJzdp[iJ + ip*udata->nJ];
     }
 
-delete[] dJzdxTmp;
-delete[] multResult;
-delete[] sxTmp;
+    delete[] dJzdxTmp;
+    delete[] multResult;
+    delete[] sxTmp;
 
-return(status);
+    return(status);
 }
 
-int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+
+int Model::fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // dJzdz         nztrue x nJ x nz
@@ -288,7 +301,7 @@ int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, Retur
     return(status);
 }
 
-int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata) {
+int Model::fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata) {
     int status = AMICI_SUCCESS;
 
     // dJzdz         nztrue x nJ x nz
