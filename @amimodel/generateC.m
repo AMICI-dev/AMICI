@@ -345,6 +345,10 @@ else
 end
 fprintf(fid,'}\n\n');
 
+fprintf(fid,'Model *getModel(UserData *udata, ExpData *edata) {\n');
+    fprintf(fid, ['    return new Model_' this.modelname '(udata, edata);\n']);
+fprintf(fid,'}\n\n');
+
 
 ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','rz','srz','stau',...
     'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx', 'sxdot', ...
@@ -392,6 +396,7 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
+fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 fprintf(fid,'\n');
@@ -405,6 +410,8 @@ fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTE
 fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData();\n');
 fprintf(fid,'Solver *getSolver();\n');
+fprintf(fid,'Model *getModel(UserData *udata, ExpData *edata);\n');
+
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)
@@ -415,6 +422,29 @@ for iffun = ffuns
     end
     fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
 end
+
+% Subclass Model
+fprintf(fid,'\n');
+fprintf(fid,['class Model_' this.modelname ' : public Model {\n']);
+fprintf(fid,'public:\n');
+fprintf(fid,['    Model_' this.modelname '() {}\n']);
+fprintf(fid,['    Model_' this.modelname '(UserData *udata) : Model(udata) {}\n']);
+fprintf(fid,['    Model_' this.modelname '(UserData *udata, ExpData *edata) : Model(udata, edata) {}\n']);
+fprintf(fid,'\n');
+for iffun = this.funs
+    % check whether the function was generated, otherwise generate (but
+    % whithout symbolic expressions)
+    if(isfield(this.fun,iffun{1}))
+        fun = this.fun.(iffun{1});
+    else
+        fun = amifun(iffun{1},this);
+    end
+    fprintf(fid,['    int f' iffun{1} fun.fargstr ' {\n']);
+    fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
+    fprintf(fid,'    }\n\n');
+end
+fprintf(fid,'};\n\n');
+
 fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
 

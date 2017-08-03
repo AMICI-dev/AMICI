@@ -11,10 +11,12 @@ class ReturnData;
 class TempData;
 class ExpData;
 class Solver;
+class Model;
 
 // Modell-specific functions
 UserData getUserData();
 Solver *getSolver();
+Model *getModel(UserData*, ExpData*);
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);

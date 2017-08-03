@@ -14,6 +14,9 @@ class Model
 {
 public:
     Model() {}
+    Model(UserData *udata) : udata(udata) {}
+    Model(UserData *udata, ExpData *edata) : udata(udata), edata(edata) {}
+
     // TODO model dimensions constructors
 
     virtual int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
@@ -114,8 +117,8 @@ public:
     static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 
 
-    UserData *udata;
-    ExpData *edata;
+    UserData *udata = NULL;
+    ExpData *edata = NULL;
 };
 
 #endif // MODEL_H

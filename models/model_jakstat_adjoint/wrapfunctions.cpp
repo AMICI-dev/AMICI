@@ -27,6 +27,10 @@ Solver *getSolver(){
     return new CVodeSolver();
 }
 
+Model *getModel(UserData *udata, ExpData *edata) {
+    return new Model_model_jakstat_adjoint(udata, edata);
+}
+
 int fx0(N_Vector x0, void *user_data){
     return x0_model_jakstat_adjoint(x0, user_data);
 }
