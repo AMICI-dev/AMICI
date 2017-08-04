@@ -1553,7 +1553,6 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      double beta;
      double omega;
      double res;
-     double rel_res;
     
      N_Vector ns_p = N_VNew_Serial(udata->nx);
      N_Vector ns_h = N_VNew_Serial(udata->nx);
@@ -1812,7 +1811,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                         }
                     } else {
                         if (udata->nx>0) {
-                            if (isinf(udata->ts[it])) {
+                            if (std::isinf(udata->ts[it])) {
                                 status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it);
                             } else {
                                 status = AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
