@@ -1658,7 +1658,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonOutput(serData *udata, TempData *tdata, ReturnData *rdata, int newton, double starttime) {
+int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int newton, double starttime) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
      *
