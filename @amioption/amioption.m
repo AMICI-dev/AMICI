@@ -51,6 +51,18 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
+        % newton solver: linear solver
+        newton_linsol = 10;
+        % newton solver: preconditioning method
+        % (0 = none, 1 = diagonal, 2 = incomplete LU)
+        newton_precon = 1;
+        % newton solver: maximum newton steps
+        newton_maxsteps = 40;
+        % newton solver: maximum linear steps
+        newton_maxlinsteps = 100;
+        % preequilibration of system via newton solver
+        % (0 = none, 1 = only states, 2 = states and sensitivities)
+        newton_preeq = 0;
         % mapping of event ouputs to events
         z2event = double.empty();
     end
@@ -208,7 +220,38 @@ classdef amioption < matlab.mixin.CustomDisplay
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')
             this.sensi = value;
         end
-    end
-    
-end
+        
+        function this = set.newton_linsol(this,value)
+            assert(isnumeric(value),'The option ns_linsol must have a numeric value!')
+            assert(floor(value)==value,'The option ns_linsol must be an integer!')
+            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_linsol!')
+            this.ns_linsol = value;
+        end
+        
+        function this = set.newton_precon(this,value)
+            assert(isnumeric(value),'The option ns_precon must have a numeric value!')
+            assert(floor(value)==value,'The option ns_precon must be an integer!')
+            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_precon!')
+            this.ns_precon = value;
+        end
+        
+        function this = set.newton_maxsteps(this,value)
+            assert(isnumeric(value),'The option ns_maxsteps must have a numeric value!')
+            assert(floor(value)==value,'The option ns_maxsteps must be an integer!')
+            this.ns_maxsteps = value;
+        end
+        
+        function this = set.newton_maxlinsteps(this,value)
+            assert(isnumeric(value),'The option ns_maxlinsteps must have a numeric value!')
+            assert(floor(value)==value,'The option ns_maxlinsteps must be an integer!')
+            this.ns_maxlinsteps = value;
+        end
 
+        function this = set.newton_preeq(this,value)
+            assert(isnumeric(value),'The option preequil must have a numeric value!')
+            assert(floor(value)==value,'The option preequil must be an integer!')
+            assert(value<=2,'Only 0 and 1 are valid options for preequil!')
+            this.preequil = value;
+        end
+    end
+end

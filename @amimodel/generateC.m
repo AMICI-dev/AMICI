@@ -54,7 +54,7 @@ for ifun = this.funs
             end
         elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
             fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
         elseif(strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -128,7 +128,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             else
-                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
+                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
                     fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 this.fun.(ifun{1}).writeCcode(this,fid);
@@ -196,6 +196,21 @@ for ifun = this.funs
                 fprintf(fid,'   }\n');
                 fprintf(fid,'   if(amiIsInf(J->data[ix])) {\n');
                 fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");\n');
+                fprintf(fid,'       return(-1);\n');
+                fprintf(fid,'   }\n');
+                fprintf(fid,'}\n');
+            end
+            if(strcmp(ifun{1},'JDiag'))
+                fprintf(fid,['for(ix = 0; ix<' num2str(this.nx) '; ix++) {\n']);
+                fprintf(fid,'   if(amiIsNaN(JDiag_tmp[ix])) {\n');
+                fprintf(fid,'       JDiag_tmp[ix] = 0;\n');
+                fprintf(fid,'       if(!udata->nan_JDiag) {\n');
+                fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value on Jacobian diagonal and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
+                fprintf(fid,'           udata->nan_JDiag = TRUE;\n');
+                fprintf(fid,'       }\n');
+                fprintf(fid,'   }\n');
+                fprintf(fid,'   if(amiIsInf(JDiag_tmp[ix])) {\n');
+                fprintf(fid,'       warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value on Jacobian diagonal! Aborting simulation ... ");\n');
                 fprintf(fid,'       return(-1);\n');
                 fprintf(fid,'   }\n');
                 fprintf(fid,'}\n');
@@ -453,7 +468,7 @@ else
 end
 fprintf(fid,'}\n\n');
 
-ffuns = {'x0','dx0','sx0','sdx0','J','JB','root','rz','srz','stau',...
+ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',...
     'y','dydp','dydx','z','sz','dzdp','dzdx','drzdp','drzdx',...
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...

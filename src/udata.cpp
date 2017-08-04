@@ -145,6 +145,8 @@ void UserData::init()
     atol = 1e-16;
     rtol = 1e-8;
     maxsteps = 0;
+    newton_maxsteps = 0;
+    newton_maxlinsteps = 0;
     ism = 1;
     nmaxevent = 10;
 
@@ -163,6 +165,7 @@ void UserData::init()
 
     nan_dxdotdp = false;
     nan_J = false;
+    nan_JDiag = false;
     nan_JSparse = false;
     nan_xdot = false;
     nan_xBdot = false;
@@ -209,6 +212,8 @@ void UserData::print()
     printf("atol: %e\n", atol);
     printf("rtol: %e\n", rtol);
     printf("maxsteps: %d\n", maxsteps);
+    printf("newton_maxsteps: %d\n", newton_maxsteps);
+    printf("newton_maxlinsteps: %d\n", newton_maxlinsteps);
     printf("ism: %d\n", ism);
     printf("sensi_meth: %d\n", sensi_meth);
     printf("linsol: %d\n", linsol);

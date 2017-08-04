@@ -61,6 +61,9 @@ function printLocalVars(this,model,fid)
         case 'J'
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(J->data,0,sizeof(realtype)*' num2str(nx^2) ');\n']);
+        case 'JDiag'
+            fprintf(fid,'int ix;\n');
+            fprintf(fid,['memset(JDiag_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'JSparse'
             fprintf(fid,'int inz;\n');
             fprintf(fid,'SparseSetMatToZero(J);\n');
