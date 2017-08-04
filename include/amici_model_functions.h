@@ -66,6 +66,8 @@ int fdJzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, con
 int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
+int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
 
 // Generic implementations
 int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);

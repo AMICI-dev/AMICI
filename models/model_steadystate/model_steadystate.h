@@ -5,6 +5,7 @@
 #include "model_steadystate_JB.h"
 #include "model_steadystate_JBand.h"
 #include "model_steadystate_JBandB.h"
+#include "model_steadystate_JDiag.h"
 #include "model_steadystate_JSparse.h"
 #include "model_steadystate_JSparseB.h"
 #include "model_steadystate_Jrz.h"
@@ -54,6 +55,7 @@ int J_model_steadystate(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMa
 int JB_model_steadystate(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 int JBand_model_steadystate(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int JBandB_model_steadystate(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int JDiag_model_steadystate(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
 int JSparse_model_steadystate(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int JSparseB_model_steadystate(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 int Jrz_model_steadystate(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);

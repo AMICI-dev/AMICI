@@ -73,7 +73,7 @@ function example_jakstat_adjoint_hvp()
     v = presol.sllh;
     options.sensi = 2;
     sol  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);
-    hvpasa = hvpasa + sol.s2llh;
+    hvpasa = hvpasa + sol.s2llh';
     t3 = toc;
     options.sensi_meth = 'forward';
     solf  = simulate_model_jakstat_adjoint_hvp([],xi_rand,[],D,options,v);

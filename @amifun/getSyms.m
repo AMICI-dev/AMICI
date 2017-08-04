@@ -330,6 +330,10 @@ function [this,model] = getSyms(this,model)
             % fill nonzero entries
             this.strsym(idx) = Js;
             
+        case 'JDiag'
+            this.sym = diag(model.fun.J.sym);
+            this = makeStrSyms(this);
+            
         case 'JB'
             this.sym = sym(zeros(model.nx, model.nx));
             % Augmentation needs a transposition in the submatrices

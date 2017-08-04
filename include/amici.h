@@ -8,6 +8,7 @@
 #include <include/tdata.h>
 #include <cstdbool>
 #include <cvodes/cvodes.h>
+#include <time.h>
 
 #include <include/amici_defines.h>
 
@@ -65,9 +66,12 @@ int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 
 int getDiagnosis(int it, void *ami_mem, UserData *udata, ReturnData *rdata);
 int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int status, int ntry);
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt);
 
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot);
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
