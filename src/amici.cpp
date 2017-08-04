@@ -1559,7 +1559,6 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      N_Vector ns_t = N_VNew_Serial(udata->nx);
      N_Vector ns_s = N_VNew_Serial(udata->nx);
      N_Vector ns_r = N_VNew_Serial(udata->nx);
-     N_Vector ns_rr = N_VNew_Serial(udata->nx);
      N_Vector ns_rt = N_VNew_Serial(udata->nx);
      N_Vector ns_v = N_VNew_Serial(udata->nx);
      N_Vector ns_Jv = N_VNew_Serial(udata->nx);
@@ -1634,8 +1633,6 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
         // Compute the (unscaled) residual
         N_VProd(ns_r, ns_Jdiag, ns_r);
         res = sqrt(N_VDotProd(ns_r, ns_r));
-        N_VDiv(ns_r, tdata->xdot, ns_rr);
-        rel_res = sqrt(N_VDotProd(ns_rr, ns_rr));
         
         // Test convergence
         if (res < udata->atol) {
@@ -1658,7 +1655,6 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     N_VDestroy_Serial(ns_t);
     N_VDestroy_Serial(ns_s);
     N_VDestroy_Serial(ns_r);
-    N_VDestroy_Serial(ns_rr);
     N_VDestroy_Serial(ns_rt);
     N_VDestroy_Serial(ns_v);
     N_VDestroy_Serial(ns_Jv);
