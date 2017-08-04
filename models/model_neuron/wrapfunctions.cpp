@@ -55,6 +55,14 @@ int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, D
     return JB_model_neuron(NeqBdot, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
+int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data){
+    return JDiag_model_neuron(t, JDiag, x, user_data);
+}
+
+int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp){
+    return Jv_model_neuron(v, Jv, t, x, xdot, user_data, tmp);
+}
+
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){
     return root_model_neuron(t, x, root, user_data);
 }

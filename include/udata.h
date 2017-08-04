@@ -136,6 +136,10 @@ public:
     double rtol;
     /** maximum number of allowed integration steps */
     int maxsteps;
+    /** maximum number of allowed Newton steps for steady state computation */
+    int newton_maxsteps;
+    /** maximum number of allowed linear steps per Newton step for steady state computation */
+    int newton_maxlinsteps;
     
     /** internal sensitivity method */
     /*!
@@ -210,6 +214,8 @@ public:
     booleantype nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */
     booleantype nan_J;
+    /** flag indicating whether a NaN in JDiag has been reported */
+    booleantype nan_JDiag;
     /** flag indicating whether a NaN in JSparse has been reported */
     booleantype nan_JSparse;
     /** flag indicating whether a NaN in xdot has been reported */

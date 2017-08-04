@@ -5,6 +5,7 @@
 #include "model_neuron_JB.h"
 #include "model_neuron_JBand.h"
 #include "model_neuron_JBandB.h"
+#include "model_neuron_JDiag.h"
 #include "model_neuron_JSparse.h"
 #include "model_neuron_JSparseB.h"
 #include "model_neuron_Jrz.h"
@@ -49,5 +50,4 @@
 #include "model_neuron_xdot.h"
 #include "model_neuron_y.h"
 #include "model_neuron_z.h"
-
 #endif /* _am_model_neuron_h */

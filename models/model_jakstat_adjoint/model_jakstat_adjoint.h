@@ -5,6 +5,7 @@
 #include "model_jakstat_adjoint_JB.h"
 #include "model_jakstat_adjoint_JBand.h"
 #include "model_jakstat_adjoint_JBandB.h"
+#include "model_jakstat_adjoint_JDiag.h"
 #include "model_jakstat_adjoint_JSparse.h"
 #include "model_jakstat_adjoint_JSparseB.h"
 #include "model_jakstat_adjoint_Jrz.h"
@@ -49,5 +50,4 @@
 #include "model_jakstat_adjoint_xdot.h"
 #include "model_jakstat_adjoint_y.h"
 #include "model_jakstat_adjoint_z.h"
-
 #endif /* _am_model_jakstat_adjoint_h */

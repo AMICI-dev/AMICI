@@ -5,6 +5,7 @@
 #include "model_jakstat_adjoint_o2_JB.h"
 #include "model_jakstat_adjoint_o2_JBand.h"
 #include "model_jakstat_adjoint_o2_JBandB.h"
+#include "model_jakstat_adjoint_o2_JDiag.h"
 #include "model_jakstat_adjoint_o2_JSparse.h"
 #include "model_jakstat_adjoint_o2_JSparseB.h"
 #include "model_jakstat_adjoint_o2_Jrz.h"

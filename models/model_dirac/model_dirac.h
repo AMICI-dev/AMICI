@@ -5,6 +5,7 @@
 #include "model_dirac_JB.h"
 #include "model_dirac_JBand.h"
 #include "model_dirac_JBandB.h"
+#include "model_dirac_JDiag.h"
 #include "model_dirac_JSparse.h"
 #include "model_dirac_JSparseB.h"
 #include "model_dirac_Jrz.h"

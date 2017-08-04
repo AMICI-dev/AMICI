@@ -5,6 +5,7 @@
 #include "model_steadystate_JB.h"
 #include "model_steadystate_JBand.h"
 #include "model_steadystate_JBandB.h"
+#include "model_steadystate_JDiag.h"
 #include "model_steadystate_JSparse.h"
 #include "model_steadystate_JSparseB.h"
 #include "model_steadystate_Jrz.h"
@@ -49,5 +50,4 @@
 #include "model_steadystate_xdot.h"
 #include "model_steadystate_y.h"
 #include "model_steadystate_z.h"
-
 #endif /* _am_model_steadystate_h */
