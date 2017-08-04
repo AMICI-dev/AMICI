@@ -1,5 +1,6 @@
 #ifndef amici_h
 #define amici_h
+
 #include <include/symbolic_functions.h>
 #include <include/udata.h>
 #include <include/rdata.h>
@@ -17,17 +18,22 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "AMICI_ROOT_RETURN != CV_ROOT
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 
-void errMsgIdAndTxt(
-                            const char * identifier, /* string with error message identifier */
-                            const char * err_msg,    /* string with error message printf-style format */
-                            ...                      /* any additional arguments */
-);
 
-void warnMsgIdAndTxt(
-                             const char * identifier, /* string with error message identifier */
-                             const char * err_msg,    /* string with error message printf-style format */
-                             ...                      /* any additional arguments */
-);
+void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...);
+
+void printWarnMsgIdAndTxt(const char * identifier, const char *msg, ...);
+
+/**
+ * @brief msgIdAndTxtFp
+ * @param identifier string with error message identifier
+ * @param err_msg string with error message printf-style format
+ * @param ... unused
+ */
+typedef void (*msgIdAndTxtFp)(const char * identifier, const char * err_msg, ...);
+
+// function pointers to process errors / warnings
+extern msgIdAndTxtFp errMsgIdAndTxt;
+extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
 

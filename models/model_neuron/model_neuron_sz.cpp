@@ -1,5 +1,6 @@
 
 #include <include/symbolic_functions.h>
+#include <include/amici.h>
 #include <string.h>
 #include <include/udata.h>
 #include <include/tdata.h>

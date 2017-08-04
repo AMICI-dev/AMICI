@@ -27,6 +27,7 @@ for ifun = this.funs
         fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
+        fprintf(fid,'#include <include/amici.h>\n');
         fprintf(fid,'#include <string.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
