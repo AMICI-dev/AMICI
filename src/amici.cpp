@@ -1714,6 +1714,7 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
      * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[in] rdata pointer to the return data struct @type ReturnData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @return int status flag indicating success of execution @type int
      */
