@@ -937,7 +937,7 @@ int updateHeavisideB(int iroot, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try) {
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model) {
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
      *
@@ -967,7 +967,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     N_VConst(0.0, delta);
     
     /* Check, how fxdot is used exactly within AMICI... */
-    fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
+    model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
     res_abs = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
     
     /* Check for relative error, but make sure not to divide by 0!
@@ -985,7 +985,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     
     if (res_abs >= udata->atol && res_rel >= udata->rtol) {
         /* If Newton steps are necessary, compute the inital search direction */
-        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta);
+        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta, model);
     
         if (status == AMICI_SUCCESS) {
             /* The linear solver was successful, now the Newton solver needs to be */
@@ -1010,7 +1010,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                 }
         
                 /* Compute new xdot */
-                fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
+                model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
         
                 /* Check if new residuals are smaller than old ones */
                 res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
@@ -1034,7 +1034,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                         gamma = fmax(1.0, 2.0*gamma);
             
                         /* Do another Newton step */
-                        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta);
+                        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta, model);
                         if (status == AMICI_SUCCESS) {
                             /* Newton step was successful, now Newtons method still needs to be */
                             status = AMICI_ERROR_NEWTONSOLVER;
@@ -1076,7 +1076,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta) {
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta, Model *model) {
     /**
      * getNewtonStep acomputes the Newton Step by solving a linear system
      *
@@ -1113,7 +1113,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
     // Get the diagonal of the Jacobian for preconditioning
-    fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
+    model->fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
     
     // Ensure positivity of entries in ns_Jdiag
     N_VConst(1.0, ns_p);
@@ -1133,7 +1133,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
     alpha = 1.0;
     
     // can be set to 0 at the moment
-    fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+    model->fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
     
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
@@ -1152,7 +1152,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
         N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
         
         // ns_v = J * ns_p
-        fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        model->fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
         N_VDiv(ns_v, ns_Jdiag, ns_v);
         
         // Compute factor
@@ -1164,7 +1164,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
         N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
         
         // ns_t = J * ns_s
-        fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        model->fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
         N_VDiv(ns_t, ns_Jdiag, ns_t);
         
         // Compute factor
@@ -1252,7 +1252,7 @@ int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int new
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnData *rdata) {
+int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver) {
     /**
      * getNewtonSimulation solves the forward problem, if the first Newton solver run did not succeed.
      *
@@ -1279,7 +1279,7 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
     } else {
         sim_time = 1e6;
     }
-    status = AMISolve(ami_mem, RCONST(sim_time), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
+    status = solver->AMISolve(ami_mem, RCONST(sim_time), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
     
     if (status == AMICI_SUCCESS) {
         /* Check residuals */
@@ -1354,7 +1354,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                     } else {
                         if (udata->nx>0) {
                             if (std::isinf(udata->ts[it])) {
-                                status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it);
+                                status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it, solver, model);
                             } else {
                                 status = solver->AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
                             }
@@ -1555,7 +1555,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
     return status;
 }
 
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it) {
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it, Solver *solver, Model *model) {
     /*
      * tries to determine the steady state of the ODE system by a Newton solver
      uses forward intergration, if the Newton solver fails
@@ -1572,7 +1572,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     
     /* First, try to do Newton steps */
     starttime = clock();
-    status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 1);
+    status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 1, model);
     
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
@@ -1580,14 +1580,14 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         status = getNewtonOutput(udata, tdata, rdata, 1, run_time);
     } else {
         /* Newton solver did not find a steady state, so try integration */
-        status = getNewtonSimulation(ami_mem, udata, tdata, rdata);
+        status = getNewtonSimulation(ami_mem, udata, tdata, rdata, solver);
         
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
             status = getNewtonOutput(udata, tdata, rdata, 2, run_time);
         } else {
-            status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 2);
+            status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 2, model);
             
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */

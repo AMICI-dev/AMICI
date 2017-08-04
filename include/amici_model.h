@@ -32,6 +32,10 @@ public:
 
     virtual int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
+    virtual int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data)  { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp)  { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
     virtual int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int frz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }

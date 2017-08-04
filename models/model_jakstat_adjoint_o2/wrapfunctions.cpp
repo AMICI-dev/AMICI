@@ -175,10 +175,6 @@ int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x,
     return JBand_model_jakstat_adjoint_o2(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp){
-    return Jv_model_jakstat_adjoint_o2(v, Jv, t, x, xdot, user_data, tmp);
-}
-
 int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
     return JSparseB_model_jakstat_adjoint_o2(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }

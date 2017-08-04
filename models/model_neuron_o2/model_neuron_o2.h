@@ -50,4 +50,5 @@
 #include "model_neuron_o2_xdot.h"
 #include "model_neuron_o2_y.h"
 #include "model_neuron_o2_z.h"
+
 #endif /* _am_model_neuron_o2_h */
