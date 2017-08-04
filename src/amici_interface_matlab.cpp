@@ -178,6 +178,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
         readOptionScalar(ism,int)
         readOptionScalar(sensi_meth,AMICI_sensi_meth)
         readOptionScalar(ordering,int)
+        readOptionScalar(newton_maxsteps,int)
+        readOptionScalar(newton_maxlinsteps,int)
     } else {
         errMsgIdAndTxt("AMICI:mex:options","No options provided!");
         delete udata;
@@ -324,8 +326,8 @@ ReturnDataMatlab::ReturnDataMatlab(const UserData *udata) : ReturnData()
 
 void ReturnDataMatlab::initFields(const UserData *udata)
 {
-    const int numFields = 33;
-    const char *field_names_sol[numFields] = {"status","llh","sllh","s2llh","chi2","t","x","sx","y","sy","sigmay","ssigmay","z","sz","sigmaz","ssigmaz","rz","srz","s2rz","xdot","J","dydp","dydx","dxdotdp","numsteps","numrhsevals","numerrtestfails","numnonlinsolvconvfails","order","numstepsB","numrhsevalsB","numerrtestfailsB","numnonlinsolvconvfailsB"};
+    const int numFields = 38;
+    const char *field_names_sol[numFields] = {"status","llh","sllh","s2llh","chi2","t","x","sx","y","sy","sigmay","ssigmay","z","sz","sigmaz","ssigmaz","rz","srz","s2rz","xdot","J","dydp","dydx","dxdotdp","numsteps","numrhsevals","numerrtestfails","numnonlinsolvconvfails","order","numstepsB","numrhsevalsB","numerrtestfailsB","numnonlinsolvconvfailsB","xss","newton","newton_numsteps","newton_numlinsteps","newton_time"};
 
     mxsol = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 

@@ -54,7 +54,7 @@ function this = gccode(this,model,fid)
         
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
-            if(any(strcmp(this.funstr,{'J','JB','dJydsigma','dJydy','dJzdsigma','dJzdz','dJrzdsigma','dJrzdz','dydx','dzdx','drzdx','M','dfdx'}) ))
+            if(any(strcmp(this.funstr,{'J','JB','JDiag','dJydsigma','dJydy','dJzdsigma','dJzdz','dJrzdsigma','dJrzdz','dydx','dzdx','drzdx','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '_$1']);
@@ -152,7 +152,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dJydsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJydsigma[iy+($1)*udata->nytrue]');
             cstr = regexprep(cstr,'var_dJzdsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJzdsigma[iz+($1)*udata->nztrue]');
             cstr = regexprep(cstr,'var_dJrzdsigma[_\[]*([0-9\+\*]+)[\]]*','tdata->dJrzdsigma[iz+($1)*udata->nztrue]');
-           
+            cstr = regexprep(cstr,'var_JDiag[_\[]*([0-9\+\*]+)[\]]*','JDiag_tmp[$1]');
             
             if(~isempty(strfind(this.cvar,'Jy')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');
