@@ -2,7 +2,7 @@ function example_jakstat_adjoint()
     
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
-    amiwrap('model_jakstat','model_jakstat_adjoint_syms',exdir,1)
+    amiwrap('model_jakstat_adjoint','model_jakstat_adjoint_syms',exdir,1)
     
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
     

@@ -114,6 +114,21 @@ public:
     /** employed order forward problem (dimension: nt) */
     double *order;
     
+    /** flag success of Newton solver */
+    double *newton;
+    
+    /** number of Newton steps steady state problem */
+    double *newton_time;
+    
+    /** number of Newton steps steady state problem */
+    double *newton_numsteps;
+    
+    /** number of linear steps per Newton step steady state problem */
+    double *newton_numlinsteps;
+    
+    /** steady state found be Newton solver */
+    double *xss;
+    
     /** likelihood value (double[1]) */
     double *llh;
 
