@@ -13,7 +13,6 @@
 #endif
 
 #include <stdio.h>
-#include <time.h>
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
@@ -1659,7 +1658,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonOutput(serData *udata, TempData *tdata, ReturnData *rdata, int newton, clock_t starttime) {
+int getNewtonOutput(serData *udata, TempData *tdata, ReturnData *rdata, int newton, double starttime) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
      *
