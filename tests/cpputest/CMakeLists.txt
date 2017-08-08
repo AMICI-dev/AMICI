@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-add_definitions(-DAMICI_WITHOUT_MATLAB)
-
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")

@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
 
-add_definitions(-DAMICI_WITHOUT_MATLAB)
-    
 set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 set(MODEL_DIR "${AMICI_DIR}/models/model_dirac")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
@@ -33,6 +31,7 @@ set(SRC_LIST_LIB ${MODEL_DIR}/model_dirac_J.cpp
 ${MODEL_DIR}/model_dirac_JB.cpp
 ${MODEL_DIR}/model_dirac_JBand.cpp
 ${MODEL_DIR}/model_dirac_JBandB.cpp
+${MODEL_DIR}/model_dirac_JDiag.cpp
 ${MODEL_DIR}/model_dirac_JSparse.cpp
 ${MODEL_DIR}/model_dirac_JSparseB.cpp
 ${MODEL_DIR}/model_dirac_Jrz.cpp

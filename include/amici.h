@@ -1,5 +1,6 @@
 #ifndef amici_h
 #define amici_h
+
 #include <include/symbolic_functions.h>
 #include <include/udata.h>
 #include <include/rdata.h>
@@ -17,17 +18,22 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "AMICI_ROOT_RETURN != CV_ROOT
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 
-void errMsgIdAndTxt(
-                            const char * identifier, /* string with error message identifier */
-                            const char * err_msg,    /* string with error message printf-style format */
-                            ...                      /* any additional arguments */
-);
 
-void warnMsgIdAndTxt(
-                             const char * identifier, /* string with error message identifier */
-                             const char * err_msg,    /* string with error message printf-style format */
-                             ...                      /* any additional arguments */
-);
+void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...);
+
+void printWarnMsgIdAndTxt(const char * identifier, const char *msg, ...);
+
+/**
+ * @brief msgIdAndTxtFp
+ * @param identifier string with error message identifier
+ * @param err_msg string with error message printf-style format
+ * @param ... unused
+ */
+typedef void (*msgIdAndTxtFp)(const char * identifier, const char * err_msg, ...);
+
+// function pointers to process errors / warnings
+extern msgIdAndTxtFp errMsgIdAndTxt;
+extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
 
@@ -60,8 +66,14 @@ int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 int getDiagnosis(int it, void *ami_mem, UserData *udata, ReturnData *rdata);
 int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
 
+int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try);
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta);
+int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int newton_status, double run_time);
+int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnData *rdata);
+
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot);
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
