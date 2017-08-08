@@ -80,20 +80,30 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % flag dependencies for recompilation
     if(~isempty(cfun))
         if(cfun(1).J)
-            cfun(1).JBand = 1;
+            if(ismember('JBand',funs))
+                cfun(1).JBand = 1;
+            end
         end
-        if(adjoint)
-            if(cfun(1).JB)
+
+        if(cfun(1).JB)
+            if(ismember('JBandB',funs))
                 cfun(1).JBandB = 1;
             end
         end
+        
         if(cfun(1).JSparse)
-            cfun(1).sxdot = 1;
+            if(ismember('sxdot',funs))
+                cfun(1).sxdot = 1;
+            end
         end
         if(isfield(cfun(1),'dxdotdp'))
             if(cfun(1).dxdotdp)
-                cfun(1).sxdot = 1;
-                cfun(1).qBdot = 1;
+                if(ismember('sxdot',funs))
+                    cfun(1).sxdot = 1;
+                end
+                if(ismember('qBdot',funs))
+                    cfun(1).qBdot = 1;
+                end
             end
         end
         funsForRecompile = funs(structfun(@(x) logical(x), cfun(1)));
