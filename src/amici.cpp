@@ -51,7 +51,7 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
     if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
     
-    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, edata);
+    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata);
     if (status < AMICI_SUCCESS) rdata->invalidate(udata);
     
     

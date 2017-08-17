@@ -49,7 +49,7 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN(const UserData *udata)
     fillArray(s2llh, udata->nplist*(udata->nJ-1), amiGetNaN());
 }
 
-int ReturnData::applyChainRuleFactorToSimulationResults(const UserData *udata, const ExpData *edata)
+int ReturnData::applyChainRuleFactorToSimulationResults(const UserData *udata)
 {
     if (udata->pscale == AMICI_SCALING_NONE)
         return AMICI_SUCCESS;
@@ -113,11 +113,9 @@ int ReturnData::applyChainRuleFactorToSimulationResults(const UserData *udata, c
             }
         }
 
-        if (edata) {
-            if (sllh)
-                for(int ip = 0; ip < udata->nplist; ++ip)
-                    sllh[ip] *= pcoefficient[ip];
-        }
+        if (sllh)
+            for(int ip = 0; ip < udata->nplist; ++ip)
+                sllh[ip] *= pcoefficient[ip];
 
 #define chainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if (s ## QUANT ) \
@@ -145,7 +143,6 @@ s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
                     dydp[iy + ip*udata->nytrue] *= pcoefficient[ip];
     }
     if (udata->o2mode == AMICI_O2MODE_FULL) { //full
-        if (edata){
             if (s2llh) {
                 if (sllh) {
                     for(int ip = 0; ip < udata->nplist; ++ip) {
@@ -157,7 +154,6 @@ s ## QUANT [(ip * N1 + IND1) * N2 + IND2] *= pcoefficient[ip];} \
                     }
                 }
             }
-        }
 
 #define s2ChainRule(QUANT,IND1,N1T,N1,IND2,N2) \
 if (s ## QUANT ) \

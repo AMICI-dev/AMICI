@@ -2,7 +2,6 @@
 #define _MY_RDATA
 
 class UserData;
-class ExpData;
 
 /** @brief struct that stores all data which is later returned by the mex function
  *
@@ -25,7 +24,7 @@ public:
     void setLikelihoodSensitivityFirstOrderNaN(const UserData *udata);
     void setLikelihoodSensitivitySecondOrderNaN(const UserData *udata);
 
-    int applyChainRuleFactorToSimulationResults(const UserData *udata, const ExpData *edata);
+    int applyChainRuleFactorToSimulationResults(const UserData *udata);
 
     virtual ~ReturnData();
 
