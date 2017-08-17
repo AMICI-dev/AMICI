@@ -7,7 +7,7 @@
  * -----------------------------------------------------------------
  * LLNS Copyright Start
  * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
+ * This work was performed under the auspices of the U.S. Department
  * of Energy by Lawrence Livermore National Laboratory in part under 
  * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
  * Produced at the Lawrence Livermore National Laboratory.
@@ -33,15 +33,6 @@
 #define ZERO         RCONST(0.0)
 #define ONE          RCONST(1.0)
 #define TWO          RCONST(2.0)
-
-/* CVSDENSE linit, lsetup, lsolve, and lfree routines */
-static int cvDenseInit(CVodeMem cv_mem);
-static int cvDenseSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
-                        N_Vector fpred, booleantype *jcurPtr, 
-                        N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
-static int cvDenseSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
-                        N_Vector ycur, N_Vector fcur);
-static int cvDenseFree(CVodeMem cv_mem);
 
 /* CVSDENSE lfreeB function */
 static int cvDenseFreeB(CVodeBMem cvb_mem);

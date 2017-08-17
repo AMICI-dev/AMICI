@@ -24,6 +24,7 @@
 
 #include <cvodes/cvodes_direct.h>
 #include <sundials/sundials_dense.h>
+#include "cvodes_impl.h"
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -50,6 +51,10 @@ extern "C" {
  */
 
 SUNDIALS_EXPORT int CVDense(void *cvode_mem, long int N);
+SUNDIALS_EXPORT int cvDenseInit(CVodeMem cv_mem);
+SUNDIALS_EXPORT int cvDenseSetup(CVodeMem cv_mem, int convfail, N_Vector ypred, N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3);
+SUNDIALS_EXPORT int cvDenseSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight, N_Vector ycur, N_Vector fcur);
+SUNDIALS_EXPORT int cvDenseFree(CVodeMem cv_mem);
 
 /*
  * -----------------------------------------------------------------

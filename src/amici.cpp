@@ -22,6 +22,9 @@
 #include <cvodes/cvodes_spils.h>
 #include <include/amici_solver_wrap.h>
 #include <include/amici_model_functions.h>
+#include "cvodes_impl.h"
+#include "cvodes_direct_impl.h"
+#include  <cvodes/cvodes_dense.h>
 
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
@@ -1407,12 +1410,18 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 
     int status = AMICI_ERROR_NEWTONSOLVER;
     int i_newtonstep=0;
-    int ix=0;    
+    int setup_status = 0;
+    int ix=0;
     double res_abs;
     double res_rel;
     double res_tmp;
+    booleantype jcurPtr = TRUE;
     double gamma = 1.0;
     realtype *x_tmp;
+    
+    N_Vector tmp1 = N_VNew_Serial(udata->nx);
+    N_Vector tmp2 = N_VNew_Serial(udata->nx);
+    N_Vector tmp3 = N_VNew_Serial(udata->nx);
     
     N_Vector delta = N_VNew_Serial(udata->nx);
     N_Vector rel_x_newton = N_VNew_Serial(udata->nx);
@@ -1424,6 +1433,44 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     /* Check, how fxdot is used exactly within AMICI... */
     fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
     res_abs = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
+    
+    /* testing to use the sundials linear solvers
+    
+    
+    N_Vector weight = N_VNew_Serial(udata->nx);
+    N_VConst(1.0, weight);
+    
+    t_status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
+    
+    t_status = AMIDense(ami_mem, udata->nx);
+    PrintMat(tdata->Jtmp);
+    t_status = fJ(udata->nx,tdata->t,3,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,tmp1,tmp2,tmp3);
+    */
+    // A new beginning
+    long int pivots = 0;
+    int t_status = 0;
+    t_status = fJ(udata->nx,tdata->t,3,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,tmp1,tmp2,tmp3);
+    PrintMat(tdata->Jtmp);
+    t_status = DenseGETRF(tdata->Jtmp, &pivots);
+    
+    N_Vector delta2 = N_VNew_Serial(udata->nx);
+    x_tmp = N_VGetArrayPointer(delta2);
+    fxdot(tdata->t, tdata->x, tdata->dx, delta2, udata);
+    DenseGETRS(tdata->Jtmp, &pivots, x_tmp);
+    // A new ending
+    
+    N_VPrint_Serial(tdata->x);
+    x_tmp = N_VGetArrayPointer(tdata->x);
+    /*
+    t_status = cvDenseSetup((CVodeMem) ami_mem,setup_status,tdata->x,tdata->xdot,&jcurPtr,tmp1,tmp2,tmp3);
+    
+    t_status = cvDenseSolve((CVodeMem) ami_mem, delta2, weight, tdata->x, tdata->xdot);
+    N_VPrint_Serial(delta2);*/
+    // t_status = cv_lsolve(ami_mem, delta2, weight, tdata->x, tdata->xdot);
+    // t_status = CVode(ami_mem, RCONST(udata->ts[0]), tdata->x, &(tdata->t), AMICI_NORMAL);
+    // cvode_mem->cv_lsolve(&ami_mem, delta2, weight, tdata->x, tdata->xdot);
+    /* finish testing */
+
     
     /* Check for relative error, but make sure not to divide by 0!
     Ensure positivity of the state */
