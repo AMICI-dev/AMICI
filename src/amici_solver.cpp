@@ -37,7 +37,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
     if (AMISetErrHandlerFn() != AMICI_SUCCESS) goto freturn;
 
     /* attaches userdata*/
-    if (AMISetUserData(udata) != AMICI_SUCCESS) goto freturn;
+    if (AMISetUserData(tdata) != AMICI_SUCCESS) goto freturn;
 
     /* specify maximal number of steps */
     if (AMISetMaxNumSteps(udata->maxsteps) != AMICI_SUCCESS) goto freturn;
@@ -61,7 +61,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
                 realtype *sx_tmp;
 
                 if (!udata->sx0data) {
-                    if (model->fsx0(tdata->sx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+                    if (model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata) != AMICI_SUCCESS) goto freturn;
                 } else {
                     int ip;
                     for (ip=0; ip<udata->nplist; ip++) {
@@ -74,7 +74,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
                     }
                 }
 
-                if (model->fsdx0(tdata->sdx, tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+                if (model->fsdx0(tdata->sdx, tdata->x, tdata->dx, tdata) != AMICI_SUCCESS) goto freturn;
 
                 /* Activate sensitivity calculations */
                 if (wrap_SensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS) goto freturn;
@@ -158,7 +158,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata) {
     if(status != AMICI_SUCCESS) return status;
 
     /* Attach user data */
-    status = AMISetUserDataB(tdata->which, udata);
+    status = AMISetUserDataB(tdata->which, tdata);
     if(status != AMICI_SUCCESS) return status;
 
     /* Number of maximal internal steps */

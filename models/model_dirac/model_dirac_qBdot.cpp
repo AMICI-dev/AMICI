@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
 #include <include/udata.h>
 #include "model_dirac_dwdp.h"
@@ -8,7 +9,9 @@
 
 int qBdot_model_dirac(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
 realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);

@@ -1,19 +1,20 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
-#include <include/udata.h>
 #include <include/tdata.h>
 #include <include/rdata.h>
 #include <include/edata.h>
 #include "model_neuron_o2_w.h"
 
-int dJydy_model_neuron_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+int dJydy_model_neuron_o2(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJydy,0,sizeof(realtype)*udata->ny*udata->nytrue*udata->nJ);
-status = w_model_neuron_o2(t,x,NULL,user_data);
+status = w_model_neuron_o2(t,x,NULL,tdata);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;

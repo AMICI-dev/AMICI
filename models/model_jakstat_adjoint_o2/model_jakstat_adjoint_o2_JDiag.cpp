@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
 #include <include/udata.h>
 #include "model_jakstat_adjoint_o2_dwdx.h"
@@ -8,12 +9,14 @@
 
 int JDiag_model_jakstat_adjoint_o2(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *JDiag_tmp = N_VGetArrayPointer(JDiag);
 int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*162);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,user_data);
+status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
 status = dwdx_model_jakstat_adjoint_o2(t,x,NULL,user_data);
   JDiag_tmp[0+0*162] = -udata->k[0]*udata->p[0]*udata->w[0]*udata->w[2];
   JDiag_tmp[1+0*162] = udata->p[1]*udata->dwdx[0]*-2.0;

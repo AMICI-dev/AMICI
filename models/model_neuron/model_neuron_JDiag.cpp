@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
 #include <include/udata.h>
 #include "model_neuron_dwdx.h"
@@ -8,12 +9,14 @@
 
 int JDiag_model_neuron(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *JDiag_tmp = N_VGetArrayPointer(JDiag);
 int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*2);
-status = w_model_neuron(t,x,NULL,user_data);
+status = w_model_neuron(t,x,NULL,tdata);
 status = dwdx_model_neuron(t,x,NULL,user_data);
   JDiag_tmp[0+0*2] = x_tmp[0]*(2.0/2.5E1)+5.0;
   JDiag_tmp[1+0*2] = -udata->p[0];

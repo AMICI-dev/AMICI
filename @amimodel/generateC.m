@@ -23,6 +23,7 @@ for ifun = this.funs
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
         fprintf(fid,'#include <include/amici.h>\n');
+        fprintf(fid,'#include <include/amici_model.h>\n');
         fprintf(fid,'#include <string.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
             fprintf(fid,'#include <include/udata.h>\n');
@@ -65,13 +66,19 @@ for ifun = this.funs
             fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
         else
             if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
-                fprintf(fid,'UserData *udata = (UserData*) user_data;\n');
+                fprintf(fid,'TempData *tdata = (TempData*) user_data;\n');
+                fprintf(fid,'Model *model = (Model*) tdata->model;\n');
+                fprintf(fid,'UserData *udata = (UserData*) tdata->udata;\n');
+            end
+            if( strfind(this.fun.(ifun{1}).argstr,'tdata') )
+                fprintf(fid,'Model *model = (Model*) tdata->model;\n');
+                fprintf(fid,'UserData *udata = (UserData*) tdata->udata;\n');
             end
             this.fun.(ifun{1}).printLocalVars(this,fid);
             if(~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector x')) && ~isempty(strfind(this.fun.(ifun{1}).argstr,'realtype t')))
                 if(or(not(strcmp(this.wtype,'iw')),~isempty(strfind(this.fun.(ifun{1}).argstr,'N_Vector dx'))))
                     if(~any(ismember(ifun{1},{'w','sxdot','dxdotdp','dfdx','qBdot'})))
-                        fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                        fprintf(fid,['status = w_' this.modelname '(t,x,' dxvec 'tdata);\n']);
                     end
                 end
             end

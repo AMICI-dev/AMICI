@@ -38,29 +38,29 @@ public:
 
     virtual int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int frz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdydp(realtype t, int it, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdydp(realtype t, int it, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdydx(realtype t, int it, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdydx(realtype t, int it, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdrzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdrzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
@@ -70,58 +70,58 @@ public:
 
     virtual int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fsigma_y(realtype t, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fsigma_y(realtype t, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdsigma_ydp(realtype t, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdsigma_ydp(realtype t, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fsigma_z(realtype t, int ie, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fsigma_z(realtype t, int ie, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdsigma_zdp(realtype t, int ie, void *user_data, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdsigma_zdp(realtype t, int ie, TempData *tdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fJy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fJz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fJrz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJydy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJydsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual ~Model() {}
 
     // Generic implementations
-    static int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
+    int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
 
-    static int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
+    int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
 
-    static int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    static int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    static int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
+    int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
 
-    static int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    static int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
+    int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 
     int initialize(UserData *udata, TempData *tdata);
 

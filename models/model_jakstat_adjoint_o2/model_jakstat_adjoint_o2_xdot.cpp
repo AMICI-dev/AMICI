@@ -1,18 +1,21 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
 #include <include/udata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
 int xdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(xdot_tmp,0,sizeof(realtype)*162);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,user_data);
+status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
   xdot_tmp[0] = udata->w[2]*(udata->k[1]*udata->p[3]*x_tmp[8]-udata->k[0]*udata->p[0]*udata->w[0]*x_tmp[0]);
   xdot_tmp[1] = udata->p[1]*udata->w[1]*-2.0+udata->p[0]*udata->w[0]*x_tmp[0];
   xdot_tmp[2] = udata->p[1]*udata->w[1]-udata->p[2]*x_tmp[2];

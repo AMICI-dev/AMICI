@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dsigma_ydp_model_steadystate(realtype t, void *user_data, TempData *tdata);
+int dsigma_ydp_model_steadystate(realtype t, TempData *tdata);
 
 
 #endif /* _am_model_steadystate_dsigma_ydp_h */

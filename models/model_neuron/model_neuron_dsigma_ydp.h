@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dsigma_ydp_model_neuron(realtype t, void *user_data, TempData *tdata);
+int dsigma_ydp_model_neuron(realtype t, TempData *tdata);
 
 
 #endif /* _am_model_neuron_dsigma_ydp_h */

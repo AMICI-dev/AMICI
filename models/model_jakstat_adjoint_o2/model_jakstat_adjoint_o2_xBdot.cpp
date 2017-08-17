@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
 #include <include/udata.h>
 #include "model_jakstat_adjoint_o2_dwdx.h"
@@ -8,13 +9,15 @@
 
 int xBdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
 realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
 int ix;
 memset(xBdot_tmp,0,sizeof(realtype)*162);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,user_data);
+status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
 status = dwdx_model_jakstat_adjoint_o2(t,x,NULL,user_data);
   xBdot_tmp[0] = -udata->p[0]*udata->w[0]*xB_tmp[1]+udata->k[0]*udata->p[0]*udata->w[0]*udata->w[2]*xB_tmp[0];
   xBdot_tmp[1] = udata->p[1]*xB_tmp[1]*udata->dwdx[0]*2.0-udata->p[1]*xB_tmp[2]*udata->dwdx[0];

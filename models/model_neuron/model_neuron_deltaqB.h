@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int deltaqB_model_neuron(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata);
+int deltaqB_model_neuron(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
 
 
 #endif /* _am_model_neuron_deltaqB_h */

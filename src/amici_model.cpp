@@ -362,7 +362,7 @@ int Model::initialize(UserData *udata, TempData *tdata)
 
     if((status = initializeStates(udata, tdata)) != AMICI_SUCCESS) return status;
 
-    if((status = fdx0(tdata->x, tdata->dx, udata)) != AMICI_SUCCESS) return status;
+    if((status = fdx0(tdata->x, tdata->dx, tdata)) != AMICI_SUCCESS) return status;
 
     if ((status = initHeaviside(udata,tdata)) != AMICI_SUCCESS) return status;
 
@@ -378,7 +378,7 @@ int Model::initializeStates(UserData *udata, TempData *tdata)
         return AMICI_ERROR_TDATA;
 
     if (udata->x0data == NULL) {
-        if (fx0(tdata->x, udata) != AMICI_SUCCESS)
+        if (fx0(tdata->x, tdata) != AMICI_SUCCESS)
             return AMICI_ERROR_MODEL;
     } else {
         realtype *x_tmp = NV_DATA_S(tdata->x);
@@ -406,7 +406,7 @@ int Model::initHeaviside(UserData *udata, TempData *tdata) {
 
     int status = AMICI_SUCCESS;
 
-    status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata);
+    status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,tdata);
     if (status != AMICI_SUCCESS) return status;
 
     for (int ie = 0; ie<udata->ne; ie++) {
