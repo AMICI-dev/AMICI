@@ -221,9 +221,15 @@ public:
 
     int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
 
+
+    int setLinearSolver(const UserData *udata, void *ami_mem);
+
     virtual ~Solver() {
 
     }
+
+    //void *ami_mem = nullptr; /* pointer to ami memory block */
+
 };
 
 

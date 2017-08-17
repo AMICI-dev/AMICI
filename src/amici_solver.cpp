@@ -6,6 +6,7 @@
 
 void *Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
+    int status;
     void *ami_mem = NULL; /* pointer to ami memory block */
     N_Vector id = NULL;
 
@@ -49,89 +50,9 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
         if (wrap_RootInit(ami_mem, udata) != AMICI_SUCCESS) goto freturn;
     }
 
-    /* Attach linear solver module */
-    switch (udata->linsol) {
-
-            /* DIRECT SOLVERS */
-
-        case AMICI_DENSE:
-            if (AMIDense(ami_mem, udata->nx) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetDenseJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-        case AMICI_BAND:
-            if (AMIBand(ami_mem, udata->nx, udata->ubw, udata->lbw) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetBandJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-        case AMICI_LAPACKDENSE:
-            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
-            /* status = CVLapackDense(ami_mem, nx);
-             if (status != AMICI_SUCCESS) return;
-
-             status = wrap_SetDenseJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-
-             break;*/
-
-        case AMICI_LAPACKBAND:
-
-            errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
-            /* status = CVLapackBand(ami_mem, nx);
-             if (status != AMICI_SUCCESS) return;
-
-             status = wrap_SetBandJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-
-             break;*/
-
-        case AMICI_DIAG:
-            if (AMIDiag(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-            /* ITERATIVE SOLVERS */
-
-        case AMICI_SPGMR:
-            if (AMISpgmr(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-        case AMICI_SPBCG:
-            if (AMISpbcg(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-        case AMICI_SPTFQMR:
-            if (AMISptfqmr(ami_mem, PREC_NONE, CVSPILS_MAXL) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetJacTimesVecFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-            /* SPARSE SOLVERS */
-
-        case AMICI_KLU:
-            if (AMIKLU(ami_mem, udata->nx, udata->nnz, CSC_MAT) != AMICI_SUCCESS) goto freturn;
-
-            if (wrap_SetSparseJacFn(ami_mem) != AMICI_SUCCESS) goto freturn;
-
-            if (AMIKLUSetOrdering(ami_mem, udata->ordering) != AMICI_SUCCESS) goto freturn;
-
-            break;
-
-        default:
-            errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
-            break;
-    }
+    status = setLinearSolver(udata, ami_mem);
+    if(status != AMICI_SUCCESS)
+        goto freturn;
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         if (udata->sensi_meth == AMICI_SENSI_FSA) {
@@ -456,4 +377,86 @@ int Solver::getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rd
     rdata->numnonlinsolvconvfailsB[it] = (double) number;
 
     return status;
+}
+
+int Solver::setLinearSolver(const UserData *udata, void *ami_mem) {
+    int status;
+    /* Attach linear solver module */
+
+    switch (udata->linsol) {
+
+    /* DIRECT SOLVERS */
+
+    case AMICI_DENSE:
+
+        status = AMIDense(ami_mem, udata->nx);
+        if (status != AMICI_SUCCESS) return status;
+
+        return wrap_SetDenseJacFn(ami_mem);
+
+    case AMICI_BAND:
+        status = AMIBand(ami_mem, udata->nx, udata->ubw, udata->lbw);
+        if (status != AMICI_SUCCESS) return status;
+
+        return wrap_SetBandJacFn(ami_mem);
+
+    case AMICI_LAPACKDENSE:
+        errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+        /* status = CVLapackDense(ami_mem, nx);
+             if (status != AMICI_SUCCESS) return;
+
+             status = wrap_SetDenseJacFn(ami_mem);
+             if (status != AMICI_SUCCESS) return;
+        */
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+
+    case AMICI_LAPACKBAND:
+
+        errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+        /* status = CVLapackBand(ami_mem, nx);
+             if (status != AMICI_SUCCESS) return;
+
+             status = wrap_SetBandJacFn(ami_mem);
+             if (status != AMICI_SUCCESS) return;
+        */
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+
+    case AMICI_DIAG:
+        return AMIDiag(ami_mem);
+
+        /* ITERATIVE SOLVERS */
+
+    case AMICI_SPGMR:
+        status = AMISpgmr(ami_mem, PREC_NONE, CVSPILS_MAXL);
+        if (status != AMICI_SUCCESS) return status;
+
+        return wrap_SetJacTimesVecFn(ami_mem);
+
+    case AMICI_SPBCG:
+        status = AMISpbcg(ami_mem, PREC_NONE, CVSPILS_MAXL);
+        if (status != AMICI_SUCCESS) return status;
+
+        return wrap_SetJacTimesVecFn(ami_mem);
+
+    case AMICI_SPTFQMR:
+        status = AMISptfqmr(ami_mem, PREC_NONE, CVSPILS_MAXL);
+        if (status != AMICI_SUCCESS) return status;
+
+        return wrap_SetJacTimesVecFn(ami_mem);
+
+        /* SPARSE SOLVERS */
+
+    case AMICI_KLU:
+        status = AMIKLU(ami_mem, udata->nx, udata->nnz, CSC_MAT);
+        if (status != AMICI_SUCCESS) return status;
+
+        status = wrap_SetSparseJacFn(ami_mem);
+        if (status != AMICI_SUCCESS) return status;
+
+        return AMIKLUSetOrdering(ami_mem, udata->ordering);
+    }
+
+    errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
+
+    return AMICI_ERROR_OTHER;
 }
