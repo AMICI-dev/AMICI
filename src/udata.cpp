@@ -73,7 +73,6 @@ UserData::~UserData()
     if(sx0data) delete[] sx0data;
     if(z2event) delete[] z2event;
     if(plist) delete[] plist;
-    if(h) delete[] h;
 }
 
 void UserData::init()
@@ -109,7 +108,6 @@ void UserData::init()
     sx0data = NULL;
     ordering = 0;
     z2event = NULL;
-    h = NULL;
 
     nan_dxdotdp = false;
     nan_J = false;
@@ -166,5 +164,4 @@ void UserData::print()
     printf("sx0data: %p\n", sx0data);
     printf("ordering: %d\n", ordering);
     printf("z2event: %p\n", z2event);
-    printf("h: %p\n", h);
 }

@@ -182,10 +182,7 @@ public:
     
     /** index indicating to which event an event output belongs */
     double *z2event;
-    
-    /** flag indicating whether a certain heaviside function should be active or not */
-    realtype *h;
-    
+        
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */

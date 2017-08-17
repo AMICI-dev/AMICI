@@ -109,11 +109,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     // xscale, matlab: seventh argument
     udata->xbar = NULL;
 
-    udata->h = 0;
-    if (udata->ne>0) {
-        udata->h = new realtype[udata->ne]();
-    }
-
     return udata;
 }
 

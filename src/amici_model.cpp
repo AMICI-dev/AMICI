@@ -411,12 +411,12 @@ int Model::initHeaviside(UserData *udata, TempData *tdata) {
 
     for (int ie = 0; ie<udata->ne; ie++) {
         if (tdata->rootvals[ie]<0) {
-            udata->h[ie] = 0.0;
+            tdata->h_udata[ie] = 0.0;
         } else if (tdata->rootvals[ie]==0) {
             errMsgIdAndTxt("AMICI:mex:initHeaviside","Simulation started in an event. This could lead to unexpected results, aborting simulation! Please specify an earlier simulation start via @amimodel.t0");
             return AMICI_ERROR_EVENT;
         } else {
-            udata->h[ie] = 1.0;
+            tdata->h_udata[ie] = 1.0;
         }
     }
     return status;

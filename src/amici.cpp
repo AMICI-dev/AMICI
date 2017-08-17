@@ -834,7 +834,7 @@ int updateHeaviside(UserData *udata, TempData *tdata) {
      the right update to the heaviside variables */
     
     for (ie = 0; ie<udata->ne; ie++) {
-        udata->h[ie] += tdata->rootsfound[ie];
+        tdata->h_udata[ie] += tdata->rootsfound[ie];
     }
     return AMICI_SUCCESS;
 }
@@ -859,7 +859,7 @@ int updateHeavisideB(int iroot, UserData *udata, TempData *tdata) {
      the right update to the heaviside variables */
     
     for (ie = 0; ie<udata->ne; ie++) {
-        udata->h[ie] -= tdata->rootidx[iroot*udata->ne + ie];
+        tdata->h_udata[ie] -= tdata->rootidx[iroot*udata->ne + ie];
     }
     return AMICI_SUCCESS;
 }

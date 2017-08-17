@@ -123,6 +123,10 @@ public:
     /** temporary rootval storage to check crossing in secondary event */
     realtype *h;
 
+    /** flag indicating whether a certain heaviside function should be active or not
+        Moved from UserData to TempData; TODO: better naming */
+    realtype *h_udata;
+
     /** change in x */
     realtype *deltax;
     /** change in sx */
