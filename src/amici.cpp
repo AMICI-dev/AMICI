@@ -45,16 +45,12 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status == AMICI_SUCCESS) udata->initTemporaryFields();
     
     /* pointer to cvodes memory block */
-    void *ami_mem = solver->setupAMI(udata, tdata, model);
-    if (ami_mem == NULL){
-        status = AMICI_ERROR_SETUP;
+    status = solver->setupAMI(udata, tdata, model);
+    if (status != AMICI_SUCCESS)
         goto freturn;
-    }
-    
 
-
-    if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot, solver, model);
-    if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, ami_mem, &iroot, solver, model);
+    if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
+    if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
     
     if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, edata);
     if (status < AMICI_SUCCESS) rdata->invalidate(udata);
@@ -231,12 +227,11 @@ int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *e
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
+int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
      * getDataOutput extracts output information for data-points
      *
      * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -274,7 +269,7 @@ int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, con
         status = prepDataSensis(it, udata, rdata, edata, tdata, model);
         if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_FSA) {
-            status = getDataSensisFSA(it, ami_mem, udata, rdata, edata, tdata, solver, model);
+            status = getDataSensisFSA(it, udata, rdata, edata, tdata, solver, model);
             if(status != AMICI_SUCCESS) return status;
         }
     }
@@ -354,13 +349,12 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
+int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
      *
      * @param[out] status flag indicating success of execution @type int
      * @param[in] it index of current timepoint @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -375,7 +369,7 @@ int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
     for(ip=0; ip < udata->nplist; ip++) {
         if (udata->nx>0) {
             if (udata->ts[it] > udata->tstart) {
-                status = solver->AMIGetSens(ami_mem, &(tdata->t), tdata->sx);
+                status = solver->AMIGetSens(&(tdata->t), tdata->sx);
                 if (status != AMICI_SUCCESS) return status;
             }
             
@@ -454,12 +448,11 @@ int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
+int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points
      *
      * @param[in] it index of data point @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -479,24 +472,23 @@ int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, c
         }
         
         if (udata->ts[it] > udata->tstart) {
-            status = solver->getDiagnosis(it, ami_mem, rdata);
+            status = solver->getDiagnosis(it, rdata);
             if(status != AMICI_SUCCESS) return status;
         }
     }
     
-    return getDataOutput(it, ami_mem, udata, rdata, edata, tdata, solver, model);
+    return getDataOutput(it, udata, rdata, edata, tdata, solver, model);
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver) {
+int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points for the backward problems
      *
      * @param[in] it index of data point @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] tdata pointer to the temporary data struct @type TempData
@@ -510,20 +502,19 @@ int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, 
             // we only need the 1:nxtrue slice here!
             xB_tmp[ix + iJ * udata->nxtrue] += tdata->dJydx[it + (iJ + ix * udata->nJ) * udata->nt];
     }
-    return solver->getDiagnosisB(it,ami_mem,udata,rdata,tdata);
+    return solver->getDiagnosisB(it,udata,rdata,tdata);
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model) {
+int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
      * @param[out] iroot index of event @type int
      * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -540,7 +531,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
     if(model->froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata) != AMICI_SUCCESS) return AMICI_ERROR_EVENT;
     
     if (seflag == 0) {
-        status = solver->AMIGetRootInfo(ami_mem, tdata->rootsfound);
+        status = solver->AMIGetRootInfo(tdata->rootsfound);
         if(status != AMICI_SUCCESS) return status;
     }
     
@@ -557,7 +548,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
     if (seflag == 0) {
         if (udata->sensi >= AMICI_SENSI_ORDER_FIRST){
             if (udata->sensi_meth == AMICI_SENSI_FSA) {
-                if (solver->AMIGetSens(ami_mem, &(tdata->t), tdata->sx) != AMICI_SUCCESS) return AMICI_ERROR_SA;
+                if (solver->AMIGetSens(&(tdata->t), tdata->sx) != AMICI_SUCCESS) return AMICI_ERROR_SA;
             }
         }
     }
@@ -614,7 +605,7 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
         (*iroot)++;
     } else {
         warnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
-        status = solver->AMIReInit(ami_mem, tdata->t, tdata->x, tdata->dx); /* reinitialise so that we can continue in peace */
+        status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx); /* reinitialise so that we can continue in peace */
         return status;
     }
     
@@ -654,24 +645,24 @@ int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata,
     }
     /* fire the secondary event */
     if (secondevent>0) {
-        status = handleEvent( iroot, tlastroot, ami_mem, udata, rdata, edata, tdata, secondevent, solver, model);
+        status = handleEvent( iroot, tlastroot, udata, rdata, edata, tdata, secondevent, solver, model);
         if (status != AMICI_SUCCESS) return status;
     }
     
     /* only reinitialise in the first event fired */
     if (seflag == 0) {
-        status = solver->AMIReInit(ami_mem, tdata->t, tdata->x, tdata->dx);
+        status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
         if (status != AMICI_SUCCESS) return status;
         
         /* make time derivative consistent */
-        status = solver->AMICalcIC(ami_mem, tdata->t);
+        status = solver->AMICalcIC(tdata->t);
         if (status != AMICI_SUCCESS) return status;
     }
     
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST){
         if (udata->sensi_meth == AMICI_SENSI_FSA) {
             if (seflag == 0) {
-                status = solver->AMISensReInit(ami_mem, udata->ism, tdata->sx, tdata->sdx);
+                status = solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
                 if (status != AMICI_SUCCESS) return status;
             }
         }
@@ -902,11 +893,10 @@ int updateHeavisideB(int iroot, UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model) {
+int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model) {
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
      *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] tdata pointer to the temporary data struct @type TempData
@@ -950,7 +940,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     
     if (res_abs >= udata->atol && res_rel >= udata->rtol) {
         /* If Newton steps are necessary, compute the inital search direction */
-        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta, model);
+        status = getNewtonStep(udata, rdata, tdata, newton_try, i_newtonstep, delta, model);
     
         if (status == AMICI_SUCCESS) {
             /* The linear solver was successful, now the Newton solver needs to be */
@@ -999,7 +989,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
                         gamma = fmax(1.0, 2.0*gamma);
             
                         /* Do another Newton step */
-                        status = getNewtonStep(udata, rdata, tdata, ami_mem, newton_try, i_newtonstep, delta, model);
+                        status = getNewtonStep(udata, rdata, tdata, newton_try, i_newtonstep, delta, model);
                         if (status == AMICI_SUCCESS) {
                             /* Newton step was successful, now Newtons method still needs to be */
                             status = AMICI_ERROR_NEWTONSOLVER;
@@ -1041,7 +1031,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta, Model *model) {
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector ns_delta, Model *model) {
     /**
      * getNewtonStep acomputes the Newton Step by solving a linear system
      *
@@ -1049,7 +1039,6 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] ntry intger number of Newton solver try
      * @param[in] nnewt intger number of Newton steps in the current Newton solver try
      * @param[out] delta N_Vector solution of the linear system
@@ -1217,11 +1206,10 @@ int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int new
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver) {
+int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver) {
     /**
      * getNewtonSimulation solves the forward problem, if the first Newton solver run did not succeed.
      *
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[in] rdata pointer to the return data struct @type ReturnData
@@ -1244,7 +1232,7 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
     } else {
         sim_time = 1e6;
     }
-    status = solver->AMISolve(ami_mem, RCONST(sim_time), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
+    status = solver->AMISolve(RCONST(sim_time), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
     
     if (status == AMICI_SUCCESS) {
         /* Check residuals */
@@ -1278,7 +1266,7 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
 /* ------------------------------------------------------------------------------------- */
 
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot, Solver *solver, Model *model) {
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
      *
@@ -1286,7 +1274,6 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] edata pointer to the experimental data struct @type ExpData
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] iroot pointer to the current root index, the value pointed to will be increased during the forward solve
      * @return int status flag indicating success of execution @type int
      */
@@ -1304,7 +1291,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
     /* loop over timepoints */
     for (it=0; it < udata->nt; it++) {
         if (udata->sensi_meth == AMICI_SENSI_FSA && udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            status = solver->AMISetStopTime(ami_mem, udata->ts[it]);
+            status = solver->AMISetStopTime(udata->ts[it]);
         }
         if (status == AMICI_SUCCESS) {
             /* only integrate if no errors occured */
@@ -1312,16 +1299,16 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                 while (tdata->t<udata->ts[it]) {
                     if (udata->sensi_meth == AMICI_SENSI_ASA && udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
                         if (udata->nx>0) {
-                            status = solver->AMISolveF(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL, &ncheck);
+                            status = solver->AMISolveF(RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL, &ncheck);
                         } else {
                             tdata->t = udata->ts[it];
                         }
                     } else {
                         if (udata->nx>0) {
                             if (std::isinf(udata->ts[it])) {
-                                status = workSteadyStateProblem(udata, tdata, rdata, ami_mem, it, solver, model);
+                                status = workSteadyStateProblem(udata, tdata, rdata, it, solver, model);
                             } else {
-                                status = solver->AMISolve(ami_mem, RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
+                                status = solver->AMISolve(RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
                             }
                         } else {
                             tdata->t = udata->ts[it];
@@ -1332,11 +1319,11 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                         if(!x_tmp) return AMICI_ERROR_SIMULATION;
                         if (status == -22) {
                             /* clustering of roots => turn off rootfinding */
-                            solver->AMIRootInit(ami_mem, 0, NULL);
+                            solver->AMIRootInit(0, NULL);
                             status = AMICI_SUCCESS;
                         }
                         if (status==AMICI_ROOT_RETURN) {
-                            status = handleEvent(iroot, &tlastroot, ami_mem, udata, rdata, edata, tdata, 0, solver, model);
+                            status = handleEvent(iroot, &tlastroot, udata, rdata, edata, tdata, 0, solver, model);
                             if (status != AMICI_SUCCESS) goto freturn;
                         }
                         /* integration error occured */
@@ -1344,7 +1331,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                     }
                 }
             }
-            status = handleDataPoint(it, ami_mem, udata, rdata, edata, tdata, solver, model);
+            status = handleDataPoint(it, udata, rdata, edata, tdata, solver, model);
             if (status != AMICI_SUCCESS) goto freturn;
         } else {
             for(ix=0; ix < udata->nx; ix++) rdata->x[ix*udata->nt+it] = amiGetNaN();
@@ -1369,7 +1356,7 @@ freturn:
     return status;
 }
 
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot, Solver *solver, Model *model) {
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model) {
     /**
      * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
      * workForwardProblem should be called before this is function is called
@@ -1378,7 +1365,6 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] edata pointer to the experimental data struct @type ExpData
-     * @param[in] ami_mem pointer to the solver memory block @type *void
      * @param[in] iroot pointer to the current root index, the value pointed to will be decreased during the forward solve
      * @return int status flag
      */
@@ -1393,7 +1379,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
         return status;
     }
 
-    solver->setupAMIB(ami_mem, udata, tdata);
+    solver->setupAMIB(udata, tdata);
 
     it = udata->nt-2;
     (*iroot)--;
@@ -1403,13 +1389,13 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
         tnext = getTnext(tdata->discs, *iroot, udata->ts, it, udata);
 
         if (tnext<tdata->t) {
-            status = solver->AMISolveB(ami_mem, tnext, AMICI_NORMAL);
+            status = solver->AMISolveB(tnext, AMICI_NORMAL);
             if (status != AMICI_SUCCESS) return status;
 
 
-            status = solver->AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
+            status = solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
             if (status != AMICI_SUCCESS) return status;
-            status = solver->AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
+            status = solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
             if (status != AMICI_SUCCESS) return status;
         }
 
@@ -1429,18 +1415,18 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
         /* handle data-point */
 
         if (tnext == udata->ts[it]) {
-            handleDataPointB(it, ami_mem, udata, rdata, tdata, solver);
+            handleDataPointB(it, udata, rdata, tdata, solver);
             it--;
         }
 
         /* reinit states */
-        status = solver->AMIReInitB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
+        status = solver->AMIReInitB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
         if (status != AMICI_SUCCESS) return status;
 
-        status = solver->AMIQuadReInitB(ami_mem, tdata->which, tdata->xQB);
+        status = solver->AMIQuadReInitB(tdata->which, tdata->xQB);
         if (status != AMICI_SUCCESS) return status;
 
-        status = solver->AMICalcICB(ami_mem, tdata->which, tdata->t, tdata->xB, tdata->dxB);
+        status = solver->AMICalcICB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
         if (status != AMICI_SUCCESS) return status;
     }
 
@@ -1449,12 +1435,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
         if (status == AMICI_SUCCESS) {
             if (udata->nx>0) {
                 /* solve for backward problems */
-                status = solver->AMISolveB(ami_mem, udata->tstart, AMICI_NORMAL);
+                status = solver->AMISolveB(udata->tstart, AMICI_NORMAL);
                 if (status != AMICI_SUCCESS) return status;
 
-                status = solver->AMIGetQuadB(ami_mem, tdata->which, &(tdata->t), tdata->xQB);
+                status = solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
                 if (status != AMICI_SUCCESS) return status;
-                status = solver->AMIGetB(ami_mem, tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
+                status = solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB, tdata->dxB);
                 if (status != AMICI_SUCCESS) return status;
             }
         }
@@ -1520,7 +1506,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
     return status;
 }
 
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it, Solver *solver, Model *model) {
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int it, Solver *solver, Model *model) {
     /*
      * tries to determine the steady state of the ODE system by a Newton solver
      uses forward intergration, if the Newton solver fails
@@ -1537,7 +1523,7 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     
     /* First, try to do Newton steps */
     starttime = clock();
-    status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 1, model);
+    status = applyNewtonsMethod(udata, rdata, tdata, 1, model);
     
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
@@ -1545,14 +1531,14 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
         status = getNewtonOutput(udata, tdata, rdata, 1, run_time);
     } else {
         /* Newton solver did not find a steady state, so try integration */
-        status = getNewtonSimulation(ami_mem, udata, tdata, rdata, solver);
+        status = getNewtonSimulation(udata, tdata, rdata, solver);
         
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
             status = getNewtonOutput(udata, tdata, rdata, 2, run_time);
         } else {
-            status = applyNewtonsMethod(ami_mem, udata, rdata, tdata, 2, model);
+            status = applyNewtonsMethod(udata, rdata, tdata, 2, model);
             
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */

@@ -37,19 +37,19 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
 
-int prepDataSensis(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
+int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int getDataSensisFSA(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int getDataOutput(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-int handleEvent(int *iroot, realtype *tlastroot, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
-int handleDataPoint(int it, void *ami_mem, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
+int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model);
-int handleDataPointB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver);
+int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver);
 
 int applyEventBolus(UserData *udata, TempData *tdata, Model *model);
 int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
@@ -59,15 +59,15 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
 int updateHeaviside(UserData *udata, TempData *tdata);
 int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int* iroot, Solver *solver, Model *model);
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, void *ami_mem, int *iroot, Solver *solver, Model *model);
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int* iroot, Solver *solver, Model *model);
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model);
 
-int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model);
-int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta, Model *model);
+int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model);
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector ns_delta, Model *model);
 int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int newton_status, double run_time);
-int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver);
-int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, void *ami_mem, int it, Solver *solver, Model *model);
+int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver);
+int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int it, Solver *solver, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,
