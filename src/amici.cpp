@@ -22,9 +22,7 @@
 #include <cvodes/cvodes_spils.h>
 #include <include/amici_solver_wrap.h>
 #include <include/amici_model_functions.h>
-#include "cvodes_impl.h"
-#include "cvodes_direct_impl.h"
-#include  <cvodes/cvodes_dense.h>
+#include <cvodes/cvodes_dense.h>
 
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
@@ -1729,7 +1727,8 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
 
 int linsolveSPBCG(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta) {
     /**
-     * linsolveSPBCG solves the linear system for the Newton iteration by using the BiCGStab algorithm
+     * linsolveSPBCG solves the linear system for the Newton iteration by using the BiCGStab algorithm.
+     * This routines is to be stored in another file in near future.
      *
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
