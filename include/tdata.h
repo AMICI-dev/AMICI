@@ -142,7 +142,10 @@ public:
     
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
-    
+
+    /** current root index, will be increased during the forward solve */
+    int iroot = 0;
+
 
     const UserData *udata;
     const Model *model;

@@ -59,8 +59,8 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
 int updateHeaviside(UserData *udata, TempData *tdata);
 int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int* iroot, Solver *solver, Model *model);
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model);
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model);
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model);
 int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model);
 
 int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model);

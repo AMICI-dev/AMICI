@@ -29,7 +29,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if(!rdata) return AMICI_ERROR_RDATA;
     
     int status = AMICI_SUCCESS;
-    int iroot = 0;
     
     Solver *solver = getSolver();
     Model *model = getModel(udata, edata);
@@ -48,8 +47,8 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status != AMICI_SUCCESS)
         goto freturn;
 
-    if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
-    if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, &iroot, solver, model);
+    if (status == AMICI_SUCCESS) status = workForwardProblem(udata, tdata, rdata, edata, solver, model);
+    if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, edata, solver, model);
     
     if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata);
     if (status < AMICI_SUCCESS) rdata->invalidate(udata);
@@ -506,7 +505,7 @@ int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model) {
+int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -532,9 +531,9 @@ int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rd
         if(status != AMICI_SUCCESS) return status;
     }
     
-    if (*iroot<udata->nmaxevent*udata->ne) {
+    if (tdata->iroot<udata->nmaxevent*udata->ne) {
         for (ie=0; ie<udata->ne; ie++) {
-            tdata->rootidx[*iroot*udata->ne + ie] = tdata->rootsfound[ie];
+            tdata->rootidx[tdata->iroot*udata->ne + ie] = tdata->rootsfound[ie];
         }
     }
     for (ie = 0; ie<udata->ne; ie++) {
@@ -583,10 +582,10 @@ int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rd
         
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
             /* store x to compute jump in discontinuity */
-            if (*iroot<udata->nmaxevent*udata->ne) {
-                N_VScale(1.0,tdata->x,tdata->x_disc[*iroot]);
-                N_VScale(1.0,tdata->xdot,tdata->xdot_disc[*iroot]);
-                N_VScale(1.0,tdata->xdot_old,tdata->xdot_old_disc[*iroot]);
+            if (tdata->iroot<udata->nmaxevent*udata->ne) {
+                N_VScale(1.0,tdata->x,tdata->x_disc[tdata->iroot]);
+                N_VScale(1.0,tdata->xdot,tdata->xdot_disc[tdata->iroot]);
+                N_VScale(1.0,tdata->xdot_old,tdata->xdot_old_disc[tdata->iroot]);
             }
         }
     }
@@ -597,9 +596,9 @@ int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rd
     status = applyEventBolus(udata, tdata, model);
     if (status != AMICI_SUCCESS) return status;
     
-    if (*iroot<udata->nmaxevent*udata->ne) {
-        tdata->discs[*iroot] = tdata->t;
-        (*iroot)++;
+    if (tdata->iroot<udata->nmaxevent*udata->ne) {
+        tdata->discs[tdata->iroot] = tdata->t;
+        ++tdata->iroot;
     } else {
         warnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT","Event was recorded but not reported as the number of occured events exceeded (nmaxevents)*(number of events in model definition)!");
         status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx); /* reinitialise so that we can continue in peace */
@@ -642,7 +641,7 @@ int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rd
     }
     /* fire the secondary event */
     if (secondevent>0) {
-        status = handleEvent( iroot, tlastroot, udata, rdata, edata, tdata, secondevent, solver, model);
+        status = handleEvent(tlastroot, udata, rdata, edata, tdata, secondevent, solver, model);
         if (status != AMICI_SUCCESS) return status;
     }
     
@@ -1263,7 +1262,7 @@ int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
 /* ------------------------------------------------------------------------------------- */
 
 
-int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model) {
+int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model) {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
      *
@@ -1271,7 +1270,6 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] edata pointer to the experimental data struct @type ExpData
-     * @param[in] iroot pointer to the current root index, the value pointed to will be increased during the forward solve
      * @return int status flag indicating success of execution @type int
      */
     
@@ -1320,7 +1318,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                             status = AMICI_SUCCESS;
                         }
                         if (status==AMICI_ROOT_RETURN) {
-                            status = handleEvent(iroot, &tlastroot, udata, rdata, edata, tdata, 0, solver, model);
+                            status = handleEvent(&tlastroot, udata, rdata, edata, tdata, 0, solver, model);
                             if (status != AMICI_SUCCESS) goto freturn;
                         }
                         /* integration error occured */
@@ -1353,7 +1351,7 @@ freturn:
     return status;
 }
 
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, int *iroot, Solver *solver, Model *model) {
+int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model) {
     /**
      * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
      * workForwardProblem should be called before this is function is called
@@ -1379,11 +1377,11 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
     solver->setupAMIB(udata, tdata);
 
     it = udata->nt-2;
-    (*iroot)--;
-    while (it>=0 || *iroot>=0) {
+    --tdata->iroot;
+    while (it>=0 || tdata->iroot>=0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        tnext = getTnext(tdata->discs, *iroot, udata->ts, it, udata);
+        tnext = getTnext(tdata->discs, tdata->iroot, udata->ts, it, udata);
 
         if (tnext<tdata->t) {
             status = solver->AMISolveB(tnext, AMICI_NORMAL);
@@ -1400,10 +1398,10 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, con
 
         if (udata->ne>0){
             if (udata->nmaxevent>0){
-                if ((*iroot)>=0){
-                    if (tnext == tdata->discs[*iroot]) {
-                        handleEventB(*iroot, udata, tdata, model);
-                        (*iroot)--;
+                if ((tdata->iroot)>=0){
+                    if (tnext == tdata->discs[tdata->iroot]) {
+                        handleEventB(tdata->iroot, udata, tdata, model);
+                        --tdata->iroot;
                     }
                 }
             }
