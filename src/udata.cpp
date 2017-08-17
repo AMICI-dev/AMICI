@@ -109,13 +109,6 @@ void UserData::init()
     ordering = 0;
     z2event = NULL;
 
-    nan_dxdotdp = false;
-    nan_J = false;
-    nan_JDiag = false;
-    nan_JSparse = false;
-    nan_xdot = false;
-    nan_xBdot = false;
-    nan_qBdot = false;
 }
 
 void UserData::print()

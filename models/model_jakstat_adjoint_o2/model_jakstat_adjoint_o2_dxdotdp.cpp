@@ -475,9 +475,9 @@ for(ip = 0; ip<udata->nplist; ip++) {
    for(ix = 0; ix<udata->nx; ix++) {
        if(amiIsNaN(tdata->dxdotdp[ix+ip*udata->nx])) {
            tdata->dxdotdp[ix+ip*udata->nx] = 0;
-           if(!udata->nan_dxdotdp) {
+           if(!tdata->nan_dxdotdp) {
                warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");
-               udata->nan_dxdotdp = TRUE;
+               tdata->nan_dxdotdp = TRUE;
            }
        }
        if(amiIsInf(tdata->dxdotdp[ix+ip*udata->nx])) {

@@ -86,9 +86,9 @@ status = dwdx_model_neuron_o2(t,x,NULL,user_data);
 for(inz = 0; inz<27; inz++) {
    if(amiIsNaN(J->data[inz])) {
        J->data[inz] = 0;
-       if(!udata->nan_JSparse) {
+       if(!tdata->nan_JSparse) {
            warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           udata->nan_JSparse = TRUE;
+           tdata->nan_JSparse = TRUE;
        }
    }
    if(amiIsInf(J->data[inz])) {

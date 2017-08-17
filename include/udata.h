@@ -170,27 +170,11 @@ public:
     /** sensitivity initialisation */
     double *sx0data;
     
-    
     /** state ordering */
     int ordering;
     
     /** index indicating to which event an event output belongs */
     double *z2event;
-        
-    /** flag indicating whether a NaN in dxdotdp has been reported */
-    booleantype nan_dxdotdp;
-    /** flag indicating whether a NaN in J has been reported */
-    booleantype nan_J;
-    /** flag indicating whether a NaN in JDiag has been reported */
-    booleantype nan_JDiag;
-    /** flag indicating whether a NaN in JSparse has been reported */
-    booleantype nan_JSparse;
-    /** flag indicating whether a NaN in xdot has been reported */
-    booleantype nan_xdot;
-    /** flag indicating whether a NaN in xBdot has been reported */
-    booleantype nan_xBdot;
-    /** flag indicating whether a NaN in qBdot has been reported */
-    booleantype nan_qBdot;
 
     void print();
 

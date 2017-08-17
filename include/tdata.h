@@ -167,6 +167,21 @@ public:
     /** current root index, will be increased during the forward solve and decreased during backward solve */
     int iroot = 0;
 
+    /** flag indicating whether a NaN in dxdotdp has been reported */
+    booleantype nan_dxdotdp = false;
+    /** flag indicating whether a NaN in J has been reported */
+    booleantype nan_J = false;
+    /** flag indicating whether a NaN in JDiag has been reported */
+    booleantype nan_JDiag = false;
+    /** flag indicating whether a NaN in JSparse has been reported */
+    booleantype nan_JSparse = false;
+    /** flag indicating whether a NaN in xdot has been reported */
+    booleantype nan_xdot = false;
+    /** flag indicating whether a NaN in xBdot has been reported */
+    booleantype nan_xBdot = false;
+    /** flag indicating whether a NaN in qBdot has been reported */
+    booleantype nan_qBdot = false;
+
 
     const UserData *udata;
     const Model *model;

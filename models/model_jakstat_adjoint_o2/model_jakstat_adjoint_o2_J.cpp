@@ -405,9 +405,9 @@ status = dwdx_model_jakstat_adjoint_o2(t,x,NULL,user_data);
 for(ix = 0; ix<26244; ix++) {
    if(amiIsNaN(J->data[ix])) {
        J->data[ix] = 0;
-       if(!udata->nan_J) {
+       if(!tdata->nan_J) {
            warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           udata->nan_J = TRUE;
+           tdata->nan_J = TRUE;
        }
    }
    if(amiIsInf(J->data[ix])) {
