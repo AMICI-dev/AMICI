@@ -22,6 +22,89 @@ public:
 
     }
 
+    virtual ~Solver() {
+        if (ami_mem)
+            AMIFree(&ami_mem);
+    }
+
+    /**
+     * @brief setupAMIs initialises the ami memory object
+     * @param[out] status flag indicating success of execution @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @return ami_mem pointer to the cvodes/idas memory block
+     */
+
+    void *setupAMI(UserData *udata, TempData *tdata, Model *model);
+
+    /**
+     * setupAMIB initialises the AMI memory object for the backwards problem
+     * @param[out] status flag indicating success of execution @type int
+     * @param[in] ami_mem pointer to the solver memory object of the forward problem
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
+     */
+
+    int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata);
+
+    virtual int AMIGetSens(void *mem, realtype *tret, N_Vector *yySout) = 0;
+
+    /**
+     * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
+     *
+     * @param[out]
+     * @param[in] it time-point index @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @return status flag indicating success of execution @type int
+     */
+
+    int getDiagnosis(int it, void *ami_mem, ReturnData *rdata);
+
+    /**
+     * getDiagnosisB extracts diagnosis information from solver memory block and writes them into the return data struct for the backward problem
+     *
+     * @param[in] it time-point index @type int
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+
+    int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
+
+    virtual int AMIGetRootInfo(void *mem,int *rootsfound) = 0;
+
+    virtual int AMIReInit(void *mem, realtype t0, N_Vector yy0, N_Vector yp0) = 0;
+
+    virtual int AMISensReInit(void *mem, int ism, N_Vector *yS0, N_Vector *ypS0) = 0;
+
+    virtual int AMICalcIC(void *mem, realtype tout1) = 0;
+
+    virtual int AMICalcICB(void *mem, int which, realtype tout1, N_Vector xB, N_Vector dxB) = 0;
+
+    virtual int AMISolve(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) = 0;
+
+    virtual int AMISolveF(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) = 0;
+
+    virtual int AMISolveB(void *mem, realtype tBout, int itaskB) = 0;
+
+    virtual int AMISetStopTime(void *mem, realtype tstop) = 0;
+
+    virtual int AMIRootInit(void *mem, int nrtfn, RootFn ptr) = 0;
+
+    virtual int AMIReInitB(void *mem, int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) = 0;
+
+    virtual int AMIGetB(void *mem, int which, realtype *tret, N_Vector yy, N_Vector yp) = 0;
+
+    virtual int AMIGetQuadB(void *mem, int which, realtype *tret, N_Vector qB) = 0;
+
+    virtual int AMIQuadReInitB(void *mem, int which, N_Vector yQB0) = 0;
+
+protected:
     virtual int wrap_init(void *mem, N_Vector x, N_Vector dx, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
@@ -55,28 +138,6 @@ public:
     // TODO: check if model has adjoint sensitivities, else return -1
     virtual int wrap_SetJacTimesVecFnB(void *mem, int which) = 0;
 
-
-    /**
-     * @brief setupAMIs initialises the ami memory object
-     * @param[out] status flag indicating success of execution @type int
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] tdata pointer to the temporary data struct @type TempData
-     * @return ami_mem pointer to the cvodes/idas memory block
-     */
-
-    void *setupAMI(UserData *udata, TempData *tdata, Model *model);
-
-    /**
-     * setupAMIB initialises the AMI memory object for the backwards problem
-     * @param[out] status flag indicating success of execution @type int
-     * @param[in] ami_mem pointer to the solver memory object of the forward problem
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] tdata pointer to the temporary data struct @type TempData
-     * @return ami_mem pointer to the cvodes/idas memory block for the backward problem
-     */
-
-    int setupAMIB(void *ami_mem, UserData *udata, TempData *tdata);
-
     static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data);
 
     virtual void *AMICreate(int lmm, int iter) = 0;
@@ -88,8 +149,6 @@ public:
     virtual int AMISetSensErrCon(void *mem,bool error_corr) = 0;
 
     virtual int AMISetQuadErrConB(void *mem,int which, bool flag) = 0;
-
-    virtual int AMIGetRootInfo(void *mem,int *rootsfound) = 0;
 
     virtual int AMISetErrHandlerFn(void *mem) = 0;
 
@@ -107,43 +166,21 @@ public:
 
     virtual int AMISetSuppressAlg(void *mem, bool flag) = 0;
 
-    virtual int AMIReInit(void *mem, realtype t0, N_Vector yy0, N_Vector yp0) = 0;
-
-    virtual int AMISensReInit(void *mem, int ism, N_Vector *yS0, N_Vector *ypS0) = 0;
-
     virtual int AMISetSensParams(void *mem, realtype *p, realtype *pbar, int *plist) = 0;
 
     virtual int AMIGetDky(void *mem, realtype t, int k, N_Vector dky) = 0;
 
-    virtual int AMIGetSens(void *mem, realtype *tret, N_Vector *yySout) = 0;
-
-    virtual int AMIRootInit(void *mem, int nrtfn, RootFn ptr) = 0;
-
-    virtual void AMIFree(void **mem) = 0;
+    virtual void AMIFree(void **mem);
 
     virtual int AMIAdjInit(void *mem, long int steps, int interp) = 0;
 
     virtual int AMICreateB(void *mem, int lmm, int iter, int *which) = 0;
 
-    virtual int AMIReInitB(void *mem, int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) = 0;
-
     virtual int AMISStolerancesB(void *mem, int which, realtype relTolB, realtype absTolB) = 0;
-
-    virtual int AMIQuadReInitB(void *mem, int which, N_Vector yQB0) = 0;
 
     virtual int AMIQuadSStolerancesB(void *mem, int which, realtype reltolQB, realtype abstolQB) = 0;
 
-    virtual int AMISolve(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) = 0;
-
-    virtual int AMISolveF(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) = 0;
-
-    virtual int AMISolveB(void *mem, realtype tBout, int itaskB) = 0;
-
     virtual int AMISetMaxNumStepsB(void *mem, int which, long int mxstepsB) = 0;
-
-    virtual int AMIGetB(void *mem, int which, realtype *tret, N_Vector yy, N_Vector yp) = 0;
-
-    virtual int AMIGetQuadB(void *mem, int which, realtype *tret, N_Vector qB) = 0;
 
     virtual int AMIDense(void *mem, int nx) = 0;
 
@@ -189,46 +226,12 @@ public:
 
     virtual void *AMIGetAdjBmem(void *mem, int which) = 0;
 
-    virtual int AMICalcIC(void *mem, realtype tout1) = 0;
-
-    virtual int AMICalcICB(void *mem, int which, realtype tout1, N_Vector xB, N_Vector dxB) = 0;
-
-    virtual int AMISetStopTime(void *mem, realtype tstop) = 0;
-
-    /**
-     * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
-     *
-     * @param[out]
-     * @param[in] it time-point index @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @return status flag indicating success of execution @type int
-     */
-
-    int getDiagnosis(int it, void *ami_mem, ReturnData *rdata);
-
-    /**
-     * getDiagnosisB extracts diagnosis information from solver memory block and writes them into the return data struct for the backward problem
-     *
-     * @param[in] it time-point index @type int
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-
-    int getDiagnosisB(int it, void *ami_mem, UserData *udata, ReturnData *rdata, TempData *tdata);
 
 
     int setLinearSolver(const UserData *udata, void *ami_mem);
 
-    virtual ~Solver() {
-
-    }
-
-    //void *ami_mem = nullptr; /* pointer to ami memory block */
+    /* pointer to ami memory block */
+    void *ami_mem = nullptr;
 
 };
 

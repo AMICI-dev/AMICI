@@ -321,6 +321,11 @@ void Solver::wrap_ErrHandlerFn(int error_code, const char *module, const char *f
     warnMsgIdAndTxt(buffid,buffer);
 }
 
+void Solver::AMIFree(void **mem)
+{
+
+}
+
 int Solver::getDiagnosis(int it, void *ami_mem, ReturnData *rdata)
 {
     long int number;

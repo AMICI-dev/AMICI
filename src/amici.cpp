@@ -59,8 +59,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, edata);
     if (status < AMICI_SUCCESS) rdata->invalidate(udata);
     
-    if (ami_mem)
-        solver->AMIFree(&ami_mem);
     
 freturn:
     udata->freeTemporaryFields();
