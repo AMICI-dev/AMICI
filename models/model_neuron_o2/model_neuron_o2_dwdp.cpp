@@ -12,7 +12,7 @@ TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(udata->dwdp,0,sizeof(realtype)*0);
+memset(tdata->dwdp,0,sizeof(realtype)*0);
 status = w_model_neuron_o2(t,x,NULL,tdata);
 return(status);
 

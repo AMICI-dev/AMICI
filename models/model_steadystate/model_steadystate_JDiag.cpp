@@ -18,9 +18,9 @@ int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*3);
 status = w_model_steadystate(t,x,NULL,tdata);
 status = dwdx_model_steadystate(t,x,NULL,user_data);
-  JDiag_tmp[0+0*3] = -udata->p[1]*x_tmp[1]-udata->p[0]*udata->dwdx[0]*2.0;
+  JDiag_tmp[0+0*3] = -udata->p[1]*x_tmp[1]-udata->p[0]*tdata->dwdx[0]*2.0;
   JDiag_tmp[1+0*3] = -udata->p[2]-udata->p[1]*x_tmp[0];
-  JDiag_tmp[2+0*3] = -udata->k[3]-udata->dwdx[1];
+  JDiag_tmp[2+0*3] = -udata->k[3]-tdata->dwdx[1];
 for(ix = 0; ix<3; ix++) {
    if(amiIsNaN(JDiag_tmp[ix])) {
        JDiag_tmp[ix] = 0;

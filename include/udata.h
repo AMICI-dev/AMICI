@@ -2,12 +2,6 @@
 #define _MY_UDATA
 #include "include/amici_defines.h"
 
-#include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
-#include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
-#include <sundials/sundials_sparse.h> /* def. of type sparse stuff */
-#include <sundials/sundials_types.h> /* def. of type realtype */
-#include <sundials/sundials_math.h>  /* definition of ABS */
-#include <sundials/sundials_config.h>
 #include <cmath>
 
 typedef enum AMICI_parameter_scaling_TAG {
@@ -25,7 +19,6 @@ typedef enum AMICI_sensi_order_TAG {
 typedef enum AMICI_sensi_meth_TAG {
     AMICI_SENSI_NONE, AMICI_SENSI_FSA, AMICI_SENSI_ASA, AMICI_SENSI_SS
 } AMICI_sensi_meth;
-
 
 /** @brief struct that stores all user provided data */
 class UserData {
@@ -193,23 +186,6 @@ public:
     /** flag indicating whether a certain heaviside function should be active or not */
     realtype *h;
     
-    /** tempory storage of Jacobian data across functions */
-    SlsMat J;
-    /** tempory storage of dxdotdp data across functions */
-    realtype *dxdotdp;
-    /** tempory storage of w data across functions */
-    realtype *w;
-    /** tempory storage of dwdx data across functions */
-    realtype *dwdx;
-    /** tempory storage of dwdp data across functions */
-    realtype *dwdp;
-    /** tempory storage of M data across functions */
-    realtype *M;
-    /** tempory storage of dfdx data across functions */
-    realtype *dfdx;
-    /** tempory storage of stau data across functions */
-    realtype *stau;
-
     /** flag indicating whether a NaN in dxdotdp has been reported */
     booleantype nan_dxdotdp;
     /** flag indicating whether a NaN in J has been reported */

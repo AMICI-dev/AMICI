@@ -16,9 +16,9 @@ realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(xdot_tmp,0,sizeof(realtype)*3);
 status = w_model_steadystate(t,x,NULL,tdata);
-  xdot_tmp[0] = udata->p[4]+udata->w[0]-udata->p[0]*udata->w[1]*2.0+udata->p[2]*x_tmp[1]*2.0-udata->p[1]*x_tmp[0]*x_tmp[1];
-  xdot_tmp[1] = udata->w[0]+udata->p[0]*udata->w[1]-udata->p[2]*x_tmp[1]-udata->p[1]*x_tmp[0]*x_tmp[1];
-  xdot_tmp[2] = -udata->w[0]-udata->k[3]*x_tmp[2]+udata->p[1]*x_tmp[0]*x_tmp[1];
+  xdot_tmp[0] = udata->p[4]+tdata->w[0]-udata->p[0]*tdata->w[1]*2.0+udata->p[2]*x_tmp[1]*2.0-udata->p[1]*x_tmp[0]*x_tmp[1];
+  xdot_tmp[1] = tdata->w[0]+udata->p[0]*tdata->w[1]-udata->p[2]*x_tmp[1]-udata->p[1]*x_tmp[0]*x_tmp[1];
+  xdot_tmp[2] = -tdata->w[0]-udata->k[3]*x_tmp[2]+udata->p[1]*x_tmp[0]*x_tmp[1];
 for(ix = 0; ix<3; ix++) {
    if(amiIsNaN(xdot_tmp[ix])) {
        xdot_tmp[ix] = 0;

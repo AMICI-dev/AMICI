@@ -40,56 +40,6 @@ UserData::UserData(int np,
     init();
 }
 
-/**
- * processUserData initializes fields of the udata struct
- *
- * @param[out] udata pointer to the user data struct @type UserData
- * @return void
- */
-void UserData::initTemporaryFields()
-{
-    if (nx>0) {
-        /* initialise temporary jacobian storage */
-        J = SparseNewMat(nx,nx,nnz,CSC_MAT);
-        M = new realtype[nx*nx]();
-        dfdx = new realtype[nx*nx]();
-    }
-    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
-        /* initialise temporary dxdotdp storage */
-        dxdotdp = new realtype[nx*nplist]();
-    }
-    if (ne>0) {
-        /* initialise temporary stau storage */
-        stau = new realtype[nplist]();
-        h = new realtype[ne]();
-    }
-
-    w = new realtype[nw]();
-    dwdx = new realtype[ndwdx]();
-    dwdp = new realtype[ndwdp]();
-    
-}
-
-void UserData::freeTemporaryFields()
-{
-    if(dxdotdp) delete[] dxdotdp;
-    if(w) delete[] w;
-    if(dwdx) delete[] dwdx;
-    if(dwdp) delete[] dwdp;
-    if(M) delete[] M;
-    if(dfdx) delete[] dfdx;
-    if(stau) delete[] stau;
-    if(J) SparseDestroyMat(J);
-
-    J = NULL;
-    dxdotdp = NULL;
-    w = NULL;
-    dwdx = NULL;
-    dwdp = NULL;
-    M = NULL;
-    dfdx = NULL;
-    stau = NULL;
-}
 
 int UserData::unscaleParameters()
 {
@@ -112,8 +62,6 @@ int UserData::unscaleParameters()
 
 UserData::~UserData()
 {
-    freeTemporaryFields();
-
     if(qpositivex) delete[] qpositivex;
     if(p) delete[] p;
     if(k) delete[] k;
@@ -170,15 +118,6 @@ void UserData::init()
     nan_xdot = false;
     nan_xBdot = false;
     nan_qBdot = false;
-
-    J = NULL;
-    dxdotdp = NULL;
-    w = NULL;
-    dwdx = NULL;
-    dwdp = NULL;
-    M = NULL;
-    dfdx = NULL;
-    stau = NULL;
 }
 
 void UserData::print()

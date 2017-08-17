@@ -30,7 +30,22 @@ TempData::TempData(const UserData *udata, Model *model) : udata(udata), model(mo
         xdot = N_VNew_Serial(udata->nx);
         xdot_old = N_VNew_Serial(udata->nx);
         Jtmp = NewDenseMat(udata->nx,udata->nx);
+
+        /* initialise temporary jacobian storage */
+        J = SparseNewMat(udata->nx,udata->nx,udata->nnz,CSC_MAT);
+        M = new realtype[udata->nx*udata->nx]();
+        dfdx = new realtype[udata->nx*udata->nx]();
     }
+
+    if (udata->ne>0) {
+        /* initialise temporary stau storage */
+        stau = new realtype[nplist]();
+    }
+
+    w = new realtype[udata->nw]();
+    dwdx = new realtype[udata->ndwdx]();
+    dwdp = new realtype[udata->ndwdp]();
+
     
     /* EVENTS */
     rootsfound = new int[udata->ne]();
@@ -46,6 +61,9 @@ TempData::TempData(const UserData *udata, Model *model) : udata(udata), model(mo
     
     /* SENSITIVITIES */
     if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        /* initialise temporary dxdotdp storage */
+        dxdotdp = new realtype[udata->nx*nplist]();
+
         dydx = new realtype[udata->ny * udata->nx]();
         dydp = new realtype[udata->ny * udata->nplist]();
         dJydp = new realtype[udata->nJ * udata->nplist]();
@@ -146,5 +164,15 @@ TempData::~TempData() {
     if(dsigmazdp) delete[] dsigmazdp;
         
     if(llhS0) delete[] llhS0;
+
+    if(dxdotdp) delete[] dxdotdp;
+    if(w) delete[] w;
+    if(dwdx) delete[] dwdx;
+    if(dwdp) delete[] dwdp;
+    if(M) delete[] M;
+    if(dfdx) delete[] dfdx;
+    if(stau) delete[] stau;
+    if(J) SparseDestroyMat(J);
+
 }
 

@@ -23,8 +23,8 @@ switch (udata->plist[ip]) {
   case 0: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-udata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-udata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*udata->nx + 1] = -udata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->deltasx[ip*udata->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
 
               } break;
 
@@ -35,8 +35,8 @@ switch (udata->plist[ip]) {
   case 1: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-udata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-udata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*udata->nx + 1] = -udata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->deltasx[ip*udata->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
 
               } break;
 
@@ -47,8 +47,8 @@ switch (udata->plist[ip]) {
   case 2: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-udata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-udata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2)-1.0;
-  tdata->deltasx[ip*udata->nx + 1] = -udata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2)-1.0;
+  tdata->deltasx[ip*udata->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
 
               } break;
 
@@ -59,8 +59,8 @@ switch (udata->plist[ip]) {
   case 3: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-udata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-udata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*udata->nx + 1] = -udata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1])+1.0;
+  tdata->deltasx[ip*udata->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->deltasx[ip*udata->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1])+1.0;
 
               } break;
 

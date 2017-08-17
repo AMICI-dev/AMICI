@@ -13,7 +13,7 @@ UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;
-memset(udata->stau,0,sizeof(realtype)*udata->nplist);
+memset(tdata->stau,0,sizeof(realtype)*udata->nplist);
 status = w_model_neuron_o2(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {
 sx_tmp = N_VGetArrayPointer(sx[ip]);
@@ -21,7 +21,7 @@ switch (udata->plist[ip]) {
   case 0: {
     switch(ie) { 
         case 0: {
-  udata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -32,7 +32,7 @@ switch (udata->plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  udata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -43,7 +43,7 @@ switch (udata->plist[ip]) {
   case 2: {
     switch(ie) { 
         case 0: {
-  udata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -54,7 +54,7 @@ switch (udata->plist[ip]) {
   case 3: {
     switch(ie) { 
         case 0: {
-  udata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  tdata->stau[ip] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 

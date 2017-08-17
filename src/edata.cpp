@@ -20,7 +20,7 @@ ExpData::ExpData(const UserData *udata) {
 
 void ExpData::setDefaults()
 {
-    my = sigmay = mz = sigmaz = NULL;
+    my = sigmay = mz = sigmaz = nullptr;
 }
 
 ExpData::~ExpData() {

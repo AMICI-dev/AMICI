@@ -139,7 +139,24 @@ public:
     realtype *discs; 
     /** array containing the index of discontinuities */
     realtype *irdiscs; 
-    
+
+    /** tempory storage of Jacobian data across functions */
+    SlsMat J = NULL;
+    /** tempory storage of dxdotdp data across functions */
+    realtype *dxdotdp = NULL;
+    /** tempory storage of w data across functions */
+    realtype *w = NULL;
+    /** tempory storage of dwdx data across functions */
+    realtype *dwdx = NULL;
+    /** tempory storage of dwdp data across functions */
+    realtype *dwdp = NULL;
+    /** tempory storage of M data across functions */
+    realtype *M = NULL;
+    /** tempory storage of dfdx data across functions */
+    realtype *dfdx = NULL;
+    /** tempory storage of stau data across functions */
+    realtype *stau = NULL;
+
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
 

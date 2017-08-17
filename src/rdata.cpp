@@ -17,11 +17,11 @@ ReturnData::ReturnData(const UserData *udata)
 
 void ReturnData::setDefaults()
 {
-    ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = NULL;
-    sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order = llh = chi2 = sllh = s2llh = NULL;
-    numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB = numnonlinsolvconvfailsB = NULL;
-    newton_status = newton_time = newton_numsteps = newton_numlinsteps = xss = NULL;
-    status = NULL;
+    ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz = srz = s2rz = x = sx = y = sigmay = nullptr;
+    sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order = llh = chi2 = sllh = s2llh = nullptr;
+    numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB = numnonlinsolvconvfailsB = nullptr;
+    newton_status = newton_time = newton_numsteps = newton_numlinsteps = xss = nullptr;
+    status = nullptr;
 
     freeFieldsOnDestruction = true;
 }

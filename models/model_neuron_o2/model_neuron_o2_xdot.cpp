@@ -18,13 +18,13 @@ memset(xdot_tmp,0,sizeof(realtype)*10);
 status = w_model_neuron_o2(t,x,NULL,tdata);
   xdot_tmp[0] = udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2;
   xdot_tmp[1] = -udata->p[0]*(x_tmp[1]-udata->p[1]*x_tmp[0]);
-  xdot_tmp[2] = -x_tmp[3]+udata->w[1]*x_tmp[2];
+  xdot_tmp[2] = -x_tmp[3]+tdata->w[1]*x_tmp[2];
   xdot_tmp[3] = -x_tmp[1]+udata->p[1]*x_tmp[0]-udata->p[0]*x_tmp[3]+udata->p[0]*udata->p[1]*x_tmp[2];
-  xdot_tmp[4] = -x_tmp[5]+udata->w[1]*x_tmp[4];
+  xdot_tmp[4] = -x_tmp[5]+tdata->w[1]*x_tmp[4];
   xdot_tmp[5] = udata->p[0]*x_tmp[0]-udata->p[0]*x_tmp[5]+udata->p[0]*udata->p[1]*x_tmp[4];
-  xdot_tmp[6] = -x_tmp[7]+udata->w[1]*x_tmp[6];
+  xdot_tmp[6] = -x_tmp[7]+tdata->w[1]*x_tmp[6];
   xdot_tmp[7] = -udata->p[0]*x_tmp[7]+udata->p[0]*udata->p[1]*x_tmp[6];
-  xdot_tmp[8] = -x_tmp[9]+udata->w[1]*x_tmp[8];
+  xdot_tmp[8] = -x_tmp[9]+tdata->w[1]*x_tmp[8];
   xdot_tmp[9] = -udata->p[0]*x_tmp[9]+udata->p[0]*udata->p[1]*x_tmp[8];
 for(ix = 0; ix<10; ix++) {
    if(amiIsNaN(xdot_tmp[ix])) {

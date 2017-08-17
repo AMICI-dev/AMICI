@@ -126,10 +126,10 @@ function printLocalVars(this,model,fid)
         case 'deltasx'
             fprintf(fid,['memset(tdata->deltasx,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'stau'
-            fprintf(fid,['memset(udata->stau,0,sizeof(realtype)*udata->nplist);\n']);
+            fprintf(fid,['memset(tdata->stau,0,sizeof(realtype)*udata->nplist);\n']);
         case 'dxdotdp'
             fprintf(fid,'int ix;\n');
-            fprintf(fid,['memset(udata->dxdotdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
+            fprintf(fid,['memset(tdata->dxdotdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'root'
             % nothing
         case 'sigma_y'
@@ -159,15 +159,15 @@ function printLocalVars(this,model,fid)
         case 'dJrzdsigma'
             fprintf(fid,['memset(tdata->dJrzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
         case 'w'
-            fprintf(fid,['memset(udata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
+            fprintf(fid,['memset(tdata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
         case 'dwdx'
-            fprintf(fid,['memset(udata->dwdx,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
+            fprintf(fid,['memset(tdata->dwdx,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
         case 'dwdp'
-            fprintf(fid,['memset(udata->dwdp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
+            fprintf(fid,['memset(tdata->dwdp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
         case 'M'
-            fprintf(fid,['memset(udata->M,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+            fprintf(fid,['memset(tdata->M,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         case 'dfdx'
-            fprintf(fid,['memset(udata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+            fprintf(fid,['memset(tdata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         otherwise
             error(['unkown function: ' this.funstr])
     end

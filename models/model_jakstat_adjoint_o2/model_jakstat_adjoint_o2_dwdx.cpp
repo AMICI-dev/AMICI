@@ -12,10 +12,10 @@ TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(udata->dwdx,0,sizeof(realtype)*2);
+memset(tdata->dwdx,0,sizeof(realtype)*2);
 status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
-  udata->dwdx[0] = x_tmp[1]*2.0;
-  udata->dwdx[1] = 2.0;
+  tdata->dwdx[0] = x_tmp[1]*2.0;
+  tdata->dwdx[1] = 2.0;
 return(status);
 
 }

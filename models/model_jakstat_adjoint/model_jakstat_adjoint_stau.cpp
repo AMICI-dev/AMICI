@@ -13,7 +13,7 @@ UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;
-memset(udata->stau,0,sizeof(realtype)*udata->nplist);
+memset(tdata->stau,0,sizeof(realtype)*udata->nplist);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {
 sx_tmp = N_VGetArrayPointer(sx[ip]);

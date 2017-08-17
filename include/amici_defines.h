@@ -43,6 +43,19 @@
 #define AMICI_ONE_STEP                   2
 
 
+#ifndef booleantype
+#define booleantype int
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+
 typedef double realtype;
 
 typedef enum {AMICI_BLAS_RowMajor=101, AMICI_BLAS_ColMajor=102} AMICI_BLAS_LAYOUT;

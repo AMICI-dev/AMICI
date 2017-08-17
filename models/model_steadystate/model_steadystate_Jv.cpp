@@ -17,9 +17,9 @@ realtype *v_tmp = N_VGetArrayPointer(v);
 realtype *Jv_tmp = N_VGetArrayPointer(Jv);
 memset(Jv_tmp,0,sizeof(realtype)*3);
 status = w_model_steadystate(t,x,NULL,tdata);
-  Jv_tmp[0] = v_tmp[2]*udata->dwdx[1]+v_tmp[1]*(udata->p[2]*2.0-udata->p[1]*x_tmp[0])-v_tmp[0]*(udata->p[1]*x_tmp[1]+udata->p[0]*udata->dwdx[0]*2.0);
-  Jv_tmp[1] = v_tmp[2]*udata->dwdx[1]-v_tmp[0]*(udata->p[1]*x_tmp[1]-udata->p[0]*udata->dwdx[0])-v_tmp[1]*(udata->p[2]+udata->p[1]*x_tmp[0]);
-  Jv_tmp[2] = -v_tmp[2]*(udata->k[3]+udata->dwdx[1])+udata->p[1]*v_tmp[0]*x_tmp[1]+udata->p[1]*v_tmp[1]*x_tmp[0];
+  Jv_tmp[0] = v_tmp[2]*tdata->dwdx[1]+v_tmp[1]*(udata->p[2]*2.0-udata->p[1]*x_tmp[0])-v_tmp[0]*(udata->p[1]*x_tmp[1]+udata->p[0]*tdata->dwdx[0]*2.0);
+  Jv_tmp[1] = v_tmp[2]*tdata->dwdx[1]-v_tmp[0]*(udata->p[1]*x_tmp[1]-udata->p[0]*tdata->dwdx[0])-v_tmp[1]*(udata->p[2]+udata->p[1]*x_tmp[0]);
+  Jv_tmp[2] = -v_tmp[2]*(udata->k[3]+tdata->dwdx[1])+udata->p[1]*v_tmp[0]*x_tmp[1]+udata->p[1]*v_tmp[1]*x_tmp[0];
 return(status);
 
 }

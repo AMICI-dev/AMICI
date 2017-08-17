@@ -29,8 +29,6 @@ UserData *getTestUserData() {
     for(int i = 0; i < udata->np; ++i)
         udata->idlist[i] = 0;
 
-    udata->initTemporaryFields();
-
     return udata;
 }
 

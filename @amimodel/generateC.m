@@ -97,7 +97,7 @@ for ifun = this.funs
                     fprintf(fid,'}\n');
                 else
                     fprintf(fid,'if(ip == 0) {\n');
-                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,udata->J,user_data,NULL,NULL,NULL);\n']);
+                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tdata->J,user_data,NULL,NULL,NULL);\n']);
                     fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,'}\n');
                     this.fun.(ifun{1}).writeCcode(this,fid);
@@ -138,14 +138,14 @@ for ifun = this.funs
             if(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
                 fprintf(fid,'   for(ix = 0; ix<udata->nx; ix++) {\n');
-                fprintf(fid,'       if(amiIsNaN(udata->dxdotdp[ix+ip*udata->nx])) {\n');
-                fprintf(fid,'           udata->dxdotdp[ix+ip*udata->nx] = 0;\n');
+                fprintf(fid,'       if(amiIsNaN(tdata->dxdotdp[ix+ip*udata->nx])) {\n');
+                fprintf(fid,'           tdata->dxdotdp[ix+ip*udata->nx] = 0;\n');
                 fprintf(fid,'           if(!udata->nan_dxdotdp) {\n');
                 fprintf(fid,'               warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'               udata->nan_dxdotdp = TRUE;\n');
                 fprintf(fid,'           }\n');
                 fprintf(fid,'       }\n');
-                fprintf(fid,'       if(amiIsInf(udata->dxdotdp[ix+ip*udata->nx])) {\n');
+                fprintf(fid,'       if(amiIsInf(tdata->dxdotdp[ix+ip*udata->nx])) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                 fprintf(fid,'           return(-1);\n');
                 fprintf(fid,'       }\n');

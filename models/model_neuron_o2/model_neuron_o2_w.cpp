@@ -12,9 +12,9 @@ TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(udata->w,0,sizeof(realtype)*2);
-  udata->w[0] = x_tmp[0]*(2.0/2.5E1);
-  udata->w[1] = udata->w[0]+5.0;
+memset(tdata->w,0,sizeof(realtype)*2);
+  tdata->w[0] = x_tmp[0]*(2.0/2.5E1);
+  tdata->w[1] = tdata->w[0]+5.0;
 return(status);
 
 }

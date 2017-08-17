@@ -40,10 +40,9 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     TempData *tdata = new TempData(udata, model);
     
     status = udata->unscaleParameters();
-    if (status == AMICI_SUCCESS) udata->initTemporaryFields();
-    
+    if (status == AMICI_SUCCESS)
+        status = solver->setupAMI(udata, tdata, model);
 
-    status = solver->setupAMI(udata, tdata, model);
     if (status != AMICI_SUCCESS)
         goto freturn;
 
@@ -55,7 +54,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     
     
 freturn:
-    udata->freeTemporaryFields();
     delete tdata;
     delete model;
     delete solver;
@@ -1552,7 +1550,7 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
         if(status != AMICI_SUCCESS) return status;
 
         if(rdata->dxdotdp)
-            memcpy(rdata->dxdotdp,udata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
+            memcpy(rdata->dxdotdp,tdata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
 
         status = model->fdydp(tdata->t,udata->nt-1,tdata->x,tdata);
         if(status != AMICI_SUCCESS) return status;
