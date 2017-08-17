@@ -46,7 +46,7 @@ public:
      * @return status flag indicating success of execution @type int
      */
 
-    int setupAMIB(UserData *udata, TempData *tdata);
+    int setupAMIB(UserData *udata, TempData *tdata, Model *model);
 
     virtual int AMIGetSens(realtype *tret, N_Vector *yySout) = 0;
 
@@ -113,7 +113,7 @@ protected:
     // TODO: check if model has adjoint sensitivities, else return -1
     virtual int wrap_qbinit(int which, N_Vector qBdot) = 0;
 
-    virtual int wrap_RootInit(UserData *udata) = 0;
+    virtual int wrap_RootInit(int ne) = 0;
 
     // TODO: check if model has forward sensitivities, else return -1
     virtual int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) = 0;
@@ -226,7 +226,7 @@ protected:
 
     virtual void *AMIGetAdjBmem(void *ami_mem, int which) = 0;
 
-    int setLinearSolver(const UserData *udata, void *ami_mem);
+    int setLinearSolver(const UserData *udata, Model *model);
 
     /* pointer to ami memory block */
     void *ami_mem = nullptr;

@@ -2,6 +2,7 @@
 #define _MY_EDATA
 
 class UserData;
+class Model;
 
 /** @brief struct that carries all information about experimental data */
 class ExpData {
@@ -11,7 +12,7 @@ public:
      * @brief Default constructor
      */
     ExpData();
-    ExpData(const UserData *udata);
+    ExpData(const UserData *udata, Model *model);
     ~ExpData();
     
     void setDefaults();

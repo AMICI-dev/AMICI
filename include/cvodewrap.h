@@ -44,8 +44,8 @@ public:
         return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
     }
 
-    int wrap_RootInit(UserData *udata) {
-        return CVodeRootInit(ami_mem, udata->ne, rootFunction);
+    int wrap_RootInit(int ne) {
+        return CVodeRootInit(ami_mem, ne, rootFunction);
     }
 
     int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) {

@@ -35,7 +35,7 @@ typedef void (*msgIdAndTxtFp)(const char * identifier, const char * err_msg, ...
 extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
-int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata);
+int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model, Solver *solver);
 
 int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
 int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
@@ -49,15 +49,15 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
 int handleEvent(int *iroot, realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
 int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model);
-int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver);
+int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver, Model *model);
 
 int applyEventBolus(UserData *udata, TempData *tdata, Model *model);
 int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
 
-realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata);
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, Model *model);
 
-int updateHeaviside(UserData *udata, TempData *tdata);
-int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
+int updateHeaviside(TempData *tdata, int ne);
+int updateHeavisideB(int iroot, TempData *tdata, int ne);
 
 int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model);
 int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model);
@@ -65,8 +65,8 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata, Ret
 
 int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model);
 int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector ns_delta, Model *model);
-int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int newton_status, double run_time);
-int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver);
+int getNewtonOutput(TempData *tdata, ReturnData *rdata, int newton_status, double run_time, int nx);
+int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model);
 int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int it, Solver *solver, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,

@@ -3,32 +3,15 @@
 #include <include/cvodewrap.h>
 
 UserData getUserData(){
-    return UserData(5,
-                    3,
-                    3,
-                    4,
-                    3,
-                    3,
-                    0,
-                    0,
-                    0,
-                    1,
-                    2,
-                    2,
-                    1,
-                    9,
-                    2,
-                    2,
-                    AMICI_SCALING_LOG10,
-                    AMICI_O2MODE_NONE);
+    return UserData();
 }
 
 Solver *getSolver(){
     return new CVodeSolver();
 }
 
-Model *getModel(UserData *udata, const ExpData *edata) {
-    return new Model_model_steadystate(udata, edata);
+Model *getModel() {
+    return new Model_model_steadystate();
 }
 
 int fx0(N_Vector x0, void *user_data){

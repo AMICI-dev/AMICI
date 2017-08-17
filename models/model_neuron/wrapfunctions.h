@@ -19,7 +19,7 @@ class Solver;
 
 UserData getUserData();
 Solver *getSolver();
-Model *getModel(UserData *udata, const ExpData *edata);
+Model *getModel();
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
@@ -71,9 +71,25 @@ int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *
 
 class Model_model_neuron : public Model {
 public:
-    Model_model_neuron() {}
-    Model_model_neuron(UserData *udata) : Model(udata) {}
-    Model_model_neuron(UserData *udata, const ExpData *edata) : Model(udata, edata) {}
+    Model_model_neuron() : Model(4,
+                    2,
+                    2,
+                    2,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                    4,
+                    1,
+                    1,
+                    AMICI_SCALING_LOG10,
+                    AMICI_O2MODE_NONE)
+{}
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return J_model_neuron(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);

@@ -3,32 +3,15 @@
 #include <include/cvodewrap.h>
 
 UserData getUserData(){
-    return UserData(17,
-                    162,
-                    9,
-                    2,
-                    54,
-                    3,
-                    0,
-                    0,
-                    0,
-                    18,
-                    10,
-                    2,
-                    30,
-                    384,
-                    8,
-                    154,
-                    AMICI_SCALING_LOG10,
-                    AMICI_O2MODE_FULL);
+    return UserData();
 }
 
 Solver *getSolver(){
     return new CVodeSolver();
 }
 
-Model *getModel(UserData *udata, const ExpData *edata) {
-    return new Model_model_jakstat_adjoint_o2(udata, edata);
+Model *getModel() {
+    return new Model_model_jakstat_adjoint_o2();
 }
 
 int fx0(N_Vector x0, void *user_data){

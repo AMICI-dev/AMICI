@@ -11,7 +11,7 @@ class ReturnDataMatlab;
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
  * @return udata: struct containing all provided user data @type *UserData
  */
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model);
 
 /**
  * setupReturnData initialises the return data struct
@@ -29,19 +29,19 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs, const UserData *uda
  * @param[out] status non-zero on failure, zero on success
  * @return edata: experimental data struct @type *ExpData
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata);
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Model *model);
 
 
 class ReturnDataMatlab : public ReturnData {
 
 public:
-    ReturnDataMatlab(const UserData *udata);
+    ReturnDataMatlab(const UserData *udata, const Model *model);
     ~ReturnDataMatlab() {}
 
     mxArray *mxsol;
 
 protected:
-    void initFields(const UserData *udata);
+    void initFields();
 
     virtual void initField1(double **fieldPointer, const char *fieldName, int dim);
 

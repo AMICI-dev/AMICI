@@ -21,11 +21,11 @@ switch (udata->plist[ip]) {
   case 0: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 0)] = sx_tmp[0];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 1)] = sx_tmp[2];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 2)] = sx_tmp[4];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 3)] = sx_tmp[6];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 4)] = sx_tmp[8];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 1)] = sx_tmp[2];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 2)] = sx_tmp[4];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 3)] = sx_tmp[6];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 4)] = sx_tmp[8];
 
         } break;
 
@@ -36,11 +36,11 @@ switch (udata->plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 0)] = sx_tmp[0];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 1)] = sx_tmp[2];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 2)] = sx_tmp[4];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 3)] = sx_tmp[6];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 4)] = sx_tmp[8];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 1)] = sx_tmp[2];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 2)] = sx_tmp[4];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 3)] = sx_tmp[6];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 4)] = sx_tmp[8];
 
         } break;
 
@@ -51,11 +51,11 @@ switch (udata->plist[ip]) {
   case 2: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 0)] = sx_tmp[0];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 1)] = sx_tmp[2];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 2)] = sx_tmp[4];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 3)] = sx_tmp[6];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 4)] = sx_tmp[8];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 1)] = sx_tmp[2];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 2)] = sx_tmp[4];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 3)] = sx_tmp[6];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 4)] = sx_tmp[8];
 
         } break;
 
@@ -66,11 +66,11 @@ switch (udata->plist[ip]) {
   case 3: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 0)] = sx_tmp[0];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 1)] = sx_tmp[2];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 2)] = sx_tmp[4];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 3)] = sx_tmp[6];
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*udata->nz + 4)] = sx_tmp[8];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 1)] = sx_tmp[2];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 2)] = sx_tmp[4];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 3)] = sx_tmp[6];
+  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 4)] = sx_tmp[8];
 
         } break;
 

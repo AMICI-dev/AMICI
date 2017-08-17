@@ -13,7 +13,7 @@ int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
-memset(tdata->dJzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);
+memset(tdata->dJzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);
 status = w_model_steadystate(t,x,NULL,tdata);
 return(status);
 

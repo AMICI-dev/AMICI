@@ -20,48 +20,48 @@ status = dwdp_model_steadystate(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  tdata->dxdotdp[0 + ip*udata->nx] = tdata->w[1]*-2.0;
-  tdata->dxdotdp[1 + ip*udata->nx] = tdata->w[1];
+  tdata->dxdotdp[0 + ip*model->nx] = tdata->w[1]*-2.0;
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->w[1];
 
   } break;
 
   case 1: {
-  tdata->dxdotdp[0 + ip*udata->nx] = -x_tmp[0]*x_tmp[1];
-  tdata->dxdotdp[1 + ip*udata->nx] = -x_tmp[0]*x_tmp[1];
-  tdata->dxdotdp[2 + ip*udata->nx] = x_tmp[0]*x_tmp[1];
+  tdata->dxdotdp[0 + ip*model->nx] = -x_tmp[0]*x_tmp[1];
+  tdata->dxdotdp[1 + ip*model->nx] = -x_tmp[0]*x_tmp[1];
+  tdata->dxdotdp[2 + ip*model->nx] = x_tmp[0]*x_tmp[1];
 
   } break;
 
   case 2: {
-  tdata->dxdotdp[0 + ip*udata->nx] = x_tmp[1]*2.0;
-  tdata->dxdotdp[1 + ip*udata->nx] = -x_tmp[1];
+  tdata->dxdotdp[0 + ip*model->nx] = x_tmp[1]*2.0;
+  tdata->dxdotdp[1 + ip*model->nx] = -x_tmp[1];
 
   } break;
 
   case 3: {
-  tdata->dxdotdp[0 + ip*udata->nx] = tdata->dwdp[0];
-  tdata->dxdotdp[1 + ip*udata->nx] = tdata->dwdp[0];
-  tdata->dxdotdp[2 + ip*udata->nx] = -tdata->dwdp[0];
+  tdata->dxdotdp[0 + ip*model->nx] = tdata->dwdp[0];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->dwdp[0];
+  tdata->dxdotdp[2 + ip*model->nx] = -tdata->dwdp[0];
 
   } break;
 
   case 4: {
-  tdata->dxdotdp[0 + ip*udata->nx] = 1.0;
+  tdata->dxdotdp[0 + ip*model->nx] = 1.0;
 
   } break;
 
 }
 }
 for(ip = 0; ip<udata->nplist; ip++) {
-   for(ix = 0; ix<udata->nx; ix++) {
-       if(amiIsNaN(tdata->dxdotdp[ix+ip*udata->nx])) {
-           tdata->dxdotdp[ix+ip*udata->nx] = 0;
+   for(ix = 0; ix<model->nx; ix++) {
+       if(amiIsNaN(tdata->dxdotdp[ix+ip*model->nx])) {
+           tdata->dxdotdp[ix+ip*model->nx] = 0;
            if(!tdata->nan_dxdotdp) {
                warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");
                tdata->nan_dxdotdp = TRUE;
            }
        }
-       if(amiIsInf(tdata->dxdotdp[ix+ip*udata->nx])) {
+       if(amiIsInf(tdata->dxdotdp[ix+ip*model->nx])) {
            warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");
            return(-1);
        }

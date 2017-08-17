@@ -137,15 +137,15 @@ for ifun = this.funs
             end
             if(strcmp(ifun{1},'dxdotdp'))
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
-                fprintf(fid,'   for(ix = 0; ix<udata->nx; ix++) {\n');
-                fprintf(fid,'       if(amiIsNaN(tdata->dxdotdp[ix+ip*udata->nx])) {\n');
-                fprintf(fid,'           tdata->dxdotdp[ix+ip*udata->nx] = 0;\n');
+                fprintf(fid,'   for(ix = 0; ix<model->nx; ix++) {\n');
+                fprintf(fid,'       if(amiIsNaN(tdata->dxdotdp[ix+ip*model->nx])) {\n');
+                fprintf(fid,'           tdata->dxdotdp[ix+ip*model->nx] = 0;\n');
                 fprintf(fid,'           if(!tdata->nan_dxdotdp) {\n');
                 fprintf(fid,'               warnMsgIdAndTxt("AMICI:mex:fdxdotdp:NaN","AMICI replaced a NaN value in dxdotdp and replaced it by 0.0. This will not be reported again for this simulation run.");\n');
                 fprintf(fid,'               tdata->nan_dxdotdp = TRUE;\n');
                 fprintf(fid,'           }\n');
                 fprintf(fid,'       }\n');
-                fprintf(fid,'       if(amiIsInf(tdata->dxdotdp[ix+ip*udata->nx])) {\n');
+                fprintf(fid,'       if(amiIsInf(tdata->dxdotdp[ix+ip*model->nx])) {\n');
                 fprintf(fid,'           warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");\n');
                 fprintf(fid,'           return(-1);\n');
                 fprintf(fid,'       }\n');
@@ -233,7 +233,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
             end
             if(strcmp(ifun{1},'qBdot'))
-                fprintf(fid,'for(ip = 0; ip<udata->nplist*udata->nJ; ip++) {\n');
+                fprintf(fid,'for(ip = 0; ip<udata->nplist*model->nJ; ip++) {\n');
                 fprintf(fid,'   if(amiIsNaN(qBdot_tmp[ip])) {\n');
                 fprintf(fid,'       qBdot_tmp[ip] = 0;');
                 fprintf(fid,'       if(!tdata->nan_qBdot) {\n');
@@ -322,42 +322,7 @@ else
 end
 fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData(){\n');
-fprintf(fid,['    return UserData(' num2str(this.np) ',\n']);
-fprintf(fid,['                    ' num2str(this.nx) ',\n']);
-fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nk) ',\n']);
-fprintf(fid,['                    ' num2str(this.ny) ',\n']);
-fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nz) ',\n']);
-fprintf(fid,['                    ' num2str(this.nztrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nevent) ',\n']);
-fprintf(fid,['                    ' num2str(this.ng) ',\n']);
-fprintf(fid,['                    ' num2str(this.nw) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
-fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
-fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
-fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
-switch(this.param)
-    case 'lin'
-        fprintf(fid,'                    AMICI_SCALING_NONE,\n');
-    case 'log'
-        fprintf(fid,'                    AMICI_SCALING_LN,\n');
-    case 'log10'
-        fprintf(fid,'                    AMICI_SCALING_LOG10,\n');
-    otherwise
-        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
-        fprintf(fid,'                    AMICI_SCALING_NONE;\n');
-end
-switch(this.o2flag)
-    case 1
-        fprintf(fid,'                    AMICI_O2MODE_FULL);\n');
-    case 2
-        fprintf(fid,'                    AMICI_O2MODE_DIR);\n');
-    otherwise
-        fprintf(fid,'                    AMICI_O2MODE_NONE);\n');
-end
-fprintf(fid,'}\n\n');
+fprintf(fid,'    return UserData();\n}\n\n');
 
 fprintf(fid,'Solver *getSolver(){\n');
 if(strcmp(this.wtype,'iw'))
@@ -367,8 +332,8 @@ else
 end
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'Model *getModel(UserData *udata, const ExpData *edata) {\n');
-    fprintf(fid, ['    return new Model_' this.modelname '(udata, edata);\n']);
+fprintf(fid,'Model *getModel() {\n');
+    fprintf(fid, ['    return new Model_' this.modelname '();\n']);
 fprintf(fid,'}\n\n');
 
 ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',...
@@ -431,7 +396,7 @@ fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTE
 fprintf(fid,'\n');
 fprintf(fid,'UserData getUserData();\n');
 fprintf(fid,'Solver *getSolver();\n');
-fprintf(fid,'Model *getModel(UserData *udata, const ExpData *edata);\n');
+fprintf(fid,'Model *getModel();\n');
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
@@ -448,10 +413,43 @@ end
 fprintf(fid,'\n');
 fprintf(fid,['class Model_' this.modelname ' : public Model {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '() {}\n']);
-fprintf(fid,['    Model_' this.modelname '(UserData *udata) : Model(udata) {}\n']);
-fprintf(fid,['    Model_' this.modelname '(UserData *udata, const ExpData *edata) : Model(udata, edata) {}\n']);
-fprintf(fid,'\n');
+fprintf(fid,['    Model_' this.modelname '() : Model(' num2str(this.np) ',\n']);
+fprintf(fid,['                    ' num2str(this.nx) ',\n']);
+fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nk) ',\n']);
+fprintf(fid,['                    ' num2str(this.ny) ',\n']);
+fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nz) ',\n']);
+fprintf(fid,['                    ' num2str(this.nztrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nevent) ',\n']);
+fprintf(fid,['                    ' num2str(this.ng) ',\n']);
+fprintf(fid,['                    ' num2str(this.nw) ',\n']);
+fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
+fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
+fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
+fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
+fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
+switch(this.param)
+    case 'lin'
+        fprintf(fid,'                    AMICI_SCALING_NONE,\n');
+    case 'log'
+        fprintf(fid,'                    AMICI_SCALING_LN,\n');
+    case 'log10'
+        fprintf(fid,'                    AMICI_SCALING_LOG10,\n');
+    otherwise
+        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
+        fprintf(fid,'                    AMICI_SCALING_NONE;\n');
+end
+switch(this.o2flag)
+    case 1
+        fprintf(fid,'                    AMICI_O2MODE_FULL)\n');
+    case 2
+        fprintf(fid,'                    AMICI_O2MODE_DIR)\n');
+    otherwise
+        fprintf(fid,'                    AMICI_O2MODE_NONE)\n');
+end
+fprintf(fid,'{}\n\n');
+
 for iffun = this.funs
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)

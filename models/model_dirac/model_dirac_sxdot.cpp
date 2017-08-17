@@ -22,8 +22,8 @@ if(ip == 0) {
     status = JSparse_model_dirac(t,x,xdot,tdata->J,user_data,NULL,NULL,NULL);
     status = dxdotdp_model_dirac(t,x,NULL,user_data);
 }
-  sxdot_tmp[0] = tdata->dxdotdp[0 + ip*udata->nx]+tdata->J->data[0]*sx_tmp[0];
-  sxdot_tmp[1] = tdata->dxdotdp[1 + ip*udata->nx]+tdata->J->data[1]*sx_tmp[0]+tdata->J->data[2]*sx_tmp[1];
+  sxdot_tmp[0] = tdata->dxdotdp[0 + ip*model->nx]+tdata->J->data[0]*sx_tmp[0];
+  sxdot_tmp[1] = tdata->dxdotdp[1 + ip*model->nx]+tdata->J->data[1]*sx_tmp[0]+tdata->J->data[2]*sx_tmp[1];
 return(status);
 
 }

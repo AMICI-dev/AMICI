@@ -21,7 +21,7 @@ switch (udata->plist[ip]) {
   case 0: {
     switch(ie) { 
         case 0: {
-  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*udata->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*model->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -32,7 +32,7 @@ switch (udata->plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*udata->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*model->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -43,7 +43,7 @@ switch (udata->plist[ip]) {
   case 2: {
     switch(ie) { 
         case 0: {
-  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*udata->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*model->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 
@@ -54,7 +54,7 @@ switch (udata->plist[ip]) {
   case 3: {
     switch(ie) { 
         case 0: {
-  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*udata->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
+  rdata->sz[tdata->nroots[ie] + udata->nmaxevent*(ip*model->nz + 0)] = -sx_tmp[0]/(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
 
         } break;
 

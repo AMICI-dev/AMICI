@@ -13,9 +13,38 @@ class ExpData;
 class Model
 {
 public:
-    Model() {}
-    Model(UserData *udata) : udata(udata) {}
-    Model(UserData *udata, const ExpData *edata) : udata(udata), edata(edata) {}
+    Model() :
+        np(0), nk(0),
+        nx(0), nxtrue(0),
+        ny(0), nytrue(0),
+        nz(0), nztrue(0),
+        ne(0), nw(0),
+        ndwdx(0), ndwdp(0),
+        nnz(0), nJ(0),
+        ubw(0), lbw(0),
+        pscale (AMICI_SCALING_NONE),
+        o2mode(AMICI_O2MODE_NONE) {}
+
+    Model(int np,
+          int nx, int nxtrue,
+          int nk,
+          int ny, int nytrue,
+          int nz, int nztrue,
+          int ne, int nJ,
+          int nw, int ndwdx, int ndwdp, int nnz,
+          int ubw, int lbw,
+          AMICI_parameter_scaling pscale,
+          AMICI_o2mode o2mode) :
+        np(np), nk(nk),
+        nx(nx), nxtrue(nxtrue),
+        ny(ny), nytrue(nytrue),
+        nz(nz), nztrue(nztrue),
+        ne(ne), nw(nw),
+        ndwdx(ndwdx), ndwdp(ndwdp),
+        nnz(nnz),nJ(nJ),
+        ubw(ubw), lbw(lbw),
+        pscale(pscale),
+        o2mode(o2mode) {}
 
     // TODO model dimensions constructors
     virtual int fx0(N_Vector x0, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
@@ -129,8 +158,43 @@ public:
 
     int initHeaviside(UserData *udata, TempData *tdata);
 
-    UserData *udata = NULL;
-    const ExpData *edata = NULL;
+    /* Model dimensions */
+    /** total number of model parameters */
+    const int np;
+    /** number of fixed parameters */
+    const int nk;
+    /** number of states */
+    const int nx;
+    /** number of states in the unaugmented system */
+    const int nxtrue;
+    /** number of observables */
+    const int ny;
+    /** number of observables in the unaugmented system */
+    const int nytrue;
+    /** number of event outputs */
+    const int nz;
+    /** number of event outputs in the unaugmented system */
+    const int nztrue;
+    /** number of events */
+    const int ne;
+    /** number of common expressions */
+    const int nw;
+    /** number of derivatives of common expressions wrt x */
+    const int ndwdx;
+    /** number of derivatives of common expressions wrt p */
+    const int ndwdp;
+    /** number of nonzero entries in jacobian */
+    const int nnz;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    const int nJ;
+    /** upper bandwith of the jacobian */
+    const int ubw;
+    /** lower bandwith of the jacobian */
+    const int lbw;
+    /** parametrization of parameters p */
+    AMICI_parameter_scaling pscale;
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
+    const AMICI_o2mode o2mode;
 };
 
 #endif // MODEL_H

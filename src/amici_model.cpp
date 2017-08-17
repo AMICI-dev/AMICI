@@ -16,16 +16,16 @@ int Model::fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     for(int ip = 0; ip < udata->nplist; ++ip) {
-        for(int iy = 0; iy < udata->ny; ++iy)
+        for(int iy = 0; iy < ny; ++iy)
             // copy dydp to sy
-            rdata->sy[ip * udata->nt * udata->ny + iy * udata->nt + it] = tdata->dydp[iy + ip * udata->ny];
+            rdata->sy[ip * udata->nt * ny + iy * udata->nt + it] = tdata->dydp[iy + ip * ny];
 
         realtype *sx_tmp = N_VGetArrayPointer(tdata->sx[ip]);
 
         // compute sy = 1.0*dydx*sx + 1.0*sy
-        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, udata->ny, udata->nx,
-                    1.0, tdata->dydx, udata->ny, sx_tmp, 1,
-                    1.0, &rdata->sy[it + ip * udata->nt * udata->ny], udata->nt);
+        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, ny, nx,
+                    1.0, tdata->dydx, ny, sx_tmp, 1,
+                    1.0, &rdata->sy[it + ip * udata->nt * ny], udata->nt);
     }
 
     return status;
@@ -38,9 +38,9 @@ int Model::fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     for(int ip = 0; ip < udata->nplist; ++ip) {
-        for(int iz = 0; iz < udata->nz; ++iz)
+        for(int iz = 0; iz < nz; ++iz)
             // copy dydp to sy
-            rdata->sz[tdata->nroots[ie] + (iz + ip * udata->nz) * udata->nmaxevent ] = 0;
+            rdata->sz[tdata->nroots[ie] + (iz + ip * nz) * udata->nmaxevent ] = 0;
     }
 
     return status;
@@ -51,39 +51,39 @@ int Model::fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, 
     int status = AMICI_SUCCESS;
 
     // Compute dJydx*sx for current 'it'
-    // dJydx        nt x nJ x nx
-    // sx           nt x nx x nplist
+    // dJydx        udata->nt x nJ x nx
+    // sx           udata->nt x nx x udata->nplist
 
-    double *multResult = new double[udata->nJ * udata->nplist];
-    double *dJydxTmp = new double[udata->nJ * udata->nx];
-    double *sxTmp = new double[udata->nplist * udata->nx];
-    for(int ix = 0; ix < udata->nx; ++ix){
+    double *multResult = new double[nJ * udata->nplist];
+    double *dJydxTmp = new double[nJ * nx];
+    double *sxTmp = new double[udata->nplist * nx];
+    for(int ix = 0; ix < nx; ++ix){
         for(int ip = 0; ip < udata->nplist; ++ip)
-            sxTmp[ix + ip * udata->nx] = rdata->sx[it + (ix + ip * udata->nx ) * udata->nt];
-        for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            dJydxTmp[iJ + ix * udata->nJ] = tdata->dJydx[it + (iJ + ix * udata->nJ ) * udata->nt];
+            sxTmp[ix + ip * nx] = rdata->sx[it + (ix + ip * nx ) * udata->nt];
+        for(int iJ = 0; iJ < nJ; ++iJ)
+            dJydxTmp[iJ + ix * nJ] = tdata->dJydx[it + (iJ + ix * nJ ) * udata->nt];
     }
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                udata->nJ, udata->nplist, udata->nx,
-                1.0, dJydxTmp, udata->nJ,
-                sxTmp, udata->nx,
-                0.0, multResult, udata->nJ);
+                nJ, udata->nplist, nx,
+                1.0, dJydxTmp, nJ,
+                sxTmp, nx,
+                0.0, multResult, nJ);
 
-    // multResult    nJ x nplist
-    // dJydp         nJ x nplist
+    // multResult    nJ x udata->nplist
+    // dJydp         nJ x udata->nplist
     // dJydxTmp      nJ x nx
-    // sxTmp         nx x nplist
+    // sxTmp         nx x udata->nplist
 
     // sJy += multResult + dJydp
-    for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+    for(int iJ = 0; iJ < nJ; ++iJ) {
         if (iJ == 0)
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->sllh[ip] -= multResult[ip * udata->nJ] + tdata->dJydp[ip * udata->nJ];
+                rdata->sllh[ip] -= multResult[ip * nJ] + tdata->dJydp[ip * nJ];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= multResult[iJ + ip * udata->nJ] + tdata->dJydp[iJ + ip * udata->nJ];
+                rdata->s2llh[(iJ - 1) + ip * (nJ-1) ] -= multResult[iJ + ip * nJ] + tdata->dJydp[iJ + ip * nJ];
     }
 
     delete[] dJydxTmp;
@@ -99,39 +99,39 @@ int Model::fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata
     int status = AMICI_SUCCESS;
 
     // dJydy         nytrue x nJ x ny
-    // dydp          ny x nplist
-    // dJydp         nJ x nplist
+    // dydp          ny x udata->nplist
+    // dJydp         nJ x udata->nplist
 
-    memset(tdata->dJydp,0,udata->nJ * udata->nplist * sizeof(double));
+    memset(tdata->dJydp,0,nJ * udata->nplist * sizeof(double));
 
-    realtype *dJydyTmp = new double[udata->nJ * udata->ny];
-    realtype *dJydsigmaTmp = new double[udata->nJ * udata->ny];
+    realtype *dJydyTmp = new double[nJ * ny];
+    realtype *dJydsigmaTmp = new double[nJ * ny];
 
-    for(int iyt=0; iyt < udata->nytrue; ++iyt) {
+    for(int iyt=0; iyt < nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
             continue;
 
         // copy current (iyt) dJydy and dJydsigma slices
         // dJydyTmp     nJ x ny
         // dJydsigmaTmp nJ x ny
-        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-            for(int iy = 0; iy < udata->ny; ++iy) {
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
-                dJydsigmaTmp[iJ + iy * udata->nJ] = tdata->dJydsigma[iyt + (iJ  + iy * udata->nJ) * udata->nytrue];
+        for(int iJ = 0; iJ < nJ; ++iJ) {
+            for(int iy = 0; iy < ny; ++iy) {
+                dJydyTmp[iJ + iy * nJ] = tdata->dJydy[iyt + (iJ + iy * nJ) * nytrue];
+                dJydsigmaTmp[iJ + iy * nJ] = tdata->dJydsigma[iyt + (iJ  + iy * nJ) * nytrue];
             }
         }
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    udata->nJ, udata->nplist, udata->ny,
-                    1.0, dJydyTmp, udata->nJ,
-                    tdata->dydp, udata->ny,
-                    1.0, tdata->dJydp, udata->nJ);
+                    nJ, udata->nplist, ny,
+                    1.0, dJydyTmp, nJ,
+                    tdata->dydp, ny,
+                    1.0, tdata->dJydp, nJ);
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    udata->nJ, udata->nplist, udata->ny,
-                    1.0, dJydsigmaTmp, udata->nJ,
-                    tdata->dsigmaydp, udata->ny,
-                    1.0, tdata->dJydp, udata->nJ);
+                    nJ, udata->nplist, ny,
+                    1.0, dJydsigmaTmp, nJ,
+                    tdata->dsigmaydp, ny,
+                    1.0, tdata->dJydp, nJ);
     }
     delete[] dJydyTmp;
     delete[] dJydsigmaTmp;
@@ -145,30 +145,30 @@ int Model::fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata
 
     // dJydy         nytrue x nJ x ny
     // dydx          ny x nx
-    // dJydx         nt x nJ x nx
+    // dJydx         udata->nt x nJ x nx
 
-    realtype *dJydyTmp = new realtype[udata->nJ * udata->ny];
-    realtype *multResult = new realtype[udata->nJ * udata->nx]();
+    realtype *dJydyTmp = new realtype[nJ * ny];
+    realtype *multResult = new realtype[nJ * nx]();
 
-    for(int iyt=0; iyt < udata->nytrue; ++iyt) {
+    for(int iyt=0; iyt < nytrue; ++iyt) {
         if (amiIsNaN(edata->my[udata->nt * iyt + it]))
             continue;
 
         // copy current (iyt) dJydy slice
         // dJydyTmp     nJ x ny
-        for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            for(int iy = 0; iy < udata->ny; ++iy)
-                dJydyTmp[iJ + iy * udata->nJ] = tdata->dJydy[iyt + (iJ + iy * udata->nJ) * udata->nytrue];
+        for(int iJ = 0; iJ < nJ; ++iJ)
+            for(int iy = 0; iy < ny; ++iy)
+                dJydyTmp[iJ + iy * nJ] = tdata->dJydy[iyt + (iJ + iy * nJ) * nytrue];
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    udata->nJ, udata->nx, udata->ny,
-                    1.0, dJydyTmp, udata->nJ,
-                    tdata->dydx, udata->ny,
-                    1.0, multResult, udata->nJ);
+                    nJ, nx, ny,
+                    1.0, dJydyTmp, nJ,
+                    tdata->dydx, ny,
+                    1.0, multResult, nJ);
     }
-    for(int iJ = 0; iJ < udata->nJ; ++iJ)
-        for(int ix = 0; ix < udata->nx; ++ix)
-            tdata->dJydx[it + (iJ + ix * udata->nJ) * udata->nt] = multResult[iJ + ix * udata->nJ];
+    for(int iJ = 0; iJ < nJ; ++iJ)
+        for(int ix = 0; ix < nx; ++ix)
+            tdata->dJydx[it + (iJ + ix * nJ) * udata->nt] = multResult[iJ + ix * nJ];
 
     delete[] dJydyTmp;
     delete[] multResult;
@@ -179,45 +179,45 @@ int Model::fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata
 int Model::fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
-    // sJz           nJ x nplist
-    // dJzdp         nJ x nplist
+    // sJz           nJ x udata->nplist
+    // dJzdp         nJ x udata->nplist
     // dJzdx         nmaxevent x nJ x nx
-    // sx            nt x nx x nplist
+    // sx            udata->nt x nx x udata->nplist
 
     // Compute dJzdx*sx for current 'ie'
-    // dJzdx        nt x nJ x nx
-    // sx           nt x nx x nplist
+    // dJzdx        udata->nt x nJ x nx
+    // sx           udata->nt x nx x udata->nplist
 
-    realtype *multResult = new realtype[udata->nJ * udata->nplist]();
-    realtype *dJzdxTmp = new realtype[udata->nJ * udata->nx];
-    realtype *sxTmp = new realtype[udata->nplist * udata->nx];
+    realtype *multResult = new realtype[nJ * udata->nplist]();
+    realtype *dJzdxTmp = new realtype[nJ * nx];
+    realtype *sxTmp = new realtype[udata->nplist * nx];
     realtype *sx_tmp;
     for(int ip = 0; ip < udata->nplist; ++ip){
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
         if(!sx_tmp) return AMICI_ERROR_FSA;
-        for(int ix = 0; ix < udata->nx; ++ix)
-            sxTmp[ix + ip * udata->nx] = sx_tmp[ix];
+        for(int ix = 0; ix < nx; ++ix)
+            sxTmp[ix + ip * nx] = sx_tmp[ix];
     }
 
-    for(int ix = 0; ix < udata->nx; ++ix)
-        for(int iJ = 0; iJ < udata->nJ; ++iJ)
-            dJzdxTmp[iJ + ix * udata->nJ] = tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
+    for(int ix = 0; ix < nx; ++ix)
+        for(int iJ = 0; iJ < nJ; ++iJ)
+            dJzdxTmp[iJ + ix * nJ] = tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * nJ) * udata->nmaxevent];
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                udata->nJ, udata->nplist, udata->nx,
-                1.0, dJzdxTmp, udata->nJ,
-                sxTmp, udata->nx,
-                1.0, multResult, udata->nJ);
+                nJ, udata->nplist, nx,
+                1.0, dJzdxTmp, nJ,
+                sxTmp, nx,
+                1.0, multResult, nJ);
 
     // sJy += multResult + dJydp
-    for(int iJ = 0; iJ < udata->nJ; ++iJ) {
+    for(int iJ = 0; iJ < nJ; ++iJ) {
         if (iJ == 0)
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->sllh[ip] -= multResult[ip * udata->nJ] + tdata->dJzdp[ip * udata->nJ];
+                rdata->sllh[ip] -= multResult[ip * nJ] + tdata->dJzdp[ip * nJ];
         else
             for(int ip = 0; ip < udata->nplist; ++ip)
-                rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1)] -= multResult[iJ + ip*udata->nJ] + tdata->dJzdp[iJ + ip*udata->nJ];
+                rdata->s2llh[(iJ - 1) + ip * (nJ-1)] -= multResult[iJ + ip*nJ] + tdata->dJzdp[iJ + ip*nJ];
     }
 
     delete[] dJzdxTmp;
@@ -233,19 +233,19 @@ int Model::fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
 
     // dJzdz         nztrue x nJ x nz
     // dJzdsigma     nztrue x nJ x nz
-    // dzdp          nz x nplist
-    // dJzdp         nJ x nplist
+    // dzdp          nz x udata->nplist
+    // dJzdp         nJ x udata->nplist
 
-    memset(tdata->dJzdp,0,udata->nJ * udata->nplist * sizeof(double));
+    memset(tdata->dJzdp,0,nJ * udata->nplist * sizeof(double));
 
-    realtype *dJzdzTmp = new double[udata->nJ * udata->nz];
-    realtype *dJzdsigmaTmp = new double[udata->nJ * udata->nz];
+    realtype *dJzdzTmp = new double[nJ * nz];
+    realtype *dJzdsigmaTmp = new double[nJ * nz];
     realtype *dJrzdsigmaTmp = NULL;
     if (tdata->t == udata->ts[udata->nt-1]) {
-        dJrzdsigmaTmp = new double[udata->nJ * udata->nz];
+        dJrzdsigmaTmp = new double[nJ * nz];
     }
 
-    for(int izt=0; izt < udata->nztrue; ++izt) {
+    for(int izt=0; izt < nztrue; ++izt) {
         if (amiIsNaN(edata->mz[tdata->nroots[ie] + izt * udata->nmaxevent]))
             continue;
 
@@ -255,42 +255,42 @@ int Model::fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata
 
 
         if (tdata->t < udata->ts[udata->nt-1]) {
-            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-                for(int iz = 0; iz < udata->nz; ++iz) {
-                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+            for(int iJ = 0; iJ < nJ; ++iJ) {
+                for(int iz = 0; iz < nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * nJ] = tdata->dJzdz[izt + (iJ  + iz * nJ) * nztrue];
                 }
             }
         } else {
-            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-                for(int iz = 0; iz < udata->nz; ++iz) {
-                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJrzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
-                    dJrzdsigmaTmp[iJ  + iz * udata->nJ] = tdata->dJrzdsigma[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+            for(int iJ = 0; iJ < nJ; ++iJ) {
+                for(int iz = 0; iz < nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * nJ] = tdata->dJrzdz[izt + (iJ  + iz * nJ) * nztrue];
+                    dJrzdsigmaTmp[iJ  + iz * nJ] = tdata->dJrzdsigma[izt + (iJ  + iz * nJ) * nztrue];
                 }
             }
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                        udata->nJ, udata->nplist, udata->nz,
-                        1.0, dJrzdsigmaTmp, udata->nJ,
-                        tdata->dsigmazdp, udata->nz,
-                        1.0, tdata->dJzdp, udata->nJ);
+                        nJ, udata->nplist, nz,
+                        1.0, dJrzdsigmaTmp, nJ,
+                        tdata->dsigmazdp, nz,
+                        1.0, tdata->dJzdp, nJ);
         }
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    udata->nJ, udata->nplist, udata->nz,
-                    1.0, dJzdzTmp, udata->nJ,
-                    tdata->dzdp, udata->nz,
-                    1.0, tdata->dJzdp, udata->nJ);
+                    nJ, udata->nplist, nz,
+                    1.0, dJzdzTmp, nJ,
+                    tdata->dzdp, nz,
+                    1.0, tdata->dJzdp, nJ);
 
-        for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-            for(int iz = 0; iz < udata->nz; ++iz) {
-                dJzdsigmaTmp[iJ  + iz * udata->nJ] = tdata->dJzdsigma[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+        for(int iJ = 0; iJ < nJ; ++iJ) {
+            for(int iz = 0; iz < nz; ++iz) {
+                dJzdsigmaTmp[iJ  + iz * nJ] = tdata->dJzdsigma[izt + (iJ  + iz * nJ) * nztrue];
             }
         }
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    udata->nJ, udata->nplist, udata->nz,
-                    1.0, dJzdsigmaTmp, udata->nJ,
-                    tdata->dsigmazdp, udata->nz,
-                    1.0, tdata->dJzdp, udata->nJ);
+                    nJ, udata->nplist, nz,
+                    1.0, dJzdsigmaTmp, nJ,
+                    tdata->dsigmazdp, nz,
+                    1.0, tdata->dJzdp, nJ);
 
     }
     delete[] dJzdzTmp;
@@ -308,44 +308,44 @@ int Model::fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata
     // dzdx          nz x nx
     // dJzdx         nmaxevent x nJ x nx
 
-    realtype *dJzdzTmp = new realtype[udata->nJ * udata->nz];
-    realtype *multResult = new realtype[udata->nJ * udata->nx]();
-    for(int izt=0; izt < udata->nztrue; ++izt) {
+    realtype *dJzdzTmp = new realtype[nJ * nz];
+    realtype *multResult = new realtype[nJ * nx]();
+    for(int izt=0; izt < nztrue; ++izt) {
         if (amiIsNaN(edata->mz[tdata->nroots[ie] + izt * udata->nmaxevent]))
             continue;
 
         // copy current (izt) dJzdz slice
         // dJzdzTmp     nJ x nz
         if (tdata->t < udata->ts[udata->nt-1]) {
-            for(int iJ = 0; iJ < udata->nJ; ++iJ)
-                for(int iz = 0; iz < udata->nz; ++iz)
-                    dJzdzTmp[iJ + iz * udata->nJ] = tdata->dJzdz[izt + (iJ + iz * udata->nJ) * udata->nztrue];
+            for(int iJ = 0; iJ < nJ; ++iJ)
+                for(int iz = 0; iz < nz; ++iz)
+                    dJzdzTmp[iJ + iz * nJ] = tdata->dJzdz[izt + (iJ + iz * nJ) * nztrue];
 
 
 
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                        udata->nJ, udata->nx, udata->nz,
-                        1.0, dJzdzTmp, udata->nJ,
-                        tdata->dzdx, udata->nz,
-                        1.0, multResult, udata->nJ);
+                        nJ, nx, nz,
+                        1.0, dJzdzTmp, nJ,
+                        tdata->dzdx, nz,
+                        1.0, multResult, nJ);
         } else {
-            for(int iJ = 0; iJ < udata->nJ; ++iJ) {
-                for(int iz = 0; iz < udata->nz; ++iz) {
-                    dJzdzTmp[iJ  + iz * udata->nJ] = tdata->dJrzdz[izt + (iJ  + iz * udata->nJ) * udata->nztrue];
+            for(int iJ = 0; iJ < nJ; ++iJ) {
+                for(int iz = 0; iz < nz; ++iz) {
+                    dJzdzTmp[iJ  + iz * nJ] = tdata->dJrzdz[izt + (iJ  + iz * nJ) * nztrue];
                 }
             }
 
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                        udata->nJ, udata->nx, udata->nz,
-                        1.0, dJzdzTmp, udata->nJ,
-                        tdata->drzdx, udata->nz,
-                        1.0, multResult, udata->nJ);
+                        nJ, nx, nz,
+                        1.0, dJzdzTmp, nJ,
+                        tdata->drzdx, nz,
+                        1.0, multResult, nJ);
         }
 
     }
-    for(int iJ = 0; iJ < udata->nJ; ++iJ)
-        for(int ix = 0; ix < udata->nx; ++ix)
-            tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ ) * udata->nmaxevent] = multResult[iJ + ix * udata->nJ];
+    for(int iJ = 0; iJ < nJ; ++iJ)
+        for(int ix = 0; ix < nx; ++ix)
+            tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * nJ ) * udata->nmaxevent] = multResult[iJ + ix * nJ];
 
     delete[] dJzdzTmp;
     delete[] multResult;
@@ -355,7 +355,7 @@ int Model::fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata
 
 int Model::initialize(UserData *udata, TempData *tdata)
 {
-    if (udata->nx < 1)
+    if (nx < 1)
         return AMICI_SUCCESS;
 
     int status;
@@ -371,7 +371,7 @@ int Model::initialize(UserData *udata, TempData *tdata)
 
 int Model::initializeStates(UserData *udata, TempData *tdata)
 {
-    if (udata->nx < 1)
+    if (nx < 1)
         return AMICI_SUCCESS;
 
     if (tdata->x == NULL)
@@ -385,7 +385,7 @@ int Model::initializeStates(UserData *udata, TempData *tdata)
         if(!x_tmp)
             return AMICI_ERROR_TDATA;
 
-        for (int ix=0; ix < udata->nx; ix++) {
+        for (int ix=0; ix < nx; ix++) {
             x_tmp[ix] = (realtype) udata->x0data[ix];
         }
     }
@@ -409,7 +409,7 @@ int Model::initHeaviside(UserData *udata, TempData *tdata) {
     status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,tdata);
     if (status != AMICI_SUCCESS) return status;
 
-    for (int ie = 0; ie<udata->ne; ie++) {
+    for (int ie = 0; ie<ne; ie++) {
         if (tdata->rootvals[ie]<0) {
             tdata->h_udata[ie] = 0.0;
         } else if (tdata->rootvals[ie]==0) {

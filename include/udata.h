@@ -20,6 +20,8 @@ typedef enum AMICI_sensi_meth_TAG {
     AMICI_SENSI_NONE, AMICI_SENSI_FSA, AMICI_SENSI_ASA, AMICI_SENSI_SS
 } AMICI_sensi_meth;
 
+class Model;
+
 /** @brief struct that stores all user provided data */
 class UserData {
 
@@ -29,57 +31,9 @@ public:
      */
     UserData();
 
-    UserData(int np,
-             int nx, int nxtrue,
-             int nk,
-             int ny, int nytrue,
-             int nz, int nztrue,
-             int ne, int nJ,
-             int nw, int ndwdx, int ndwdp, int nnz,
-             int ubw, int lbw,
-             AMICI_parameter_scaling pscale,
-             AMICI_o2mode o2mode
-             );
-
-    int unscaleParameters();
+    int unscaleParameters(Model *model);
 
     virtual ~UserData();
-
-    /* Model dimensions */
-    /** total number of model parameters */
-    const int    np;
-    /** number of fixed parameters */
-    const int    nk;
-    /** number of states */
-    const int    nx;
-    /** number of states in the unaugmented system */
-    const int    nxtrue;
-    /** number of observables */
-    const int    ny;
-    /** number of observables in the unaugmented system */
-    const int    nytrue;
-    /** number of event outputs */
-    const int    nz;
-    /** number of event outputs in the unaugmented system */
-    const int    nztrue;
-    /** number of events */
-    const int    ne;
-    /** number of common expressions */
-    const int    nw;
-    /** number of derivatives of common expressions wrt x */
-    const int    ndwdx;
-    /** number of derivatives of common expressions wrt p */
-    const int    ndwdp;
-    /** number of nonzero entries in jacobian */
-    const int    nnz;
-    /** dimension of the augmented objective function for 2nd order ASA */
-    const int    nJ;
-    /** upper bandwith of the jacobian */
-    const int ubw;
-    /** lower bandwith of the jacobian */
-    const int lbw;
-    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
-    const AMICI_o2mode o2mode;
 
     /* Options */
 
@@ -96,9 +50,6 @@ public:
 
     /** number of timepoints */
     int    nt;
-
-    /** parametrization of parameters p */
-    AMICI_parameter_scaling pscale;
 
     /** parameter array */
     double *p;
@@ -163,7 +114,7 @@ public:
     
     /** flag controlling stability limit detection */
     booleantype stldet;
-    
+
     /** state initialisation */
     double *x0data;
     

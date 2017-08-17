@@ -17,29 +17,32 @@
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
-#include <include/amici_model_functions.h>
 #include "include/amici_solver.h"
 #include "include/amici_model.h"
 
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
 
-int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata) {
+int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model, Solver *solver) {
     if(!udata) return AMICI_ERROR_UDATA;
     if(!rdata) return AMICI_ERROR_RDATA;
     
     int status = AMICI_SUCCESS;
     
-    Solver *solver = getSolver();
-    Model *model = getModel(udata, edata);
-
-    if (udata->nx <= 0) {
+    if (model->nx <= 0) {
         return AMICI_ERROR_NOTHINGTODO;
     }
     
     TempData *tdata = new TempData(udata, model);
     
-    status = udata->unscaleParameters();
+    // unscale parameters but keep original
+    double *originalParams = NULL;
+    if(model->pscale != AMICI_SCALING_NONE) {
+        originalParams = (double *) malloc(sizeof(double) * model->np);
+        memcpy(originalParams, udata->p, sizeof(double) * model->np);
+    }
+    status = udata->unscaleParameters(model);
+
     if (status == AMICI_SUCCESS)
         status = solver->setupAMI(udata, tdata, model);
 
@@ -50,13 +53,17 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     if (status == AMICI_SUCCESS) status = workBackwardProblem(udata, tdata, rdata, solver, model);
     
     if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata);
-    if (status < AMICI_SUCCESS) rdata->invalidate(udata);
+    if (status < AMICI_SUCCESS) rdata->invalidate();
     
     
 freturn:
+    // reset to original parameters
+    if(originalParams) {
+        memcpy(udata->p, originalParams, sizeof(double) * model->np);
+        free(originalParams);
+    }
+
     delete tdata;
-    delete model;
-    delete solver;
 
     return status;
 }
@@ -89,14 +96,14 @@ int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *ed
     status = model->fdsigma_ydp(tdata->t,tdata);
     if(status != AMICI_SUCCESS) return status;
 
-    for (int iy=0; iy<udata->nytrue; iy++) {
+    for (int iy=0; iy<model->nytrue; iy++) {
         if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
             for (int ip=0; ip<udata->nplist; ip++) {
-                tdata->dsigmaydp[ip*udata->ny+iy] = 0;
+                tdata->dsigmaydp[ip*model->ny+iy] = 0;
             }
         }
         for (int ip=0; ip<udata->nplist; ip++) {
-            rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
+            rdata->ssigmay[it + udata->nt*(ip*model->ny+iy)] = tdata->dsigmaydp[ip*model->ny+iy];
         }
     }
     status = model->fdJydy(tdata->t,it,tdata->x,tdata,edata,rdata);
@@ -114,15 +121,15 @@ int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *ed
     if (udata->sensi_meth != AMICI_SENSI_ASA)
         return status;
 
-    for(int iJ=0; iJ<udata->nJ; iJ++) {
+    for(int iJ=0; iJ<model->nJ; iJ++) {
         for(int ip=0; ip < udata->nplist; ip++) {
             if (iJ==0) {
-                if (udata->ny>0) {
-                    rdata->sllh[ip] -= tdata->dJydp[ip * udata->nJ];
+                if (model->ny>0) {
+                    rdata->sllh[ip] -= tdata->dJydp[ip * model->nJ];
                 }
             } else {
-                if (udata->ny>0) {
-                    rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJydp[iJ + ip * udata->nJ];
+                if (model->ny>0) {
+                    rdata->s2llh[(iJ - 1) + ip * (model->nJ-1) ] -= tdata->dJydp[iJ + ip * model->nJ];
                 }
             }
         }
@@ -145,7 +152,7 @@ int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *e
     
     int status = AMICI_SUCCESS;
     if (edata) {
-        for (int iz=0; iz<udata->nztrue; iz++) {
+        for (int iz=0; iz<model->nztrue; iz++) {
             if ( udata->z2event[iz]-1 == ie ){
                 if (!amiIsNaN(edata->mz[iz*udata->nmaxevent+tdata->nroots[ie]])) {
                     status = model->fdzdp(tdata->t,ie,tdata->x,tdata);
@@ -167,13 +174,13 @@ int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *e
                         if(status != AMICI_SUCCESS) return status;
                     } else {
                         for (int ip=0; ip<udata->nplist; ip++) {
-                            tdata->dsigmazdp[iz+udata->nz*ip] = 0;
+                            tdata->dsigmazdp[iz+model->nz*ip] = 0;
                         }
                         tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz];
                     }
                     rdata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz] = tdata->sigmaz[iz];
                     for (int ip=0; ip<udata->nplist; ip++) {
-                        rdata->ssigmaz[tdata->nroots[ie] + udata->nmaxevent*(iz+udata->nz*ip)] = tdata->dsigmazdp[iz+udata->nz*ip];
+                        rdata->ssigmaz[tdata->nroots[ie] + udata->nmaxevent*(iz+model->nz*ip)] = tdata->dsigmazdp[iz+model->nz*ip];
                     }
                 }
             }
@@ -196,15 +203,15 @@ int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *e
         status = model->fdJzdp(ie,udata,tdata,edata,rdata);
         if(status != AMICI_SUCCESS) return status;
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            for(int iJ=0; iJ<udata->nJ; iJ++) {
+            for(int iJ=0; iJ<model->nJ; iJ++) {
                 for(int ip=0; ip < udata->nplist; ip++) {
                     if (iJ==0) {
-                        if (udata->nz>0) {
+                        if (model->nz>0) {
                             rdata->sllh[ip] -= tdata->dJzdp[ip];
                         }
                     } else {
-                        if (udata->nz>0) {
-                            rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJzdp[iJ + ip*udata->nJ];
+                        if (model->nz>0) {
+                            rdata->s2llh[(iJ - 1) + ip * (model->nJ-1) ] -= tdata->dJzdp[iJ + ip*model->nJ];
                         }
                     }
                 }
@@ -236,7 +243,7 @@ int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *eda
     if (edata) {
         status = model->fsigma_y(tdata->t,tdata);
         if(status != AMICI_SUCCESS) return status;
-        for (int iy=0; iy<udata->nytrue; iy++) {
+        for (int iy=0; iy<model->nytrue; iy++) {
             /* extract the value for the standard deviation, if the data value is NaN, use
              the parameter value. Store this value in the return struct */
             if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
@@ -249,7 +256,7 @@ int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *eda
     } else {
         status = model->fsigma_y(tdata->t,tdata);
         if(status != AMICI_SUCCESS) return status;
-        for (int iy=0; iy<udata->nytrue; iy++) {
+        for (int iy=0; iy<model->nytrue; iy++) {
             rdata->sigmay[iy*udata->nt+it] = tdata->sigmay[iy];
         }
     }
@@ -287,7 +294,7 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
     }
     
     /* EVENT OUTPUT */
-    for (int ie=0; ie<udata->ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
+    for (int ie=0; ie<model->ne; ie++){ /* only look for roots of the rootfunction not discontinuities */
         if (tdata->nroots[ie] >= udata->nmaxevent)
             continue;
 
@@ -298,7 +305,7 @@ int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, cons
             if (edata) {
                 status = model->fsigma_z(tdata->t,ie,tdata);
                 if(status != AMICI_SUCCESS) return status;
-                for (int iz=0; iz<udata->nztrue; iz++) {
+                for (int iz=0; iz<model->nztrue; iz++) {
                     if (udata->z2event[iz]-1 == ie) {
 
                         if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + udata->nmaxevent*iz])) {
@@ -356,7 +363,7 @@ int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *
     realtype *sx_tmp;
     
     for(int ip=0; ip < udata->nplist; ip++) {
-        if (udata->nx>0) {
+        if (model->nx>0) {
             if (udata->ts[it] > udata->tstart) {
                 status = solver->AMIGetSens(&(tdata->t), tdata->sx);
                 if (status != AMICI_SUCCESS) return status;
@@ -364,28 +371,28 @@ int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *
             
             sx_tmp = NV_DATA_S(tdata->sx[ip]);
             if(!sx_tmp) return AMICI_ERROR_FSA;
-            for(int ix=0; ix < udata->nx; ix++) {
-                rdata->sx[(ip*udata->nx + ix)*udata->nt + it] = sx_tmp[ix];
+            for(int ix=0; ix < model->nx; ix++) {
+                rdata->sx[(ip*model->nx + ix)*udata->nt + it] = sx_tmp[ix];
             }
         }
     }
     
-    for (int iy=0; iy<udata->nytrue; iy++) {
+    for (int iy=0; iy<model->nytrue; iy++) {
         if (edata){
             if (amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
                 status = model->fdsigma_ydp(tdata->t,tdata);
                 if(status != AMICI_SUCCESS) return status;
             } else {
                 for (int ip=0; ip<udata->nplist; ip++) {
-                    tdata->dsigmaydp[ip*udata->ny+iy] = 0;
+                    tdata->dsigmaydp[ip*model->ny+iy] = 0;
                 }
             }
             for (int ip=0; ip<udata->nplist; ip++) {
-                rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
+                rdata->ssigmay[it + udata->nt*(ip*model->ny+iy)] = tdata->dsigmaydp[ip*model->ny+iy];
             }
         } else {
             for (int ip=0; ip<udata->nplist; ip++) {
-                rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = 0;
+                rdata->ssigmay[it + udata->nt*(ip*model->ny+iy)] = 0;
             }
         }
     }
@@ -450,10 +457,10 @@ int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *e
      */
        
     rdata->ts[it] = udata->ts[it];
-    if (udata->nx>0) {
+    if (model->nx>0) {
         realtype *x_tmp = NV_DATA_S(tdata->x);
         if(!x_tmp) return AMICI_ERROR_DATA;
-        for (int ix=0; ix<udata->nx; ix++) {
+        for (int ix=0; ix<model->nx; ix++) {
             rdata->x[it+udata->nt*ix] = x_tmp[ix];
         }
         
@@ -470,7 +477,7 @@ int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *e
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver) {
+int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver, Model *model) {
     /**
      * handleDataPoint executes everything necessary for the handling of data points for the backward problems
      *
@@ -483,10 +490,10 @@ int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata
     
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if(!xB_tmp) return AMICI_ERROR_DATA;
-    for (int ix=0; ix<udata->nxtrue; ix++) {
-        for(int iJ=0; iJ<udata->nJ; iJ++)
+    for (int ix=0; ix<model->nxtrue; ix++) {
+        for(int iJ=0; iJ<model->nJ; iJ++)
             // we only need the 1:nxtrue slice here!
-            xB_tmp[ix + iJ * udata->nxtrue] += tdata->dJydx[it + (iJ + ix * udata->nJ) * udata->nt];
+            xB_tmp[ix + iJ * model->nxtrue] += tdata->dJydx[it + (iJ + ix * model->nJ) * udata->nt];
     }
     return solver->getDiagnosisB(it,udata,rdata,tdata);
 }
@@ -520,12 +527,12 @@ int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const E
         if(status != AMICI_SUCCESS) return status;
     }
     
-    if (tdata->iroot<udata->nmaxevent*udata->ne) {
-        for (ie=0; ie<udata->ne; ie++) {
-            tdata->rootidx[tdata->iroot*udata->ne + ie] = tdata->rootsfound[ie];
+    if (tdata->iroot<udata->nmaxevent*model->ne) {
+        for (ie=0; ie<model->ne; ie++) {
+            tdata->rootidx[tdata->iroot*model->ne + ie] = tdata->rootsfound[ie];
         }
     }
-    for (ie = 0; ie<udata->ne; ie++) {
+    for (ie = 0; ie<model->ne; ie++) {
         tdata->h[ie] = tdata->rootvals[ie];
     }
     
@@ -558,7 +565,7 @@ int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const E
             
             /* compute event-time derivative only for primary events, we get into trouble with multiple simultaneously firing events here (but is this really well defined then?), in that case just use the last ie and hope for the best. */
             if (seflag == 0) {
-                for (ie = 0; ie<udata->ne; ie++) {
+                for (ie = 0; ie<model->ne; ie++) {
                     if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
                         model->fstau(tdata->t,ie,tdata->x,tdata->sx,tdata);
                     }
@@ -566,7 +573,7 @@ int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const E
             }
         } else if (udata->sensi_meth == AMICI_SENSI_ASA) {
             /* store x to compute jump in discontinuity */
-            if (tdata->iroot<udata->nmaxevent*udata->ne) {
+            if (tdata->iroot<udata->nmaxevent*model->ne) {
                 N_VScale(1.0,tdata->x,tdata->x_disc[tdata->iroot]);
                 N_VScale(1.0,tdata->xdot,tdata->xdot_disc[tdata->iroot]);
                 N_VScale(1.0,tdata->xdot_old,tdata->xdot_old_disc[tdata->iroot]);
@@ -574,13 +581,13 @@ int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const E
         }
     }
     
-    status = updateHeaviside(udata, tdata);
+    status = updateHeaviside(tdata, model->ne);
     if (status != AMICI_SUCCESS) return status;
     
     status = applyEventBolus(udata, tdata, model);
     if (status != AMICI_SUCCESS) return status;
     
-    if (tdata->iroot<udata->nmaxevent*udata->ne) {
+    if (tdata->iroot<udata->nmaxevent*model->ne) {
         tdata->discs[tdata->iroot] = tdata->t;
         ++tdata->iroot;
     } else {
@@ -604,7 +611,7 @@ int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const E
     /* check whether we need to fire a secondary event */
     status = model->froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,tdata);
     if (status != AMICI_SUCCESS) return status;
-    for (ie = 0; ie<udata->ne; ie++) {
+    for (ie = 0; ie<model->ne; ie++) {
         /* the same event should not trigger itself */
         if (tdata->rootsfound[ie] == 0 ) {
             /* check whether there was a zero-crossing */
@@ -673,9 +680,9 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model) {
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if(!xQB_tmp) return AMICI_ERROR_DATA;
     
-    for (int ie=0; ie<udata->ne; ie++) {
+    for (int ie=0; ie<model->ne; ie++) {
         
-        if (tdata->rootidx[iroot*udata->ne + ie] != 0) {
+        if (tdata->rootidx[iroot*model->ne + ie] != 0) {
             
             status = model->fdeltaqB(tdata->t,ie,tdata->x_disc[iroot],tdata->xB_old,tdata->xQB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],tdata);
             if (status != AMICI_SUCCESS) return status;
@@ -683,16 +690,16 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model) {
             status = model->fdeltaxB(tdata->t,ie,tdata->x_disc[iroot],tdata->xB_old,tdata->xdot_disc[iroot],tdata->xdot_old_disc[iroot],tdata);
             if (status != AMICI_SUCCESS) return status;
             
-            for (int ix=0; ix<udata->nxtrue; ++ix) {
-                for (int iJ = 0; iJ < udata->nJ; ++iJ) {
-                    xB_tmp[ix + iJ*udata->nxtrue] += tdata->deltaxB[ix + iJ*udata->nxtrue];
-                    if (udata->nz>0) {
-                        xB_tmp[ix + iJ*udata->nxtrue] += tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * udata->nJ) * udata->nmaxevent];
+            for (int ix=0; ix<model->nxtrue; ++ix) {
+                for (int iJ = 0; iJ < model->nJ; ++iJ) {
+                    xB_tmp[ix + iJ*model->nxtrue] += tdata->deltaxB[ix + iJ*model->nxtrue];
+                    if (model->nz>0) {
+                        xB_tmp[ix + iJ*model->nxtrue] += tdata->dJzdx[tdata->nroots[ie] + (iJ + ix * model->nJ) * udata->nmaxevent];
                     }
                 }
             }
             
-            for (int iJ=0; iJ<udata->nJ; ++iJ) {
+            for (int iJ=0; iJ<model->nJ; ++iJ) {
                 for (int ip=0; ip<udata->nplist; ++ip) {
                     xQB_tmp[ip + iJ*udata->nplist] += tdata->deltaqB[ip + iJ*udata->nplist];
                 }
@@ -703,14 +710,14 @@ int handleEventB(int iroot, UserData *udata, TempData *tdata, Model *model) {
         }
     }
     
-    return updateHeavisideB(iroot, udata, tdata);
+    return updateHeavisideB(iroot, tdata, model->ne);
 }
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata) {
+realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, Model *model) {
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum of
      * tdata and troot but also takes into account if it<0 or iroot<0 where these expressions
@@ -733,7 +740,7 @@ realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData 
         if (iroot<0) {
             tnext = tdata[it];
         } else {
-            if (udata->ne>0) {
+            if (model->ne>0) {
                 if (troot[iroot]>tdata[it]) {
                     tnext = troot[iroot];
                 } else {
@@ -766,14 +773,14 @@ int applyEventBolus( UserData *udata, TempData *tdata, Model *model) {
     int status = AMICI_SUCCESS;
     realtype *x_tmp;
     
-    for (ie=0; ie<udata->ne; ie++){
+    for (ie=0; ie<model->ne; ie++){
         if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
             status = model->fdeltax(tdata->t,ie,tdata->x,tdata->xdot,tdata->xdot_old,tdata);
             if (status != AMICI_SUCCESS) return status;
             
             x_tmp = NV_DATA_S(tdata->x);
             if(!x_tmp) return AMICI_ERROR_EVENT;
-            for (ix=0; ix<udata->nx; ix++) {
+            for (ix=0; ix<model->nx; ix++) {
                 x_tmp[ix] += tdata->deltax[ix];
             }
         }
@@ -798,7 +805,7 @@ int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model) {
     int status = AMICI_SUCCESS;
     realtype *sx_tmp;
     
-    for (ie=0; ie<udata->ne; ie++){
+    for (ie=0; ie<model->ne; ie++){
         if (tdata->rootsfound[ie] == 1) { /* only consider transitions false -> true */
             status = model->fdeltasx(tdata->t,ie,tdata->x_old,tdata->xdot,tdata->xdot_old,tdata->sx,tdata);
             if (status != AMICI_SUCCESS) return status;
@@ -806,8 +813,8 @@ int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model) {
             for (ip=0; ip<udata->nplist; ip++) {
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
                 if(!sx_tmp) return AMICI_ERROR_FSA;
-                for (ix=0; ix<udata->nx; ix++) {
-                    sx_tmp[ix] += tdata->deltasx[ix + udata->nx*ip];
+                for (ix=0; ix<model->nx; ix++) {
+                    sx_tmp[ix] += tdata->deltasx[ix + model->nx*ip];
                 }
             }
         }
@@ -819,21 +826,20 @@ int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int updateHeaviside(UserData *udata, TempData *tdata) {
+int updateHeaviside(TempData *tdata, int ne) {
     /**
      * updateHeaviside updates the heaviside variables h on event occurences
      *
      * @param[in] udata pointer to the user data struct @type UserData
+     * @param[ne] number of events
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status = status flag indicating success of execution @type int;
      */
-    
-    int ie;
-    
+        
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding it will give
      the right update to the heaviside variables */
     
-    for (ie = 0; ie<udata->ne; ie++) {
+    for (int ie = 0; ie<ne; ie++) {
         tdata->h_udata[ie] += tdata->rootsfound[ie];
     }
     return AMICI_SUCCESS;
@@ -843,23 +849,22 @@ int updateHeaviside(UserData *udata, TempData *tdata) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int updateHeavisideB(int iroot, UserData *udata, TempData *tdata) {
+int updateHeavisideB(int iroot, TempData *tdata, int ne) {
     /**
      * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
      *
      * @param[in] iroot discontinuity occurance index @type int
      * @param[in] udata pointer to the user data struct @type UserData
+     * @param[ne] number of events
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
      */
-    
-    int ie;
-    
+        
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding it will give
      the right update to the heaviside variables */
     
-    for (ie = 0; ie<udata->ne; ie++) {
-        tdata->h_udata[ie] -= tdata->rootidx[iroot*udata->ne + ie];
+    for (int ie = 0; ie<ne; ie++) {
+        tdata->h_udata[ie] -= tdata->rootidx[iroot*ne + ie];
     }
     return AMICI_SUCCESS;
 }
@@ -891,9 +896,9 @@ int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int 
     double gamma = 1.0;
     realtype *x_tmp;
     
-    N_Vector delta = N_VNew_Serial(udata->nx);
-    N_Vector rel_x_newton = N_VNew_Serial(udata->nx);
-    N_Vector x_newton = N_VNew_Serial(udata->nx);
+    N_Vector delta = N_VNew_Serial(model->nx);
+    N_Vector rel_x_newton = N_VNew_Serial(model->nx);
+    N_Vector x_newton = N_VNew_Serial(model->nx);
     
     /* initialize output von linear solver for Newton step */
     N_VConst(0.0, delta);
@@ -907,7 +912,7 @@ int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int 
     N_VScale(1.0, tdata->x, x_newton);
     N_VAbs(x_newton, x_newton);
     x_tmp = N_VGetArrayPointer(x_newton);
-    for (ix=0; ix<udata->nx; ix++) {
+    for (ix=0; ix<model->nx; ix++) {
         if (x_tmp[ix] < udata->atol) {
             x_tmp[ix] = udata->atol;
         }
@@ -935,7 +940,7 @@ int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int 
         
                 /* Ensure positivity of the state */
                 x_tmp = N_VGetArrayPointer(tdata->x);
-                for (ix=0; ix<udata->nx; ix++) {
+                for (ix=0; ix<model->nx; ix++) {
                     if (x_tmp[ix] < 0.0) {
                         x_tmp[ix] = 0.0;
                     }
@@ -1030,16 +1035,16 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry,
      double omega;
      double res;
     
-     N_Vector ns_p = N_VNew_Serial(udata->nx);
-     N_Vector ns_h = N_VNew_Serial(udata->nx);
-     N_Vector ns_t = N_VNew_Serial(udata->nx);
-     N_Vector ns_s = N_VNew_Serial(udata->nx);
-     N_Vector ns_r = N_VNew_Serial(udata->nx);
-     N_Vector ns_rt = N_VNew_Serial(udata->nx);
-     N_Vector ns_v = N_VNew_Serial(udata->nx);
-     N_Vector ns_Jv = N_VNew_Serial(udata->nx);
-     N_Vector ns_tmp = N_VNew_Serial(udata->nx);
-     N_Vector ns_Jdiag = N_VNew_Serial(udata->nx);
+     N_Vector ns_p = N_VNew_Serial(model->nx);
+     N_Vector ns_h = N_VNew_Serial(model->nx);
+     N_Vector ns_t = N_VNew_Serial(model->nx);
+     N_Vector ns_s = N_VNew_Serial(model->nx);
+     N_Vector ns_r = N_VNew_Serial(model->nx);
+     N_Vector ns_rt = N_VNew_Serial(model->nx);
+     N_Vector ns_v = N_VNew_Serial(model->nx);
+     N_Vector ns_Jv = N_VNew_Serial(model->nx);
+     N_Vector ns_tmp = N_VNew_Serial(model->nx);
+     N_Vector ns_Jdiag = N_VNew_Serial(model->nx);
     
      N_VScale(-1.0, tdata->xdot, tdata->xdot);
     
@@ -1147,7 +1152,7 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int newton_status, double run_time) {
+int getNewtonOutput(TempData *tdata, ReturnData *rdata, int newton_status, double run_time, int nx) {
     /**
      * getNewtonOutput stores the output of the Newton solver run.
      *
@@ -1169,7 +1174,7 @@ int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int new
     
     // Write output
     x_tmp = N_VGetArrayPointer(tdata->x);
-    for (int ix=0; ix<udata->nx; ix++) {
+    for (int ix=0; ix<nx; ix++) {
         rdata->xss[ix] = x_tmp[ix];
     }
     
@@ -1183,7 +1188,7 @@ int getNewtonOutput(UserData *udata, TempData *tdata, ReturnData *rdata, int new
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver) {
+int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model) {
     /**
      * getNewtonSimulation solves the forward problem, if the first Newton solver run did not succeed.
      *
@@ -1200,8 +1205,8 @@ int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
     double sim_time;
     int status = (int) *rdata->status;
     realtype *x_tmp;
-    N_Vector rel_x = N_VNew_Serial(udata->nx);
-    N_Vector tmp_x = N_VNew_Serial(udata->nx);
+    N_Vector rel_x = N_VNew_Serial(model->nx);
+    N_Vector tmp_x = N_VNew_Serial(model->nx);
     
     /* Newton solver did not work, so try a simulation */
     if (tdata->t >= 1e6) {
@@ -1219,7 +1224,7 @@ int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
         N_VScale(1.0, tdata->x, tmp_x);
         N_VAbs(tmp_x, tmp_x);
         x_tmp = N_VGetArrayPointer(tmp_x);
-        for (int ix=0; ix<udata->nx; ix++) {
+        for (int ix=0; ix<model->nx; ix++) {
             if (x_tmp[ix] < udata->atol) {
                 x_tmp[ix] = udata->atol;
             }
@@ -1269,13 +1274,13 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
             if (udata->ts[it] > udata->tstart) {
                 while (tdata->t<udata->ts[it]) {
                     if (udata->sensi_meth == AMICI_SENSI_ASA && udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                        if (udata->nx>0) {
+                        if (model->nx>0) {
                             status = solver->AMISolveF(RCONST(udata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL, &ncheck);
                         } else {
                             tdata->t = udata->ts[it];
                         }
                     } else {
-                        if (udata->nx>0) {
+                        if (model->nx>0) {
                             if (std::isinf(udata->ts[it])) {
                                 status = workSteadyStateProblem(udata, tdata, rdata, it, solver, model);
                             } else {
@@ -1285,7 +1290,7 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
                             tdata->t = udata->ts[it];
                         }
                     }
-                    if (udata->nx>0) {
+                    if (model->nx>0) {
                         x_tmp = NV_DATA_S(tdata->x);
                         if(!x_tmp) return AMICI_ERROR_SIMULATION;
                         if (status == -22) {
@@ -1305,12 +1310,12 @@ int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, cons
             status = handleDataPoint(it, udata, rdata, edata, tdata, solver, model);
             if (status != AMICI_SUCCESS) goto freturn;
         } else {
-            for(int ix=0; ix < udata->nx; ix++) rdata->x[ix*udata->nt+it] = amiGetNaN();
+            for(int ix=0; ix < model->nx; ix++) rdata->x[ix*udata->nt+it] = amiGetNaN();
         }
     }
     
     /* fill events */
-    if (udata->ne>0) {
+    if (model->ne>0) {
         getEventOutput(&tlastroot, udata, rdata, edata, tdata, model);
     }
 
@@ -1343,21 +1348,21 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
     int status = (int) *rdata->status;
     double tnext;
     
-    if (udata->nx <= 0
+    if (model->nx <= 0
             || udata->sensi < AMICI_SENSI_ORDER_FIRST
             || udata->sensi_meth != AMICI_SENSI_ASA
             || status != AMICI_SUCCESS) {
         return status;
     }
 
-    solver->setupAMIB(udata, tdata);
+    solver->setupAMIB(udata, tdata, model);
 
     it = udata->nt-2;
     --tdata->iroot;
     while (it>=0 || tdata->iroot>=0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        tnext = getTnext(tdata->discs, tdata->iroot, udata->ts, it, udata);
+        tnext = getTnext(tdata->discs, tdata->iroot, udata->ts, it, model);
 
         if (tnext<tdata->t) {
             status = solver->AMISolveB(tnext, AMICI_NORMAL);
@@ -1372,7 +1377,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
 
         /* handle discontinuity */
 
-        if (udata->ne>0 && udata->nmaxevent>0 && tdata->iroot >=0) {
+        if (model->ne>0 && udata->nmaxevent>0 && tdata->iroot >=0) {
             if (tnext == tdata->discs[tdata->iroot]) {
                 handleEventB(tdata->iroot, udata, tdata, model);
                 --tdata->iroot;
@@ -1381,7 +1386,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
 
         /* handle data-point */
         if (tnext == udata->ts[it]) {
-            handleDataPointB(it, udata, rdata, tdata, solver);
+            handleDataPointB(it, udata, rdata, tdata, solver, model);
             it--;
         }
 
@@ -1399,7 +1404,7 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
     /* we still need to integrate from first datapoint to tstart */
     if (tdata->t>udata->tstart) {
         if (status == AMICI_SUCCESS) {
-            if (udata->nx>0) {
+            if (model->nx>0) {
                 /* solve for backward problems */
                 status = solver->AMISolveB(udata->tstart, AMICI_NORMAL);
                 if (status != AMICI_SUCCESS) return status;
@@ -1423,13 +1428,13 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
     if(!xB_tmp) return AMICI_ERROR_ASA;
     realtype *sx_tmp;
 
-    for (int iJ=0; iJ<udata->nJ; iJ++) {
+    for (int iJ=0; iJ<model->nJ; iJ++) {
         if (iJ==0) {
             for (ip=0; ip<udata->nplist; ++ip) {
                 tdata->llhS0[iJ*udata->nplist + ip] = 0.0;
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
                 if(!sx_tmp) return AMICI_ERROR_ASA;
-                for (ix = 0; ix < udata->nxtrue; ++ix) {
+                for (ix = 0; ix < model->nxtrue; ++ix) {
                     tdata->llhS0[ip] = tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
                 }
             }
@@ -1438,10 +1443,10 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
                 tdata->llhS0[ip + iJ * udata->nplist] = 0.0;
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
                 if(!sx_tmp) return AMICI_ERROR_ASA;
-                for (ix = 0; ix < udata->nxtrue; ++ix) {
+                for (ix = 0; ix < model->nxtrue; ++ix) {
                     tdata->llhS0[ip + iJ * udata->nplist] = tdata->llhS0[ip + iJ * udata->nplist]
-                            + xB_tmp[ix + iJ * udata->nxtrue] * sx_tmp[ix]
-                            + xB_tmp[ix] * sx_tmp[ix + iJ * udata->nxtrue];
+                            + xB_tmp[ix + iJ * model->nxtrue] * sx_tmp[ix]
+                            + xB_tmp[ix] * sx_tmp[ix + iJ * model->nxtrue];
                 }
             }
         }
@@ -1450,12 +1455,12 @@ int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Sol
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if(!xQB_tmp) return AMICI_ERROR_ASA;
 
-    for(int iJ=0; iJ<udata->nJ; iJ++) {
+    for(int iJ=0; iJ<model->nJ; iJ++) {
         for(ip=0; ip < udata->nplist; ip++) {
             if (iJ==0) {
                 rdata->sllh[ip] -=  tdata->llhS0[ip] + xQB_tmp[ip];
             } else {
-                rdata->s2llh[iJ-1 + ip*(udata->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
+                rdata->s2llh[iJ-1 + ip*(model->nJ-1)] -= tdata->llhS0[ip + iJ*udata->nplist] + xQB_tmp[ip + iJ*udata->nplist];
             }
         }
     }
@@ -1485,22 +1490,22 @@ int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, 
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
         run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-        status = getNewtonOutput(udata, tdata, rdata, 1, run_time);
+        status = getNewtonOutput(tdata, rdata, 1, run_time, model->nx);
     } else {
         /* Newton solver did not find a steady state, so try integration */
-        status = getNewtonSimulation(udata, tdata, rdata, solver);
+        status = getNewtonSimulation(udata, tdata, rdata, solver, model);
         
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-            status = getNewtonOutput(udata, tdata, rdata, 2, run_time);
+            status = getNewtonOutput(tdata, rdata, 2, run_time, model->nx);
         } else {
             status = applyNewtonsMethod(udata, rdata, tdata, 2, model);
             
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */
                 run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-                status = getNewtonOutput(udata, tdata, rdata, 3, run_time);
+                status = getNewtonOutput(tdata, rdata, 3, run_time, model->nx);
             } else {
                 /* integration error occured */
                 return(status);
@@ -1523,7 +1528,7 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
      * @return void
      */
 
-    if(!udata || !tdata || udata->nx <= 0)
+    if(!udata || !tdata || model->nx <= 0)
         return AMICI_SUCCESS;
 
     /*
@@ -1537,32 +1542,33 @@ int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  Re
     if(!xdot_tmp) return AMICI_ERROR_SIMULATION;
 
     if (rdata->xdot)
-        memcpy(rdata->xdot,xdot_tmp,udata->nx*sizeof(realtype));
+        memcpy(rdata->xdot,xdot_tmp,model->nx*sizeof(realtype));
 
-    status = model->fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,tdata,NULL,NULL,NULL);
+    status = model->fJ(model->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,tdata,NULL,NULL,NULL);
+
     if (status != AMICI_SUCCESS) return status;
 
     if (rdata->J)
-        memcpy(rdata->J,tdata->Jtmp->data,udata->nx*udata->nx*sizeof(realtype));
+        memcpy(rdata->J,tdata->Jtmp->data,model->nx*model->nx*sizeof(realtype));
 
     if (udata->sensi_meth == AMICI_SENSI_SS) {
         status = model->fdxdotdp(tdata->t,tdata->x,tdata->dx,tdata);
         if(status != AMICI_SUCCESS) return status;
 
         if(rdata->dxdotdp)
-            memcpy(rdata->dxdotdp,tdata->dxdotdp,udata->nx*udata->nplist*sizeof(realtype));
+            memcpy(rdata->dxdotdp,tdata->dxdotdp,model->nx*udata->nplist*sizeof(realtype));
 
         status = model->fdydp(tdata->t,udata->nt-1,tdata->x,tdata);
         if(status != AMICI_SUCCESS) return status;
 
         if(rdata->dydp)
-            memcpy(rdata->dydp,tdata->dydp,udata->ny*udata->nplist*sizeof(realtype));
+            memcpy(rdata->dydp,tdata->dydp,model->ny*udata->nplist*sizeof(realtype));
 
         status = model->fdydx(tdata->t,udata->nt-1,tdata->x,tdata);
         if(status != AMICI_SUCCESS) return status;
 
         if(rdata->dydx)
-            memcpy(rdata->dydx,tdata->dydx,udata->ny*udata->nx*sizeof(realtype));
+            memcpy(rdata->dydx,tdata->dydx,model->ny*model->nx*sizeof(realtype));
     }
 
     return status;

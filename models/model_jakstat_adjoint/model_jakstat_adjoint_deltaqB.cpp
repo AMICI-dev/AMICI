@@ -16,7 +16,7 @@ realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
 realtype *xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 int ip;
-memset(tdata->deltaqB,0,sizeof(realtype)*udata->nplist*udata->nJ);
+memset(tdata->deltaqB,0,sizeof(realtype)*udata->nplist*model->nJ);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {

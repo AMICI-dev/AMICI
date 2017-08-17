@@ -10,6 +10,6 @@ class Model;
 
 UserData getUserData();
 Solver *getSolver();
-Model *getModel(UserData*, const ExpData *);
+Model *getModel();
 
 #endif // AMICI_MODEL_FUNCTIONS_H

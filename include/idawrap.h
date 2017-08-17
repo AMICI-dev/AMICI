@@ -42,8 +42,8 @@ public:
         return IDAQuadInitB(ami_mem, which, fqBdot, qBdot);
     }
 
-    int wrap_RootInit(UserData *udata) {
-        return IDARootInit(ami_mem, udata->ne, froot);
+    int wrap_RootInit(int ne) {
+        return IDARootInit(ami_mem, ne, froot);
     }
 
     int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) {

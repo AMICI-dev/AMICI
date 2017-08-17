@@ -1,4 +1,6 @@
 #include "include/amici_interface_cpp.h"
+#include <include/amici_model.h>
+#include <include/amici_model_functions.h>
 #include "include/amici.h"
 
 #ifdef __APPLE__
@@ -21,22 +23,17 @@ FIELD ## data = new double[(D1) * (D2) * (D3) * (D4)]();
 
 
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
-    double *originalParams = NULL;
 
-    if(udata->pscale != AMICI_SCALING_NONE) {
-        originalParams = (double *) malloc(sizeof(double) * udata->np);
-        memcpy(originalParams, udata->p, sizeof(double) * udata->np);
-    }
+    Model *model = getModel();
+    Solver *solver = getSolver();
 
-    ReturnData *rdata = new ReturnData(udata);
+    ReturnData *rdata = new ReturnData(udata, model);
 
-    int status = runAmiciSimulation(udata, edata, rdata);
+    int status = runAmiciSimulation(udata, edata, rdata,  model, solver);
     *rdata->status = status;
 
-    if(originalParams) {
-        memcpy(udata->p, originalParams, sizeof(double) * udata->np);
-        free(originalParams);
-    }
+    delete model;
+    delete solver;
 
     return rdata;
 }

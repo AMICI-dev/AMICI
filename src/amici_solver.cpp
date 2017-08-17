@@ -45,17 +45,15 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
     /* activates stability limit detection */
     if (AMISetStabLimDet(udata->stldet) != AMICI_SUCCESS) goto freturn;
 
-    if (udata->ne > 0) {
-        if (wrap_RootInit(udata) != AMICI_SUCCESS) goto freturn;
-    }
+    if (wrap_RootInit(model->ne) != AMICI_SUCCESS) goto freturn;
 
-    status = setLinearSolver(udata, ami_mem);
+    status = setLinearSolver(udata, model);
     if(status != AMICI_SUCCESS)
         goto freturn;
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         if (udata->sensi_meth == AMICI_SENSI_FSA) {
-            if (udata->nx>0) {
+            if (model->nx>0) {
 
                 /* initialise sensitivities, this can either be user provided or come from the model definition */
                 realtype *sx_tmp;
@@ -68,8 +66,8 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
                         sx_tmp = NV_DATA_S(tdata->sx[ip]);
                         if(!sx_tmp) goto freturn;
                         int ix;
-                        for (ix=0; ix<udata->nx; ix++) {
-                            sx_tmp[ix] = (realtype) udata->sx0data[ix + udata->nx*ip];
+                        for (ix=0; ix<model->nx; ix++) {
+                            sx_tmp[ix] = (realtype) udata->sx0data[ix + model->nx*ip];
                         }
                     }
                 }
@@ -89,7 +87,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
         }
 
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            if (udata->nx>0) {
+            if (model->nx>0) {
                 /* Allocate space for the adjoint computation */
                 if (AMIAdjInit(udata->maxsteps, udata->interpType) != AMICI_SUCCESS) goto freturn;
             }
@@ -97,10 +95,10 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 
     }
 
-    id = N_VNew_Serial(udata->nx);
+    id = N_VNew_Serial(model->nx);
     if(!id) goto freturn;
     if(!udata->idlist) goto freturn;
-    memcpy(NV_CONTENT_S(id)->data, udata->idlist, udata->nx * sizeof(double));
+    memcpy(NV_CONTENT_S(id)->data, udata->idlist, model->nx * sizeof(double));
 
     if (AMISetId(id) != AMICI_SUCCESS) goto freturn;
     if(id) N_VDestroy_Serial(id);
@@ -116,25 +114,25 @@ freturn:
 
 }
 
-int Solver::setupAMIB(UserData *udata, TempData *tdata) {
+int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
     int status = AMICI_SUCCESS;
 
     /* write initial conditions */
     if(!tdata->xB) return AMICI_ERROR_SETUPB;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if(!xB_tmp) return AMICI_ERROR_SETUPB;
-    memset(xB_tmp,0,sizeof(realtype)*udata->nxtrue*udata->nJ);
-    for (int ix=0; ix<udata->nxtrue; ++ix)
-        for (int iJ=0; iJ<udata->nJ; ++iJ)
-            xB_tmp[ix + iJ * udata->nxtrue] += tdata->dJydx[udata->nt-1 + (iJ + ix * udata->nJ) * udata->nt];
+    memset(xB_tmp,0,sizeof(realtype)*model->nxtrue*model->nJ);
+    for (int ix=0; ix<model->nxtrue; ++ix)
+        for (int iJ=0; iJ<model->nJ; ++iJ)
+            xB_tmp[ix + iJ * model->nxtrue] += tdata->dJydx[udata->nt-1 + (iJ + ix * model->nJ) * udata->nt];
 
     if(!tdata->dxB) return AMICI_ERROR_SETUPB;
     if(!NV_DATA_S(tdata->dxB)) return AMICI_ERROR_SETUPB;
-    memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*udata->nx);
+    memset(NV_DATA_S(tdata->dxB),0,sizeof(realtype)*model->nx);
 
     if(!tdata->xQB) return AMICI_ERROR_SETUPB;
     if(!NV_DATA_S(tdata->xQB)) return AMICI_ERROR_SETUPB;
-    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*udata->nJ*udata->nplist);
+    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*model->nJ*udata->nplist);
 
     /* create backward problem */
     if (udata->lmm>2||udata->lmm<1) {
@@ -169,7 +167,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata) {
     /* DIRECT SOLVERS */
 
     case AMICI_DENSE:
-        status = AMIDenseB(tdata->which, udata->nx);
+        status = AMIDenseB(tdata->which, model->nx);
         if(status != AMICI_SUCCESS) return status;
 
         status = wrap_SetDenseJacFnB(tdata->which);
@@ -178,7 +176,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata) {
         break;
 
     case AMICI_BAND:
-        status = AMIBandB(tdata->which, udata->nx, udata->ubw, udata->lbw);
+        status = AMIBandB(tdata->which, model->nx, model->ubw, model->lbw);
         if(status != AMICI_SUCCESS) return status;
 
         status = wrap_SetBandJacFnB(tdata->which);
@@ -254,7 +252,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata) {
         /* SPARSE SOLVERS */
 
     case AMICI_KLU:
-        status = AMIKLUB(tdata->which, udata->nx, udata->nnz, CSC_MAT);
+        status = AMIKLUB(tdata->which, model->nx, model->nnz, CSC_MAT);
         if(status != AMICI_SUCCESS) return status;
 
         status = wrap_SetSparseJacFnB(tdata->which);
@@ -381,7 +379,7 @@ int Solver::getDiagnosisB(int it, UserData *udata, ReturnData *rdata, TempData *
     return status;
 }
 
-int Solver::setLinearSolver(const UserData *udata, void *ami_mem) {
+int Solver::setLinearSolver(const UserData *udata, Model *model) {
     int status;
     /* Attach linear solver module */
 
@@ -391,13 +389,13 @@ int Solver::setLinearSolver(const UserData *udata, void *ami_mem) {
 
     case AMICI_DENSE:
 
-        status = AMIDense(udata->nx);
+        status = AMIDense(model->nx);
         if (status != AMICI_SUCCESS) return status;
 
         return wrap_SetDenseJacFn();
 
     case AMICI_BAND:
-        status = AMIBand(udata->nx, udata->ubw, udata->lbw);
+        status = AMIBand(model->nx, model->ubw, model->lbw);
         if (status != AMICI_SUCCESS) return status;
 
         return wrap_SetBandJacFn();
@@ -449,7 +447,7 @@ int Solver::setLinearSolver(const UserData *udata, void *ami_mem) {
         /* SPARSE SOLVERS */
 
     case AMICI_KLU:
-        status = AMIKLU(udata->nx, udata->nnz, CSC_MAT);
+        status = AMIKLU(model->nx, model->nnz, CSC_MAT);
         if (status != AMICI_SUCCESS) return status;
 
         status = wrap_SetSparseJacFn();

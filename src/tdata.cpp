@@ -17,74 +17,74 @@ TempData::TempData(const UserData *udata, Model *model) : udata(udata), model(mo
     
     nplist = udata->nplist;
     
-    Jy = new realtype[udata->nJ]();
-    Jz = new realtype[udata->nJ]();
-    sigmay = new realtype[udata->ny]();
-    sigmaz = new realtype[udata->nz]();
+    Jy = new realtype[model->nJ]();
+    Jz = new realtype[model->nJ]();
+    sigmay = new realtype[model->ny]();
+    sigmaz = new realtype[model->nz]();
 
-    if(udata->nx>0) {
-        x = N_VNew_Serial(udata->nx);
-        x_old = N_VNew_Serial(udata->nx);
-        dx = N_VNew_Serial(udata->nx); /* only needed for idas */
-        dx_old = N_VNew_Serial(udata->nx); /* only needed for idas */
-        xdot = N_VNew_Serial(udata->nx);
-        xdot_old = N_VNew_Serial(udata->nx);
-        Jtmp = NewDenseMat(udata->nx,udata->nx);
+    if(model->nx>0) {
+        x = N_VNew_Serial(model->nx);
+        x_old = N_VNew_Serial(model->nx);
+        dx = N_VNew_Serial(model->nx); /* only needed for idas */
+        dx_old = N_VNew_Serial(model->nx); /* only needed for idas */
+        xdot = N_VNew_Serial(model->nx);
+        xdot_old = N_VNew_Serial(model->nx);
+        Jtmp = NewDenseMat(model->nx,model->nx);
 
         /* initialise temporary jacobian storage */
-        J = SparseNewMat(udata->nx,udata->nx,udata->nnz,CSC_MAT);
-        M = new realtype[udata->nx*udata->nx]();
-        dfdx = new realtype[udata->nx*udata->nx]();
+        J = SparseNewMat(model->nx,model->nx,model->nnz,CSC_MAT);
+        M = new realtype[model->nx*model->nx]();
+        dfdx = new realtype[model->nx*model->nx]();
     }
 
-    if (udata->ne>0) {
+    if (model->ne>0) {
         /* initialise temporary stau storage */
         stau = new realtype[nplist]();
     }
 
-    w = new realtype[udata->nw]();
-    dwdx = new realtype[udata->ndwdx]();
-    dwdp = new realtype[udata->ndwdp]();
+    w = new realtype[model->nw]();
+    dwdx = new realtype[model->ndwdx]();
+    dwdp = new realtype[model->ndwdp]();
 
     
     /* EVENTS */
-    rootsfound = new int[udata->ne]();
-    rootvals = new realtype[udata->ne]();
-    h = new realtype[udata->ne]();
-    h_udata = new realtype[udata->ne]();
+    rootsfound = new int[model->ne]();
+    rootvals = new realtype[model->ne]();
+    h = new realtype[model->ne]();
+    h_udata = new realtype[model->ne]();
 
-    rootidx = new int[udata->nmaxevent*udata->ne*udata->ne]();
-    nroots = new int[udata->ne]();
-    discs = new realtype[udata->nmaxevent*udata->ne]();
-    deltax = new realtype[udata->nx]();
-    deltasx = new realtype[udata->nx*udata->nplist]();
-    deltaxB = new realtype[udata->nx]();
-    deltaqB = new realtype[udata->nJ*udata->nplist]();
+    rootidx = new int[udata->nmaxevent*model->ne*model->ne]();
+    nroots = new int[model->ne]();
+    discs = new realtype[udata->nmaxevent*model->ne]();
+    deltax = new realtype[model->nx]();
+    deltasx = new realtype[model->nx*udata->nplist]();
+    deltaxB = new realtype[model->nx]();
+    deltaqB = new realtype[model->nJ*udata->nplist]();
     
     /* SENSITIVITIES */
     if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* initialise temporary dxdotdp storage */
-        dxdotdp = new realtype[udata->nx*nplist]();
+        dxdotdp = new realtype[model->nx*nplist]();
 
-        dydx = new realtype[udata->ny * udata->nx]();
-        dydp = new realtype[udata->ny * udata->nplist]();
-        dJydp = new realtype[udata->nJ * udata->nplist]();
-        dJydx = new realtype[udata->nJ * udata->nx * udata->nt]();
-        dJydy = new realtype[udata->nJ * udata->nytrue * udata->ny]();
-        dJydsigma = new realtype[udata->nJ * udata->nytrue * udata->ny]();
-        dzdx = new realtype[udata->nz*udata->nx]();
-        dzdp = new realtype[udata->nz*udata->nplist]();
-        drzdx = new realtype[udata->nz*udata->nx]();
-        drzdp = new realtype[udata->nz*udata->nplist]();
-        dJzdp = new realtype[udata->nJ * udata->nplist]();
-        dJzdx = new realtype[udata->nJ * udata->nx * udata->nmaxevent]();
-        dJzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
-        dJzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
-        dJrzdz = new realtype[udata->nJ * udata->nztrue * udata->nz]();
-        dJrzdsigma = new realtype[udata->nJ * udata->nztrue * udata->nz]();
+        dydx = new realtype[model->ny * model->nx]();
+        dydp = new realtype[model->ny * udata->nplist]();
+        dJydp = new realtype[model->nJ * udata->nplist]();
+        dJydx = new realtype[model->nJ * model->nx * udata->nt]();
+        dJydy = new realtype[model->nJ * model->nytrue * model->ny]();
+        dJydsigma = new realtype[model->nJ * model->nytrue * model->ny]();
+        dzdx = new realtype[model->nz*model->nx]();
+        dzdp = new realtype[model->nz*udata->nplist]();
+        drzdx = new realtype[model->nz*model->nx]();
+        drzdp = new realtype[model->nz*udata->nplist]();
+        dJzdp = new realtype[model->nJ * udata->nplist]();
+        dJzdx = new realtype[model->nJ * model->nx * udata->nmaxevent]();
+        dJzdz = new realtype[model->nJ * model->nztrue * model->nz]();
+        dJzdsigma = new realtype[model->nJ * model->nztrue * model->nz]();
+        dJrzdz = new realtype[model->nJ * model->nztrue * model->nz]();
+        dJrzdsigma = new realtype[model->nJ * model->nztrue * model->nz]();
         
-        dsigmaydp = new realtype[udata->ny * udata->nplist]();
-        dsigmazdp = new realtype[udata->nz * udata->nplist]();
+        dsigmaydp = new realtype[model->ny * udata->nplist]();
+        dsigmazdp = new realtype[model->nz * udata->nplist]();
         
         if(udata->nplist && x) {
             sx = N_VCloneVectorArray_Serial(udata->nplist, x);
@@ -92,18 +92,18 @@ TempData::TempData(const UserData *udata, Model *model) : udata(udata), model(mo
         }
         
         if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            llhS0 = new realtype[udata->nJ * udata->nplist]();
-            if(udata->ne > 0 && udata->nmaxevent > 0 && x) {
-                x_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
-                xdot_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
-                xdot_old_disc = N_VCloneVectorArray_Serial(udata->ne * udata->nmaxevent, x);
+            llhS0 = new realtype[model->nJ * udata->nplist]();
+            if(model->ne > 0 && udata->nmaxevent > 0 && x) {
+                x_disc = N_VCloneVectorArray_Serial(model->ne * udata->nmaxevent, x);
+                xdot_disc = N_VCloneVectorArray_Serial(model->ne * udata->nmaxevent, x);
+                xdot_old_disc = N_VCloneVectorArray_Serial(model->ne * udata->nmaxevent, x);
             }
-            if(udata->nx > 0 && udata->nplist > 0) {
-                xB = N_VNew_Serial(udata->nxtrue * udata->nJ);
-                xB_old = N_VNew_Serial(udata->nxtrue * udata->nJ);
-                dxB = N_VNew_Serial(udata->nxtrue * udata->nJ);
-                xQB = N_VNew_Serial(udata->nJ * udata->nplist);
-                xQB_old = N_VNew_Serial(udata->nJ * udata->nplist);
+            if(model->nx > 0 && udata->nplist > 0) {
+                xB = N_VNew_Serial(model->nxtrue * model->nJ);
+                xB_old = N_VNew_Serial(model->nxtrue * model->nJ);
+                dxB = N_VNew_Serial(model->nxtrue * model->nJ);
+                xQB = N_VNew_Serial(model->nJ * udata->nplist);
+                xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
             }
         }
     }
