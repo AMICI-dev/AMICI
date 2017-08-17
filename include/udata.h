@@ -41,9 +41,6 @@ public:
              AMICI_o2mode o2mode
              );
 
-    void initTemporaryFields();
-    void freeTemporaryFields();
-
     int unscaleParameters();
 
     virtual ~UserData();
@@ -141,12 +138,11 @@ public:
     int ism;
     
     /** method for sensitivity computation */
-    /*!
-     * CW_FSA for forward sensitivity analysis, CW_ASA for adjoint sensitivity analysis
-     */
     AMICI_sensi_meth sensi_meth;
+
     /** linear solver specification */
     int linsol;
+
     /** interpolation type */
     /*!
      * specifies the interpolation type for the forward problem solution which is then used for the backwards problem. can be either CV_POLYNOMIAL or CV_HERMITE
@@ -168,8 +164,6 @@ public:
     /** flag controlling stability limit detection */
     booleantype stldet;
     
-    
-
     /** state initialisation */
     double *x0data;
     
