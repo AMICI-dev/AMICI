@@ -3,6 +3,7 @@
 #include "include/amici_misc.h"
 #include "include/amici_model.h"
 #include "include/symbolic_functions.h"
+#include <cstring>
 
 ReturnData::ReturnData() : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
     ne(0), nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0), pscale(AMICI_SCALING_NONE),
@@ -21,6 +22,8 @@ ReturnData::ReturnData(const UserData *udata, const Model *model) :
     setDefaults();
 
     initFields();
+
+    memcpy(ts, udata->ts, nt * sizeof(realtype));
 }
 
 void ReturnData::setDefaults()
