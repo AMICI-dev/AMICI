@@ -143,7 +143,7 @@ public:
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
 
-    /** current root index, will be increased during the forward solve */
+    /** current root index, will be increased during the forward solve and decreased during backward solve */
     int iroot = 0;
 
 
