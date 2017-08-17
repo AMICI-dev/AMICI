@@ -17,7 +17,6 @@
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
-
 #include <include/amici_model_functions.h>
 #include "include/amici_solver.h"
 #include "include/amici_model.h"
@@ -44,7 +43,7 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata)
     status = udata->unscaleParameters();
     if (status == AMICI_SUCCESS) udata->initTemporaryFields();
     
-    /* pointer to cvodes memory block */
+
     status = solver->setupAMI(udata, tdata, model);
     if (status != AMICI_SUCCESS)
         goto freturn;
@@ -61,13 +60,9 @@ freturn:
     delete tdata;
     delete model;
     delete solver;
+
     return status;
 }
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
@@ -85,7 +80,6 @@ int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *ed
      * @return status flag indicating success of execution @type int
      */
     
-    int iy,ip,iJ;
     int status = AMICI_SUCCESS;
     
     status = model->fdydx(udata->ts[it],it,tdata->x,udata,tdata);
@@ -94,48 +88,51 @@ int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *ed
     status = model->fdydp(udata->ts[it],it,tdata->x,udata,tdata);
     if(status != AMICI_SUCCESS) return status;
 
-    if (edata) {
-        status = model->fdsigma_ydp(tdata->t,udata,tdata);
-        if(status != AMICI_SUCCESS) return status;
-        for (iy=0; iy<udata->nytrue; iy++) {
-            if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
-                for (ip=0; ip<udata->nplist; ip++) {
-                    tdata->dsigmaydp[ip*udata->ny+iy] = 0;
-                }
-            }
-            for (ip=0; ip<udata->nplist; ip++) {
-                rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
-            }
-        }
-        status = model->fdJydy(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
-        if(status != AMICI_SUCCESS) return status;
+    if (!edata)
+        return status;
 
-        status = model->fdJydsigma(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
-        if(status != AMICI_SUCCESS) return status;
+    status = model->fdsigma_ydp(tdata->t,udata,tdata);
+    if(status != AMICI_SUCCESS) return status;
 
-        status = Model::fdJydx(it,udata,tdata,edata);
-        if(status != AMICI_SUCCESS) return status;
-
-        status = Model::fdJydp(it,udata,tdata,edata,rdata);
-        if(status != AMICI_SUCCESS) return status;
-
-        if (udata->sensi_meth == AMICI_SENSI_ASA) {
-            for(iJ=0; iJ<udata->nJ; iJ++) {
-                for(ip=0; ip < udata->nplist; ip++) {
-                    if (iJ==0) {
-                        if (udata->ny>0) {
-                            rdata->sllh[ip] -= tdata->dJydp[ip * udata->nJ];
-                        }
-                    } else {
-                        if (udata->ny>0) {
-                            rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJydp[iJ + ip * udata->nJ];
-                        }
-                    }
-                }
+    for (int iy=0; iy<udata->nytrue; iy++) {
+        if (!amiIsNaN(edata->sigmay[iy*udata->nt+it])) {
+            for (int ip=0; ip<udata->nplist; ip++) {
+                tdata->dsigmaydp[ip*udata->ny+iy] = 0;
             }
         }
-        
+        for (int ip=0; ip<udata->nplist; ip++) {
+            rdata->ssigmay[it + udata->nt*(ip*udata->ny+iy)] = tdata->dsigmaydp[ip*udata->ny+iy];
+        }
     }
+    status = model->fdJydy(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
+    if(status != AMICI_SUCCESS) return status;
+
+    status = model->fdJydsigma(tdata->t,it,tdata->x,udata,tdata,edata,rdata);
+    if(status != AMICI_SUCCESS) return status;
+
+    status = Model::fdJydx(it,udata,tdata,edata);
+    if(status != AMICI_SUCCESS) return status;
+
+    status = Model::fdJydp(it,udata,tdata,edata,rdata);
+    if(status != AMICI_SUCCESS) return status;
+
+    if (udata->sensi_meth != AMICI_SENSI_ASA)
+        return status;
+
+    for(int iJ=0; iJ<udata->nJ; iJ++) {
+        for(int ip=0; ip < udata->nplist; ip++) {
+            if (iJ==0) {
+                if (udata->ny>0) {
+                    rdata->sllh[ip] -= tdata->dJydp[ip * udata->nJ];
+                }
+            } else {
+                if (udata->ny>0) {
+                    rdata->s2llh[(iJ - 1) + ip * (udata->nJ-1) ] -= tdata->dJydp[iJ + ip * udata->nJ];
+                }
+            }
+        }
+    }
+
     return status;
 }
 
