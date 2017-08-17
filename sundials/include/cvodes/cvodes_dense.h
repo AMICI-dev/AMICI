@@ -24,7 +24,6 @@
 
 #include <cvodes/cvodes_direct.h>
 #include <sundials/sundials_dense.h>
-#include "cvodes_impl.h"
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -49,9 +48,9 @@ extern "C" {
  *    CVDLS_ILL_INPUT if a required vector operation is missing
  * -----------------------------------------------------------------
  */
-    
+
 SUNDIALS_EXPORT int CVDense(void *cvode_mem, long int N);
-    
+
 /*
  * -----------------------------------------------------------------
  * Function: CVDenseB

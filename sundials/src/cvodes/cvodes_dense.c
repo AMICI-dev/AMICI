@@ -46,7 +46,7 @@ static int cvDenseFree(CVodeMem cv_mem);
 /* CVSDENSE lfreeB function */
 static int cvDenseFreeB(CVodeBMem cvb_mem);
 
-/*
+/* 
  * ================================================================
  *
  *                   PART I - forward problems
