@@ -11,7 +11,6 @@
 #define AMICI_SPBCG       7
 #define AMICI_SPTFQMR     8
 #define AMICI_KLU         9
-#define AMICI_BICGSTAB   10
 
 #define AMICI_ONEOUTPUT   5
 

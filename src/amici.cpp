@@ -1415,13 +1415,8 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     double res_abs;
     double res_rel;
     double res_tmp;
-    booleantype jcurPtr = TRUE;
     double gamma = 1.0;
     realtype *x_tmp;
-    
-    N_Vector tmp1 = N_VNew_Serial(udata->nx);
-    N_Vector tmp2 = N_VNew_Serial(udata->nx);
-    N_Vector tmp3 = N_VNew_Serial(udata->nx);
     
     N_Vector delta = N_VNew_Serial(udata->nx);
     N_Vector rel_x_newton = N_VNew_Serial(udata->nx);
@@ -1433,45 +1428,7 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
     /* Check, how fxdot is used exactly within AMICI... */
     fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, udata);
     res_abs = sqrt(N_VDotProd(tdata->xdot,tdata->xdot));
-    
-    /* testing to use the sundials linear solvers
-    
-    
-    N_Vector weight = N_VNew_Serial(udata->nx);
-    N_VConst(1.0, weight);
-    
-    t_status = fJ(udata->nx,tdata->t,0,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,NULL,NULL,NULL);
-    
-    t_status = AMIDense(ami_mem, udata->nx);
-    PrintMat(tdata->Jtmp);
-    t_status = fJ(udata->nx,tdata->t,3,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,tmp1,tmp2,tmp3);
-    */
-    // A new beginning
-    long int pivots = 0;
-    int t_status = 0;
-    t_status = fJ(udata->nx,tdata->t,3,tdata->x,tdata->dx,tdata->xdot,tdata->Jtmp,udata,tmp1,tmp2,tmp3);
-    PrintMat(tdata->Jtmp);
-    t_status = DenseGETRF(tdata->Jtmp, &pivots);
-    
-    N_Vector delta2 = N_VNew_Serial(udata->nx);
-    x_tmp = N_VGetArrayPointer(delta2);
-    fxdot(tdata->t, tdata->x, tdata->dx, delta2, udata);
-    DenseGETRS(tdata->Jtmp, &pivots, x_tmp);
-    // A new ending
-    
-    N_VPrint_Serial(tdata->x);
-    x_tmp = N_VGetArrayPointer(tdata->x);
-    /*
-    t_status = cvDenseSetup((CVodeMem) ami_mem,setup_status,tdata->x,tdata->xdot,&jcurPtr,tmp1,tmp2,tmp3);
-    
-    t_status = cvDenseSolve((CVodeMem) ami_mem, delta2, weight, tdata->x, tdata->xdot);
-    N_VPrint_Serial(delta2);*/
-    // t_status = cv_lsolve(ami_mem, delta2, weight, tdata->x, tdata->xdot);
-    // t_status = CVode(ami_mem, RCONST(udata->ts[0]), tdata->x, &(tdata->t), AMICI_NORMAL);
-    // cvode_mem->cv_lsolve(&ami_mem, delta2, weight, tdata->x, tdata->xdot);
-    /* finish testing */
 
-    
     /* Check for relative error, but make sure not to divide by 0!
     Ensure positivity of the state */
     N_VScale(1.0, tdata->x, x_newton);
@@ -1578,9 +1535,9 @@ int applyNewtonsMethod(void *ami_mem, UserData *udata, ReturnData *rdata, TempDa
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta) {
+int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector delta) {
     /**
-     * getNewtonStep acomputes the Newton Step by solving a linear system
+     * getNewtonStep acomputes the Newton Step by solving the linear system
      *
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -1593,124 +1550,80 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      * @return int status flag indicating success of execution @type int
      */
     
-     int status = AMICI_ERROR_NEWTON_LINSOLVER;
-     double rho;
-     double rho1;
-     double alpha;
-     double beta;
-     double omega;
-     double res;
+     int status = AMICI_SUCCESS;
+     realtype *x_tmp;
+     long int *pivots = NewLintArray(udata->nx);
+     N_Vector tmp1 = N_VNew_Serial(udata->nx);
+     N_Vector tmp2 = N_VNew_Serial(udata->nx);
+     N_Vector tmp3 = N_VNew_Serial(udata->nx);
     
-     N_Vector ns_p = N_VNew_Serial(udata->nx);
-     N_Vector ns_h = N_VNew_Serial(udata->nx);
-     N_Vector ns_t = N_VNew_Serial(udata->nx);
-     N_Vector ns_s = N_VNew_Serial(udata->nx);
-     N_Vector ns_r = N_VNew_Serial(udata->nx);
-     N_Vector ns_rt = N_VNew_Serial(udata->nx);
-     N_Vector ns_v = N_VNew_Serial(udata->nx);
-     N_Vector ns_Jv = N_VNew_Serial(udata->nx);
-     N_Vector ns_tmp = N_VNew_Serial(udata->nx);
-     N_Vector ns_Jdiag = N_VNew_Serial(udata->nx);
-    
-     N_VScale(-1.0, tdata->xdot, tdata->xdot);
-    
-    // Get the diagonal of the Jacobian for preconditioning
-    fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
-    
-    // Ensure positivity of entries in ns_Jdiag
-    N_VConst(1.0, ns_p);
-    N_VAbs(ns_Jdiag, ns_tmp);
-    N_VCompare(1e-15, ns_tmp, ns_tmp);
-    N_VLinearSum(-1.0, ns_tmp, 1.0, ns_p, ns_tmp);
-    N_VLinearSum(1.0, ns_Jdiag, 1.0, ns_tmp, ns_Jdiag);
-    
-    
-    // Initialize for linear solve
-    N_VConst(0.0, ns_p);
-    N_VConst(0.0, ns_v);
-    N_VConst(0.0, ns_delta);
-    N_VConst(0.0, ns_tmp);
-    rho = 1.0;
-    omega = 1.0;
-    alpha = 1.0;
-    
-    // can be set to 0 at the moment
-    fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
-    
-    // ns_r = xdot - ns_Jv;
-    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
-    N_VDiv(ns_r, ns_Jdiag, ns_r);
-    res = sqrt(N_VDotProd(ns_r, ns_r));
-    N_VScale(1.0, ns_r, ns_rt);
-    
-    for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps; i_linstep++) {
-        // Compute factors
-        rho1 = rho;
-        rho = N_VDotProd(ns_rt, ns_r);
-        beta = rho*alpha / (rho1*omega);
-        
-        // ns_p = ns_r + beta * (ns_p - omega * ns_v);
-        N_VLinearSum(1.0, ns_p, -omega, ns_v, ns_p);
-        N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
-        
-        // ns_v = J * ns_p
-        fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
-        N_VDiv(ns_v, ns_Jdiag, ns_v);
-        
-        // Compute factor
-        alpha = rho / N_VDotProd(ns_rt, ns_v);
-        
-        // ns_h = ns_delta + alpha * ns_p;
-        N_VLinearSum(1.0, ns_delta, alpha, ns_p, ns_h);
-        // ns_s = ns_r - alpha * ns_v;
-        N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
-        
-        // ns_t = J * ns_s
-        fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
-        N_VDiv(ns_t, ns_Jdiag, ns_t);
-        
-        // Compute factor
-        omega = N_VDotProd(ns_t, ns_s) / N_VDotProd(ns_t, ns_t);
-        
-        // ns_delta = ns_h + omega * ns_s;
-        N_VLinearSum(1.0, ns_h, omega, ns_s, ns_delta);
-        // ns_r = ns_s - omega * ns_t;
-        N_VLinearSum(1.0, ns_s, -omega, ns_t, ns_r);
-        
-        // Compute the (unscaled) residual
-        N_VProd(ns_r, ns_Jdiag, ns_r);
-        res = sqrt(N_VDotProd(ns_r, ns_r));
-        
-        // Test convergence
-        if (res < udata->atol) {
-            // Write number of steps needed
-            rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = i_linstep + 1;
+     /* Choose which linear solver to use */
+     switch (udata->newton_linsol) {
+             
+             /* DIRECT SOLVERS */
+             
+         case AMICI_DENSE:
+             /* Define variables needed for the dense solver */
 
-            // Return success
-            N_VScale(-1.0, tdata->xdot, tdata->xdot);
-            status = AMICI_SUCCESS;
-            break;
-        }
-        
-        // Scale back
-        N_VDiv(ns_r, ns_Jdiag, ns_r);
-    }
+             
+             /* Compute Jacobian for dense solver */
+             status = fJ(udata->nx, tdata->t, 0, tdata->x, tdata->dx, tdata->xdot, tdata->Jtmp, udata, tmp1, tmp2, tmp3);
+             if (status == AMICI_SUCCESS) {
+                 /* Compute factorization and pivoting */
+                 status = DenseGETRF(tdata->Jtmp, pivots);
+                 if (status == AMICI_SUCCESS) {
+                     /* Solve linear system by elimiation using pivotiing */
+                     fxdot(tdata->t, tdata->x, tdata->dx, delta, udata);
+                     N_VScale(-1.0, delta, delta);
+                     x_tmp = N_VGetArrayPointer(delta);
+                     DenseGETRS(tdata->Jtmp, pivots, x_tmp);
+                 } else {
+                    return(AMICI_ERROR_NEWTON_LINSOLVER);
+                 }
+             } else {
+                 return(AMICI_ERROR_NEWTON_LINSOLVER);
+             }
+             
+             rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = 0.0;
+             break;
+             
+         case AMICI_BAND:
+             errMsgIdAndTxt("AMICI:mex:dense","Solver currently not supported!");
+             
+         case AMICI_LAPACKDENSE:
+             errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+             
+         case AMICI_LAPACKBAND:
+             errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
+             
+         case AMICI_DIAG:
+             errMsgIdAndTxt("AMICI:mex:dense","Solver currently not supported!");
+             
+             
+             /* ITERATIVE SOLVERS */
+             
+         case AMICI_SPGMR:
+             errMsgIdAndTxt("AMICI:mex:spils","Solver currently not supported!");
+             
+         case AMICI_SPBCG:
+             status = linsolveSPBCG(udata, rdata, tdata, ami_mem, ntry, nnewt, delta);
+             break;
+             
+         case AMICI_SPTFQMR:
+             errMsgIdAndTxt("AMICI:mex:spils","Solver currently not supported!");
+             
+             
+             /* SPARSE SOLVERS */
+             
+         case AMICI_KLU:
+             errMsgIdAndTxt("AMICI:mex:sparse","Solver currently not supported!");
+             
+         default:
+             errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
+             break;
+     }
     
-    // Clean up workspace
-    N_VDestroy_Serial(ns_p);
-    N_VDestroy_Serial(ns_h);
-    N_VDestroy_Serial(ns_t);
-    N_VDestroy_Serial(ns_s);
-    N_VDestroy_Serial(ns_r);
-    N_VDestroy_Serial(ns_rt);
-    N_VDestroy_Serial(ns_v);
-    N_VDestroy_Serial(ns_Jv);
-    N_VDestroy_Serial(ns_tmp);
-    N_VDestroy_Serial(ns_Jdiag);
-    
-    N_VScale(-1.0, tdata->xdot, tdata->xdot);
-    
-    // Return
+      // Return
     return(status);
  }
 
@@ -1808,6 +1721,147 @@ int getNewtonSimulation(void *ami_mem, UserData *udata, TempData *tdata, ReturnD
     } else {
         return(status);
     }
+}
+
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------- */
+
+int linsolveSPBCG(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami_mem, int ntry, int nnewt, N_Vector ns_delta) {
+    /**
+     * linsolveSPBCG solves the linear system for the Newton iteration by using the BiCGStab algorithm
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] ami_mem pointer to the solver memory block @type *void
+     * @param[in] ntry intger number of Newton solver try
+     * @param[in] nnewt intger number of Newton steps in the current Newton solver try
+     * @param[out] delta N_Vector solution of the linear system
+     * @return int status flag indicating success of execution @type int
+     */
+    
+    int status = AMICI_ERROR_NEWTON_LINSOLVER;
+    
+    double rho;
+    double rho1;
+    double alpha;
+    double beta;
+    double omega;
+    double res;
+    
+    N_Vector ns_p = N_VNew_Serial(udata->nx);
+    N_Vector ns_h = N_VNew_Serial(udata->nx);
+    N_Vector ns_t = N_VNew_Serial(udata->nx);
+    N_Vector ns_s = N_VNew_Serial(udata->nx);
+    N_Vector ns_r = N_VNew_Serial(udata->nx);
+    N_Vector ns_rt = N_VNew_Serial(udata->nx);
+    N_Vector ns_v = N_VNew_Serial(udata->nx);
+    N_Vector ns_Jv = N_VNew_Serial(udata->nx);
+    N_Vector ns_tmp = N_VNew_Serial(udata->nx);
+    N_Vector ns_Jdiag = N_VNew_Serial(udata->nx);
+    
+    N_VScale(-1.0, tdata->xdot, tdata->xdot);
+    
+    // Get the diagonal of the Jacobian for preconditioning
+    fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
+    
+    // Ensure positivity of entries in ns_Jdiag
+    N_VConst(1.0, ns_p);
+    N_VAbs(ns_Jdiag, ns_tmp);
+    N_VCompare(1e-15, ns_tmp, ns_tmp);
+    N_VLinearSum(-1.0, ns_tmp, 1.0, ns_p, ns_tmp);
+    N_VLinearSum(1.0, ns_Jdiag, 1.0, ns_tmp, ns_Jdiag);
+    
+    
+    // Initialize for linear solve
+    N_VConst(0.0, ns_p);
+    N_VConst(0.0, ns_v);
+    N_VConst(0.0, ns_delta);
+    N_VConst(0.0, ns_tmp);
+    rho = 1.0;
+    omega = 1.0;
+    alpha = 1.0;
+    
+    // can be set to 0 at the moment
+    fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+    
+    // ns_r = xdot - ns_Jv;
+    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
+    N_VDiv(ns_r, ns_Jdiag, ns_r);
+    res = sqrt(N_VDotProd(ns_r, ns_r));
+    N_VScale(1.0, ns_r, ns_rt);
+    
+    for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps; i_linstep++) {
+        // Compute factors
+        rho1 = rho;
+        rho = N_VDotProd(ns_rt, ns_r);
+        beta = rho*alpha / (rho1*omega);
+        
+        // ns_p = ns_r + beta * (ns_p - omega * ns_v);
+        N_VLinearSum(1.0, ns_p, -omega, ns_v, ns_p);
+        N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
+        
+        // ns_v = J * ns_p
+        fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        N_VDiv(ns_v, ns_Jdiag, ns_v);
+        
+        // Compute factor
+        alpha = rho / N_VDotProd(ns_rt, ns_v);
+        
+        // ns_h = ns_delta + alpha * ns_p;
+        N_VLinearSum(1.0, ns_delta, alpha, ns_p, ns_h);
+        // ns_s = ns_r - alpha * ns_v;
+        N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
+        
+        // ns_t = J * ns_s
+        fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        N_VDiv(ns_t, ns_Jdiag, ns_t);
+        
+        // Compute factor
+        omega = N_VDotProd(ns_t, ns_s) / N_VDotProd(ns_t, ns_t);
+        
+        // ns_delta = ns_h + omega * ns_s;
+        N_VLinearSum(1.0, ns_h, omega, ns_s, ns_delta);
+        // ns_r = ns_s - omega * ns_t;
+        N_VLinearSum(1.0, ns_s, -omega, ns_t, ns_r);
+        
+        // Compute the (unscaled) residual
+        N_VProd(ns_r, ns_Jdiag, ns_r);
+        res = sqrt(N_VDotProd(ns_r, ns_r));
+        
+        // Test convergence
+        if (res < udata->atol) {
+            // Write number of steps needed
+            rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = i_linstep + 1;
+            
+            // Return success
+            N_VScale(-1.0, tdata->xdot, tdata->xdot);
+            status = AMICI_SUCCESS;
+            break;
+        }
+        
+        // Scale back
+        N_VDiv(ns_r, ns_Jdiag, ns_r);
+    }
+    
+    // Clean up workspace
+    N_VDestroy_Serial(ns_p);
+    N_VDestroy_Serial(ns_h);
+    N_VDestroy_Serial(ns_t);
+    N_VDestroy_Serial(ns_s);
+    N_VDestroy_Serial(ns_r);
+    N_VDestroy_Serial(ns_rt);
+    N_VDestroy_Serial(ns_v);
+    N_VDestroy_Serial(ns_Jv);
+    N_VDestroy_Serial(ns_tmp);
+    N_VDestroy_Serial(ns_Jdiag);
+    
+    N_VScale(-1.0, tdata->xdot, tdata->xdot);
+    
+    // Return
+    return(status);
 }
 
 /* ------------------------------------------------------------------------------------- */

@@ -136,10 +136,15 @@ public:
     double rtol;
     /** maximum number of allowed integration steps */
     int maxsteps;
+    
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps;
     /** maximum number of allowed linear steps per Newton step for steady state computation */
     int newton_maxlinsteps;
+    /** maximum number of allowed Newton steps for steady state computation */
+    int newton_linsol;
+    /** maximum number of allowed linear steps per Newton step for steady state computation */
+    int newton_precon;
     
     /** internal sensitivity method */
     /*!
