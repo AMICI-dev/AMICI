@@ -352,3 +352,73 @@ int Model::fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata
 
     return(status);
 }
+
+int Model::initialize(UserData *udata, TempData *tdata)
+{
+    if (udata->nx < 1)
+        return AMICI_SUCCESS;
+
+    int status;
+
+    if((status = initializeStates(udata, tdata)) != AMICI_SUCCESS) return status;
+
+    if((status = fdx0(tdata->x, tdata->dx, udata)) != AMICI_SUCCESS) return status;
+
+    if ((status = initHeaviside(udata,tdata)) != AMICI_SUCCESS) return status;
+
+    return AMICI_SUCCESS;
+}
+
+int Model::initializeStates(UserData *udata, TempData *tdata)
+{
+    if (udata->nx < 1)
+        return AMICI_SUCCESS;
+
+    if (tdata->x == NULL)
+        return AMICI_ERROR_TDATA;
+
+    if (udata->x0data == NULL) {
+        if (fx0(tdata->x, udata) != AMICI_SUCCESS)
+            return AMICI_ERROR_MODEL;
+    } else {
+        realtype *x_tmp = NV_DATA_S(tdata->x);
+        if(!x_tmp)
+            return AMICI_ERROR_TDATA;
+
+        for (int ix=0; ix < udata->nx; ix++) {
+            x_tmp[ix] = (realtype) udata->x0data[ix];
+        }
+    }
+
+    return AMICI_SUCCESS;
+}
+
+
+int Model::initHeaviside(UserData *udata, TempData *tdata) {
+    /**
+     * initHeaviside initialises the heaviside variables h at the intial time t0
+     * heaviside variables activate/deactivate on event occurences
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status flag indicating success of execution @type int
+     */
+
+    int status = AMICI_SUCCESS;
+
+    status = froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata);
+    if (status != AMICI_SUCCESS) return status;
+
+    for (int ie = 0; ie<udata->ne; ie++) {
+        if (tdata->rootvals[ie]<0) {
+            udata->h[ie] = 0.0;
+        } else if (tdata->rootvals[ie]==0) {
+            errMsgIdAndTxt("AMICI:mex:initHeaviside","Simulation started in an event. This could lead to unexpected results, aborting simulation! Please specify an earlier simulation start via @amimodel.t0");
+            return AMICI_ERROR_EVENT;
+        } else {
+            udata->h[ie] = 1.0;
+        }
+    }
+    return status;
+}
+

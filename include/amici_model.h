@@ -123,6 +123,11 @@ public:
 
     static int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
 
+    int initialize(UserData *udata, TempData *tdata);
+
+    int initializeStates(UserData *udata, TempData *tdata);
+
+    int initHeaviside(UserData *udata, TempData *tdata);
 
     UserData *udata = NULL;
     const ExpData *edata = NULL;

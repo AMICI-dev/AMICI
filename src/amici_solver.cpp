@@ -12,25 +12,8 @@ void *Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 
     tdata->t = udata->tstart;
 
-    if (udata->nx > 0) {
-        /* initialise states */
-        if (tdata->x == NULL) goto freturn;
-        if (udata->x0data == NULL) {
-            if (model->fx0(tdata->x, udata) != AMICI_SUCCESS) goto freturn;
-        } else {
-            int ix;
-            realtype *x_tmp = NV_DATA_S(tdata->x);
-            if(!x_tmp) goto freturn;
-            for (ix=0; ix < udata->nx; ix++) {
-                x_tmp[ix] = (realtype) udata->x0data[ix];
-            }
-        }
-        if (model->fdx0(tdata->x, tdata->dx, udata) != AMICI_SUCCESS) goto freturn;
+    if(model->initialize(udata, tdata) != AMICI_SUCCESS) goto freturn;
 
-        /* initialise heaviside variables */
-        if (initHeaviside(udata,tdata, model) != AMICI_SUCCESS) goto freturn;
-
-    }
 
     /* Create AMIS object */
     if (udata->lmm != CV_ADAMS && udata->lmm != CV_BDF) {

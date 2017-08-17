@@ -853,39 +853,6 @@ int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model) {
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int initHeaviside(UserData *udata, TempData *tdata, Model *model) {
-    /**
-     * initHeaviside initialises the heaviside variables h at the intial time t0
-     * heaviside variables activate/deactivate on event occurences
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
-    
-    int ie;
-    int status = AMICI_SUCCESS;
-    
-    status = model->froot(tdata->t,tdata->x,tdata->dx,tdata->rootvals,udata);
-    if (status != AMICI_SUCCESS) return status;
-    
-    for (ie = 0; ie<udata->ne; ie++) {
-        if (tdata->rootvals[ie]<0) {
-            udata->h[ie] = 0.0;
-        } else if (tdata->rootvals[ie]==0) {
-            errMsgIdAndTxt("AMICI:mex:initHeaviside","Simulation started in an event. This could lead to unexpected results, aborting simulation! Please specify an earlier simulation start via @amimodel.t0");
-            return AMICI_ERROR_EVENT;
-        } else {
-            udata->h[ie] = 1.0;
-        }
-    }
-    return status;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
 int updateHeaviside(UserData *udata, TempData *tdata) {
     /**
      * updateHeaviside updates the heaviside variables h on event occurences

@@ -56,7 +56,6 @@ int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
 
 realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, UserData *udata);
 
-int initHeaviside(UserData *udata, TempData *tdata, Model *model);
 int updateHeaviside(UserData *udata, TempData *tdata);
 int updateHeavisideB(int iroot, UserData *udata, TempData *tdata);
 
