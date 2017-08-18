@@ -2,6 +2,8 @@
 #define AMICISOLVER_H
 
 #include <nvector/nvector_serial.h>
+#include <sundials/sundials_sparse.h>
+
 class ReturnData;
 class UserData;
 class TempData;
@@ -103,6 +105,25 @@ public:
     virtual int AMIGetQuadB(int which, realtype *tret, N_Vector qB) = 0;
 
     virtual int AMIQuadReInitB(int which, N_Vector yQB0) = 0;
+
+
+    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
+
+    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip, N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
+
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+    static int fJBand(long N, long mupper, long mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
+
+    static int fJB(long NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+
+    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+
+    static int fJBandB(long NeqBdot, long mupper, long mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+
+    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 
 protected:
     virtual int wrap_init(N_Vector x, N_Vector dx, realtype t) = 0;
