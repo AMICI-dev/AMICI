@@ -21,7 +21,7 @@ TEST_GROUP(groupDirac)
 
 UserData *getTestUserData() {
     Model *model = getModel();
-    UserData *udata = new UserData(getUserData());
+    UserData *udata = new UserData();
 
     udata->qpositivex = new double[model->nx];
     udata->p = new double[model->np];

@@ -1,6 +1,7 @@
 #include "include/amici_interface_cpp.h"
 #include <include/amici_model.h>
 #include <include/amici_model_functions.h>
+#include <include/amici_solver.h>
 #include "include/amici.h"
 
 #ifdef __APPLE__

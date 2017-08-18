@@ -1,14 +1,16 @@
 #include "include/amici_solver.h"
 #include "include/amici.h"
+#include <include/amici_model.h>
+#include <include/tdata.h>
+#include <include/udata.h>
+#include <include/rdata.h>
 #include <cstdio>
 #include <cstring>
-#include <include/amici_model.h>
 
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
     int status;
     N_Vector id = NULL;
-
 
     tdata->t = udata->tstart;
 

@@ -8,7 +8,6 @@ class ExpData;
 class Solver;
 class Model;
 
-UserData getUserData();
 Solver *getSolver();
 Model *getModel();
 

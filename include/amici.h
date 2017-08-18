@@ -2,15 +2,17 @@
 #define amici_h
 
 #include <include/symbolic_functions.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include <include/edata.h>
-#include <include/tdata.h>
-#include <include/amici_solver.h>
 #include <cstdbool>
 #include <cvodes/cvodes.h>
 
 #include <include/amici_defines.h>
+
+class UserData;
+class TempData;
+class ReturnData;
+class ExpData;
+class Solver;
+class Model;
 
 // ensure definitions are in sync
 static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");

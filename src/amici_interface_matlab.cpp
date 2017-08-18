@@ -8,6 +8,9 @@
 #include "include/amici_interface_matlab.h"
 #include "include/amici_model_functions.h"
 #include "include/amici_model.h"
+#include "include/amici_solver.h"
+#include "include/edata.h"
+#include "include/udata.h"
 
 #include <cstring>
 #include <assert.h>
@@ -99,7 +102,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model) {
     if(nrhs <  8) { errMsgIdAndTxt("AMICI:mex","Incorrect number of input arguments (must be at least 7)!"); return NULL;};
     
-    UserData *udata = new UserData(getUserData());
+    UserData *udata = new UserData();
     
     /* time */
     if (prhs[0] || mxGetM(prhs[0]) * mxGetN(prhs[0]) == 0 ) {

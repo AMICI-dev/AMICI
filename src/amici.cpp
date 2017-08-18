@@ -12,12 +12,14 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#include <stdio.h>
 #include <include/amici.h> /* amici functions */
 #include <include/symbolic_functions.h>
 #include <include/amici_misc.h>
 #include "include/amici_solver.h"
 #include "include/amici_model.h"
+#include "include/tdata.h"
+#include "include/udata.h"
+#include "include/rdata.h"
 #include "include/forwardproblem.h"
 #include "include/backwardproblem.h"
 

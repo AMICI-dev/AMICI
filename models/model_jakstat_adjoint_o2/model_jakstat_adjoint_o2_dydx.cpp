@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
 int dydx_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, TempData *tdata) {

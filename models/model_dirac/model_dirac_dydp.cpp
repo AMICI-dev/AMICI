@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_dirac_w.h"
 
 int dydp_model_dirac(realtype t, int it, N_Vector x, TempData *tdata) {

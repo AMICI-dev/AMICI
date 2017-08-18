@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
 int sigma_y_model_jakstat_adjoint(realtype t, TempData *tdata) {

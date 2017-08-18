@@ -1,10 +1,7 @@
 #include "wrapfunctions.h"
-
+#include <include/amici_model.h>
+#include <include/udata.h>
 #include <include/cvodewrap.h>
-
-UserData getUserData(){
-    return UserData();
-}
 
 Solver *getSolver(){
     return new CVodeSolver();

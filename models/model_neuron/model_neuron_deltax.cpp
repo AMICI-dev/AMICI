@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_neuron_w.h"
 
 int deltax_model_neuron(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata) {

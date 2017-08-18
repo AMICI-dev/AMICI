@@ -2,6 +2,7 @@
 #define MODEL_H
 
 #include <nvector/nvector_serial.h>
+#include <sundials/sundials_direct.h>
 #include <include/amici.h>
 
 class UserData;

@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
 int deltaqB_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata) {

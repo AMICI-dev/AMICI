@@ -1,6 +1,10 @@
 #include "include/amici_model.h"
-#include <cstring>
 #include "include/amici.h"
+#include <include/tdata.h>
+#include <include/udata.h>
+#include <include/rdata.h>
+#include <include/edata.h>
+#include <cstring>
 
 //int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
 //{

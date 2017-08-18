@@ -26,10 +26,12 @@ for ifun = this.funs
         fprintf(fid,'#include <include/amici_model.h>\n');
         fprintf(fid,'#include <string.h>\n');
         if( strfind(this.fun.(ifun{1}).argstr,'user_data') )
+            fprintf(fid,'#include <include/tdata.h>\n');
             fprintf(fid,'#include <include/udata.h>\n');
         end
         if( strfind(this.fun.(ifun{1}).argstr,'tdata') )
             fprintf(fid,'#include <include/tdata.h>\n');
+            fprintf(fid,'#include <include/udata.h>\n');
         end
         if( strfind(this.fun.(ifun{1}).argstr,'rdata') )
             fprintf(fid,'#include <include/rdata.h>\n');
@@ -314,15 +316,16 @@ end
 fprintf('wrapfunctions | ');
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 
-fprintf(fid,'#include "wrapfunctions.h"\n\n');
+fprintf(fid,'#include "wrapfunctions.h"\n');
+fprintf(fid,'#include <include/amici_model.h>\n');
+fprintf(fid,'#include <include/udata.h>\n');
+
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/cvodewrap.h>\n');
 else
     fprintf(fid,'#include <include/idawrap.h>\n');
 end
 fprintf(fid,'\n');
-fprintf(fid,'UserData getUserData(){\n');
-fprintf(fid,'    return UserData();\n}\n\n');
 
 fprintf(fid,'Solver *getSolver(){\n');
 if(strcmp(this.wtype,'iw'))

@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include <include/rdata.h>
 #include <include/edata.h>
 #include "model_neuron_o2_w.h"

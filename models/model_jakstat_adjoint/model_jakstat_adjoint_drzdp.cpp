@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
 int drzdp_model_jakstat_adjoint(realtype t, int ie, N_Vector x, TempData *tdata) {

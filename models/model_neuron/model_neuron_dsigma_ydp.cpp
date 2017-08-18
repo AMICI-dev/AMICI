@@ -4,6 +4,7 @@
 #include <include/amici_model.h>
 #include <string.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include "model_neuron_w.h"
 
 int dsigma_ydp_model_neuron(realtype t, TempData *tdata) {

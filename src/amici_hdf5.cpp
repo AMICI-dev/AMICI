@@ -31,7 +31,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 {
     assert(fileId > 0);
 
-    UserData *udata = new UserData(getUserData());
+    UserData *udata = new UserData();
 
     if (udata == NULL)
         return(NULL);

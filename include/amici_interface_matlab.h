@@ -3,6 +3,7 @@
 
 #include <mex.h>
 #include "include/amici.h"
+#include "include/rdata.h"
 
 class ReturnDataMatlab;
 
