@@ -37,16 +37,6 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model, Solver *solver);
 
-int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata);
-
-int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
-
-int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
-
-
-realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, Model *model);
-
-
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,
                  const double alpha, const double *A, const int lda,

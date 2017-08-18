@@ -32,6 +32,12 @@ public:
 
     static int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 
+    static int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+
+    static int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
+
+    static int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
+
     static int applyEventBolus( UserData *udata, TempData *tdata, Model *model);
 
     static int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
