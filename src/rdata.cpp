@@ -16,7 +16,7 @@ ReturnData::ReturnData(const UserData *udata, const Model *model) :
     np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue), ny(model->ny), nytrue(model->nytrue),
     nz(model->nz), nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
     nplist(udata->nplist), nmaxevent(udata->nmaxevent), nt(udata->nt), newton_maxsteps(udata->newton_maxsteps),
-    pscale(model->pscale), o2mode(model->o2mode),
+    pscale(udata->pscale), o2mode(model->o2mode),
     sensi(udata->sensi), sensi_meth(udata->sensi_meth)
 {
     setDefaults();

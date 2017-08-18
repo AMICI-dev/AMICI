@@ -10,7 +10,7 @@ UserData::UserData()
 
 int UserData::unscaleParameters(const Model *model, double *bufferUnscaled) const
 {
-    switch(model->pscale) {
+    switch(pscale) {
         case AMICI_SCALING_LOG10:
             for(int ip = 0; ip < model->np; ++ip) {
                 bufferUnscaled[ip] = pow(10, p[ip]);

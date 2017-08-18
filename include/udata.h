@@ -37,9 +37,13 @@ public:
 
     /** parameter array */
     double *p;
+
     /** constants array */
     double *k;
     
+    /** parameter transformation of p */
+    AMICI_parameter_scaling pscale;
+
     /** starting time */
     double tstart;
     /** timepoints */

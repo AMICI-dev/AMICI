@@ -432,17 +432,6 @@ fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
 fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
 fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
-switch(this.param)
-    case 'lin'
-        fprintf(fid,'                    AMICI_SCALING_NONE,\n');
-    case 'log'
-        fprintf(fid,'                    AMICI_SCALING_LN,\n');
-    case 'log10'
-        fprintf(fid,'                    AMICI_SCALING_LOG10,\n');
-    otherwise
-        disp('No valid parametrisation chosen! Valid options are "log","log10" and "lin". Using lin parametrisation (default)!')
-        fprintf(fid,'                    AMICI_SCALING_NONE;\n');
-end
 switch(this.o2flag)
     case 1
         fprintf(fid,'                    AMICI_O2MODE_FULL)\n');

@@ -87,7 +87,6 @@ public:
                     9,
                     2,
                     2,
-                    AMICI_SCALING_LOG10,
                     AMICI_O2MODE_NONE)
 {}
 

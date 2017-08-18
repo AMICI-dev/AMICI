@@ -24,7 +24,6 @@ public:
         ndwdx(0), ndwdp(0),
         nnz(0), nJ(0),
         ubw(0), lbw(0),
-        pscale (AMICI_SCALING_NONE),
         o2mode(AMICI_O2MODE_NONE) {}
 
     Model(int np,
@@ -35,7 +34,6 @@ public:
           int ne, int nJ,
           int nw, int ndwdx, int ndwdp, int nnz,
           int ubw, int lbw,
-          AMICI_parameter_scaling pscale,
           AMICI_o2mode o2mode) :
         np(np), nk(nk),
         nx(nx), nxtrue(nxtrue),
@@ -45,7 +43,6 @@ public:
         ndwdx(ndwdx), ndwdp(ndwdp),
         nnz(nnz),nJ(nJ),
         ubw(ubw), lbw(lbw),
-        pscale(pscale),
         o2mode(o2mode) {}
 
     // TODO model dimensions constructors
@@ -193,8 +190,6 @@ public:
     const int ubw;
     /** lower bandwith of the jacobian */
     const int lbw;
-    /** parametrization of parameters p */
-    AMICI_parameter_scaling pscale;
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
     const AMICI_o2mode o2mode;
 };

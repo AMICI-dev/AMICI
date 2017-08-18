@@ -77,6 +77,10 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
             return NULL;
     }
 
+    if(AMI_HDF5_attributeExists(fileId, datasetPath, "pscale")) {
+        udata->pscale = (AMICI_parameter_scaling) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "pscale");
+    }
+
     // parameter selection and reordering for sensitivities (matlab: fifth argument)
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind", &udata->plist, &length);
     assert(udata->nplist <= model->np);

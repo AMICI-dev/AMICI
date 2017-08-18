@@ -197,15 +197,17 @@ fprintf(fid,'    pbar = ones(size(theta));\n');
 fprintf(fid,'end\n');
 fprintf(fid,'\n');
 
-
-switch (this.param)
-    case 'log'
-        fprintf(fid, 'chainRuleFactor = exp(theta(options_ami.sens_ind));\n\n');
-    case 'log10'
-        fprintf(fid, 'chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n\n');
-    otherwise
-        fprintf(fid, 'chainRuleFactor = ones(size(options_ami.sens_ind));\n\n');
-end
+fprintf(fid,'if(isempty(options_ami.pscale))\n');
+fprintf(fid,['    options_ami.pscale = ''' this.param ''' ;\n']);
+fprintf(fid,'end\n');
+fprintf(fid,'switch (options_ami.pscale)\n');
+fprintf(fid,'    case 1\n');
+fprintf(fid,'        chainRuleFactor = exp(theta(options_ami.sens_ind));\n');
+fprintf(fid,'    case 2\n');
+fprintf(fid,'        chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n');
+fprintf(fid,'    otherwise\n');
+fprintf(fid,'        chainRuleFactor = ones(size(options_ami.sens_ind));\n');
+fprintf(fid,'end\n\n');
 
 if(o2flag == 2)
     fprintf(fid,'if(nargin>=6)\n');
