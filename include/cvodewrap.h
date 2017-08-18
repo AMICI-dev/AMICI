@@ -319,7 +319,7 @@ public:
         return CVodeSetStopTime(ami_mem, tstop);
     }
 
-    // Static wrapper functions because cannot pass member functions to Solver
+    // Static wrapper functions because cannot pass member functions to solver (CVODES-specific signatures)
     static int resultFunction(realtype t, N_Vector y,
                    N_Vector ydot, void *user_data) {
         TempData *tdata = (TempData *) user_data;

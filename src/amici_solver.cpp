@@ -6,6 +6,9 @@
 #include <include/rdata.h>
 #include <cstdio>
 #include <cstring>
+#include <sundials/sundials_spgmr.h>
+// TODO: don't use cvodes includes here
+#include <cvodes/cvodes_spils.h>
 
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {

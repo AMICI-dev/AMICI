@@ -1,21 +1,15 @@
 #ifndef AMICISOLVER_H
 #define AMICISOLVER_H
 
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_sparse.h>
+#include <nvector/nvector_serial.h> // DlsMat
+#include <sundials/sundials_sparse.h> // SlsMat
 
 class ReturnData;
 class UserData;
 class TempData;
 class Model;
 
-// TODO: get out of here
 typedef int (*RootFn)(realtype t, N_Vector y, realtype *gout, void *user_data);
-
-#include <sundials/sundials_spgmr.h>
-// TODO: don't use cvodes includes here
-#include <cvodes/cvodes_spils.h>
-
 
 class Solver
 {
@@ -106,6 +100,8 @@ public:
 
     virtual int AMIQuadReInitB(int which, N_Vector yQB0) = 0;
 
+
+    // Static wrapper functions because cannot pass member functions to solver
 
     static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
 
@@ -249,7 +245,7 @@ protected:
 
     int setLinearSolver(const UserData *udata, Model *model);
 
-    /* pointer to ami memory block */
+    /** pointer to ami memory block */
     void *ami_mem = nullptr;
 
 };

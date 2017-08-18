@@ -13,9 +13,6 @@
 #endif
 #include <unistd.h>
 
-#include "include/amici_model_functions.h"
-#include "include/symbolic_functions.h"
-
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char* datasetPath, Model *model) {
 
     hid_t file_id = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
