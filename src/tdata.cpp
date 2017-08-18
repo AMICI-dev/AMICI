@@ -1,9 +1,10 @@
 #include "include/tdata.h"
 
 #include <include/udata.h>
+#include <include/rdata.h>
 #include <include/amici_model.h>
 
-TempData::TempData(const UserData *udata, Model *model) : udata(udata), model(model) {
+TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata) : udata(udata), model(model), rdata(rdata) {
     
     xB = xB_old = dxB = xQB = xQB_old = NULL;
     x_disc = xdot_disc = xdot_old_disc = NULL;

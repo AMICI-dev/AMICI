@@ -22,25 +22,25 @@ public:
 
     static int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
 
-    static int storeJacobianAndDerivativeInReturnData(UserData *udata, TempData *tdata,  ReturnData *rdata, Model *model);
+    static int storeJacobianAndDerivativeInReturnData(TempData *tdata,  ReturnData *rdata, Model *model);
 
     static int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
     static int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-    static int getEventSensisFSA(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
+    static int getEventSensisFSA(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
     static int handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 
     static int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 
-    static int prepDataSensis(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
+    static int prepDataSensis(int it, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
     static int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 
-    static int applyEventBolus( UserData *udata, TempData *tdata, Model *model);
+    static int applyEventBolus(TempData *tdata, Model *model);
 
-    static int applyEventSensiBolusFSA(UserData *udata, TempData *tdata, Model *model);
+    static int applyEventSensiBolusFSA(TempData *tdata, Model *model);
 
     static int updateHeaviside(TempData *tdata, int ne);
 

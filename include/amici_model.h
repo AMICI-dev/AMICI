@@ -138,27 +138,27 @@ public:
     virtual ~Model() {}
 
     // Generic implementations
-    int fsy(int it, UserData *udata, TempData *tdata, ReturnData *rdata);
+    int fsy(int it, TempData *tdata, ReturnData *rdata);
 
-    int fsz_tf(int ie, UserData *udata, TempData *tdata, ReturnData *rdata);
+    int fsz_tf(int ie, TempData *tdata, ReturnData *rdata);
 
-    int fsJy(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fsJy(int it, TempData *tdata, ReturnData *rdata);
 
-    int fdJydp(int it, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fdJydp(int it, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    int fdJydx(int it, UserData *udata, TempData *tdata, const ExpData *edata);
+    int fdJydx(int it, TempData *tdata, const ExpData *edata);
 
-    int fsJz(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fsJz(int ie, TempData *tdata, const ReturnData *rdata);
 
-    int fdJzdp(int ie, UserData *udata, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+    int fdJzdp(int ie, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
-    int fdJzdx(int ie, UserData *udata, TempData *tdata, const ExpData *edata);
+    int fdJzdx(int ie, TempData *tdata, const ExpData *edata);
 
     int initialize(UserData *udata, TempData *tdata);
 
-    int initializeStates(UserData *udata, TempData *tdata);
+    int initializeStates(double *x0data, TempData *tdata);
 
-    int initHeaviside(UserData *udata, TempData *tdata);
+    int initHeaviside(TempData *tdata);
 
     /* Model dimensions */
     /** total number of model parameters */

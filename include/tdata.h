@@ -9,6 +9,7 @@
 #include <sundials/sundials_config.h>
 
 class UserData;
+class ReturnData;
 class Model;
 
 /** @brief struct that provides temporary storage for different variables */
@@ -19,7 +20,7 @@ public:
     /**
      * @brief Default constructor
      */
-    TempData(const UserData *udata, Model *model);
+    TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
     
     /** current time */
@@ -185,6 +186,7 @@ public:
 
     const UserData *udata;
     const Model *model;
+    ReturnData *rdata;
 	};
 
 #endif /* _MY_TDATA */

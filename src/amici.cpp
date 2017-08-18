@@ -36,7 +36,7 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
         return AMICI_ERROR_NOTHINGTODO;
     }
     
-    TempData *tdata = new TempData(udata, model);
+    TempData *tdata = new TempData(udata, model, rdata);
     
     // unscale parameters but keep original
     double *originalParams = NULL;

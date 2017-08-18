@@ -74,7 +74,7 @@ public:
      * @return status flag indicating success of execution @type int
      */
 
-    int getDiagnosisB(int it, UserData *udata, ReturnData *rdata, TempData *tdata);
+    int getDiagnosisB(int it, ReturnData *rdata, TempData *tdata);
 
     virtual int AMIGetRootInfo(int *rootsfound) = 0;
 

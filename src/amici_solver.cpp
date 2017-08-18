@@ -126,7 +126,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
     memset(xB_tmp,0,sizeof(realtype)*model->nxtrue*model->nJ);
     for (int ix=0; ix<model->nxtrue; ++ix)
         for (int iJ=0; iJ<model->nJ; ++iJ)
-            xB_tmp[ix + iJ * model->nxtrue] += tdata->dJydx[udata->nt-1 + (iJ + ix * model->nJ) * udata->nt];
+            xB_tmp[ix + iJ * model->nxtrue] += tdata->dJydx[tdata->rdata->nt-1 + (iJ + ix * model->nJ) * tdata->rdata->nt];
 
     if(!tdata->dxB) return AMICI_ERROR_SETUPB;
     if(!NV_DATA_S(tdata->dxB)) return AMICI_ERROR_SETUPB;
@@ -134,7 +134,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
 
     if(!tdata->xQB) return AMICI_ERROR_SETUPB;
     if(!NV_DATA_S(tdata->xQB)) return AMICI_ERROR_SETUPB;
-    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*model->nJ*udata->nplist);
+    memset(NV_DATA_S(tdata->xQB),0,sizeof(realtype)*model->nJ*tdata->rdata->nplist);
 
     /* create backward problem */
     if (udata->lmm>2||udata->lmm<1) {
@@ -355,7 +355,7 @@ int Solver::getDiagnosis(int it, ReturnData *rdata)
     return status;
 }
 
-int Solver::getDiagnosisB(int it, UserData *udata, ReturnData *rdata, TempData *tdata)
+int Solver::getDiagnosisB(int it, ReturnData *rdata, TempData *tdata)
 {
     long int number;
     int status = AMICI_SUCCESS;
