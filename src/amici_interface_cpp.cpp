@@ -14,15 +14,6 @@
 
 #include <cstring>
 
-#define initField2(FIELD,D1,D2) \
-FIELD ## data = new double[(D1) * (D2)]();
-#define initField3(FIELD,D1,D2,D3) \
-FIELD ## data = new double[(D1) * (D2) * (D3)]();
-
-#define initField4(FIELD,D1,D2,D3,D4) \
-FIELD ## data = new double[(D1) * (D2) * (D3) * (D4)]();
-
-
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
 
     Model *model = getModel();
