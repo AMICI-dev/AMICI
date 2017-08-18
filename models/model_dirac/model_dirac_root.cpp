@@ -14,8 +14,8 @@ Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 status = w_model_dirac(t,x,NULL,tdata);
-  root[0] = t-udata->p[1];
-  root[1] = -t+udata->p[1];
+  root[0] = t-tdata->p[1];
+  root[1] = -t+tdata->p[1];
 return(status);
 
 }

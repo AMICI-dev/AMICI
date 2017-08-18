@@ -16,6 +16,9 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata) : uda
     
     which = 0;
     
+    p = new realtype[model->np];
+    udata->unscaleParameters(model, p);
+
     nplist = udata->nplist;
     
     Jy = new realtype[model->nJ]();
@@ -111,7 +114,8 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata) : uda
 }
 
 TempData::~TempData() {
-    
+    if(p) delete[] p;
+
     if(x) N_VDestroy_Serial(x);
     if(dx) N_VDestroy_Serial(dx);
     if(xdot) N_VDestroy_Serial(xdot);
@@ -177,6 +181,7 @@ TempData::~TempData() {
     if(dfdx) delete[] dfdx;
     if(stau) delete[] stau;
     if(J) SparseDestroyMat(J);
+
 
 }
 

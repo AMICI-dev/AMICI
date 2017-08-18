@@ -42,27 +42,27 @@ switch (udata->plist[ip]) {
   } break;
 
   case 5: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[0]-udata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[0];
+  qBdot_tmp[ip + udata->nplist*0] = tdata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[0]-tdata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[0];
 
   } break;
 
   case 6: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[1]-udata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[1];
+  qBdot_tmp[ip + udata->nplist*0] = tdata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[1]-tdata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[1];
 
   } break;
 
   case 7: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[2]-udata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[2];
+  qBdot_tmp[ip + udata->nplist*0] = tdata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[2]-tdata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[2];
 
   } break;
 
   case 8: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[3]-udata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[3];
+  qBdot_tmp[ip + udata->nplist*0] = tdata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[3]-tdata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[3];
 
   } break;
 
   case 9: {
-  qBdot_tmp[ip + udata->nplist*0] = udata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[4]-udata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[4];
+  qBdot_tmp[ip + udata->nplist*0] = tdata->p[0]*x_tmp[0]*xB_tmp[0]*tdata->dwdp[4]-tdata->p[0]*x_tmp[0]*xB_tmp[1]*tdata->dwdp[4];
 
   } break;
 

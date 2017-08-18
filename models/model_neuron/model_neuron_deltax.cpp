@@ -18,8 +18,8 @@ memset(tdata->deltax,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
               switch(ie) { 
               case 0: {
-  tdata->deltax[0] = -udata->p[2]-x_tmp[0];
-  tdata->deltax[1] = udata->p[3];
+  tdata->deltax[0] = -tdata->p[2]-x_tmp[0];
+  tdata->deltax[1] = tdata->p[3];
 
               } break;
 

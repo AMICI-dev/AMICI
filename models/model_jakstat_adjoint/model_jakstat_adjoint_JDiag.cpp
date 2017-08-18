@@ -19,15 +19,15 @@ int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*9);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
 status = dwdx_model_jakstat_adjoint(t,x,NULL,user_data);
-  JDiag_tmp[0+0*9] = -udata->p[0]*tdata->w[0];
-  JDiag_tmp[1+0*9] = udata->p[1]*tdata->dwdx[0]*-2.0;
-  JDiag_tmp[2+0*9] = -udata->p[2];
-  JDiag_tmp[3+0*9] = -udata->p[3];
-  JDiag_tmp[4+0*9] = -udata->p[3];
-  JDiag_tmp[5+0*9] = -udata->p[3];
-  JDiag_tmp[6+0*9] = -udata->p[3];
-  JDiag_tmp[7+0*9] = -udata->p[3];
-  JDiag_tmp[8+0*9] = -udata->p[3];
+  JDiag_tmp[0+0*9] = -tdata->p[0]*tdata->w[0];
+  JDiag_tmp[1+0*9] = tdata->p[1]*tdata->dwdx[0]*-2.0;
+  JDiag_tmp[2+0*9] = -tdata->p[2];
+  JDiag_tmp[3+0*9] = -tdata->p[3];
+  JDiag_tmp[4+0*9] = -tdata->p[3];
+  JDiag_tmp[5+0*9] = -tdata->p[3];
+  JDiag_tmp[6+0*9] = -tdata->p[3];
+  JDiag_tmp[7+0*9] = -tdata->p[3];
+  JDiag_tmp[8+0*9] = -tdata->p[3];
 for(ix = 0; ix<9; ix++) {
    if(amiIsNaN(JDiag_tmp[ix])) {
        JDiag_tmp[ix] = 0;

@@ -19,8 +19,8 @@ realtype *vB_tmp = N_VGetArrayPointer(vB);
 realtype *JvB_tmp = N_VGetArrayPointer(JvB);
 memset(JvB_tmp,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
-  JvB_tmp[0] = -vB_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0)-udata->p[0]*udata->p[1]*vB_tmp[1];
-  JvB_tmp[1] = vB_tmp[0]+udata->p[0]*vB_tmp[1];
+  JvB_tmp[0] = -vB_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0)-tdata->p[0]*tdata->p[1]*vB_tmp[1];
+  JvB_tmp[1] = vB_tmp[0]+tdata->p[0]*vB_tmp[1];
 return(status);
 
 }

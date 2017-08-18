@@ -38,14 +38,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
     
     TempData *tdata = new TempData(udata, model, rdata);
     
-    // unscale parameters but keep original
-    double *originalParams = NULL;
-    if(model->pscale != AMICI_SCALING_NONE) {
-        originalParams = (double *) malloc(sizeof(double) * model->np);
-        memcpy(originalParams, udata->p, sizeof(double) * model->np);
-    }
-    status = udata->unscaleParameters(model);
-
     if (status == AMICI_SUCCESS)
         status = solver->setupAMI(udata, tdata, model);
 
@@ -55,17 +47,11 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
     if (status == AMICI_SUCCESS) status = ForwardProblem::workForwardProblem(udata, tdata, rdata, edata, solver, model);
     if (status == AMICI_SUCCESS) status = BackwardProblem::workBackwardProblem(udata, tdata, rdata, solver, model);
     
-    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata);
+    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, tdata->p);
     if (status < AMICI_SUCCESS) rdata->invalidate();
     
     
 freturn:
-    // reset to original parameters
-    if(originalParams) {
-        memcpy(udata->p, originalParams, sizeof(double) * model->np);
-        free(originalParams);
-    }
-
     delete tdata;
 
     return status;

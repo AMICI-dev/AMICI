@@ -18,7 +18,7 @@ int ix;
 memset(xdot_tmp,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
   xdot_tmp[0] = udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2;
-  xdot_tmp[1] = -udata->p[0]*(x_tmp[1]-udata->p[1]*x_tmp[0]);
+  xdot_tmp[1] = -tdata->p[0]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
 for(ix = 0; ix<2; ix++) {
    if(amiIsNaN(xdot_tmp[ix])) {
        xdot_tmp[ix] = 0;

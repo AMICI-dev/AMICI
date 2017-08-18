@@ -27,9 +27,9 @@ J->indexptrs[2] = 4;
 status = w_model_neuron(t,x,NULL,tdata);
 status = dwdx_model_neuron(t,x,NULL,user_data);
   J->data[0] = x_tmp[0]*(2.0/2.5E1)+5.0;
-  J->data[1] = udata->p[0]*udata->p[1];
+  J->data[1] = tdata->p[0]*tdata->p[1];
   J->data[2] = -1.0;
-  J->data[3] = -udata->p[0];
+  J->data[3] = -tdata->p[0];
 for(inz = 0; inz<4; inz++) {
    if(amiIsNaN(J->data[inz])) {
        J->data[inz] = 0;

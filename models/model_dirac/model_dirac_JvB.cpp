@@ -19,8 +19,8 @@ realtype *vB_tmp = N_VGetArrayPointer(vB);
 realtype *JvB_tmp = N_VGetArrayPointer(JvB);
 memset(JvB_tmp,0,sizeof(realtype)*2);
 status = w_model_dirac(t,x,NULL,tdata);
-  JvB_tmp[0] = udata->p[0]*vB_tmp[0]-udata->p[2]*vB_tmp[1];
-  JvB_tmp[1] = udata->p[3]*vB_tmp[1];
+  JvB_tmp[0] = tdata->p[0]*vB_tmp[0]-tdata->p[2]*vB_tmp[1];
+  JvB_tmp[1] = tdata->p[3]*vB_tmp[1];
 return(status);
 
 }

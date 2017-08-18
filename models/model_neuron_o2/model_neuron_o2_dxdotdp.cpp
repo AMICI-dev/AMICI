@@ -21,20 +21,20 @@ status = dwdp_model_neuron_o2(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  tdata->dxdotdp[1 + ip*model->nx] = -x_tmp[1]+udata->p[1]*x_tmp[0];
-  tdata->dxdotdp[3 + ip*model->nx] = -x_tmp[3]+udata->p[1]*x_tmp[2];
-  tdata->dxdotdp[5 + ip*model->nx] = x_tmp[0]-x_tmp[5]+udata->p[1]*x_tmp[4];
-  tdata->dxdotdp[7 + ip*model->nx] = -x_tmp[7]+udata->p[1]*x_tmp[6];
-  tdata->dxdotdp[9 + ip*model->nx] = -x_tmp[9]+udata->p[1]*x_tmp[8];
+  tdata->dxdotdp[1 + ip*model->nx] = -x_tmp[1]+tdata->p[1]*x_tmp[0];
+  tdata->dxdotdp[3 + ip*model->nx] = -x_tmp[3]+tdata->p[1]*x_tmp[2];
+  tdata->dxdotdp[5 + ip*model->nx] = x_tmp[0]-x_tmp[5]+tdata->p[1]*x_tmp[4];
+  tdata->dxdotdp[7 + ip*model->nx] = -x_tmp[7]+tdata->p[1]*x_tmp[6];
+  tdata->dxdotdp[9 + ip*model->nx] = -x_tmp[9]+tdata->p[1]*x_tmp[8];
 
   } break;
 
   case 1: {
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0];
-  tdata->dxdotdp[3 + ip*model->nx] = x_tmp[0]+udata->p[0]*x_tmp[2];
-  tdata->dxdotdp[5 + ip*model->nx] = udata->p[0]*x_tmp[4];
-  tdata->dxdotdp[7 + ip*model->nx] = udata->p[0]*x_tmp[6];
-  tdata->dxdotdp[9 + ip*model->nx] = udata->p[0]*x_tmp[8];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0];
+  tdata->dxdotdp[3 + ip*model->nx] = x_tmp[0]+tdata->p[0]*x_tmp[2];
+  tdata->dxdotdp[5 + ip*model->nx] = tdata->p[0]*x_tmp[4];
+  tdata->dxdotdp[7 + ip*model->nx] = tdata->p[0]*x_tmp[6];
+  tdata->dxdotdp[9 + ip*model->nx] = tdata->p[0]*x_tmp[8];
 
   } break;
 

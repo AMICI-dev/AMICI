@@ -25,7 +25,7 @@ public:
     void setLikelihoodSensitivityFirstOrderNaN();
     void setLikelihoodSensitivitySecondOrderNaN();
 
-    int applyChainRuleFactorToSimulationResults(UserData *udata);
+    int applyChainRuleFactorToSimulationResults(const UserData *udata, const realtype *unscaledParameters);
 
     virtual ~ReturnData();
 

@@ -22,12 +22,12 @@ status = dwdp_model_neuron(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[1]*(x_tmp[1]-udata->p[1]*x_tmp[0]);
+  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[1]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
 
   } break;
 
   case 1: {
-  qBdot_tmp[ip + udata->nplist*0] = -udata->p[0]*x_tmp[0]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = -tdata->p[0]*x_tmp[0]*xB_tmp[1];
 
   } break;
 

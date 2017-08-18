@@ -20,8 +20,8 @@ int ix;
 memset(xBdot_tmp,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
 status = dwdx_model_neuron(t,x,NULL,user_data);
-  xBdot_tmp[0] = -xB_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0)-udata->p[0]*udata->p[1]*xB_tmp[1];
-  xBdot_tmp[1] = xB_tmp[0]+udata->p[0]*xB_tmp[1];
+  xBdot_tmp[0] = -xB_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0)-tdata->p[0]*tdata->p[1]*xB_tmp[1];
+  xBdot_tmp[1] = xB_tmp[0]+tdata->p[0]*xB_tmp[1];
 for(ix = 0; ix<2; ix++) {
    if(amiIsNaN(xBdot_tmp[ix])) {
        xBdot_tmp[ix] = 0;       if(!tdata->nan_xBdot) {

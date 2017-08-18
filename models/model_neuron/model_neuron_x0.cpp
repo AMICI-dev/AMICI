@@ -16,7 +16,7 @@ realtype *x0_tmp = N_VGetArrayPointer(x0);
 memset(x0_tmp,0,sizeof(realtype)*2);
 realtype t = udata->tstart;
   x0_tmp[0] = udata->k[0];
-  x0_tmp[1] = udata->k[0]*udata->p[1];
+  x0_tmp[1] = udata->k[0]*tdata->p[1];
 return(status);
 
 }

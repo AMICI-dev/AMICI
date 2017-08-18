@@ -22,20 +22,20 @@ status = dwdp_model_neuron_o2(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[1]*(x_tmp[1]-udata->p[1]*x_tmp[0]);
-  qBdot_tmp[ip + udata->nplist*1] = xB_tmp[3]*(x_tmp[1]-udata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[3]-udata->p[1]*x_tmp[2]);
-  qBdot_tmp[ip + udata->nplist*2] = -xB_tmp[1]*(x_tmp[0]-x_tmp[5]+udata->p[1]*x_tmp[4])+xB_tmp[5]*(x_tmp[1]-udata->p[1]*x_tmp[0]);
-  qBdot_tmp[ip + udata->nplist*3] = xB_tmp[7]*(x_tmp[1]-udata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[7]-udata->p[1]*x_tmp[6]);
-  qBdot_tmp[ip + udata->nplist*4] = xB_tmp[9]*(x_tmp[1]-udata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[9]-udata->p[1]*x_tmp[8]);
+  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[1]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
+  qBdot_tmp[ip + udata->nplist*1] = xB_tmp[3]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[3]-tdata->p[1]*x_tmp[2]);
+  qBdot_tmp[ip + udata->nplist*2] = -xB_tmp[1]*(x_tmp[0]-x_tmp[5]+tdata->p[1]*x_tmp[4])+xB_tmp[5]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
+  qBdot_tmp[ip + udata->nplist*3] = xB_tmp[7]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[7]-tdata->p[1]*x_tmp[6]);
+  qBdot_tmp[ip + udata->nplist*4] = xB_tmp[9]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[9]-tdata->p[1]*x_tmp[8]);
 
   } break;
 
   case 1: {
-  qBdot_tmp[ip + udata->nplist*0] = -udata->p[0]*x_tmp[0]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*1] = -xB_tmp[1]*(x_tmp[0]+udata->p[0]*x_tmp[2])-udata->p[0]*x_tmp[0]*xB_tmp[3];
-  qBdot_tmp[ip + udata->nplist*2] = -udata->p[0]*x_tmp[0]*xB_tmp[5]-udata->p[0]*x_tmp[4]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*3] = -udata->p[0]*x_tmp[0]*xB_tmp[7]-udata->p[0]*x_tmp[6]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*4] = -udata->p[0]*x_tmp[0]*xB_tmp[9]-udata->p[0]*x_tmp[8]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*0] = -tdata->p[0]*x_tmp[0]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*1] = -xB_tmp[1]*(x_tmp[0]+tdata->p[0]*x_tmp[2])-tdata->p[0]*x_tmp[0]*xB_tmp[3];
+  qBdot_tmp[ip + udata->nplist*2] = -tdata->p[0]*x_tmp[0]*xB_tmp[5]-tdata->p[0]*x_tmp[4]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*3] = -tdata->p[0]*x_tmp[0]*xB_tmp[7]-tdata->p[0]*x_tmp[6]*xB_tmp[1];
+  qBdot_tmp[ip + udata->nplist*4] = -tdata->p[0]*x_tmp[0]*xB_tmp[9]-tdata->p[0]*x_tmp[8]*xB_tmp[1];
 
   } break;
 

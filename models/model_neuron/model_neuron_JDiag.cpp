@@ -20,7 +20,7 @@ memset(JDiag_tmp,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
 status = dwdx_model_neuron(t,x,NULL,user_data);
   JDiag_tmp[0+0*2] = x_tmp[0]*(2.0/2.5E1)+5.0;
-  JDiag_tmp[1+0*2] = -udata->p[0];
+  JDiag_tmp[1+0*2] = -tdata->p[0];
 for(ix = 0; ix<2; ix++) {
    if(amiIsNaN(JDiag_tmp[ix])) {
        JDiag_tmp[ix] = 0;

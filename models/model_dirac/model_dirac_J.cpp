@@ -19,9 +19,9 @@ int ix;
 memset(J->data,0,sizeof(realtype)*4);
 status = w_model_dirac(t,x,NULL,tdata);
 status = dwdx_model_dirac(t,x,NULL,user_data);
-  J->data[0+0*2] = -udata->p[0];
-  J->data[1+0*2] = udata->p[2];
-  J->data[1+1*2] = -udata->p[3];
+  J->data[0+0*2] = -tdata->p[0];
+  J->data[1+0*2] = tdata->p[2];
+  J->data[1+1*2] = -tdata->p[3];
 for(ix = 0; ix<4; ix++) {
    if(amiIsNaN(J->data[ix])) {
        J->data[ix] = 0;

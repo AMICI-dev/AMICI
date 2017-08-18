@@ -15,7 +15,7 @@ public:
      */
     UserData();
 
-    int unscaleParameters(Model *model);
+    int unscaleParameters(const Model *model, double *bufferUnscaled) const;
 
     virtual ~UserData();
 

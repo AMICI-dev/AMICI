@@ -20,15 +20,15 @@ memset(JDiag_tmp,0,sizeof(realtype)*10);
 status = w_model_neuron_o2(t,x,NULL,tdata);
 status = dwdx_model_neuron_o2(t,x,NULL,user_data);
   JDiag_tmp[0+0*10] = x_tmp[0]*(2.0/2.5E1)+5.0;
-  JDiag_tmp[1+0*10] = -udata->p[0];
+  JDiag_tmp[1+0*10] = -tdata->p[0];
   JDiag_tmp[2+0*10] = tdata->w[1];
-  JDiag_tmp[3+0*10] = -udata->p[0];
+  JDiag_tmp[3+0*10] = -tdata->p[0];
   JDiag_tmp[4+0*10] = tdata->w[1];
-  JDiag_tmp[5+0*10] = -udata->p[0];
+  JDiag_tmp[5+0*10] = -tdata->p[0];
   JDiag_tmp[6+0*10] = tdata->w[1];
-  JDiag_tmp[7+0*10] = -udata->p[0];
+  JDiag_tmp[7+0*10] = -tdata->p[0];
   JDiag_tmp[8+0*10] = tdata->w[1];
-  JDiag_tmp[9+0*10] = -udata->p[0];
+  JDiag_tmp[9+0*10] = -tdata->p[0];
 for(ix = 0; ix<10; ix++) {
    if(amiIsNaN(JDiag_tmp[ix])) {
        JDiag_tmp[ix] = 0;

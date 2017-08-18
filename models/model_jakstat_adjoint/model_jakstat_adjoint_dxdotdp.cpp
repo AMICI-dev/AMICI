@@ -50,32 +50,32 @@ switch (udata->plist[ip]) {
   } break;
 
   case 5: {
-  tdata->dxdotdp[0 + ip*model->nx] = -udata->p[0]*x_tmp[0]*tdata->dwdp[0];
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0]*tdata->dwdp[0];
+  tdata->dxdotdp[0 + ip*model->nx] = -tdata->p[0]*x_tmp[0]*tdata->dwdp[0];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0]*tdata->dwdp[0];
 
   } break;
 
   case 6: {
-  tdata->dxdotdp[0 + ip*model->nx] = -udata->p[0]*x_tmp[0]*tdata->dwdp[1];
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0]*tdata->dwdp[1];
+  tdata->dxdotdp[0 + ip*model->nx] = -tdata->p[0]*x_tmp[0]*tdata->dwdp[1];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0]*tdata->dwdp[1];
 
   } break;
 
   case 7: {
-  tdata->dxdotdp[0 + ip*model->nx] = -udata->p[0]*x_tmp[0]*tdata->dwdp[2];
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0]*tdata->dwdp[2];
+  tdata->dxdotdp[0 + ip*model->nx] = -tdata->p[0]*x_tmp[0]*tdata->dwdp[2];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0]*tdata->dwdp[2];
 
   } break;
 
   case 8: {
-  tdata->dxdotdp[0 + ip*model->nx] = -udata->p[0]*x_tmp[0]*tdata->dwdp[3];
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0]*tdata->dwdp[3];
+  tdata->dxdotdp[0 + ip*model->nx] = -tdata->p[0]*x_tmp[0]*tdata->dwdp[3];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0]*tdata->dwdp[3];
 
   } break;
 
   case 9: {
-  tdata->dxdotdp[0 + ip*model->nx] = -udata->p[0]*x_tmp[0]*tdata->dwdp[4];
-  tdata->dxdotdp[1 + ip*model->nx] = udata->p[0]*x_tmp[0]*tdata->dwdp[4];
+  tdata->dxdotdp[0 + ip*model->nx] = -tdata->p[0]*x_tmp[0]*tdata->dwdp[4];
+  tdata->dxdotdp[1 + ip*model->nx] = tdata->p[0]*x_tmp[0]*tdata->dwdp[4];
 
   } break;
 

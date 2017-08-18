@@ -19,7 +19,7 @@ realtype *Jv_tmp = N_VGetArrayPointer(Jv);
 memset(Jv_tmp,0,sizeof(realtype)*2);
 status = w_model_neuron(t,x,NULL,tdata);
   Jv_tmp[0] = -v_tmp[1]+v_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0);
-  Jv_tmp[1] = -udata->p[0]*v_tmp[1]+udata->p[0]*udata->p[1]*v_tmp[0];
+  Jv_tmp[1] = -tdata->p[0]*v_tmp[1]+tdata->p[0]*tdata->p[1]*v_tmp[0];
 return(status);
 
 }

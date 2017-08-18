@@ -25,9 +25,9 @@ J->indexptrs[1] = 2;
 J->indexptrs[2] = 3;
 status = w_model_dirac(t,x,NULL,tdata);
 status = dwdx_model_dirac(t,x,NULL,user_data);
-  J->data[0] = -udata->p[0];
-  J->data[1] = udata->p[2];
-  J->data[2] = -udata->p[3];
+  J->data[0] = -tdata->p[0];
+  J->data[1] = tdata->p[2];
+  J->data[2] = -tdata->p[3];
 for(inz = 0; inz<3; inz++) {
    if(amiIsNaN(J->data[inz])) {
        J->data[inz] = 0;

@@ -20,8 +20,8 @@ int ix;
 memset(xBdot_tmp,0,sizeof(realtype)*3);
 status = w_model_steadystate(t,x,NULL,tdata);
 status = dwdx_model_steadystate(t,x,NULL,user_data);
-  xBdot_tmp[0] = xB_tmp[0]*(udata->p[1]*x_tmp[1]+udata->p[0]*tdata->dwdx[0]*2.0)+xB_tmp[1]*(udata->p[1]*x_tmp[1]-udata->p[0]*tdata->dwdx[0])-udata->p[1]*x_tmp[1]*xB_tmp[2];
-  xBdot_tmp[1] = -xB_tmp[0]*(udata->p[2]*2.0-udata->p[1]*x_tmp[0])+xB_tmp[1]*(udata->p[2]+udata->p[1]*x_tmp[0])-udata->p[1]*x_tmp[0]*xB_tmp[2];
+  xBdot_tmp[0] = xB_tmp[0]*(tdata->p[1]*x_tmp[1]+tdata->p[0]*tdata->dwdx[0]*2.0)+xB_tmp[1]*(tdata->p[1]*x_tmp[1]-tdata->p[0]*tdata->dwdx[0])-tdata->p[1]*x_tmp[1]*xB_tmp[2];
+  xBdot_tmp[1] = -xB_tmp[0]*(tdata->p[2]*2.0-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(tdata->p[2]+tdata->p[1]*x_tmp[0])-tdata->p[1]*x_tmp[0]*xB_tmp[2];
   xBdot_tmp[2] = xB_tmp[2]*(udata->k[3]+tdata->dwdx[1])-xB_tmp[0]*tdata->dwdx[1]-xB_tmp[1]*tdata->dwdx[1];
 for(ix = 0; ix<3; ix++) {
    if(amiIsNaN(xBdot_tmp[ix])) {

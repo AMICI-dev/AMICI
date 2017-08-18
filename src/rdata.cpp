@@ -61,7 +61,7 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN()
     fillArray(s2llh, nplist*(nJ-1), amiGetNaN());
 }
 
-int ReturnData::applyChainRuleFactorToSimulationResults(UserData *udata)
+int ReturnData::applyChainRuleFactorToSimulationResults(const UserData *udata, const realtype *unscaledParameters)
 {
     if (pscale == AMICI_SCALING_NONE)
         return AMICI_SUCCESS;
@@ -77,20 +77,20 @@ int ReturnData::applyChainRuleFactorToSimulationResults(UserData *udata)
         case AMICI_SCALING_LOG10:
             coefficient = log(10.0);
             for(int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = udata->p[udata->plist[ip]]*log(10);
+                pcoefficient[ip] = unscaledParameters[udata->plist[ip]]*log(10);
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for(int ip = 0; ip < np; ++ip)
-                        augcoefficient[ip] = udata->p[ip]*log(10);
+                        augcoefficient[ip] = unscaledParameters[ip]*log(10);
             break;
         case AMICI_SCALING_LN:
             coefficient = 1.0;
             for(int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = udata->p[udata->plist[ip]];
+                pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for(int ip = 0; ip < np; ++ip)
-                        augcoefficient[ip] = udata->p[ip];
+                        augcoefficient[ip] = unscaledParameters[ip];
             break;
         case AMICI_SCALING_NONE:
             //this should never be reached
@@ -190,7 +190,7 @@ s  ## QUANT [(ip*N1 + iJ*N1T + IND1)*N2 + IND2] += s ## QUANT [(ip*N1 + IND1)*N2
             if (sllh) {
                 for(int ip = 0; ip < nplist; ++ip) {
                     s2llh[ip] *= pcoefficient[ip];
-                    s2llh[ip] += udata->k[nk-nplist+ip]*sllh[ip]/udata->p[udata->plist[ip]];
+                    s2llh[ip] += udata->k[nk-nplist+ip]*sllh[ip]/unscaledParameters[udata->plist[ip]];
                 }
             }
         }
@@ -201,7 +201,7 @@ for(int ip = 0; ip < nplist; ++ip) \
 for(int IND1 = 0; IND1 < N1T; ++IND1) \
 for(int IND2 = 0; IND2 < N2; ++IND2){ \
 s ## QUANT [(ip*N1 + N1T + IND1)*N2 + IND2] *= pcoefficient[ip]; \
-s ## QUANT [(ip*N1 + N1T + IND1)*N2 + IND2] += udata->k[nk-nplist+ip]*s ## QUANT [(ip*N1 + IND1)*N2 + IND2]/udata->p[udata->plist[ip]];}
+s ## QUANT [(ip*N1 + N1T + IND1)*N2 + IND2] += udata->k[nk-nplist+ip]*s ## QUANT [(ip*N1 + IND1)*N2 + IND2]/unscaledParameters[udata->plist[ip]];}
 
         s2vecChainRule(x,ix,nxtrue,nx,it,nt)
         s2vecChainRule(y,iy,nytrue,ny,it,nt)

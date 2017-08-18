@@ -107,7 +107,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_sdx0_([0-9]+)','sdx0_tmp[$1]');
             cstr = regexprep(cstr,'var_root_([0-9]+)', 'root[$1]');
             
-            cstr = regexprep(cstr,'var_p_([0-9]+)','udata->p[$1]');
+            cstr = regexprep(cstr,'var_p_([0-9]+)','tdata->p[$1]');
             cstr = regexprep(cstr,'var_k_([0-9]+)','udata->k[$1]');
             cstr = regexprep(cstr,'h_([0-9]+)','udata->h[$1]');
             cstr = regexprep(cstr,'var_w_([0-9]+)','tdata->w[$1]');

@@ -28,8 +28,8 @@ status = w_model_neuron(t,x,NULL,tdata);
 status = dwdx_model_neuron(t,x,NULL,user_data);
   JB->data[0] = x_tmp[0]*(-2.0/2.5E1)-5.0;
   JB->data[1] = 1.0;
-  JB->data[2] = -udata->p[0]*udata->p[1];
-  JB->data[3] = udata->p[0];
+  JB->data[2] = -tdata->p[0]*tdata->p[1];
+  JB->data[3] = tdata->p[0];
 return(status);
 
 }

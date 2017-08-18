@@ -15,7 +15,7 @@ UserData *udata = (UserData*) tdata->udata;
 realtype *x0_tmp = N_VGetArrayPointer(x0);
 memset(x0_tmp,0,sizeof(realtype)*9);
 realtype t = udata->tstart;
-  x0_tmp[0] = udata->p[4];
+  x0_tmp[0] = tdata->p[4];
 return(status);
 
 }

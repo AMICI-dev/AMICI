@@ -19,8 +19,8 @@ int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*2);
 status = w_model_dirac(t,x,NULL,tdata);
 status = dwdx_model_dirac(t,x,NULL,user_data);
-  JDiag_tmp[0+0*2] = -udata->p[0];
-  JDiag_tmp[1+0*2] = -udata->p[3];
+  JDiag_tmp[0+0*2] = -tdata->p[0];
+  JDiag_tmp[1+0*2] = -tdata->p[3];
 for(ix = 0; ix<2; ix++) {
    if(amiIsNaN(JDiag_tmp[ix])) {
        JDiag_tmp[ix] = 0;

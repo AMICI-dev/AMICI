@@ -80,7 +80,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
                 if (wrap_SensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS) goto freturn;
 
                 /* Set sensitivity analysis optional inputs */
-                if (AMISetSensParams(udata->p, udata->pbar, udata->plist) != AMICI_SUCCESS) goto freturn;
+                if (AMISetSensParams(tdata->p, udata->pbar, udata->plist) != AMICI_SUCCESS) goto freturn;
 
                 if (AMISetSensErrCon(TRUE) != AMICI_SUCCESS) goto freturn;
 

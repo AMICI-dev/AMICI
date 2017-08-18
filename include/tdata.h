@@ -23,6 +23,9 @@ public:
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
     
+    /** parameter array, unscaled */
+    realtype *p = nullptr;
+
     /** current time */
     realtype t;
     

@@ -17,8 +17,8 @@ realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(xdot_tmp,0,sizeof(realtype)*2);
 status = w_model_dirac(t,x,NULL,tdata);
-  xdot_tmp[0] = -udata->p[0]*x_tmp[0];
-  xdot_tmp[1] = udata->p[2]*x_tmp[0]-udata->p[3]*x_tmp[1];
+  xdot_tmp[0] = -tdata->p[0]*x_tmp[0];
+  xdot_tmp[1] = tdata->p[2]*x_tmp[0]-tdata->p[3]*x_tmp[1];
 for(ix = 0; ix<2; ix++) {
    if(amiIsNaN(xdot_tmp[ix])) {
        xdot_tmp[ix] = 0;

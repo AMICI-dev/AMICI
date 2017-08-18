@@ -19,9 +19,9 @@ realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   memset(JB->data,0,sizeof(realtype)*4);
 status = w_model_dirac(t,x,NULL,tdata);
 status = dwdx_model_dirac(t,x,NULL,user_data);
-  JB->data[0+0*2] = udata->p[0];
-  JB->data[0+1*2] = -udata->p[2];
-  JB->data[1+1*2] = udata->p[3];
+  JB->data[0+0*2] = tdata->p[0];
+  JB->data[0+1*2] = -tdata->p[2];
+  JB->data[1+1*2] = tdata->p[3];
 return(status);
 
 }

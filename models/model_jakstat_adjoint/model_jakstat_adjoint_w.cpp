@@ -14,7 +14,7 @@ Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 memset(tdata->w,0,sizeof(realtype)*2);
-  tdata->w[0] = am_spline_pos(t,5,0.0,udata->p[5],5.0,udata->p[6],1.0E1,udata->p[7],2.0E1,udata->p[8],6.0E1,udata->p[9],0.0,0.0);
+  tdata->w[0] = am_spline_pos(t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
   tdata->w[1] = x_tmp[1]*x_tmp[1];
 return(status);
 

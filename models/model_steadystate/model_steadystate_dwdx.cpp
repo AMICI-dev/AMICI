@@ -16,7 +16,7 @@ realtype *x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dwdx,0,sizeof(realtype)*2);
 status = w_model_steadystate(t,x,NULL,tdata);
   tdata->dwdx[0] = x_tmp[0]*2.0;
-  tdata->dwdx[1] = udata->p[3];
+  tdata->dwdx[1] = tdata->p[3];
 return(status);
 
 }
