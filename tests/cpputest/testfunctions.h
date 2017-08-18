@@ -8,6 +8,7 @@
 class UserData;
 class ReturnData;
 class ExpData;
+class Model;
 
 #define HDFFILE "../../expectedResults.h5"
 #define TEST_ATOL 1e-10
@@ -17,15 +18,15 @@ class ExpData;
 #include <iostream>
 #endif
 
-ExpData *getTestExpData(const UserData *udata);
+ExpData *getTestExpData(const UserData *udata, Model *model);
 
 bool withinTolerance(double expected, double actual, double atol, double rtol);
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol);
 
-void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
+void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
 
-void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, double atol, double rtol);
+void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
 
 void printBacktrace(int depth);
 #endif

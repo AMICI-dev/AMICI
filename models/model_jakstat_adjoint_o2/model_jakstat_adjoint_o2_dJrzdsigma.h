@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dJrzdsigma_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int dJrzdsigma_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_dJrzdsigma_h */

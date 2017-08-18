@@ -2,25 +2,26 @@
 
 #include <include/udata.h>
 #include "include/amici_defines.h"
+#include "include/amici_model.h"
 
 ExpData::ExpData() {
     setDefaults();
 }
 
-ExpData::ExpData(const UserData *udata) {
+ExpData::ExpData(const UserData *udata, Model *model) {
     setDefaults();
     if(udata){
-        my = new double[udata->nt*udata->nytrue]();
-        sigmay = new double[udata->nt*udata->nytrue]();
-        mz = new double[udata->nmaxevent*udata->nztrue]();
-        mrz = new double[udata->nmaxevent*udata->nztrue]();
-        sigmaz = new double[udata->nmaxevent*udata->nztrue]();
+        my = new double[udata->nt*model->nytrue]();
+        sigmay = new double[udata->nt*model->nytrue]();
+        mz = new double[udata->nmaxevent*model->nztrue]();
+        mrz = new double[udata->nmaxevent*model->nztrue]();
+        sigmaz = new double[udata->nmaxevent*model->nztrue]();
     }
 }
 
 void ExpData::setDefaults()
 {
-    my = sigmay = mz = sigmaz = NULL;
+    my = sigmay = mz = sigmaz = nullptr;
 }
 
 ExpData::~ExpData() {

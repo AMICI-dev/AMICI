@@ -181,14 +181,6 @@ fprintf(fid,'if(options_ami.sensi>1)\n');
 fprintf(fid,'    error(''Second order sensitivities were requested but not computed'');\n');
 fprintf(fid,'end\n');
 end
-fprintf(fid,'if(options_ami.sensi<2)\n');
-fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n']);
-if(o2flag > 0)
-    fprintf(fid,'else\n');
-    fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(amimodelo2.id))) ']);\n']);
-end
-fprintf(fid,'end\n');
-fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
 fprintf(fid,'\n');
 fprintf(fid,'if(~isempty(options_ami.pbar))\n');
 fprintf(fid,'    pbar = options_ami.pbar;\n');
@@ -197,15 +189,17 @@ fprintf(fid,'    pbar = ones(size(theta));\n');
 fprintf(fid,'end\n');
 fprintf(fid,'\n');
 
-
-switch (this.param)
-    case 'log'
-        fprintf(fid, 'chainRuleFactor = exp(theta(options_ami.sens_ind));\n\n');
-    case 'log10'
-        fprintf(fid, 'chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n\n');
-    otherwise
-        fprintf(fid, 'chainRuleFactor = ones(size(options_ami.sens_ind));\n\n');
-end
+fprintf(fid,'if(isempty(options_ami.pscale))\n');
+fprintf(fid,['    options_ami.pscale = ''' this.param ''' ;\n']);
+fprintf(fid,'end\n');
+fprintf(fid,'switch (options_ami.pscale)\n');
+fprintf(fid,'    case 1\n');
+fprintf(fid,'        chainRuleFactor = exp(theta(options_ami.sens_ind));\n');
+fprintf(fid,'    case 2\n');
+fprintf(fid,'        chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n');
+fprintf(fid,'    otherwise\n');
+fprintf(fid,'        chainRuleFactor = ones(size(options_ami.sens_ind));\n');
+fprintf(fid,'end\n\n');
 
 if(o2flag == 2)
     fprintf(fid,'if(nargin>=6)\n');

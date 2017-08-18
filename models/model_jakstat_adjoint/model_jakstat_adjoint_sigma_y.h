@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int sigma_y_model_jakstat_adjoint(realtype t, void *user_data, TempData *tdata);
+int sigma_y_model_jakstat_adjoint(realtype t, TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_sigma_y_h */

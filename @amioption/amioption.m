@@ -65,6 +65,11 @@ classdef amioption < matlab.mixin.CustomDisplay
         newton_preeq = 0;
         % mapping of event ouputs to events
         z2event = double.empty();
+        % parameter scaling
+        % Valid options are "log","log10" and "lin" for log, log10 or
+        % unscaled parameters p
+        % use "" for default as specified in the model (fallback: 'lin')
+        pscale = '';
     end
     
     properties (Hidden)
@@ -219,6 +224,28 @@ classdef amioption < matlab.mixin.CustomDisplay
             assert(floor(value)==value,'The option sensi must be an integer!')
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')
             this.sensi = value;
+        end
+        
+        function this = set.pscale(this,value)
+            if(~isempty(value))
+                if(isnumeric(value))
+                    assert(value == 0 || value == 1 || value == 2, ...
+                        'No valid parametrisation chosen! Valid integer options are 0 (lin), 1 (log), 2 (log10).');
+                else
+                    switch (value)
+                        case 'lin'
+                            value = 0;
+                        case 'log'
+                            value = 1;
+                        case 'log10'
+                            value = 2;
+                        otherwise
+                            assert(0, ...
+                                'No valid parametrisation chosen! Valid string options are "log", "log10" and "lin".')
+                    end          
+                end
+            end
+            this.pscale = value;
         end
         
         function this = set.newton_linsol(this,value)

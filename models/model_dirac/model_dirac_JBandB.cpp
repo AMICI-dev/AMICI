@@ -1,7 +1,9 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
+#include <include/tdata.h>
 #include <include/udata.h>
 #include "model_dirac_JB.h"
 #include "model_dirac_w.h"

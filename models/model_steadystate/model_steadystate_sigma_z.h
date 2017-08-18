@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int sigma_z_model_steadystate(realtype t, int ie, void *user_data, TempData *tdata);
+int sigma_z_model_steadystate(realtype t, int ie, TempData *tdata);
 
 
 #endif /* _am_model_steadystate_sigma_z_h */

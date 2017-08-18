@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dzdp_model_steadystate(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata);
+int dzdp_model_steadystate(realtype t, int ie, N_Vector x, TempData *tdata);
 
 
 #endif /* _am_model_steadystate_dzdp_h */

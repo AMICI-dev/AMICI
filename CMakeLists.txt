@@ -46,7 +46,6 @@ endif()
 set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/symbolic_functions.cpp
     ${AMICI_DIR}/src/amici_interface_cpp.cpp
-    ${AMICI_DIR}/src/amici_model_functions.cpp
     ${AMICI_DIR}/src/amici.cpp
     ${AMICI_DIR}/src/amici_misc.cpp
     ${AMICI_DIR}/src/udata.cpp
@@ -55,6 +54,11 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/edata.cpp
     ${AMICI_DIR}/src/amici_hdf5.cpp
     ${AMICI_DIR}/src/spline.cpp
+    ${AMICI_DIR}/src/amici_solver.cpp
+    ${AMICI_DIR}/src/amici_model.cpp
+    ${AMICI_DIR}/src/forwardproblem.cpp
+    ${AMICI_DIR}/src/steadystateproblem.cpp
+    ${AMICI_DIR}/src/backwardproblem.cpp
 )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})

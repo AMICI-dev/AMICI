@@ -15,6 +15,7 @@
 class UserData;
 class ReturnData;
 class ExpData;
+class Model;
 
 /* Functions for reading and writing AMICI data to/from HDF5 files. */
 
@@ -35,9 +36,9 @@ EXTERNC void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *u
  * @return
  */
 
-EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char *datasetPath);
+EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char* fileName, const char *datasetPath, Model *model);
 
-EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath);
+EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char *datasetPath, Model *model);
 
 /**
  * @brief AMI_HDF5_readSimulationExpData reads AMICI experimental data from attributes in HDF5 file.
@@ -46,7 +47,7 @@ EXTERNC UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, co
  * @return
  */
 
-EXTERNC ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char *dataObject);
+EXTERNC ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char *dataObject, Model *model);
 
 /**
  * @brief AMI_HDF5_attributeExists Check whether an attribute with the given name exists on the given dataset

@@ -1,80 +1,9 @@
 #include "wrapfunctions.h"
+#include <include/amici_model.h>
+#include <include/udata.h>
 
-#include <include/cvodewrap.h>
-
-UserData getUserData(){
-    return UserData(4,
-                    2,
-                    2,
-                    2,
-                    1,
-                    1,
-                    1,
-                    1,
-                    1,
-                    1,
-                    0,
-                    0,
-                    0,
-                    4,
-                    1,
-                    1,
-                    AMICI_SCALING_LOG10,
-                    AMICI_O2MODE_NONE);
-}
-
-int wrap_init(void *cvode_mem, N_Vector x, N_Vector dx, realtype t){
-   return CVodeInit(cvode_mem, xdot_model_neuron, RCONST(t), x);
-}
-
-int wrap_binit(void *cvode_mem, int which, N_Vector xB, N_Vector dxB, realtype t){
-    return CVodeInitB(cvode_mem, which, xBdot_model_neuron, RCONST(t), xB);
-}
-
-int wrap_qbinit(void *cvode_mem, int which, N_Vector qBdot){
-    return CVodeQuadInitB(cvode_mem, which, qBdot_model_neuron, qBdot);
-}
-
-int wrap_SensInit1(void *cvode_mem, N_Vector *sx, N_Vector *sdx, void *user_data){
-                    UserData *udata = (UserData*) user_data;
-    return CVodeSensInit1(cvode_mem, udata->nplist, udata->sensi_meth, sxdot_model_neuron, sx);
-}
-
-int wrap_RootInit(void *cvode_mem, void *user_data){
-                    UserData *udata = (UserData*) user_data;
-    return CVodeRootInit(cvode_mem, 1, root_model_neuron);
-}
-
-int wrap_SetDenseJacFn(void *cvode_mem){
-    return CVDlsSetDenseJacFn(cvode_mem, J_model_neuron);
-}
-
-int wrap_SetSparseJacFn(void *cvode_mem){
-    return CVSlsSetSparseJacFn(cvode_mem, JSparse_model_neuron);
-}
-
-int wrap_SetBandJacFn(void *cvode_mem){
-    return CVDlsSetBandJacFn(cvode_mem, JBand_model_neuron);
-}
-
-int wrap_SetJacTimesVecFn(void *cvode_mem){
-    return CVSpilsSetJacTimesVecFn(cvode_mem, Jv_model_neuron);
-}
-
-int wrap_SetDenseJacFnB(void *cvode_mem,int which){
-    return CVDlsSetDenseJacFnB(cvode_mem, which, JB_model_neuron);
-}
-
-int wrap_SetSparseJacFnB(void *cvode_mem,int which){
-    return CVSlsSetSparseJacFnB(cvode_mem, which, JSparseB_model_neuron);
-}
-
-int wrap_SetBandJacFnB(void *cvode_mem,int which){
-    return CVDlsSetBandJacFnB(cvode_mem, which, JBandB_model_neuron);
-}
-
-int wrap_SetJacTimesVecFnB(void *cvode_mem,int which){
-    return CVSpilsSetJacTimesVecFnB(cvode_mem, which, JvB_model_neuron);
+Model *getModel() {
+    return new Model_model_neuron();
 }
 
 int fx0(N_Vector x0, void *user_data){
@@ -113,52 +42,56 @@ int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){
     return root_model_neuron(t, x, root, user_data);
 }
 
-int frz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata){
-    return rz_model_neuron(t, ie, x, user_data, tdata, rdata);
+int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata){
+    return rz_model_neuron(t, ie, x, tdata, rdata);
 }
 
-int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-    return srz_model_neuron(t, ie, x, sx, user_data, tdata, rdata);
+int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata){
+    return srz_model_neuron(t, ie, x, sx, tdata, rdata);
 }
 
-int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata){
-    return stau_model_neuron(t, ie, x, sx, user_data, tdata);
+int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata){
+    return stau_model_neuron(t, ie, x, sx, tdata);
 }
 
 int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata){
     return y_model_neuron(t, it, x, user_data, rdata);
 }
 
-int fdydp(realtype t, int it, N_Vector x, void *user_data, TempData *tdata){
-    return dydp_model_neuron(t, it, x, user_data, tdata);
+int fdydp(realtype t, int it, N_Vector x, TempData *tdata){
+    return dydp_model_neuron(t, it, x, tdata);
 }
 
-int fdydx(realtype t, int it, N_Vector x, void *user_data, TempData *tdata){
-    return dydx_model_neuron(t, it, x, user_data, tdata);
+int fdydx(realtype t, int it, N_Vector x, TempData *tdata){
+    return dydx_model_neuron(t, it, x, tdata);
 }
 
-int fz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata){
-    return z_model_neuron(t, ie, x, user_data, tdata, rdata);
+int fz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata){
+    return z_model_neuron(t, ie, x, tdata, rdata);
 }
 
-int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata, ReturnData *rdata){
-    return sz_model_neuron(t, ie, x, sx, user_data, tdata, rdata);
+int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata){
+    return sz_model_neuron(t, ie, x, sx, tdata, rdata);
 }
 
-int fdzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-    return dzdp_model_neuron(t, ie, x, user_data, tdata);
+int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata){
+    return dzdp_model_neuron(t, ie, x, tdata);
 }
 
-int fdzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-    return dzdx_model_neuron(t, ie, x, user_data, tdata);
+int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata){
+    return dzdx_model_neuron(t, ie, x, tdata);
 }
 
-int fdrzdp(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-    return drzdp_model_neuron(t, ie, x, user_data, tdata);
+int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata){
+    return drzdp_model_neuron(t, ie, x, tdata);
 }
 
-int fdrzdx(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata){
-    return drzdx_model_neuron(t, ie, x, user_data, tdata);
+int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata){
+    return drzdx_model_neuron(t, ie, x, tdata);
+}
+
+int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2){
+    return sxdot_model_neuron(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1, tmp2);
 }
 
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){
@@ -177,71 +110,91 @@ int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
     return dxdotdp_model_neuron(t, x, dx, user_data);
 }
 
-int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata){
-    return deltax_model_neuron(t, ie, x, xdot, xdot_old, user_data, tdata);
+int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+    return deltax_model_neuron(t, ie, x, xdot, xdot_old, tdata);
 }
 
-int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, void *user_data, TempData *tdata){
-    return deltasx_model_neuron(t, ie, x, xdot, xdot_old, sx, user_data, tdata);
+int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata){
+    return deltasx_model_neuron(t, ie, x, xdot, xdot_old, sx, tdata);
 }
 
-int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata){
-    return deltaxB_model_neuron(t, ie, x, xB, xdot, xdot_old, user_data, tdata);
+int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+    return deltaxB_model_neuron(t, ie, x, xB, xdot, xdot_old, tdata);
 }
 
-int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, void *user_data, TempData *tdata){
-    return deltaqB_model_neuron(t, ie, x, xB, qBdot, xdot, xdot_old, user_data, tdata);
+int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+    return deltaqB_model_neuron(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
 }
 
-int fsigma_y(realtype t, void *user_data, TempData *tdata){
-    return sigma_y_model_neuron(t, user_data, tdata);
+int fsigma_y(realtype t, TempData *tdata){
+    return sigma_y_model_neuron(t, tdata);
 }
 
-int fdsigma_ydp(realtype t, void *user_data, TempData *tdata){
-    return dsigma_ydp_model_neuron(t, user_data, tdata);
+int fdsigma_ydp(realtype t, TempData *tdata){
+    return dsigma_ydp_model_neuron(t, tdata);
 }
 
-int fsigma_z(realtype t, int ie, void *user_data, TempData *tdata){
-    return sigma_z_model_neuron(t, ie, user_data, tdata);
+int fsigma_z(realtype t, int ie, TempData *tdata){
+    return sigma_z_model_neuron(t, ie, tdata);
 }
 
-int fdsigma_zdp(realtype t, int ie, void *user_data, TempData *tdata){
-    return dsigma_zdp_model_neuron(t, ie, user_data, tdata);
+int fdsigma_zdp(realtype t, int ie, TempData *tdata){
+    return dsigma_zdp_model_neuron(t, ie, tdata);
 }
 
-int fJy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return Jy_model_neuron(t, it, x, user_data, tdata, edata, rdata);
+int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JSparse_model_neuron(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return Jz_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JBand_model_neuron(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJrz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return Jrz_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JSparseB_model_neuron(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fdJydy(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJydy_model_neuron(t, it, x, user_data, tdata, edata, rdata);
+int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JBandB_model_neuron(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fdJydsigma(realtype t, int it, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJydsigma_model_neuron(t, it, x, user_data, tdata, edata, rdata);
+int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB){
+    return JvB_model_neuron(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
 }
 
-int fdJzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJzdz_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return Jy_model_neuron(t, it, x, tdata, edata, rdata);
 }
 
-int fdJzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJzdsigma_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return Jz_model_neuron(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJrzdz(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJrzdz_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return Jrz_model_neuron(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJrzdsigma(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, const ExpData *edata, ReturnData *rdata){
-    return dJrzdsigma_model_neuron(t, ie, x, user_data, tdata, edata, rdata);
+int fdJydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJydy_model_neuron(t, it, x, tdata, edata, rdata);
+}
+
+int fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJydsigma_model_neuron(t, it, x, tdata, edata, rdata);
+}
+
+int fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJzdz_model_neuron(t, ie, x, tdata, edata, rdata);
+}
+
+int fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJzdsigma_model_neuron(t, ie, x, tdata, edata, rdata);
+}
+
+int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJrzdz_model_neuron(t, ie, x, tdata, edata, rdata);
+}
+
+int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return dJrzdsigma_model_neuron(t, ie, x, tdata, edata, rdata);
 }
 

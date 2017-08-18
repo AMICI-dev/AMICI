@@ -17,6 +17,8 @@
 #include <btf.h>
 
 #include <include/amici.h>
+#include <include/amici_solver.h>
+#include <include/amici_model.h>
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"
@@ -24,270 +26,323 @@
 #define EXTERNC
 #endif
 
-void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data) {
-    char buffer[250];
-    char buffid[250];
-    sprintf(buffer,"AMICI ERROR: in module %s in function %s : %s ",module,function,msg);
-    switch (error_code) {
-        case 99:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_WARNING",module,function);
-            break;
-            
-        case -1:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_TOO_MUCH_WORK",module,function);
-            break;
-            
-        case -2:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_TOO_MUCH_ACC",module,function);
-            break;
-            
-        case -3:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_ERR_FAILURE",module,function);
-            break;
-            
-        case -4:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_CONV_FAILURE",module,function);
-            break;
-            
-        default:
-            sprintf(buffid,"AMICI:mex:%s:%s:CV_OTHER",module,function);
-            break;
+class IDASolver : public Solver
+{
+public:
+    IDASolver() {}
+
+    int wrap_init(N_Vector x, N_Vector dx, realtype t){
+       return IDAInit(ami_mem, resultFunction, RCONST(t), x, dx);
     }
-    
-    mexWarnMsgIdAndTxt(buffid,buffer);
-};
 
-void *AMICreate(int lmm, int iter) {
-    return IDACreate();
-};
+    int wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
+        return IDAInitB(ami_mem, which, resultFunctionB, RCONST(t), xB, dxB);
+    }
 
-int AMISStolerances(void *mem, double rtol,double atol) {
-    return IDASStolerances(mem,rtol,atol);
-};
+    int wrap_qbinit(int which, N_Vector qBdot) {
+        return IDAQuadInitB(ami_mem, which, fqBdot, qBdot);
+    }
 
-int AMISensEEtolerances(void *mem) {
-    return IDASensEEtolerances(mem);
-};
+    int wrap_RootInit(int ne) {
+        return IDARootInit(ami_mem, ne, froot);
+    }
 
-int AMISetSensErrCon(void *mem,bool error_corr) {
-    return IDASetSensErrCon(mem,error_corr);
-};
+    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) {
+        return IDASensInit(ami_mem, udata->nplist, udata->sensi_meth, fsxdot, sx, sdx);
+    }
 
-int AMISetQuadErrConB(void *mem,int which, bool flag) {
-    return IDASetQuadErrConB(mem,which,flag);
-};
+    int wrap_SetDenseJacFn() {
+        return IDADlsSetDenseJacFn(ami_mem, fJ);
+    }
 
-int AMIGetRootInfo(void *mem,int *rootsfound) {
-    return IDAGetRootInfo(mem,rootsfound);
-};
+    int wrap_SetSparseJacFn() {
+        return IDASlsSetSparseJacFn(ami_mem, fJSparse);
+    }
 
-int AMISetErrHandlerFn(void *mem) {
-    return IDASetErrHandlerFn(mem,wrap_ErrHandlerFn,NULL);
-};
+    int wrap_SetBandJacFn() {
+        return IDADlsSetBandJacFn(ami_mem, fJBand);
+    }
 
-int AMISetUserData(void *mem, void *user_data) {
-    return IDASetUserData(mem,user_data);
-};
+    int wrap_SetJacTimesVecFn() {
+        return IDASpilsSetJacTimesVecFn(ami_mem, fJv);
+    }
 
-int AMISetUserDataB(void *mem, int which, void *user_data) {
-    return IDASetUserDataB(mem, which, user_data);
-};
+    int wrap_SetDenseJacFnB(int which) {
+        return IDADlsSetDenseJacFnB(ami_mem, which, fJB);
+    }
 
-int AMISetMaxNumSteps(void *mem, long int mxsteps) {
-    return IDASetMaxNumSteps(mem,mxsteps);
-};
+    int wrap_SetSparseJacFnB(int which) {
+        return IDASlsSetSparseJacFnB(ami_mem, which, fJSparseB);
+    }
 
-int AMISetStabLimDet(void *mem, int stldet) {
-    return(0);
-};
+    int wrap_SetBandJacFnB(int which) {
+        return IDADlsSetBandJacFnB(ami_mem, which, fJBandB);
+    }
 
-int AMISetStabLimDetB(void *mem, int which, int stldet) {
-    return(0);
-};
+    int wrap_SetJacTimesVecFnB(int which) {
+        return IDASpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
+    }
 
-int AMISetId(void *mem, N_Vector id) {
-    return IDASetId(mem, id);
-};
+    void *AMICreate(int lmm, int iter) {
+        return IDACreate();
+    }
 
-int AMISetSuppressAlg(void *mem, bool flag) {
-    return IDASetSuppressAlg(mem, flag);
-};
+    int AMISStolerances(double rtol,double atol) {
+        return IDASStolerances(ami_mem,rtol,atol);
+    }
 
-int AMIReInit(void *mem, realtype t0, N_Vector yy0, N_Vector yp0) {
-    return IDAReInit( mem, t0, yy0, yp0);
-};
+    int AMISensEEtolerances() {
+        return IDASensEEtolerances(mem);
+    }
 
-int AMISensReInit(void *mem, int ism, N_Vector *yS0, N_Vector *ypS0) {
-    return IDASensReInit( mem, ism, yS0, ypS0);
-};
+    int AMISetSensErrCon(bool error_corr) {
+        return IDASetSensErrCon(ami_mem,error_corr);
+    }
 
-int AMISetSensParams(void *mem, realtype *p, realtype *pbar, int *plist) {
-    return IDASetSensParams(mem, p, pbar, plist);
-};
+    int AMISetQuadErrConB(int which, bool flag) {
+        return IDASetQuadErrConB(ami_mem,which,flag);
+    }
 
-int AMIGetDky(void *mem, realtype t, int k, N_Vector dky) {
-    return IDAGetDky(mem, t, k, dky);
-};
+    int AMIGetRootInfo(int *rootsfound) {
+        return IDAGetRootInfo(ami_mem,rootsfound);
+    }
 
-int AMIGetSens(void *mem, realtype *tret, N_Vector *yySout) {
-    return IDAGetSens( mem, tret, yySout);
-};
+    int AMISetErrHandlerFn() {
+        return IDASetErrHandlerFn(ami_mem,wrap_ErrHandlerFn,NULL);
+    }
 
-int AMIRootInit(void *mem, int nrtfn, IDARootFn ptr) {
-    return IDARootInit( mem, nrtfn, ptr);
-};
+    int AMISetUserData(void *user_data) {
+        return IDASetUserData(ami_mem,user_data);
+    }
 
-void AMIFree(void **mem) {
-    IDAFree(mem);
-};
+    int AMISetUserDataB(int which, void *user_data) {
+        return IDASetUserDataB(ami_mem, which, user_data);
+    }
 
-int AMIAdjInit(void *mem, long int steps, int interp) {
-    return IDAAdjInit(mem, steps, interp);
-};
+    int AMISetMaxNumSteps(long int mxsteps) {
+        return IDASetMaxNumSteps(ami_mem,mxsteps);
+    }
 
-int AMICreateB(void *mem, int lmm, int iter, int *which) {
-    return IDACreateB(mem, which);
-};
+    int AMISetStabLimDet(int stldet) {
+        return(0);
+    }
 
-int AMIReInitB(void *mem, int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) {
-    return IDAReInitB(mem, which, tB0, yyB0, ypB0);
-};
+    int AMISetStabLimDetB(int which, int stldet) {
+        return(0);
+    }
 
-int AMISStolerancesB(void *mem, int which, realtype relTolB, realtype absTolB) {
-    return IDASStolerancesB(mem, which, relTolB, absTolB);
-};
+    int AMISetId(Model *model) {
+        if(!model->idlist)
+            return AMICI_ERROR_SETUP;
 
-int AMIQuadReInitB(void *mem, int which, N_Vector yQB0) {
-    return IDAQuadReInitB(mem, which, yQB0);
-};
+        N_Vector id = N_VNew_Serial(model->nx);
+        if(!id)
+            return AMICI_ERROR_SETUP;
 
-int AMIQuadSStolerancesB(void *mem, int which, realtype reltolQB, realtype abstolQB) {
-    return IDAQuadSStolerancesB(mem, which, reltolQB, abstolQB);
-};
+        memcpy(NV_CONTENT_S(id)->data, model->idlist, model->nx * sizeof(realtype));
 
-int AMISolve(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) {
-    return IDASolve(mem, tout, tret, yret, ypret, itask);
-};
+        int status = IDASetId(ami_mem, id);
 
-int AMISolveF(void *mem, realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) {
-    return IDASolveF(mem, tout, tret, yret, ypret, itask, ncheckPtr);
-};
+        N_VDestroy_Serial(id);
 
-int AMISolveB(void *mem, realtype tBout, int itaskB) {
-    return IDASolveB(mem, tBout, itaskB);
-};
+        return status;
+    }
 
-int AMISetMaxNumStepsB(void *mem, int which, long int mxstepsB) {
-    return IDASetMaxNumStepsB(mem, which, mxstepsB);
-};
+    int AMISetSuppressAlg(bool flag) {
+        return IDASetSuppressAlg(ami_mem, flag);
+    }
 
-int AMIGetB(void *mem, int which, realtype *tret, N_Vector yy, N_Vector yp) {
-    return IDAGetB(mem, which, tret, yy, yp);
-};
+    int AMIReInit(realtype t0, N_Vector yy0, N_Vector yp0) {
+        return IDAReInit( ami_mem, t0, yy0, yp0);
+    }
 
-int AMIGetQuadB(void *mem, int which, realtype *tret, N_Vector qB) {
-    return IDAGetQuadB(mem, which, tret, qB);
-};
+    int AMISensReInit(int ism, N_Vector *yS0, N_Vector *ypS0) {
+        return IDASensReInit( ami_mem, ism, yS0, ypS0);
+    }
 
-int AMIDense(void *mem, int nx) {
-    return IDADense(mem, nx);
-};
+    int AMISetSensParams(realtype *p, realtype *pbar, int *plist) {
+        return IDASetSensParams(ami_mem, p, pbar, plist);
+    }
 
-int AMIDenseB(void *mem, int which, int nx) {
-    return IDADenseB(mem, which, nx);
-};
+    int AMIGetDky(realtype t, int k, N_Vector dky) {
+        return IDAGetDky(ami_mem, t, k, dky);
+    }
 
-int AMIBand(void *mem, int nx, int ubw, int lbw) {
-    return IDABand(mem, nx, ubw, lbw);
-};
+    int AMIGetSens(realtype *tret, N_Vector *yySout) {
+        return IDAGetSens( ami_mem, tret, yySout);
+    }
 
-int AMIBandB(void *mem, int which, int nx, int ubw, int lbw) {
-    return IDABandB(mem, which, nx, ubw, lbw);
-};
+    int AMIRootInit(int nrtfn, IDARootFn ptr) {
+        return IDARootInit( ami_mem, nrtfn, ptr);
+    }
 
-int AMIDiag(void *mem) {
-    return(-99);
-};
+    void AMIFree() {
+        IDAFree(ami_mem);
+        ami_mem = NULL;
+    }
 
-int AMIDiagB(void *mem, int which) {
-    return(-99);
-};
+    int AMIAdjInit(long int steps, int interp) {
+        return IDAAdjInit(ami_mem, steps, interp);
+    }
 
-int AMISpgmr(void *mem, int prectype, int maxl) {
-    return IDASpgmr(mem, maxl);
-};
+    int AMICreateB(int lmm, int iter, int *which) {
+        return IDACreateB(ami_mem, which);
+    }
 
-int AMISpgmrB(void *mem, int which, int prectype, int maxl) {
-    return IDASpgmrB(mem, which, maxl);
-};
+    int AMIReInitB(int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) {
+        return IDAReInitB(ami_mem, which, tB0, yyB0, ypB0);
+    }
 
-int AMISpbcg(void *mem, int prectype, int maxl) {
-    return IDASpbcg(mem, maxl);
-};
+    int AMISStolerancesB(int which, realtype relTolB, realtype absTolB) {
+        return IDASStolerancesB(ami_mem, which, relTolB, absTolB);
+    }
 
-int AMISpbcgB(void *mem, int which, int prectype, int maxl) {
-    return IDASpbcgB(mem, which, maxl);
-};
+    int AMIQuadReInitB(int which, N_Vector yQB0) {
+        return IDAQuadReInitB(ami_mem, which, yQB0);
+    }
 
-int AMISptfqmr(void *mem, int prectype, int maxl) {
-    return IDASptfqmr(mem, maxl);
-};
+    int AMIQuadSStolerancesB(int which, realtype reltolQB, realtype abstolQB) {
+        return IDAQuadSStolerancesB(ami_mem, which, reltolQB, abstolQB);
+    }
 
-int AMISptfqmrB(void *mem, int which, int prectype, int maxl) {
-    return IDASptfqmrB(mem, which, maxl);
-};
+    int AMISolve(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) {
+        return IDASolve(ami_mem, tout, tret, yret, ypret, itask);
+    }
 
-int AMIKLU(void *mem, int nx, int nnz, int sparsetype) {
-    return IDAKLU(mem, nx, nnz, sparsetype);
-};
+    int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) {
+        return IDASolveF(ami_mem, tout, tret, yret, ypret, itask, ncheckPtr);
+    }
 
-int AMIKLUSetOrdering(void *mem, int ordering) {
-    return IDAKLUSetOrdering(mem, ordering);
-};
+    int AMISolveB(realtype tBout, int itaskB) {
+        return IDASolveB(ami_mem, tBout, itaskB);
+    }
 
-int AMIKLUSetOrderingB(void *mem, int which, int ordering) {
-    return IDAKLUSetOrderingB(mem, which, ordering);
-};
+    int AMISetMaxNumStepsB(int which, long int mxstepsB) {
+        return IDASetMaxNumStepsB(ami_mem, which, mxstepsB);
+    }
 
-int AMIKLUB(void *mem, int which, int nx, int nnz, int sparsetype) {
-    return IDAKLUB(mem, which, nx, nnz, sparsetype);
-};
+    int AMIGetB(int which, realtype *tret, N_Vector yy, N_Vector yp) {
+        return IDAGetB(ami_mem, which, tret, yy, yp);
+    }
 
-int AMIGetNumSteps(void *mem, long int *numsteps) {
-    return IDAGetNumSteps(mem,numsteps);
+    int AMIGetQuadB(int which, realtype *tret, N_Vector qB) {
+        return IDAGetQuadB(ami_mem, which, tret, qB);
+    }
+
+    int AMIDense(int nx) {
+        return IDADense(ami_mem, nx);
+    }
+
+    int AMIDenseB(int which, int nx) {
+        return IDADenseB(ami_mem, which, nx);
+    }
+
+    int AMIBand(int nx, int ubw, int lbw) {
+        return IDABand(ami_mem, nx, ubw, lbw);
+    }
+
+    int AMIBandB(int which, int nx, int ubw, int lbw) {
+        return IDABandB(ami_mem, which, nx, ubw, lbw);
+    }
+
+    int AMIDiag() {
+        return(-99);
+    }
+
+    int AMIDiagB(int which) {
+        return(-99);
+    }
+
+    int AMISpgmr(int prectype, int maxl) {
+        return IDASpgmr(ami_mem, maxl);
+    }
+
+    int AMISpgmrB(int which, int prectype, int maxl) {
+        return IDASpgmrB(ami_mem, which, maxl);
+    }
+
+    int AMISpbcg(int prectype, int maxl) {
+        return IDASpbcg(ami_mem, maxl);
+    }
+
+    int AMISpbcgB(int which, int prectype, int maxl) {
+        return IDASpbcgB(ami_mem, which, maxl);
+    }
+
+    int AMISptfqmr(int prectype, int maxl) {
+        return IDASptfqmr(ami_mem, maxl);
+    }
+
+    int AMISptfqmrB(int which, int prectype, int maxl) {
+        return IDASptfqmrB(ami_mem, which, maxl);
+    }
+
+    int AMIKLU(int nx, int nnz, int sparsetype) {
+        return IDAKLU(ami_mem, nx, nnz, sparsetype);
+    }
+
+    int AMIKLUSetOrdering(int ordering) {
+        return IDAKLUSetOrdering(ami_mem, ordering);
+    }
+
+    int AMIKLUSetOrderingB(int which, int ordering) {
+        return IDAKLUSetOrderingB(ami_mem, which, ordering);
+    }
+
+    int AMIKLUB(int which, int nx, int nnz, int sparsetype) {
+        return IDAKLUB(ami_mem, which, nx, nnz, sparsetype);
+    }
+
+    int AMIGetNumSteps(void *ami_mem, long int *numsteps) {
+        return IDAGetNumSteps(ami_mem,numsteps);
+    }
+
+    int AMIGetNumRhsEvals(void *ami_mem, long int *numrhsevals) {
+        return IDAGetNumResEvals(ami_mem,numrhsevals);
+    }
+
+    int AMIGetNumErrTestFails(void *ami_mem, long int *numerrtestfails) {
+        return IDAGetNumErrTestFails(ami_mem,numerrtestfails);
+    }
+
+    int AMIGetNumNonlinSolvConvFails(void *ami_mem, long int *numnonlinsolvconvfails) {
+        return IDAGetNumNonlinSolvConvFails(ami_mem,numnonlinsolvconvfails);
+    }
+
+    int AMIGetLastOrder(int *order) {
+        return IDAGetLastOrder(ami_mem,order);
+    }
+
+    void *AMIGetAdjBmem(void *ami_mem, int which) {
+        return IDAGetAdjIDABmem(ami_mem,which);
+    }
+
+    int AMICalcIC(realtype tout1){
+        return IDACalcIC(ami_mem,IDA_YA_YDP_INIT , tout1);
+    }
+
+    int AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB) {
+        return IDACalcICB(ami_mem, which, tout1, xB, dxB);
+    }
+
+    int AMISetStopTime(realtype tstop) {
+        return IDASetStopTime(ami_mem, tstop);
+    }
+
+    static int resultFunction(realtype tt, N_Vector yy, N_Vector yp,
+                          N_Vector rr, void *user_data) {
+        return fxdot(tt, yy, yp, rr, user_data);
+    }
+
+    static int resultFunctionB(realtype tt,
+                               N_Vector yy, N_Vector yp,
+                               N_Vector yyB, N_Vector ypB,
+                                           N_Vector rrB, void *user_dataB) {
+        return fxBdot(tt, yy, yp, yyB, ypB, rrB, user_dataB);
+    }
+
+
+    ~IDASolver() {}
 }
-
-int AMIGetNumRhsEvals(void *mem, long int *numrhsevals) {
-    return IDAGetNumResEvals(mem,numrhsevals);
-}
-
-int AMIGetNumErrTestFails(void *mem, long int *numerrtestfails) {
-    return IDAGetNumErrTestFails(mem,numerrtestfails);
-}
-
-int AMIGetNumNonlinSolvConvFails(void *mem, long int *numnonlinsolvconvfails) {
-    return IDAGetNumNonlinSolvConvFails(mem,numnonlinsolvconvfails);
-}
-
-int AMIGetLastOrder(void *mem,int *order) {
-    return IDAGetLastOrder(mem,order);
-}
-
-void *AMIGetAdjBmem(void *mem, int which) {
-    return IDAGetAdjIDABmem(mem,which);
-}
-
-int AMICalcIC(void *mem, realtype tout1){
-    return IDACalcIC(mem,IDA_YA_YDP_INIT , tout1);
-}
-
-int AMICalcICB(void *mem, int which, realtype tout1, N_Vector xB, N_Vector dxB) {
-    return IDACalcICB(mem, which, tout1, xB, dxB);
-}
-
-int AMISetStopTime(void *mem, realtype tstop) {
-    return IDASetStopTime(mem, tstop);
-}
-
 
 #endif /* idawrap_h */
