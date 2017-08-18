@@ -1,4 +1,5 @@
 #include "include/forwardproblem.h"
+#include "include/steadystateproblem.h"
 #include "include/udata.h"
 #include "include/rdata.h"
 #include "include/tdata.h"
@@ -41,7 +42,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnD
                     } else {
                         if (model->nx>0) {
                             if (std::isinf(rdata->ts[it])) {
-                                status = workSteadyStateProblem(udata, tdata, rdata, it, solver, model);
+                                status = SteadystateProblem::workSteadyStateProblem(udata, tdata, rdata, it, solver, model);
                             } else {
                                 status = solver->AMISolve(RCONST(rdata->ts[it]), tdata->x, tdata->dx, &(tdata->t), AMICI_NORMAL);
                             }
