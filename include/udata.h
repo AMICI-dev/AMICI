@@ -112,9 +112,6 @@ public:
     /** state ordering */
     int ordering;
     
-    /** index indicating to which event an event output belongs */
-    double *z2event;
-
     void print();
 
 protected:

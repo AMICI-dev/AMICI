@@ -182,7 +182,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model) 
             goto freturn;
         }
         
-        readOptionData(z2event)
         readOptionData(qpositivex)
         readOptionScalar(sensi,AMICI_sensi_order)
         readOptionScalar(pscale,AMICI_parameter_scaling)

@@ -76,7 +76,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnD
 
     /* fill events */
     if (model->ne>0) {
-        getEventOutput(&tlastroot, udata, rdata, edata, tdata, model);
+        getEventOutput(udata, rdata, edata, tdata, model);
     }
 
     // set likelihood
@@ -146,7 +146,7 @@ int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata, ReturnData
         *tlastroot = tdata->t;
     }
 
-    status = getEventOutput(tlastroot, udata, rdata, edata, tdata, model);
+    status = getEventOutput(udata, rdata, edata, tdata, model);
     if (status != AMICI_SUCCESS) return status;
 
     /* if we need to do forward sensitivities later on we need to store the old x and the old xdot */
@@ -313,11 +313,10 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata, Retu
 /* ------------------------------------------------------------------------------------- */
 
 
-int ForwardProblem::getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
+int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
          * getEventOutput extracts output information for events
          *
-         * @param[in] tlastroot timepoint of last occured event @type *realtype
          * @param[in] udata pointer to the user data struct @type UserData
          * @param[out] rdata pointer to the return data struct @type ReturnData
          * @param[in] edata pointer to the experimental data struct @type ExpData
@@ -344,7 +343,7 @@ int ForwardProblem::getEventOutput(realtype *tlastroot, UserData *udata, ReturnD
                 status = model->fsigma_z(tdata->t,ie,tdata);
                 if(status != AMICI_SUCCESS) return status;
                 for (int iz=0; iz<model->nztrue; iz++) {
-                    if (udata->z2event[iz]-1 == ie) {
+                    if (model->z2event[iz]-1 == ie) {
 
                         if (!amiIsNaN(edata->sigmaz[tdata->nroots[ie] + rdata->nmaxevent*iz])) {
                             tdata->sigmaz[iz] = edata->sigmaz[tdata->nroots[ie] + rdata->nmaxevent*iz];
@@ -366,7 +365,7 @@ int ForwardProblem::getEventOutput(realtype *tlastroot, UserData *udata, ReturnD
             }
 
             if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                status = prepEventSensis(ie, udata, rdata, edata, tdata, model);
+                status = prepEventSensis(ie, rdata, edata, tdata, model);
                 if(status != AMICI_SUCCESS) return status;
                 if (rdata->sensi_meth == AMICI_SENSI_FSA) {
                     status = getEventSensisFSA(ie, rdata, edata, tdata, model);
@@ -385,12 +384,11 @@ int ForwardProblem::getEventOutput(realtype *tlastroot, UserData *udata, ReturnD
 /* ------------------------------------------------------------------------------------- */
 
 
-int ForwardProblem::prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
+int ForwardProblem::prepEventSensis(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
          * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
          *
          * @param[in] ie index of current event @type int
-         * @param[in] udata pointer to the user data struct @type UserData
          * @param[out] rdata pointer to the return data struct @type ReturnData
          * @param[in] edata pointer to the experimental data struct @type ExpData
          * @param[out] tdata pointer to the temporary data struct @type TempData
@@ -400,7 +398,7 @@ int ForwardProblem::prepEventSensis(int ie, UserData *udata, ReturnData *rdata, 
     int status = AMICI_SUCCESS;
     if (edata) {
         for (int iz=0; iz<model->nztrue; iz++) {
-            if ( udata->z2event[iz]-1 == ie ){
+            if ( model->z2event[iz]-1 == ie ){
                 if (!amiIsNaN(edata->mz[iz*rdata->nmaxevent+tdata->nroots[ie]])) {
                     status = model->fdzdp(tdata->t,ie,tdata->x,tdata);
                     if(status != AMICI_SUCCESS) return status;

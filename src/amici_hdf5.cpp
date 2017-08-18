@@ -96,12 +96,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     }
 
     /* Options ; matlab: fourth argument   */
-    if(model->nz > 0) {
-        status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "z2event", &udata->z2event, &length);
-        if(length != (unsigned) model->nztrue)
-            return NULL;
-    }
-
     udata->idlist = new realtype[model->nx]();
 
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation

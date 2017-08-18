@@ -14,6 +14,11 @@
 //    return fdx0(udata->k, x0_tmp);
 //}
 
+Model::~Model() {
+    if(z2event)
+        delete [] z2event;
+}
+
 int Model::fsy(int it, TempData *tdata, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
 

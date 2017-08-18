@@ -132,7 +132,7 @@ public:
 
     virtual int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual ~Model() {}
+    virtual ~Model();
 
     // Generic implementations
     int fsy(int it, TempData *tdata, ReturnData *rdata);
@@ -192,6 +192,8 @@ public:
     const int lbw;
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
     const AMICI_o2mode o2mode;
+    /** index indicating to which event an event output belongs */
+    int *z2event = nullptr;
 };
 
 #endif // MODEL_H

@@ -188,7 +188,6 @@ if(o2flag > 0)
     fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(amimodelo2.id))) ']);\n']);
 end
 fprintf(fid,'end\n');
-fprintf(fid,['options_ami.z2event = [' num2str(transpose(this.z2event)) ']; %% MUST NOT CHANGE THIS VALUE\n']);
 fprintf(fid,'\n');
 fprintf(fid,'if(~isempty(options_ami.pbar))\n');
 fprintf(fid,'    pbar = options_ami.pbar;\n');

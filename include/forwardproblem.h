@@ -24,9 +24,9 @@ public:
 
     static int storeJacobianAndDerivativeInReturnData(TempData *tdata,  ReturnData *rdata, Model *model);
 
-    static int getEventOutput(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
+    static int getEventOutput(UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
-    static int prepEventSensis(int ie, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
+    static int prepEventSensis(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 
     static int getEventSensisFSA(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model);
 

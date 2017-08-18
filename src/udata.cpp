@@ -38,7 +38,6 @@ UserData::~UserData()
     if(idlist) delete[] idlist;
     if(x0data) delete[] x0data;
     if(sx0data) delete[] sx0data;
-    if(z2event) delete[] z2event;
     if(plist) delete[] plist;
 }
 
@@ -74,7 +73,6 @@ void UserData::init()
 
     sx0data = NULL;
     ordering = 0;
-    z2event = NULL;
 
 }
 
@@ -108,5 +106,4 @@ void UserData::print()
     printf("x0data: %p\n", x0data);
     printf("sx0data: %p\n", sx0data);
     printf("ordering: %d\n", ordering);
-    printf("z2event: %p\n", z2event);
 }

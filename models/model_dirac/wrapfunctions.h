@@ -88,7 +88,9 @@ public:
                     0,
                     1,
                     AMICI_O2MODE_NONE)
-{}
+{
+    z2event = new int[nz] {};
+}
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return J_model_dirac(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
