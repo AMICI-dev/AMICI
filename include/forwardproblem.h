@@ -18,7 +18,7 @@ class ForwardProblem
 {
 public:
 
-    static int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model);
+    static int workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Model *model);
 
     static int handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model);
 

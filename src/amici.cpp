@@ -26,7 +26,7 @@
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
 
-int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model, Solver *solver) {
+int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model) {
     if(!udata) return AMICI_ERROR_UDATA;
     if(!rdata) return AMICI_ERROR_RDATA;
     
@@ -36,24 +36,15 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
         return AMICI_ERROR_NOTHINGTODO;
     }
     
-    TempData *tdata = new TempData(udata, model, rdata);
+    TempData tdata = TempData(udata, model, rdata);
     
-    if (status == AMICI_SUCCESS)
-        status = solver->setupAMI(udata, tdata, model);
-
-    if (status != AMICI_SUCCESS)
-        goto freturn;
-
-    if (status == AMICI_SUCCESS) status = ForwardProblem::workForwardProblem(udata, tdata, rdata, edata, solver, model);
-    if (status == AMICI_SUCCESS) status = BackwardProblem::workBackwardProblem(udata, tdata, rdata, solver, model);
+    if (status == AMICI_SUCCESS) status = ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata, model);
+    if (status == AMICI_SUCCESS) status = BackwardProblem::workBackwardProblem(udata, &tdata, rdata, model);
     
-    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, tdata->p);
+    if (status == AMICI_SUCCESS) status = rdata->applyChainRuleFactorToSimulationResults(udata, tdata.p);
+
     if (status < AMICI_SUCCESS) rdata->invalidate();
     
-    
-freturn:
-    delete tdata;
-
     return status;
 }
 

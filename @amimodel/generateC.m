@@ -319,21 +319,7 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp')
 fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,'#include <include/udata.h>\n');
-
-if(~strcmp(this.wtype,'iw'))
-    fprintf(fid,'#include <include/cvodewrap.h>\n');
-else
-    fprintf(fid,'#include <include/idawrap.h>\n');
-end
 fprintf(fid,'\n');
-
-fprintf(fid,'Solver *getSolver(){\n');
-if(strcmp(this.wtype,'iw'))
-    fprintf(fid, '    return new IDASolver();\n');
-else
-    fprintf(fid, '    return new CVodeSolver();\n');
-end
-fprintf(fid,'}\n\n');
 
 fprintf(fid,'Model *getModel() {\n');
     fprintf(fid, ['    return new Model_' this.modelname '();\n']);
@@ -386,8 +372,12 @@ fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'#include <include/amici_model.h>\n');
-fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
+if(~strcmp(this.wtype,'iw'))
+    fprintf(fid,'#include <include/cvodewrap.h>\n');
+else
+    fprintf(fid,'#include <include/idawrap.h>\n');
+end
 fprintf(fid,'\n');
 fprintf(fid,'class UserData;\nclass Solver;\n');
 fprintf(fid,'\n');
@@ -440,10 +430,18 @@ switch(this.o2flag)
     otherwise
         fprintf(fid,'                    AMICI_O2MODE_NONE)\n');
 end
-fprintf(fid,'{\n');
-fprintf(fid,['    z2event = new int[nz] {' num2str(transpose(this.z2event), '%d, ') '};\n']);
-fprintf(fid,['    idlist = new realtype[nx] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
-fprintf(fid,'}\n\n');
+fprintf(fid,'    {\n');
+fprintf(fid,['        z2event = new int[nz] {' num2str(transpose(this.z2event), '%d, ') '};\n']);
+fprintf(fid,['        idlist = new realtype[nx] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
+fprintf(fid,'    }\n\n');
+
+fprintf(fid,'    Solver *getSolver(){\n');
+if(strcmp(this.wtype,'iw'))
+    fprintf(fid, '        return new IDASolver();\n');
+else
+    fprintf(fid, '        return new CVodeSolver();\n');
+end
+fprintf(fid,'    }\n\n');
 
 for iffun = this.funs
     % check whether the function was generated, otherwise generate (but

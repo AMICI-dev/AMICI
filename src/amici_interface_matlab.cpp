@@ -84,16 +84,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         edata = expDataFromMatlabCall(prhs, udata, model);
     }
     
-    Solver *solver = getSolver();
-
     if(udata) {
         if(model->nx > 0) {
-            *(rdata->status) = (double) runAmiciSimulation(udata, edata, rdata, model, solver);
+            *(rdata->status) = (double) runAmiciSimulation(udata, edata, rdata, model);
         }
     }
 
     delete model;
-    delete solver;
 
     if(udata) delete udata;
     if(rdata) delete rdata;

@@ -14,7 +14,7 @@ class BackwardProblem
 {
 public:
 
-    static int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model);
+    static int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model);
 
     static int handleEventB(int iroot, TempData *tdata, Model *model);
 

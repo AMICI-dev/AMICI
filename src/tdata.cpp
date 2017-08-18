@@ -3,6 +3,7 @@
 #include <include/udata.h>
 #include <include/rdata.h>
 #include <include/amici_model.h>
+#include <include/amici_solver.h>
 
 TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata) : udata(udata), model(model), rdata(rdata) {
     
@@ -111,10 +112,13 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata) : uda
             }
         }
     }
+
+    solver = model->getSolver();
 }
 
 TempData::~TempData() {
     if(p) delete[] p;
+    if(solver) delete solver;
 
     if(x) N_VDestroy_Serial(x);
     if(dx) N_VDestroy_Serial(dx);
@@ -136,7 +140,7 @@ TempData::~TempData() {
     
     if(Jy) delete[] Jy;
     if(Jz) delete[] Jz;
-        
+
     
     if(rootsfound) delete[] rootsfound;
     if(rootvals) delete[] rootvals;
@@ -144,7 +148,7 @@ TempData::~TempData() {
     if(sigmaz) delete[] sigmaz;
     if(nroots) delete[] nroots;
     if(discs) delete[] discs;
-        
+
     if(deltax) delete[] deltax;
     if(deltasx) delete[] deltasx;
     if(deltaxB) delete[] deltaxB;
@@ -170,7 +174,7 @@ TempData::~TempData() {
     if(drzdx) delete[] drzdx;
     if(dsigmaydp) delete[] dsigmaydp;
     if(dsigmazdp) delete[] dsigmazdp;
-        
+
     if(llhS0) delete[] llhS0;
 
     if(dxdotdp) delete[] dxdotdp;

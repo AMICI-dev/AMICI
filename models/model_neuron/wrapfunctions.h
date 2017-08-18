@@ -2,8 +2,8 @@
 #define _amici_wrapfunctions_h
 #include <math.h>
 #include <include/amici_model.h>
-
 #include "model_neuron.h"
+#include <include/cvodewrap.h>
 
 class UserData;
 class Solver;
@@ -88,10 +88,14 @@ public:
                     1,
                     1,
                     AMICI_O2MODE_NONE)
-{
-    z2event = new int[nz] {1,};
-    idlist = new realtype[nx] {0, 0,};
-}
+    {
+        z2event = new int[nz] {1,};
+        idlist = new realtype[nx] {0, 0,};
+    }
+
+    Solver *getSolver(){
+        return new CVodeSolver();
+    }
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return J_model_neuron(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);

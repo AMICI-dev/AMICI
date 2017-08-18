@@ -3,6 +3,7 @@
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>
+#include <sundials/sundials_sparse.h>
 #include <include/amici.h>
 
 class UserData;
@@ -45,7 +46,8 @@ public:
         ubw(ubw), lbw(lbw),
         o2mode(o2mode) {}
 
-    // TODO model dimensions constructors
+    virtual Solver *getSolver() = 0;
+
     virtual int fx0(N_Vector x0, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fdx0(N_Vector x0, N_Vector dx0, void *user_data) { return AMICI_SUCCESS; }
@@ -131,6 +133,18 @@ public:
     virtual int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+
+    virtual int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual ~Model();
 

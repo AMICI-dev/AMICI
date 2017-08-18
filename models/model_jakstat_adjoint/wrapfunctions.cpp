@@ -1,11 +1,6 @@
 #include "wrapfunctions.h"
 #include <include/amici_model.h>
 #include <include/udata.h>
-#include <include/cvodewrap.h>
-
-Solver *getSolver(){
-    return new CVodeSolver();
-}
 
 Model *getModel() {
     return new Model_model_jakstat_adjoint();

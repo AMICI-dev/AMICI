@@ -8,7 +8,7 @@
 #include "include/amici_solver.h"
 #include <cstring>
 
-int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Solver *solver, Model *model) {
+int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Model *model) {
     /**
          * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
          *
@@ -19,10 +19,16 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnD
          * @return int status flag indicating success of execution @type int
          */
 
+    Solver *solver = tdata->solver;
+
+    int status = solver->setupAMI(udata, tdata, model);
+
+    if (status != AMICI_SUCCESS)
+        return status;
+
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
     realtype *x_tmp;
     realtype tlastroot = 0; /* storage for last found root */
-    int status = AMICI_SUCCESS;
 
     /* loop over timepoints */
     for (int it=0; it < rdata->nt; it++) {

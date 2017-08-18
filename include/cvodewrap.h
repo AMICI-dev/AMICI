@@ -18,7 +18,9 @@
 
 #include <include/amici.h>
 #include <include/amici_solver.h>
-#include <include/amici_model_functions.h>
+#include <include/amici_model.h>
+#include <include/udata.h>
+#include <include/tdata.h>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -317,23 +319,30 @@ public:
         return CVodeSetStopTime(ami_mem, tstop);
     }
 
+    // Static wrapper functions because cannot pass member functions to Solver
     static int resultFunction(realtype t, N_Vector y,
                    N_Vector ydot, void *user_data) {
-        return fxdot(t, y, NULL, ydot, user_data);
+        TempData *tdata = (TempData *) user_data;
+
+        return tdata->model->fxdot(t, y, NULL, ydot, user_data);
     }
 
     static int resultFunctionB(realtype t, N_Vector y,
                                    N_Vector yB, N_Vector yBdot,
                                    void *user_dataB) {
-        return fxBdot(t, y, yB, yBdot, user_dataB);
+        TempData *tdata = (TempData *) user_dataB;
+
+        return tdata->model->fxBdot(t, y, yB, yBdot, user_dataB);
     }
 
     static int rootFunction(realtype t, N_Vector x, realtype *root, void *user_data) {
-        return froot(t, x, NULL, root, user_data);
+        TempData *tdata = (TempData *) user_data;
+        return tdata->model->froot(t, x, NULL, root, user_data);
     }
 
     static int J(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-        return fJ(N, t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2, tmp3);
+        TempData *tdata = (TempData *) user_data;
+        return tdata->model->fJ(N, t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2, tmp3);
     }
 
     ~CVodeSolver() {

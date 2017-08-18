@@ -37,7 +37,7 @@ typedef void (*msgIdAndTxtFp)(const char * identifier, const char * err_msg, ...
 extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
-int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model, Solver *solver);
+int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,

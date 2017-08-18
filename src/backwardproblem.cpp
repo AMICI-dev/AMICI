@@ -7,7 +7,7 @@
 #include "include/amici_solver.h"
 #include <cstring>
 
-int BackwardProblem::workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model) {
+int BackwardProblem::workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model) {
     /**
          * workBackwardProblem solves the backward problem. if adjoint sensitivities are enabled this will also compute sensitivies
          * workForwardProblem should be called before this is function is called
@@ -30,6 +30,7 @@ int BackwardProblem::workBackwardProblem(UserData *udata, TempData *tdata, Retur
         return status;
     }
 
+    Solver *solver = tdata->solver;
     solver->setupAMIB(udata, tdata, model);
 
     it = rdata->nt-2;

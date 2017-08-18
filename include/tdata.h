@@ -11,6 +11,7 @@
 class UserData;
 class ReturnData;
 class Model;
+class Solver;
 
 /** @brief struct that provides temporary storage for different variables */
 class TempData {
@@ -188,8 +189,9 @@ public:
 
 
     const UserData *udata;
-    const Model *model;
+    Model *model;
     ReturnData *rdata;
-	};
+    Solver *solver = nullptr;
+};
 
 #endif /* _MY_TDATA */

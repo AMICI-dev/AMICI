@@ -17,15 +17,13 @@
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
 
     Model *model = getModel();
-    Solver *solver = getSolver();
 
     ReturnData *rdata = new ReturnData(udata, model);
 
-    int status = runAmiciSimulation(udata, edata, rdata,  model, solver);
+    int status = runAmiciSimulation(udata, edata, rdata,  model);
     *rdata->status = status;
 
     delete model;
-    delete solver;
 
     return rdata;
 }
