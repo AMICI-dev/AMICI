@@ -56,6 +56,8 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/spline.cpp
     ${AMICI_DIR}/src/amici_solver.cpp
     ${AMICI_DIR}/src/amici_model.cpp
+    ${AMICI_DIR}/src/forwardproblem.cpp
+
 )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})

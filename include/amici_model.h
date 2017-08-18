@@ -8,7 +8,8 @@ class UserData;
 class ExpData;
 
 /**
- * @brief The Model class represents an AMICI ODE model
+ * @brief The Model class represents an AMICI ODE model.
+ * The model does not contain any data, its state should never change.
  */
 class Model
 {
