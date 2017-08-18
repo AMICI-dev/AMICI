@@ -26,9 +26,6 @@ UserData *getTestUserData() {
     udata->qpositivex = new double[model->nx];
     udata->p = new double[model->np];
     udata->k = new double[model->nk];
-    udata->idlist = new realtype[model->np]();
-    for(int i = 0; i < model->np; ++i)
-        udata->idlist[i] = 0;
 
     delete model;
     return udata;

@@ -18,7 +18,8 @@
 
 #include <include/amici.h>
 #include <include/amici_solver.h>
-#include <include/amici_model_functions.h>
+#include <include/amici_model.h>
+
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -130,8 +131,21 @@ public:
         return(0);
     }
 
-    int AMISetId(N_Vector id) {
-        return IDASetId(ami_mem, id);
+    int AMISetId(Model *model) {
+        if(!model->idlist)
+            return AMICI_ERROR_SETUP;
+
+        N_Vector id = N_VNew_Serial(model->nx);
+        if(!id)
+            return AMICI_ERROR_SETUP;
+
+        memcpy(NV_CONTENT_S(id)->data, model->idlist, model->nx * sizeof(realtype));
+
+        int status = IDASetId(ami_mem, id);
+
+        N_VDestroy_Serial(id);
+
+        return status;
     }
 
     int AMISetSuppressAlg(bool flag) {

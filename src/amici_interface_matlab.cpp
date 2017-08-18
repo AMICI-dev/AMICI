@@ -166,22 +166,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model) 
         readOptionScalar(iter,int)
         readOptionScalar(interpType,int)
         readOptionScalar(linsol,int)
-        readOptionScalar(stldet,booleantype)
-        
-        mxArray *idlist = mxGetProperty(prhs[3],0,"id");
-        if(idlist){
-            if(mxGetM(idlist) * mxGetN(idlist) == model->nx) {
-                udata->idlist = new double[model->nx];
-                memcpy(udata->idlist, mxGetData(idlist), sizeof(double) * model->nx);
-            } else {
-                errMsgIdAndTxt("AMICI:mex:idlist","Provided idlist has incorrect length!");
-                goto freturn;
-            }
-        } else {
-            warnMsgIdAndTxt("AMICI:mex:OPTION","Provided options are not of class amioption!");
-            goto freturn;
-        }
-        
+        readOptionScalar(stldet,booleantype)        
         readOptionData(qpositivex)
         readOptionScalar(sensi,AMICI_sensi_order)
         readOptionScalar(pscale,AMICI_parameter_scaling)

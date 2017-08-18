@@ -35,7 +35,6 @@ UserData::~UserData()
     if(ts) delete[] ts;
     if(pbar) delete[] pbar;
     if(xbar) delete[] xbar;
-    if(idlist) delete[] idlist;
     if(x0data) delete[] x0data;
     if(sx0data) delete[] sx0data;
     if(plist) delete[] plist;
@@ -53,7 +52,6 @@ void UserData::init()
     tstart = 0;
     pbar = NULL;
     xbar = NULL;
-    idlist = NULL;
     sensi = AMICI_SENSI_ORDER_NONE;
     atol = 1e-16;
     rtol = 1e-8;
@@ -89,7 +87,6 @@ void UserData::print()
     printf("ts: %p\n", ts);
     printf("pbar: %p\n", pbar);
     printf("xbar: %p\n", xbar);
-    printf("idlist: %p\n", idlist);
     printf("sensi: %d\n", sensi);
     printf("atol: %e\n", atol);
     printf("rtol: %e\n", rtol);

@@ -162,7 +162,7 @@ protected:
 
     virtual int AMISetStabLimDetB(int which, int stldet) = 0;
 
-    virtual int AMISetId(N_Vector id) = 0;
+    virtual int AMISetId(Model *model) = 0;
 
     virtual int AMISetSuppressAlg(bool flag) = 0;
 

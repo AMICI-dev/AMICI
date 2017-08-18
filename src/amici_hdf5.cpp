@@ -96,8 +96,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
     }
 
     /* Options ; matlab: fourth argument   */
-    udata->idlist = new realtype[model->nx]();
-
     //user-provided sensitivity initialisation. this should be a matrix of dimension [#states x #parameters] default is sensitivity initialisation based on the derivative of the state initialisation
     udata->x0data = NULL;
     udata->sx0data = NULL;

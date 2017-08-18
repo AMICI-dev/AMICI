@@ -194,6 +194,9 @@ public:
     const AMICI_o2mode o2mode;
     /** index indicating to which event an event output belongs */
     int *z2event = nullptr;
+    /** flag array for DAE equations */
+    realtype *idlist = nullptr;
+
 };
 
 #endif // MODEL_H

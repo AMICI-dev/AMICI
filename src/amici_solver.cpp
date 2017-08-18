@@ -10,8 +10,6 @@
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
     int status;
-    N_Vector id = NULL;
-
     tdata->t = udata->tstart;
 
     if(model->initialize(udata, tdata) != AMICI_SUCCESS) goto freturn;
@@ -97,20 +95,13 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 
     }
 
-    id = N_VNew_Serial(model->nx);
-    if(!id) goto freturn;
-    if(!udata->idlist) goto freturn;
-    memcpy(NV_CONTENT_S(id)->data, udata->idlist, model->nx * sizeof(double));
-
-    if (AMISetId(id) != AMICI_SUCCESS) goto freturn;
-    if(id) N_VDestroy_Serial(id);
+    if (AMISetId(model) != AMICI_SUCCESS) goto freturn;
 
     if (AMISetSuppressAlg(TRUE) != AMICI_SUCCESS) goto freturn;
 
     return AMICI_SUCCESS;
 
 freturn:
-    if(id) N_VDestroy_Serial(id);
     if(ami_mem) AMIFree(&ami_mem);
     return AMICI_ERROR_SETUP;
 

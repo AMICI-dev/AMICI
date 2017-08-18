@@ -442,6 +442,7 @@ switch(this.o2flag)
 end
 fprintf(fid,'{\n');
 fprintf(fid,['    z2event = new int[nz] {' num2str(transpose(this.z2event), '%d, ') '};\n']);
+fprintf(fid,['    idlist = new realtype[nx] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
 fprintf(fid,'}\n\n');
 
 for iffun = this.funs

@@ -17,6 +17,10 @@
 Model::~Model() {
     if(z2event)
         delete [] z2event;
+
+    if(idlist)
+        delete [] idlist;
+
 }
 
 int Model::fsy(int it, TempData *tdata, ReturnData *rdata) {

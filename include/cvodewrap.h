@@ -132,7 +132,7 @@ public:
         return CVodeSetStabLimDetB(ami_mem,which,stldet);
     }
 
-    int AMISetId(N_Vector id) {
+    int AMISetId(Model *model) {
         return(0);
     }
 

@@ -53,10 +53,7 @@ public:
     double *pbar;
     /** scaling of states */
     double *xbar;
-    
-    /** flag array for DAE equations */
-    double *idlist;
-    
+        
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi;
     /** absolute tolerances for integration */

@@ -181,13 +181,6 @@ fprintf(fid,'if(options_ami.sensi>1)\n');
 fprintf(fid,'    error(''Second order sensitivities were requested but not computed'');\n');
 fprintf(fid,'end\n');
 end
-fprintf(fid,'if(options_ami.sensi<2)\n');
-fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(this.id))) ']);\n']);
-if(o2flag > 0)
-    fprintf(fid,'else\n');
-    fprintf(fid,['    options_ami.id = transpose([' num2str(transpose(double(amimodelo2.id))) ']);\n']);
-end
-fprintf(fid,'end\n');
 fprintf(fid,'\n');
 fprintf(fid,'if(~isempty(options_ami.pbar))\n');
 fprintf(fid,'    pbar = options_ami.pbar;\n');
