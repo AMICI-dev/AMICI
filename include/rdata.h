@@ -145,6 +145,9 @@ public:
     double *status;
 
 protected:
+
+    virtual void copyFromUserData(const UserData *udata);
+
     virtual void initFields();
 
     virtual void initField1(double **fieldPointer, const char *fieldName, int dim);

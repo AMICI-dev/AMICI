@@ -23,7 +23,8 @@ ReturnData::ReturnData(const UserData *udata, const Model *model) :
 
     initFields();
 
-    memcpy(ts, udata->ts, nt * sizeof(realtype));
+    copyFromUserData(udata);
+
 }
 
 void ReturnData::setDefaults()
@@ -258,6 +259,11 @@ ReturnData::~ReturnData()
     if(s2llh) delete[] s2llh;
     if(chi2) delete[] chi2;
     if(status) delete[] status;
+}
+
+void ReturnData::copyFromUserData(const UserData *udata)
+{
+    memcpy(ts, udata->ts, nt * sizeof(realtype));
 }
 
 void ReturnData::initFields()

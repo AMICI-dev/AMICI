@@ -5,6 +5,7 @@ ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model) : 
     mxsol = NULL;
     freeFieldsOnDestruction = false;
     initFields();
+    copyFromUserData(udata);
 }
 
 void ReturnDataMatlab::initFields()
