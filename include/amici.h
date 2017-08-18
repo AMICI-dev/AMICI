@@ -43,14 +43,9 @@ int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *
 
 int getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model);
 
-int handleEventB(UserData *udata, TempData *tdata, Model *model);
-int handleDataPointB(int it, UserData *udata, ReturnData *rdata, TempData *tdata, Solver *solver, Model *model);
 
 realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, Model *model);
 
-int updateHeavisideB(int iroot, TempData *tdata, int ne);
-
-int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout,
                  AMICI_BLAS_TRANSPOSE TransA, const int M, const int N,

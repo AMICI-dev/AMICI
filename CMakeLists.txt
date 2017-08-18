@@ -58,8 +58,7 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/amici_model.cpp
     ${AMICI_DIR}/src/forwardproblem.cpp
     ${AMICI_DIR}/src/steadystateproblem.cpp
-
-
+    ${AMICI_DIR}/src/backwardproblem.cpp
 )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
