@@ -274,17 +274,6 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata, co
         AMI_HDF5_createAndWriteDouble3DAttribute(dataset, "ssigmaz", rdata->ssigmaz, rdata->nmaxevent, rdata->nz, rdata->nplist);
 
     H5Fclose(file_id);
-
-    // NOT YET INCLUDED IN HDF5 output:
-    //    /** parameter derivative of time derivative */
-    //    double *am_dxdotdpdata;
-    //    /** state derivative of observables */
-    //    double *am_dydxdata;
-    //    /** parameter derivative of observables */
-    //    double *am_dydpdata;
-    //    /** event output */
-    //    /** chi2 value */
-    //    double *am_chi2data;
 }
 
 
