@@ -23,6 +23,9 @@
 #include <include/amici_solver_wrap.h>
 #include <include/amici_model_functions.h>
 #include <cvodes/cvodes_dense.h>
+#include "cvodes_impl.h"
+#include "cvodes_sparse_impl.h"
+#include "klu.h"
 
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
@@ -1555,6 +1558,9 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
      N_Vector tmp2 = N_VNew_Serial(udata->nx);
      N_Vector tmp3 = N_VNew_Serial(udata->nx);
     
+     CVSlsMem cvsls_mem = (CVSlsMem)((CVodeMem)ami_mem)->cv_lmem;
+     SlsMat s_jac = cvsls_mem->s_JacMat;
+    
      /* Choose which linear solver to use */
      switch (udata->newton_linsol) {
              
@@ -1614,7 +1620,20 @@ int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, void *ami
              /* SPARSE SOLVERS */
              
          case AMICI_KLU:
-             errMsgIdAndTxt("AMICI:mex:sparse","Solver currently not supported!");
+             status = fJSparse(tdata->t, tdata->x, tdata->xdot, s_jac, udata, tmp1, tmp2, tmp3);
+             klu_symbolic *Symbolic;
+             klu_numeric *Numeric;
+             klu_common Common;
+             klu_defaults (&Common) ;
+             Symbolic = klu_analyze (udata->nx, s_jac->indexptrs, s_jac->indexvals, &Common) ;
+             Numeric = klu_factor(s_jac->indexptrs, s_jac->indexvals, s_jac->data, Symbolic, &Common) ;
+             N_VScale(-1.0, tdata->xdot, delta);
+             x_tmp = N_VGetArrayPointer(delta);
+             klu_solve(Symbolic, Numeric, udata->nx, 1, x_tmp, &Common);
+             klu_free_symbolic(&Symbolic, &Common);
+             klu_free_numeric(&Numeric, &Common);
+             //errMsgIdAndTxt("AMICI:mex:sparse","Solver currently not supported!");
+             break;
              
          default:
              errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");

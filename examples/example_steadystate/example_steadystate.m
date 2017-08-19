@@ -129,7 +129,7 @@ function example_steadystate
     % STEADY STATE COMPUTATION WITH NEWTON SOLVER
     options.sensi_meth = 'forward';
     options.sensi = 0;
-    options.newton_linsol = 1;
+    options.newton_linsol = 9;
     t_newton = inf;
     sol_newton = simulate_model_steadystate(t_newton,log10(p),k,[],options);
     
