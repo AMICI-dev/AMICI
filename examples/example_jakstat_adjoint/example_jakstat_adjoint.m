@@ -31,7 +31,7 @@ function example_jakstat_adjoint()
         -0.5];
     
     options.sensi = 0;
-    sol = simulate_model_jakstat([],xi,[],D,options);
+    sol = simulate_model_jakstat_adjoint([],xi,[],D,options);
     
     if(usejava('jvm'))
     figure
@@ -59,9 +59,9 @@ function example_jakstat_adjoint()
     xi_rand = xi + 0.1;
     options.sensi = 2;
     options.sensi_meth = 'adjoint';
-    sol = simulate_model_jakstat([],xi_rand,[],D,options);
+    sol = simulate_model_jakstat_adjoint([],xi_rand,[],D,options);
     options.sensi_meth = 'forward';
-    solf = simulate_model_jakstat([],xi_rand,[],D,options);
+    solf = simulate_model_jakstat_adjoint([],xi_rand,[],D,options);
     
     options.sensi = 1;
     eps = 1e-4;
@@ -69,7 +69,7 @@ function example_jakstat_adjoint()
     for ip = 1:length(xi)
         xip = xi_rand;
         xip(ip) = xip(ip) + eps;
-        psol = simulate_model_jakstat([],xip,[],D,options);
+        psol = simulate_model_jakstat_adjoint([],xip,[],D,options);
         fd_grad(ip) = (psol.llh-sol.llh)/eps;
         fd_hess(:,ip) = (psol.sllh-sol.sllh)/eps;
     end
