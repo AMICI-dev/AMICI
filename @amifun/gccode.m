@@ -109,7 +109,7 @@ function this = gccode(this,model,fid)
             
             cstr = regexprep(cstr,'var_p_([0-9]+)','tdata->p[$1]');
             cstr = regexprep(cstr,'var_k_([0-9]+)','udata->k[$1]');
-            cstr = regexprep(cstr,'h_([0-9]+)','udata->h[$1]');
+            cstr = regexprep(cstr,'h_([0-9]+)','tdata->h[$1]');
             cstr = regexprep(cstr,'var_w_([0-9]+)','tdata->w[$1]');
             cstr = regexprep(cstr,'var_dxdotdp_([0-9]+)','tdata->dxdotdp[$1 + ip*model->nx]');
             cstr = regexprep(cstr,'var_stau_([0-9]+)','tdata->stau[ip]');
