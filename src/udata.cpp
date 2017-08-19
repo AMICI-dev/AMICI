@@ -21,6 +21,8 @@ int UserData::unscaleParameters(const Model *model, double *bufferUnscaled) cons
                 bufferUnscaled[ip] = exp(p[ip]);
             break;
         case AMICI_SCALING_NONE:
+            for(int ip = 0; ip < model->np; ++ip)
+                bufferUnscaled[ip] = p[ip];
             break;
     }
 
