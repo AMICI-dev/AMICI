@@ -9,6 +9,7 @@
 #include <sundials/sundials_dense.h>
 #include <cstring>
 #include <ctime>
+#include "include/newton_solver.h"
 
 
 SteadystateProblem::SteadystateProblem()
@@ -33,7 +34,10 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 
     /* First, try to do Newton steps */
     starttime = clock();
-    status = applyNewtonsMethod(udata, rdata, tdata, 1, model, solver);
+    
+    NewtonSolver *newtonSolver = NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata, solver, &status);
+    
+    status = applyNewtonsMethod(udata, rdata, tdata, 1, model, solver, newtonSolver);
 
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
@@ -48,7 +52,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
             status = getNewtonOutput(tdata, rdata, 2, run_time, model->nx);
         } else {
-            status = applyNewtonsMethod(udata, rdata, tdata, 2, model, solver);
+            status = applyNewtonsMethod(udata, rdata, tdata, 2, model, solver, newtonSolver);
 
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */
@@ -61,6 +65,8 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
         }
     }
 
+    delete newtonSolver;
+    
     /* if this point was reached, the Newton solver was successful */
     return(AMICI_SUCCESS);
 }
@@ -69,7 +75,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model, Solver *solver) {
+int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model, Solver *solver, NewtonSolver *newtonSolver) {
     /**
          * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
          *
@@ -115,8 +121,9 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, T
     res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
 
     if (res_abs >= udata->atol && res_rel >= udata->rtol) {
+        
         /* If Newton steps are necessary, compute the inital search direction */
-        status = getNewtonStep(udata, rdata, tdata, newton_try, i_newtonstep, delta, model, solver);
+        status = newtonSolver->getStep(newton_try, i_newtonstep, delta);
 
         if (status == AMICI_SUCCESS) {
             /* The linear solver was successful, now the Newton solver needs to be */
@@ -165,7 +172,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, T
                         gamma = fmax(1.0, 2.0*gamma);
 
                         /* Do another Newton step */
-                        status = getNewtonStep(udata, rdata, tdata, newton_try, i_newtonstep, delta, model, solver);
+                        status = newtonSolver->getStep(newton_try, i_newtonstep, delta);
                         if (status == AMICI_SUCCESS) {
                             /* Newton step was successful, now Newtons method still needs to be */
                             status = AMICI_ERROR_NEWTONSOLVER;
@@ -202,116 +209,6 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, T
 
     return(status);
 }
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
-int SteadystateProblem::getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector delta, Model *model, Solver *solver) {
-    /**
-     * getNewtonStep acomputes the Newton Step by solving the linear system
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] tdata pointer to the temporary data struct @type TempData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[in] ami_mem pointer to the solver memory block @type *void
-     * @param[in] ntry intger number of Newton solver try
-     * @param[in] nnewt intger number of Newton steps in the current Newton solver try
-     * @param[out] delta N_Vector solution of the linear system
-     * @return int status flag indicating success of execution @type int
-     */
-
-    int status = AMICI_SUCCESS;
-    realtype *x_tmp;
-    long int *pivots = NewLintArray(model->nx);
-    N_Vector tmp1 = N_VNew_Serial(model->nx);
-    N_Vector tmp2 = N_VNew_Serial(model->nx);
-    N_Vector tmp3 = N_VNew_Serial(model->nx);
-
-    SlsMat s_jac = solver->getSparseJacobian();
-
-    /* Choose which linear solver to use */
-    switch (udata->newton_linsol) {
-
-    /* DIRECT SOLVERS */
-
-    case AMICI_DENSE:
-        /* Define variables needed for the dense solver */
-
-
-        /* Compute Jacobian for dense solver */
-        status = model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx, tdata->xdot, tdata->Jtmp, udata, tmp1, tmp2, tmp3);
-        if (status == AMICI_SUCCESS) {
-            /* Compute factorization and pivoting */
-            status = DenseGETRF(tdata->Jtmp, pivots);
-            if (status == AMICI_SUCCESS) {
-                /* Solve linear system by elimiation using pivotiing */
-                model->fxdot(tdata->t, tdata->x, tdata->dx, delta, udata);
-                N_VScale(-1.0, delta, delta);
-                x_tmp = N_VGetArrayPointer(delta);
-                DenseGETRS(tdata->Jtmp, pivots, x_tmp);
-            } else {
-                return(AMICI_ERROR_NEWTON_LINSOLVER);
-            }
-        } else {
-            return(AMICI_ERROR_NEWTON_LINSOLVER);
-        }
-
-        rdata->newton_numlinsteps[(ntry-1) * udata->newton_maxsteps + nnewt] = 0.0;
-        break;
-
-    case AMICI_BAND:
-        errMsgIdAndTxt("AMICI:mex:dense","Solver currently not supported!");
-
-    case AMICI_LAPACKDENSE:
-        errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
-
-    case AMICI_LAPACKBAND:
-        errMsgIdAndTxt("AMICI:mex:lapack","Solver currently not supported!");
-
-    case AMICI_DIAG:
-        errMsgIdAndTxt("AMICI:mex:dense","Solver currently not supported!");
-
-
-        /* ITERATIVE SOLVERS */
-
-    case AMICI_SPGMR:
-        errMsgIdAndTxt("AMICI:mex:spils","Solver currently not supported!");
-
-    case AMICI_SPBCG:
-        status = linsolveSPBCG(udata, rdata, tdata, ntry, nnewt, delta, model);
-        break;
-
-    case AMICI_SPTFQMR:
-        errMsgIdAndTxt("AMICI:mex:spils","Solver currently not supported!");
-
-
-        /* SPARSE SOLVERS */
-
-    case AMICI_KLU:
-        status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, s_jac, udata, tmp1, tmp2, tmp3);
-        klu_symbolic *Symbolic;
-        klu_numeric *Numeric;
-        klu_common Common;
-        klu_defaults (&Common) ;
-        Symbolic = klu_analyze (model->nx, s_jac->indexptrs, s_jac->indexvals, &Common) ;
-        Numeric = klu_factor(s_jac->indexptrs, s_jac->indexvals, s_jac->data, Symbolic, &Common) ;
-        N_VScale(-1.0, tdata->xdot, delta);
-        x_tmp = N_VGetArrayPointer(delta);
-        klu_solve(Symbolic, Numeric, model->nx, 1, x_tmp, &Common);
-        klu_free_symbolic(&Symbolic, &Common);
-        klu_free_numeric(&Numeric, &Common);
-        //errMsgIdAndTxt("AMICI:mex:sparse","Solver currently not supported!");
-        break;
-
-    default:
-        errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
-        break;
-    }
-
-    // Return
-    return(status);}
 
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */

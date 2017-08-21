@@ -11,7 +11,7 @@ syms x1 x2 x3
 model.sym.x = [
 x1 x2 x3
 ];
-
+model.debug = true;
 %%
 % PARAMETERS ( for these sensitivities will be computed )
 
