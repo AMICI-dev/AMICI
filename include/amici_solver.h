@@ -9,8 +9,6 @@ class UserData;
 class TempData;
 class Model;
 
-typedef int (*RootFn)(realtype t, N_Vector y, realtype *gout, void *user_data);
-
 class Solver
 {
 public:
@@ -90,7 +88,7 @@ public:
 
     virtual int AMISetStopTime(realtype tstop) = 0;
 
-    virtual int AMIRootInit(int nrtfn, RootFn ptr) = 0;
+//    virtual int AMIRootInit(int nrtfn, RootFn ptr) = 0;
 
     virtual int AMIReInitB(int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) = 0;
 
@@ -100,26 +98,9 @@ public:
 
     virtual int AMIQuadReInitB(int which, N_Vector yQB0) = 0;
 
+    virtual SlsMat getSparseJacobian() = 0;
 
-    // Static wrapper functions because cannot pass member functions to solver
-
-    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
-
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip, N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJBand(long N, long mupper, long mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
-
-    static int fJB(long NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJBandB(long NeqBdot, long mupper, long mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
+    virtual int turnOffRootFinding() = 0;
 
 protected:
     virtual int wrap_init(N_Vector x, N_Vector dx, realtype t) = 0;

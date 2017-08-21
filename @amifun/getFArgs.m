@@ -13,6 +13,8 @@ function this = getFArgs(this)
     switch(this.funstr)
         case 'xdot'
             this.fargstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data)';
+        case 'xBdot'
+            this.fargstr = '(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data)';
         case 'J'
             this.fargstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
         case 'root'

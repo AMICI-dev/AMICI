@@ -3,7 +3,7 @@
 #include <math.h>
 #include <include/amici_model.h>
 #include "model_dirac.h"
-#include <include/cvodewrap.h>
+#include <include/amici_solver_cvodes.h>
 
 class UserData;
 class Solver;
@@ -43,7 +43,7 @@ int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata);
 int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata);
 int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
-int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);
+int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
 int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
 int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
@@ -277,7 +277,7 @@ public:
         return x0_model_dirac(x0, user_data);
     }
 
-    int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data) {
+    int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) {
         return xBdot_model_dirac(t, x, xB, xBdot, user_data);
     }
 

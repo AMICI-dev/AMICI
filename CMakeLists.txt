@@ -36,6 +36,7 @@ endif()
 include_directories("${AMICI_DIR}")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
+include_directories("${AMICI_DIR}/sundials/src")
 include_directories("${SUITESPARSE_DIR}/include")
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
@@ -55,6 +56,8 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/amici_hdf5.cpp
     ${AMICI_DIR}/src/spline.cpp
     ${AMICI_DIR}/src/amici_solver.cpp
+    ${AMICI_DIR}/src/amici_solver_cvodes.cpp
+    ${AMICI_DIR}/src/amici_solver_idas.cpp
     ${AMICI_DIR}/src/amici_model.cpp
     ${AMICI_DIR}/src/forwardproblem.cpp
     ${AMICI_DIR}/src/steadystateproblem.cpp

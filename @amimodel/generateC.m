@@ -335,7 +335,7 @@ ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
     % whithout symbolic expressions)
-    if(isfield(this.fun,iffun{1}))
+    if(isfield(this.funs,iffun{1}))
         fun = this.fun.(iffun{1});
     else
         fun = amifun(iffun{1},this);
@@ -374,9 +374,9 @@ fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 if(~strcmp(this.wtype,'iw'))
-    fprintf(fid,'#include <include/cvodewrap.h>\n');
+    fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
 else
-    fprintf(fid,'#include <include/idawrap.h>\n');
+    fprintf(fid,'#include <include/amici_solver_idas.h>\n');
 end
 fprintf(fid,'\n');
 fprintf(fid,'class UserData;\nclass Solver;\n');
