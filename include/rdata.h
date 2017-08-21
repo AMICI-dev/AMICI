@@ -1,8 +1,8 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
-
+#include <include/udata.h>
 class UserData;
-class ExpData;
+class Model;
 
 /** @brief struct that stores all data which is later returned by the mex function
  *
@@ -12,7 +12,7 @@ class ReturnData {
 public:
     ReturnData();
 
-    ReturnData(const UserData *udata);
+    ReturnData(const UserData *udata, const Model *model);
 
     virtual void setDefaults();
 
@@ -20,12 +20,12 @@ public:
      * @brief performs all necessary actions to reset return data upon integration failure
      * @param[in] udata pointer to the user data struct @type UserData
      */
-    void invalidate(const UserData *udata);
+    void invalidate();
 
-    void setLikelihoodSensitivityFirstOrderNaN(const UserData *udata);
-    void setLikelihoodSensitivitySecondOrderNaN(const UserData *udata);
+    void setLikelihoodSensitivityFirstOrderNaN();
+    void setLikelihoodSensitivitySecondOrderNaN();
 
-    int applyChainRuleFactorToSimulationResults(const UserData *udata, const ExpData *edata);
+    int applyChainRuleFactorToSimulationResults(const UserData *udata, const realtype *unscaledParameters);
 
     virtual ~ReturnData();
 
@@ -145,7 +145,10 @@ public:
     double *status;
 
 protected:
-    virtual void initFields(const UserData *udata);
+
+    virtual void copyFromUserData(const UserData *udata);
+
+    virtual void initFields();
 
     virtual void initField1(double **fieldPointer, const char *fieldName, int dim);
 
@@ -181,6 +184,36 @@ protected:
 
     bool freeFieldsOnDestruction;
     
+public:
+    /** total number of model parameters */
+    const int np;
+    /** number of fixed parameters */
+    const int nk;
+    /** number of states */
+    const int nx;
+    /** number of states in the unaugmented system */
+    const int nxtrue;
+    /** number of observables */
+    const int ny;
+    /** number of observables in the unaugmented system */
+    const int nytrue;
+    /** number of event outputs */
+    const int nz;
+    /** number of event outputs in the unaugmented system */
+    const int nztrue;
+    /** number of events */
+    const int ne;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    const int nJ;
+
+    const int nplist;
+    const int nmaxevent;
+    const int nt;
+    const int newton_maxsteps;
+    const AMICI_parameter_scaling pscale;
+    const AMICI_o2mode o2mode;
+    const AMICI_sensi_order sensi;
+    const AMICI_sensi_meth sensi_meth;
 };
 
 #endif /* _MY_RDATA */

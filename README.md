@@ -26,6 +26,12 @@ A: Make an [issue](https://github.com/ICB-DCM/AMICI/issues) and we will have a l
 
 ---
 
+Q: I get an out of memory error while compiling my model on a Windows machine.
+
+A: This may be due to an old compiler version. See [issue #161](https://github.com/ICB-DCM/AMICI/issues/161) for instructions on how to install a new compiler.
+
+---
+
 Q: The simulation/sensitivities I get are incorrect.
 
 A: There are some known issues, especially with adjoint sensitivities, events and DAEs. If your particular problem is not featured in the [issues](https://github.com/ICB-DCM/AMICI/issues) list, please add it!

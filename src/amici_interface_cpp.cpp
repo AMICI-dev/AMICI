@@ -1,4 +1,6 @@
 #include "include/amici_interface_cpp.h"
+#include <include/amici_model.h>
+#include <include/amici_model_functions.h>
 #include "include/amici.h"
 
 #ifdef __APPLE__
@@ -11,32 +13,16 @@
 
 #include <cstring>
 
-#define initField2(FIELD,D1,D2) \
-FIELD ## data = new double[(D1) * (D2)]();
-#define initField3(FIELD,D1,D2,D3) \
-FIELD ## data = new double[(D1) * (D2) * (D3)]();
-
-#define initField4(FIELD,D1,D2,D3,D4) \
-FIELD ## data = new double[(D1) * (D2) * (D3) * (D4)]();
-
-
 ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
-    double *originalParams = NULL;
 
-    if(udata->pscale != AMICI_SCALING_NONE) {
-        originalParams = (double *) malloc(sizeof(double) * udata->np);
-        memcpy(originalParams, udata->p, sizeof(double) * udata->np);
-    }
+    Model *model = getModel();
 
-    ReturnData *rdata = new ReturnData(udata);
+    ReturnData *rdata = new ReturnData(udata, model);
 
-    int status = runAmiciSimulation(udata, edata, rdata);
+    int status = runAmiciSimulation(udata, edata, rdata,  model);
     *rdata->status = status;
 
-    if(originalParams) {
-        memcpy(udata->p, originalParams, sizeof(double) * udata->np);
-        free(originalParams);
-    }
+    delete model;
 
     return rdata;
 }

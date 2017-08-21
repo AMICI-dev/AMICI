@@ -9,6 +9,9 @@
 #include <sundials/sundials_config.h>
 
 class UserData;
+class ReturnData;
+class Model;
+class Solver;
 
 /** @brief struct that provides temporary storage for different variables */
 class TempData {
@@ -18,9 +21,12 @@ public:
     /**
      * @brief Default constructor
      */
-    TempData(const UserData *udata);
+    TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
     
+    /** parameter array, unscaled */
+    realtype *p = nullptr;
+
     /** current time */
     realtype t;
     
@@ -122,6 +128,10 @@ public:
     /** temporary rootval storage to check crossing in secondary event */
     realtype *h;
 
+    /** flag indicating whether a certain heaviside function should be active or not
+        Moved from UserData to TempData; TODO: better naming */
+    realtype *h_udata;
+
     /** change in x */
     realtype *deltax;
     /** change in sx */
@@ -138,10 +148,50 @@ public:
     realtype *discs; 
     /** array containing the index of discontinuities */
     realtype *irdiscs; 
-    
+
+    /** tempory storage of Jacobian data across functions */
+    SlsMat J = NULL;
+    /** tempory storage of dxdotdp data across functions */
+    realtype *dxdotdp = NULL;
+    /** tempory storage of w data across functions */
+    realtype *w = NULL;
+    /** tempory storage of dwdx data across functions */
+    realtype *dwdx = NULL;
+    /** tempory storage of dwdp data across functions */
+    realtype *dwdp = NULL;
+    /** tempory storage of M data across functions */
+    realtype *M = NULL;
+    /** tempory storage of dfdx data across functions */
+    realtype *dfdx = NULL;
+    /** tempory storage of stau data across functions */
+    realtype *stau = NULL;
+
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
-    
-	};
+
+    /** current root index, will be increased during the forward solve and decreased during backward solve */
+    int iroot = 0;
+
+    /** flag indicating whether a NaN in dxdotdp has been reported */
+    booleantype nan_dxdotdp = false;
+    /** flag indicating whether a NaN in J has been reported */
+    booleantype nan_J = false;
+    /** flag indicating whether a NaN in JDiag has been reported */
+    booleantype nan_JDiag = false;
+    /** flag indicating whether a NaN in JSparse has been reported */
+    booleantype nan_JSparse = false;
+    /** flag indicating whether a NaN in xdot has been reported */
+    booleantype nan_xdot = false;
+    /** flag indicating whether a NaN in xBdot has been reported */
+    booleantype nan_xBdot = false;
+    /** flag indicating whether a NaN in qBdot has been reported */
+    booleantype nan_qBdot = false;
+
+
+    const UserData *udata;
+    Model *model;
+    ReturnData *rdata;
+    Solver *solver = nullptr;
+};
 
 #endif /* _MY_TDATA */

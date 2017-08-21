@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dydx_model_neuron(realtype t, int it, N_Vector x, void *user_data, TempData *tdata);
+int dydx_model_neuron(realtype t, int it, N_Vector x, TempData *tdata);
 
 
 #endif /* _am_model_neuron_dydx_h */

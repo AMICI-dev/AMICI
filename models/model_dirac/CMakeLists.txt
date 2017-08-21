@@ -25,6 +25,7 @@ include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
+include_directories("${AMICI_DIR}/sundials/src")
 include_directories("${SUITESPARSE_DIR}/include")
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_dirac_J.cpp

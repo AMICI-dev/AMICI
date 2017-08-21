@@ -71,7 +71,7 @@ end
 function includesstr = getIncludeString(wrap_path, sundials_path, ssparse_path)
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src','cvodes'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(wrap_path), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'include'), '"');

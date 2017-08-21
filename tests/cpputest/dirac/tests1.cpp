@@ -20,17 +20,14 @@ TEST_GROUP(groupDirac)
 
 
 UserData *getTestUserData() {
-    UserData *udata = new UserData(getUserData());
+    Model *model = getModel();
+    UserData *udata = new UserData();
 
-    udata->qpositivex = new double[udata->nx];
-    udata->p = new double[udata->np];
-    udata->k = new double[udata->nk];
-    udata->idlist = new realtype[udata->np]();
-    for(int i = 0; i < udata->np; ++i)
-        udata->idlist[i] = 0;
+    udata->qpositivex = new double[model->nx];
+    udata->p = new double[model->np];
+    udata->k = new double[model->nk];
 
-    udata->initTemporaryFields();
-
+    delete model;
     return udata;
 }
 
@@ -49,10 +46,13 @@ TEST(groupDirac, testCreateAndFreeUserData) {
  */
 
 TEST(groupDirac, testCreateAndFreeExpData) {
-    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMICI_SCALING_NONE, AMICI_O2MODE_NONE);
+    UserData udata;
     
-    ExpData *edata = getTestExpData(&udata);
+    Model *model = getModel();
+
+    ExpData *edata = getTestExpData(&udata, model);
     
+    delete model;
     delete edata;
 }
 
@@ -61,25 +61,30 @@ TEST(groupDirac, testCreateAndFreeExpData) {
  */
 
 TEST(groupDirac, testCreateAndFreeReturnData) {
-    UserData udata(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, AMICI_SCALING_NONE, AMICI_O2MODE_NONE);
-    ReturnData *rdata = new ReturnData(&udata);
+    Model *model = getModel();
+
+    UserData udata;
+    ReturnData *rdata = new ReturnData(&udata, model);
+    delete model;
 
     delete rdata;
 }
 
 
 TEST(groupDirac, testSimulation) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options", model);
     ExpData *edata = NULL;
 
-    int status;
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
     // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_dirac/nosensi/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete udata;
 }
@@ -89,16 +94,19 @@ TEST(groupDirac, testSimulationExpData) {
 }
 
 TEST(groupDirac, testSensitivityForward) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options", model);
     ExpData *edata = NULL;
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
     // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete udata;
 }

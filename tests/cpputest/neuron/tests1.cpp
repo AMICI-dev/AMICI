@@ -20,30 +20,36 @@ TEST_GROUP(groupNeuron)
 };
 
 TEST(groupNeuron, testSimulation) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/nosensi/options");
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/nosensi/options", model);
+    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data", model);
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_neuron/nosensi/results", rdata, udata, 10*TEST_ATOL, 10*TEST_RTOL);
+    verifyReturnData("/model_neuron/nosensi/results", rdata, udata, model, 10*TEST_ATOL, 10*TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete edata;
     delete udata;
 }
 
 TEST(groupNeuron, testSensitivityForward) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/sensiforward/options");
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/sensiforward/options", model);
+    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data", model);
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_neuron/sensiforward/results", rdata, udata, 10*TEST_ATOL, 10*TEST_RTOL);
+    verifyReturnData("/model_neuron/sensiforward/results", rdata, udata, model, 10*TEST_ATOL, 10*TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete edata;
     delete udata;

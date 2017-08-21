@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int deltasx_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, void *user_data, TempData *tdata);
+int deltasx_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_deltasx_h */

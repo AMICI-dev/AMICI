@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dydp_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, TempData *tdata);
+int dydp_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_dydp_h */

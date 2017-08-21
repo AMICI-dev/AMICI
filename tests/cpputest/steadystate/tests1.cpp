@@ -22,29 +22,35 @@ TEST_GROUP(groupSteadystate)
 
 
 TEST(groupSteadystate, testSimulation) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/nosensi/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/nosensi/options", model);
     ExpData *edata = NULL;
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_steadystate/nosensi/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete udata;
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
+    Model *model = getModel();
+
     // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/sensiforward/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_steadystate/sensiforward/options", model);
     ExpData *edata = NULL;
 
     ReturnData *rdata = getSimulationResults(udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
-    verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata, TEST_ATOL, TEST_RTOL);
+    verifyReturnData("/model_steadystate/sensiforward/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
 
+    delete model;
     delete rdata;
     delete udata;
 }

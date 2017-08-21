@@ -7,6 +7,7 @@
 #include "include/amici_model_functions.h" /* model-provided functions */
 #include <include/amici_interface_cpp.h> /* AMICI API */
 #include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
+#include <include/amici_model.h>
 
 /* This is a scaffold for a stand-alone AMICI simulation executable demonstrating
  * use of the AMICI C++ API.
@@ -36,8 +37,8 @@
  */
 
 // Function prototypes
-void processReturnData(ReturnData *rdata, UserData *udata);
-void printReturnData(ReturnData *rdata, UserData *udata);
+void processReturnData(ReturnData *rdata, UserData *udata, Model *model);
+void printReturnData(ReturnData *rdata, UserData *udata, Model *model);
 
 
 int main(int argc, char **argv)
@@ -52,15 +53,17 @@ int main(int argc, char **argv)
     } else {
         hdffile = argv[1];
     }
-    
+
+    Model *model = getModel();
+
     // Read UserData (AMICI settings and model parameters) from HDF5 file
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile, "/options");
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile, "/options", model);
     if (udata == NULL) {
         return 1;
     }
 
     // Read ExpData (experimental data for model) from HDF5 file
-    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data");
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile, udata, "/data", model);
 
     // Run the simulation
     ReturnData *rdata = getSimulationResults(udata, edata);
@@ -71,12 +74,13 @@ int main(int argc, char **argv)
     }
 
     // Do something with the simulation results
-    processReturnData(rdata, udata);
+    processReturnData(rdata, udata, model);
 
     // Save simulation results to HDF5 file
     AMI_HDF5_writeReturnData(rdata, udata, hdffile, "/solution");
 
     // Free memory
+    delete model;
     if(edata) delete edata;
     if(udata) delete udata;
     if(rdata) delete rdata;
@@ -85,33 +89,33 @@ int main(int argc, char **argv)
 }
 
 
-void processReturnData(ReturnData *rdata, UserData *udata) {
+void processReturnData(ReturnData *rdata, UserData *udata, Model *model) {
     // show some the simulation results
-    printReturnData(rdata, udata);
+    printReturnData(rdata, udata, model);
 }
 
-void printReturnData(ReturnData *rdata, UserData *udata) {
+void printReturnData(ReturnData *rdata, UserData *udata, Model *model) {
     //Print of some the simulation results
 
     printf("Timepoints (tsdata): ");
     printArray(rdata->ts, udata->nt);
 
     printf("\n\nStates (xdata):\n");
-    for(int i = 0; i < udata->nx; ++i) {
+    for(int i = 0; i < model->nx; ++i) {
         for(int j = 0; j < udata->nt; ++j)
             printf("%e\t", rdata->x[j +  udata->nt * i]);
         printf("\n");
     }
 
     printf("\nObservables (ydata):\n");
-    for(int i = 0; i < udata->ny; ++i) {
+    for(int i = 0; i < model->ny; ++i) {
         for(int j = 0; j < udata->nt; ++j)
             printf("%e\t", rdata->y[j +  udata->nt * i]);
         printf("\n");
     }
 
     printf("\n\ndx/dt (xdotdata):\n");
-    for(int i = 0; i < udata->nx; ++i)
+    for(int i = 0; i < model->nx; ++i)
         printf("%e\t", rdata->xdot[i]);
 
 //    printf("\nJacobian (jdata)\n");
