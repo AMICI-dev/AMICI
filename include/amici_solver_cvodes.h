@@ -152,8 +152,6 @@ public:
 
     int AMISetStopTime(realtype tstop);
 
-    SlsMat getSparseJacobian();
-
     int turnOffRootFinding();
 
     // Static wrapper functions because cannot pass member functions to solver (CVODES-specific signatures)

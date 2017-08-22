@@ -267,8 +267,8 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata, Re
     double sim_time;
     int status = (int) *rdata->status;
     realtype *x_tmp;
-    N_Vector rel_x = N_VNew_Serial(model->nx);
-    N_Vector tmp_x = N_VNew_Serial(model->nx);
+    N_Vector rel_x_newton = N_VNew_Serial(model->nx);
+    N_Vector x_newton = N_VNew_Serial(model->nx);
 
     /* Newton solver did not work, so try a simulation */
     if (tdata->t >= 1e6) {
@@ -283,26 +283,28 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata, Re
         res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
 
         /* Ensure positivity for relative residual */
-        N_VScale(1.0, tdata->x, tmp_x);
-        N_VAbs(tmp_x, tmp_x);
-        x_tmp = N_VGetArrayPointer(tmp_x);
+        N_VScale(1.0, tdata->x, x_newton);
+        N_VAbs(x_newton, x_newton);
+        x_tmp = N_VGetArrayPointer(x_newton);
         for (int ix=0; ix<model->nx; ix++) {
             if (x_tmp[ix] < udata->atol) {
                 x_tmp[ix] = udata->atol;
             }
         }
-        N_VDiv(tdata->xdot, tmp_x, rel_x);
-        res_rel = sqrt(N_VDotProd(rel_x, rel_x));
+        N_VDiv(tdata->xdot, x_newton, rel_x_newton);
+        res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
 
         /* residuals are small? */
         if (res_abs < udata->atol || res_rel < udata->rtol) {
             return(AMICI_SUCCESS);
         } else {
-            return(-1);
+            status = AMICI_ERROR_SIM2STEADYSTATE;
         }
-    } else {
-        return(status);
     }
+    
+    N_VDestroy_Serial(rel_x_newton);
+    N_VDestroy_Serial(x_newton);
+    return(status);
 }
 
 /* ------------------------------------------------------------------------------------- */
@@ -348,7 +350,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata, TempDa
     N_VScale(-1.0, tdata->xdot, tdata->xdot);
 
     // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiag(tdata->t, ns_Jdiag, tdata->x, udata);
+    model->fJDiag(tdata->t, ns_Jdiag, tdata->x, tdata);
 
     // Ensure positivity of entries in ns_Jdiag
     N_VConst(1.0, ns_p);
@@ -368,7 +370,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata, TempDa
     alpha = 1.0;
 
     // can be set to 0 at the moment
-    model->fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+    model->fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
 
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
@@ -387,7 +389,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata, TempDa
         N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
 
         // ns_v = J * ns_p
-        model->fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        model->fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
         N_VDiv(ns_v, ns_Jdiag, ns_v);
 
         // Compute factor
@@ -399,7 +401,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata, TempDa
         N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
 
         // ns_t = J * ns_s
-        model->fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, udata, ns_tmp);
+        model->fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
         N_VDiv(ns_t, ns_Jdiag, ns_t);
 
         // Compute factor

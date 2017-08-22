@@ -12,9 +12,6 @@
 #include <cvodes/cvodes_sptfqmr.h>
 #include <cvodes/cvodes_klu.h>
 
-#include <cvodes/cvodes_impl.h>
-#include <cvodes/cvodes_sparse_impl.h>
-
 #include <klu.h>
 #include <amd.h>
 #include <colamd.h>
@@ -313,11 +310,6 @@ int CVodeSolver::AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB
 
 int CVodeSolver::AMISetStopTime(realtype tstop) {
     return CVodeSetStopTime(ami_mem, tstop);
-}
-
-SlsMat CVodeSolver::getSparseJacobian() {
-    CVSlsMem cvsls_mem = (CVSlsMem)((CVodeMem)ami_mem)->cv_lmem;
-    return cvsls_mem->s_JacMat;
 }
 
 int CVodeSolver::turnOffRootFinding()

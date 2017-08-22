@@ -67,9 +67,9 @@ public:
     int newton_maxsteps;
     /** maximum number of allowed linear steps per Newton step for steady state computation */
     int newton_maxlinsteps;
-    /** maximum number of allowed Newton steps for steady state computation */
-    int newton_linsol;
-    /** maximum number of allowed linear steps per Newton step for steady state computation */
+    /** Preequilibration of model via NEwton solver? */
+    int newton_preeq;
+    /** Which preconditioner is to be used in the case of iterative linear Newton solvers */
     int newton_precon;
     
     /** internal sensitivity method */

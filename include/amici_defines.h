@@ -34,6 +34,7 @@
 #define AMICI_ERROR_NOT_IMPLEMENTED    -83
 #define AMICI_ERROR_MODEL              -82
 #define AMICI_ERROR_OTHER              -81
+#define AMICI_ERROR_SIM2STEADYSTATE    -80
 #define AMICI_SUCCESS                    0
 #define AMICI_DATA_RETURN                1
 #define AMICI_ROOT_RETURN                2

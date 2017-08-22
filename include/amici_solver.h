@@ -98,8 +98,6 @@ public:
 
     virtual int AMIQuadReInitB(int which, N_Vector yQB0) = 0;
 
-    virtual SlsMat getSparseJacobian() = 0;
-
     virtual int turnOffRootFinding() = 0;
 
 protected:

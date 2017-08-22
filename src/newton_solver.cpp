@@ -15,10 +15,9 @@
 NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):model(model), rdata(rdata), udata(udata), tdata(tdata), solver(solver) {
 }
 
-
 NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver, int *status) {
     /**
-     * getNewtonStep acomputes the Newton Step by solving the linear system
+     * getNewtonStep computes the Newton Step by solving the linear system
      *
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -84,6 +83,9 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
 NewtonSolver::~NewtonSolver(){
 }
 
+
+
+/* derived class for dense linear solver */
 NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
     long int *pivots = NewLintArray(model->nx);
     N_Vector tmp1 = N_VNew_Serial(model->nx);
@@ -93,7 +95,7 @@ NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *
 
 int NewtonSolverDense::getStep(int ntry, int nnewt, N_Vector delta) {
     
-    int status = model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx, tdata->xdot, tdata->Jtmp, udata, tmp1, tmp2, tmp3);
+    int status = model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx, tdata->xdot, tdata->Jtmp, tdata, tmp1, tmp2, tmp3);
     realtype *x_tmp;
     
     if (status == AMICI_SUCCESS) {
@@ -101,7 +103,7 @@ int NewtonSolverDense::getStep(int ntry, int nnewt, N_Vector delta) {
         status = DenseGETRF(tdata->Jtmp, pivots);
         if (status == AMICI_SUCCESS) {
             /* Solve linear system by elimiation using pivotiing */
-            model->fxdot(tdata->t, tdata->x, tdata->dx, delta, udata);
+            model->fxdot(tdata->t, tdata->x, tdata->dx, delta, tdata);
             N_VScale(-1.0, delta, delta);
             x_tmp = N_VGetArrayPointer(delta);
             DenseGETRS(tdata->Jtmp, pivots, x_tmp);
@@ -123,6 +125,8 @@ NewtonSolverDense::~NewtonSolverDense() {
 }
 
 
+
+/* derived class for sparse linear solver */
 NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
     klu_defaults (&common);
     N_Vector tmp1 = N_VNew_Serial(model->nx);
@@ -133,7 +137,7 @@ NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData
 int NewtonSolverSparse::getStep(int ntry, int nnewt, N_Vector delta) {
     
     realtype *x_tmp;
-    int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, tdata->J, udata, tmp1, tmp2, tmp3);
+    int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, tdata->J, tdata, tmp1, tmp2, tmp3);
     
     symbolic = klu_analyze (model->nx, (tdata->J)->indexptrs, (tdata->J)->indexvals, &common) ;
     numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals, (tdata->J)->data, symbolic, &common) ;
@@ -152,6 +156,8 @@ NewtonSolverSparse::~NewtonSolverSparse() {
     klu_free_numeric(&numeric, &common);
 }
 
+
+/* derived class for iterative linear solver */
 NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
 }
 

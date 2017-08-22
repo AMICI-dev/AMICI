@@ -11,9 +11,6 @@
 #include <idas/idas_sptfqmr.h>
 #include <idas/idas_klu.h>
 
-#include <idas/idas_impl.h>
-#include <idas/idas_sparse_impl.h>
-
 #include <klu.h>
 #include <amd.h>
 #include <colamd.h>
@@ -320,11 +317,6 @@ int IDASolver::AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB) 
 
 int IDASolver::AMISetStopTime(realtype tstop) {
     return IDASetStopTime(ami_mem, tstop);
-}
-
-SlsMat IDASolver::getSparseJacobian() {
-    IDASlsMem idasls_mem = (IDASlsMem)((IDAMem)ami_mem)->ida_lmem;
-    return idasls_mem->s_JacMat;
 }
 
 int IDASolver::turnOffRootFinding()

@@ -150,8 +150,6 @@ public:
 
     int AMISetStopTime(realtype tstop);
 
-    SlsMat getSparseJacobian();
-
     int turnOffRootFinding();
 
 
