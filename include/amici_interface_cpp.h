@@ -22,6 +22,6 @@
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-EXTERNC ReturnData *getSimulationResults(UserData *udata, const ExpData *edata);
+EXTERNC ReturnData *getSimulationResults(Model *model, UserData *udata, const ExpData *edata);
 
 #endif
