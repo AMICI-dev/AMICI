@@ -87,10 +87,10 @@ NewtonSolver::~NewtonSolver(){
 
 /* derived class for dense linear solver */
 NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
-    long int *pivots = NewLintArray(model->nx);
-    N_Vector tmp1 = N_VNew_Serial(model->nx);
-    N_Vector tmp2 = N_VNew_Serial(model->nx);
-    N_Vector tmp3 = N_VNew_Serial(model->nx);
+    pivots = NewLintArray(model->nx);
+    tmp1 = N_VNew_Serial(model->nx);
+    tmp2 = N_VNew_Serial(model->nx);
+    tmp3 = N_VNew_Serial(model->nx);
 }
 
 int NewtonSolverDense::getStep(int ntry, int nnewt, N_Vector delta) {
@@ -129,9 +129,9 @@ NewtonSolverDense::~NewtonSolverDense() {
 /* derived class for sparse linear solver */
 NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
     klu_defaults (&common);
-    N_Vector tmp1 = N_VNew_Serial(model->nx);
-    N_Vector tmp2 = N_VNew_Serial(model->nx);
-    N_Vector tmp3 = N_VNew_Serial(model->nx);
+    tmp1 = N_VNew_Serial(model->nx);
+    tmp2 = N_VNew_Serial(model->nx);
+    tmp3 = N_VNew_Serial(model->nx);
 }
 
 int NewtonSolverSparse::getStep(int ntry, int nnewt, N_Vector delta) {
