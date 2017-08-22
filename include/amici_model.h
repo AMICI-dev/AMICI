@@ -46,7 +46,7 @@ public:
         ubw(ubw), lbw(lbw),
         o2mode(o2mode) {}
 
-    virtual Solver *getSolver() = 0;
+    virtual Solver *getSolver() { return NULL; }
 
     virtual int fx0(N_Vector x0, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
