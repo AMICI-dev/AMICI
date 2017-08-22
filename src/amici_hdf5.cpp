@@ -109,13 +109,16 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId, const char
 
 ExpData *AMI_HDF5_readSimulationExpData(const char* hdffile, UserData *udata, const char* dataObject, Model *model) {
 
-    ExpData *edata = new ExpData(udata, model);
-    
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+    ExpData *edata = NULL;
 
     hsize_t m, n;
 
     if(H5Lexists(file_id, dataObject, 0)) {
+
+        edata = new ExpData(udata, model);
+
         double *tmp_data;
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Y", &tmp_data, &m, &n);
         // if this is rank 1, n and m can be swapped
