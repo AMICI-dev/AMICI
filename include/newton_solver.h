@@ -32,12 +32,11 @@ public:
     virtual ~NewtonSolver();
     
 protected:
+    Model *model;
     ReturnData *rdata;
     UserData *udata;
     TempData *tdata;
-    Model *model;
     Solver *solver;
-    
 };
 
 
@@ -66,7 +65,6 @@ public:
     ~NewtonSolverSparse();
     
 private:
-    long int *pivots;
     N_Vector tmp1;
     N_Vector tmp2;
     N_Vector tmp3;

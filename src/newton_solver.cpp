@@ -119,7 +119,7 @@ NewtonSolverDense::~NewtonSolverDense() {
     N_VDestroy_Serial(tmp1);
     N_VDestroy_Serial(tmp2);
     N_VDestroy_Serial(tmp3);
-    /* read up */ free(pivots);
+    DestroyArray(pivots);
 }
 
 
@@ -133,17 +133,14 @@ NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData
 int NewtonSolverSparse::getStep(int ntry, int nnewt, N_Vector delta) {
     
     realtype *x_tmp;
+    int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, tdata->J, udata, tmp1, tmp2, tmp3);
     
-    SlsMat s_jac = solver->getSparseJacobian();
-    int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, s_jac, udata, tmp1, tmp2, tmp3);
-    
-    symbolic = klu_analyze (model->nx, s_jac->indexptrs, s_jac->indexvals, &common) ;
-    numeric = klu_factor(s_jac->indexptrs, s_jac->indexvals, s_jac->data, symbolic, &common) ;
+    symbolic = klu_analyze (model->nx, (tdata->J)->indexptrs, (tdata->J)->indexvals, &common) ;
+    numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals, (tdata->J)->data, symbolic, &common) ;
     N_VScale(-1.0, tdata->xdot, delta);
     x_tmp = N_VGetArrayPointer(delta);
     klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
     
-    // N_VDestroy_SlsMat(s_jac); /* read up */
     return status;
 }
 
