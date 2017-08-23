@@ -77,3 +77,4 @@ target_link_libraries(${PROJECT_NAME}
     -ldl -lz -lm
 )
 
+include(CMakeModules/clang-tools.cmake)
