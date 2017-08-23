@@ -98,7 +98,7 @@ fi
 # libamici
 mkdir -p ${AMICI_PATH}/build
 cd ${AMICI_PATH}/build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 if [ $? -ne 0 ] ; then
     exit 1
@@ -109,7 +109,7 @@ TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_ad
 for MODEL in $TESTMODELS; do
 mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 cd ${AMICI_PATH}/models/${MODEL}/build
-cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=Debug ..
 make
 if [ $? -ne 0 ] ; then
 exit 1
@@ -122,7 +122,7 @@ done;
 cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCPPUTEST_DIR=${CPPUTEST_BUILD_DIR} ..
+cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=Debug -DCPPUTEST_DIR=${CPPUTEST_BUILD_DIR} ..
 make
 if [ $? -ne 0 ] ; then
 exit 1
