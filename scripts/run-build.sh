@@ -80,13 +80,13 @@ fi
 # Cpputest
 mkdir -p ${AMICI_PATH}/ThirdParty
 cd ${AMICI_PATH}/ThirdParty
-if [ ! -d "cpputest-3.8" ]; then
-    if [ ! -e "cpputest-3.8.tar.gz" ]; then
-        wget https://github.com/cpputest/cpputest/releases/download/v3.8/cpputest-3.8.tar.gz
+CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/
+if [ ! -d "cpputest-master" ]; then
+    if [ ! -e "cpputest-master.zip" ]; then
+        wget -O cpputest-master.zip https://codeload.github.com/cpputest/cpputest/zip/master
     fi
-    tar -xzf cpputest-3.8.tar.gz
-    cd cpputest-3.8/cpputest_build/
-    ../configure && make
+    unzip cpputest-master.zip
+    cd cpputest-master/ && ./autogen.sh && ./configure && make
     if [ $? -ne 0 ] ; then
         exit 1
     fi
@@ -122,7 +122,7 @@ done;
 cd ${AMICI_PATH}/tests/cpputest/
 mkdir -p build
 cd build
-cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCPPUTEST_DIR=${CPPUTEST_BUILD_DIR} ..
 make
 if [ $? -ne 0 ] ; then
 exit 1

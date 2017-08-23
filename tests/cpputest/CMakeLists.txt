@@ -10,9 +10,9 @@ set(BLAS_LIBRARIES "-lcblas")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
-set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/")
-set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include")
-set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/cpputest_build/lib/libCppUTest.a" "${CPPUTEST_DIR}/cpputest_build/lib/libCppUTestExt.a")
+set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/" CACHE PATH "cppUTest root directory")
+set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include" CACHE PATH "cppUTest include directory")
+set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/lib/libCppUTest.a" "${CPPUTEST_DIR}/lib/libCppUTestExt.a"  CACHE PATH "cppUTest libraries")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
 
