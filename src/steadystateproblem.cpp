@@ -35,9 +35,9 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     /* First, try to do Newton steps */
     starttime = clock();
     
-    NewtonSolver *newtonSolver = NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata, solver, &status);
+    NewtonSolver *newtonSolver = NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata, &status);
     
-    status = applyNewtonsMethod(udata, rdata, tdata, 1, model, solver, newtonSolver);
+    status = applyNewtonsMethod(udata, rdata, tdata, 1, model, newtonSolver);
 
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
@@ -75,7 +75,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
-int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model, Solver *solver, NewtonSolver *newtonSolver) {
+int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model, NewtonSolver *newtonSolver) {
     /**
          * applyNewtonsMethod applies Newtons method to the current state x to find the steady state
          *

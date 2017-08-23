@@ -13,14 +13,13 @@ class UserData;
 class ReturnData;
 class TempData;
 class Model;
-class Solver;
 
 class NewtonSolver {
     
 public:
-    NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver);
+    NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata;
     
-    static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver, int *status);
+    static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status);
     /**
      * @param[in] ntry integer number of Newton solver try
      * @param[in] nnewt integer number of Newton steps in the current Newton solver try

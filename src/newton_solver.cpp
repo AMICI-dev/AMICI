@@ -12,10 +12,10 @@
 #include <ctime>
 #include "include/newton_solver.h"
 
-NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):model(model), rdata(rdata), udata(udata), tdata(tdata), solver(solver) {
+NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):model(model), rdata(rdata), udata(udata), tdata(tdata) {
 }
 
-NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver, int *status) {
+NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status) {
     /**
      * getNewtonStep computes the Newton Step by solving the linear system
      *
