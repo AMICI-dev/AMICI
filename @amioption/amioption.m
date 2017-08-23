@@ -268,7 +268,7 @@ classdef amioption < matlab.mixin.CustomDisplay
             assert(isnumeric(value),'The option preequil must have a logical value!')
             assert(floor(value)==value,'The option preequil must be a logical!')
             assert(value<=2,'Only 0 and 1 are valid options for preequil!')
-            this.newton_preequil = value;
+            this.newton_preeq = value;
         end
     end
 end

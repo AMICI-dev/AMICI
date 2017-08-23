@@ -35,7 +35,6 @@ protected:
     ReturnData *rdata;
     UserData *udata;
     TempData *tdata;
-    int solverStatus;
 };
 
 
@@ -62,14 +61,15 @@ public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
     ~NewtonSolverSparse();
-    klu_common common;
     
 private:
     N_Vector tmp1;
     N_Vector tmp2;
     N_Vector tmp3;
+    klu_common common;
     klu_symbolic *symbolic;
     klu_numeric *numeric;
+    int klu_status = 0;
 };
 
 
