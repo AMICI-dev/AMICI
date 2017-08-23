@@ -22,14 +22,35 @@
     #include <alloca.h>
 #endif
 
+
+/**
+ * c++ interface to the isNaN function
+ *
+ * @param what argument
+ * @return isnan(what)
+ *
+ */
 int amiIsNaN(double what) {
     return std::isnan(what);
 }
 
+/**
+ * c++ interface to the isinf function
+ *
+ * @param what argument
+ * @return isnan(what)
+ *
+ */
 int amiIsInf(double what) {
     return std::isinf(what);
 }
 
+/**
+ * function returning nan
+ *
+ * @return NaN
+ *
+ */
 double amiGetNaN() {
     return NAN;
 }
@@ -194,13 +215,12 @@ double Dam_max(int id,double a, double b, double c) {
 
 
 /**
- * spline function
+ * spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined 
+ * and `dudt` user defined slope at first node. All arguments must be of type double.
  *
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return spline(t)
  *
@@ -245,13 +265,13 @@ double am_spline(double t, int num, ...) {
 }
 
 /**
- * exponentiated spline function
+ * exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments must be of type double.
+
  *
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return spline(t)
  *
@@ -297,13 +317,13 @@ double am_spline_pos(double t, int num, ...) {
 }
 
 /**
- * derivation of a spline function
+ * derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of type double.
  *
+ * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return dsplinedp(t)
  *
@@ -353,13 +373,13 @@ double am_Dspline(int id, double t, int num, ...) {
 }
 
 /**
- * derivation of an exponentiated spline function
+ * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of type double.
  *
+ * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return dsplinedp(t)
  *
@@ -417,15 +437,16 @@ double am_Dspline_pos(int id, double t, int num, ...) {
 }
 
 /**
- * second derivation of a spline function
+ * second derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
  *
+ * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
- * @return spline(t)
+ * @return ddspline(t)
  *
  */
 double am_DDspline(int id1, int id2, double t, int num, ...) {
@@ -433,15 +454,16 @@ double am_DDspline(int id1, int id2, double t, int num, ...) {
 }
 
 /**
- * derivation of an exponentiated spline function
+ * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
  *
+ * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
- * @return spline(t)
+ * @return ddspline(t)
  *
  */
 double am_DDspline_pos(int id1, int id2, double t, int num, ...) {

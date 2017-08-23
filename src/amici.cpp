@@ -26,6 +26,16 @@
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
 
+/*!
+ * runAmiciSimulation is the core integration routine. It initializes the solver and temporary storage in tdata and 
+ * runs the forward and backward problem.
+ *
+ * @param[in] udata pointer to user data object @type UserData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @param[in] model pointer to model specification object @type Model
+ * @return status status flag indicating (un)successful execution @type int
+ */
 int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata, Model *model) {
     if(!udata) return AMICI_ERROR_UDATA;
     if(!rdata) return AMICI_ERROR_RDATA;
@@ -53,10 +63,24 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
 /* ------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------- */
 
+/*!
+ * printErrMsgIdAndTxt prints a specified error message associated to the specified identifier
+ *
+ * @param[in] identifier error identifier @type char
+ * @param[in] msg error message @type char
+ * @return void
+ */
 void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...) {
     printf("[Error] %s: %s\n", identifier, msg);
 }
 
+/*!
+ * printErrMsgIdAndTxt prints a specified warning message associated to the specified identifier
+ *
+ * @param[in] identifier warning identifier @type char
+ * @param[in] msg warning message @type char
+ * @return void
+ */
 void printWarnMsgIdAndTxt(const char * identifier, const char *msg, ...) {
     printf("[Warning] %s: %s\n", identifier, msg);
 }

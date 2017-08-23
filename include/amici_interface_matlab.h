@@ -17,7 +17,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model);
  * setupReturnData initialises the return data struct
  * @param[in] plhs user input @type mxArray
  * @param[in] udata pointer to the user data struct @type UserData
- * @param[out] pstatus pointer to the flag indicating the execution status @type double
  * @return rdata: return data struct @type *ReturnData
  */
 ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs, const UserData *udata);
@@ -26,7 +25,6 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs, const UserData *uda
  * expDataFromMatlabCall initialises the experimental data struct
  * @param[in] prhs user input @type *mxArray
  * @param[in] udata pointer to the user data struct @type UserData
- * @param[out] status non-zero on failure, zero on success
  * @return edata: experimental data struct @type *ExpData
  */
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Model *model);

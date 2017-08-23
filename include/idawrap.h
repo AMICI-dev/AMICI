@@ -26,6 +26,11 @@
 #define EXTERNC
 #endif
 
+//!  IDASolver class. 
+/*!
+  provides access to the DAE solver routines implemented in IDAS
+*/
+
 class IDASolver : public Solver
 {
 public:

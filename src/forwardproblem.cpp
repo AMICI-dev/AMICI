@@ -10,14 +10,15 @@
 
 int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, const ExpData *edata, Model *model) {
     /**
-         * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[out] edata pointer to the experimental data struct @type ExpData
-         * @return int status flag indicating success of execution @type int
-         */
+     * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[out] edata pointer to the experimental data struct @type ExpData
+     * @param[in] model pointer to model specification object @type Model
+     * @return int status flag indicating success of execution @type int
+     */
 
     Solver *solver = tdata->solver;
 
@@ -105,16 +106,19 @@ freturn:
 
 int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, int seflag, Solver *solver, Model *model) {
     /**
-         * handleEvent executes everything necessary for the handling of events
-         *
-         * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[in] seflag flag indicating whether this is a secondary event @type int
-         * @return status flag indicating success of execution @type int
-         */
+     * handleEvent executes everything necessary for the handling of events
+     *
+     * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] seflag flag indicating whether this is a secondary event @type int
+     * @param[in] solver pointer to solver object @type Solver
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
+    
     int ie;
     int secondevent = 0;
     int status = AMICI_SUCCESS;
@@ -262,13 +266,14 @@ int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata, ReturnData
 
 int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata, ReturnData *rdata, Model *model) {
     /**
-         * evalues the Jacobian and differential equation right hand side, stores it in tdata and
-         * and copies it to rdata
-         *
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @return void
-         */
+     * evalues the Jacobian and differential equation right hand side, stores it in tdata and
+     * and copies it to rdata
+     *
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] model pointer to model specification object @type Model
+     * @return void
+     */
 
     if(!tdata || model->nx <= 0)
         return AMICI_SUCCESS;
@@ -321,14 +326,16 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata, Retu
 
 int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
-         * getEventOutput extracts output information for events
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * getEventOutput extracts output information for events
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
+    
     int status = AMICI_SUCCESS;
 
     if (tdata->t == rdata->ts[rdata->nt-1]) { // call from fillEvent at last timepoint
@@ -392,14 +399,15 @@ int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata, const Exp
 
 int ForwardProblem::prepEventSensis(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
-         * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
-         *
-         * @param[in] ie index of current event @type int
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
+     *
+     * @param[in] ie index of current event @type int
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     int status = AMICI_SUCCESS;
     if (edata) {
@@ -478,14 +486,16 @@ int ForwardProblem::prepEventSensis(int ie, ReturnData *rdata, const ExpData *ed
 
 int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
-         * getEventSensisFSA extracts event information for forward sensitivity analysis
-         *
-         * @param[in] ie index of event type @type int
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * getEventSensisFSA extracts event information for forward sensitivity analysis
+     *
+     * @param[in] ie index of event type @type int
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
+    
     int status = AMICI_SUCCESS;
 
     if (tdata->t == rdata->ts[rdata->nt-1]) { // call from fillEvent at last timepoint
@@ -513,15 +523,17 @@ int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata, const ExpData *
 
 int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
-         * handleDataPoint executes everything necessary for the handling of data points
-         *
-         * @param[in] it index of data point @type int
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * handleDataPoint executes everything necessary for the handling of data points
+     *
+     * @param[in] it index of data point @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] solver pointer to solver object @type Solver
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     if (model->nx>0) {
         realtype *x_tmp = NV_DATA_S(tdata->x);
@@ -547,15 +559,17 @@ int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata, 
 
 int ForwardProblem::getDataOutput(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
-         * getDataOutput extracts output information for data-points
-         *
-         * @param[in] it index of current timepoint @type int
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * getDataOutput extracts output information for data-points
+     *
+     * @param[in] it index of current timepoint @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] solver pointer to solver object @type Solver
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     int status = model->fy(rdata->ts[it],it,tdata->x,tdata,rdata);
     if(status != AMICI_SUCCESS) return status;
@@ -598,14 +612,15 @@ int ForwardProblem::getDataOutput(int it, UserData *udata, ReturnData *rdata, co
 
 int ForwardProblem::prepDataSensis(int it, ReturnData *rdata, const ExpData *edata, TempData *tdata, Model *model) {
     /**
-         * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
-         *
-         * @param[in] it index of current timepoint @type int
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
+     *
+     * @param[in] it index of current timepoint @type int
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     int status = model->fdydx(rdata->ts[it],it,tdata->x,tdata);
     if(status != AMICI_SUCCESS) return status;
@@ -667,16 +682,18 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata, const ExpData *eda
 
 int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata, const ExpData *edata, TempData *tdata, Solver *solver, Model *model) {
     /**
-         * getDataSensisFSA extracts data information for forward sensitivity analysis
-         *
-         * @param[out] status flag indicating success of execution @type int
-         * @param[in] it index of current timepoint @type int
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] edata pointer to the experimental data struct @type ExpData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return void
-         */
+     * getDataSensisFSA extracts data information for forward sensitivity analysis
+     *
+     * @param[out] status flag indicating success of execution @type int
+     * @param[in] it index of current timepoint @type int
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] solver pointer to solver object @type Solver
+     * @param[in] model pointer to model specification object @type Model
+     * @return void
+     */
 
     int status = AMICI_SUCCESS;
     realtype *sx_tmp;
@@ -731,11 +748,12 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
 
 int ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
     /**
-         * applyEventBolus applies the event bolus to the current state
-         *
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * applyEventBolus applies the event bolus to the current state
+     *
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     int ix, ie;
     int status = AMICI_SUCCESS;
@@ -763,11 +781,12 @@ int ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
 
 int ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
     /**
-         * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
-         *
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
+     *
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
 
     int ix, ip, ie;
     int status = AMICI_SUCCESS;
@@ -797,12 +816,12 @@ int ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
 
 int ForwardProblem::updateHeaviside(TempData *tdata, int ne) {
     /**
-         * updateHeaviside updates the heaviside variables h on event occurences
-         *
-         * @param[ne] number of events
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status = status flag indicating success of execution @type int;
-         */
+     * updateHeaviside updates the heaviside variables h on event occurences
+     *
+     * @param[ne] number of events
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @return status = status flag indicating success of execution @type int;
+     */
 
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding it will give
          the right update to the heaviside variables */

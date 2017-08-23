@@ -109,9 +109,11 @@ public:
     /** state ordering */
     int ordering;
     
+    /** function to print the contents of the UserData object */
     void print();
 
 protected:
+    /** function to initialize the UserData member variables */
     void init();
 };
 

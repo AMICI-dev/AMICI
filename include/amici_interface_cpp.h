@@ -18,7 +18,6 @@
  *
  * @param[in] udata pointer to the user data struct @type UserData
  * @param[in] edata pointer to the experimental data struct @type ExpData
- * @param[out] pstatus flag indicating success of execution @type *int
  * @return rdata data struct with simulation results @type ReturnData
  */
 

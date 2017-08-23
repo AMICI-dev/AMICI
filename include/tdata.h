@@ -187,10 +187,13 @@ public:
     /** flag indicating whether a NaN in qBdot has been reported */
     booleantype nan_qBdot = false;
 
-
+    /** attached UserData object */
     const UserData *udata;
+    /** attached Model object */
     Model *model;
+    /** attached ReturnData object */
     ReturnData *rdata;
+    /** attached Solver object */
     Solver *solver = nullptr;
 };
 

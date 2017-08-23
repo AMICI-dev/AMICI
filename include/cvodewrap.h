@@ -27,6 +27,11 @@
 #define EXTERNC
 #endif
 
+//!  CVodeSolver class. 
+/*!
+  provides access to the ODE solver routines implemented in CVodeS
+*/
+
 class CVodeSolver : public Solver
 {
 public:

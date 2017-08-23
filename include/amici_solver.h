@@ -11,6 +11,12 @@ class Model;
 
 typedef int (*RootFn)(realtype t, N_Vector y, realtype *gout, void *user_data);
 
+//!  Solver class. 
+/*!
+  provides a generic interface to CVode and IDA solvers, individual realizations are realized in the CVodeSolver and the IDASolver class.
+*/
+
+
 class Solver
 {
 public:

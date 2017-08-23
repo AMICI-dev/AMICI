@@ -15,8 +15,7 @@ int BackwardProblem::workBackwardProblem(UserData *udata, TempData *tdata, Retur
          * @param[in] udata pointer to the user data struct @type UserData
          * @param[in] tdata pointer to the temporary data struct @type TempData
          * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[out] edata pointer to the experimental data struct @type ExpData
-         * @param[in] iroot pointer to the current root index, the value pointed to will be decreased during the forward solve
+         * @param[in] model pointer to model specification object @type Model
          * @return int status flag
          */
     int ix, it, ip;
@@ -155,6 +154,7 @@ int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
          *
          * @param[out] iroot index of event @type int
          * @param[out] tdata pointer to the temporary data struct @type TempData
+         * @param[in] model pointer to model specification object @type Model
          * @return status flag indicating success of execution @type int
          */
 
@@ -213,6 +213,8 @@ int BackwardProblem::handleDataPointB(int it, ReturnData *rdata, TempData *tdata
      * @param[in] it index of data point @type int
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] solver pointer to solver object @type Solver
+     * @param[in] model pointer to model specification object @type Model
      * @return status flag indicating success of execution @type int
      */
 
@@ -233,13 +235,13 @@ int BackwardProblem::handleDataPointB(int it, ReturnData *rdata, TempData *tdata
 
 int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
     /**
-         * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
-         *
-         * @param[in] iroot discontinuity occurance index @type int
-         * @param[ne] number of events
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @return status flag indicating success of execution @type int
-         */
+     * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
+     *
+     * @param[in] iroot discontinuity occurance index @type int
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[ne] number of events
+     * @return status flag indicating success of execution @type int
+     */
 
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding it will give
          the right update to the heaviside variables */
@@ -265,6 +267,7 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata, 
      * @param[in] iroot index of next event @type int
      * @param[in] tdata timepoint of next data point @type realtype
      * @param[in] it index of next data point @type int
+     * @param[in] model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
 
@@ -295,5 +298,8 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata, 
 
 BackwardProblem::BackwardProblem()
 {
+    /**
+     * this is a placeholder, nothing needs to be done at initialization.
+     */
 
 }

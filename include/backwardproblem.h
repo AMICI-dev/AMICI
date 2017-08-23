@@ -10,6 +10,12 @@ class ExpData;
 class Solver;
 class Model;
 
+//!  class to solve backwards problems. 
+/*!
+  solves the backwards problem for adjoint sensitivity analysis and handles events and data-points
+*/
+
+
 class BackwardProblem
 {
 public:
