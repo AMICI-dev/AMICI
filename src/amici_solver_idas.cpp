@@ -406,4 +406,6 @@ int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector d
     return tdata->model->fJvB(vB, JvB, t, x, xB, xBdot, user_data, tmpB1);
 }
 
-IDASolver::~IDASolver() {}
+IDASolver::~IDASolver() {
+    AMIFree();
+}

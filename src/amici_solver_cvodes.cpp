@@ -383,3 +383,7 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vecto
     TempData *tdata = (TempData *) user_data;
     return tdata->model->fJvB(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
 }
+
+CVodeSolver::~CVodeSolver() {
+    AMIFree();
+}

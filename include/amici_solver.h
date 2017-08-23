@@ -16,10 +16,7 @@ public:
 
     }
 
-    virtual ~Solver() {
-        if (ami_mem)
-            AMIFree(&ami_mem);
-    }
+    virtual ~Solver();
 
     /**
      * @brief setupAMIs initialises the ami memory object
@@ -166,7 +163,7 @@ protected:
 
     virtual int AMIGetDky(realtype t, int k, N_Vector dky) = 0;
 
-    virtual void AMIFree(void **mem);
+    virtual void AMIFree() = 0;
 
     virtual int AMIAdjInit(long int steps, int interp) = 0;
 

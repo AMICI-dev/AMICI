@@ -10,6 +10,8 @@
 // TODO: don't use cvodes includes here
 #include <cvodes/cvodes_spils.h>
 
+Solver::~Solver() {    }
+
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
     int status;
@@ -105,7 +107,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
     return AMICI_SUCCESS;
 
 freturn:
-    if(ami_mem) AMIFree(&ami_mem);
+    if(ami_mem) AMIFree();
     return AMICI_ERROR_SETUP;
 
 }
@@ -312,11 +314,6 @@ void Solver::wrap_ErrHandlerFn(int error_code, const char *module, const char *f
     }
 
     warnMsgIdAndTxt(buffid,buffer);
-}
-
-void Solver::AMIFree(void **mem)
-{
-
 }
 
 int Solver::getDiagnosis(int it, ReturnData *rdata)
