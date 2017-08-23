@@ -52,7 +52,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
             status = getNewtonOutput(tdata, rdata, 2, run_time, model->nx);
         } else {
-            status = applyNewtonsMethod(udata, rdata, tdata, 2, model, solver, newtonSolver);
+            status = applyNewtonsMethod(udata, rdata, tdata, 2, model, newtonSolver);
 
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */

@@ -17,7 +17,7 @@ class Model;
 class NewtonSolver {
     
 public:
-    NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata;
+    NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     
     static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status);
     /**
@@ -35,7 +35,7 @@ protected:
     ReturnData *rdata;
     UserData *udata;
     TempData *tdata;
-    Solver *solver;
+    int solverStatus;
 };
 
 
@@ -43,7 +43,7 @@ protected:
 class NewtonSolverDense : public NewtonSolver {
     
 public:
-    NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver);
+    NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
     ~NewtonSolverDense();
     
@@ -59,9 +59,10 @@ private:
 class NewtonSolverSparse : public NewtonSolver {
     
 public:
-    NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver);
+    NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
     ~NewtonSolverSparse();
+    klu_common common;
     
 private:
     N_Vector tmp1;
@@ -69,7 +70,6 @@ private:
     N_Vector tmp3;
     klu_symbolic *symbolic;
     klu_numeric *numeric;
-    klu_common common;
 };
 
 
@@ -77,7 +77,7 @@ private:
 class NewtonSolverIterative : public NewtonSolver {
     
 public:
-    NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver);
+    NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
     ~NewtonSolverIterative();
     

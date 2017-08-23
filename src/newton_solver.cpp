@@ -12,7 +12,7 @@
 #include <ctime>
 #include "include/newton_solver.h"
 
-NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):model(model), rdata(rdata), udata(udata), tdata(tdata) {
+NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata):model(model), rdata(rdata), udata(udata), tdata(tdata) {
 }
 
 NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status) {
@@ -27,11 +27,13 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
      * @return int status flag indicating success of execution @type int
      */
     
+    NewtonSolver *newtonSolver;
+    
     switch (linsolType) {
             /* DIRECT SOLVERS */
             
         case AMICI_DENSE:
-            return new NewtonSolverDense(model, rdata, udata, tdata, solver);
+            return new NewtonSolverDense(model, rdata, udata, tdata);
             
         case AMICI_BAND:
             errMsgIdAndTxt("AMICI:mex:dense","Solver currently not supported!");
@@ -61,7 +63,7 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
             return NULL;
             
         case AMICI_SPBCG:
-            return new NewtonSolverIterative(model, rdata, udata, tdata, solver);
+            return new NewtonSolverIterative(model, rdata, udata, tdata);
             
         case AMICI_SPTFQMR:
             errMsgIdAndTxt("AMICI:mex:spils","Solver currently not supported!");
@@ -71,8 +73,17 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
             /* SPARSE SOLVERS */
             
         case AMICI_KLU:
-            return new NewtonSolverSparse(model, rdata, udata, tdata, solver);
-            
+            newtonSolver = new NewtonSolverSparse(model, rdata, udata, tdata);
+            newtonSolver->solverStatus = klu_defaults (&(((NewtonSolverSparse *)newtonSolver)->common));
+            if (newtonSolver->solverStatus == 1) {
+                return newtonSolver;
+            } else {
+                *status = AMICI_ERROR_NEWTONSOLVER;
+                errMsgIdAndTxt("AMICI:mex:solver","Initialization of KLU solver feiled!");
+                return NULL;
+            }
+        
+        
         default:
             errMsgIdAndTxt("AMICI:mex:solver","Invalid choice of solver!");
             *status = AMICI_ERROR_NEWTONSOLVER;
@@ -86,7 +97,7 @@ NewtonSolver::~NewtonSolver(){
 
 
 /* derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
+NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata):NewtonSolver(model, rdata, udata, tdata) {
     pivots = NewLintArray(model->nx);
     tmp1 = N_VNew_Serial(model->nx);
     tmp2 = N_VNew_Serial(model->nx);
@@ -127,8 +138,9 @@ NewtonSolverDense::~NewtonSolverDense() {
 
 
 /* derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
-    klu_defaults (&common);
+NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata):NewtonSolver(model, rdata, udata, tdata) {
+    
+    /* Initialize the KLU solver */
     tmp1 = N_VNew_Serial(model->nx);
     tmp2 = N_VNew_Serial(model->nx);
     tmp3 = N_VNew_Serial(model->nx);
@@ -158,7 +170,7 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 
 
 /* derived class for iterative linear solver */
-NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, Solver *solver):NewtonSolver(model, rdata, udata, tdata, solver) {
+NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata):NewtonSolver(model, rdata, udata, tdata) {
 }
 
 int NewtonSolverIterative::getStep(int ntry, int nnewt, N_Vector delta) {
