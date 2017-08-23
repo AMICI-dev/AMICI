@@ -74,7 +74,7 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
             
         case AMICI_KLU:
             newtonSolver = new NewtonSolverSparse(model, rdata, udata, tdata);
-            newtonSolver->solverStatus = klu_defaults (&(((NewtonSolverSparse *)newtonSolver)->common));
+            newtonSolver->solverStatus = klu_defaults(&(((NewtonSolverSparse *)newtonSolver)->common));
             if (newtonSolver->solverStatus == 1) {
                 return newtonSolver;
             } else {
@@ -151,12 +151,27 @@ int NewtonSolverSparse::getStep(int ntry, int nnewt, N_Vector delta) {
     realtype *x_tmp;
     int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, tdata->J, tdata, tmp1, tmp2, tmp3);
     
-    symbolic = klu_analyze (model->nx, (tdata->J)->indexptrs, (tdata->J)->indexvals, &common) ;
-    numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals, (tdata->J)->data, symbolic, &common) ;
-    N_VScale(-1.0, tdata->xdot, delta);
-    x_tmp = N_VGetArrayPointer(delta);
-    klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
-    
+    if (status == AMICI_SUCCESS) {
+        symbolic = klu_analyze(model->nx, (tdata->J)->indexptrs, (tdata->J)->indexvals, &common);
+        if (symbolic != NULL) {
+            numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals, (tdata->J)->data, symbolic, &common);
+            if (numeric != NULL) {
+                N_VScale(-1.0, tdata->xdot, delta);
+                x_tmp = N_VGetArrayPointer(delta);
+                this->solverStatus = klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
+                if (this->solverStatus == 1) {
+                    status = AMICI_SUCCESS;
+                }
+                else {
+                    status = AMICI_ERROR_NEWTON_LINSOLVER;
+                }
+            } else {
+                status = AMICI_ERROR_NEWTON_LINSOLVER;
+            }
+        } else {
+            status = AMICI_ERROR_NEWTON_LINSOLVER;
+        }
+    }
     return status;
 }
 
