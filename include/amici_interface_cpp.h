@@ -3,9 +3,9 @@
 
 #include "include/amici_misc.h"
 
-#include <include/udata.h>
 #include <include/edata.h>
 #include <include/rdata.h>
+#include <include/udata.h>
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"
@@ -14,7 +14,8 @@
 #endif
 
 /**
- * getSimulationResults runs the forward an backwards simulation and returns results in a ReturnData struct
+ * getSimulationResults runs the forward an backwards simulation and returns
+ * results in a ReturnData struct
  *
  * @param[in] udata pointer to the user data struct @type UserData
  * @param[in] edata pointer to the experimental data struct @type ExpData
