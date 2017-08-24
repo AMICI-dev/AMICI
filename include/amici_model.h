@@ -1,10 +1,10 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <include/amici.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
-#include <include/amici.h>
 
 class UserData;
 class ExpData;
@@ -13,38 +13,19 @@ class ExpData;
  * @brief The Model class represents an AMICI ODE model.
  * The model does not contain any data, its state should never change.
  */
-class Model
-{
-public:
-    Model() :
-        np(0), nk(0),
-        nx(0), nxtrue(0),
-        ny(0), nytrue(0),
-        nz(0), nztrue(0),
-        ne(0), nw(0),
-        ndwdx(0), ndwdp(0),
-        nnz(0), nJ(0),
-        ubw(0), lbw(0),
-        o2mode(AMICI_O2MODE_NONE) {}
+class Model {
+  public:
+    Model()
+        : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
+          ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
+          o2mode(AMICI_O2MODE_NONE) {}
 
-    Model(int np,
-          int nx, int nxtrue,
-          int nk,
-          int ny, int nytrue,
-          int nz, int nztrue,
-          int ne, int nJ,
-          int nw, int ndwdx, int ndwdp, int nnz,
-          int ubw, int lbw,
-          AMICI_o2mode o2mode) :
-        np(np), nk(nk),
-        nx(nx), nxtrue(nxtrue),
-        ny(ny), nytrue(nytrue),
-        nz(nz), nztrue(nztrue),
-        ne(ne), nw(nw),
-        ndwdx(ndwdx), ndwdp(ndwdp),
-        nnz(nnz),nJ(nJ),
-        ubw(ubw), lbw(lbw),
-        o2mode(o2mode) {}
+    Model(int np, int nx, int nxtrue, int nk, int ny, int nytrue, int nz,
+          int nztrue, int ne, int nJ, int nw, int ndwdx, int ndwdp, int nnz,
+          int ubw, int lbw, AMICI_o2mode o2mode)
+        : np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
+          nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
+          nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode) {}
 
     virtual Solver *getSolver() = 0;
 
@@ -194,6 +175,7 @@ public:
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package) */
     virtual int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
+
     virtual ~Model();
 
     // Generic implementations
@@ -263,13 +245,13 @@ public:
     const int ubw;
     /** lower bandwith of the jacobian */
     const int lbw;
-    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
+     * directional or full second order derivative will be computed */
     const AMICI_o2mode o2mode;
     /** index indicating to which event an event output belongs */
     int *z2event = nullptr;
     /** flag array for DAE equations */
     realtype *idlist = nullptr;
-
 };
 
 #endif // MODEL_H

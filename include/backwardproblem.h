@@ -24,13 +24,15 @@ public:
 
     static int handleEventB(int iroot, TempData *tdata, Model *model);
 
-    static int handleDataPointB(int it, ReturnData *rdata, TempData *tdata, Solver *solver, Model *model);
+    static int handleDataPointB(int it, ReturnData *rdata, TempData *tdata,
+                                Solver *solver, Model *model);
 
     static int updateHeavisideB(int iroot, TempData *tdata, int ne);
 
-    static realtype getTnext(realtype *troot, int iroot, realtype *tdata, int it, Model *model);
+    static realtype getTnext(realtype *troot, int iroot, realtype *tdata,
+                             int it, Model *model);
 
-private:
+  private:
     BackwardProblem();
 };
 

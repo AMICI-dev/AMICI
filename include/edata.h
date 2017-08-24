@@ -8,7 +8,9 @@ class Model;
 class ExpData {
 
 public:
-    /** default constructor */
+    /**
+     * @brief Default constructor
+     */
     ExpData();
     /** initialization with UserData and model */
     ExpData(const UserData *udata, Model *model);
@@ -16,12 +18,12 @@ public:
     
     /** initialization with default values */
     void setDefaults();
-    
+
     /** observed data */
     double *my;
     /** standard deviation of observed data */
     double *sigmay;
-    
+
     /** observed events */
     double *mz;
     /** observed roots */

@@ -98,7 +98,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){
     return xdot_model_dirac(t, x, xdot, user_data);
 }
 
-int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data){
+int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data){
     return xBdot_model_dirac(t, x, xB, xBdot, user_data);
 }
 
