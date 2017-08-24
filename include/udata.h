@@ -125,6 +125,7 @@ class UserData {
     void print();
 
   protected:
+    /** function to initialize the contents of the UserData object */
     void init();
 };
 

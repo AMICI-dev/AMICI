@@ -25,6 +25,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
          * @param[in] tdata pointer to the temporary data struct @type UserData
          * @param[out] tdata pointer to the temporary data struct @type TempData
          * @param[out] rdata pointer to the return data struct @type ReturnData
+         * @return status flag indicating success of execution @type int
          */
 
     int status = (int)*rdata->status;
@@ -93,7 +94,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
          * @param[out] tdata pointer to the temporary data struct @type TempData
          * @param[out] rdata pointer to the return data struct @type ReturnData
          * @param[in] newton_try integer for the try number of the Newton solver
-         * @return void
+         * @return status flag indicating success of execution @type int
          */
 
     int status = AMICI_ERROR_NEWTONSOLVER;
@@ -246,7 +247,7 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
          * @param[in] newton_status integer flag indicating the run of the
      * Newton solver
          * @param[in] run_time double computation time of the Newton solver
-         * @return int status flag indicating success of execution @type int
+         * @return status flag indicating success of execution @type int
          */
 
     realtype *x_tmp;
@@ -287,7 +288,7 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
          * @param[in] tdata pointer to the temporary data struct @type TempData
          * @param[in] rdata pointer to the return data struct @type ReturnData
          * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @return int status flag indicating success of execution @type int
+         * @return status flag indicating success of execution @type int
          */
 
     double res_abs;
@@ -360,7 +361,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
          * @param[in] nnewt intger number of Newton steps in the current Newton
      * solver try
          * @param[out] delta N_Vector solution of the linear system
-         * @return int status flag indicating success of execution @type int
+         * @return status flag indicating success of execution @type int
          */
 
     int status = AMICI_ERROR_NEWTON_LINSOLVER;

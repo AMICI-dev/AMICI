@@ -20,10 +20,15 @@ class NewtonSolver;
 
 class SteadystateProblem {
   public:
+
     static int workSteadyStateProblem(UserData *udata, TempData *tdata,
                                       ReturnData *rdata, int it, Solver *solver,
                                       Model *model);
 
+    /**
+     * applyNewtonsMethod applies Newtons method to the current state x to
+     * find the steady state
+     */
     static int applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                                   TempData *tdata, int newton_try, Model *model,
                                   NewtonSolver *newtonSolver);

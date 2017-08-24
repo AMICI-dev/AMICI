@@ -7,6 +7,14 @@ UserData::UserData() { init(); }
 
 int UserData::unscaleParameters(const Model *model,
                                 double *bufferUnscaled) const {
+    /**
+     * unscaleParameters removes parameter scaling according to the parameter scaling in pscale
+     *
+     * @param[in] model pointer to model specification object @type Model
+     * @param[out] bufferUnscaled unscaled parameters are written to the array @type double
+     * 
+     * @return status flag indicating success of execution @type int
+     */
     switch (pscale) {
     case AMICI_SCALING_LOG10:
         for (int ip = 0; ip < model->np; ++ip) {

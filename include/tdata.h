@@ -17,9 +17,6 @@ class Solver;
 class TempData {
 
   public:
-    /**
-     * @brief Default constructor
-     */
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
 
