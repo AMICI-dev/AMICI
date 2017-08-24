@@ -95,7 +95,7 @@ int NewtonSolver::getSensis(int it) {
     
     N_Vector sx_ip = N_VNew_Serial(model->nx);
     realtype *x_tmp;
-    int status = this->prepareLinearSystem(0, 0);
+    int status = this->prepareLinearSystem(0, -1);
     
     if (status == AMICI_SUCCESS) {
         status = model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
@@ -113,19 +113,11 @@ int NewtonSolver::getSensis(int it) {
                 if (status == AMICI_SUCCESS) {
                     for (int ix=0; ix<model->nx; ix++) {
                         rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = x_tmp[ix];
-                        N_VScale(1.0, sx_ip, tdata->sx[ip]);
                     }
                 } else {
                     N_VDestroy_Serial(sx_ip);
                     return AMICI_ERROR_SS_SENSIS;
                 }
-            }
-            
-            /* Compute sy from sx */
-            status = model->fsy(it, tdata, rdata);
-            if (status != AMICI_SUCCESS) {
-                N_VDestroy_Serial(sx_ip);
-                return AMICI_ERROR_SS_SENSIS;
             }
         }
     }
@@ -253,15 +245,14 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata):NewtonSolver(model, rdata, udata, tdata) {
 }
 
-int NewtonSolverIterative::getSensis(int it) {
-    errMsgIdAndTxt("AMICI:mex:SPILS","Solver does not currently suppport sensitivity calculation!");
-    return AMICI_ERROR_NEWTONSOLVER;
-}
-
 int NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     newton_try = ntry;
     i_newton = nnewt;
-    return AMICI_SUCCESS;
+    if (nnewt == -1) {
+        return AMICI_ERROR_NEWTON_LINSOLVER;
+    } else {
+        return AMICI_SUCCESS;
+    }
 }
 
 int NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {

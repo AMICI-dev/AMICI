@@ -876,19 +876,21 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
     int status = AMICI_SUCCESS;
     realtype *sx_tmp;
 
-    for (int ip = 0; ip < rdata->nplist; ip++) {
-        if (model->nx > 0) {
-            if (rdata->ts[it] > udata->tstart) {
-                status = solver->AMIGetSens(&(tdata->t), tdata->sx);
-                if (status != AMICI_SUCCESS)
-                    return status;
-            }
+    if (!(std::isinf(rdata->ts[it]))) {
+        for (int ip = 0; ip < rdata->nplist; ip++) {
+            if (model->nx > 0) {
+                if (rdata->ts[it] > udata->tstart) {
+                    status = solver->AMIGetSens(&(tdata->t), tdata->sx);
+                    if (status != AMICI_SUCCESS)
+                        return status;
+                }
 
-            sx_tmp = NV_DATA_S(tdata->sx[ip]);
-            if (!sx_tmp)
-                return AMICI_ERROR_FSA;
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                if (!sx_tmp)
+                    return AMICI_ERROR_FSA;
+                for (int ix = 0; ix < model->nx; ix++) {
+                    rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                }
             }
         }
     }
