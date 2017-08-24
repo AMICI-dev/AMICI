@@ -206,13 +206,21 @@ public:
     /** dimension of the augmented objective function for 2nd order ASA */
     const int nJ;
 
+    /** number of parameter for which sensitivities were requested */
     const int nplist;
+    /** maximal number of occuring events (for every event type) */
     const int nmaxevent;
+    /** number of considered timepoints */
     const int nt;
+    /** maximal number of newton iterations for steady state calculation */
     const int newton_maxsteps;
+    /** scaling of parameterization (lin,log,log10) */
     const AMICI_parameter_scaling pscale;
+    /** flag indicating whether second order sensitivities were requested */
     const AMICI_o2mode o2mode;
+    /** sensitivity order */
     const AMICI_sensi_order sensi;
+    /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
 };
 
