@@ -151,7 +151,7 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                         chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
                             chainRule(rz, iz, nztrue, nz, ie, nmaxevent)
     }
-    if (udata->sensi_meth == AMICI_SENSI_SS) {
+    if (udata->sensi_meth != AMICI_SENSI_ASA) {
         if (dxdotdp)
             for (int ip = 0; ip < nplist; ++ip)
                 for (int ix = 0; ix < nx; ++ix)
@@ -354,7 +354,7 @@ void ReturnData::initFields() {
     if (ny > 0) {
         initField2(&y, "y", nt, ny);
         initField2(&sigmay, "sigmay", nt, ny);
-        if (sensi_meth == AMICI_SENSI_SS) {
+        if (sensi_meth != AMICI_SENSI_ASA) {
             initField2(&dydp, "dydp", ny, nplist);
             initField2(&dydx, "dydx", ny, nx);
             initField2(&dxdotdp, "dxdotdp", nx, nplist);

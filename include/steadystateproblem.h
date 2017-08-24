@@ -28,7 +28,7 @@ class SteadystateProblem {
                                   TempData *tdata, int newton_try, Model *model,
                                   NewtonSolver *newtonSolver);
 
-    static int getNewtonOutput(TempData *tdata, ReturnData *rdata,
+    static int getNewtonOutput(TempData *tdata, ReturnData *rdata, Model *model,
                                int newton_status, double run_time, int nx);
 
     static int getNewtonSimulation(UserData *udata, TempData *tdata,

@@ -42,7 +42,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
         run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-        status = getNewtonOutput(tdata, rdata, 1, run_time, model->nx);
+        status = getNewtonOutput(tdata, rdata, model, 1, run_time, model->nx);
     } else {
         /* Newton solver did not find a steady state, so try integration */
         status = getNewtonSimulation(udata, tdata, rdata, solver, model);
@@ -50,7 +50,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-            status = getNewtonOutput(tdata, rdata, 2, run_time, model->nx);
+            status = getNewtonOutput(tdata, rdata, model, 2, run_time, model->nx);
         } else {
             status =
                 applyNewtonsMethod(udata, rdata, tdata, 2, model, newtonSolver);
@@ -59,7 +59,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
                 /* If the second Newton solver found a steady state */
                 run_time =
                     (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-                status = getNewtonOutput(tdata, rdata, 3, run_time, model->nx);
+                status = getNewtonOutput(tdata, rdata, model, 3, run_time, model->nx);
             }
         }
     }
@@ -239,8 +239,8 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
  */
 
 int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
-                                        int newton_status, double run_time,
-                                        int nx) {
+                                        Model *model, int newton_status,
+                                        double run_time, int nx) {
     /**
          * getNewtonOutput stores the output of the Newton solver run.
          *
@@ -254,7 +254,8 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
          */
 
     realtype *x_tmp;
-
+    int status = AMICI_SUCCESS;
+    
     // Get time for Newton solve
     rdata->newton_time[0] = run_time;
 
@@ -267,10 +268,19 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
         rdata->xss[ix] = x_tmp[ix];
     }
 
+    // Write dydx
+    status = model->fdydx(tdata->t, rdata->nt - 1, tdata->x, tdata);
+    if (status != AMICI_SUCCESS)
+        return status;
+    
+    if (rdata->dydx)
+        memcpy(rdata->dydx, tdata->dydx,
+               model->ny * model->nx * sizeof(realtype));
+    
     // Write flag for the Newton solver
     *rdata->newton_status = (double)newton_status;
 
-    return (AMICI_SUCCESS);
+    return status;
 }
 
 /* -------------------------------------------------------------------------------------
