@@ -67,7 +67,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     /* Compute steady state sensitvities */
     if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         if (status == AMICI_SUCCESS) {
-            status = getSteadystateSensis();
+            status = newtonSolver->getSensis(it);
         }
     }
 
@@ -340,31 +340,7 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
     return (status);
 }
 
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
 
-int SteadystateProblem::getSteadystateSensis(UserData *udata, ReturnData *rdata,
-                                           TempData *tdata, Model *model,
-                                           NewtonSolver *newtonSolver) {
-    /**
-     * getSteadystateSensis computes the state and oservables sensitivities in
-     * steady state
-     *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] tdata pointer to the temporary data struct @type TempData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @return int status flag indicating success of execution @type int
-     */
-    
-    int status = AMICI_ERROR_NEWTONSOLVER;
-    
-    return (status);
-}
 
 /* -------------------------------------------------------------------------------------
  */

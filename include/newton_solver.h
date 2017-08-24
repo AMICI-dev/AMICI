@@ -26,7 +26,13 @@ public:
      * @param[out] delta N_Vector solution of the linear system
      * @return int status flag indicating success of execution @type int
      */
-    virtual int getStep(int ntry, int nnewt, N_Vector delta) = 0;
+    int getStep(int ntry, int nnewt, N_Vector delta);
+    
+    int getSensis(int it);
+    
+    virtual int prepareLinearSystem() = 0;
+
+    virtual int solveLinearSystem(N_Vector rhs) = 0;
     
     virtual ~NewtonSolver();
     
@@ -44,6 +50,9 @@ class NewtonSolverDense : public NewtonSolver {
 public:
     NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem();
     ~NewtonSolverDense();
     
 private:
@@ -60,6 +69,9 @@ class NewtonSolverSparse : public NewtonSolver {
 public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem();
     ~NewtonSolverSparse();
     
 private:
@@ -79,6 +91,9 @@ class NewtonSolverIterative : public NewtonSolver {
 public:
     NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem();
     ~NewtonSolverIterative();
     
 private:
