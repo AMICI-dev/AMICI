@@ -60,17 +60,21 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
                 run_time =
                     (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
                 status = getNewtonOutput(tdata, rdata, 3, run_time, model->nx);
-            } else {
-                /* integration error occured */
-                return (status);
             }
+        }
+    }
+    
+    /* Compute steady state sensitvities */
+    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if (status == AMICI_SUCCESS) {
+            status = getSteadystateSensis();
         }
     }
 
     delete newtonSolver;
 
     /* if this point was reached, the Newton solver was successful */
-    return (AMICI_SUCCESS);
+    return (status);
 }
 
 /* -------------------------------------------------------------------------------------
@@ -343,6 +347,32 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
 /* -------------------------------------------------------------------------------------
  */
 
+int SteadystateProblem::getSteadystateSensis(UserData *udata, ReturnData *rdata,
+                                           TempData *tdata, Model *model,
+                                           NewtonSolver *newtonSolver) {
+    /**
+     * getSteadystateSensis computes the state and oservables sensitivities in
+     * steady state
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] tdata pointer to the temporary data struct @type TempData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @return int status flag indicating success of execution @type int
+     */
+    
+    int status = AMICI_ERROR_NEWTONSOLVER;
+    
+    return (status);
+}
+
+/* -------------------------------------------------------------------------------------
+ */
+/* -------------------------------------------------------------------------------------
+ */
+/* -------------------------------------------------------------------------------------
+ */
+
 int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
                                       TempData *tdata, int ntry, int nnewt,
                                       N_Vector ns_delta, Model *model) {
@@ -355,7 +385,6 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
          * @param[out] rdata pointer to the return data struct @type ReturnData
          * @param[in] tdata pointer to the temporary data struct @type TempData
          * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[in] ami_mem pointer to the solver memory block @type *void
          * @param[in] ntry intger number of Newton solver try
          * @param[in] nnewt intger number of Newton steps in the current Newton
      * solver try
