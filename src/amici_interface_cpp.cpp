@@ -7,7 +7,7 @@
 #include "include/amici_interface_cpp.h"
 #include "include/amici.h"
 #include <include/amici_model.h>
-#include <include/amici_model_functions.h>
+#include "include/amici.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -23,20 +23,17 @@
  * getSimulationResults is the core cpp interface function. It initializes the model and return data and
  * then calls the core simulation routine.
  *
+ * @param[in] model pointer to the model object, this is necessary to perform dimension checks @type Model
  * @param[in] udata pointer to user data object @type UserData
  * @param[in] edata pointer to experimental data object @type ExpData
  * @return rdata pointer to return data object @type ReturnData
  */
-ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
-
-    Model *model = getModel();
+ReturnData *getSimulationResults(Model *model, UserData *udata, const ExpData *edata) {
 
     ReturnData *rdata = new ReturnData(udata, model);
 
     int status = runAmiciSimulation(udata, edata, rdata, model);
     *rdata->status = status;
-
-    delete model;
 
     return rdata;
 }

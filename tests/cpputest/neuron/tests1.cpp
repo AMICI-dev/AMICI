@@ -19,39 +19,15 @@ TEST_GROUP(groupNeuron)
     }
 };
 
+
 TEST(groupNeuron, testSimulation) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/nosensi/options", model);
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data", model);
-
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-
-    verifyReturnData("/model_neuron/nosensi/results", rdata, udata, model, 10*TEST_ATOL, 10*TEST_RTOL);
-
+    simulateAndVerifyFromFile(model, "/model_neuron/nosensi/", 10*TEST_ATOL, 10*TEST_RTOL);
     delete model;
-    delete rdata;
-    delete edata;
-    delete udata;
 }
 
 TEST(groupNeuron, testSensitivityForward) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_neuron/sensiforward/options", model);
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_neuron/sensiforward/data", model);
-
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-
-    verifyReturnData("/model_neuron/sensiforward/results", rdata, udata, model, 10*TEST_ATOL, 10*TEST_RTOL);
-
+    simulateAndVerifyFromFile(model, "/model_neuron/sensiforward/", 10*TEST_ATOL, 10*TEST_RTOL);
     delete model;
-    delete rdata;
-    delete edata;
-    delete udata;
 }
-

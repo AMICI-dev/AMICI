@@ -22,42 +22,14 @@ TEST_GROUP(groupJakstatAdjointO2)
 
 TEST(groupJakstatAdjointO2, testSensitivityForward2) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_jakstat_adjoint/sensi2forward/options", model);
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_jakstat_adjoint/sensi2forward/data", model);
-    CHECK_FALSE(edata == NULL);
-    CHECK_FALSE(udata == NULL);
-
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-
-    verifyReturnData("/model_jakstat_adjoint/sensi2forward/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
-
+    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2forward/");
     delete model;
-    delete rdata;
-    delete edata;
-    delete udata;
 }
 
 TEST(groupJakstatAdjointO2, testSensitivityAdjoint2) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_jakstat_adjoint/sensi2adjoint/options", model);
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, "/model_jakstat_adjoint/sensi2adjoint/data", model);
-    CHECK_FALSE(edata == NULL);
-    CHECK_FALSE(udata == NULL);
-    
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-    
-    verifyReturnData("/model_jakstat_adjoint/sensi2adjoint/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
-    
+    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2adjoint/");
     delete model;
-    delete rdata;
-    delete edata;
-    delete udata;
 }
 
 

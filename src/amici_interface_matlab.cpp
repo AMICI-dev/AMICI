@@ -8,7 +8,6 @@
 
 #include "include/amici_interface_matlab.h"
 #include "include/amici_model.h"
-#include "include/amici_model_functions.h"
 #include "include/edata.h"
 #include "include/returndata_matlab.h"
 #include "include/udata.h"
