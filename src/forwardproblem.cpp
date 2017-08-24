@@ -61,7 +61,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata, ReturnD
                         if(!x_tmp) return AMICI_ERROR_SIMULATION;
                         if (status == -22) {
                             /* clustering of roots => turn off rootfinding */
-                            solver->AMIRootInit(0, NULL);
+                            solver->turnOffRootFinding();
                             status = AMICI_SUCCESS;
                         }
                         if (status==AMICI_ROOT_RETURN) {

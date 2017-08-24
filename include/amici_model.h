@@ -94,7 +94,7 @@ public:
 
     virtual int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
-    virtual int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
+    virtual int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
     virtual int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) { return AMICI_ERROR_NOT_IMPLEMENTED; }
 
