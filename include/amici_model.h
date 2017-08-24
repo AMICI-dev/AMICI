@@ -182,7 +182,7 @@ class Model {
     /** Sensitivity of measurements y, total derivative */
     int fsy(int it, TempData *tdata, ReturnData *rdata);
 
-    /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative *//
+    /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative */
     int fsz_tf(int ie, TempData *tdata, ReturnData *rdata);
 
     /* Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative */
