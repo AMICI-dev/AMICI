@@ -169,6 +169,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model) 
         readOptionScalar(ism,int)
         readOptionScalar(sensi_meth,AMICI_sensi_meth)
         readOptionScalar(ordering,int)
+        readOptionScalar(newton_preeq,int)
+        readOptionScalar(newton_precon,int)
         readOptionScalar(newton_maxsteps,int)
         readOptionScalar(newton_maxlinsteps,int)
     } else {

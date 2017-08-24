@@ -10,6 +10,7 @@ class ReturnData;
 class ExpData;
 class Solver;
 class Model;
+class NewtonSolver;
 
 /**
  * @brief The SteadystateProblem class solves a steady-state problem using Newton's method
@@ -22,14 +23,13 @@ public:
 
     static int workSteadyStateProblem(UserData *udata, TempData *tdata, ReturnData *rdata, int it, Solver *solver, Model *model);
 
-    static int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model);
-
-    static int getNewtonStep(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector ns_delta, Model *model);
+    static int applyNewtonsMethod(UserData *udata, ReturnData *rdata, TempData *tdata, int newton_try, Model *model, NewtonSolver *newtonSolver);
 
     static int getNewtonOutput(TempData *tdata, ReturnData *rdata, int newton_status, double run_time, int nx);
 
     static int getNewtonSimulation(UserData *udata, TempData *tdata, ReturnData *rdata, Solver *solver, Model *model);
 
+    static int linsolveSPBCG(UserData *udata, ReturnData *rdata, TempData *tdata, int ntry, int nnewt, N_Vector ns_delta, Model *model);
 private:
     SteadystateProblem();
 };

@@ -48,11 +48,6 @@ int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
     return status;
 }
 
-
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------- */
-
 void printErrMsgIdAndTxt(const char * identifier, const char *msg, ...) {
     printf("[Error] %s: %s\n", identifier, msg);
 }

@@ -60,6 +60,8 @@ void UserData::init()
     maxsteps = 0;
     newton_maxsteps = 0;
     newton_maxlinsteps = 0;
+    newton_precon = 1;
+    newton_preeq = FALSE;
     ism = 1;
     nmaxevent = 10;
 

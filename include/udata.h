@@ -62,10 +62,15 @@ public:
     double rtol;
     /** maximum number of allowed integration steps */
     int maxsteps;
+    
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps;
     /** maximum number of allowed linear steps per Newton step for steady state computation */
     int newton_maxlinsteps;
+    /** Preequilibration of model via NEwton solver? */
+    int newton_preeq;
+    /** Which preconditioner is to be used in the case of iterative linear Newton solvers */
+    int newton_precon;
     
     /** internal sensitivity method */
     /*!

@@ -10,6 +10,8 @@
 // TODO: don't use cvodes includes here
 #include <cvodes/cvodes_spils.h>
 
+Solver::~Solver() {    }
+
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
 {
     int status;
@@ -105,7 +107,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model)
     return AMICI_SUCCESS;
 
 freturn:
-    if(ami_mem) AMIFree(&ami_mem);
+    if(ami_mem) AMIFree();
     return AMICI_ERROR_SETUP;
 
 }
@@ -314,11 +316,6 @@ void Solver::wrap_ErrHandlerFn(int error_code, const char *module, const char *f
     warnMsgIdAndTxt(buffid,buffer);
 }
 
-void Solver::AMIFree(void **mem)
-{
-
-}
-
 int Solver::getDiagnosis(int it, ReturnData *rdata)
 {
     long int number;
@@ -375,50 +372,6 @@ int Solver::getDiagnosisB(int it, ReturnData *rdata, TempData *tdata)
     return status;
 }
 
-int Solver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fqBdot(t, x, xB, qBdot, user_data);
-}
-
-int Solver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fsxdot(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1, tmp2);
-}
-
-int Solver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJSparse(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
-}
-
-int Solver::fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJBand(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
-}
-
-int Solver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJv(v, Jv, t, x, xdot, user_data, tmp);
-}
-
-int Solver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJB(NeqBdot, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-}
-
-int Solver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJSparseB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-}
-
-int Solver::fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJBandB(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-}
-
-int Solver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB) {
-    TempData *tdata = (TempData *) user_data;
-    return tdata->model->fJvB(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
-}
 
 int Solver::setLinearSolver(const UserData *udata, Model *model) {
     int status;
