@@ -1,6 +1,7 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 
+// clang-format off
 /* linear solvers */
 #define AMICI_DENSE       1
 #define AMICI_BAND        2
@@ -11,7 +12,6 @@
 #define AMICI_SPBCG       7
 #define AMICI_SPTFQMR     8
 #define AMICI_KLU         9
-#define AMICI_BICGSTAB   10
 
 #define AMICI_ONEOUTPUT   5
 
@@ -35,6 +35,7 @@
 #define AMICI_ERROR_NOT_IMPLEMENTED    -83
 #define AMICI_ERROR_MODEL              -82
 #define AMICI_ERROR_OTHER              -81
+#define AMICI_ERROR_SIM2STEADYSTATE    -80
 #define AMICI_SUCCESS                    0
 #define AMICI_DATA_RETURN                1
 #define AMICI_ROOT_RETURN                2
@@ -54,28 +55,43 @@
 #ifndef TRUE
 #define TRUE 1
 #endif
-
+// clang-format on
 
 typedef double realtype;
 
-typedef enum {AMICI_BLAS_RowMajor=101, AMICI_BLAS_ColMajor=102} AMICI_BLAS_LAYOUT;
-typedef enum {AMICI_BLAS_NoTrans=111, AMICI_BLAS_Trans=112, AMICI_BLAS_ConjTrans=113} AMICI_BLAS_TRANSPOSE;
+typedef enum {
+    AMICI_BLAS_RowMajor = 101,
+    AMICI_BLAS_ColMajor = 102
+} AMICI_BLAS_LAYOUT;
+typedef enum {
+    AMICI_BLAS_NoTrans = 111,
+    AMICI_BLAS_Trans = 112,
+    AMICI_BLAS_ConjTrans = 113
+} AMICI_BLAS_TRANSPOSE;
 
 typedef enum AMICI_parameter_scaling_TAG {
-    AMICI_SCALING_NONE, AMICI_SCALING_LN, AMICI_SCALING_LOG10
+    AMICI_SCALING_NONE,
+    AMICI_SCALING_LN,
+    AMICI_SCALING_LOG10
 } AMICI_parameter_scaling;
 
 typedef enum AMICI_o2mode_TAG {
-    AMICI_O2MODE_NONE, AMICI_O2MODE_FULL, AMICI_O2MODE_DIR
+    AMICI_O2MODE_NONE,
+    AMICI_O2MODE_FULL,
+    AMICI_O2MODE_DIR
 } AMICI_o2mode;
 
 typedef enum AMICI_sensi_order_TAG {
-    AMICI_SENSI_ORDER_NONE, AMICI_SENSI_ORDER_FIRST, AMICI_SENSI_ORDER_SECOND
+    AMICI_SENSI_ORDER_NONE,
+    AMICI_SENSI_ORDER_FIRST,
+    AMICI_SENSI_ORDER_SECOND
 } AMICI_sensi_order;
 
 typedef enum AMICI_sensi_meth_TAG {
-    AMICI_SENSI_NONE, AMICI_SENSI_FSA, AMICI_SENSI_ASA, AMICI_SENSI_SS
+    AMICI_SENSI_NONE,
+    AMICI_SENSI_FSA,
+    AMICI_SENSI_ASA,
+    AMICI_SENSI_SS
 } AMICI_sensi_meth;
-
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef AMICISOLVER_H
 #define AMICISOLVER_H
 
-#include <nvector/nvector_serial.h> // DlsMat
+#include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
 
 class ReturnData;
@@ -9,19 +9,11 @@ class UserData;
 class TempData;
 class Model;
 
-typedef int (*RootFn)(realtype t, N_Vector y, realtype *gout, void *user_data);
+class Solver {
+  public:
+    Solver() {}
 
-class Solver
-{
-public:
-    Solver() {
-
-    }
-
-    virtual ~Solver() {
-        if (ami_mem)
-            AMIFree(&ami_mem);
-    }
+    virtual ~Solver();
 
     /**
      * @brief setupAMIs initialises the ami memory object
@@ -36,7 +28,8 @@ public:
     /**
      * setupAMIB initialises the AMI memory object for the backwards problem
      * @param[out] status flag indicating success of execution @type int
-     * @param[in] ami_mem pointer to the solver memory object of the forward problem
+     * @param[in] ami_mem pointer to the solver memory object of the forward
+     * problem
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
      * @return status flag indicating success of execution @type int
@@ -47,7 +40,8 @@ public:
     virtual int AMIGetSens(realtype *tret, N_Vector *yySout) = 0;
 
     /**
-     * getDiagnosis extracts diagnosis information from solver memory block and writes them into the return data struct
+     * getDiagnosis extracts diagnosis information from solver memory block and
+     * writes them into the return data struct
      *
      * @param[out]
      * @param[in] it time-point index @type int
@@ -60,7 +54,8 @@ public:
     int getDiagnosis(int it, ReturnData *rdata);
 
     /**
-     * getDiagnosisB extracts diagnosis information from solver memory block and writes them into the return data struct for the backward problem
+     * getDiagnosisB extracts diagnosis information from solver memory block and
+     * writes them into the return data struct for the backward problem
      *
      * @param[in] it time-point index @type int
      * @param[in] ami_mem pointer to the solver memory block @type *void
@@ -80,52 +75,39 @@ public:
 
     virtual int AMICalcIC(realtype tout1) = 0;
 
-    virtual int AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB) = 0;
+    virtual int AMICalcICB(int which, realtype tout1, N_Vector xB,
+                           N_Vector dxB) = 0;
 
-    virtual int AMISolve(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) = 0;
+    virtual int AMISolve(realtype tout, N_Vector yret, N_Vector ypret,
+                         realtype *tret, int itask) = 0;
 
-    virtual int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) = 0;
+    virtual int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret,
+                          realtype *tret, int itask, int *ncheckPtr) = 0;
 
     virtual int AMISolveB(realtype tBout, int itaskB) = 0;
 
     virtual int AMISetStopTime(realtype tstop) = 0;
 
-    virtual int AMIRootInit(int nrtfn, RootFn ptr) = 0;
+    //    virtual int AMIRootInit(int nrtfn, RootFn ptr) = 0;
 
-    virtual int AMIReInitB(int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) = 0;
+    virtual int AMIReInitB(int which, realtype tB0, N_Vector yyB0,
+                           N_Vector ypB0) = 0;
 
-    virtual int AMIGetB(int which, realtype *tret, N_Vector yy, N_Vector yp) = 0;
+    virtual int AMIGetB(int which, realtype *tret, N_Vector yy,
+                        N_Vector yp) = 0;
 
     virtual int AMIGetQuadB(int which, realtype *tret, N_Vector qB) = 0;
 
     virtual int AMIQuadReInitB(int which, N_Vector yQB0) = 0;
 
+    virtual int turnOffRootFinding() = 0;
 
-    // Static wrapper functions because cannot pass member functions to solver
-
-    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
-
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip, N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
-
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJBand(long N, long mupper, long mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
-
-    static int fJB(long NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJBandB(long NeqBdot, long mupper, long mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
-
-protected:
+  protected:
     virtual int wrap_init(N_Vector x, N_Vector dx, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
-    virtual int wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) = 0;
+    virtual int wrap_binit(int which, N_Vector xB, N_Vector dxB,
+                           realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
     virtual int wrap_qbinit(int which, N_Vector qBdot) = 0;
@@ -133,7 +115,8 @@ protected:
     virtual int wrap_RootInit(int ne) = 0;
 
     // TODO: check if model has forward sensitivities, else return -1
-    virtual int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) = 0;
+    virtual int wrap_SensInit1(N_Vector *sx, N_Vector *sdx,
+                               UserData *udata) = 0;
 
     virtual int wrap_SetDenseJacFn() = 0;
 
@@ -155,11 +138,13 @@ protected:
     // TODO: check if model has adjoint sensitivities, else return -1
     virtual int wrap_SetJacTimesVecFnB(int which) = 0;
 
-    static void wrap_ErrHandlerFn(int error_code, const char *module, const char *function, char *msg, void *eh_data);
+    static void wrap_ErrHandlerFn(int error_code, const char *module,
+                                  const char *function, char *msg,
+                                  void *eh_data);
 
     virtual void *AMICreate(int lmm, int iter) = 0;
 
-    virtual int AMISStolerances(double rtol,double atol) = 0;
+    virtual int AMISStolerances(double rtol, double atol) = 0;
 
     virtual int AMISensEEtolerances() = 0;
 
@@ -187,15 +172,17 @@ protected:
 
     virtual int AMIGetDky(realtype t, int k, N_Vector dky) = 0;
 
-    virtual void AMIFree(void **mem);
+    virtual void AMIFree() = 0;
 
     virtual int AMIAdjInit(long int steps, int interp) = 0;
 
     virtual int AMICreateB(int lmm, int iter, int *which) = 0;
 
-    virtual int AMISStolerancesB(int which, realtype relTolB, realtype absTolB) = 0;
+    virtual int AMISStolerancesB(int which, realtype relTolB,
+                                 realtype absTolB) = 0;
 
-    virtual int AMIQuadSStolerancesB(int which, realtype reltolQB, realtype abstolQB) = 0;
+    virtual int AMIQuadSStolerancesB(int which, realtype reltolQB,
+                                     realtype abstolQB) = 0;
 
     virtual int AMISetMaxNumStepsB(int which, long int mxstepsB) = 0;
 
@@ -235,9 +222,12 @@ protected:
 
     virtual int AMIGetNumRhsEvals(void *ami_mem, long int *numrhsevals) = 0;
 
-    virtual int AMIGetNumErrTestFails(void *ami_mem, long int *numerrtestfails) = 0;
+    virtual int AMIGetNumErrTestFails(void *ami_mem,
+                                      long int *numerrtestfails) = 0;
 
-    virtual int AMIGetNumNonlinSolvConvFails(void *ami_mem, long int *numnonlinsolvconvfails) = 0;
+    virtual int
+    AMIGetNumNonlinSolvConvFails(void *ami_mem,
+                                 long int *numnonlinsolvconvfails) = 0;
 
     virtual int AMIGetLastOrder(void *ami_mem, int *order) = 0;
 
@@ -247,9 +237,6 @@ protected:
 
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
-
 };
-
-
 
 #endif // AMICISOLVER_H

@@ -18,5 +18,5 @@ target_link_libraries(${PROJECT_NAME}
     ${CPPUTEST_LIBRARY}
     amici
     )
-
+    
 add_test(NAME jakstat_adjoint_o2 COMMAND ./model_jakstat_adjoint_o2_test -c)
