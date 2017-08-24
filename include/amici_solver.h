@@ -9,27 +9,16 @@ class UserData;
 class TempData;
 class Model;
 
-class Solver {
-  public:
-    Solver() {}
-
 //!  Solver class. 
 /*!
   provides a generic interface to CVode and IDA solvers, individual realizations are realized in the CVodeSolver and the IDASolver class.
 */
-
-
 class Solver
 {
 public:
-    Solver() {
+    Solver() {}
 
-    }
-
-    virtual ~Solver() {
-        if (ami_mem)
-            AMIFree(&ami_mem);
-    }
+    virtual ~Solver();
 
     /**
      * @brief setupAMIs initialises the ami memory object
