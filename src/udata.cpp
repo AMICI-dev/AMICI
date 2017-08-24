@@ -3,47 +3,51 @@
 #include <cstdio>
 #include <cstring>
 
-UserData::UserData()
-{
-    init();
-}
+UserData::UserData() { init(); }
 
-int UserData::unscaleParameters(const Model *model, double *bufferUnscaled) const
-{
-    switch(pscale) {
-        case AMICI_SCALING_LOG10:
-            for(int ip = 0; ip < model->np; ++ip) {
-                bufferUnscaled[ip] = pow(10, p[ip]);
-            }
-            break;
-        case AMICI_SCALING_LN:
-            for(int ip = 0; ip < model->np; ++ip)
-                bufferUnscaled[ip] = exp(p[ip]);
-            break;
-        case AMICI_SCALING_NONE:
-            for(int ip = 0; ip < model->np; ++ip)
-                bufferUnscaled[ip] = p[ip];
-            break;
+int UserData::unscaleParameters(const Model *model,
+                                double *bufferUnscaled) const {
+    switch (pscale) {
+    case AMICI_SCALING_LOG10:
+        for (int ip = 0; ip < model->np; ++ip) {
+            bufferUnscaled[ip] = pow(10, p[ip]);
+        }
+        break;
+    case AMICI_SCALING_LN:
+        for (int ip = 0; ip < model->np; ++ip)
+            bufferUnscaled[ip] = exp(p[ip]);
+        break;
+    case AMICI_SCALING_NONE:
+        for (int ip = 0; ip < model->np; ++ip)
+            bufferUnscaled[ip] = p[ip];
+        break;
     }
 
     return AMICI_SUCCESS;
 }
 
-UserData::~UserData()
-{
-    if(qpositivex) delete[] qpositivex;
-    if(p) delete[] p;
-    if(k) delete[] k;
-    if(ts) delete[] ts;
-    if(pbar) delete[] pbar;
-    if(xbar) delete[] xbar;
-    if(x0data) delete[] x0data;
-    if(sx0data) delete[] sx0data;
-    if(plist) delete[] plist;
+UserData::~UserData() {
+    if (qpositivex)
+        delete[] qpositivex;
+    if (p)
+        delete[] p;
+    if (k)
+        delete[] k;
+    if (ts)
+        delete[] ts;
+    if (pbar)
+        delete[] pbar;
+    if (xbar)
+        delete[] xbar;
+    if (x0data)
+        delete[] x0data;
+    if (sx0data)
+        delete[] sx0data;
+    if (plist)
+        delete[] plist;
 }
 
-void UserData::init()
-{
+void UserData::init() {
     qpositivex = NULL;
     plist = NULL;
     nplist = 0;
@@ -75,11 +79,9 @@ void UserData::init()
 
     sx0data = NULL;
     ordering = 0;
-
 }
 
-void UserData::print()
-{
+void UserData::print() {
     printf("qpositivex: %p\n", qpositivex);
     printf("plist: %p\n", plist);
     printf("nplist: %d\n", nplist);
