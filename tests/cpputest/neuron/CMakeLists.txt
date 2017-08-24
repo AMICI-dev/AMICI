@@ -18,5 +18,4 @@ target_link_libraries(${PROJECT_NAME}
     ${CPPUTEST_LIBRARY}
     amici
     )
-
 add_test(NAME neuron COMMAND ./model_neuron_test -c)

@@ -20,7 +20,7 @@ matrix:
             - libatlas-base-dev
     - os: osx
       compiler: clang
-      before_install: brew install homebrew/science/hdf5
+      before_install: brew install hdf5
 
 install:
     - ./scripts/run-build.sh
