@@ -53,13 +53,8 @@
     }
 
 /*!
-<<<<<<< HEAD
  * mexFunction is the main interface function for the MATLAB interface. It reads in input data (udata and edata) and 
  * creates output data compound (rdata) and then calls the AMICI simulation routine to carry out numerical integration.
-=======
- * mexFunction is the main function of the mex simulation file this function
- * carries out all numerical integration and writes results into the sol struct.
->>>>>>> master
  *
  * @param[in] nlhs number of output arguments of the matlab call @type int
  * @param[out] plhs pointer to the array of output arguments @type mxArray
