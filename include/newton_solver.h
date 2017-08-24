@@ -30,7 +30,7 @@ public:
     
     int getSensis(int it);
     
-    virtual int prepareLinearSystem() = 0;
+    virtual int prepareLinearSystem(int ntry, int nnewt) = 0;
 
     virtual int solveLinearSystem(N_Vector rhs) = 0;
     
@@ -52,7 +52,7 @@ public:
     int getStep(int ntry, int nnewt, N_Vector delta);
     int getSensis(int it);
     int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem();
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverDense();
     
 private:
@@ -71,7 +71,7 @@ public:
     int getStep(int ntry, int nnewt, N_Vector delta);
     int getSensis(int it);
     int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem();
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverSparse();
     
 private:
@@ -93,10 +93,12 @@ public:
     int getStep(int ntry, int nnewt, N_Vector delta);
     int getSensis(int it);
     int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem();
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverIterative();
     
 private:
+    int newton_try;
+    int i_newton;
 };
 
 #endif

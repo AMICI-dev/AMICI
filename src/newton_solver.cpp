@@ -81,7 +81,7 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *
 
 int NewtonSolver::getStep(int ntry, int nnewt, N_Vector delta) {
     
-    int status = this->prepareLinearSystem();
+    int status = this->prepareLinearSystem(ntry, nnewt);
     
     N_VScale(-1.0, tdata->xdot, delta);
     if (status == AMICI_SUCCESS) {
@@ -95,7 +95,7 @@ int NewtonSolver::getSensis(int it) {
     
     N_Vector sx_ip = N_VNew_Serial(model->nx);
     realtype *x_tmp;
-    int status = this->prepareLinearSystem();
+    int status = this->prepareLinearSystem(0, 0);
     
     if (status == AMICI_SUCCESS) {
         status = model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
@@ -151,7 +151,7 @@ NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *
     tmp3 = N_VNew_Serial(model->nx);
 }
 
-int NewtonSolverDense::prepareLinearSystem() {
+int NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
     
     /* Get Jacobian */
     int status = model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx, tdata->xdot, tdata->Jtmp, tdata, tmp1, tmp2, tmp3);
@@ -195,7 +195,7 @@ NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData
     tmp3 = N_VNew_Serial(model->nx);
 }
 
-int NewtonSolverSparse::prepareLinearSystem() {
+int NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     
     /* Check if KLU was initialized successfully */
     if (klu_status != 1)
@@ -258,17 +258,14 @@ int NewtonSolverIterative::getSensis(int it) {
     return AMICI_ERROR_NEWTONSOLVER;
 }
 
-int NewtonSolverIterative::prepareLinearSystem() {
+int NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
+    newton_try = ntry;
+    i_newton = nnewt;
     return AMICI_SUCCESS;
 }
-
-int NewtonSolverIterative::getStep(int ntry, int nnewt, N_Vector delta) {
-    return SteadystateProblem::linsolveSPBCG(udata, rdata, tdata, ntry, nnewt, delta, model);;
-}
-
 
 int NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
-    return AMICI_SUCCESS;
+    return SteadystateProblem::linsolveSPBCG(udata, rdata, tdata, newton_try, i_newton, rhs, model);;
 }
 
 
