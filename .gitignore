@@ -31,8 +31,6 @@ stylesheets/*
 
 images/*
 
-doc/*
-
 debug_amici/*
 
 models/*
@@ -98,8 +96,6 @@ CMakeLists.txt.user
 *.js
 
 *.md5
-
-*.template
 
 *.dox
 
@@ -238,3 +234,9 @@ examples/example_neuron/simulate_model_neuron_hdf.m
 examples/example_neuron/simulate_model_neuron.m
 
 scripts/env.sh
+
+mtoc/config/Doxyfile
+
+mtoc/config/latexextras.sty
+
+mtoc/config/mtocpp_filter.sh
