@@ -8,6 +8,33 @@
 #include <cmath>
 #include <unistd.h>
 
+
+void simulateAndVerifyFromFile(Model *model, const std::string path)
+{
+    simulateAndVerifyFromFile(model, path, TEST_ATOL, TEST_RTOL);
+}
+
+void simulateAndVerifyFromFile(Model *model, const std::string path, double atol, double rtol)
+{
+    // read simulation options
+    std::string optionsPath = path + "/options";
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, optionsPath.c_str(), model);
+
+    std::string measurementPath = path + "/data";
+    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, measurementPath.c_str(), model);
+
+    ReturnData *rdata = getSimulationResults(model, udata, edata);
+    CHECK_EQUAL(0, *rdata->status);
+
+    std::string resultPath = path + "/results";
+    verifyReturnData(resultPath.c_str(), rdata, udata, model, atol, rtol);
+
+    if(edata)
+        delete edata;
+    delete rdata;
+    delete udata;
+}
+
 ExpData *getTestExpData(const UserData *udata, Model *model) {
     ExpData *edata = new ExpData(udata, model);
     return edata;

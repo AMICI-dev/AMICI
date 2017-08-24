@@ -4,6 +4,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 #include <hdf5.h>
+#include <string>
 
 class UserData;
 class ReturnData;
@@ -17,6 +18,10 @@ class Model;
 #ifndef __APPLE__
 #include <iostream>
 #endif
+
+void simulateAndVerifyFromFile(Model *model, const std::string path);
+
+void simulateAndVerifyFromFile(Model *model, const std::string path, double atol, double rtol);
 
 ExpData *getTestExpData(const UserData *udata, Model *model);
 
