@@ -21,7 +21,13 @@ Model::~Model() {
         delete[] idlist;
 }
 
-int Model::fsy(int it, TempData *tdata, ReturnData *rdata) {
+/** Sensitivity of measurements y, total derivative
+ * @param[in] it timepoint index @type int
+ * @param[in] tdata pointer to temp data object @type TempData
+ * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
 
     int status = AMICI_SUCCESS;
@@ -43,7 +49,13 @@ int Model::fsy(int it, TempData *tdata, ReturnData *rdata) {
     return status;
 }
 
-int Model::fsz_tf(int ie, TempData *tdata, ReturnData *rdata) {
+/** Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative
+ * @param[in] ie event index @type int
+ * @param[in] tdata pointer to temp data object @type TempData
+ * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
 
     int status = AMICI_SUCCESS;
@@ -58,7 +70,13 @@ int Model::fsz_tf(int ie, TempData *tdata, ReturnData *rdata) {
     return status;
 }
 
-int Model::fsJy(int it, TempData *tdata, ReturnData *rdata) {
+/* Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative
+ * @param[in] it timepoint index @type int
+ * @param[in] tdata pointer to temp data object @type TempData
+ * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fsJy(const int it,const TempData *tdata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // Compute dJydx*sx for current 'it'
@@ -104,8 +122,15 @@ int Model::fsJy(int it, TempData *tdata, ReturnData *rdata) {
     return (status);
 }
 
-int Model::fdJydp(int it, TempData *tdata, const ExpData *edata,
-                  ReturnData *rdata) {
+/* Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. parameters
+ * @param[in] it timepoint index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
+                  const ReturnData *rdata) {
 
     int status = AMICI_SUCCESS;
 
@@ -148,7 +173,14 @@ int Model::fdJydp(int it, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-int Model::fdJydx(int it, TempData *tdata, const ExpData *edata) {
+/* Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. state variables
+ * @param[in] it timepoint index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @return status flag indicating successful execution @type int
+ */
+
+int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
     int status = AMICI_SUCCESS;
 
     // dJydy         nytrue x nJ x ny
@@ -184,7 +216,13 @@ int Model::fdJydx(int it, TempData *tdata, const ExpData *edata) {
     return (status);
 }
 
-int Model::fsJz(int ie, TempData *tdata, const ReturnData *rdata) {
+/* Sensitivity of event-resolved measurement negative log-likelihood Jz, total derivative
+ * @param[in] ie event index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // sJz           nJ x rdata->nplist
@@ -237,8 +275,15 @@ int Model::fsJz(int ie, TempData *tdata, const ReturnData *rdata) {
     return (status);
 }
 
-int Model::fdJzdp(int ie, TempData *tdata, const ExpData *edata,
-                  ReturnData *rdata) {
+/* Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. parameters
+ * @param[in] ie event index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
+                  const ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // dJzdz         nztrue x nJ x nz
@@ -308,7 +353,13 @@ int Model::fdJzdp(int ie, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-int Model::fdJzdx(int ie, TempData *tdata, const ExpData *edata) {
+/* Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. state variables
+ * @param[in] ie event index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
     int status = AMICI_SUCCESS;
 
     // dJzdz         nztrue x nJ x nz
@@ -358,7 +409,12 @@ int Model::fdJzdx(int ie, TempData *tdata, const ExpData *edata) {
     return (status);
 }
 
-int Model::initialize(UserData *udata, TempData *tdata) {
+/* initialization of model properties
+ * @param[in] udata pointer to user data object @type UserData
+ * @param[out] tdata pointer to temp data object @type TempData
+ * @return status flag indicating success of execution @type int
+ */
+int Model::initialize(const UserData *udata, TempData *tdata) {
     if (nx < 1)
         return AMICI_SUCCESS;
 
@@ -376,7 +432,12 @@ int Model::initialize(UserData *udata, TempData *tdata) {
     return AMICI_SUCCESS;
 }
 
-int Model::initializeStates(double *x0data, TempData *tdata) {
+/* initialization of initial states
+ * @param[in] x0data array with initial state values @type double
+ * @param[out] tdata pointer to temp data object @type TempData
+ * @return status flag indicating success of execution @type int
+ */
+int Model::initializeStates(const double *x0data, TempData *tdata) {
     if (nx < 1)
         return AMICI_SUCCESS;
 
@@ -399,14 +460,15 @@ int Model::initializeStates(double *x0data, TempData *tdata) {
     return AMICI_SUCCESS;
 }
 
+/**
+ * initHeaviside initialises the heaviside variables h at the intial time t0
+ * heaviside variables activate/deactivate on event occurences
+ *
+ * @param[out] tdata pointer to the temporary data struct @type TempData
+ * @return status flag indicating success of execution @type int
+ */
 int Model::initHeaviside(TempData *tdata) {
-    /**
-     * initHeaviside initialises the heaviside variables h at the intial time t0
-     * heaviside variables activate/deactivate on event occurences
-     *
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @return status flag indicating success of execution @type int
-     */
+
 
     int status = AMICI_SUCCESS;
 
