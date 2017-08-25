@@ -14,18 +14,17 @@ class ReturnData;
 class TempData;
 class Model;
 
+/**
+ * @brief The NewtonSolver class sets up the linear solver for the Newton method.
+ */
+
 class NewtonSolver {
     
 public:
     NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     
     static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status);
-    /**
-     * @param[in] ntry integer number of Newton solver try
-     * @param[in] nnewt integer number of Newton steps in the current Newton solver try
-     * @param[out] delta N_Vector solution of the linear system
-     * @return int status flag indicating success of execution @type int
-     */
+
     int getStep(int ntry, int nnewt, N_Vector delta);
     
     int getSensis(int it);
@@ -101,4 +100,4 @@ private:
     int i_newton;
 };
 
-#endif
+#endif // NEWTON_SOLVER
