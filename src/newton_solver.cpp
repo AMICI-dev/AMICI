@@ -361,9 +361,9 @@ int NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
      * @param[out] N_Vector rhs containing the solution of the linear system
      * @return stats integer flag indicating success of the method
      */
-    
-    return SteadystateProblem::linsolveSPBCG(udata, rdata, tdata, newton_try, i_newton,
-                                             rhs, model);;
+
+    return SteadystateProblem::linsolveSPBCG(udata, rdata, tdata, model,
+                                             newton_try, i_newton, rhs);
 }
 
 /* ---------------------------------------------------------------------------------- */

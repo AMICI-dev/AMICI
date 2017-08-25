@@ -25,7 +25,7 @@ class SteadystateProblem {
 
     static int applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                                   TempData *tdata, Model *model,
-                                  NewtonSolver *newtonSolver, int newton_try,);
+                                  NewtonSolver *newtonSolver, int newton_try);
 
     static void getNewtonOutput(TempData *tdata, ReturnData *rdata, Model *model,
                                int newton_status, double run_time);
@@ -40,7 +40,7 @@ class SteadystateProblem {
     
     static int linsolveSPBCG(UserData *udata, ReturnData *rdata,
                              TempData *tdata, Model *model, int ntry,
-                             int nnewt, N_Vector ns_delta)
+                             int nnewt, N_Vector ns_delta);
 
   private:
     SteadystateProblem();

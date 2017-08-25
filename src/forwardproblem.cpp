@@ -58,7 +58,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
                             if (std::isinf(rdata->ts[it])) {
                                 status =
                                     SteadystateProblem::workSteadyStateProblem(
-                                        udata, tdata, rdata, it, solver, model);
+                                        udata, tdata, rdata, solver, model, it);
                             } else {
                                 status = solver->AMISolve(
                                     RCONST(rdata->ts[it]), tdata->x, tdata->dx,

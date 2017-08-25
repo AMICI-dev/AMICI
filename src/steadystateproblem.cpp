@@ -41,13 +41,13 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 
     NewtonSolver *newtonSolver = NewtonSolver::getSolver(
         udata->linsol, model, rdata, udata, tdata, &status);
-
-    status = applyNewtonsMethod(udata, rdata, tdata, 1, model, newtonSolver);
+    
+    status = applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 1);
 
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
         run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-        status = getNewtonOutput(tdata, rdata, model, 1, run_time, model->nx);
+        getNewtonOutput(tdata, rdata, model, 1, run_time);
     } else {
         /* Newton solver did not find a steady state, so try integration */
         status = getNewtonSimulation(udata, tdata, rdata, solver, model);
@@ -55,16 +55,16 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-            status = getNewtonOutput(tdata, rdata, model, 2, run_time, model->nx);
+            getNewtonOutput(tdata, rdata, model, 2, run_time);
         } else {
             status =
-                applyNewtonsMethod(udata, rdata, tdata, 2, model, newtonSolver);
+                applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 2);
 
             if (status == AMICI_SUCCESS) {
                 /* If the second Newton solver found a steady state */
                 run_time =
                     (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-                status = getNewtonOutput(tdata, rdata, model, 3, run_time, model->nx);
+                getNewtonOutput(tdata, rdata, model, 3, run_time);
             }
         }
     }
