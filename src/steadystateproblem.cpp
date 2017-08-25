@@ -236,7 +236,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
 /* ---------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------- */
 
-int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
+void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
                                         Model *model, int newton_status,
                                         double run_time) {
     /**
@@ -253,31 +253,18 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
     realtype *x_tmp;
     int status = AMICI_SUCCESS;
     
-    // Get time for Newton solve
+    /* Get time for Newton solve */
     rdata->newton_time[0] = run_time;
 
-    // Since the steady state was found, current time is set to infinity
+    /* Since the steady state was found, current time is set to infinity */
     tdata->t = INFINITY;
 
-    // Write output
+    /* Write output: steady state and Newton flag */
     x_tmp = N_VGetArrayPointer(tdata->x);
     for (int ix = 0; ix < model->nx; ix++) {
         rdata->xss[ix] = x_tmp[ix];
     }
-
-    // Write dydx
-    status = model->fdydx(tdata->t, rdata->nt - 1, tdata->x, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
-    
-    if (rdata->dydx)
-        memcpy(rdata->dydx, tdata->dydx,
-               model->ny * model->nx * sizeof(realtype));
-    
-    // Write flag for the Newton solver
     *rdata->newton_status = (double)newton_status;
-
-    return status;
 }
 
 /* ---------------------------------------------------------------------------------- */

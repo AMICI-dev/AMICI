@@ -150,18 +150,6 @@ int NewtonSolver::getSensis(int it) {
         }
     }
     
-    if (rdata->dxdotdp)
-        memcpy(rdata->dxdotdp, tdata->dxdotdp,
-               model->nx * rdata->nplist * sizeof(realtype));
-    
-    status = model->fdydp(tdata->t, rdata->nt - 1, tdata->x, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
-    
-    if (rdata->dydp)
-        memcpy(rdata->dydp, tdata->dydp,
-               model->ny * rdata->nplist * sizeof(realtype));
-    
     return status;
 }
 
