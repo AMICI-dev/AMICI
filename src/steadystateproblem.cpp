@@ -14,18 +14,23 @@
 SteadystateProblem::SteadystateProblem() {}
 
 int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
-                                               ReturnData *rdata, int it,
-                                               Solver *solver, Model *model) {
+                                               ReturnData *rdata, Solver *solver,
+                                               Model *model, int it) {
     /**
-         * tries to determine the steady state of the ODE system by a Newton
-     * solver
-         * uses forward intergration, if the Newton solver fails
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] tdata pointer to the temporary data struct @type UserData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         */
+     * Tries to determine the steady state of the ODE system by a Newton
+     * solver, uses forward intergration, if the Newton solver fails,
+     * restarts Newton solver, if integration fails.
+     * Computes steady state sensitivities
+     *
+     * @param[in] udata pointer to the user data object @type UserData
+     * @param[in] tdata pointer to the temporary data object @type UserData
+     * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[in] model pointer to the AMICI model object @type Model
+     * @param[in] it integer with the index of the current time step
+     * @param[out] tdata pointer to the temporary data object @type TempData
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @return stats integer flag indicating success of the method
+     */
 
     int status = (int)*rdata->status;
     double run_time;
@@ -72,33 +77,29 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     }
 
     delete newtonSolver;
-
-    /* if this point was reached, the Newton solver was successful */
-    return (status);
+    return status;
 }
 
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
 
 int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
-                                           TempData *tdata, int newton_try,
-                                           Model *model,
-                                           NewtonSolver *newtonSolver) {
+                                           TempData *tdata, Model *model,
+                                           NewtonSolver *newtonSolver, int newton_try) {
     /**
-         * applyNewtonsMethod applies Newtons method to the current state x to
-     * find the steady state
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] newton_try integer for the try number of the Newton solver
-         * @return void
-         */
+     * Runs the Newton solver iterations and checks for convergence to steady state
+     *
+     * @param[in] udata pointer to the user data object @type UserData
+     * @param[in] tdata pointer to the temporary data object @type UserData
+     * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[in] model pointer to the AMICI model object @type Model
+     * @param[in] newtonSolver pointer to the NewtonSolver object @type NewtonSolver
+     * @param[in] newton_try integer start number of Newton solver (1 or 2)
+     * @param[out] tdata pointer to the temporary data object @type TempData
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @return stats integer flag indicating success of the method
+     */
 
     int status = AMICI_ERROR_NEWTONSOLVER;
     int i_newtonstep = 0;
@@ -231,27 +232,23 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
     return (status);
 }
 
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
 
 int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
                                         Model *model, int newton_status,
-                                        double run_time, int nx) {
+                                        double run_time) {
     /**
-         * getNewtonOutput stores the output of the Newton solver run.
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] newton_status integer flag indicating the run of the
-     * Newton solver
-         * @param[in] run_time double computation time of the Newton solver
-         * @return int status flag indicating success of execution @type int
-         */
+     * Stores output of workSteadyStateProblem in return data
+     *
+     * @param[in] tdata pointer to the temporary data object @type UserData
+     * @param[in] model pointer to the AMICI model object @type Model
+     * @param[in] newton_status integer flag indicating when a steady state was found
+     * @param[in] run_time double coputation time of the solver in milliseconds
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @return stats integer flag indicating success of the method
+     */
 
     realtype *x_tmp;
     int status = AMICI_SUCCESS;
@@ -264,7 +261,7 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
 
     // Write output
     x_tmp = N_VGetArrayPointer(tdata->x);
-    for (int ix = 0; ix < nx; ix++) {
+    for (int ix = 0; ix < model->nx; ix++) {
         rdata->xss[ix] = x_tmp[ix];
     }
 
@@ -283,27 +280,25 @@ int SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
 
 int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
                                             ReturnData *rdata, Solver *solver,
                                             Model *model) {
     /**
-         * getNewtonSimulation solves the forward problem, if the first Newton
-     * solver run did not succeed.
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @param[in] rdata pointer to the return data struct @type ReturnData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @return int status flag indicating success of execution @type int
-         */
-
+     * Forward simulation is launched, if Newton solver fails in first try
+     *
+     * @param[in] udata pointer to the user data object @type UserData
+     * @param[in] tdata pointer to the temporary data object @type UserData
+     * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[in] model pointer to the AMICI model object @type Model
+     * @param[out] tdata pointer to the temporary data object @type TempData
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @return stats integer flag indicating success of the method
+     */
+ 
     double res_abs;
     double res_rel;
     double sim_time;
@@ -347,36 +342,30 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
 
     N_VDestroy_Serial(rel_x_newton);
     N_VDestroy_Serial(x_newton);
-    return (status);
+    return status;
 }
 
-
-
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------------
- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------- */
 
 int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
-                                      TempData *tdata, int ntry, int nnewt,
-                                      N_Vector ns_delta, Model *model) {
+                                      TempData *tdata, Model *model, int ntry,
+                                      int nnewt, N_Vector ns_delta) {
     /**
-         * linsolveSPBCG solves the linear system for the Newton iteration by
-     * using the BiCGStab algorithm.
-         * This routines is to be stored in another file in near future.
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[out] rdata pointer to the return data struct @type ReturnData
-         * @param[in] tdata pointer to the temporary data struct @type TempData
-         * @param[out] tdata pointer to the temporary data struct @type TempData
-         * @param[in] ntry intger number of Newton solver try
-         * @param[in] nnewt intger number of Newton steps in the current Newton
-     * solver try
-         * @param[out] delta N_Vector solution of the linear system
-         * @return int status flag indicating success of execution @type int
-         */
+     * Iterative linear solver created from SPILS BiCG-Stab.
+     * Solves the linear system within each Newton step if iterative solver is chosen.
+     *
+     * @param[in] udata pointer to the user data object @type UserData
+     * @param[in] tdata pointer to the temporary data object @type UserData
+     * @param[in] model pointer to the AMICI model object @type Model
+     * @param[in] ntry integer newton_try integer start number of Newton solver (1 or 2)
+     * @param[in] nnewt integer number of current Newton step
+     * @param[in] N_Vector ns_delta
+     * @param[out] tdata pointer to the temporary data object @type TempData
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @return stats integer flag indicating success of the method
+     */
 
     int status = AMICI_ERROR_NEWTON_LINSOLVER;
 

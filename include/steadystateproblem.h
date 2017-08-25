@@ -14,22 +14,21 @@ class NewtonSolver;
 
 /**
  * @brief The SteadystateProblem class solves a steady-state problem using
- * Newton's method
- * and falls back to integration on failure.
+ * Newton's method and falls back to integration on failure.
  */
 
 class SteadystateProblem {
   public:
     static int workSteadyStateProblem(UserData *udata, TempData *tdata,
-                                      ReturnData *rdata, int it, Solver *solver,
-                                      Model *model);
+                                      ReturnData *rdata, Solver *solver,
+                                      Model *model, int it);
 
     static int applyNewtonsMethod(UserData *udata, ReturnData *rdata,
-                                  TempData *tdata, int newton_try, Model *model,
-                                  NewtonSolver *newtonSolver);
+                                  TempData *tdata, Model *model,
+                                  NewtonSolver *newtonSolver, int newton_try,);
 
     static int getNewtonOutput(TempData *tdata, ReturnData *rdata, Model *model,
-                               int newton_status, double run_time, int nx);
+                               int newton_status, double run_time);
 
     static int getNewtonSimulation(UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
@@ -40,8 +39,8 @@ class SteadystateProblem {
                                    NewtonSolver *newtonSolver);
     
     static int linsolveSPBCG(UserData *udata, ReturnData *rdata,
-                             TempData *tdata, int ntry, int nnewt,
-                             N_Vector ns_delta, Model *model);
+                             TempData *tdata, Model *model, int ntry,
+                             int nnewt, N_Vector ns_delta)
 
   private:
     SteadystateProblem();
