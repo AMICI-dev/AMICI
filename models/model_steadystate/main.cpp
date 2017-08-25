@@ -4,9 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "wrapfunctions.h" /* model-provided functions */
-#include <include/amici_interface_cpp.h> /* AMICI API */
-#include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
+#include "wrapfunctions.h"                 /* model-provided functions */
+#include <include/amici_hdf5.h>            /* AMICI HDF5 I/O functions */
+#include <include/amici_interface_cpp.h>   /* AMICI API */
 #include <include/amici_model.h>
 
 /* This is a scaffold for a stand-alone AMICI simulation executable

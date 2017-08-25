@@ -365,33 +365,7 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
     if (rdata->J)
         memcpy(rdata->J, tdata->Jtmp->data,
                model->nx * model->nx * sizeof(realtype));
-
-    if (rdata->sensi_meth == AMICI_SENSI_SS) {
-        status = model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dxdotdp)
-            memcpy(rdata->dxdotdp, tdata->dxdotdp,
-                   model->nx * rdata->nplist * sizeof(realtype));
-
-        status = model->fdydp(tdata->t, rdata->nt - 1, tdata->x, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dydp)
-            memcpy(rdata->dydp, tdata->dydp,
-                   model->ny * rdata->nplist * sizeof(realtype));
-
-        status = model->fdydx(tdata->t, rdata->nt - 1, tdata->x, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dydx)
-            memcpy(rdata->dydx, tdata->dydx,
-                   model->ny * model->nx * sizeof(realtype));
-    }
-
+    
     return status;
 }
 

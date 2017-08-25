@@ -29,7 +29,7 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
 }
 
 void ReturnData::setDefaults() {
-    ts = xdot = dxdotdp = dydx = dydp = J = z = sigmaz = sz = ssigmaz = rz =
+    ts = xdot = J = z = sigmaz = sz = ssigmaz = rz =
         srz = s2rz = x = sx = y = sigmay = nullptr;
     sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order =
         llh = chi2 = sllh = s2llh = nullptr;
@@ -151,17 +151,7 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                         chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
                             chainRule(rz, iz, nztrue, nz, ie, nmaxevent)
     }
-    if (udata->sensi_meth != AMICI_SENSI_ASA) {
-        if (dxdotdp)
-            for (int ip = 0; ip < nplist; ++ip)
-                for (int ix = 0; ix < nx; ++ix)
-                    dxdotdp[ix + ip * nxtrue] *= pcoefficient[ip];
-
-        if (dydp)
-            for (int ip = 0; ip < nplist; ++ip)
-                for (int iy = 0; iy < ny; ++iy)
-                    dydp[iy + ip * nytrue] *= pcoefficient[ip];
-    }
+    
     if (o2mode == AMICI_O2MODE_FULL) { // full
         if (s2llh) {
             if (sllh) {
@@ -245,12 +235,6 @@ ReturnData::~ReturnData() {
         delete[] ts;
     if (xdot)
         delete[] xdot;
-    if (dxdotdp)
-        delete[] dxdotdp;
-    if (dydx)
-        delete[] dydx;
-    if (dydp)
-        delete[] dydp;
     if (J)
         delete[] J;
     if (z)
@@ -354,11 +338,6 @@ void ReturnData::initFields() {
     if (ny > 0) {
         initField2(&y, "y", nt, ny);
         initField2(&sigmay, "sigmay", nt, ny);
-        if (sensi_meth != AMICI_SENSI_ASA) {
-            initField2(&dydp, "dydp", ny, nplist);
-            initField2(&dydx, "dydx", ny, nx);
-            initField2(&dxdotdp, "dxdotdp", nx, nplist);
-        }
     }
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         initField2(&sllh, "sllh", nplist, 1);
