@@ -1,7 +1,7 @@
 #include "include/amici_interface_cpp.h"
 #include "include/amici.h"
 #include <include/amici_model.h>
-#include <include/amici_model_functions.h>
+#include "include/amici.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -13,16 +13,11 @@
 
 #include <cstring>
 
-ReturnData *getSimulationResults(UserData *udata, const ExpData *edata) {
-
-    Model *model = getModel();
-
+ReturnData *getSimulationResults(Model *model, UserData *udata, const ExpData *edata) {
     ReturnData *rdata = new ReturnData(udata, model);
 
     int status = runAmiciSimulation(udata, edata, rdata, model);
     *rdata->status = status;
-
-    delete model;
 
     return rdata;
 }

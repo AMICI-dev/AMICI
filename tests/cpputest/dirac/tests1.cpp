@@ -73,20 +73,8 @@ TEST(groupDirac, testCreateAndFreeReturnData) {
 
 TEST(groupDirac, testSimulation) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/nosensi/options", model);
-    ExpData *edata = NULL;
-
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-
-    // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/nosensi/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
-
+    simulateAndVerifyFromFile(model, "/model_dirac/nosensi/");
     delete model;
-    delete rdata;
-    delete udata;
 }
 
 TEST(groupDirac, testSimulationExpData) {
@@ -95,20 +83,8 @@ TEST(groupDirac, testSimulationExpData) {
 
 TEST(groupDirac, testSensitivityForward) {
     Model *model = getModel();
-
-    // read simulation options
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, "/model_dirac/sensiforward/options", model);
-    ExpData *edata = NULL;
-
-    ReturnData *rdata = getSimulationResults(udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
-
-    // TODO proper paths /testDirac1/...
-    verifyReturnData("/model_dirac/sensiforward/results", rdata, udata, model, TEST_ATOL, TEST_RTOL);
-
+    simulateAndVerifyFromFile(model, "/model_dirac/sensiforward/");
     delete model;
-    delete rdata;
-    delete udata;
 }
 
 TEST(groupDirac, testSensitivityState) {

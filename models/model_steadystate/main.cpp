@@ -4,9 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "include/amici_model_functions.h" /* model-provided functions */
-#include <include/amici_hdf5.h>            /* AMICI HDF5 I/O functions */
-#include <include/amici_interface_cpp.h>   /* AMICI API */
+#include "wrapfunctions.h" /* model-provided functions */
+#include <include/amici_interface_cpp.h> /* AMICI API */
+#include <include/amici_hdf5.h>  /* AMICI HDF5 I/O functions */
 #include <include/amici_model.h>
 
 /* This is a scaffold for a stand-alone AMICI simulation executable
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
         AMI_HDF5_readSimulationExpData(hdffile, udata, "/data", model);
 
     // Run the simulation
-    ReturnData *rdata = getSimulationResults(udata, edata);
+    ReturnData *rdata = getSimulationResults(model, udata, edata);
     if (rdata == NULL) {
         if (edata)
             delete edata;

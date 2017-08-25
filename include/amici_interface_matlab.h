@@ -6,6 +6,8 @@
 
 class ReturnDataMatlab;
 
+Model *getModel();
+
 /**
  * @brief userDataFromMatlabCall extracts information from the matlab call and
  * returns the corresponding UserData struct
