@@ -10,18 +10,21 @@ function example_steadystate
     % SIMULATION
     
     % time vector
-    t = linspace(0,300,20);
+    t = linspace(0,100,50);
     p = [1;0.5;0.4;2;0.1];
     k = [0.1,0.4,0.7,1];
     
-    options = amioption('sensi',0,...
-        'maxsteps',1e4);
-    % load mex into memory
-    sol = simulate_model_steadystate(t,log10(p),k,[],options);
+    options = amioption(...
+        'sensi', 0, ...
+        'maxsteps', 1e4 ...
+        );
     
-    tic
-    sol = simulate_model_steadystate(t,log10(p),k,[],options);
-    disp(['Time elapsed with cvodes: ' num2str(toc) ])
+    % load mex into memory
+    simulate_model_steadystate(t,log10(p),k,[],options);
+    
+    tic;
+    sol = simulate_model_steadystate([t, inf],log10(p),k,[],options);
+    display(['Time elapsed with cvodes: ' num2str(toc) ' seconds']);
     
     %%
     % ODE15S
@@ -31,33 +34,34 @@ function example_steadystate
         + p(2)*x(1)*x(2) - p(4)*x(3) - k(4)*x(3)];
     options_ode15s = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
     
-    tic
+    tic;
     [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
-    disp(['Time elapsed with ode15s: ' num2str(toc) ])
+    disp(['Time elapsed with ode15s: ' num2str(toc) ' seconds'])
     
     %%
     % PLOTTING
     
     if(usejava('jvm'))
-        figure
+        figure;
         c_x = get(gca,'ColorOrder');
-        subplot(2,2,1)
+        subplot(2,1,1);
         for ix = 1:size(sol.x,2)
-            plot(t,sol.x(:,ix),'.-','Color',c_x(ix,:))
-            hold on
-            plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:))
+            plot(t,sol.x(1:end-1,ix),'.-','Color',c_x(ix,:));
+            hold on;
+            plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:));
+            plot([t(1), t(end)],sol.xss(ix)*[1, 1],'--','Color',c_x(ix,:));
         end
-        legend('x1','x1_{ode15s}','x2','x2_{ode15s}','x3','x3_{ode15s}','Location','NorthEastOutside')
-        legend boxoff
-        xlabel('time t')
-        ylabel('x')
-        box on
-        subplot(2,2,2)
-        plot(t,abs(sol.x-X_ode15s),'--')
-        set(gca,'YScale','log')
-        legend('error x1','error x2','error x3','Location','NorthEastOutside')
-        legend boxoff
-        set(gcf,'Position',[100 300 1200 500])
+        legend('x1','x1_{ode15s}','x1_{ss, Newton}','x2','x2_{ode15s}','x2_{ss, Newton}','x3','x3_{ode15s}','x3_{ss, Newton}','Location','NorthEastOutside');
+        legend boxoff;
+        xlabel('time t');
+        ylabel('x');
+        box on;
+        subplot(2,1,2);
+        plot(t,abs(sol.x(1:end-1,:)-X_ode15s),'--');
+        set(gca,'YScale','log');
+        legend('error x1','error x2','error x3','Location','NorthEastOutside');
+        legend boxoff;
+        set(gcf,'Position',[100 300 1200 500]);
     end
     
     %%
@@ -66,7 +70,7 @@ function example_steadystate
     options.sensi = 1;
     options.sens_ind = [3,1,2,4];
     
-    sol = simulate_model_steadystate(t,log10(p),k,[],options);
+    sol = simulate_model_steadystate([t, inf],log10(p),k,[],options);
     
     %%
     % FINITE DIFFERENCES
@@ -74,109 +78,157 @@ function example_steadystate
     eps = 1e-3;
     
     xi = log10(p);
+    sx_ffd = zeros(length(t)+1, 3, length(p));
+    sx_bfd = zeros(length(t)+1, 3, length(p));
+    sx_cfd = zeros(length(t)+1, 3, length(p));
     for ip = 1:4;
         xip = xi;
+        xim = xi;
         xip(ip) = xip(ip) + eps;
-        solp = simulate_model_steadystate(t,xip,k,[],options);
-        sx_fd(:,:,ip) = (solp.x - sol.x)/eps;
-        sy_fd(:,:,ip) = (solp.y - sol.y)/eps;
+        xim(ip) = xim(ip) - eps;
+        solp = simulate_model_steadystate([t, inf],xip,k,[],options);
+        solm = simulate_model_steadystate([t, inf],xim,k,[],options);
+        sx_ffd(:,:,ip) = (solp.x - sol.x) / eps;
+        sx_bfd(:,:,ip) = (sol.x - solm.x) / eps;
+        sx_cfd(:,:,ip) = (solp.x - solm.x) / (2*eps);
     end
     
     %%
     % PLOTTING
     if(usejava('jvm'))
-    figure
-    for ip = 1:4
-        subplot(4,2,ip*2-1)
-        hold on
-        for ix = 1:size(sol.x,2)
-            plot(t,sol.sx(:,ix,ip),'.-','Color',c_x(ix,:))
-            plot(t,sx_fd(:,ix,options.sens_ind(ip)),'d','Color',c_x(ix,:))
+        % Sensitivities for time series
+        figure;
+        for ip = 1:4
+            subplot(4,2,ip*2-1);
+            hold on;
+            for ix = 1:size(sol.x,2)
+                plot(t,sol.sx(1:end-1,ix,ip),'.-','Color',c_x(ix,:));
+                plot(t,sx_cfd(1:end-1,ix,options.sens_ind(ip)),'d','Color',c_x(ix,:));
+            end
+            legend('x1','x1_{fd}','x2','x2_{fd}','x3','x3_{fd}','Location','NorthEastOutside');
+            legend boxoff;
+            title(['state sensitivity for p' num2str(options.sens_ind(ip))]);
+            xlabel('time t');
+            ylabel('x');
+            box on;
+
+            subplot(4,2,ip*2);
+            plot(t,abs(sol.sx(1:end-1,:,ip)-sx_cfd(1:end-1,:,options.sens_ind(ip))),'--');
+            legend('error x1','error x2','error x3','Location','NorthEastOutside');
+            legend boxoff;
+            title(['error of state sensitivity for p' num2str(options.sens_ind(ip))]);
+            xlabel('time t');
+            ylabel('error');
+            set(gca,'YScale','log');
+            box on;
         end
-        legend('x1','x1_{fd}','x2','x2_{fd}','x3','x3_{fd}','Location','NorthEastOutside')
-        legend boxoff
-        title(['state sensitivity for p' num2str(options.sens_ind(ip))])
-        xlabel('time t')
-        ylabel('x')
-        box on
+        set(gcf,'Position',[100 300 1200 500]);
         
-        subplot(4,2,ip*2)
-        plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,options.sens_ind(ip))),'--')
-        legend('error x1','error x2','error x3','Location','NorthEastOutside')
-        legend boxoff
-        title(['error of state sensitivity for p' num2str(options.sens_ind(ip))])
-        xlabel('time t')
-        ylabel('error')
-        set(gca,'YScale','log')
-        box on
-    end
-    set(gcf,'Position',[100 300 1200 500])
+        sxss = squeeze(sol.sx(length(t),:,:));
+        sxss_fd = squeeze(sx_cfd(length(t),:,options.sens_ind));
+        
+        % Sensitivities for steady state
+        figure;
+        subplot(1,2,1);
+        hold on;
+        plot([-1,1], [-1,1], 'k:');
+        type = {'o','x','d','*'};
+        for ip = 1:4
+            for ix = 1:size(sol.x,2)
+                plot(sxss(ix,ip), sxss_fd(ix,ip), type{ip}, 'Color', c_x(ix,:));
+            end
+        end
+        legend('SA = FD',...
+            's^{x1}_{p3}','s^{x2}_{p3}','s^{x3}_{p3}',...
+            's^{x1}_{p1}','s^{x2}_{p1}','s^{x3}_{p1}',...
+            's^{x1}_{p2}','s^{x2}_{p2}','s^{x3}_{p2}',...
+            's^{x1}_{p4}','s^{x2}_{p3}','s^{x3}_{p4}',...
+            'Location','NorthEastOutside');
+        legend boxoff;
+        title('Steady state sensitivies');
+        xlabel('Steady state sensitivities');
+        ylabel('finite differences');
+        box on;
+        
+        
+        subplot(1,2,2);
+        hold on;
+        for ip = 1:4
+            for ix = 1:size(sol.x,2)
+                ind = 3*(ip-1)+ix;
+                plot(ind, abs(sxss(ind)-sxss_fd(ind)), type{ip}, 'Color', c_x(ix,:));
+            end
+        end
+        title('Error of steady state sensitivies');
+        set(gca,'XTick',1:12);
+        set(gca,'XTickLabel',...
+            {'s^{x1}_{p3}','s^{x2}_{p3}','s^{x3}_{p3}',...
+            's^{x1}_{p1}','s^{x2}_{p1}','s^{x3}_{p1}',...
+            's^{x1}_{p2}','s^{x2}_{p2}','s^{x3}_{p2}',...
+            's^{x1}_{p4}','s^{x2}_{p3}','s^{x3}_{p4}'});
+        xlabel('Sensitivity index');
+        xlim([0.5,12.5])
+        ylabel('Error');
+        box on;
+        set(gca,'YScale','log');
+        set(gcf,'Position',[100 300 1200 500]);
     end
     
     %%
-    % STEADY STATE SENSITIVITY
+    % XDOT FOR DIFFERENT TIME POINTS
     
-    sssens = NaN(size(sol.sx));
-    for it = 2:length(t)
+    t = [10,25,100,250,1000];
+    options.sensi = 0;
+    ssxdot = NaN(length(t), size(sol.x, 2));
+    for it = 1:length(t)
         tt = [0,t(it)];
-        options.sensi_meth = 'ss';
         solss = simulate_model_steadystate(tt,log10(p),k,[],options);
-        sssens(it,:,:) = solss.sx;
         ssxdot(it,:) = solss.xdot;
     end
     
-    %% 
-    % STEADY STATE COMPUTATION WITH NEWTON SOLVER
-    options.sensi_meth = 'forward';
-    options.sensi = 1;
-    t_newton = inf;
-    sol_newton = simulate_model_steadystate(t_newton,log10(p),k,[],options);
+    % Compute steady state wihtout integration before
+    sol = simulate_model_steadystate(inf,log10(p),k,[],options);
+    %Test recapturing in the case of Newton solver failing
+    options.newton_maxsteps = 10;
+    sol_newton_fail = simulate_model_steadystate(inf,log10(p),k,[],options);
     
     %%
     % PLOTTING
     if(usejava('jvm'))
-    figure
-    for ip = 1:4
-        subplot(4,2,ip*2-1)
-        hold on
+        figure;
+        subplot(1,3,[1 2]);
+        hold on;
         for ix = 1:size(sol.x,2)
-            plot(t,sol.sx(:,ix,ip),'.-','Color',c_x(ix,:))
-            plot(t,sssens(:,ix,ip),'d-','Color',c_x(ix,:))
+            plot(t,abs(ssxdot(:,ix)),'o-','Color',c_x(ix,:));
+            plot([10 1000], abs(sol.xdot(ix))*[1, 1],'--','Color',c_x(ix,:));
         end
-        legend('x1','x1_{ss}','x2','x2_{ss}','x3','x3_{ss}','Location','NorthEastOutside')
-        legend boxoff
-        title(['state steady sensitivity for p' num2str(ip)])
-        xlabel('time t')
-        ylabel('x')
-        box on
+        plot(t,sqrt(sum(ssxdot.^2,2)), 'ko-');
+        plot(t,sqrt(sum(sol.xdot.^2,2)), 'k--');
+        legend('dx_1/dt','dx_1/dt, ss','dx_2/dt','dx_2/dt, ss',...
+            'dx_3/dt','dx_3/dt, ss','||dx/dt||','||dx/dt||, ss',...
+            'Location','NorthEastOutside');
+        legend boxoff;
+        title('ODE right hand side over time');
+        xlabel('time t');
+        ylabel('xdot');
+        box on;
+        set(gca,'YScale','log');
+        set(gca,'XScale','log');
         
-        subplot(4,2,ip*2)
-        plot(t,abs(sol.sx(:,:,ip)-sssens(:,:,ip)),'--')
-        legend('error x1','error x2','error x3','Location','NorthEastOutside')
-        legend boxoff
-        title(['error of steady state sensitivity for p' num2str(ip)])
-        xlabel('time t')
-        ylabel('error')
-        set(gca,'YScale','log')
-        box on
-    end
-    set(gcf,'Position',[100 300 1200 500])
-    
-    figure
-    scatter(sqrt(sum((ssxdot./sol.x).^2,2)),sqrt(sum(sum((sol.sx-sssens).^2,2),3)))
-    hold on
-    plot([1e-15,1e5],[1e-15,1e5],'k:')
-    set(gca,'YScale','log')
-    set(gca,'XScale','log')
-    box on
-    axis square
-    xlabel('||dxdt/x||_2')
-    ylabel('error steady state approximation')
-    set(gca,'FontSize',15)
-    set(gca,'LineWidth',1.5)
-    set(gcf,'Position',[100 300 1200 500])
-    
-    drawnow
+        subplot(1,3,3);
+        hold on;
+        bar(sol_newton_fail.newton_numsteps);
+        legend boxoff;
+        title('Number of Newton steps');
+        xlabel('Solver run');
+        ylabel('Newton steps');
+        xlim([0.5,2.5]);
+        ylim([-1 12]);
+        a = gca();
+        a.Children.BarWidth = 0.6;
+        box on;
+        
+        set(gcf,'Position',[100 300 1200 500]);
     end
 
 end
