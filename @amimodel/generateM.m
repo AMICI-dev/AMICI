@@ -102,7 +102,6 @@ fprintf(fid,['%% simulate_' this.modelname '.m is the matlab interface to the cv
     '%%    .sensi_meth   ... method for sensitivity analysis.\n'...
     '%%        ''forward'': forward sensitivity analysis (DEFAULT)\n'...
     '%%        ''adjoint'': adjoint sensitivity analysis \n'...
-    '%%        ''ss'': steady state sensitivity analysis \n'...
     '%%    .adjoint   ... flag for adjoint sensitivity analysis.\n'...
     '%%        true: on \n'...
     '%%        false: off (DEFAULT)\n'...
@@ -234,12 +233,6 @@ else
     fprintf(fid,'    end\n');
     fprintf(fid,'end\n');
 end
-fprintf(fid,'if(options_ami.ss>0)\n');
-fprintf(fid,'    if(options_ami.sensi>1)\n');
-fprintf(fid,'        error(''Computation of steady state sensitivity only possible for first order sensitivities'');\n');
-fprintf(fid,'    end\n');
-fprintf(fid,'    options_ami.sensi = 0;\n');
-fprintf(fid,'end\n');
 if(~this.forward)
     fprintf(fid,'if(options_ami.sensi>0)\n');
     fprintf(fid,'    if(options_ami.sensi_meth == 1)\n');
@@ -416,12 +409,6 @@ if(o2flag)
     fprintf(fid,['    sol.sigmaz = sol.sigmaz(:,1:' num2str(nztrue) ');\n']);
     fprintf(fid,'end\n');
 end
-
-
-fprintf(fid,'if(options_ami.sensi_meth == 3)\n');
-fprintf(fid,'    sol.sx = -sol.J\\sol.dxdotdp;\n');
-fprintf(fid,'    sol.sy = sol.dydx*sol.sx + sol.dydp;\n');
-fprintf(fid,'end\n');
 
 fprintf(fid,'if(nargout>1)\n');
 fprintf(fid,'    varargout{1} = sol.status;\n');

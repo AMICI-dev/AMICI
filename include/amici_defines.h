@@ -26,7 +26,7 @@
 #define AMICI_ERROR_FSA                -92
 #define AMICI_ERROR_ASA                -91
 #define AMICI_ERROR_SA                 -90
-#define AMICI_ERROR_SS                 -89
+#define AMICI_ERROR_SS_SENSIS          -89
 #define AMICI_ERROR_DATA               -88
 #define AMICI_ERROR_EVENT              -87
 #define AMICI_ERROR_SIMULATION         -86

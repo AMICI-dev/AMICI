@@ -9,7 +9,7 @@ ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
 }
 
 void ReturnDataMatlab::initFields() {
-    const int numFields = 38;
+    const int numFields = 35;
     const char *field_names_sol[numFields] = {"status",
                                               "llh",
                                               "sllh",
@@ -31,9 +31,6 @@ void ReturnDataMatlab::initFields() {
                                               "s2rz",
                                               "xdot",
                                               "J",
-                                              "dydp",
-                                              "dydx",
-                                              "dxdotdp",
                                               "numsteps",
                                               "numrhsevals",
                                               "numerrtestfails",

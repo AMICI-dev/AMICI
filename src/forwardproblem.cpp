@@ -58,7 +58,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
                             if (std::isinf(rdata->ts[it])) {
                                 status =
                                     SteadystateProblem::workSteadyStateProblem(
-                                        udata, tdata, rdata, it, solver, model);
+                                        udata, tdata, rdata, solver, model, it);
                             } else {
                                 status = solver->AMISolve(
                                     RCONST(rdata->ts[it]), tdata->x, tdata->dx,
@@ -365,33 +365,7 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
     if (rdata->J)
         memcpy(rdata->J, tdata->Jtmp->data,
                model->nx * model->nx * sizeof(realtype));
-
-    if (rdata->sensi_meth == AMICI_SENSI_SS) {
-        status = model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dxdotdp)
-            memcpy(rdata->dxdotdp, tdata->dxdotdp,
-                   model->nx * rdata->nplist * sizeof(realtype));
-
-        status = model->fdydp(tdata->t, rdata->nt - 1, tdata->x, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dydp)
-            memcpy(rdata->dydp, tdata->dydp,
-                   model->ny * rdata->nplist * sizeof(realtype));
-
-        status = model->fdydx(tdata->t, rdata->nt - 1, tdata->x, tdata);
-        if (status != AMICI_SUCCESS)
-            return status;
-
-        if (rdata->dydx)
-            memcpy(rdata->dydx, tdata->dydx,
-                   model->ny * model->nx * sizeof(realtype));
-    }
-
+    
     return status;
 }
 
@@ -876,19 +850,21 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
     int status = AMICI_SUCCESS;
     realtype *sx_tmp;
 
-    for (int ip = 0; ip < rdata->nplist; ip++) {
-        if (model->nx > 0) {
-            if (rdata->ts[it] > udata->tstart) {
-                status = solver->AMIGetSens(&(tdata->t), tdata->sx);
-                if (status != AMICI_SUCCESS)
-                    return status;
-            }
+    if (!(std::isinf(rdata->ts[it]))) {
+        for (int ip = 0; ip < rdata->nplist; ip++) {
+            if (model->nx > 0) {
+                if (rdata->ts[it] > udata->tstart) {
+                    status = solver->AMIGetSens(&(tdata->t), tdata->sx);
+                    if (status != AMICI_SUCCESS)
+                        return status;
+                }
 
-            sx_tmp = NV_DATA_S(tdata->sx[ip]);
-            if (!sx_tmp)
-                return AMICI_ERROR_FSA;
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                if (!sx_tmp)
+                    return AMICI_ERROR_FSA;
+                for (int ix = 0; ix < model->nx; ix++) {
+                    rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                }
             }
         }
     }
