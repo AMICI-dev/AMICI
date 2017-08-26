@@ -18,6 +18,7 @@ matrix:
             - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
+            - valgrind
     - os: osx
       compiler: clang
       before_install: brew install hdf5
