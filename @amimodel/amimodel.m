@@ -23,8 +23,6 @@ classdef amimodel < handle
         adjoint = true;
         % flag indicating whether forward sensitivities should be enabled @type bool
         forward = true;
-        % flag indicating whether steady state sensitivities should be enabled @type bool
-        steadystate = true;
         % default initial time @type double
         t0 = 0;
         % type of wrapper (cvodes/idas) @type string

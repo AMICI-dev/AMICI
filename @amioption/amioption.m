@@ -202,16 +202,14 @@ classdef amioption < matlab.mixin.CustomDisplay
                         this.sensi_meth = 1;
                     case 'adjoint' 
                         this.sensi_meth = 2;
-                    case 'ss'
-                        this.sensi_meth = 3;
                     otherwise
-                        error('Unknown sensitivity method. Must be either ''forward'',''adjoint'' or ''ss''!');
+                        error('Unknown sensitivity method. Must be either ''forward'' or ''adjoint''!');
                 end
             else
                 assert(isnumeric(value),'The option sensi_meth must have a numeric value!')
                 assert(floor(value)==value,'The option sensi_meth must be an integer!')
-                assert(value<=4,'Only 1, 2, 3 are valid options for sensi_meth!')
-                assert(value>=0,'Only 1, 2, 3 are valid options for sensi_meth!')
+                assert(value<=3,'Only 1 and 2 are valid options for sensi_meth!')
+                assert(value>=0,'Only 1 and 2 are valid options for sensi_meth!')
                 this.sensi_meth = value;
             end
         end

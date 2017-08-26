@@ -114,11 +114,6 @@ end
 
 funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
 
-
-if(this.steadystate)
-    funs = {funs{:},'dwdp','dxdotdp','dydp'};
-end
-
 if(this.forward)
     funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
 end
