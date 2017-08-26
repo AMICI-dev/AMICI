@@ -21,7 +21,7 @@ matrix:
             - valgrind
     - os: osx
       compiler: clang
-      before_install: brew install hdf5
+      before_install: brew install hdf5 valgrind
 
 install:
     - ./scripts/run-build.sh
