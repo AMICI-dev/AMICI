@@ -18,7 +18,6 @@ matrix:
             - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
-            - valgrind
     - os: osx
       compiler: clang
       before_install: brew install hdf5 valgrind
@@ -28,7 +27,7 @@ install:
 
 script:  
     - ./scripts/run-cpputest.sh
-    - ./scripts/run-valgrind.sh
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
 
 notifications:
   slack: 
