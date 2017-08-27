@@ -14,19 +14,24 @@ class ReturnData;
 class TempData;
 class Model;
 
+/**
+ * @brief The NewtonSolver class sets up the linear solver for the Newton method.
+ */
+
 class NewtonSolver {
     
 public:
     NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     
     static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status);
-    /**
-     * @param[in] ntry integer number of Newton solver try
-     * @param[in] nnewt integer number of Newton steps in the current Newton solver try
-     * @param[out] delta N_Vector solution of the linear system
-     * @return int status flag indicating success of execution @type int
-     */
-    virtual int getStep(int ntry, int nnewt, N_Vector delta) = 0;
+
+    int getStep(int ntry, int nnewt, N_Vector delta);
+    
+    int getSensis(int it);
+    
+    virtual int prepareLinearSystem(int ntry, int nnewt) = 0;
+
+    virtual int solveLinearSystem(N_Vector rhs) = 0;
     
     virtual ~NewtonSolver();
     
@@ -44,6 +49,9 @@ class NewtonSolverDense : public NewtonSolver {
 public:
     NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverDense();
     
 private:
@@ -60,6 +68,9 @@ class NewtonSolverSparse : public NewtonSolver {
 public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverSparse();
     
 private:
@@ -79,9 +90,14 @@ class NewtonSolverIterative : public NewtonSolver {
 public:
     NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
     int getStep(int ntry, int nnewt, N_Vector delta);
+    int getSensis(int it);
+    int solveLinearSystem(N_Vector rhs);
+    int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverIterative();
     
 private:
+    int newton_try;
+    int i_newton;
 };
 
-#endif
+#endif // NEWTON_SOLVER

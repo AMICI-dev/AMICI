@@ -35,17 +35,6 @@ class ReturnData {
     /** time derivative (dimension: nx) */
     double *xdot;
 
-    /** parameter derivative of time derivative (dimension: nx x nplist,
-     * column-major) */
-    double *dxdotdp;
-
-    /** state derivative of observables (dimension: ny x nx, column-major) */
-    double *dydx;
-
-    /** parameter derivative of observables (dimension: ny x nplist,
-     * column-major) */
-    double *dydp;
-
     /** Jacobian of differential equation right hand side (dimension: nx x nx,
      * column-major) */
     double *J;
