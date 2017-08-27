@@ -123,8 +123,6 @@ CMakeLists.txt.user
 
 *.make
 
-*.cmake
-
 *.bin
 
 *.csv
