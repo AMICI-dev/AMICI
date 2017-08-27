@@ -2,7 +2,7 @@
 #define AMICI_INTERFACE_CPP_H
 
 #include "include/amici_misc.h"
-
+#include "amici_defines.h"
 #include <include/edata.h>
 #include <include/rdata.h>
 #include <include/udata.h>
