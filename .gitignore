@@ -77,7 +77,11 @@ CMakeCache.txt
 
 CMakeLists.txt.user
 
+.coveralls.yml
+
 *.a
+
+*.info
 
 *.o
 

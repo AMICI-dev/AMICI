@@ -82,11 +82,8 @@ target_link_libraries(${PROJECT_NAME}
     -ldl -lz -lm
 )
 
-if(CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_ACTIVATE_COVERAGE STREQUAL "TRUE"))
-    include(CodeCoverage)
-    set(COVERAGE_EXCLUDES "${AMICI_DIR}/SuiteSparse/*" "${AMICI_DIR}/Sundials/")
-    APPEND_COVERAGE_COMPILER_FLAGS() 
-    setup_target_for_coverage(NAME amici_coverage)
+if($ENV{ENABLE_GCOV_COVERAGE})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
 endif()
 
 include(CMakeModules/clang-tools.cmake)

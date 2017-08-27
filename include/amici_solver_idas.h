@@ -140,7 +140,7 @@ public:
 
     int AMIGetNumNonlinSolvConvFails(void *ami_mem, long int *numnonlinsolvconvfails);
 
-    int AMIGetLastOrder(int *order);
+    int AMIGetLastOrder(void *ami_mem, int *order);
 
     void *AMIGetAdjBmem(void *ami_mem, int which);
 
