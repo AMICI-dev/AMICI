@@ -43,7 +43,7 @@ int CVodeSolver::wrap_RootInit(int ne) {
     return CVodeRootInit(ami_mem, ne, rootFunction);
 }
 
-int CVodeSolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) {
+int CVodeSolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
     return CVodeSensInit1(ami_mem, udata->nplist, udata->sensi_meth, fsxdot, sx);
 }
 

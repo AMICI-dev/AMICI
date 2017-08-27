@@ -953,11 +953,11 @@ int ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::updateHeaviside(TempData *tdata, int ne) {
+int ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
     /**
      * updateHeaviside updates the heaviside variables h on event occurences
      *
-     * @param[ne] number of events
+     * @param[in] ne number of events
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @return status = status flag indicating success of execution @type int;
      */

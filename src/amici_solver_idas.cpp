@@ -41,7 +41,7 @@ int IDASolver::wrap_RootInit(int ne) {
     return IDARootInit(ami_mem, ne, rootFunction);
 }
 
-int IDASolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata) {
+int IDASolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
     return IDASensInit(ami_mem, udata->nplist, udata->sensi_meth, fsxdot, sx, sdx);
 }
 
