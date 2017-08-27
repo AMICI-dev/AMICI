@@ -136,6 +136,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
 void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol) {
     hsize_t m, n, o;
     double *expected;
+    int status;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
     checkEqualArray(expected, rdata->sllh, model->np, atol, rtol);
@@ -173,13 +174,15 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
         }
     }
 
-    AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
-    for(int ip = 0; ip < udata->nplist; ++ip)
-        checkEqualArray(&expected[ip * udata->nt * model->nytrue],
-                &rdata->ssigmay[ip * udata->nt * model->ny],
-                udata->nt * model->nytrue, atol, rtol);
-    delete[] expected;
-    
+    status = AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
+    if(status == AMICI_SUCCESS) {
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            checkEqualArray(&expected[ip * udata->nt * model->nytrue],
+                    &rdata->ssigmay[ip * udata->nt * model->ny],
+                    udata->nt * model->nytrue, atol, rtol);
+        delete[] expected;
+    }
+
     if(model->nz>0) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmaz", &expected, &m, &n, &o);
         for(int ip = 0; ip < udata->nplist; ++ip)
