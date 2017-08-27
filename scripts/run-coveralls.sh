@@ -9,9 +9,6 @@ if [ -f ${AMICI_PATH}/scripts/env.sh ]; then
     . ${AMICI_PATH}/scripts/env.sh
 fi
 
-
-mkdir ${AMICI_PATH}/gcov
-
 lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH} --zerocounters -q
 
 for MODELSTR in $TESTMODELS; do
@@ -20,7 +17,7 @@ for MODELSTR in $TESTMODELS; do
     ./model_${MODEL}_test
 done
 
-cd ${AMICI_PATH}/src
+cd ${AMICI_PATH}/build/CMakeFiles/amici.dir/src
 
 lcov --compat-libtool --directory . --capture --output-file coverage.info
 
