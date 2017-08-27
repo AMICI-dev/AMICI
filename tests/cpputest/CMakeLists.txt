@@ -16,8 +16,8 @@ set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/lib/libCppUTest.a" "${CPPUTEST_DIR}/lib/li
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 if(CMAKE_COMPILER_IS_GNUCXX)
     include(CodeCoverage)
-    setup_target_for_coverage(${PROJECT_NAME}_coverage ${PROJECT_TEST_NAME} coverage)
     set(COVERAGE_EXCLUDES '${AMICI_DIR}/SuiteSparse/*' '${AMICI_DIR}/Sundials/')
+    setup_target_for_coverage(amici_coverage amici coverage)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
@@ -30,10 +30,6 @@ include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${SUITESPARSE_DIR}/include")
 include_directories(${CPPUTEST_INCLUDE_DIR})
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-    target_link_libraries(${PROJECT_TEST_NAME} gcov)
-endif()
 
 if(APPLE)
     set(SHARED_OBJECT_EXTENSION .dylib)
@@ -57,6 +53,10 @@ set_property(TARGET amici PROPERTY INTERFACE_LINK_LIBRARIES
     "-lpthread -ldl -lz"
     "-lm"
     )
+    
+if(CMAKE_COMPILER_IS_GNUCXX)
+    target_link_libraries(amici gcov)
+endif()
 
 
 enable_testing()
