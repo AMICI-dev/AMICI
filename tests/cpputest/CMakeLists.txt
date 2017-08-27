@@ -13,7 +13,6 @@ set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/" CACHE PATH "cppUTest root directory")
 set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include" CACHE PATH "cppUTest include directory")
 set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/lib/libCppUTest.a" "${CPPUTEST_DIR}/lib/libCppUTestExt.a"  CACHE PATH "cppUTest libraries")
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
 
@@ -57,10 +56,3 @@ add_subdirectory(jakstat_adjoint)
 add_subdirectory(neuron)
 add_subdirectory(jakstat_adjoint_o2)
 add_subdirectory(neuron_o2)
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-    include(CodeCoverage)
-    set(COVERAGE_EXCLUDES '${AMICI_DIR}/SuiteSparse/*' '${AMICI_DIR}/Sundials/')
-    setup_target_for_coverage(amici_coverage amici coverage)
-    target_link_libraries(amici_coverage gcov)
-endif()

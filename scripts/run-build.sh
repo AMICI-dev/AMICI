@@ -98,8 +98,9 @@ fi
 # libamici
 mkdir -p ${AMICI_PATH}/build
 cd ${AMICI_PATH}/build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ACTIVATE_COVERAGE=TRUE ..
 make
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make amici_coverage; fi
 if [ $? -ne 0 ] ; then
     exit 1
 fi

@@ -148,6 +148,7 @@ function(SETUP_TARGET_FOR_COVERAGE)
     endif() # NOT GENHTML_PATH
 
     # Setup target
+
     add_custom_target(${Coverage_NAME}
 
         # Cleanup lcov
