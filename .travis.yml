@@ -19,11 +19,14 @@ matrix:
             - zlib1g-dev
             - libatlas-base-dev
             - valgrind
+            - lcov
+            - gcov
+            - genhtml
+      before_install: pip install --user cpp-coveralls
       after_success: coveralls --exclude lib --exclude tests --gcov-options '\-lp'
     - os: osx
       compiler: clang
-      before_install: 
-        - brew install hdf5
+      before_install: brew install hdf5
         
 install:
     - ./scripts/run-build.sh
