@@ -21,6 +21,8 @@ class Model;
 
 void simulateAndVerifyFromFile(Model *model, const std::string path);
 
+void simulateAndVerifyFromFile(Model *model, std::string path, double atol, double rtol);
+
 void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::string path, double atol, double rtol);
 
 ExpData *getTestExpData(const UserData *udata, Model *model);

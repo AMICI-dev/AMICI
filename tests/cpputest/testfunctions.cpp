@@ -14,6 +14,12 @@ void simulateAndVerifyFromFile(Model *model, const std::string path)
     simulateAndVerifyFromFile(model, HDFFILE, path, TEST_ATOL, TEST_RTOL);
 }
 
+void simulateAndVerifyFromFile(Model *model, std::string path, double atol, double rtol)
+{
+    simulateAndVerifyFromFile(model, HDFFILE, path, atol, rtol);
+}
+
+
 void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::string path, double atol, double rtol)
 {
     // read simulation options
@@ -210,3 +216,4 @@ void printBacktrace(int depth) {
     size = backtrace(array, depth);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
 }
+
