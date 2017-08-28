@@ -22,7 +22,6 @@ matrix:
             - lcov
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
-        - pip install --user cpp-coveralls
         - gem install coveralls-lcov
       after_success: ./scripts/run-coveralls.sh
     - os: osx
