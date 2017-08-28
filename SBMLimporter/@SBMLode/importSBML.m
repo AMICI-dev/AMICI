@@ -6,7 +6,7 @@ function importSBML(this,filename)
 %  filename: target name of the model
 %
 % Return values:
-%
+%  void
 
 extension = [];
 if(exist([filename],'file'))
