@@ -88,7 +88,7 @@ classdef amioption < matlab.mixin.CustomDisplay
             %   the named parameters altered with the specified value
             %
             %   Note: to see the parameters, check the
-            %   documentation page for @amioption
+            %   documentation page for amioption
             %
             % Parameters:
             %  varargin: input to construct amioption object, see function
