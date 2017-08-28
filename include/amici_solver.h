@@ -137,7 +137,7 @@ public:
      * AMIReInitB reinitializes the adjoint states after an event occurence
      *
      * @param[in] which identifier of the backwards problem @type int
-     * @param[in] t0 new timepoint @type realtype
+     * @param[in] tB0 new timepoint @type realtype
      * @param[in] yyB0 new adjoint state variables @type N_Vector
      * @param[in] ypB0 new adjoint derivative state variables (DAE only) @type N_Vector
      * @return status flag indicating success of execution @type int
@@ -232,7 +232,7 @@ public:
      * wrap_SensInit1 initialises the sensitivities at the specified initial timepoint
      *
      * @param[in] sx initial state sensitivities @type N_Vector
-     * @param[in] dx initial derivative state sensitivities (DAE only) @type N_Vector
+     * @param[in] sdx initial derivative state sensitivities (DAE only) @type N_Vector
      * @param[in] udata initial derivative state sensitivities (DAE only) @type N_Vector
      * @return status flag indicating success of execution @type int
      */
@@ -308,109 +308,392 @@ public:
                                   void *eh_data);
 
     /**
-     * AMICreate specifies solver method and initializes solver memory
+     * AMICreate specifies solver method and initializes solver memory for the forward problem
      *
      * @param[in] lmm linear multistep method CV_ADAMS or CV_BDF @type int
-     * @param[in] lmm nonlinear solver method CV_NEWTON or CV_FUNCTIONAL @type int
+     * @param[in] iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL @type int
      * @return status flag indicating success of execution @type int
      */
     virtual void *AMICreate(int lmm, int iter) = 0;
 
+    /**
+     * AMISStolerances sets relative and absolute tolerances for the forward problem
+     *
+     * @param[in] rtol relative tolerances @type double
+     * @param[in] atol absolute tolerances @type double
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISStolerances(double rtol, double atol) = 0;
 
+    /**
+     * AMISensEEtolerances activates automatic estimation of tolerances for the forward problem
+     *
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISensEEtolerances() = 0;
 
+    /**
+     * AMISetSensErrCon specifies whether error control is also enforced for sensitivities for the forward problem
+     *
+     * @param[in] error_corr activation flag @type bool
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetSensErrCon(bool error_corr) = 0;
 
+    /**
+     * AMISetSensErrCon specifies whether error control is also enforced for the backward quadrature problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] flag activation flag @type bool
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetQuadErrConB(int which, bool flag) = 0;
 
+    /**
+     * AMISetErrHandlerFn attaches the error handler function (errMsgIdAndTxt) to the solver
+     *
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetErrHandlerFn() = 0;
 
+    /**
+     * AMISetUserData attaches the user data object (here this is a TempData and not UserData object) to the forward problem
+     *
+     * @param[in] user_data TempData object, @type TempData
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetUserData(void *user_data) = 0;
 
+    /**
+     * AMISetUserDataB attaches the user data object (here this is a TempData and not UserData object) to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] user_data TempData object, @type TempData
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetUserDataB(int which, void *user_data) = 0;
 
+    /**
+     * AMISetMaxNumSteps specifies the maximum number of steps for the forward problem
+     *
+     * @param[in] mxsteps number of steps @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetMaxNumSteps(long int mxsteps) = 0;
 
+    /**
+     * AMISetMaxNumStepsB specifies the maximum number of steps for the forward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] mxstepsB number of steps @type long int
+     * @return status flag indicating success of execution @type int
+     */
+    virtual int AMISetMaxNumStepsB(int which, long int mxstepsB) = 0;
+
+    /**
+     * AMISetStabLimDet activates stability limit detection for the forward problem
+     *
+     * @param[in] stldet flag for stability limit detection (TRUE or FALSE) @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetStabLimDet(int stldet) = 0;
 
+    /**
+     * AMISetStabLimDetB activates stability limit detection for the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] stldet flag for stability limit detection (TRUE or FALSE) @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetStabLimDetB(int which, int stldet) = 0;
 
+    /**
+     * AMISetId specify algebraic/differential components (DAE only)
+     *
+     * @param[in] model model specification @type Model
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetId(Model *model) = 0;
 
+    /**
+     * AMISetId deactivates error control for algebraic components (DAE only)
+     *
+     * @param[in] flag deactivation flag @type bool
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetSuppressAlg(bool flag) = 0;
 
+    /**
+     * AMISetSensParams specifies the scaling and indexes for sensitivity computation
+     *
+     * @param[in] p paramaters @type realtype
+     * @param[in] pbar parameter scaling constants @type realtype
+     * @param[in] plist parameter index list @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISetSensParams(realtype *p, realtype *pbar, int *plist) = 0;
 
+    /**
+     * AMIGetDky interpolates the (derivative of the) solution at the requested timepoint
+     *
+     * @param[in] t timepoint @type realtype
+     * @param[in] k derivative order @type int
+     * @param[out] dky interpolated solution @type N_Vector
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIGetDky(realtype t, int k, N_Vector dky) = 0;
 
+    /**
+     * AMIFree frees allocation solver memory
+     *
+     * @return status flag indicating success of execution @type int
+     */
     virtual void AMIFree() = 0;
 
+    /**
+     * AMIAdjInit initializes the adjoint problem
+     *
+     * @param[in] steps number of integration points between checkpoints @type long int
+     * @param[in] interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIAdjInit(long int steps, int interp) = 0;
 
     /**
-     * AMICreateB specifies solver method and initializes solver memory
+     * AMICreateB specifies solver method and initializes solver memory for the backward problem
      *
      * @param[in] which identifier of the backwards problem @type int
      * @param[in] lmm linear multistep method CV_ADAMS or CV_BDF @type int
-     * @param[in] lmm nonlinear solver method CV_NEWTON or CV_FUNCTIONAL @type int
+     * @param[in] iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL @type int
      * @return status flag indicating success of execution @type int
      */
     virtual int AMICreateB(int lmm, int iter, int *which) = 0;
 
+    /**
+     * AMISStolerancesB sets relative and absolute tolerances for the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] relTolB relative tolerances @type double
+     * @param[in] absTolB absolute tolerances @type double
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISStolerancesB(int which, realtype relTolB,
                                  realtype absTolB) = 0;
 
+    /**
+     * AMISStolerancesB sets relative and absolute tolerances for the quadrature backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] reltolQB relative tolerances @type double
+     * @param[in] abstolQB absolute tolerances @type double
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIQuadSStolerancesB(int which, realtype reltolQB,
                                      realtype abstolQB) = 0;
 
-    virtual int AMISetMaxNumStepsB(int which, long int mxstepsB) = 0;
-
+    /**
+     * AMIDense attaches a dense linear solver to the forward problem
+     *
+     * @param[in] nx number of state variables @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIDense(int nx) = 0;
 
+    /**
+     * AMIDenseB attaches a dense linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] nx number of state variables @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIDenseB(int which, int nx) = 0;
 
+    /**
+     * AMIBand attaches a banded linear solver to the forward problem
+     *
+     * @param[in] nx number of state variables @type int
+     * @param[in] ubw upper matrix bandwidth @type int
+     * @param[in] lbw lower matrix bandwidth @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIBand(int nx, int ubw, int lbw) = 0;
 
+    /**
+     * AMIBandB attaches a banded linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] nx number of state variables @type int
+     * @param[in] ubw upper matrix bandwidth @type int
+     * @param[in] lbw lower matrix bandwidth @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIBandB(int which, int nx, int ubw, int lbw) = 0;
 
+    /**
+     * AMIDiag attaches a diagonal linear solver to the forward problem
+     *
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIDiag() = 0;
 
+    /**
+     * AMIDiagB attaches a diagonal linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIDiagB(int which) = 0;
 
+    /**
+     * AMIDAMISpgmr attaches a scaled predonditioned GMRES linear solver to the forward problem
+     *
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISpgmr(int prectype, int maxl) = 0;
 
+    /**
+     * AMIDAMISpgmrB attaches a scaled predonditioned GMRES linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISpgmrB(int which, int prectype, int maxl) = 0;
 
+    /**
+     * AMISpbcg attaches a scaled predonditioned Bi-CGStab linear solver to the forward problem
+     *
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISpbcg(int prectype, int maxl) = 0;
 
+    /**
+     * AMISpbcgB attaches a scaled predonditioned Bi-CGStab linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISpbcgB(int which, int prectype, int maxl) = 0;
 
+    /**
+     * AMISptfqmr attaches a scaled predonditioned TFQMR linear solver to the forward problem
+     *
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISptfqmr(int prectype, int maxl) = 0;
 
+    /**
+     * AMISptfqmrB attaches a scaled predonditioned TFQMR linear solver to the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT or PREC_BOTH @type int
+     * @param[in] maxl maximum Kryloc subspace dimension @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMISptfqmrB(int which, int prectype, int maxl) = 0;
 
+    /**
+     * AMIKLU attaches a sparse linear solver to the forward problem
+     *
+     * @param[in] nx number of state variables @type int
+     * @param[in] nnz number of nonzero entries in the jacobian @type int
+     * @param[in] sparsetype sparse storage type, CSC_MAT for column matrix, CSR_MAT for row matrix @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIKLU(int nx, int nnz, int sparsetype) = 0;
 
+    /**
+     * AMIKLUSetOrdering sets the ordering for the sparse linear solver of the forward problem
+     *
+     * @param[in] ordering ordering algorithm to reduce fill 0:AMD 1:COLAMD 2: natural ordering @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIKLUSetOrdering(int ordering) = 0;
 
+    /**
+     * AMIKLUSetOrderingB sets the ordering for the sparse linear solver of the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] ordering ordering algorithm to reduce fill 0:AMD 1:COLAMD 2: natural ordering @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIKLUSetOrderingB(int which, int ordering) = 0;
 
+    /**
+     * AMIKLUB attaches a sparse linear solver to the forward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] nx number of state variables @type int
+     * @param[in] nnz number of nonzero entries in the jacobian @type int
+     * @param[in] sparsetype sparse storage type, CSC_MAT for column matrix, CSR_MAT for row matrix @type int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIKLUB(int which, int nx, int nnz, int sparsetype) = 0;
 
+    /**
+     * AMIGetNumSteps reports the number of solver steps 
+     *
+     * @param[in] ami_mem pointer to the solver memory object (can be from forward or backward problem) @type void
+     * @param[out] numsteps output array @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIGetNumSteps(void *ami_mem, long int *numsteps) = 0;
 
+    /**
+     * AMIGetNumRhsEvals reports the number of right hand evaluations
+     *
+     * @param[in] ami_mem pointer to the solver memory object (can be from forward or backward problem) @type void
+     * @param[out] numrhsevals output array @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIGetNumRhsEvals(void *ami_mem, long int *numrhsevals) = 0;
 
+    /**
+     * AMIGetNumErrTestFails reports the number of local error test failures
+     *
+     * @param[in] ami_mem pointer to the solver memory object (can be from forward or backward problem) @type void
+     * @param[out] numerrtestfails output array @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIGetNumErrTestFails(void *ami_mem,
                                       long int *numerrtestfails) = 0;
 
+    /**
+     * AMIGetNumNonlinSolvConvFails reports the number of nonlinear convergence failures
+     *
+     * @param[in] ami_mem pointer to the solver memory object (can be from forward or backward problem) @type void
+     * @param[out] numnonlinsolvconvfails output array @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int
     AMIGetNumNonlinSolvConvFails(void *ami_mem,
                                  long int *numnonlinsolvconvfails) = 0;
 
+    /**
+     * AMIGetLastOrder reports the order of the integration method during the last internal step
+     *
+     * @param[in] ami_mem pointer to the solver memory object (can be from forward or backward problem) @type void
+     * @param[out] order output array @type long int
+     * @return status flag indicating success of execution @type int
+     */
     virtual int AMIGetLastOrder(void *ami_mem, int *order) = 0;
 
+    /**
+     * AMIGetAdjBmem retrieves the solver memory object for the backward problem
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] ami_mem pointer to the forward solver memory object @type void
+     * @return ami_memB pointer to the backward solver memory object @type void
+     */
     virtual void *AMIGetAdjBmem(void *ami_mem, int which) = 0;
 
     int setLinearSolver(const UserData *udata, Model *model);
