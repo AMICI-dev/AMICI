@@ -17,6 +17,8 @@ for MODELSTR in $TESTMODELS; do
     ./model_${MODEL}_test
 done
 
+cd ${AMICI_PATH}
+
 lcov --compat-libtool --no-external --directory ${AMICI_PATH}/build/CMakeFiles/amici.dir/src --base-directory ${AMICI_PATH} --capture --output-file coverage.info
 
 coveralls-lcov coverage.info
