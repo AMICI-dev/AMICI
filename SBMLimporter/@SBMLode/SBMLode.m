@@ -39,7 +39,7 @@ classdef SBMLode < handle
         bolus = sym.empty();
         % mathematical experessions for function
         funmath = cell.empty();
-        % function call
+        % string function signature
         funarg = cell.empty();
         % symbol of time
         time_symbol = char.empty();
