@@ -48,7 +48,6 @@ set_property(TARGET amici PROPERTY INTERFACE_LINK_LIBRARIES
     "-lm"
     )
 
-
 enable_testing()
 
 add_subdirectory(dirac)
@@ -57,3 +56,7 @@ add_subdirectory(jakstat_adjoint)
 add_subdirectory(neuron)
 add_subdirectory(jakstat_adjoint_o2)
 add_subdirectory(neuron_o2)
+
+if($ENV{ENABLE_GCOV_COVERAGE})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+endif()

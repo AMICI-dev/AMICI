@@ -89,8 +89,8 @@ public:
                     1,
                     AMICI_O2MODE_NONE)
     {
-        z2event = new int[nz] {1,};
-        idlist = new realtype[nx] {0, 0,};
+        z2event = new int[1] {1,};
+        idlist = new realtype[2] {0, 0,};
     }
 
     Solver *getSolver(){

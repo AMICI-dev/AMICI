@@ -10,6 +10,7 @@ Current build status
 
 Linux/Mac: [![TravisCI](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
 Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/ob315laj1i6i3om3?svg=true)](https://ci.appveyor.com/project/FFroehlich/amici)
+Coverage: [![Coverage Status](https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=feature_coveralls)](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
 
 FAQ
 ===

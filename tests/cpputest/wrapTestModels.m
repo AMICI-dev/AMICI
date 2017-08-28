@@ -50,8 +50,6 @@ function wrapTestModels()
         cd(fileparts(mfilename('fullpath')));
     end
 
-    
-    
     cd(fileparts(mfilename('fullpath')));
     
 end

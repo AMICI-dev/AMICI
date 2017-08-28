@@ -19,10 +19,15 @@ matrix:
             - zlib1g-dev
             - libatlas-base-dev
             - valgrind
+            - lcov
+      env: ENABLE_GCOV_COVERAGE=TRUE
+      before_install: 
+        - gem install coveralls-lcov
+      after_success: ./scripts/run-coveralls.sh
     - os: osx
       compiler: clang
       before_install: brew install hdf5
-
+        
 install:
     - ./scripts/run-build.sh
 

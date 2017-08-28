@@ -107,7 +107,7 @@ EXTERNC void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
                                                 double **destination,
                                                 hsize_t *m, hsize_t *n);
 
-EXTERNC void AMI_HDF5_getDoubleArrayAttribute3D(
+EXTERNC int AMI_HDF5_getDoubleArrayAttribute3D(
     hid_t file_id, const char *optionsObject, const char *attributeName,
     double **destination, hsize_t *m, hsize_t *n, hsize_t *o);
 

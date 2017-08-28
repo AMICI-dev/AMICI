@@ -299,7 +299,7 @@ int IDASolver::AMIGetNumNonlinSolvConvFails(void *ami_mem, long *numnonlinsolvco
     return IDAGetNumNonlinSolvConvFails(ami_mem,numnonlinsolvconvfails);
 }
 
-int IDASolver::AMIGetLastOrder(int *order) {
+int IDASolver::AMIGetLastOrder(void *ami_mem, int *order) {
     return IDAGetLastOrder(ami_mem,order);
 }
 
