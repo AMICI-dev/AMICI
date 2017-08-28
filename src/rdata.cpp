@@ -35,8 +35,8 @@ void ReturnData::setDefaults() {
         llh = chi2 = sllh = s2llh = nullptr;
     numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB =
         numnonlinsolvconvfailsB = nullptr;
-    newton_status = newton_time = newton_numsteps = newton_numlinsteps = xss =
-        nullptr;
+    newton_status = newton_time = newton_numsteps = newton_numlinsteps = x0 =
+        sx0 = nullptr;
     status = nullptr;
 
     freeFieldsOnDestruction = true;
@@ -281,8 +281,10 @@ ReturnData::~ReturnData() {
         delete[] numerrtestfailsB;
     if (numnonlinsolvconvfailsB)
         delete[] numnonlinsolvconvfailsB;
-    if (xss)
-        delete[] xss;
+    if (sx0)
+        delete[] sx0;
+    if (x0)
+        delete[] x0;
     if (newton_status)
         delete[] newton_status;
     if (newton_numsteps)
@@ -328,7 +330,8 @@ void ReturnData::initFields() {
         initField2(&x, "x", nt, nx);
         initField2(&xdot, "xdot", 1, nx);
         initField2(&J, "J", nx, nx);
-        initField2(&xss, "xss", 1, nx);
+        initField2(&x0, "x0", 1, nx);
+        initField2(&sx0, "sx0", nx, nplist);
         initField2(&newton_status, "newton_status", 1, 1);
         initField2(&newton_numsteps, "newton_numsteps", 1, 2);
         initField2(&newton_numlinsteps, "newton_numlinsteps", newton_maxsteps,
