@@ -90,12 +90,11 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
      * Runs the Newton solver iterations and checks for convergence to steady state
      *
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] newtonSolver pointer to the NewtonSolver object @type NewtonSolver
      * @param[in] newton_try integer start number of Newton solver (1 or 2)
-     * @param[out] tdata pointer to the temporary data object @type TempData
-     * @param[out] rdata pointer to the return data object @type ReturnData
      * @return stats integer flag indicating success of the method
      */
 
@@ -344,7 +343,7 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] ntry integer newton_try integer start number of Newton solver (1 or 2)
      * @param[in] nnewt integer number of current Newton step
-     * @param[in] N_Vector ns_delta
+     * @param[in] ns_delta ???
      * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @return stats integer flag indicating success of the method

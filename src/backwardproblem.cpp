@@ -280,7 +280,7 @@ int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
      *
      * @param[in] iroot discontinuity occurance index @type int
      * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[ne] number of events
+     * @param[in] ne number of events @type int
      * @return status flag indicating success of execution @type int
      */
 

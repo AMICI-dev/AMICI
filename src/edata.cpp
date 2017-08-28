@@ -7,6 +7,12 @@
 ExpData::ExpData() { setDefaults(); }
 
 ExpData::ExpData(const UserData *udata, Model *model) {
+    /**
+     * constructor that initializes with UserData and model
+     *
+     * @param[out] udata pointer to the return data struct @type ReturnData
+     * @param[in] model pointer to model specification object @type Model
+     */
     setDefaults();
     if (udata) {
         my = new double[udata->nt * model->nytrue]();

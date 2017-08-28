@@ -8,11 +8,8 @@ class Model;
 class ExpData {
 
 public:
-    /**
-     * @brief Default constructor
-     */
+    /** default constructor */
     ExpData();
-    /** initialization with UserData and model */
     ExpData(const UserData *udata, Model *model);
     ~ExpData();
     

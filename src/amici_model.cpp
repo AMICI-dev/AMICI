@@ -70,7 +70,7 @@ int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
     return status;
 }
 
-/* Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative
  * @param[in] it timepoint index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
@@ -122,7 +122,7 @@ int Model::fsJy(const int it,const TempData *tdata, ReturnData *rdata) {
     return (status);
 }
 
-/* Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. parameters
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. parameters
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -173,7 +173,7 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-/* Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. state variables
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. state variables
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -216,7 +216,7 @@ int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
     return (status);
 }
 
-/* Sensitivity of event-resolved measurement negative log-likelihood Jz, total derivative
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz, total derivative
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] rdata pointer to return data object @type ReturnData
@@ -275,7 +275,7 @@ int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     return (status);
 }
 
-/* Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. parameters
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. parameters
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -353,7 +353,7 @@ int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-/* Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. state variables
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. state variables
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -409,7 +409,7 @@ int Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
     return (status);
 }
 
-/* initialization of model properties
+/** initialization of model properties
  * @param[in] udata pointer to user data object @type UserData
  * @param[out] tdata pointer to temp data object @type TempData
  * @return status flag indicating success of execution @type int
@@ -432,7 +432,7 @@ int Model::initialize(const UserData *udata, TempData *tdata) {
     return AMICI_SUCCESS;
 }
 
-/* initialization of initial states
+/** initialization of initial states
  * @param[in] x0data array with initial state values @type double
  * @param[out] tdata pointer to temp data object @type TempData
  * @return status flag indicating success of execution @type int

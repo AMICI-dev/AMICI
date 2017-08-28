@@ -38,10 +38,6 @@ class SteadystateProblem {
     static int getNewtonSimulation(UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
                                    Model *model);
-
-    static int getSteadystateSensis(UserData *udata, ReturnData *rdata,
-                                   TempData *tdata, Model *model,
-                                   NewtonSolver *newtonSolver);
     
     static int linsolveSPBCG(UserData *udata, ReturnData *rdata,
                              TempData *tdata, Model *model, int ntry,

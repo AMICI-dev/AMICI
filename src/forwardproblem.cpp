@@ -810,7 +810,6 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
     /**
      * getDataSensisFSA extracts data information for forward sensitivity analysis
      *
-     * @param[out] status flag indicating success of execution @type int
      * @param[in] it index of current timepoint @type int
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -818,7 +817,7 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[in] solver pointer to solver object @type Solver
      * @param[in] model pointer to model specification object @type Model
-     * @return void
+     * @return status flag indicating success of execution @type int
      */
 
     int status = AMICI_SUCCESS;
