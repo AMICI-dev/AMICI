@@ -460,13 +460,19 @@ void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
     }
 }
 
-void AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id,
+int AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id,
                                         const char *optionsObject,
                                         const char *attributeName,
                                         double **destination, hsize_t *m,
                                         hsize_t *n, hsize_t *o) {
+    if(!AMI_HDF5_attributeExists(file_id, optionsObject, attributeName))
+        return 1;
+
     int rank;
-    H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    herr_t status = H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    if(status < 0)
+        return status;
+
     assert(rank == 3);
 
     hsize_t dims[3];
@@ -491,6 +497,8 @@ void AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id,
     // printfArray(*destination, (*m) * (*n) * (*o), "%e ");
     printf("\n");
 #endif
+
+    return AMICI_SUCCESS;
 }
 
 void AMI_HDF5_getDoubleArrayAttribute4D(hid_t file_id,

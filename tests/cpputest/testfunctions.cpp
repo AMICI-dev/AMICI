@@ -11,23 +11,29 @@
 
 void simulateAndVerifyFromFile(Model *model, const std::string path)
 {
-    simulateAndVerifyFromFile(model, path, TEST_ATOL, TEST_RTOL);
+    simulateAndVerifyFromFile(model, HDFFILE, path, TEST_ATOL, TEST_RTOL);
 }
 
-void simulateAndVerifyFromFile(Model *model, const std::string path, double atol, double rtol)
+void simulateAndVerifyFromFile(Model *model, std::string path, double atol, double rtol)
+{
+    simulateAndVerifyFromFile(model, HDFFILE, path, atol, rtol);
+}
+
+
+void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::string path, double atol, double rtol)
 {
     // read simulation options
     std::string optionsPath = path + "/options";
-    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(HDFFILE, optionsPath.c_str(), model);
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str(), model);
 
     std::string measurementPath = path + "/data";
-    ExpData *edata = AMI_HDF5_readSimulationExpData(HDFFILE, udata, measurementPath.c_str(), model);
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata, measurementPath.c_str(), model);
 
     ReturnData *rdata = getSimulationResults(model, udata, edata);
     CHECK_EQUAL(0, *rdata->status);
 
     std::string resultPath = path + "/results";
-    verifyReturnData(resultPath.c_str(), rdata, udata, model, atol, rtol);
+    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata, udata, model, atol, rtol);
 
     if(edata)
         delete edata;
@@ -75,14 +81,14 @@ void checkEqualArrayStrided(const double *expected, const double *actual, int le
     }
 }
 
-void verifyReturnData(const char* resultPath, const ReturnData *rdata, const UserData *udata, const Model *model, double atol, double rtol) {
+void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const UserData *udata, const Model *model, double atol, double rtol) {
     CHECK_FALSE(udata == NULL);
     CHECK_FALSE(rdata == NULL);
 
     // compare to saved data in hdf file
-    hid_t file_id = H5Fopen(HDFFILE, H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    hsize_t m, n, o;
+    hsize_t m, n;
     double *expected;
 
     double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
@@ -136,6 +142,7 @@ void verifyReturnData(const char* resultPath, const ReturnData *rdata, const Use
 void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol) {
     hsize_t m, n, o;
     double *expected;
+    int status;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
     checkEqualArray(expected, rdata->sllh, model->np, atol, rtol);
@@ -173,13 +180,15 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
         }
     }
 
-    AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
-    for(int ip = 0; ip < udata->nplist; ++ip)
-        checkEqualArray(&expected[ip * udata->nt * model->nytrue],
-                &rdata->ssigmay[ip * udata->nt * model->ny],
-                udata->nt * model->nytrue, atol, rtol);
-    delete[] expected;
-    
+    status = AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
+    if(status == AMICI_SUCCESS) {
+        for(int ip = 0; ip < udata->nplist; ++ip)
+            checkEqualArray(&expected[ip * udata->nt * model->nytrue],
+                    &rdata->ssigmay[ip * udata->nt * model->ny],
+                    udata->nt * model->nytrue, atol, rtol);
+        delete[] expected;
+    }
+
     if(model->nz>0) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmaz", &expected, &m, &n, &o);
         for(int ip = 0; ip < udata->nplist; ++ip)
@@ -207,3 +216,4 @@ void printBacktrace(int depth) {
     size = backtrace(array, depth);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
 }
+
