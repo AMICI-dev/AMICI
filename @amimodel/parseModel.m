@@ -4,7 +4,7 @@ function parseModel(this)
 % Parameters:
 %
 % Return values:
-%
+%  void
 
 % load old hashes
 HTable = this.loadOldHashes();

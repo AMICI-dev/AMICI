@@ -6,16 +6,19 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % rerunning amiwrap().
     % 
     % Parameters:
-    % modelname name of the model as specified for amiwrap()
-    % wrap_path AMICI path
-    % recompile flag indicating whether all source files should be
-    %   recompiled
-    % coptim optimization flags
-    % debug enable debugging?
-    % funs array with names of the model functions, will be guessed 
+    %  modelname: name of the model as specified for amiwrap()
+    %  wrap_path: AMICI path
+    %  recompile: flag indicating whether all source files should be
+    %  recompiled
+    %  coptim: optimization flags
+    %  debug: enable debugging
+    %  funs: array with names of the model functions, will be guessed 
     %   from source files if left empty 
-    % cfun struct indicating which files should be recompiled
-    % adjoint flag indicating whether adjoint sensitivies are enabled
+    %  cfun: struct indicating which files should be recompiled
+    %  adjoint: flag indicating whether adjoint sensitivies are enabled
+    %
+    % Return values:
+    %  void
     
     % if no list provided, try to determine relevant files from model
     % folder

@@ -75,6 +75,8 @@ classdef amifun
         [ this ] = getCVar(this)
         
         [ this ] = getSensiFlag(this)
+
+        [ this, model ] = getSyms(this,model)
     end
 end
 
