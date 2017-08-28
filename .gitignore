@@ -109,8 +109,6 @@ CMakeLists.txt.user
 
 *.js
 
-*.template
-
 *.dox
 
 *.json
