@@ -77,7 +77,11 @@ CMakeCache.txt
 
 CMakeLists.txt.user
 
+.coveralls.yml
+
 *.a
+
+*.info
 
 *.o
 
@@ -122,8 +126,6 @@ CMakeLists.txt.user
 *.plist
 
 *.make
-
-*.cmake
 
 *.bin
 

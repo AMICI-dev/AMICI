@@ -19,4 +19,8 @@ target_link_libraries(${PROJECT_NAME}
     amici
 )
 
+if($ENV{ENABLE_GCOV_COVERAGE})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+endif()
+
 add_test(NAME dirac COMMAND ./model_dirac_test -c)

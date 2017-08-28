@@ -130,4 +130,7 @@ fi
 
 cd ${AMICI_PATH}
 
-echo "export DYLD_LIBRARY_PATH=\"\${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib\"" > scripts/env.sh
+cat >scripts/env.sh <<EOL
+export DYLD_LIBRARY_PATH=\"\${DYLD_LIBRARY_PATH}:${SUNDIALS_BUILD_PATH}/lib:${SUITESPARSE_ROOT}/lib\"
+export TESTMODELS="${TESTMODELS}"
+EOL

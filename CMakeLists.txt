@@ -15,6 +15,7 @@ add_definitions(-DAMICI_WITHOUT_MATLAB)
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
+set(CMAKE_MODULE_PATH ${AMICI_DIR}/CMakeModules)
 
 find_package(HDF5 COMPONENTS C HL REQUIRED)
 
@@ -80,5 +81,9 @@ target_link_libraries(${PROJECT_NAME}
     ${BLAS_LIBRARIES}
     -ldl -lz -lm
 )
+
+if($ENV{ENABLE_GCOV_COVERAGE})
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+endif()
 
 include(CMakeModules/clang-tools.cmake)
