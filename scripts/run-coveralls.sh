@@ -19,7 +19,7 @@ done
 
 cd ${AMICI_PATH}/build/CMakeFiles/amici.dir/src
 
-lcov --compat-libtool --no-external --directory . --base-directory /Users/F.Froehlich/Documents/MATLAB/AMICI/  --capture --output-file coverage.info 
+lcov --compat-libtool --no-external --directory . --base-directory ${AMICI_PATH} --capture --output-file coverage.info 
 
 coveralls-lcov coverage.info
 
