@@ -11,6 +11,8 @@ CMakeFiles/*
 
 build/*
 
+build-debug/*
+
 tests/cpputest/build/*
 
 tests/cpputest/Testing/*
@@ -21,8 +23,6 @@ doc/*
 
 fonts/*
 
-mtoc/*
-
 sed-ml/*
 
 src/doc/*
@@ -30,8 +30,6 @@ src/doc/*
 stylesheets/*
 
 images/*
-
-doc/*
 
 debug_amici/*
 
@@ -73,7 +71,13 @@ cmake_install.cmake
 
 CMakeCache.txt
 
+CMakeLists.txt.user
+
+.coveralls.yml
+
 *.a
+
+*.info
 
 *.o
 
@@ -97,8 +101,6 @@ CMakeCache.txt
 
 *.md5
 
-*.template
-
 *.dox
 
 *.json
@@ -106,8 +108,6 @@ CMakeCache.txt
 *.mat
 
 *.js
-
-*.template
 
 *.dox
 
@@ -118,8 +118,6 @@ CMakeCache.txt
 *.plist
 
 *.make
-
-*.cmake
 
 *.bin
 
@@ -234,3 +232,5 @@ examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint_hdf.m
 examples/example_neuron/simulate_model_neuron_hdf.m
 
 examples/example_neuron/simulate_model_neuron.m
+
+scripts/env.sh

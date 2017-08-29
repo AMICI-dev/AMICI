@@ -1,6 +1,9 @@
-function [ output_args ] = wrapTestModels( input_args )
-    %WRAPTESTMODELS Summary of this function goes here
-    %   Detailed explanation goes here
+function wrapTestModels()
+% wrapTestModels calls amiwrap on all test models. currently necessary for continuous integrations
+% to yield meaningful results
+%
+% Return values:
+%  void
     
     amiciPath = fileparts(mfilename('fullpath'));
     amiciPath = [amiciPath '/../..'];
@@ -50,8 +53,6 @@ function [ output_args ] = wrapTestModels( input_args )
         cd(fileparts(mfilename('fullpath')));
     end
 
-    
-    
     cd(fileparts(mfilename('fullpath')));
     
 end

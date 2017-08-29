@@ -6,6 +6,8 @@ function writeAMICI(this,modelname)
     %  modelname: target name of the model (_syms.m will be appended to the name )
     %
     % Return values:
+    % void
+    
     fprintf('writing file ...\n')
     fid = fopen([modelname '_syms.m'],'w');
     

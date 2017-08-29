@@ -46,7 +46,7 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'int ix;\n');
             fprintf(fid,['memset(xBdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'qBdot'
-            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*udata->nJ);\n');
+            fprintf(fid,'memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*model->nJ);\n');
         case 'x0'
             fprintf(fid,['memset(x0_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
             fprintf(fid,['realtype t = udata->tstart;\n']);
@@ -122,14 +122,14 @@ function printLocalVars(this,model,fid)
         case 'deltaxB'
             fprintf(fid,['memset(tdata->deltaxB,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'deltaqB'
-            fprintf(fid,['memset(tdata->deltaqB,0,sizeof(realtype)*udata->nplist*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->deltaqB,0,sizeof(realtype)*udata->nplist*model->nJ);\n']);
         case 'deltasx'
             fprintf(fid,['memset(tdata->deltasx,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'stau'
-            fprintf(fid,['memset(udata->stau,0,sizeof(realtype)*udata->nplist);\n']);
+            fprintf(fid,['memset(tdata->stau,0,sizeof(realtype)*udata->nplist);\n']);
         case 'dxdotdp'
             fprintf(fid,'int ix;\n');
-            fprintf(fid,['memset(udata->dxdotdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
+            fprintf(fid,['memset(tdata->dxdotdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist);\n']);
         case 'root'
             % nothing
         case 'sigma_y'
@@ -143,31 +143,31 @@ function printLocalVars(this,model,fid)
         case 'Jy'
             % nothing
         case 'dJydy'
-            fprintf(fid,['memset(tdata->dJydy,0,sizeof(realtype)*udata->ny*udata->nytrue*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJydy,0,sizeof(realtype)*model->ny*model->nytrue*model->nJ);\n']);
         case 'dJydsigma'
-            fprintf(fid,['memset(tdata->dJydsigma,0,sizeof(realtype)*udata->nytrue*udata->ny*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJydsigma,0,sizeof(realtype)*model->nytrue*model->ny*model->nJ);\n']);
         case 'Jz'
             % nothing
         case 'Jrz'
             % nothing
         case 'dJzdz'
-            fprintf(fid,['memset(tdata->dJzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);\n']);
         case 'dJrzdz'
-            fprintf(fid,['memset(tdata->dJrzdz,0,sizeof(realtype)*udata->nz*udata->nztrue*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJrzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);\n']);
         case 'dJzdsigma'
-            fprintf(fid,['memset(tdata->dJzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJzdsigma,0,sizeof(realtype)*model->nztrue*model->nz*model->nJ);\n']);
         case 'dJrzdsigma'
-            fprintf(fid,['memset(tdata->dJrzdsigma,0,sizeof(realtype)*udata->nztrue*udata->nz*udata->nJ);\n']);
+            fprintf(fid,['memset(tdata->dJrzdsigma,0,sizeof(realtype)*model->nztrue*model->nz*model->nJ);\n']);
         case 'w'
-            fprintf(fid,['memset(udata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
+            fprintf(fid,['memset(tdata->w,0,sizeof(realtype)*' num2str(model.nw) ');\n']);
         case 'dwdx'
-            fprintf(fid,['memset(udata->dwdx,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
+            fprintf(fid,['memset(tdata->dwdx,0,sizeof(realtype)*' num2str(model.ndwdx) ');\n']);
         case 'dwdp'
-            fprintf(fid,['memset(udata->dwdp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
+            fprintf(fid,['memset(tdata->dwdp,0,sizeof(realtype)*' num2str(model.ndwdp) ');\n']);
         case 'M'
-            fprintf(fid,['memset(udata->M,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+            fprintf(fid,['memset(tdata->M,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         case 'dfdx'
-            fprintf(fid,['memset(udata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+            fprintf(fid,['memset(tdata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         otherwise
             error(['unkown function: ' this.funstr])
     end

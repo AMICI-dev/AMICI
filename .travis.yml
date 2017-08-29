@@ -18,15 +18,28 @@ matrix:
             - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
+            - valgrind
+            - lcov
+            - graphviz
+            - doxygen
+            - cppcheck
+      env: ENABLE_GCOV_COVERAGE=TRUE
+      before_install: 
+        - gem install coveralls-lcov
+      after_success: 
+        - ./scripts/run-coveralls.sh
+        - ./scripts/run-doxygen.sh
     - os: osx
       compiler: clang
-      before_install: brew install homebrew/science/hdf5
-
+      before_install: brew install hdf5 cppcheck
+        
 install:
     - ./scripts/run-build.sh
 
 script:  
     - ./scripts/run-cpputest.sh
+    - ./scripts/run-cppcheck.sh
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
 
 notifications:
   slack: 

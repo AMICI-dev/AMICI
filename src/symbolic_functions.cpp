@@ -5,47 +5,68 @@
  * This file contains definitions of various symbolic functions which
  */
 
-#include <include/symbolic_functions.h>
-#include <include/spline.h>
-#include <cstdarg>
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <cfloat>
+#include <cmath>
+#include <cstdarg>
+#include <cstdlib>
+#include <include/spline.h>
+#include <include/symbolic_functions.h>
 #if _MSC_VER && !__INTEL_COMPILER
-    #include <malloc.h>
-    #define alloca _alloca
+#include <malloc.h>
+#define alloca _alloca
 #elif defined(WIN32) || defined(__WIN32) || defined(__WIN32__)
-    // For alloca().
-    #include <malloc.h>
+// For alloca().
+#include <malloc.h>
 #else
-    #include <alloca.h>
+#include <alloca.h>
 #endif
 
+/**
+ * c++ interface to the isNaN function
+ *
+ * @param what argument
+ * @return isnan(what)
+ *
+ */
 int amiIsNaN(double what) {
     return std::isnan(what);
 }
 
+/**
+ * c++ interface to the isinf function
+ *
+ * @param what argument
+ * @return isnan(what)
+ *
+ */
 int amiIsInf(double what) {
     return std::isinf(what);
 }
 
+/**
+ * function returning nan
+ *
+ * @return NaN
+ *
+ */
 double amiGetNaN() {
     return NAN;
 }
 
 /**
- * c implementation of log function, this prevents returning NaN values for negative values
+ * c implementation of log function, this prevents returning NaN values for
+ * negative values
  *
  * @param x argument
  * @return if(x>0) then log(x) else -Inf
  *
  */
 double amilog(double x) {
-    if (x<=0) {
-        return(-log(DBL_MAX));
+    if (x <= 0) {
+        return (-log(DBL_MAX));
     } else {
-        return(log(x));
+        return (log(x));
     }
 }
 
@@ -58,9 +79,9 @@ double amilog(double x) {
  */
 double dirac(double x) {
     if (x == 0) {
-        return(DBL_MAX);
+        return (DBL_MAX);
     } else {
-        return(0);
+        return (0);
     }
 }
 
@@ -73,13 +94,11 @@ double dirac(double x) {
  */
 double heaviside(double x) {
     if (x <= 0) {
-        return(0);
+        return (0);
     } else {
-        return(1);
+        return (1);
     }
 }
-
-
 
 /**
  *  c implementation of matlab function sign
@@ -90,12 +109,12 @@ double heaviside(double x) {
  */
 double sign(double x) {
     if (x > 0) {
-        return(1);
+        return (1);
     } else {
-        if (x < 0 ) {
-            return(-1);
+        if (x < 0) {
+            return (-1);
         } else {
-            return(0);
+            return (0);
         }
     }
 }
@@ -111,12 +130,14 @@ double sign(double x) {
  */
 double am_min(double a, double b, double c) {
     int anan = amiIsNaN(a), bnan = amiIsNaN(b);
-    if(anan || bnan) {
-        if(anan && !bnan) return b;
-        if(!anan && bnan) return a;
+    if (anan || bnan) {
+        if (anan && !bnan)
+            return b;
+        if (!anan && bnan)
+            return a;
         return a;
     }
-    return(std::min(a,b));
+    return (std::min(a, b));
 }
 
 /**
@@ -130,18 +151,18 @@ double am_min(double a, double b, double c) {
  * @return id == 2:  if(a < b) then 0 else 1 @type double
  *
  */
-double Dam_min(int id,double a, double b, double c) {
+double Dam_min(int id, double a, double b, double c) {
     if (id == 1) {
         if (a < b) {
-            return(1);
+            return (1);
         } else {
-            return(0);
+            return (0);
         }
     } else {
         if (a < b) {
-            return(0);
+            return (0);
         } else {
-            return(1);
+            return (1);
         }
     }
 }
@@ -157,12 +178,14 @@ double Dam_min(int id,double a, double b, double c) {
  */
 double am_max(double a, double b, double c) {
     int anan = amiIsNaN(a), bnan = amiIsNaN(b);
-    if(anan || bnan) {
-        if(anan && !bnan) return b;
-        if(!anan && bnan) return a;
+    if (anan || bnan) {
+        if (anan && !bnan)
+            return b;
+        if (!anan && bnan)
+            return a;
         return a;
     }
-    return(std::max(a,b));
+    return (std::max(a, b));
 }
 
 /**
@@ -176,165 +199,163 @@ double am_max(double a, double b, double c) {
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
  */
-double Dam_max(int id,double a, double b, double c) {
+double Dam_max(int id, double a, double b, double c) {
     if (id == 1) {
         if (a > b) {
-            return(1);
+            return (1);
         } else {
-            return(0);
+            return (0);
         }
     } else {
         if (a > b) {
-            return(0);
+            return (0);
         } else {
-            return(1);
+            return (1);
         }
     }
 }
 
-
 /**
- * spline function
+ * spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined 
+ * and `dudt` user defined slope at first node. All arguments must be of type double.
  *
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return spline(t)
  *
  */
 double am_spline(double t, int num, ...) {
-    
+
     va_list valist;
-    
+
     double uout;
     double ss;
     double dudt;
-    
-    double *ts = (double*) alloca(num*sizeof(double));
-    double *us = (double*) alloca(num*sizeof(double));
-    
-    double *b = (double*) alloca(num*sizeof(double));
-    double *c = (double*) alloca(num*sizeof(double));
-    double *d = (double*) alloca(num*sizeof(double));
-    
+
+    double *ts = (double *)alloca(num * sizeof(double));
+    double *us = (double *)alloca(num * sizeof(double));
+
+    double *b = (double *)alloca(num * sizeof(double));
+    double *c = (double *)alloca(num * sizeof(double));
+    double *d = (double *)alloca(num * sizeof(double));
+
     int i;
     int j;
-    
-     /* Variable list type macro */
+
+    /* Variable list type macro */
     /* initialize valist for num number of arguments */
     va_start(valist, num);
-    
-    for (i=0; i<2*num; i+=2) {
-        j = i/2;
+
+    for (i = 0; i < 2 * num; i += 2) {
+        j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
     }
     ss = va_arg(valist, double);
     dudt = va_arg(valist, double);
-    
+
     /* clean memory reserved for valist */
     va_end(valist);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
-    
-    return(uout);
+
+    return (uout);
 }
 
 /**
- * exponentiated spline function
+ * exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments must be of type double.
+
  *
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return spline(t)
  *
  */
 double am_spline_pos(double t, int num, ...) {
-    
+
     va_list valist;
-    
+
     double uout;
     double ss;
     double dudt;
-    
-    double *ts = (double*) alloca(num*sizeof(double));
-    double *us = (double*) alloca(num*sizeof(double));
-    double *uslog = (double*) alloca(num*sizeof(double));
-    
-    double *b = (double*) alloca(num*sizeof(double));
-    double *c = (double*) alloca(num*sizeof(double));
-    double *d = (double*) alloca(num*sizeof(double));
-    
+
+    double *ts = (double *)alloca(num * sizeof(double));
+    double *us = (double *)alloca(num * sizeof(double));
+    double *uslog = (double *)alloca(num * sizeof(double));
+
+    double *b = (double *)alloca(num * sizeof(double));
+    double *c = (double *)alloca(num * sizeof(double));
+    double *d = (double *)alloca(num * sizeof(double));
+
     int i;
     int j;
-    
+
     /* initialize valist for num number of arguments */
     va_start(valist, num);
-    
-    for (i=0; i<2*num; i+=2) {
-        j = i/2;
+
+    for (i = 0; i < 2 * num; i += 2) {
+        j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);
     }
     ss = va_arg(valist, double);
     dudt = va_arg(valist, double);
-    
+
     /* clean memory reserved for valist */
     va_end(valist);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uout = seval(num, t, ts, uslog, b, c, d);
-    
-    return(exp(uout));
+
+    return (exp(uout));
 }
 
 /**
- * derivation of a spline function
+ * derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of type double.
  *
+ * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return dsplinedp(t)
  *
  */
 double am_Dspline(int id, double t, int num, ...) {
-    
+
     va_list valist;
-    
+
     double uout;
     double ss;
     double dudt;
-    
-    double *ts = (double*) alloca(num*sizeof(double));
-    double *us = (double*) alloca(num*sizeof(double));
-    double *ps = (double*) alloca(num*sizeof(double));
-    
-    double *b = (double*) alloca(num*sizeof(double));
-    double *c = (double*) alloca(num*sizeof(double));
-    double *d = (double*) alloca(num*sizeof(double));
-    
+
+    double *ts = (double *)alloca(num * sizeof(double));
+    double *us = (double *)alloca(num * sizeof(double));
+    double *ps = (double *)alloca(num * sizeof(double));
+
+    double *b = (double *)alloca(num * sizeof(double));
+    double *c = (double *)alloca(num * sizeof(double));
+    double *d = (double *)alloca(num * sizeof(double));
+
     int i;
     int j;
     int did;
-    
-    did = id/2 - 2;
-    
+
+    did = id / 2 - 2;
+
     /* initialize valist for num number of arguments */
     va_start(valist, num);
-    
-    for (i=0; i<2*num; i+=2) {
-        j = i/2;
+
+    for (i = 0; i < 2 * num; i += 2) {
+        j = i / 2;
         ts[j] = va_arg(valist, double);
         ps[j] = va_arg(valist, double);
         us[j] = 0.0;
@@ -342,58 +363,58 @@ double am_Dspline(int id, double t, int num, ...) {
     us[did] = 1.0;
     ss = va_arg(valist, double);
     dudt = va_arg(valist, double);
-    
+
     /* clean memory reserved for valist */
     va_end(valist);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
-    
-    return(uout);
+
+    return (uout);
 }
 
 /**
- * derivation of an exponentiated spline function
+ * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of type double.
  *
+ * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
  * @return dsplinedp(t)
  *
  */
 double am_Dspline_pos(int id, double t, int num, ...) {
-    
-    va_list valist;
-    
-    double *ts = (double*) alloca(num*sizeof(double));
-    double *us = (double*) alloca(num*sizeof(double));
-    double *sus = (double*) alloca(num*sizeof(double));
-    double *uslog = (double*) alloca(num*sizeof(double));
 
-    double *b = (double*) alloca(num*sizeof(double));
-    double *c = (double*) alloca(num*sizeof(double));
-    double *d = (double*) alloca(num*sizeof(double));
-    
+    va_list valist;
+
+    double *ts = (double *)alloca(num * sizeof(double));
+    double *us = (double *)alloca(num * sizeof(double));
+    double *sus = (double *)alloca(num * sizeof(double));
+    double *uslog = (double *)alloca(num * sizeof(double));
+
+    double *b = (double *)alloca(num * sizeof(double));
+    double *c = (double *)alloca(num * sizeof(double));
+    double *d = (double *)alloca(num * sizeof(double));
+
     double uout;
     double ss;
     double dudt;
     double uspline_pos;
     double suspline;
-    
+
     int i;
     int j;
     int did;
-    
-    did = id/2 - 2;
-    
+
+    did = id / 2 - 2;
+
     /* initialize valist for num number of arguments */
     va_start(valist, num);
-    
-    for (i=0; i<2*num; i+=2) {
-        j = i/2;
+
+    for (i = 0; i < 2 * num; i += 2) {
+        j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);
@@ -402,82 +423,82 @@ double am_Dspline_pos(int id, double t, int num, ...) {
     ss = va_arg(valist, double);
     dudt = va_arg(valist, double);
     sus[did] = 1.0;
-    
+
     /* clean memory reserved for valist */
     va_end(valist);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, sus, b, c, d);
     suspline = seval(num, t, ts, sus, b, c, d);
     uout = suspline * uspline_pos / us[did];
-    
-    return(uout);
+
+    return (uout);
 }
 
 /**
- * second derivation of a spline function
+ * second derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
  *
+ * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
- * @return spline(t)
+ * @return ddspline(t)
  *
  */
-double am_DDspline(int id1, int id2, double t, int num, ...) {
-    return(0.0);
-}
+double am_DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
 
 /**
- * derivation of an exponentiated spline function
+ * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
  *
+ * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
  * @param t point at which the spline should be evaluated
- * @param ti location of node i
- * @param pi spline value at node i
- * @param ss flag indicating whether slope at first node should be user defined
- * @param dudt user defined slope at first node
+ * @param num number of spline nodes
  *
- * @return spline(t)
+ * @return ddspline(t)
  *
  */
 double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
-    
+
     va_list valist;
-    
-    double *ts = (double*) alloca(num*sizeof(double));
-    double *us = (double*) alloca(num*sizeof(double));
-    double *sus1 = (double*) alloca(num*sizeof(double));
-    double *sus2 = (double*) alloca(num*sizeof(double));
-    double *uslog = (double*) alloca(num*sizeof(double));
-    
-    double *b = (double*) alloca(num*sizeof(double));
-    double *c = (double*) alloca(num*sizeof(double));
-    double *d = (double*) alloca(num*sizeof(double));
-    
+
+    double *ts = (double *)alloca(num * sizeof(double));
+    double *us = (double *)alloca(num * sizeof(double));
+    double *sus1 = (double *)alloca(num * sizeof(double));
+    double *sus2 = (double *)alloca(num * sizeof(double));
+    double *uslog = (double *)alloca(num * sizeof(double));
+
+    double *b = (double *)alloca(num * sizeof(double));
+    double *c = (double *)alloca(num * sizeof(double));
+    double *d = (double *)alloca(num * sizeof(double));
+
     double uout;
     double ss;
     double dudt;
     double uspline_pos;
     double su1spline;
     double su2spline;
-    
+
     int i;
     int j;
     int did1;
     int did2;
-    
-    did1 = id1/2 - 2;
-    did2 = id2/2 - 2;
-    
+
+    did1 = id1 / 2 - 2;
+    did2 = id2 / 2 - 2;
+
     /* initialize valist for num number of arguments */
     va_start(valist, num);
-    
-    for (i=0; i<2*num; i+=2) {
-        j = i/2;
+
+    for (i = 0; i < 2 * num; i += 2) {
+        j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);
@@ -488,26 +509,25 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
     dudt = va_arg(valist, double);
     sus1[did1] = 1.0;
     sus2[did2] = 1.0;
-    
+
     /* clean memory reserved for valist */
     va_end(valist);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, sus1, b, c, d);
     su1spline = seval(num, t, ts, sus1, b, c, d);
-    
+
     spline(num, ss, 0, dudt, 0.0, ts, sus2, b, c, d);
     su2spline = seval(num, t, ts, sus2, b, c, d);
 
     if (id1 == id2) {
         uout = (su1spline * su2spline - su1spline) * uspline_pos;
-    }
-    else {
+    } else {
         uout = su1spline * su2spline * uspline_pos;
     }
     uout = uout / us[did1] / us[did2];
-    
-    return(uout);
+
+    return (uout);
 }

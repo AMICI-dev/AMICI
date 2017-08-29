@@ -1,186 +1,212 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
-
+#include <include/udata.h>
 class UserData;
-class ExpData;
+class Model;
 
-/** @brief struct that stores all data which is later returned by the mex function
+/** @brief struct that stores all data which is later returned by the mex
+ * function
  *
- * NOTE: MATLAB stores multidimensional arrays in column-major order (FORTRAN-style)
+ * NOTE: MATLAB stores multidimensional arrays in column-major order
+ * (FORTRAN-style)
  */
 class ReturnData {
-public:
+  public:
     ReturnData();
 
-    ReturnData(const UserData *udata);
+    ReturnData(const UserData *udata, const Model *model);
 
-    virtual void setDefaults();
+    ReturnData(const UserData *udata, const Model *model, bool initializeFields);
 
-    /**
-     * @brief performs all necessary actions to reset return data upon integration failure
-     * @param[in] udata pointer to the user data struct @type UserData
-     */
-    void invalidate(const UserData *udata);
+    void invalidate();
 
-    void setLikelihoodSensitivityFirstOrderNaN(const UserData *udata);
-    void setLikelihoodSensitivitySecondOrderNaN(const UserData *udata);
+    void setLikelihoodSensitivityFirstOrderNaN();
+    void setLikelihoodSensitivitySecondOrderNaN();
 
-    int applyChainRuleFactorToSimulationResults(const UserData *udata, const ExpData *edata);
+    int
+    applyChainRuleFactorToSimulationResults(const UserData *udata,
+                                            const realtype *unscaledParameters);
 
     virtual ~ReturnData();
 
-
     /** timepoints (dimension: nt) */
-    double *ts;
+    double *ts = nullptr;
 
     /** time derivative (dimension: nx) */
-    double *xdot;
+    double *xdot = nullptr;
 
-    /** parameter derivative of time derivative (dimension: nx x nplist, column-major) */
-    double *dxdotdp;
-
-    /** state derivative of observables (dimension: ny x nx, column-major) */
-    double *dydx;
-
-    /** parameter derivative of observables (dimension: ny x nplist, column-major) */
-    double *dydp;
-
-    /** Jacobian of differential equation right hand side (dimension: nx x nx, column-major) */
-    double *J;
+    /** Jacobian of differential equation right hand side (dimension: nx x nx,
+     * column-major) */
+    double *J = nullptr;
 
     /** event output (dimension: nmaxevent x nz, column-major) */
-    double *z;
+    double *z = nullptr;
 
-    /** event output sigma standard deviation (dimension: nmaxevent x nz, column-major) */
-    double *sigmaz;
+    /** event output sigma standard deviation (dimension: nmaxevent x nz,
+     * column-major) */
+    double *sigmaz = nullptr;
 
-    /** parameter derivative of event output (dimension: nmaxevent x nz, column-major) */
-    double *sz;
+    /** parameter derivative of event output (dimension: nmaxevent x nz,
+     * column-major) */
+    double *sz = nullptr;
 
-    /** parameter derivative of event output standard deviation (dimension: nmaxevent x nz, column-major)  */
-    double *ssigmaz;
+    /** parameter derivative of event output standard deviation (dimension:
+     * nmaxevent x nz, column-major)  */
+    double *ssigmaz = nullptr;
 
     /** event trigger output (dimension: nmaxevent x nz, column-major)*/
-    double *rz;
+    double *rz = nullptr;
 
-    /** parameter derivative of event trigger output (dimension: nmaxevent x nz x nplist, column-major) */
-    double *srz;
+    /** parameter derivative of event trigger output (dimension: nmaxevent x nz
+     * x nplist, column-major) */
+    double *srz = nullptr;
 
-    /** second order parameter derivative of event trigger output (dimension: nmaxevent x nztrue x nplist x nplist, column-major) */
-    double *s2rz;
+    /** second order parameter derivative of event trigger output (dimension:
+     * nmaxevent x nztrue x nplist x nplist, column-major) */
+    double *s2rz = nullptr;
 
     /** state (dimension: nt x nx, column-major) */
-    double *x;
+    double *x = nullptr;
 
-    /** parameter derivative of state (dimension: nt x nx x nplist, column-major) */
-    double *sx;
+    /** parameter derivative of state (dimension: nt x nx x nplist,
+     * column-major) */
+    double *sx = nullptr;
 
     /** observable (dimension: nt x ny, column-major) */
-    double *y;
+    double *y = nullptr;
 
     /** observable standard deviation (dimension: nt x ny, column-major) */
-    double *sigmay;
+    double *sigmay = nullptr;
 
-    /** parameter derivative of observable (dimension: nt x ny x nplist, column-major) */
-    double *sy;
+    /** parameter derivative of observable (dimension: nt x ny x nplist,
+     * column-major) */
+    double *sy = nullptr;
 
-    /** parameter derivative of observable standard deviation (dimension: nt x ny x nplist, column-major) */
-    double *ssigmay;
-    
+    /** parameter derivative of observable standard deviation (dimension: nt x
+     * ny x nplist, column-major) */
+    double *ssigmay = nullptr;
+
     /** number of integration steps forward problem (dimension: nt) */
-    double *numsteps;
+    double *numsteps = nullptr;
 
     /** number of integration steps backward problem (dimension: nt) */
-    double *numstepsB;
+    double *numstepsB = nullptr;
 
     /** number of right hand side evaluations forward problem (dimension: nt) */
-    double *numrhsevals;
+    double *numrhsevals = nullptr;
 
     /** number of right hand side evaluations backwad problem (dimension: nt) */
-    double *numrhsevalsB;
+    double *numrhsevalsB = nullptr;
 
     /** number of error test failures forward problem (dimension: nt) */
-    double *numerrtestfails;
+    double *numerrtestfails = nullptr;
 
     /** number of error test failures backwad problem (dimension: nt) */
-    double *numerrtestfailsB;
+    double *numerrtestfailsB = nullptr;
 
-    /** number of linear solver convergence failures forward problem (dimension: nt) */
-    double *numnonlinsolvconvfails;
+    /** number of linear solver convergence failures forward problem (dimension:
+     * nt) */
+    double *numnonlinsolvconvfails = nullptr;
 
-    /** number of linear solver convergence failures backwad problem (dimension: nt) */
-    double *numnonlinsolvconvfailsB;
+    /** number of linear solver convergence failures backwad problem (dimension:
+     * nt) */
+    double *numnonlinsolvconvfailsB = nullptr;
 
     /** employed order forward problem (dimension: nt) */
-    double *order;
-    
+    double *order = nullptr;
+
     /** flag indicating success of Newton solver */
-    double *newton_status;
-    
-    /* computation time of the Newton solver [s] */
-    double *newton_time;
-    
+    double *newton_status = nullptr;
+
+    /** computation time of the Newton solver [s] */
+    double *newton_time = nullptr;
+
     /** number of Newton steps for steady state problem */
-    double *newton_numsteps;
-    
+    double *newton_numsteps = nullptr;
+
     /** number of linear steps by Newton step for steady state problem */
-    double *newton_numlinsteps;
+    double *newton_numlinsteps = nullptr;
+
+    /** preequilibration steady state found be Newton solver */
+    double *x0 = nullptr;
     
-    /** steady state found be Newton solver */
-    double *xss;
-    
+    /** preequilibration sensitivities found be Newton solver */
+    double *sx0 = nullptr;
+
     /** likelihood value (double[1]) */
-    double *llh;
+    double *llh = nullptr;
 
     /** chi2 value (double[1]) */
-    double *chi2;
+    double *chi2 = nullptr;
 
     /** parameter derivative of likelihood (dimension: nplist) */
-    double *sllh;
+    double *sllh = nullptr;
 
-    /** second order parameter derivative of likelihood (dimension: (nJ-1) x nplist, column-major) */
-    double *s2llh;
+    /** second order parameter derivative of likelihood (dimension: (nJ-1) x
+     * nplist, column-major) */
+    double *s2llh = nullptr;
 
     /** status code (double[1]) */
-    double *status;
+    double *status = nullptr;
 
-protected:
-    virtual void initFields(const UserData *udata);
+  protected:
+    virtual void copyFromUserData(const UserData *udata);
 
-    virtual void initField1(double **fieldPointer, const char *fieldName, int dim);
+    virtual void initFields();
 
-    /**
-     * @ brief initialise matrix and attach to the field
-     * @ param FIELD name of the field to which the matrix will be attached
-     * @ param D1 number of rows in the matrix
-     * @ param D2 number of columns in the matrix
-     */
+    virtual void initField1(double **fieldPointer, const char *fieldName,
+                            int dim);
 
-    virtual void initField2(double **fieldPointer, const char *fieldName, int dim1, int dim2);
+    virtual void initField2(double **fieldPointer, const char *fieldName,
+                            int dim1, int dim2);
 
-    /**
-     * @ brief initialise 3D tensor and attach to the field
-     * @ param FIELD name of the field to which the tensor will be attached
-     * @ param D1 number of rows in the tensor
-     * @ param D2 number of columns in the tensor
-     * @ param D3 number of elements in the third dimension of the tensor
-     */
+    virtual void initField3(double **fieldPointer, const char *fieldName,
+                            int dim1, int dim2, int dim3);
 
-    virtual void initField3(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3);
+    virtual void initField4(double **fieldPointer, const char *fieldName,
+                            int dim1, int dim2, int dim3, int dim4);
 
-    /**
-     * @ brief initialise 4D tensor and attach to the field
-     * @ param FIELD name of the field to which the tensor will be attached
-     * @ param D1 number of rows in the tensor
-     * @ param D2 number of columns in the tensor
-     * @ param D3 number of elements in the third dimension of the tensor
-     * @ param D4 number of elements in the fourth dimension of the tensor
-     */
+    /** flag indicating whether memory for fields needs to be freed on destruction */
+    bool freeFieldsOnDestruction = true;
 
-    virtual void initField4(double **fieldPointer, const char *fieldName, int dim1, int dim2, int dim3, int dim4);
+  public:
+    /** total number of model parameters */
+    const int np;
+    /** number of fixed parameters */
+    const int nk;
+    /** number of states */
+    const int nx;
+    /** number of states in the unaugmented system */
+    const int nxtrue;
+    /** number of observables */
+    const int ny;
+    /** number of observables in the unaugmented system */
+    const int nytrue;
+    /** number of event outputs */
+    const int nz;
+    /** number of event outputs in the unaugmented system */
+    const int nztrue;
+    /** number of events */
+    const int ne;
+    /** dimension of the augmented objective function for 2nd order ASA */
+    const int nJ;
 
-    bool freeFieldsOnDestruction;
-    
+    /** number of parameter for which sensitivities were requested */
+    const int nplist;
+    /** maximal number of occuring events (for every event type) */
+    const int nmaxevent;
+    /** number of considered timepoints */
+    const int nt;
+    /** maximal number of newton iterations for steady state calculation */
+    const int newton_maxsteps;
+    /** scaling of parameterization (lin,log,log10) */
+    const AMICI_parameter_scaling pscale;
+    /** flag indicating whether second order sensitivities were requested */
+    const AMICI_o2mode o2mode;
+    /** sensitivity order */
+    const AMICI_sensi_order sensi;
+    /** sensitivity method */
+    const AMICI_sensi_meth sensi_meth;
 };
 
 #endif /* _MY_RDATA */

@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int dsigma_zdp_model_neuron_o2(realtype t, int ie, void *user_data, TempData *tdata);
+int dsigma_zdp_model_neuron_o2(realtype t, int ie, TempData *tdata);
 
 
 #endif /* _am_model_neuron_o2_dsigma_zdp_h */

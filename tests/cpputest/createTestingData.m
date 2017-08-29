@@ -1,6 +1,10 @@
-function [ output_args ] = createTestingData( input_args )
-    %CREATETESTINGDATA This function writes some data for continuous
-    % integration tests
+function createTestingData()
+% createTestingData runs simulation on all test models and writes results as hdf5. currently necessary for continuous integration
+% to yield meaningful results
+%
+% Return values:
+%  void
+
     
     oldwd = pwd;
     
@@ -115,7 +119,7 @@ function [ output_args ] = createTestingData( input_args )
     
     amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint/';
     options.sensi = 2;
-    options.sensi_meth = 'forward';
+    options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
     %% EXAMPLE NEURON

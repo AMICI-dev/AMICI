@@ -10,6 +10,7 @@ Current build status
 
 Linux/Mac: [![TravisCI](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
 Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/ob315laj1i6i3om3?svg=true)](https://ci.appveyor.com/project/FFroehlich/amici)
+Coverage: [![Coverage Status](https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=feature_coveralls)](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
 
 FAQ
 ===
@@ -23,6 +24,12 @@ A: Remove the corresponding model directory located in AMICI/models/*yourmodelna
 Q: It still does not compile.
 
 A: Make an [issue](https://github.com/ICB-DCM/AMICI/issues) and we will have a look.
+
+---
+
+Q: I get an out of memory error while compiling my model on a Windows machine.
+
+A: This may be due to an old compiler version. See [issue #161](https://github.com/ICB-DCM/AMICI/issues/161) for instructions on how to install a new compiler.
 
 ---
 

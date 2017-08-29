@@ -2,25 +2,25 @@
 #define _MY_EDATA
 
 class UserData;
+class Model;
 
 /** @brief struct that carries all information about experimental data */
 class ExpData {
 
 public:
-    /**
-     * @brief Default constructor
-     */
+    /** default constructor */
     ExpData();
-    ExpData(const UserData *udata);
+    ExpData(const UserData *udata, Model *model);
     ~ExpData();
     
+    /** initialization with default values */
     void setDefaults();
-    
+
     /** observed data */
     double *my;
     /** standard deviation of observed data */
     double *sigmay;
-    
+
     /** observed events */
     double *mz;
     /** observed roots */

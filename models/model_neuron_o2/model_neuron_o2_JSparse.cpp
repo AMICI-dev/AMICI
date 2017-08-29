@@ -1,14 +1,18 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
+#include <include/tdata.h>
 #include <include/udata.h>
 #include "model_neuron_o2_dwdx.h"
 #include "model_neuron_o2_w.h"
 
 int JSparse_model_neuron_o2(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+TempData *tdata = (TempData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xdot_tmp = N_VGetArrayPointer(xdot);
 int inz;
@@ -51,41 +55,41 @@ J->indexptrs[7] = 21;
 J->indexptrs[8] = 23;
 J->indexptrs[9] = 25;
 J->indexptrs[10] = 27;
-status = w_model_neuron_o2(t,x,NULL,user_data);
+status = w_model_neuron_o2(t,x,NULL,tdata);
 status = dwdx_model_neuron_o2(t,x,NULL,user_data);
   J->data[0] = x_tmp[0]*(2.0/2.5E1)+5.0;
-  J->data[1] = udata->p[0]*udata->p[1];
-  J->data[2] = x_tmp[2]*udata->dwdx[1];
-  J->data[3] = udata->p[1];
-  J->data[4] = x_tmp[4]*udata->dwdx[1];
-  J->data[5] = udata->p[0];
-  J->data[6] = x_tmp[6]*udata->dwdx[1];
-  J->data[7] = x_tmp[8]*udata->dwdx[1];
+  J->data[1] = tdata->p[0]*tdata->p[1];
+  J->data[2] = x_tmp[2]*tdata->dwdx[1];
+  J->data[3] = tdata->p[1];
+  J->data[4] = x_tmp[4]*tdata->dwdx[1];
+  J->data[5] = tdata->p[0];
+  J->data[6] = x_tmp[6]*tdata->dwdx[1];
+  J->data[7] = x_tmp[8]*tdata->dwdx[1];
   J->data[8] = -1.0;
-  J->data[9] = -udata->p[0];
+  J->data[9] = -tdata->p[0];
   J->data[10] = -1.0;
-  J->data[11] = udata->w[1];
-  J->data[12] = udata->p[0]*udata->p[1];
+  J->data[11] = tdata->w[1];
+  J->data[12] = tdata->p[0]*tdata->p[1];
   J->data[13] = -1.0;
-  J->data[14] = -udata->p[0];
-  J->data[15] = udata->w[1];
-  J->data[16] = udata->p[0]*udata->p[1];
+  J->data[14] = -tdata->p[0];
+  J->data[15] = tdata->w[1];
+  J->data[16] = tdata->p[0]*tdata->p[1];
   J->data[17] = -1.0;
-  J->data[18] = -udata->p[0];
-  J->data[19] = udata->w[1];
-  J->data[20] = udata->p[0]*udata->p[1];
+  J->data[18] = -tdata->p[0];
+  J->data[19] = tdata->w[1];
+  J->data[20] = tdata->p[0]*tdata->p[1];
   J->data[21] = -1.0;
-  J->data[22] = -udata->p[0];
-  J->data[23] = udata->w[1];
-  J->data[24] = udata->p[0]*udata->p[1];
+  J->data[22] = -tdata->p[0];
+  J->data[23] = tdata->w[1];
+  J->data[24] = tdata->p[0]*tdata->p[1];
   J->data[25] = -1.0;
-  J->data[26] = -udata->p[0];
+  J->data[26] = -tdata->p[0];
 for(inz = 0; inz<27; inz++) {
    if(amiIsNaN(J->data[inz])) {
        J->data[inz] = 0;
-       if(!udata->nan_JSparse) {
+       if(!tdata->nan_JSparse) {
            warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           udata->nan_JSparse = TRUE;
+           tdata->nan_JSparse = TRUE;
        }
    }
    if(amiIsInf(J->data[inz])) {

@@ -6,7 +6,7 @@ function [modelo2vec] = augmento2vec(this)
     % Parameters:
     %
     % Return values:
-    %  this: augmented system which contains symbolic definition of the
+    %  modelo2vec: augmented system which contains symbolic definition of the
     %  original system and its sensitivities @type amimodel
     
     syms Sx Sdot Sy S0

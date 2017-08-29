@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/ICB-DCM/SBMLimporter
+	branch = master
+	commit = a63f0fb53d0513c058ac0e32f47e30bc1221173b
+	parent = 9f9ec23ee55d8a330d44432f0098de4f9dcaf92c
+	cmdver = 0.3.1

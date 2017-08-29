@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int stau_model_neuron(realtype t, int ie, N_Vector x, N_Vector *sx, void *user_data, TempData *tdata);
+int stau_model_neuron(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata);
 
 
 #endif /* _am_model_neuron_stau_h */

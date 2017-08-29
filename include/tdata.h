@@ -1,31 +1,33 @@
 #ifndef _MY_TDATA
 #define _MY_TDATA
 
-#include <nvector/nvector_serial.h>  /* defs. of serial NVECTOR fcts. and macros  */
-#include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
-#include <sundials/sundials_sparse.h> /* def. of type sparse stuff */
-#include <sundials/sundials_types.h> /* def. of type realtype */
-#include <sundials/sundials_math.h>  /* definition of ABS */
+#include <nvector/nvector_serial.h> /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_config.h>
+#include <sundials/sundials_klu_impl.h> /* def. of type klu solver */
+#include <sundials/sundials_math.h>     /* definition of ABS */
+#include <sundials/sundials_sparse.h>   /* def. of type sparse stuff */
+#include <sundials/sundials_types.h>    /* def. of type realtype */
 
 class UserData;
+class ReturnData;
+class Model;
+class Solver;
 
 /** @brief struct that provides temporary storage for different variables */
 class TempData {
-    
-public:
-    
-    /**
-     * @brief Default constructor
-     */
-    TempData(const UserData *udata);
+
+  public:
+    TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
-    
+
+    /** parameter array, unscaled */
+    realtype *p = nullptr;
+
     /** current time */
     realtype t;
-    
+
     /** state vector */
-    N_Vector x; 
+    N_Vector x;
     /** old state vector */
     N_Vector x_old;
     /** array of state vectors at discontinuities*/
@@ -47,18 +49,18 @@ public:
     /** old adjoint state vector */
     N_Vector xB_old;
     /** differential adjoint state vector */
-    N_Vector dxB; 
+    N_Vector dxB;
     /** quadrature state vector */
     N_Vector xQB;
     /** old quadrature state vector */
     N_Vector xQB_old;
     /** sensitivity state vector array */
-    N_Vector *sx; 
+    N_Vector *sx;
     /** differential sensitivity state vector array */
-    N_Vector *sdx; 
+    N_Vector *sdx;
     /** Jacobian */
     DlsMat Jtmp;
-    
+
     /** parameter derivative of likelihood array */
     realtype *llhS0;
     /** data likelihood */
@@ -110,7 +112,8 @@ public:
 
     /** array of flags indicating which root has beend found */
     /*!
-    array of length nr with the indices of the user functions gi found to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
+    array of length nr with the indices of the user functions gi found to have a
+    root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
     */
     int *rootsfound;
     /** array of index which root has been found */
@@ -122,6 +125,11 @@ public:
     /** temporary rootval storage to check crossing in secondary event */
     realtype *h;
 
+    /** flag indicating whether a certain heaviside function should be active or
+       not
+        Moved from UserData to TempData; TODO: better naming */
+    realtype *h_udata;
+
     /** change in x */
     realtype *deltax;
     /** change in sx */
@@ -130,18 +138,62 @@ public:
     realtype *deltaxB;
     /** change in qB */
     realtype *deltaqB;
-    
+
     /** integer for indexing of backwards problems */
     int which;
-    
+
     /** array containing the time-points of discontinuities*/
-    realtype *discs; 
+    realtype *discs;
     /** array containing the index of discontinuities */
-    realtype *irdiscs; 
-    
+    realtype *irdiscs;
+
+    /** tempory storage of Jacobian data across functions */
+    SlsMat J = NULL;
+    /** tempory storage of dxdotdp data across functions */
+    realtype *dxdotdp = NULL;
+    /** tempory storage of w data across functions */
+    realtype *w = NULL;
+    /** tempory storage of dwdx data across functions */
+    realtype *dwdx = NULL;
+    /** tempory storage of dwdp data across functions */
+    realtype *dwdp = NULL;
+    /** tempory storage of M data across functions */
+    realtype *M = NULL;
+    /** tempory storage of dfdx data across functions */
+    realtype *dfdx = NULL;
+    /** tempory storage of stau data across functions */
+    realtype *stau = NULL;
+
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
-    
-	};
+
+    /** current root index, will be increased during the forward solve and
+     * decreased during backward solve */
+    int iroot = 0;
+
+    /** flag indicating whether a NaN in dxdotdp has been reported */
+    booleantype nan_dxdotdp = false;
+    /** flag indicating whether a NaN in J has been reported */
+    booleantype nan_J = false;
+    /** flag indicating whether a NaN in JDiag has been reported */
+    booleantype nan_JDiag = false;
+    /** flag indicating whether a NaN in JSparse has been reported */
+    booleantype nan_JSparse = false;
+    /** flag indicating whether a NaN in xdot has been reported */
+    booleantype nan_xdot = false;
+    /** flag indicating whether a NaN in xBdot has been reported */
+    booleantype nan_xBdot = false;
+    /** flag indicating whether a NaN in qBdot has been reported */
+    booleantype nan_qBdot = false;
+
+    /** attached UserData object */
+    const UserData *udata;
+    /** attached Model object */
+    Model *model;
+    /** attached ReturnData object */
+    ReturnData *rdata;
+    /** attached Solver object */
+    Solver *solver = nullptr;
+};
 
 #endif /* _MY_TDATA */

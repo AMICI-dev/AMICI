@@ -6,7 +6,7 @@ function importSBML(this,filename)
 %  filename: target name of the model
 %
 % Return values:
-%
+%  void
 
 extension = [];
 if(exist([filename],'file'))
@@ -243,8 +243,10 @@ if(length({model.reaction.id})>0)
         
     end
     
+    this.param = [this.param;plocal];
     parameter_sym = [parameter_sym;plocal];
     parameter_val = [parameter_val;pvallocal];
+    np = length(this.param);
     
     reactants = cellfun(@(x) {x.species},{model.reaction.reactant},'UniformOutput',false);
     % species index of the reactant
@@ -597,10 +599,10 @@ for irule = 1:length(rulevars)
     end
 end
 
-applyRule(this,model,'xdot',rulevars,rulemath)
-
 state_vars = [symvar(this.xdot),symvar(this.initState)];
 event_vars = [symvar(this.bolus),symvar(this.trigger)];
+
+applyRule(this,model,'xdot',rulevars,rulemath)
 
 isUsedParam = or(ismember(parameter_sym,event_vars),ismember(parameter_sym,state_vars));
 isPartOfRule = and(ismember(parameter_sym,symvar(cleanedsym({model.rule.formula}))),ismember(parameter_sym,symvar(sym({model.rule.variable}))));

@@ -1,17 +1,19 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici.h>
+#include <include/amici_model.h>
 #include <string.h>
-#include <include/udata.h>
 #include <include/tdata.h>
+#include <include/udata.h>
 #include <include/rdata.h>
 #include "model_neuron_o2_w.h"
 
-int z_model_neuron_o2(realtype t, int ie, N_Vector x, void *user_data, TempData *tdata, ReturnData *rdata) {
+int z_model_neuron_o2(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) {
 int status = 0;
-UserData *udata = (UserData*) user_data;
+Model *model = (Model*) tdata->model;
+UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
-status = w_model_neuron_o2(t,x,NULL,user_data);
+status = w_model_neuron_o2(t,x,NULL,tdata);
     switch(ie) { 
         case 0: {
   rdata->z[tdata->nroots[ie]+udata->nmaxevent*0] = t;
