@@ -31,15 +31,15 @@ matrix:
         - ./scripts/run-doxygen.sh
     - os: osx
       compiler: clang
-      before_install: brew install hdf5
+      before_install: brew install hdf5 cppcheck
         
 install:
     - ./scripts/run-build.sh
 
 script:  
     - ./scripts/run-cpputest.sh
+    - ./scripts/run-cppcheck.sh
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-cppcheck.sh; fi
 
 notifications:
   slack: 
