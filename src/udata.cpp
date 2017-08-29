@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cstring>
 
-UserData::UserData() { init(); }
 
 int UserData::unscaleParameters(const Model *model,
                                 double *bufferUnscaled) const {
@@ -55,41 +54,7 @@ UserData::~UserData() {
         delete[] plist;
 }
 
-void UserData::init() {
-    qpositivex = NULL;
-    plist = NULL;
-    nplist = 0;
-    nt = 0;
-    p = NULL;
-    k = NULL;
-    ts = NULL;
-    tstart = 0;
-    pbar = NULL;
-    xbar = NULL;
-    sensi = AMICI_SENSI_ORDER_NONE;
-    atol = 1e-16;
-    rtol = 1e-8;
-    maxsteps = 0;
-    newton_maxsteps = 0;
-    newton_maxlinsteps = 0;
-    newton_precon = 1;
-    newton_preeq = FALSE;
-    ism = 1;
-    nmaxevent = 10;
-
-    sensi_meth = AMICI_SENSI_FSA;
-    linsol = 9;
-    interpType = 1;
-    lmm = 2;
-    iter = 2;
-    stldet = true;
-    x0data = NULL;
-
-    sx0data = NULL;
-    ordering = 0;
-}
-
-void UserData::print() {
+void UserData::print() const {
     printf("qpositivex: %p\n", qpositivex);
     printf("plist: %p\n", plist);
     printf("nplist: %d\n", nplist);
