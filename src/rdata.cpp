@@ -13,10 +13,20 @@ ReturnData::ReturnData()
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
       pscale(AMICI_SCALING_NONE), o2mode(AMICI_O2MODE_NONE),
       sensi(AMICI_SENSI_ORDER_NONE), sensi_meth(AMICI_SENSI_NONE) {
-    setDefaults();
 }
 
-ReturnData::ReturnData(const UserData *udata, const Model *model)
+ReturnData::ReturnData(const UserData *udata, const Model *model) : ReturnData(udata, model, true)
+{
+    /**
+     * @brief constructor that uses information from model and userdata to
+     * appropriately initialize fields
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] model pointer to model specification object @type Model
+     */
+
+}
+
+ReturnData::ReturnData(const UserData *udata, const Model *model, bool initializeFields)
     : np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
@@ -29,29 +39,14 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
      * appropriately initialize fields
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] model pointer to model specification object @type Model
+     * @param[in] initialize arrays (needs to happen elsewhere if false) @type bool
      */
-    setDefaults();
 
-    initFields();
+    if(initializeFields) {
+        initFields();
+        copyFromUserData(udata);
+    }
 
-    copyFromUserData(udata);
-}
-
-void ReturnData::setDefaults() {
-    /**
-     * @brief initialize all member fields will nullpointers
-     */
-    ts = xdot = J = z = sigmaz = sz = ssigmaz = rz =
-        srz = s2rz = x = sx = y = sigmay = nullptr;
-    sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order =
-        llh = chi2 = sllh = s2llh = nullptr;
-    numerrtestfails = numnonlinsolvconvfails = numerrtestfailsB =
-        numnonlinsolvconvfailsB = nullptr;
-    newton_status = newton_time = newton_numsteps = newton_numlinsteps = x0 =
-        sx0 = nullptr;
-    status = nullptr;
-
-    freeFieldsOnDestruction = true;
 }
 
 void ReturnData::invalidate() {

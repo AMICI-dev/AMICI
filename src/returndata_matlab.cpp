@@ -1,7 +1,7 @@
 #include "returndata_matlab.h"
 
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
-    : ReturnData(udata, model) {
+    : ReturnData(udata, model, false) {
         /**
          * @brief initialises the returnData struct, initialises the fields and copies
          * model dimensions from the udata struct

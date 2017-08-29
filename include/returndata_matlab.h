@@ -25,16 +25,16 @@ class ReturnDataMatlab : public ReturnData {
     void initFields();
 
     virtual void initField1(double **fieldPointer, const char *fieldName,
-                            int dim);
+                            int dim) override;
 
     virtual void initField2(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2);
+                            int dim1, int dim2) override;
 
     virtual void initField3(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3);
+                            int dim1, int dim2, int dim3) override;
 
     virtual void initField4(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3, int dim4);
+                            int dim1, int dim2, int dim3, int dim4) override;
 };
 
 #endif // RETURNDATA_MATLAB_H
