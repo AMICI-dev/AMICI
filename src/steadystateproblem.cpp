@@ -46,7 +46,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     if (status == AMICI_SUCCESS) {
         /* if the Newton solver found a steady state */
         run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-        getNewtonOutput(tdata, rdata, model, 1, run_time);
+        getNewtonOutput(tdata, rdata, model, 1, run_time, it);
     } else {
         /* Newton solver did not find a steady state, so try integration */
         status = getNewtonSimulation(udata, tdata, rdata, solver, model);
@@ -54,7 +54,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
             run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-            getNewtonOutput(tdata, rdata, model, 2, run_time);
+            getNewtonOutput(tdata, rdata, model, 2, run_time, it);
         } else {
             status =
                 applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 2);
@@ -63,16 +63,25 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
                 /* If the second Newton solver found a steady state */
                 run_time =
                     (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-                getNewtonOutput(tdata, rdata, model, 3, run_time);
+                getNewtonOutput(tdata, rdata, model, 3, run_time, it);
             }
         }
     }
     
     /* Compute steady state sensitvities */
-    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (status == AMICI_SUCCESS) {
+    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+        if (status == AMICI_SUCCESS)
             status = newtonSolver->getSensis(it);
-        }
+    
+    /* Reinitialize solver with preequilibrated state */
+    if (it == AMICI_PREEQUILIBRATE) {
+
+        status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
+        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+            if (rdata->sensi_meth == AMICI_SENSI_FSA)
+                status = solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
+        if (status != AMICI_SUCCESS)
+            status = AMICI_ERROR_PREEQUILIBRATION;
     }
 
     delete newtonSolver;
@@ -235,7 +244,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
 
 void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
                                         Model *model, int newton_status,
-                                        double run_time) {
+                                        double run_time, int it) {
     /**
      * Stores output of workSteadyStateProblem in return data
      *
@@ -253,14 +262,20 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
     /* Get time for Newton solve */
     rdata->newton_time[0] = run_time;
 
-    /* Since the steady state was found, current time is set to infinity */
-    tdata->t = INFINITY;
-
-    /* Write output: steady state and Newton flag */
-    x_tmp = N_VGetArrayPointer(tdata->x);
-    for (int ix = 0; ix < model->nx; ix++) {
-        rdata->xss[ix] = x_tmp[ix];
+    /* Steady state was found: set t to t0 if preeq, otherwise to inf */
+    if (it == AMICI_PREEQUILIBRATE) {
+        tdata->t = rdata->ts[0];
+        
+        /* Write steady state to output */
+        x_tmp = NV_DATA_S(tdata->x);
+        for (int ix = 0; ix < model->nx; ix++) {
+            rdata->x0[ix] = x_tmp[ix];
+        }
+    } else {
+        tdata->t = INFINITY;
     }
+
+    /* Write Newton flag */
     *rdata->newton_status = (double)newton_status;
 }
 

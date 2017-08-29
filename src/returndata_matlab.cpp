@@ -18,7 +18,7 @@ void ReturnDataMatlab::initFields() {
     /**
      * @brief initialises sol object with the corresponding fields
      */
-    const int numFields = 35;
+    const int numFields = 36;
     const char *field_names_sol[numFields] = {"status",
                                               "llh",
                                               "sllh",
@@ -49,7 +49,8 @@ void ReturnDataMatlab::initFields() {
                                               "numrhsevalsB",
                                               "numerrtestfailsB",
                                               "numnonlinsolvconvfailsB",
-                                              "xss",
+                                              "x0",
+                                              "sx0",
                                               "newton_status",
                                               "newton_numsteps",
                                               "newton_numlinsteps",

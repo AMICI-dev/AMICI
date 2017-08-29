@@ -127,7 +127,8 @@ int NewtonSolver::getSensis(int it) {
      */
     
     N_Vector sx_ip = N_VNew_Serial(model->nx);
-    realtype *x_tmp;
+    realtype *sx_tmp;
+    realtype *sx0_tmp;
     int status = this->prepareLinearSystem(0, -1);
     
     if (status == AMICI_SUCCESS) {
@@ -136,16 +137,26 @@ int NewtonSolver::getSensis(int it) {
             for (int ip=0; ip<udata->nplist; ip++) {
                 
                 /* Copy the content of dxdotdp to sx_ip */
-                x_tmp = N_VGetArrayPointer(sx_ip);
+                sx_tmp = N_VGetArrayPointer(sx_ip);
                 for (int ix=0; ix<model->nx; ix++) {
-                    x_tmp[ix] = -tdata->dxdotdp[model->nx * ip + ix];
+                    sx_tmp[ix] = -tdata->dxdotdp[model->nx * ip + ix];
                 }
                 status = this->solveLinearSystem(sx_ip);
                 
                 /* Copy result to return data */
                 if (status == AMICI_SUCCESS) {
-                    for (int ix=0; ix<model->nx; ix++) {
-                        rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = x_tmp[ix];
+                    if (it == AMICI_PREEQUILIBRATE) {
+                        /* Case of preequlibration */
+                        sx0_tmp = N_VGetArrayPointer(tdata->sx[ip]);
+                        for (int ix=0; ix<model->nx; ix++) {
+                            rdata->sx0[ip * model->nx + ix] = sx_tmp[ix];
+                            sx0_tmp[ix] = sx_tmp[ix];
+                        }
+                    } else {
+                        /* Classical steady state computation */
+                        for (int ix=0; ix<model->nx; ix++) {
+                            rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                        }
                     }
                 } else {
                     N_VDestroy_Serial(sx_ip);
@@ -155,6 +166,7 @@ int NewtonSolver::getSensis(int it) {
         }
     }
     
+    N_VDestroy_Serial(sx_ip);
     return status;
 }
 

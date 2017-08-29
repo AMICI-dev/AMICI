@@ -33,6 +33,14 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
     realtype *x_tmp;
     realtype tlastroot = 0; /* storage for last found root */
 
+    /* if preequilibration is necessary, start Newton solver */
+    if (udata->newton_preeq == 1) {
+        status = SteadystateProblem::workSteadyStateProblem(udata, tdata, rdata,
+                                                            solver, model, -1);
+        if (status != AMICI_SUCCESS)
+            goto freturn;
+    }
+    
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
         if (rdata->sensi_meth == AMICI_SENSI_FSA &&

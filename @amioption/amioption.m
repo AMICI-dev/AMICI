@@ -263,9 +263,13 @@ classdef amioption < matlab.mixin.CustomDisplay
         end
 
         function this = set.newton_preeq(this,value)
-            assert(isnumeric(value),'The option preequil must have a logical value!')
-            assert(floor(value)==value,'The option preequil must be a logical!')
-            assert(value<=2,'Only 0 and 1 are valid options for preequil!')
+            if(isnumeric(value))
+                assert(floor(value)==value,'The option newton_preeq must be a logical!')
+                assert(value<=1,'Only 0 and 1 are valid options for preequil!')
+                assert(value>=0,'Only 0 and 1 are valid options for preequil!')
+            else
+                assert(islogical(value),'The option newton_preeq must have a logical value!')
+            end
             this.newton_preeq = value;
         end
     end

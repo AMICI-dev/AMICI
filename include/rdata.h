@@ -127,8 +127,11 @@ class ReturnData {
     /** number of linear steps by Newton step for steady state problem */
     double *newton_numlinsteps;
 
-    /** steady state found be Newton solver */
-    double *xss;
+    /** preequilibration steady state found be Newton solver */
+    double *x0;
+    
+    /** preequilibration sensitivities found be Newton solver */
+    double *sx0;
 
     /** likelihood value (double[1]) */
     double *llh;
