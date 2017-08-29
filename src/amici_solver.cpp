@@ -40,7 +40,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model) {
         goto freturn;
 
     /* Initialize AMIS solver*/
-    if (wrap_init(tdata->x, tdata->dx, udata->tstart) != AMICI_SUCCESS)
+    if (init(tdata->x, tdata->dx, udata->tstart) != AMICI_SUCCESS)
         goto freturn;
 
     /* Specify integration tolerances */
@@ -64,7 +64,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model) {
     if (AMISetStabLimDet(udata->stldet) != AMICI_SUCCESS)
         goto freturn;
 
-    if (wrap_RootInit(model->ne) != AMICI_SUCCESS)
+    if (rootInit(model->ne) != AMICI_SUCCESS)
         goto freturn;
 
     status = setLinearSolver(udata, model);
@@ -102,7 +102,7 @@ int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model) {
                     goto freturn;
 
                 /* Activate sensitivity calculations */
-                if (wrap_SensInit1(tdata->sx, tdata->sdx, udata) !=
+                if (sensInit1(tdata->sx, tdata->sdx, udata) !=
                     AMICI_SUCCESS)
                     goto freturn;
 
@@ -193,7 +193,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         return status;
 
     /* initialise states */
-    status = wrap_binit(tdata->which, tdata->xB, tdata->dxB, tdata->t);
+    status = binit(tdata->which, tdata->xB, tdata->dxB, tdata->t);
     if (status != AMICI_SUCCESS)
         return status;
 
@@ -222,7 +222,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetDenseJacFnB(tdata->which);
+        status = setDenseJacFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -233,7 +233,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetBandJacFnB(tdata->which);
+        status = setBandJacFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -245,7 +245,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
                  status = CVLapackDenseB(ami_mem, tdata->which, nx);
                  if (status != AMICI_SUCCESS) return;
 
-                 status = wrap_SetDenseJacFnB(ami_mem, tdata->which);
+                 status = SetDenseJacFnB(ami_mem, tdata->which);
                  if (status != AMICI_SUCCESS) return;
                  #else*/
         errMsgIdAndTxt("AMICI:mex:lapack", "Solver currently not supported!");
@@ -258,7 +258,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
                  status = CVLapackBandB(ami_mem, tdata->which, nx, ubw, lbw);
                  if (status != AMICI_SUCCESS) return;
 
-                 status = wrap_SetBandJacFnB(ami_mem, tdata->which);
+                 status = SetBandJacFnB(ami_mem, tdata->which);
                  if (status != AMICI_SUCCESS) return;
                  #else*/
         errMsgIdAndTxt("AMICI:mex:lapack", "Solver currently not supported!");
@@ -270,7 +270,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetDenseJacFnB(tdata->which);
+        status = setDenseJacFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -283,7 +283,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetJacTimesVecFnB(tdata->which);
+        status = setJacTimesVecFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -294,7 +294,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetJacTimesVecFnB(tdata->which);
+        status = setJacTimesVecFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -305,7 +305,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetJacTimesVecFnB(tdata->which);
+        status = setJacTimesVecFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -318,7 +318,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetSparseJacFnB(tdata->which);
+        status = setSparseJacFnB(tdata->which);
         if (status != AMICI_SUCCESS)
             return status;
 
@@ -333,7 +333,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
     }
 
     /* Initialise quadrature calculation */
-    status = wrap_qbinit(tdata->which, tdata->xQB);
+    status = qbinit(tdata->which, tdata->xQB);
     if (status != AMICI_SUCCESS)
         return status;
 
@@ -355,7 +355,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
 }
 
 /**
- * wrap_ErrHandlerFn extracts diagnosis information from solver memory block and
+ * ErrHandlerFn extracts diagnosis information from solver memory block and
  * writes them into the return data object for the backward problem
  *
  * @param[in] error_code error identifier @type int
@@ -364,7 +364,7 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
  * @param[in] msg error message @type char
  * @param[in] eh_data unused input
  */
-void Solver::wrap_ErrHandlerFn(int error_code, const char *module,
+void Solver::wrapErrHandlerFn(int error_code, const char *module,
                                const char *function, char *msg, void *eh_data) {
     char buffer[250];
     char buffid[250];
@@ -499,21 +499,21 @@ int Solver::setLinearSolver(const UserData *udata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        return wrap_SetDenseJacFn();
+        return setDenseJacFn();
 
     case AMICI_BAND:
         status = AMIBand(model->nx, model->ubw, model->lbw);
         if (status != AMICI_SUCCESS)
             return status;
 
-        return wrap_SetBandJacFn();
+        return setBandJacFn();
 
     case AMICI_LAPACKDENSE:
         errMsgIdAndTxt("AMICI:mex:lapack", "Solver currently not supported!");
         /* status = CVLapackDense(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
 
-             status = wrap_SetDenseJacFn(ami_mem);
+             status = SetDenseJacFn(ami_mem);
              if (status != AMICI_SUCCESS) return;
         */
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -524,7 +524,7 @@ int Solver::setLinearSolver(const UserData *udata, Model *model) {
         /* status = CVLapackBand(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
 
-             status = wrap_SetBandJacFn(ami_mem);
+             status = SetBandJacFn(ami_mem);
              if (status != AMICI_SUCCESS) return;
         */
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -539,21 +539,21 @@ int Solver::setLinearSolver(const UserData *udata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        return wrap_SetJacTimesVecFn();
+        return setJacTimesVecFn();
 
     case AMICI_SPBCG:
         status = AMISpbcg(PREC_NONE, CVSPILS_MAXL);
         if (status != AMICI_SUCCESS)
             return status;
 
-        return wrap_SetJacTimesVecFn();
+        return setJacTimesVecFn();
 
     case AMICI_SPTFQMR:
         status = AMISptfqmr(PREC_NONE, CVSPILS_MAXL);
         if (status != AMICI_SUCCESS)
             return status;
 
-        return wrap_SetJacTimesVecFn();
+        return setJacTimesVecFn();
 
     /* SPARSE SOLVERS */
 
@@ -562,7 +562,7 @@ int Solver::setLinearSolver(const UserData *udata, Model *model) {
         if (status != AMICI_SUCCESS)
             return status;
 
-        status = wrap_SetSparseJacFn();
+        status = setSparseJacFn();
         if (status != AMICI_SUCCESS)
             return status;
 

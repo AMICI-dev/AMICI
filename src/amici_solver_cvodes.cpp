@@ -27,55 +27,55 @@ CVodeSolver::CVodeSolver() : Solver() {
 
 }
 
-int CVodeSolver::wrap_init(N_Vector x, N_Vector dx, realtype t) {
+int CVodeSolver::init(N_Vector x, N_Vector dx, realtype t) {
     return CVodeInit(ami_mem, resultFunction, RCONST(t), x);
 }
 
-int CVodeSolver::wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
+int CVodeSolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
     return CVodeInitB(ami_mem, which, resultFunctionB, RCONST(t), xB);
 }
 
-int CVodeSolver::wrap_qbinit(int which, N_Vector qBdot) {
+int CVodeSolver::qbinit(int which, N_Vector qBdot) {
     return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
 }
 
-int CVodeSolver::wrap_RootInit(int ne) {
+int CVodeSolver::rootInit(int ne) {
     return CVodeRootInit(ami_mem, ne, rootFunction);
 }
 
-int CVodeSolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
+int CVodeSolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
     return CVodeSensInit1(ami_mem, udata->nplist, udata->sensi_meth, fsxdot, sx);
 }
 
-int CVodeSolver::wrap_SetDenseJacFn() {
+int CVodeSolver::setDenseJacFn() {
     return CVDlsSetDenseJacFn(ami_mem, J);
 }
 
-int CVodeSolver::wrap_SetSparseJacFn() {
+int CVodeSolver::setSparseJacFn() {
     return CVSlsSetSparseJacFn(ami_mem, fJSparse);
 }
 
-int CVodeSolver::wrap_SetBandJacFn() {
+int CVodeSolver::setBandJacFn() {
     return CVDlsSetBandJacFn(ami_mem, fJBand);
 }
 
-int CVodeSolver::wrap_SetJacTimesVecFn() {
+int CVodeSolver::setJacTimesVecFn() {
     return CVSpilsSetJacTimesVecFn(ami_mem, fJv);
 }
 
-int CVodeSolver::wrap_SetDenseJacFnB(int which) {
+int CVodeSolver::setDenseJacFnB(int which) {
     return CVDlsSetDenseJacFnB(ami_mem, which, fJB);
 }
 
-int CVodeSolver::wrap_SetSparseJacFnB(int which) {
+int CVodeSolver::setSparseJacFnB(int which) {
     return CVSlsSetSparseJacFnB(ami_mem, which, fJSparseB);
 }
 
-int CVodeSolver::wrap_SetBandJacFnB(int which) {
+int CVodeSolver::setBandJacFnB(int which) {
     return CVDlsSetBandJacFnB(ami_mem, which, fJBandB);
 }
 
-int CVodeSolver::wrap_SetJacTimesVecFnB(int which) {
+int CVodeSolver::setJacTimesVecFnB(int which) {
     return CVSpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
 }
 
@@ -104,7 +104,7 @@ int CVodeSolver::AMIGetRootInfo(int *rootsfound) {
 }
 
 int CVodeSolver::AMISetErrHandlerFn() {
-    return CVodeSetErrHandlerFn(ami_mem,wrap_ErrHandlerFn,NULL);
+    return CVodeSetErrHandlerFn(ami_mem,wrapErrHandlerFn,NULL);
 }
 
 int CVodeSolver::AMISetUserData(void *user_data) {

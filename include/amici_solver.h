@@ -185,19 +185,19 @@ public:
 
   protected:
     /**
-     * wrap_init initialises the states at the specified initial timepoint
+     * init initialises the states at the specified initial timepoint
      *
      * @param[in] x initial state variables @type N_Vector
      * @param[in] dx initial derivative state variables (DAE only) @type N_Vector
      * @param[in] t initial timepoint @type realtype
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_init(N_Vector x, N_Vector dx, realtype t) = 0;
+    virtual int init(N_Vector x, N_Vector dx, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
 
     /**
-     * wrap_binit initialises the adjoint states at the specified final timepoint
+     * binit initialises the adjoint states at the specified final timepoint
      *
      * @param[in] which identifier of the backwards problem @type int
      * @param[in] xB initial adjoint state variables @type N_Vector
@@ -205,105 +205,105 @@ public:
      * @param[in] t final timepoint @type realtype
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_binit(int which, N_Vector xB, N_Vector dxB,
+    virtual int binit(int which, N_Vector xB, N_Vector dxB,
                            realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
 
     /**
-     * wrap_qbinit initialises the quadrature states at the specified final timepoint
+     * qbinit initialises the quadrature states at the specified final timepoint
      *
      * @param[in] which identifier of the backwards problem @type int
      * @param[in] qBdot initial adjoint quadrature state variables @type N_Vector
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_qbinit(int which, N_Vector qBdot) = 0;
+    virtual int qbinit(int which, N_Vector qBdot) = 0;
 
     /**
-     * wrap_RootInit initialises the rootfinding for events
+     * RootInit initialises the rootfinding for events
      *
      * @param[in] ne number of different events @type int
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_RootInit(int ne) = 0;
+    virtual int rootInit(int ne) = 0;
 
     // TODO: check if model has forward sensitivities, else return -1
     /**
-     * wrap_SensInit1 initialises the sensitivities at the specified initial timepoint
+     * SensInit1 initialises the sensitivities at the specified initial timepoint
      *
      * @param[in] sx initial state sensitivities @type N_Vector
      * @param[in] sdx initial derivative state sensitivities (DAE only) @type N_Vector
      * @param[in] udata initial derivative state sensitivities (DAE only) @type N_Vector
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SensInit1(N_Vector *sx, N_Vector *sdx,
+    virtual int sensInit1(N_Vector *sx, N_Vector *sdx,
                                const UserData *udata) = 0;
 
     /**
-     * wrap_SetDenseJacFn sets the dense Jacobian function
+     * SetDenseJacFn sets the dense Jacobian function
      *
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetDenseJacFn() = 0;
+    virtual int setDenseJacFn() = 0;
 
     /**
-     * wrap_SetSparseJacFn sets the sparse Jacobian function
+     * SetSparseJacFn sets the sparse Jacobian function
      *
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetSparseJacFn() = 0;
+    virtual int setSparseJacFn() = 0;
 
     /**
-     * wrap_SetBandJacFn sets the banded Jacobian function
+     * SetBandJacFn sets the banded Jacobian function
      *
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetBandJacFn() = 0;
+    virtual int setBandJacFn() = 0;
 
     /**
-     * wrap_SetJacTimesVecFn sets the Jacobian vector multiplication function
+     * SetJacTimesVecFn sets the Jacobian vector multiplication function
      *
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetJacTimesVecFn() = 0;
+    virtual int setJacTimesVecFn() = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
     /**
-     * wrap_SetDenseJacFn sets the dense Jacobian function
+     * SetDenseJacFn sets the dense Jacobian function
      *
      * @param[in] which identifier of the backwards problem @type int
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetDenseJacFnB(int which) = 0;
+    virtual int setDenseJacFnB(int which) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
     /**
-     * wrap_SetSparseJacFn sets the sparse Jacobian function
+     * SetSparseJacFn sets the sparse Jacobian function
      *
      * @param[in] which identifier of the backwards problem @type int
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetSparseJacFnB(int which) = 0;
+    virtual int setSparseJacFnB(int which) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
     /**
-     * wrap_SetBandJacFn sets the banded Jacobian function
+     * SetBandJacFn sets the banded Jacobian function
      *
      * @param[in] which identifier of the backwards problem @type int
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetBandJacFnB(int which) = 0;
+    virtual int setBandJacFnB(int which) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
     /**
-     * wrap_SetJacTimesVecFn sets the Jacobian vector multiplication function
+     * SetJacTimesVecFn sets the Jacobian vector multiplication function
      *
      * @param[in] which identifier of the backwards problem @type int
      * @return status flag indicating success of execution @type int
      */
-    virtual int wrap_SetJacTimesVecFnB(int which) = 0;
+    virtual int setJacTimesVecFnB(int which) = 0;
 
-    static void wrap_ErrHandlerFn(int error_code, const char *module,
+    static void wrapErrHandlerFn(int error_code, const char *module,
                                   const char *function, char *msg,
                                   void *eh_data);
 

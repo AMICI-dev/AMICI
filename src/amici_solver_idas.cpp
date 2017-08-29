@@ -25,55 +25,55 @@
 
 IDASolver::IDASolver() : Solver() {}
 
-int IDASolver::wrap_init(N_Vector x, N_Vector dx, realtype t){
+int IDASolver::init(N_Vector x, N_Vector dx, realtype t){
     return IDAInit(ami_mem, resultFunction, RCONST(t), x, dx);
 }
 
-int IDASolver::wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
+int IDASolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
     return IDAInitB(ami_mem, which, resultFunctionB, RCONST(t), xB, dxB);
 }
 
-int IDASolver::wrap_qbinit(int which, N_Vector qBdot) {
+int IDASolver::qbinit(int which, N_Vector qBdot) {
     return IDAQuadInitB(ami_mem, which, fqBdot, qBdot);
 }
 
-int IDASolver::wrap_RootInit(int ne) {
+int IDASolver::rootInit(int ne) {
     return IDARootInit(ami_mem, ne, rootFunction);
 }
 
-int IDASolver::wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
+int IDASolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
     return IDASensInit(ami_mem, udata->nplist, udata->sensi_meth, fsxdot, sx, sdx);
 }
 
-int IDASolver::wrap_SetDenseJacFn() {
+int IDASolver::setDenseJacFn() {
     return IDADlsSetDenseJacFn(ami_mem, J);
 }
 
-int IDASolver::wrap_SetSparseJacFn() {
+int IDASolver::setSparseJacFn() {
     return IDASlsSetSparseJacFn(ami_mem, fJSparse);
 }
 
-int IDASolver::wrap_SetBandJacFn() {
+int IDASolver::setBandJacFn() {
     return IDADlsSetBandJacFn(ami_mem, fJBand);
 }
 
-int IDASolver::wrap_SetJacTimesVecFn() {
+int IDASolver::setJacTimesVecFn() {
     return IDASpilsSetJacTimesVecFn(ami_mem, fJv);
 }
 
-int IDASolver::wrap_SetDenseJacFnB(int which) {
+int IDASolver::setDenseJacFnB(int which) {
     return IDADlsSetDenseJacFnB(ami_mem, which, fJB);
 }
 
-int IDASolver::wrap_SetSparseJacFnB(int which) {
+int IDASolver::setSparseJacFnB(int which) {
     return IDASlsSetSparseJacFnB(ami_mem, which, fJSparseB);
 }
 
-int IDASolver::wrap_SetBandJacFnB(int which) {
+int IDASolver::setBandJacFnB(int which) {
     return IDADlsSetBandJacFnB(ami_mem, which, fJBandB);
 }
 
-int IDASolver::wrap_SetJacTimesVecFnB(int which) {
+int IDASolver::setJacTimesVecFnB(int which) {
     return IDASpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
 }
 
@@ -102,7 +102,7 @@ int IDASolver::AMIGetRootInfo(int *rootsfound) {
 }
 
 int IDASolver::AMISetErrHandlerFn() {
-    return IDASetErrHandlerFn(ami_mem,wrap_ErrHandlerFn,NULL);
+    return IDASetErrHandlerFn(ami_mem,wrapErrHandlerFn,NULL);
 }
 
 int IDASolver::AMISetUserData(void *user_data) {

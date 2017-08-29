@@ -10,31 +10,31 @@ class IDASolver : public Solver
 public:
     IDASolver();
 
-    int wrap_init(N_Vector x, N_Vector dx, realtype t) override;
+    int init(N_Vector x, N_Vector dx, realtype t) override;
 
-    int wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
+    int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
 
-    int wrap_qbinit(int which, N_Vector qBdot) override;
+    int qbinit(int which, N_Vector qBdot) override;
 
-    int wrap_RootInit(int ne) override;
+    int rootInit(int ne) override;
 
-    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
+    int sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
 
-    int wrap_SetDenseJacFn() override;
+    int setDenseJacFn() override;
 
-    int wrap_SetSparseJacFn() override;
+    int setSparseJacFn() override;
 
-    int wrap_SetBandJacFn() override;
+    int setBandJacFn() override;
 
-    int wrap_SetJacTimesVecFn() override;
+    int setJacTimesVecFn() override;
 
-    int wrap_SetDenseJacFnB(int which) override;
+    int setDenseJacFnB(int which) override;
 
-    int wrap_SetSparseJacFnB(int which) override;
+    int setSparseJacFnB(int which) override;
 
-    int wrap_SetBandJacFnB(int which) override;
+    int setBandJacFnB(int which) override;
 
-    int wrap_SetJacTimesVecFnB(int which) override;
+    int setJacTimesVecFnB(int which) override;
 
     void *AMICreate(int lmm, int iter) override;
 
