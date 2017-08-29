@@ -204,7 +204,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                                         newton_maxlinsteps, int)
     } else {
         errMsgIdAndTxt("AMICI:mex:options", "No options provided!");
-        delete udata;
         goto freturn;
     }
 
