@@ -27,7 +27,7 @@ void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::str
 
 ExpData *getTestExpData(const UserData *udata, Model *model);
 
-bool withinTolerance(double expected, double actual, double atol, double rtol);
+bool withinTolerance(double expected, double actual, double atol, double rtol, int index);
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol);
 
