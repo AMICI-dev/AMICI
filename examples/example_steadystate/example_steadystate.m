@@ -42,7 +42,7 @@ function example_steadystate
     % PLOTTING
     
     if(usejava('jvm'))
-        figure;
+        figure('Name', 'Example SteadyState');
         c_x = get(gca,'ColorOrder');
         subplot(2,1,1);
         for ix = 1:size(sol.x,2)
@@ -69,7 +69,6 @@ function example_steadystate
     
     options.sensi = 1;
     options.sens_ind = [3,1,2,4];
-    
     sol = simulate_model_steadystate([t, inf],log10(p),k,[],options);
     
     %%
@@ -97,7 +96,7 @@ function example_steadystate
     % PLOTTING
     if(usejava('jvm'))
         % Sensitivities for time series
-        figure;
+        figure('Name', 'Example SteadyState');
         for ip = 1:4
             subplot(4,2,ip*2-1);
             hold on;
@@ -128,7 +127,7 @@ function example_steadystate
         sxss_fd = squeeze(sx_cfd(length(t),:,options.sens_ind));
         
         % Sensitivities for steady state
-        figure;
+        figure('Name', 'Example SteadyState');
         subplot(1,2,1);
         hold on;
         plot([-1,1], [-1,1], 'k:');
@@ -188,14 +187,15 @@ function example_steadystate
     
     % Compute steady state wihtout integration before
     sol = simulate_model_steadystate(inf,log10(p),k,[],options);
-    %Test recapturing in the case of Newton solver failing
+    
+    % Test recapturing in the case of Newton solver failing
     options.newton_maxsteps = 10;
     sol_newton_fail = simulate_model_steadystate(inf,log10(p),k,[],options);
     
     %%
     % PLOTTING
     if(usejava('jvm'))
-        figure;
+        figure('Name', 'Example SteadyState');
         subplot(1,3,[1 2]);
         hold on;
         for ix = 1:size(sol.x,2)
@@ -230,7 +230,7 @@ function example_steadystate
         
         set(gcf,'Position',[100 300 1200 500]);
     end
-
+    
 end
 
 
