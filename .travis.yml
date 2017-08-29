@@ -21,6 +21,7 @@ matrix:
             - valgrind
             - lcov
             - graphviz
+            - doxygen
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
