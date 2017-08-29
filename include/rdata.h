@@ -1,26 +1,23 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
 #include <include/udata.h>
-class UserData;
+
 class Model;
 
 /** @brief struct that stores all data which is later returned by the mex
  * function
  *
- * NOTE: MATLAB stores multidimensional arrays in column-major order
+ * NOTE: multidimensional arrays are stored in column-major order
  * (FORTRAN-style)
  */
 class ReturnData {
   public:
-    ReturnData();
-
     ReturnData(const UserData *udata, const Model *model);
-
-    ReturnData(const UserData *udata, const Model *model, bool initializeFields);
 
     void invalidate();
 
     void setLikelihoodSensitivityFirstOrderNaN();
+
     void setLikelihoodSensitivitySecondOrderNaN();
 
     int
@@ -150,6 +147,10 @@ class ReturnData {
     double *status = nullptr;
 
   protected:
+    ReturnData();
+
+    ReturnData(const UserData *udata, const Model *model, bool initializeFields);
+
     virtual void copyFromUserData(const UserData *udata);
 
     virtual void initFields();
