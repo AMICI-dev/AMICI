@@ -127,7 +127,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     UserData *udata = new UserData();
 
     /* time */
-    if (prhs[0] || mxGetM(prhs[0]) * mxGetN(prhs[0]) == 0) {
+    if (prhs[0] && mxGetM(prhs[0]) * mxGetN(prhs[0]) > 0) {
         udata->nt = (int)mxGetM(prhs[0]) * mxGetN(prhs[0]);
         udata->ts = new double[udata->nt];
         memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(double) * udata->nt);
