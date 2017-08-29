@@ -6,6 +6,9 @@
 #include <cstring>
 
 ReturnData::ReturnData()
+    /**
+     * @brief default constructor
+     */
     : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
       pscale(AMICI_SCALING_NONE), o2mode(AMICI_O2MODE_NONE),
@@ -21,6 +24,12 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
       newton_maxsteps(udata->newton_maxsteps), pscale(udata->pscale),
       o2mode(model->o2mode), sensi(udata->sensi),
       sensi_meth(udata->sensi_meth) {
+    /**
+     * @brief constructor that uses information from model and userdata to
+     * appropriately initialize fields
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] model pointer to model specification object @type Model
+     */
     setDefaults();
 
     initFields();
@@ -29,6 +38,9 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
 }
 
 void ReturnData::setDefaults() {
+    /**
+     * @brief initialize all member fields will nullpointers
+     */
     ts = xdot = J = z = sigmaz = sz = ssigmaz = rz =
         srz = s2rz = x = sx = y = sigmay = nullptr;
     sy = ssigmay = numsteps = numstepsB = numrhsevals = numrhsevalsB = order =
@@ -43,6 +55,9 @@ void ReturnData::setDefaults() {
 }
 
 void ReturnData::invalidate() {
+    /**
+     * @brief routine to set likelihood and respective sensitivities to NaN (typically after integration failure)
+     */
     if (llh)
         *llh = amiGetNaN();
 
@@ -54,15 +69,28 @@ void ReturnData::invalidate() {
 }
 
 void ReturnData::setLikelihoodSensitivityFirstOrderNaN() {
+    /**
+     * @brief routine to set first order sensitivities to NaN (typically after integration failure)
+     */
     fillArray(sllh, nplist, amiGetNaN());
 }
 
 void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
+    /**
+     * @brief routine to set second order sensitivities to NaN (typically after integration failure)
+     */
     fillArray(s2llh, nplist * (nJ - 1), amiGetNaN());
 }
 
 int ReturnData::applyChainRuleFactorToSimulationResults(
     const UserData *udata, const realtype *unscaledParameters) {
+    /**
+     * @brief applies the chain rule to account for parameter transformation
+     * in the sensitivities of simulation results
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] unscaledParameters pointer to the non-transformed parameters @type realtype
+     * @return status flag indicating success of execution @type int
+     */
     if (pscale == AMICI_SCALING_NONE)
         return AMICI_SUCCESS;
 
@@ -229,6 +257,9 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
 }
 
 ReturnData::~ReturnData() {
+    /**
+     * @brief default destructor
+     */
     if (!freeFieldsOnDestruction)
         return;
 
@@ -307,10 +338,17 @@ ReturnData::~ReturnData() {
 }
 
 void ReturnData::copyFromUserData(const UserData *udata) {
+    /**
+     * @brief copies measurement timepoints from UserData object
+     * @param[in] udata pointer to the user data struct @type UserData
+     */
     memcpy(ts, udata->ts, nt * sizeof(realtype));
 }
 
 void ReturnData::initFields() {
+    /**
+     * @brief initialises sol object with the corresponding fields
+     */
     initField1(&status, "status", 1);
 
     initField1(&ts, "t", nt);
@@ -385,20 +423,51 @@ void ReturnData::initFields() {
 
 void ReturnData::initField1(double **fieldPointer, const char *fieldName,
                             int dim) {
+    /**
+     * @brief initialise vector and attach to the field
+     * @param fieldPointer pointer of the field to which the vector will be attached
+     * @param fieldName Name of the field to which the vector will be attached
+     * @param dim number of elements in the vector
+     */
     *fieldPointer = new double[dim]();
 }
 
 void ReturnData::initField2(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2) {
+    /**
+     * @brief initialise matrix and attach to the field
+     * @param fieldPointer pointer of the field to which the matrix will be attached
+     * @param fieldName Name of the field to which the matrix will be attached
+     * @param dim1 number of rows in the matrix
+     * @param dim2 number of columns in the matrix
+     */
     *fieldPointer = new double[(dim1) * (dim2)]();
 }
 
 void ReturnData::initField3(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3) {
+    /**
+     * @brief initialise 3D tensor and attach to the field
+     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldName Name of the field to which the tensor will be attached
+     * @param dim1 number of rows in the tensor
+     * @param dim2 number of columns in the tensor
+     * @param dim3 number of elements in the third dimension of the tensor
+     */
+
     *fieldPointer = new double[(dim1) * (dim2) * (dim3)]();
 }
 
 void ReturnData::initField4(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3, int dim4) {
+    /**
+     * @brief initialise 4D tensor and attach to the field
+     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldName Name of the field to which the tensor will be attached
+     * @param dim1 number of rows in the tensor
+     * @param dim2 number of columns in the tensor
+     * @param dim3 number of elements in the third dimension of the tensor
+     * @param dim4 number of elements in the fourth dimension of the tensor
+     */
     *fieldPointer = new double[(dim1) * (dim2) * (dim3) * (dim4)]();
 }

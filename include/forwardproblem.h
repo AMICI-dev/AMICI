@@ -60,7 +60,7 @@ class ForwardProblem {
 
     static int applyEventSensiBolusFSA(TempData *tdata, Model *model);
 
-    static int updateHeaviside(TempData *tdata, int ne);
+    static int updateHeaviside(TempData *tdata, const int ne);
 
   private:
     ForwardProblem();

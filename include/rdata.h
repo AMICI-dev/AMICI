@@ -18,11 +18,6 @@ class ReturnData {
 
     virtual void setDefaults();
 
-    /**
-     * @brief performs all necessary actions to reset return data upon
-     * integration failure
-     * @param[in] udata pointer to the user data struct @type UserData
-     */
     void invalidate();
 
     void setLikelihoodSensitivityFirstOrderNaN();
@@ -123,7 +118,7 @@ class ReturnData {
     /** flag indicating success of Newton solver */
     double *newton_status;
 
-    /* computation time of the Newton solver [s] */
+    /** computation time of the Newton solver [s] */
     double *newton_time;
 
     /** number of Newton steps for steady state problem */
@@ -162,39 +157,16 @@ class ReturnData {
     virtual void initField1(double **fieldPointer, const char *fieldName,
                             int dim);
 
-    /**
-     * @ brief initialise matrix and attach to the field
-     * @ param FIELD name of the field to which the matrix will be attached
-     * @ param D1 number of rows in the matrix
-     * @ param D2 number of columns in the matrix
-     */
-
     virtual void initField2(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2);
-
-    /**
-     * @ brief initialise 3D tensor and attach to the field
-     * @ param FIELD name of the field to which the tensor will be attached
-     * @ param D1 number of rows in the tensor
-     * @ param D2 number of columns in the tensor
-     * @ param D3 number of elements in the third dimension of the tensor
-     */
 
     virtual void initField3(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3);
 
-    /**
-     * @ brief initialise 4D tensor and attach to the field
-     * @ param FIELD name of the field to which the tensor will be attached
-     * @ param D1 number of rows in the tensor
-     * @ param D2 number of columns in the tensor
-     * @ param D3 number of elements in the third dimension of the tensor
-     * @ param D4 number of elements in the fourth dimension of the tensor
-     */
-
     virtual void initField4(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3, int dim4);
 
+    /** flag indicating whether memory for fields needs to be freed on destruction */
     bool freeFieldsOnDestruction;
 
   public:
@@ -219,13 +191,21 @@ class ReturnData {
     /** dimension of the augmented objective function for 2nd order ASA */
     const int nJ;
 
+    /** number of parameter for which sensitivities were requested */
     const int nplist;
+    /** maximal number of occuring events (for every event type) */
     const int nmaxevent;
+    /** number of considered timepoints */
     const int nt;
+    /** maximal number of newton iterations for steady state calculation */
     const int newton_maxsteps;
+    /** scaling of parameterization (lin,log,log10) */
     const AMICI_parameter_scaling pscale;
+    /** flag indicating whether second order sensitivities were requested */
     const AMICI_o2mode o2mode;
+    /** sensitivity order */
     const AMICI_sensi_order sensi;
+    /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
 };
 

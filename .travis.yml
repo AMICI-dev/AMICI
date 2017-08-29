@@ -20,10 +20,14 @@ matrix:
             - libatlas-base-dev
             - valgrind
             - lcov
+            - graphviz
+            - doxygen
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
-      after_success: ./scripts/run-coveralls.sh
+      after_success: 
+        - ./scripts/run-coveralls.sh
+        - ./scripts/run-doxygen.sh
     - os: osx
       compiler: clang
       before_install: brew install hdf5

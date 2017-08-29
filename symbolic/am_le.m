@@ -4,8 +4,7 @@ function fun = am_le(varargin)
 % whether and(varargin{1} <= varargin{2},varargin{2} <= varargin{3},...)
 %
 % Parameters:
-%  a: first input parameter @type sym
-%  b: second input parameter @type sym
+%  varargin: chain of input parameters @type sym
 %
 % Return values:
 %  fun: a <= b logical value, negative for false, positive for true

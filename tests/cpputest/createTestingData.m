@@ -1,6 +1,10 @@
-function [ output_args ] = createTestingData( input_args )
-    %CREATETESTINGDATA This function writes some data for continuous
-    % integration tests
+function createTestingData()
+% createTestingData runs simulation on all test models and writes results as hdf5. currently necessary for continuous integration
+% to yield meaningful results
+%
+% Return values:
+%  void
+
     
     oldwd = pwd;
     

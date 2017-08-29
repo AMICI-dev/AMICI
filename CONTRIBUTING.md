@@ -11,6 +11,7 @@ When making code changes:
 * Implement your changes
 * Submit a pull request
 * Make sure your code is documented appropriately
+  * Run `mtoc/makeDocumentation.m` to check completeness of your documentation
 * Make sure your code is compatible with C++11, `gcc` and `clang`
 * when adding new functionality, please also provide test cases (see `tests/cpputest/`)
 * Write meaningful commit messages

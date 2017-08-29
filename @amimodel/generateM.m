@@ -6,7 +6,7 @@ function generateM(this, amimodelo2)
 %  definitions for second order sensivities @type amimodel
 %
 % Return values:
-%  this: model definition object @type amimodel
+%  void
 
 nx = this.nx;
 ny = this.ny;
