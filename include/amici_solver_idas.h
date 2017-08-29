@@ -10,32 +10,6 @@ class IDASolver : public Solver
 public:
     IDASolver();
 
-    int init(N_Vector x, N_Vector dx, realtype t) override;
-
-    int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
-
-    int qbinit(int which, N_Vector qBdot) override;
-
-    int rootInit(int ne) override;
-
-    int sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
-
-    int setDenseJacFn() override;
-
-    int setSparseJacFn() override;
-
-    int setBandJacFn() override;
-
-    int setJacTimesVecFn() override;
-
-    int setDenseJacFnB(int which) override;
-
-    int setSparseJacFnB(int which) override;
-
-    int setBandJacFnB(int which) override;
-
-    int setJacTimesVecFnB(int which) override;
-
     void *AMICreate(int lmm, int iter) override;
 
     int AMISStolerances(double rtol,double atol) override;
@@ -193,6 +167,33 @@ public:
     static int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
 
     ~IDASolver();
+
+protected:
+    int init(N_Vector x, N_Vector dx, realtype t) override;
+
+    int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
+
+    int qbinit(int which, N_Vector qBdot) override;
+
+    int rootInit(int ne) override;
+
+    int sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
+
+    int setDenseJacFn() override;
+
+    int setSparseJacFn() override;
+
+    int setBandJacFn() override;
+
+    int setJacTimesVecFn() override;
+
+    int setDenseJacFnB(int which) override;
+
+    int setSparseJacFnB(int which) override;
+
+    int setBandJacFnB(int which) override;
+
+    int setJacTimesVecFnB(int which) override;
 };
 
 #endif /* idawrap_h */

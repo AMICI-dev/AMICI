@@ -10,33 +10,7 @@ class UserData;
 class CVodeSolver : public Solver
 {
 public:
-    CVodeSolver();
-
-    int init(N_Vector x, N_Vector dx, realtype t) override;
-
-    int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
-
-    int qbinit(int which, N_Vector qBdot) override;
-
-    int rootInit(int ne) override;
-
-    int sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
-
-    int setDenseJacFn() override;
-
-    int setSparseJacFn() override;
-
-    int setBandJacFn() override;
-
-    int setJacTimesVecFn() override;
-
-    int setDenseJacFnB(int which) override;
-
-    int setSparseJacFnB(int which) override;
-
-    int setBandJacFnB(int which) override;
-
-    int setJacTimesVecFnB(int which) override;
+    CVodeSolver() = default;
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -185,6 +159,34 @@ public:
     static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 
     ~CVodeSolver();
+
+protected:
+    int init(N_Vector x, N_Vector dx, realtype t) override;
+
+    int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
+
+    int qbinit(int which, N_Vector qBdot) override;
+
+    int rootInit(int ne) override;
+
+    int sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
+
+    int setDenseJacFn() override;
+
+    int setSparseJacFn() override;
+
+    int setBandJacFn() override;
+
+    int setJacTimesVecFn() override;
+
+    int setDenseJacFnB(int which) override;
+
+    int setSparseJacFnB(int which) override;
+
+    int setBandJacFnB(int which) override;
+
+    int setJacTimesVecFnB(int which) override;
+
 };
 
 #endif /* CVodewrap_h */
