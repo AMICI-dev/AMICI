@@ -256,9 +256,6 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
      * @return stats integer flag indicating success of the method
      */
 
-    realtype *x_tmp;
-    int status = AMICI_SUCCESS;
-    
     /* Get time for Newton solve */
     rdata->newton_time[0] = run_time;
 
@@ -267,7 +264,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
         tdata->t = rdata->ts[0];
         
         /* Write steady state to output */
-        x_tmp = NV_DATA_S(tdata->x);
+        realtype *x_tmp = NV_DATA_S(tdata->x);
         for (int ix = 0; ix < model->nx; ix++) {
             rdata->x0[ix] = x_tmp[ix];
         }
