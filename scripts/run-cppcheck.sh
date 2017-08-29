@@ -14,10 +14,13 @@ fi
 cd ${AMICI_PATH}
 
 cppcheck ${AMICI_PATH}/src 2> cppcheck.txt
-# check if warnings log was created
+# check if error log was created
 if [ -f cppcheck.txt  ]; then
-    # check if warnings log is empty
+    # check if error log is empty
     if [ -s cppcheck.txt ]; then
+        echo "CPPCHECK failed:"
+        cat cppcheck.txt
+        rm cppcheck.txt
         exit 1
     else
         exit 0
