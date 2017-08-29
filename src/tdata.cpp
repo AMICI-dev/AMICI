@@ -16,17 +16,6 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
          
          */
 
-    xB = xB_old = dxB = xQB = xQB_old = NULL;
-    x_disc = xdot_disc = xdot_old_disc = NULL;
-    x = x_old = dx = dx_old = xdot = xdot_old = NULL;
-    sx = sdx = NULL;
-    Jtmp = NULL;
-    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp =
-        dJzdx = dJzdz = dJrzdz = NULL;
-    dJydsigma = dJzdsigma = dJrzdsigma = dsigmaydp = dsigmazdp = llhS0 = NULL;
-
-    which = 0;
-
     p = new realtype[model->np];
     udata->unscaleParameters(model, p);
 
