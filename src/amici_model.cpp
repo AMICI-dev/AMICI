@@ -241,8 +241,8 @@ int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
         if (!sx_tmp) {
-            status = AMICI_ERROR_FSA
-            goto freturn
+            status = AMICI_ERROR_FSA;
+            goto freturn;
         }
         for (int ix = 0; ix < nx; ++ix)
             sxTmp[ix + ip * nx] = sx_tmp[ix];
