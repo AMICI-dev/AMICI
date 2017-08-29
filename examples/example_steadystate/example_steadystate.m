@@ -49,7 +49,7 @@ function example_steadystate
             plot(t,sol.x(1:end-1,ix),'.-','Color',c_x(ix,:));
             hold on;
             plot(t,X_ode15s(:,ix),'d','Color',c_x(ix,:));
-            plot([t(1), t(end)],sol.xss(ix)*[1, 1],'--','Color',c_x(ix,:));
+            plot([t(1), t(end)],sol.x(end,ix)*[1, 1],'--','Color',c_x(ix,:));
         end
         legend('x1','x1_{ode15s}','x1_{ss, Newton}','x2','x2_{ode15s}','x2_{ss, Newton}','x3','x3_{ode15s}','x3_{ss, Newton}','Location','NorthEastOutside');
         legend boxoff;

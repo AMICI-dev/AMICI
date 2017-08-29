@@ -123,6 +123,7 @@ int NewtonSolver::getSensis(int it) {
     
     N_Vector sx_ip = N_VNew_Serial(model->nx);
     realtype *sx_tmp;
+    realtype *sx0_tmp;
     int status = this->prepareLinearSystem(0, -1);
     
     if (status == AMICI_SUCCESS) {
@@ -139,11 +140,12 @@ int NewtonSolver::getSensis(int it) {
                 
                 /* Copy result to return data */
                 if (status == AMICI_SUCCESS) {
-                    if (it == -1) {
+                    if (it == AMICI_PREEQUILIBRATE) {
                         /* Case of preequlibration */
+                        sx0_tmp = N_VGetArrayPointer(tdata->sx[ip]);
                         for (int ix=0; ix<model->nx; ix++) {
                             rdata->sx0[ip * model->nx + ix] = sx_tmp[ix];
-                            tdata->sx[ip * model->nx + ix] = sx_tmp[ix];
+                            sx0_tmp[ix] = sx_tmp[ix];
                         }
                     } else {
                         /* Classical steady state computation */

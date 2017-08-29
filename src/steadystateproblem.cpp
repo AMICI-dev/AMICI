@@ -70,10 +70,19 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     }
     
     /* Compute steady state sensitvities */
-    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (status == AMICI_SUCCESS) {
+    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+        if (status == AMICI_SUCCESS)
             status = newtonSolver->getSensis(it);
-        }
+    
+    /* Reinitialize solver with preequilibrated state */
+    if (it == AMICI_PREEQUILIBRATE) {
+
+        status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
+        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+            if (rdata->sensi_meth == AMICI_SENSI_FSA)
+                status = solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
+        if (status != AMICI_SUCCESS)
+            status = AMICI_ERROR_PREEQUILIBRATION;
     }
 
     delete newtonSolver;
@@ -257,14 +266,13 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
     rdata->newton_time[0] = run_time;
 
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
-    if (it == -1) {
-        tdata->t = rdata->ts[0]
+    if (it == AMICI_PREEQUILIBRATE) {
+        tdata->t = rdata->ts[0];
         
         /* Write steady state to output */
-        x_tmp = N_VGetArrayPointer(tdata->x);
+        x_tmp = NV_DATA_S(tdata->x);
         for (int ix = 0; ix < model->nx; ix++) {
             rdata->x0[ix] = x_tmp[ix];
-            tdata->x[ix] = x_tmp[ix];
         }
     } else {
         tdata->t = INFINITY;

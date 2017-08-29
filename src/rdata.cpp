@@ -150,6 +150,7 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                     chainRule(z, iz, nztrue, nz, ie, nmaxevent)
                         chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
                             chainRule(rz, iz, nztrue, nz, ie, nmaxevent)
+                                chainRule(x0, ix, nxtrue, nx, it, 1)
     }
     
     if (o2mode == AMICI_O2MODE_FULL) { // full
