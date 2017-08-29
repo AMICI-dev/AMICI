@@ -16,7 +16,7 @@ class ReturnData {
 
     ReturnData(const UserData *udata, const Model *model);
 
-    virtual void setDefaults();
+    ReturnData(const UserData *udata, const Model *model, bool initializeFields);
 
     void invalidate();
 
@@ -30,124 +30,124 @@ class ReturnData {
     virtual ~ReturnData();
 
     /** timepoints (dimension: nt) */
-    double *ts;
+    double *ts = nullptr;
 
     /** time derivative (dimension: nx) */
-    double *xdot;
+    double *xdot = nullptr;
 
     /** Jacobian of differential equation right hand side (dimension: nx x nx,
      * column-major) */
-    double *J;
+    double *J = nullptr;
 
     /** event output (dimension: nmaxevent x nz, column-major) */
-    double *z;
+    double *z = nullptr;
 
     /** event output sigma standard deviation (dimension: nmaxevent x nz,
      * column-major) */
-    double *sigmaz;
+    double *sigmaz = nullptr;
 
     /** parameter derivative of event output (dimension: nmaxevent x nz,
      * column-major) */
-    double *sz;
+    double *sz = nullptr;
 
     /** parameter derivative of event output standard deviation (dimension:
      * nmaxevent x nz, column-major)  */
-    double *ssigmaz;
+    double *ssigmaz = nullptr;
 
     /** event trigger output (dimension: nmaxevent x nz, column-major)*/
-    double *rz;
+    double *rz = nullptr;
 
     /** parameter derivative of event trigger output (dimension: nmaxevent x nz
      * x nplist, column-major) */
-    double *srz;
+    double *srz = nullptr;
 
     /** second order parameter derivative of event trigger output (dimension:
      * nmaxevent x nztrue x nplist x nplist, column-major) */
-    double *s2rz;
+    double *s2rz = nullptr;
 
     /** state (dimension: nt x nx, column-major) */
-    double *x;
+    double *x = nullptr;
 
     /** parameter derivative of state (dimension: nt x nx x nplist,
      * column-major) */
-    double *sx;
+    double *sx = nullptr;
 
     /** observable (dimension: nt x ny, column-major) */
-    double *y;
+    double *y = nullptr;
 
     /** observable standard deviation (dimension: nt x ny, column-major) */
-    double *sigmay;
+    double *sigmay = nullptr;
 
     /** parameter derivative of observable (dimension: nt x ny x nplist,
      * column-major) */
-    double *sy;
+    double *sy = nullptr;
 
     /** parameter derivative of observable standard deviation (dimension: nt x
      * ny x nplist, column-major) */
-    double *ssigmay;
+    double *ssigmay = nullptr;
 
     /** number of integration steps forward problem (dimension: nt) */
-    double *numsteps;
+    double *numsteps = nullptr;
 
     /** number of integration steps backward problem (dimension: nt) */
-    double *numstepsB;
+    double *numstepsB = nullptr;
 
     /** number of right hand side evaluations forward problem (dimension: nt) */
-    double *numrhsevals;
+    double *numrhsevals = nullptr;
 
     /** number of right hand side evaluations backwad problem (dimension: nt) */
-    double *numrhsevalsB;
+    double *numrhsevalsB = nullptr;
 
     /** number of error test failures forward problem (dimension: nt) */
-    double *numerrtestfails;
+    double *numerrtestfails = nullptr;
 
     /** number of error test failures backwad problem (dimension: nt) */
-    double *numerrtestfailsB;
+    double *numerrtestfailsB = nullptr;
 
     /** number of linear solver convergence failures forward problem (dimension:
      * nt) */
-    double *numnonlinsolvconvfails;
+    double *numnonlinsolvconvfails = nullptr;
 
     /** number of linear solver convergence failures backwad problem (dimension:
      * nt) */
-    double *numnonlinsolvconvfailsB;
+    double *numnonlinsolvconvfailsB = nullptr;
 
     /** employed order forward problem (dimension: nt) */
-    double *order;
+    double *order = nullptr;
 
     /** flag indicating success of Newton solver */
-    double *newton_status;
+    double *newton_status = nullptr;
 
     /** computation time of the Newton solver [s] */
-    double *newton_time;
+    double *newton_time = nullptr;
 
     /** number of Newton steps for steady state problem */
-    double *newton_numsteps;
+    double *newton_numsteps = nullptr;
 
     /** number of linear steps by Newton step for steady state problem */
-    double *newton_numlinsteps;
+    double *newton_numlinsteps = nullptr;
 
     /** preequilibration steady state found be Newton solver */
-    double *x0;
+    double *x0 = nullptr;
     
     /** preequilibration sensitivities found be Newton solver */
-    double *sx0;
+    double *sx0 = nullptr;
 
     /** likelihood value (double[1]) */
-    double *llh;
+    double *llh = nullptr;
 
     /** chi2 value (double[1]) */
-    double *chi2;
+    double *chi2 = nullptr;
 
     /** parameter derivative of likelihood (dimension: nplist) */
-    double *sllh;
+    double *sllh = nullptr;
 
     /** second order parameter derivative of likelihood (dimension: (nJ-1) x
      * nplist, column-major) */
-    double *s2llh;
+    double *s2llh = nullptr;
 
     /** status code (double[1]) */
-    double *status;
+    double *status = nullptr;
 
   protected:
     virtual void copyFromUserData(const UserData *udata);
@@ -167,7 +167,7 @@ class ReturnData {
                             int dim1, int dim2, int dim3, int dim4);
 
     /** flag indicating whether memory for fields needs to be freed on destruction */
-    bool freeFieldsOnDestruction;
+    bool freeFieldsOnDestruction = true;
 
   public:
     /** total number of model parameters */
