@@ -12,147 +12,147 @@ class CVodeSolver : public Solver
 public:
     CVodeSolver();
 
-    int wrap_init(N_Vector x, N_Vector dx, realtype t);
+    int wrap_init(N_Vector x, N_Vector dx, realtype t) override;
 
-    int wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t);
+    int wrap_binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
 
-    int wrap_qbinit(int which, N_Vector qBdot);
+    int wrap_qbinit(int which, N_Vector qBdot) override;
 
-    int wrap_RootInit(int ne);
+    int wrap_RootInit(int ne) override;
 
-    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata);
+    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
 
-    int wrap_SetDenseJacFn();
+    int wrap_SetDenseJacFn() override;
 
-    int wrap_SetSparseJacFn();
+    int wrap_SetSparseJacFn() override;
 
-    int wrap_SetBandJacFn();
+    int wrap_SetBandJacFn() override;
 
-    int wrap_SetJacTimesVecFn();
+    int wrap_SetJacTimesVecFn() override;
 
-    int wrap_SetDenseJacFnB(int which);
+    int wrap_SetDenseJacFnB(int which) override;
 
-    int wrap_SetSparseJacFnB(int which);
+    int wrap_SetSparseJacFnB(int which) override;
 
-    int wrap_SetBandJacFnB(int which);
+    int wrap_SetBandJacFnB(int which) override;
 
-    int wrap_SetJacTimesVecFnB(int which);
+    int wrap_SetJacTimesVecFnB(int which) override;
 
-    void *AMICreate(int lmm, int iter);
+    void *AMICreate(int lmm, int iter) override;
 
-    int AMISStolerances(double rtol,double atol);
+    int AMISStolerances(double rtol,double atol) override;
 
-    int AMISensEEtolerances();
+    int AMISensEEtolerances() override;
 
-    int AMISetSensErrCon(bool error_corr);
+    int AMISetSensErrCon(bool error_corr) override;
 
-    int AMISetQuadErrConB(int which, bool flag);
+    int AMISetQuadErrConB(int which, bool flag) override;
 
-    int AMIGetRootInfo(int *rootsfound);
+    int AMIGetRootInfo(int *rootsfound) override;
 
-    int AMISetErrHandlerFn();
+    int AMISetErrHandlerFn() override;
 
-    int AMISetUserData(void *user_data);
+    int AMISetUserData(void *user_data) override;
 
-    int AMISetUserDataB(int which, void *user_data);
+    int AMISetUserDataB(int which, void *user_data) override;
 
-    int AMISetMaxNumSteps(long int mxsteps);
+    int AMISetMaxNumSteps(long int mxsteps) override;
 
-    int AMISetStabLimDet(int stldet);
+    int AMISetStabLimDet(int stldet) override;
 
-    int AMISetStabLimDetB(int which, int stldet);
+    int AMISetStabLimDetB(int which, int stldet) override;
 
-    int AMISetId(Model *model);
+    int AMISetId(Model *model) override;
 
-    int AMISetSuppressAlg(bool flag);
+    int AMISetSuppressAlg(bool flag) override;
 
-    int AMIReInit(realtype t0, N_Vector yy0, N_Vector yp0);
+    int AMIReInit(realtype t0, N_Vector yy0, N_Vector yp0) override;
 
-    int AMISensReInit(int ism, N_Vector *yS0, N_Vector *ypS0);
+    int AMISensReInit(int ism, N_Vector *yS0, N_Vector *ypS0) override;
 
-    int AMISetSensParams(realtype *p, realtype *pbar, int *plist);
+    int AMISetSensParams(realtype *p, realtype *pbar, int *plist) override;
 
-    int AMIGetDky(realtype t, int k, N_Vector dky);
+    int AMIGetDky(realtype t, int k, N_Vector dky) override;
 
-    int AMIGetSens(realtype *tret, N_Vector *yySout);
+    int AMIGetSens(realtype *tret, N_Vector *yySout) override;
 
-    void AMIFree();
+    void AMIFree() override;
 
-    int AMIAdjInit(long int steps, int interp);
+    int AMIAdjInit(long int steps, int interp) override;
 
-    int AMICreateB(int lmm, int iter, int *which);
+    int AMICreateB(int lmm, int iter, int *which) override;
 
-    int AMIReInitB(int which, realtype tB0, N_Vector yyB0, N_Vector ypB0);
+    int AMIReInitB(int which, realtype tB0, N_Vector yyB0, N_Vector ypB0) override;
 
-    int AMISStolerancesB(int which, realtype relTolB, realtype absTolB);
+    int AMISStolerancesB(int which, realtype relTolB, realtype absTolB) override;
 
-    int AMIQuadReInitB(int which, N_Vector yQB0);
+    int AMIQuadReInitB(int which, N_Vector yQB0) override;
 
-    int AMIQuadSStolerancesB(int which, realtype reltolQB, realtype abstolQB);
+    int AMIQuadSStolerancesB(int which, realtype reltolQB, realtype abstolQB) override;
 
-    int AMISolve(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask);
+    int AMISolve(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask) override;
 
-    int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr);
+    int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret, int itask, int *ncheckPtr) override;
 
-    int AMISolveB(realtype tBout, int itaskB);
+    int AMISolveB(realtype tBout, int itaskB) override;
 
-    int AMISetMaxNumStepsB(int which, long int mxstepsB);
+    int AMISetMaxNumStepsB(int which, long int mxstepsB) override;
 
-    int AMIGetB(int which, realtype *tret, N_Vector yy, N_Vector yp);
+    int AMIGetB(int which, realtype *tret, N_Vector yy, N_Vector yp) override;
 
-    int AMIGetQuadB(int which, realtype *tret, N_Vector qB);
+    int AMIGetQuadB(int which, realtype *tret, N_Vector qB) override;
 
-    int AMIDense(int nx);
+    int AMIDense(int nx) override;
 
-    int AMIDenseB(int which, int nx);
+    int AMIDenseB(int which, int nx) override;
 
-    int AMIBand(int nx, int ubw, int lbw);
+    int AMIBand(int nx, int ubw, int lbw) override;
 
-    int AMIBandB(int which, int nx, int ubw, int lbw);
+    int AMIBandB(int which, int nx, int ubw, int lbw) override;
 
-    int AMIDiag();
+    int AMIDiag() override;
 
-    int AMIDiagB(int which);
+    int AMIDiagB(int which) override;
 
-    int AMISpgmr(int prectype, int maxl);
+    int AMISpgmr(int prectype, int maxl) override;
 
-    int AMISpgmrB(int which, int prectype, int maxl);
+    int AMISpgmrB(int which, int prectype, int maxl) override;
 
-    int AMISpbcg(int prectype, int maxl);
+    int AMISpbcg(int prectype, int maxl) override;
 
-    int AMISpbcgB(int which, int prectype, int maxl);
+    int AMISpbcgB(int which, int prectype, int maxl) override;
 
-    int AMISptfqmr(int prectype, int maxl);
+    int AMISptfqmr(int prectype, int maxl) override;
 
-    int AMISptfqmrB(int which, int prectype, int maxl);
+    int AMISptfqmrB(int which, int prectype, int maxl) override;
 
-    int AMIKLU(int nx, int nnz, int sparsetype);
+    int AMIKLU(int nx, int nnz, int sparsetype) override;
 
-    int AMIKLUSetOrdering(int ordering);
+    int AMIKLUSetOrdering(int ordering) override;
 
-    int AMIKLUSetOrderingB(int which, int ordering);
+    int AMIKLUSetOrderingB(int which, int ordering) override;
 
-    int AMIKLUB(int which, int nx, int nnz, int sparsetype);
+    int AMIKLUB(int which, int nx, int nnz, int sparsetype) override;
 
-    int AMIGetNumSteps(void *ami_mem, long int *numsteps);
+    int AMIGetNumSteps(void *ami_mem, long int *numsteps) override;
 
-    int AMIGetNumRhsEvals(void *ami_mem, long int *numrhsevals);
+    int AMIGetNumRhsEvals(void *ami_mem, long int *numrhsevals) override;
 
-    int AMIGetNumErrTestFails(void *ami_mem, long int *numerrtestfails);
+    int AMIGetNumErrTestFails(void *ami_mem, long int *numerrtestfails) override;
 
-    int AMIGetNumNonlinSolvConvFails(void *ami_mem, long int *numnonlinsolvconvfails);
+    int AMIGetNumNonlinSolvConvFails(void *ami_mem, long int *numnonlinsolvconvfails) override;
 
-    int AMIGetLastOrder(void *ami_ami_mem, int *order);
+    int AMIGetLastOrder(void *ami_ami_mem, int *order) override;
 
-    void *AMIGetAdjBmem(void *ami_mem, int which);
+    void *AMIGetAdjBmem(void *ami_mem, int which) override;
 
-    int AMICalcIC(realtype tout1);
+    int AMICalcIC(realtype tout1) override;
 
-    int AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB);
+    int AMICalcICB(int which, realtype tout1, N_Vector xB, N_Vector dxB) override;
 
-    int AMISetStopTime(realtype tstop);
+    int AMISetStopTime(realtype tstop) override;
 
-    int turnOffRootFinding();
+    int turnOffRootFinding() override;
 
     // Static wrapper functions because cannot pass member functions to solver (CVODES-specific signatures)
     static int resultFunction(realtype t, N_Vector y,
