@@ -2,13 +2,12 @@
 
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
     : ReturnData(udata, model, false) {
-        /**
-         * @brief initialises the returnData struct, initialises the fields and copies
-         * model dimensions from the udata struct
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] model pointer to model specification object @type Model
-         */
-    mxsol = NULL;
+    /**
+      * @brief initialises the returnData struct, initialises the fields and copies
+      * model dimensions from the udata struct
+      * @param[in] udata pointer to the user data struct @type UserData
+      * @param[in] model pointer to model specification object @type Model
+      */
     freeFieldsOnDestruction = false;
     initFields();
     copyFromUserData(udata);
@@ -74,7 +73,7 @@ void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName,
     mxSetField(mxsol, 0, fieldName, array);
 
     array = mxGetField(mxsol, 0, fieldName);
-    if (status && array == NULL)
+    if (status && array == nullptr)
         *status = AMICI_ERROR_RDATA;
 }
 
@@ -92,7 +91,7 @@ void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName,
     mxSetField(mxsol, 0, fieldName, array);
 
     array = mxGetField(mxsol, 0, fieldName);
-    if (status && array == NULL)
+    if (status && array == nullptr)
         *status = AMICI_ERROR_RDATA;
 }
 
@@ -112,7 +111,7 @@ void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName,
     mxSetField(mxsol, 0, fieldName, array);
 
     array = mxGetField(mxsol, 0, fieldName);
-    if (status && array == NULL)
+    if (status && array == nullptr)
         *status = AMICI_ERROR_RDATA;
 }
 
@@ -134,6 +133,6 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
     mxSetField(mxsol, 0, fieldName, array);
 
     array = mxGetField(mxsol, 0, fieldName);
-    if (status && array == NULL)
+    if (status && array == nullptr)
         *status = AMICI_ERROR_RDATA;
 }
