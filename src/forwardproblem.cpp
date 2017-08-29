@@ -168,7 +168,7 @@ int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata,
         }
     }
     for (ie = 0; ie < model->ne; ie++) {
-        tdata->h[ie] = tdata->rootvals[ie];
+        tdata->rvaltmp[ie] = tdata->rootvals[ie];
     }
 
     if (seflag == 0) {
@@ -276,8 +276,8 @@ int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata,
         /* the same event should not trigger itself */
         if (tdata->rootsfound[ie] == 0) {
             /* check whether there was a zero-crossing */
-            if (0 > tdata->h[ie] * tdata->rootvals[ie]) {
-                if (tdata->h[ie] < tdata->rootvals[ie]) {
+            if (0 > tdata->rvaltmp[ie] * tdata->rootvals[ie]) {
+                if (tdata->rvaltmp[ie] < tdata->rootvals[ie]) {
                     tdata->rootsfound[ie] = 1;
                 } else {
                     tdata->rootsfound[ie] = -1;
@@ -974,7 +974,7 @@ int ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
          the right update to the heaviside variables */
 
     for (int ie = 0; ie < ne; ie++) {
-        tdata->h_udata[ie] += tdata->rootsfound[ie];
+        tdata->h[ie] += tdata->rootsfound[ie];
     }
     return AMICI_SUCCESS;
 }
