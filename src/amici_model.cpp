@@ -240,8 +240,10 @@ int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     realtype *sx_tmp;
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
-        if (!sx_tmp)
-            return AMICI_ERROR_FSA;
+        if (!sx_tmp) {
+            status = AMICI_ERROR_FSA
+            goto freturn
+        }
         for (int ix = 0; ix < nx; ++ix)
             sxTmp[ix + ip * nx] = sx_tmp[ix];
     }
@@ -268,6 +270,7 @@ int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
                     multResult[iJ + ip * nJ] + tdata->dJzdp[iJ + ip * nJ];
     }
 
+freturn:
     delete[] dJzdxTmp;
     delete[] multResult;
     delete[] sxTmp;

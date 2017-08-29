@@ -22,6 +22,7 @@ matrix:
             - lcov
             - graphviz
             - doxygen
+            - cppcheck
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
@@ -38,6 +39,7 @@ install:
 script:  
     - ./scripts/run-cpputest.sh
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-cppcheck.sh; fi
 
 notifications:
   slack: 
