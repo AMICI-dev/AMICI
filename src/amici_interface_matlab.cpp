@@ -97,10 +97,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if(!model) {
         return;
     }
-    if(model->nx <= 1) {
-        delete model;
-        return;
-    }
 
     const UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
     if(!udata) {
