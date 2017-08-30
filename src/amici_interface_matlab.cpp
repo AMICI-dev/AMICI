@@ -35,7 +35,9 @@ enum mexRhsArguments {
     RHS_PLIST,
     RHS_PBAR,
     RHS_XSCALE_UNUSED,
+    RHS_INITIALIZATION,
     RHS_DATA,
+    RHS_NUMARGS_REQUIRED = RHS_DATA,
     RHS_NUMARGS
 };
 
@@ -132,7 +134,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
  */
 UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                  Model *model) {
-    if (nrhs < RHS_NUMARGS) {
+    if (nrhs < RHS_NUMARGS_REQUIRED) {
         errMsgIdAndTxt(
             "AMICI:mex",
             "Incorrect number of input arguments (must be at least 7)!");
@@ -254,8 +256,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
 
     /* Check, if initial states and sensitivities are passed by user or must be
      * calculated */
-    if (mxGetPr(prhs[RHS_DATA])) {
-        mxArray *x0 = mxGetField(prhs[RHS_DATA], 0, "x0");
+    if (mxGetPr(prhs[RHS_INITIALIZATION])) {
+        mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
         if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
             /* check dimensions */
             if (mxGetN(x0) != 1) {
@@ -274,7 +276,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
             udata->setStateInitialization(mxGetPr(x0));
         }
 
-        mxArray *sx0 = mxGetField(prhs[RHS_DATA], 0, "sx0");
+        mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
             if (mxGetN(sx0) != udata->nplist) {
@@ -424,7 +426,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
     }
 
     // Data provided / required?
-    if (!mxGetPr(prhs[8])) {
+    if (!mxGetPr(prhs[RHS_DATA])) {
         if (udata->sensi >= AMICI_SENSI_ORDER_FIRST &&
             udata->sensi_meth == AMICI_SENSI_ASA) {
             errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
@@ -433,8 +435,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
         goto freturn;
     }
 
-    if (mxGetProperty(prhs[8], 0, "Y")) {
-        ny_my = (int)mxGetN(mxGetProperty(prhs[8], 0, "Y"));
+    if (mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
+        ny_my = (int)mxGetN(mxGetProperty(prhs[RHS_DATA], 0, "Y"));
         if (ny_my != model->nytrue) {
             sprintf(errmsg, "Number of observables in data matrix (%i) does "
                             "not match model ny (%i)",
@@ -442,7 +444,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nyy", errmsg);
             goto freturn;
         }
-        nt_my = (int)mxGetM(mxGetProperty(prhs[8], 0, "Y"));
+        nt_my = (int)mxGetM(mxGetProperty(prhs[RHS_DATA], 0, "Y"));
         if (nt_my != udata->nt) {
             sprintf(errmsg, "Number of time-points in data matrix does (%i) "
                             "not match provided time vector (%i)",
@@ -450,7 +452,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nty", errmsg);
             goto freturn;
         }
-        memcpy(edata->my, mxGetPr(mxGetProperty(prhs[8], 0, "Y")),
+        memcpy(edata->my, mxGetPr(mxGetProperty(prhs[RHS_DATA], 0, "Y")),
                ny_my * nt_my * sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Y",
@@ -458,8 +460,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
         goto freturn;
     }
 
-    if (mxGetProperty(prhs[8], 0, "Sigma_Y")) {
-        ny_sigmay = (int)mxGetN(mxGetProperty(prhs[8], 0, "Sigma_Y"));
+    if (mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")) {
+        ny_sigmay = (int)mxGetN(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y"));
         if (ny_sigmay != model->nytrue) {
             sprintf(errmsg, "Number of observables in data-sigma matrix (%i) "
                             "does not match model ny (%i)",
@@ -467,7 +469,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nysdy", errmsg);
             goto freturn;
         }
-        nt_sigmay = (int)mxGetM(mxGetProperty(prhs[8], 0, "Sigma_Y"));
+        nt_sigmay = (int)mxGetM(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y"));
         if (nt_sigmay != udata->nt) {
             sprintf(errmsg, "Number of time-points in data-sigma matrix (%i) "
                             "does not match provided time vector (%i)",
@@ -475,7 +477,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:ntsdy", errmsg);
             goto freturn;
         }
-        memcpy(edata->sigmay, mxGetPr(mxGetProperty(prhs[8], 0, "Sigma_Y")),
+        memcpy(edata->sigmay, mxGetPr(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")),
                ny_sigmay * nt_sigmay * sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Sigma_Y",
@@ -483,7 +485,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
         goto freturn;
     }
     if (mxGetProperty(prhs[8], 0, "Z")) {
-        nz_mz = (int)mxGetN(mxGetProperty(prhs[8], 0, "Z"));
+        nz_mz = (int)mxGetN(mxGetProperty(prhs[RHS_DATA], 0, "Z"));
         if (nz_mz != model->nztrue) {
             sprintf(errmsg, "Number of events in event matrix (%i) does not "
                             "match provided nz (%i)",
@@ -491,7 +493,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nenz", errmsg);
             goto freturn;
         }
-        ne_mz = (int)mxGetM(mxGetProperty(prhs[8], 0, "Z"));
+        ne_mz = (int)mxGetM(mxGetProperty(prhs[RHS_DATA], 0, "Z"));
         if (ne_mz != udata->nmaxevent) {
             sprintf(errmsg, "Number of time-points in event matrix (%i) does "
                             "not match provided nmaxevent (%i)",
@@ -499,7 +501,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnz", errmsg);
             goto freturn;
         }
-        memcpy(edata->mz, mxGetPr(mxGetProperty(prhs[8], 0, "Z")),
+        memcpy(edata->mz, mxGetPr(mxGetProperty(prhs[RHS_DATA], 0, "Z")),
                nz_mz * ne_mz * sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Z",
@@ -508,7 +510,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
     }
 
     if (mxGetProperty(prhs[8], 0, "Sigma_Z")) {
-        nz_sigmaz = (int)mxGetN(mxGetProperty(prhs[8], 0, "Sigma_Z"));
+        nz_sigmaz = (int)mxGetN(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z"));
         if (nz_sigmaz != model->nztrue) {
             sprintf(errmsg, "Number of events in event-sigma matrix (%i) does "
                             "not match provided nz (%i)",
@@ -516,7 +518,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nensdz", errmsg);
             goto freturn;
         }
-        ne_sigmaz = (int)mxGetM(mxGetProperty(prhs[8], 0, "Sigma_Z"));
+        ne_sigmaz = (int)mxGetM(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z"));
         if (ne_sigmaz != udata->nmaxevent) {
             sprintf(errmsg, "Number of time-points in event-sigma matrix (%i) "
                             "does not match provided nmaxevent (%i)",
@@ -524,7 +526,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
             errMsgIdAndTxt("AMICI:mex:data:nmaxeventnsdz", errmsg);
             goto freturn;
         }
-        memcpy(edata->sigmaz, mxGetPr(mxGetProperty(prhs[8], 0, "Sigma_Z")),
+        memcpy(edata->sigmaz, mxGetPr(mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z")),
                ne_sigmaz * nz_sigmaz * sizeof(double));
     } else {
         errMsgIdAndTxt("AMICI:mex:data:Sigma_Z",
