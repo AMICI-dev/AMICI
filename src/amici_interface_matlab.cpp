@@ -113,18 +113,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = rdata->matlabSolutionStruct;
 
     ExpData *edata = nullptr;
-    if (nrhs >= RHS_DATA) {
+    if (nrhs > RHS_DATA && mxGetPr(prhs[RHS_DATA])) {
         edata = expDataFromMatlabCall(prhs, udata, model);
         if(!edata) {
-            delete model;
-            delete rdata;
-            return;
+            goto freturn;
         }
+    } else if (udata->sensi >= AMICI_SENSI_ORDER_FIRST &&
+               udata->sensi_meth == AMICI_SENSI_ASA) {
+        errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
+        goto freturn;
     }
 
     *(rdata->status) =
             (double)runAmiciSimulation(udata, edata, rdata, model);
 
+freturn:
     delete model;
     delete udata;
     delete rdata;
@@ -421,6 +424,8 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * @return edata pointer to experimental data object @type ExpData
  */
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Model *model) {
+    if(!mxGetPr(prhs[RHS_DATA]))
+        return nullptr;
 
     int nt_my = 0, ny_my = 0, nt_sigmay = 0,
         ny_sigmay = 0; /* integers with problem dimensionality */
@@ -428,16 +433,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata, Mod
         nz_sigmaz = 0; /* integers with problem dimensionality */
 
     ExpData *edata = new ExpData(udata, model);
-    if (edata->my == nullptr) {
-        goto freturn;
-    }
-
-    // Data provided / required?
-    if (!mxGetPr(prhs[RHS_DATA])) {
-        if (udata->sensi >= AMICI_SENSI_ORDER_FIRST &&
-            udata->sensi_meth == AMICI_SENSI_ASA) {
-            errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
-        }
+    if (edata == nullptr || edata->my == nullptr) {
         goto freturn;
     }
 
