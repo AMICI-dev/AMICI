@@ -94,32 +94,45 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     Model *model = getModel();
-
-    const UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
-
-    ReturnDataMatlab *rdata = new ReturnDataMatlab(udata, model);
-    plhs[0] = rdata->matlabSolutionStruct;
-    if (*(rdata->status) != AMICI_SUCCESS)
+    if(!model) {
         return;
-
-    ExpData *edata = NULL;
-    if (nrhs >= 8) {
-        edata = expDataFromMatlabCall(prhs, udata, model);
+    }
+    if(model->nx <= 1) {
+        delete model;
+        return;
     }
 
-    if (udata) {
-        if (model->nx > 0) {
-            *(rdata->status) =
-                (double)runAmiciSimulation(udata, edata, rdata, model);
+    const UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
+    if(!udata) {
+        delete model;
+        return;
+    }
+
+    ReturnDataMatlab *rdata = new ReturnDataMatlab(udata, model);   
+    if (!rdata || *(rdata->status) != AMICI_SUCCESS) {
+        delete model;
+        delete rdata;
+        return;
+    }
+    plhs[0] = rdata->matlabSolutionStruct;
+
+    ExpData *edata = nullptr;
+    if (nrhs >= RHS_DATA) {
+        edata = expDataFromMatlabCall(prhs, udata, model);
+        if(!edata) {
+            delete model;
+            delete rdata;
+            return;
         }
     }
 
-    delete model;
+    *(rdata->status) =
+            (double)runAmiciSimulation(udata, edata, rdata, model);
 
-    if (udata)
-        delete udata;
-    if (rdata)
-        delete rdata;
+    delete model;
+    delete udata;
+    delete rdata;
+
     if (edata)
         delete edata;
 }
