@@ -7,6 +7,14 @@
 
 TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
     : udata(udata), model(model), rdata(rdata) {
+        /**
+         * @brief Default constructor
+         *
+         * @param[in] udata pointer to the user data struct @type UserData
+         * @param[in] model pointer to model specification object @type Model
+         * @param[in] rdata pointer to the return data struct @type ReturnData
+         
+         */
 
     xB = xB_old = dxB = xQB = xQB_old = NULL;
     x_disc = xdot_disc = xdot_old_disc = NULL;

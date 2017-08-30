@@ -5,7 +5,7 @@ function makeEvents( this )
 % Parameters:
 %
 % Return values:
-%
+%  void
 
 nevent = length(this.event);
 nx = length(this.sym.x);

@@ -36,7 +36,7 @@ classdef amidata < handle
     
     methods
         function D = amidata(varargin)
-            % amidata creates an @amidata container for experimental data 
+            % amidata creates an amidata container for experimental data 
             % with specified dimensions amidata.
             % 
             % AMIDATA(amidata) creates a copy of the input container

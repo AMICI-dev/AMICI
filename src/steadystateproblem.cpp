@@ -23,7 +23,6 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
      * Computes steady state sensitivities
      *
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type UserData
      * @param[in] solver pointer to the AMICI solver object @type Solver
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] it integer with the index of the current time step
@@ -100,13 +99,11 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
      * Runs the Newton solver iterations and checks for convergence to steady state
      *
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type UserData
-     * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] newtonSolver pointer to the NewtonSolver object @type NewtonSolver
      * @param[in] newton_try integer start number of Newton solver (1 or 2)
-     * @param[out] tdata pointer to the temporary data object @type TempData
-     * @param[out] rdata pointer to the return data object @type ReturnData
      * @return stats integer flag indicating success of the method
      */
 
@@ -293,7 +290,6 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
      * Forward simulation is launched, if Newton solver fails in first try
      *
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type UserData
      * @param[in] solver pointer to the AMICI solver object @type Solver
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[out] tdata pointer to the temporary data object @type TempData
@@ -382,11 +378,10 @@ int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
      * Solves the linear system within each Newton step if iterative solver is chosen.
      *
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type UserData
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] ntry integer newton_try integer start number of Newton solver (1 or 2)
      * @param[in] nnewt integer number of current Newton step
-     * @param[in] N_Vector ns_delta
+     * @param[in] ns_delta ???
      * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @return stats integer flag indicating success of the method

@@ -5,6 +5,7 @@ function checkODE(this)
     % Parameters:
     %
     % Return values:
+    % void
 length_states = arrayfun(@(x) length(char(x)),this.state);
 assert(all(length_states<=namelengthmax),['Some species have identifiers are longer than ' num2str(namelengthmax) ' which MATLAB cannot handle, please shorten the identifiers!'])
 length_parameters = arrayfun(@(x) length(char(x)),this.parameter);

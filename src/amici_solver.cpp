@@ -12,6 +12,13 @@
 
 Solver::~Solver() {}
 
+/**
+ * @brief setupAMIs initialises the ami memory object
+ * @param[in] udata pointer to the user data object @type UserData
+ * @param[in] tdata pointer to the temporary data object @type TempData
+ * @param[in] model pointer to the model object @type Model
+ * @return status flag indicating successful execution
+ */
 int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model) {
     int status;
     tdata->t = udata->tstart;
@@ -136,6 +143,13 @@ freturn:
     return AMICI_ERROR_SETUP;
 }
 
+/**
+ * setupAMIB initialises the AMI memory object for the backwards problem
+ * @param[in] udata pointer to the user data object @type UserData
+ * @param[in] tdata pointer to the temporary data object @type TempData
+ * @param[in] model pointer to the model object @type Model
+ * @return status flag indicating successful execution
+ */
 int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
     int status = AMICI_SUCCESS;
 
@@ -340,6 +354,16 @@ int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
     return status;
 }
 
+/**
+ * wrap_ErrHandlerFn extracts diagnosis information from solver memory block and
+ * writes them into the return data object for the backward problem
+ *
+ * @param[in] error_code error identifier @type int
+ * @param[in] module name of the module in which the error occured @type char
+ * @param[in] function name of the function in which the error occured @type char
+ * @param[in] msg error message @type char
+ * @param[in] eh_data unused input
+ */
 void Solver::wrap_ErrHandlerFn(int error_code, const char *module,
                                const char *function, char *msg, void *eh_data) {
     char buffer[250];
@@ -375,7 +399,15 @@ void Solver::wrap_ErrHandlerFn(int error_code, const char *module,
     warnMsgIdAndTxt(buffid, buffer);
 }
 
-int Solver::getDiagnosis(int it, ReturnData *rdata) {
+/**
+ * getDiagnosis extracts diagnosis information from solver memory block and
+ * writes them into the return data object
+ *
+ * @param[in] it time-point index @type int
+ * @param[out] rdata pointer to the return data object @type ReturnData
+ * @return status flag indicating success of execution @type int
+ */
+int Solver::getDiagnosis(const int it, ReturnData *rdata) {
     long int number;
     int status = AMICI_SUCCESS;
     int order;
@@ -408,7 +440,16 @@ int Solver::getDiagnosis(int it, ReturnData *rdata) {
     return status;
 }
 
-int Solver::getDiagnosisB(int it, ReturnData *rdata, TempData *tdata) {
+/**
+ * getDiagnosisB extracts diagnosis information from solver memory block and
+ * writes them into the return data object for the backward problem
+ *
+ * @param[in] it time-point index @type int
+ * @param[out] rdata pointer to the return data object @type ReturnData
+ * @param[out] tdata pointer to the temporary data object @type TempData
+ * @return status flag indicating success of execution @type int
+ */
+int Solver::getDiagnosisB(const int it, ReturnData *rdata, const TempData *tdata) {
     long int number;
     int status = AMICI_SUCCESS;
 
@@ -437,6 +478,13 @@ int Solver::getDiagnosisB(int it, ReturnData *rdata, TempData *tdata) {
     return status;
 }
 
+/**
+ * setLinearSolver sets the linear solver
+ *
+ * @param[out] udata pointer to the user data object @type UserData
+ * @param[in] model pointer to the model object @type Model
+ * @return status flag indicating success of execution @type int
+ */
 int Solver::setLinearSolver(const UserData *udata, Model *model) {
     int status;
     /* Attach linear solver module */

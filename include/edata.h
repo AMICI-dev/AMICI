@@ -7,14 +7,13 @@ class Model;
 /** @brief struct that carries all information about experimental data */
 class ExpData {
 
-  public:
-    /**
-     * @brief Default constructor
-     */
+public:
+    /** default constructor */
     ExpData();
     ExpData(const UserData *udata, Model *model);
     ~ExpData();
-
+    
+    /** initialization with default values */
     void setDefaults();
 
     /** observed data */

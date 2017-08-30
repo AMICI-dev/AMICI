@@ -23,8 +23,6 @@ doc/*
 
 fonts/*
 
-mtoc/*
-
 sed-ml/*
 
 src/doc/*
@@ -32,8 +30,6 @@ src/doc/*
 stylesheets/*
 
 images/*
-
-doc/*
 
 debug_amici/*
 
@@ -105,8 +101,6 @@ CMakeLists.txt.user
 
 *.md5
 
-*.template
-
 *.dox
 
 *.json
@@ -114,8 +108,6 @@ CMakeLists.txt.user
 *.mat
 
 *.js
-
-*.template
 
 *.dox
 

@@ -5,7 +5,7 @@ function makeSyms( this )
 % Parameters:
 %
 % Return values:
-%
+%  void
 
 
 

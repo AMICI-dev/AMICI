@@ -18,7 +18,7 @@ public:
 
     int wrap_RootInit(int ne);
 
-    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, UserData *udata);
+    int wrap_SensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata);
 
     int wrap_SetDenseJacFn();
 
