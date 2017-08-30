@@ -4,8 +4,6 @@
 
 #include <cmath>
 
-class Model;
-
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
  * (FORTRAN-style)
@@ -14,11 +12,19 @@ class UserData {
 
   public:
     /**
+     * @brief UserData
+     * @param np total number of model parameters
+     * @param nk number of f ixed parameters
+     * @param nx number of states
+     */
+    UserData(int np, int nk, int nx);
+
+    /**
      * @brief Default constructor for testing and serialization
      */
-    UserData() = default;
+    UserData();
 
-    int unscaleParameters(const Model *model, double *bufferUnscaled) const;
+    int unscaleParameters(double *bufferUnscaled) const;
 
     ~UserData();
 
@@ -128,6 +134,13 @@ class UserData {
     
     /** function to print the contents of the UserData object */
     void print() const;
+
+    /** total number of model parameters */
+    const int np;
+    /** number of fixed parameters */
+    const int nk;
+    /** number of states */
+    const int nx;
 };
 
 #endif /* _MY_UDATA */

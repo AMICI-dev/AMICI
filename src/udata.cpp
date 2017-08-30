@@ -1,31 +1,38 @@
 #include "include/udata.h"
-#include "include/amici_model.h"
 #include <cstdio>
 #include <cstring>
 
 
-int UserData::unscaleParameters(const Model *model,
-                                double *bufferUnscaled) const {
+UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx)
+{
+
+}
+
+UserData::UserData() : np(0), nk(0), nx(0)
+{
+
+}
+
+int UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
      * unscaleParameters removes parameter scaling according to the parameter scaling in pscale
      *
-     * @param[in] model pointer to model specification object @type Model
      * @param[out] bufferUnscaled unscaled parameters are written to the array @type double
      * 
      * @return status flag indicating success of execution @type int
      */
     switch (pscale) {
     case AMICI_SCALING_LOG10:
-        for (int ip = 0; ip < model->np; ++ip) {
+        for (int ip = 0; ip < np; ++ip) {
             bufferUnscaled[ip] = pow(10, p[ip]);
         }
         break;
     case AMICI_SCALING_LN:
-        for (int ip = 0; ip < model->np; ++ip)
+        for (int ip = 0; ip < np; ++ip)
             bufferUnscaled[ip] = exp(p[ip]);
         break;
     case AMICI_SCALING_NONE:
-        for (int ip = 0; ip < model->np; ++ip)
+        for (int ip = 0; ip < np; ++ip)
             bufferUnscaled[ip] = p[ip];
         break;
     }

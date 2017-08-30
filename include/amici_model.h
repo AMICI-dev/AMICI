@@ -47,6 +47,12 @@ class Model {
           nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
           nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode) {}
 
+    /**
+     * @brief Returns a UserData instance with preset model dimensions
+     * @return The UserData instance
+     */
+    UserData getUserData() const;
+
     /** Retrieves the solver object 
      * @return Solver solver object @type Solver
      */

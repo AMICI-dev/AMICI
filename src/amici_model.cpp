@@ -13,6 +13,11 @@
 //    return fdx0(udata->k, x0_tmp);
 //}
 
+UserData Model::getUserData() const
+{
+    return UserData(np, nk, nx);
+}
+
 Model::~Model() {
     if (z2event)
         delete[] z2event;

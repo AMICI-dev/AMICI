@@ -17,7 +17,7 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
          */
 
     p = new realtype[model->np];
-    udata->unscaleParameters(model, p);
+    udata->unscaleParameters(p);
 
     nplist = udata->nplist;
 

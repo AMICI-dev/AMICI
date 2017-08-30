@@ -42,7 +42,7 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  */
 int runAmiciSimulation(const UserData *udata, const ExpData *edata, ReturnData *rdata,
                        Model *model) {
-    if (!udata)
+    if (!udata || udata->nx != model->nx || udata->np != model->np || udata->nk != model->nk)
         return AMICI_ERROR_UDATA;
     if (!rdata)
         return AMICI_ERROR_RDATA;
