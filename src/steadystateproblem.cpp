@@ -165,14 +165,16 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                 /* Ensure positivity of the state */
                 x_tmp = N_VGetArrayPointer(tdata->x);
                 for (ix = 0; ix < model->nx; ix++) {
-                    if (x_tmp[ix] < 0.0) {
-                        x_tmp[ix] = 0.0;
+                    if (x_tmp[ix] < udata->atol) {
+                        x_tmp[ix] = udata->atol;
                     }
                 }
 
                 /* Compute new xdot */
                 model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-
+                N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
+                res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+                
                 /* Check if new residuals are smaller than old ones */
                 res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
 
@@ -183,7 +185,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                     N_VScale(1.0, tdata->xdot, tdata->xdot_old);
 
                     /* Check residuals vs tolerances */
-                    if (res_abs < udata->atol) {
+                    if ((res_abs < udata->atol) || (res_rel < udata->rtol)) {
                         /* Return number of Newton steps */
                         rdata->newton_numsteps[newton_try - 1] =
                             i_newtonstep + 1;
@@ -308,8 +310,6 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
     tdata->t = tstart;
     
     if (model->fx0(tdata->x, tdata) != AMICI_SUCCESS)
-        return AMICI_ERROR_SIM2STEADYSTATE;
-    if (model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata) != AMICI_SUCCESS)
         return AMICI_ERROR_SIM2STEADYSTATE;
     if (solver->AMIReInit(udata->tstart, tdata->x, tdata->dx) != AMICI_SUCCESS)
         return AMICI_ERROR_SIM2STEADYSTATE;
