@@ -18,7 +18,7 @@ class ReturnDataMatlab : public ReturnData {
     ReturnDataMatlab(const UserData *udata, const Model *model);
 
     /** sol struct that is passed back to matlab */
-    mxArray *mxsol = nullptr;
+    mxArray *matlabSolutionStruct = nullptr;
 
   protected:
     void initFields() override;

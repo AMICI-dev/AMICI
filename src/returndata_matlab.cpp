@@ -55,7 +55,7 @@ void ReturnDataMatlab::initFields() {
                                               "newton_numlinsteps",
                                               "newton_time"};
 
-    mxsol = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
+    matlabSolutionStruct = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
     ReturnData::initFields();
 }
@@ -70,9 +70,9 @@ void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName,
      */
     mxArray *array = mxCreateDoubleMatrix(dim, 1, mxREAL);
     *fieldPointer = mxGetPr(array);
-    mxSetField(mxsol, 0, fieldName, array);
+    mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
-    array = mxGetField(mxsol, 0, fieldName);
+    array = mxGetField(matlabSolutionStruct, 0, fieldName);
     if (status && array == NULL)
         *status = AMICI_ERROR_RDATA;
 }
@@ -88,9 +88,9 @@ void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName,
      */
     mxArray *array = mxCreateDoubleMatrix(dim1, dim2, mxREAL);
     *fieldPointer = mxGetPr(array);
-    mxSetField(mxsol, 0, fieldName, array);
+    mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
-    array = mxGetField(mxsol, 0, fieldName);
+    array = mxGetField(matlabSolutionStruct, 0, fieldName);
     if (status && array == NULL)
         *status = AMICI_ERROR_RDATA;
 }
@@ -108,9 +108,9 @@ void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName,
     mwSize dims[] = {(mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
     mxArray *array = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
     *fieldPointer = mxGetPr(array);
-    mxSetField(mxsol, 0, fieldName, array);
+    mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
-    array = mxGetField(mxsol, 0, fieldName);
+    array = mxGetField(matlabSolutionStruct, 0, fieldName);
     if (status && array == NULL)
         *status = AMICI_ERROR_RDATA;
 }
@@ -130,9 +130,9 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
                      (mwSize)(dim4)};
     mxArray *array = mxCreateNumericArray(4, dims, mxDOUBLE_CLASS, mxREAL);
     *fieldPointer = mxGetPr(array);
-    mxSetField(mxsol, 0, fieldName, array);
+    mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
-    array = mxGetField(mxsol, 0, fieldName);
+    array = mxGetField(matlabSolutionStruct, 0, fieldName);
     if (status && array == NULL)
         *status = AMICI_ERROR_RDATA;
 }

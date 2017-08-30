@@ -74,14 +74,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         errMsgIdAndTxt("AMICI:mex",
                        "Incorrect number of output arguments (must be 1)!");
         return;
-    };
+    }
 
     Model *model = getModel();
 
     UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
 
     ReturnDataMatlab *rdata = new ReturnDataMatlab(udata, model);
-    plhs[0] = rdata->mxsol;
+    plhs[0] = rdata->matlabSolutionStruct;
     if (*(rdata->status) != AMICI_SUCCESS)
         return;
 
