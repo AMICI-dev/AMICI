@@ -49,7 +49,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
         getNewtonOutput(tdata, rdata, model, 1, run_time, it);
     } else {
         /* Newton solver did not find a steady state, so try integration */
-        status = getNewtonSimulation(udata, tdata, rdata, solver, model);
+        status = getNewtonSimulation(udata, tdata, rdata, solver, model, it);
 
         if (status == AMICI_SUCCESS) {
             /* if simulation found a steady state */
@@ -165,14 +165,16 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                 /* Ensure positivity of the state */
                 x_tmp = N_VGetArrayPointer(tdata->x);
                 for (ix = 0; ix < model->nx; ix++) {
-                    if (x_tmp[ix] < 0.0) {
-                        x_tmp[ix] = 0.0;
+                    if (x_tmp[ix] < udata->atol) {
+                        x_tmp[ix] = udata->atol;
                     }
                 }
 
                 /* Compute new xdot */
                 model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-
+                N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
+                res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+                
                 /* Check if new residuals are smaller than old ones */
                 res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
 
@@ -183,7 +185,7 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
                     N_VScale(1.0, tdata->xdot, tdata->xdot_old);
 
                     /* Check residuals vs tolerances */
-                    if (res_abs < udata->atol) {
+                    if ((res_abs < udata->atol) || (res_rel < udata->rtol)) {
                         /* Return number of Newton steps */
                         rdata->newton_numsteps[newton_try - 1] =
                             i_newtonstep + 1;
@@ -285,7 +287,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
 
 int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
                                             ReturnData *rdata, Solver *solver,
-                                            Model *model) {
+                                            Model *model, int it) {
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
@@ -297,44 +299,65 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
      * @return stats integer flag indicating success of the method
      */
  
+    int status = (int)*rdata->status;
+    realtype tstart;
+    
+    /* Newton solver did not work, so try a simulation: reinitialize solver */
+    if (it<1)
+        tstart = udata->tstart;
+    else
+        tstart = udata->ts[it-1];
+    tdata->t = tstart;
+    
+    if (model->fx0(tdata->x, tdata) != AMICI_SUCCESS)
+        return AMICI_ERROR_SIM2STEADYSTATE;
+    if (solver->AMIReInit(udata->tstart, tdata->x, tdata->dx) != AMICI_SUCCESS)
+        return AMICI_ERROR_SIM2STEADYSTATE;
+    
+    /* Loop over steps and check for convergence */
     double res_abs;
     double res_rel;
-    double sim_time;
-    int status = (int)*rdata->status;
     realtype *x_tmp;
     N_Vector rel_x_newton = N_VNew_Serial(model->nx);
     N_Vector x_newton = N_VNew_Serial(model->nx);
+    
+    for (int it_newton = 0; it_newton < udata->maxsteps; it_newton++) {
+        /* One step of ODE integration */
+        status = solver->AMISolve(1e12, tdata->x, tdata->dx, &(tdata->t),
+                                  AMICI_ONE_STEP);
 
-    /* Newton solver did not work, so try a simulation */
-    if (tdata->t >= 1e6) {
-        sim_time = 10.0 * (tdata->t);
-    } else {
-        sim_time = 1e6;
-    }
-    status = solver->AMISolve(RCONST(sim_time), tdata->x, tdata->dx,
-                              &(tdata->t), AMICI_NORMAL);
-
-    if (status == AMICI_SUCCESS) {
-        /* Check residuals */
-        res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
-
-        /* Ensure positivity for relative residual */
-        N_VScale(1.0, tdata->x, x_newton);
-        N_VAbs(x_newton, x_newton);
-        x_tmp = N_VGetArrayPointer(x_newton);
-        for (int ix = 0; ix < model->nx; ix++) {
-            if (x_tmp[ix] < udata->atol) {
-                x_tmp[ix] = udata->atol;
+        if (status == AMICI_SUCCESS) {
+            /* Check residuals */
+            status = model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
+            if (status == AMICI_SUCCESS) {
+                res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
+            
+                /* Ensure positivity and compute relative residual */
+                N_VScale(1.0, tdata->x, x_newton);
+                N_VAbs(x_newton, x_newton);
+                x_tmp = N_VGetArrayPointer(x_newton);
+                for (int ix = 0; ix < model->nx; ix++) {
+                    if (x_tmp[ix] < udata->atol) {
+                        x_tmp[ix] = udata->atol;
+                    }
+                }
+                N_VDiv(tdata->xdot, x_newton, rel_x_newton);
+                res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+            
+                /* Check for convergence */
+                if (res_abs < udata->atol || res_rel < udata->rtol) {
+                    status = AMICI_SUCCESS;
+                    break;
+                } else {
+                    status = AMICI_ERROR_SIM2STEADYSTATE;
+                }
+            } else {
+                status = AMICI_ERROR_SIM2STEADYSTATE;
+                break;
             }
-        }
-        N_VDiv(tdata->xdot, x_newton, rel_x_newton);
-        res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
-
-        /* residuals are small? */
-        if (res_abs < udata->atol || res_rel < udata->rtol) {
-            return (AMICI_SUCCESS);
         } else {
             status = AMICI_ERROR_SIM2STEADYSTATE;
+            break;
         }
     }
 
