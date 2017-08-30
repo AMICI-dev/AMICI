@@ -51,33 +51,13 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    
     %% Recompile AMICI base files if necessary
-    % generate hash for file and append debug string if we have an md5
-    % file, check this hash against the contained hash
-    cppsrc = {'amici', 'symbolic_functions','spline', ...
-        'edata','rdata','udata','tdata', ...
-        'amici_interface_matlab', 'amici_misc', ...
-        'amici_solver', 'amici_solver_cvodes', 'amici_solver_idas', ...
-        'amici_model', 'returndata_matlab', ...
-        'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
-    objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
-    objectsstr = [objectsstr, strjoin(objectArray, ' ')];
-    sourcesForRecompile = cppsrc(cellfun(@(x) recompile || checkHash(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
-    if(numel(sourcesForRecompile))
-        fprintf('AMICI base files | ');
-        sourceStr = '';
-        for j = 1:numel(sourcesForRecompile)
-            baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
-            sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
-        end
-        eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
-            includesstr ' ' sourceStr]);
-        cellfun(@(x) updateFileHash(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
-    end
-    
+    [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT);
+    objectsstr = [objectsstr, objectStrAmici];
+
     %% Model-specific files
     for j=1:length(funs)
         baseFilename = fullfile(modelSourceFolder,[modelname '_' funs{j}]);
-        recompile = recompile || checkHash(baseFilename,objectFileSuffix,DEBUG);
+        recompile = recompile || sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
         cfun(1).(funs{j}) = recompile;
     end
     
@@ -116,7 +96,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
             sources ' ' ...
             includesstr ]);
         
-        cellfun(@(x) updateFileHash(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
+        cellfun(@(x) updateFileHashHeaderAndSource(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
     end
     
     % append model object files
@@ -161,6 +141,46 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         ' -output ' mexFilename ' ' objectsstr])
 end        
     
+function [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT)
+    % generate hash for file and append debug string if we have an md5
+    % file, check this hash against the contained hash
+    cppsrc = {'amici', 'symbolic_functions','spline', ...
+        'edata','rdata','udata','tdata', ...
+        'amici_interface_matlab', 'amici_misc', ...
+        'amici_solver', 'amici_solver_cvodes', 'amici_solver_idas', ...
+        'amici_model', 'returndata_matlab', ...
+        'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
+    % to be safe, recompile everything if headers have changed. otherwise
+    % would need to check the full include hierarchy
+    recompile = recompile || headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
+    objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
+    objectStrAmici = strjoin(objectArray, ' ');
+    sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
+    if(numel(sourcesForRecompile))
+        fprintf('AMICI base files | ');
+        sourceStr = '';
+        for j = 1:numel(sourcesForRecompile)
+            baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
+            sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
+        end
+        eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
+            includesstr ' ' sourceStr]);
+        cellfun(@(x) updateFileHashHeaderAndSource(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
+    end
+    
+end
+
+function headersChanged = headersHaveChanged(includePath, DEBUG)
+    list = dir([includePath '/*.h']);
+    headersChanged = false;
+    for file = {list.name}
+        headersChanged = headerFileChanged(fullfile(includePath, file{:}, DEBUG));
+        if(headersChanged)
+            break;
+        end            
+    end
+end
+
 function hash = getFileHash(file)
     % getFileHash computed the md5hash of a given file
     %
@@ -172,47 +192,84 @@ function hash = getFileHash(file)
     hash = CalcMD5(file,'File','hex');
 end    
 
-function updateFileHash(baseFilename, DEBUG)
-    hash = getFileHash([baseFilename '.cpp']);
+function updateFileHashHeaderAndSource(baseFilename, DEBUG)
+    if(exist([baseFilename '.cpp'], 'file'))
+        updateFileHash([baseFilename '.cpp'], DEBUG);
+    end
+    if(exist([baseFilename '.h'], 'file'))
+        updateFileHash([baseFilename '.h'], DEBUG);
+    end
+end
+
+
+function updateFileHash(filename, DEBUG)
+    hash = getFileHash(filename);
     hash = [hash DEBUG];
-    fid = fopen([baseFilename '_' mexext '.md5'],'w');
+    fid = fopen([filename '_' mexext '.md5'],'w');
     fprintf(fid,hash);
     fclose(fid);
 end
+
+function headerChanged = headerFileChanged(filename, DEBUG)
+    hashFileSufffix = ['_' mexext '.md5'];
     
-function recompile = checkHash(filestr,o_suffix,DEBUG)
-    % checkHash checks whether filestr.cpp  has already been compiled as
-    % filestr.o and whether the md5 hash of filestr.cpp matches the one in
-    % filestr.md5
+    if(~exist(filename, 'file') && exist([filename, hashFileSufffix], 'file'))
+        % header file has been removed, recompile and remove stray
+        % hash file
+        headerChanged = true;
+        delete([filename, hashFileSufffix])      
+    elseif(~exist([filename, hashFileSufffix], 'file'))
+        % there exists a header file but no corresponding hash file
+        headerChanged = true;
+    else
+        % hash file exist, did hash change?
+        headerChanged = hashHasChanged(sourceFilename, [filename hashFileSufffix], DEBUG);
+    end
+end
+
+function recompile = sourceNeedsRecompilation(filestr, o_suffix,DEBUG)
+    % sourceNeedsRecompilation checks whether filestr.cpp  has already been 
+    % compiled as filestr.o and whether the md5 hash of filestr.cpp matches 
+    % the one in filestr.md5
     %
     % Parameters:
-    %  filestr: path of the file @type string
-    %  o_suffix: OS specific suffix for compiled objects
-    %  DEBUG: debug flag
+    %  * filestr: path of the file @type string
+    %  * o_suffix: OS specific suffix for compiled objects
+    %  * DEBUG: debug flag
     %
     % Return values:
     %  recompile: flag indicating whether we need to recompile filestr.cpp
     
     if(~exist([filestr o_suffix],'file'))
-        % file does not exist, we need to recompile
+        % object file does not exist, we need to recompile
         recompile = 1;
     else
-        if(~exist([filestr '_' mexext '.md5'], 'file'))
-            % hash does not exist, we need to recompile
+        sourceFilename = [filestr '.cpp'];
+        hashFileName = [sourceFilename '_' mexext '.md5'];
+        if(~exist(hashFileName, 'file'))
+            % source file hash does not exist, we need to recompile
             recompile = 1;
         else
-            hash = getFileHash([filestr '.cpp']);
-            hash = [hash DEBUG];
-            fid = fopen([filestr '_' mexext '.md5']);
-            tline = fgetl(fid);
-            fclose(fid);
-            if(~strcmp(tline,hash(1:end)))
-                % file was updated, we need to recompile
-                recompile = 1;
-            else
-                % everything is fine
-                recompile = 0;
-            end
+            % hash files exists, did they change?
+            recompile = hashHasChanged(sourceFilename, hashFileName, DEBUG);
         end
     end
+end
+
+function hasChanged = hashHasChanged(sourceFilename, hashFilename, hashSuffix)
+    % checkHash checks whether the given file matches the saved hash
+    % 
+    % Parameters:
+    %  * sourceFilename: the file to hash (has to exist)
+    %  * hashFilename: the file where the hash is saved (has to exist)
+    %  * hashSuffix: string to be appended to the hash
+    % Return values:
+    %  * hasChanged: true if file and saved hash do not match
+
+    hash = getFileHash(sourceFilename);
+    hash = [hash hashSuffix];
+    fid = fopen(hashFilename);
+    tline = fgetl(fid);
+    fclose(fid);
+    hasChanged = ~strcmp(tline, hash(1:end));
 end
