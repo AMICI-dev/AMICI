@@ -96,7 +96,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
             sources ' ' ...
             includesstr ]);
         
-        cellfun(@(x) updateFileHashHeaderAndSource(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
+        cellfun(@(x) updateFileHashSource(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
     end
     
     % append model object files
@@ -165,7 +165,8 @@ function [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, object
         end
         eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
             includesstr ' ' sourceStr]);
-        cellfun(@(x) updateFileHashHeaderAndSource(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
+        cellfun(@(x) updateFileHashSource(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
+        updateHeaderFileHashes([amiciSourcePath '/../include/'], DEBUG);
     end
     
 end
@@ -174,12 +175,20 @@ function headersChanged = headersHaveChanged(includePath, DEBUG)
     list = dir([includePath '/*.h']);
     headersChanged = false;
     for file = {list.name}
-        headersChanged = headerFileChanged(fullfile(includePath, file{:}, DEBUG));
+        headersChanged = headerFileChanged(fullfile(includePath, file{:}), DEBUG);
         if(headersChanged)
             break;
         end            
     end
 end
+
+function updateHeaderFileHashes(includePath, DEBUG)
+    list = dir([includePath '/*.h']);
+    for file = {list.name}
+        updateFileHash(fullfile(includePath, file{:}), DEBUG);
+    end
+end
+
 
 function hash = getFileHash(file)
     % getFileHash computed the md5hash of a given file
@@ -192,12 +201,9 @@ function hash = getFileHash(file)
     hash = CalcMD5(file,'File','hex');
 end    
 
-function updateFileHashHeaderAndSource(baseFilename, DEBUG)
+function updateFileHashSource(baseFilename, DEBUG)
     if(exist([baseFilename '.cpp'], 'file'))
         updateFileHash([baseFilename '.cpp'], DEBUG);
-    end
-    if(exist([baseFilename '.h'], 'file'))
-        updateFileHash([baseFilename '.h'], DEBUG);
     end
 end
 
@@ -223,7 +229,7 @@ function headerChanged = headerFileChanged(filename, DEBUG)
         headerChanged = true;
     else
         % hash file exist, did hash change?
-        headerChanged = hashHasChanged(sourceFilename, [filename hashFileSufffix], DEBUG);
+        headerChanged = hashHasChanged(filename, [filename hashFileSufffix], DEBUG);
     end
 end
 
