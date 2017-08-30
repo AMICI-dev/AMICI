@@ -19,7 +19,7 @@ Solver::~Solver() {}
  * @param[in] model pointer to the model object @type Model
  * @return status flag indicating successful execution
  */
-int Solver::setupAMI(UserData *udata, TempData *tdata, Model *model) {
+int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
     int status;
     tdata->t = udata->tstart;
 
@@ -150,7 +150,7 @@ freturn:
  * @param[in] model pointer to the model object @type Model
  * @return status flag indicating successful execution
  */
-int Solver::setupAMIB(UserData *udata, TempData *tdata, Model *model) {
+int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     int status = AMICI_SUCCESS;
 
     /* write initial conditions */

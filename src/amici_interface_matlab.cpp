@@ -78,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     Model *model = getModel();
 
-    UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
+    const UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
 
     ReturnDataMatlab *rdata = new ReturnDataMatlab(udata, model);
     plhs[0] = rdata->matlabSolutionStruct;

@@ -8,7 +8,7 @@
 #include "include/udata.h"
 #include <cstring>
 
-int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
+int ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
                                        ReturnData *rdata, const ExpData *edata,
                                        Model *model) {
     /**
@@ -128,7 +128,7 @@ freturn:
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata,
+int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
                                 ReturnData *rdata, const ExpData *edata,
                                 TempData *tdata, int seflag, Solver *solver,
                                 Model *model) {
@@ -375,7 +375,7 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata,
+int ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
                                    const ExpData *edata, TempData *tdata,
                                    Model *model) {
     /**
@@ -630,7 +630,7 @@ int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata,
+int ForwardProblem::handleDataPoint(int it, const UserData *udata, ReturnData *rdata,
                                     const ExpData *edata, TempData *tdata,
                                     Solver *solver, Model *model) {
     /**
@@ -669,7 +669,7 @@ int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata,
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::getDataOutput(int it, UserData *udata, ReturnData *rdata,
+int ForwardProblem::getDataOutput(int it, const UserData *udata, ReturnData *rdata,
                                   const ExpData *edata, TempData *tdata,
                                   Solver *solver, Model *model) {
     /**
@@ -812,7 +812,7 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
 /* -------------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------------- */
 
-int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
+int ForwardProblem::getDataSensisFSA(int it, const UserData *udata, ReturnData *rdata,
                                      const ExpData *edata, TempData *tdata,
                                      Solver *solver, Model *model) {
     /**

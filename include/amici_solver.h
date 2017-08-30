@@ -20,9 +20,9 @@ public:
 
     virtual ~Solver();
 
-    int setupAMI(UserData *udata, TempData *tdata, Model *model);
+    int setupAMI(const UserData *udata, TempData *tdata, Model *model);
 
-    int setupAMIB(UserData *udata, TempData *tdata, Model *model);
+    int setupAMIB(const UserData *udata, TempData *tdata, Model *model);
 
     /**
      * AMIGetSens extracts diagnosis information from solver memory block and

@@ -40,7 +40,7 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  * @param[in] model pointer to model specification object @type Model
  * @return status status flag indicating (un)successful execution @type int
  */
-int runAmiciSimulation(UserData *udata, const ExpData *edata, ReturnData *rdata,
+int runAmiciSimulation(const UserData *udata, const ExpData *edata, ReturnData *rdata,
                        Model *model) {
     if (!udata)
         return AMICI_ERROR_UDATA;

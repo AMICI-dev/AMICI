@@ -12,7 +12,7 @@
 #include <ctime>
 #include "include/newton_solver.h"
 
-NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData
+NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, const UserData *udata, TempData
                            *tdata):model(model), rdata(rdata), udata(udata), tdata(tdata) {
     /**
      * default constructor, initializes all members with the provided objects
@@ -27,7 +27,7 @@ NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, Tem
 /* ---------------------------------------------------------------------------------- */
 
 NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model, ReturnData *rdata,
-                                UserData *udata, TempData *tdata, int *status) {
+                                const UserData *udata, TempData *tdata, int *status) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -182,7 +182,7 @@ NewtonSolver::~NewtonSolver(){
 /* ---------------------------------------------------------------------------------- */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata,
+NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
                                      TempData *tdata):NewtonSolver(model, rdata, udata,
                                                                    tdata) {
     /**
@@ -255,7 +255,7 @@ NewtonSolverDense::~NewtonSolverDense() {
 /* ---------------------------------------------------------------------------------- */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata,
+NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
                                        TempData *tdata):NewtonSolver(model, rdata, udata,
                                                                      tdata) {
     /**
@@ -352,7 +352,7 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 /* ---------------------------------------------------------------------------------- */
 
 /* Derived class for iterative linear solver */
-NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata,
+NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata, const UserData *udata,
                                              TempData *tdata):NewtonSolver(model, rdata,
                                                                            udata, tdata) {
     /**

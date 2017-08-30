@@ -21,9 +21,9 @@ class Model;
 class NewtonSolver {
     
 public:
-    NewtonSolver(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
+    NewtonSolver(Model *model, ReturnData *rdata, const UserData *udata, TempData *tdata);
     
-    static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, UserData *udata, TempData *tdata, int *status);
+    static NewtonSolver* getSolver(int linsolType, Model *model, ReturnData *rdata, const UserData *udata, TempData *tdata, int *status);
 
     int getStep(int ntry, int nnewt, N_Vector delta);
     
@@ -54,7 +54,7 @@ protected:
     /** pointer to the return data object */
     ReturnData *rdata;
     /** pointer to the user data object */
-    UserData *udata;
+    const UserData *udata;
     /** pointer to the temporary data object */
     TempData *tdata;
 };
@@ -66,7 +66,7 @@ protected:
 class NewtonSolverDense : public NewtonSolver {
     
 public:
-    NewtonSolverDense(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
+    NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata, TempData *tdata);
     int solveLinearSystem(N_Vector rhs);
     int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverDense();
@@ -89,7 +89,7 @@ private:
 class NewtonSolverSparse : public NewtonSolver {
     
 public:
-    NewtonSolverSparse(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
+    NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata, TempData *tdata);
     int solveLinearSystem(N_Vector rhs);
     int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverSparse();
@@ -118,7 +118,7 @@ private:
 class NewtonSolverIterative : public NewtonSolver {
     
 public:
-    NewtonSolverIterative(Model *model, ReturnData *rdata, UserData *udata, TempData *tdata);
+    NewtonSolverIterative(Model *model, ReturnData *rdata, const UserData *udata, TempData *tdata);
     int solveLinearSystem(N_Vector rhs);
     int prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverIterative();

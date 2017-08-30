@@ -20,7 +20,7 @@ class NewtonSolver;
 class SteadystateProblem {
   public:
 
-    static int workSteadyStateProblem(UserData *udata, TempData *tdata,
+    static int workSteadyStateProblem(const UserData *udata, TempData *tdata,
                                       ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
 
@@ -28,18 +28,18 @@ class SteadystateProblem {
      * applyNewtonsMethod applies Newtons method to the current state x to
      * find the steady state
      */
-    static int applyNewtonsMethod(UserData *udata, ReturnData *rdata,
+    static int applyNewtonsMethod(const UserData *udata, ReturnData *rdata,
                                   TempData *tdata, Model *model,
                                   NewtonSolver *newtonSolver, int newton_try);
 
     static void getNewtonOutput(TempData *tdata, ReturnData *rdata, Model *model,
                                int newton_status, double run_time, int it);
 
-    static int getNewtonSimulation(UserData *udata, TempData *tdata,
+    static int getNewtonSimulation(const UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
                                    Model *model);
     
-    static int linsolveSPBCG(UserData *udata, ReturnData *rdata,
+    static int linsolveSPBCG(const UserData *udata, ReturnData *rdata,
                              TempData *tdata, Model *model, int ntry,
                              int nnewt, N_Vector ns_delta);
 

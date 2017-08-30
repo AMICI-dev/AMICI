@@ -13,7 +13,7 @@
 
 SteadystateProblem::SteadystateProblem() {}
 
-int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
+int SteadystateProblem::workSteadyStateProblem(const UserData *udata, TempData *tdata,
                                                ReturnData *rdata, Solver *solver,
                                                Model *model, int it) {
     /**
@@ -92,7 +92,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 /* ---------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------- */
 
-int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
+int SteadystateProblem::applyNewtonsMethod(const UserData *udata, ReturnData *rdata,
                                            TempData *tdata, Model *model,
                                            NewtonSolver *newtonSolver, int newton_try) {
     /**
@@ -280,7 +280,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
 /* ---------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------- */
 
-int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
+int SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tdata,
                                             ReturnData *rdata, Solver *solver,
                                             Model *model) {
     /**
@@ -344,7 +344,7 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
 /* ---------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------- */
 
-int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
+int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
                                       TempData *tdata, Model *model, int ntry,
                                       int nnewt, N_Vector ns_delta) {
     /**

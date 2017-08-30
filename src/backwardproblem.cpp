@@ -7,7 +7,7 @@
 #include "include/udata.h"
 #include <cstring>
 
-int BackwardProblem::workBackwardProblem(UserData *udata, TempData *tdata,
+int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                                          ReturnData *rdata, Model *model) {
     /**
      * workBackwardProblem solves the backward problem. if adjoint
