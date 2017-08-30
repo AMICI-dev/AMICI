@@ -37,7 +37,7 @@ class SteadystateProblem {
 
     static int getNewtonSimulation(UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
-                                   Model *model);
+                                   Model *model, int it);
     
     static int linsolveSPBCG(UserData *udata, ReturnData *rdata,
                              TempData *tdata, Model *model, int ntry,
