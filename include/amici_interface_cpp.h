@@ -1,8 +1,8 @@
 #ifndef AMICI_INTERFACE_CPP_H
 #define AMICI_INTERFACE_CPP_H
 
-#include "include/amici_misc.h"
 #include "amici_defines.h"
+#include "include/amici_misc.h"
 #include <include/edata.h>
 #include <include/rdata.h>
 #include <include/udata.h>
@@ -22,6 +22,7 @@
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-EXTERNC ReturnData *getSimulationResults(Model *model, UserData *udata, const ExpData *edata);
+EXTERNC ReturnData *getSimulationResults(Model *model, UserData *udata,
+                                         const ExpData *edata);
 
 #endif

@@ -102,8 +102,7 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                     goto freturn;
 
                 /* Activate sensitivity calculations */
-                if (sensInit1(tdata->sx, tdata->sdx, udata) !=
-                    AMICI_SUCCESS)
+                if (sensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS)
                     goto freturn;
 
                 /* Set sensitivity analysis optional inputs */
@@ -360,12 +359,13 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
  *
  * @param[in] error_code error identifier @type int
  * @param[in] module name of the module in which the error occured @type char
- * @param[in] function name of the function in which the error occured @type char
+ * @param[in] function name of the function in which the error occured @type
+ * char
  * @param[in] msg error message @type char
  * @param[in] eh_data unused input
  */
 void Solver::wrapErrHandlerFn(int error_code, const char *module,
-                               const char *function, char *msg, void *eh_data) {
+                              const char *function, char *msg, void *eh_data) {
     char buffer[250];
     char buffid[250];
     sprintf(buffer, "AMICI ERROR: in module %s in function %s : %s ", module,
@@ -449,7 +449,8 @@ int Solver::getDiagnosis(const int it, ReturnData *rdata) {
  * @param[out] tdata pointer to the temporary data object @type TempData
  * @return status flag indicating success of execution @type int
  */
-int Solver::getDiagnosisB(const int it, ReturnData *rdata, const TempData *tdata) {
+int Solver::getDiagnosisB(const int it, ReturnData *rdata,
+                          const TempData *tdata) {
     long int number;
     int status = AMICI_SUCCESS;
 

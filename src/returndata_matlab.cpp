@@ -3,7 +3,8 @@
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
     : ReturnData(udata, model, false) {
     /**
-      * @brief initialises the returnData struct, initialises the fields and copies
+      * @brief initialises the returnData struct, initialises the fields and
+     * copies
       * model dimensions from the udata struct
       * @param[in] udata pointer to the user data struct @type UserData
       * @param[in] model pointer to model specification object @type Model
@@ -55,7 +56,8 @@ void ReturnDataMatlab::initFields() {
                                               "newton_numlinsteps",
                                               "newton_time"};
 
-    matlabSolutionStruct = mxCreateStructMatrix(1, 1, numFields, field_names_sol);
+    matlabSolutionStruct =
+        mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
     ReturnData::initFields();
 }
@@ -64,7 +66,8 @@ void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName,
                                   int dim) {
     /**
      * @brief initialise vector and attach to the field
-     * @param fieldPointer pointer of the field to which the vector will be attached
+     * @param fieldPointer pointer of the field to which the vector will be
+     * attached
      * @param fieldName Name of the field to which the vector will be attached
      * @param dim number of elements in the vector
      */
@@ -81,7 +84,8 @@ void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName,
                                   int dim1, int dim2) {
     /**
      * @brief initialise matrix and attach to the field
-     * @param fieldPointer pointer of the field to which the matrix will be attached
+     * @param fieldPointer pointer of the field to which the matrix will be
+     * attached
      * @param fieldName Name of the field to which the matrix will be attached
      * @param dim1 number of rows in the matrix
      * @param dim2 number of columns in the matrix
@@ -99,7 +103,8 @@ void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName,
                                   int dim1, int dim2, int dim3) {
     /**
      * @brief initialise 3D tensor and attach to the field
-     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldPointer pointer of the field to which the tensor will be
+     * attached
      * @param fieldName Name of the field to which the tensor will be attached
      * @param dim1 number of rows in the tensor
      * @param dim2 number of columns in the tensor
@@ -119,7 +124,8 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
                                   int dim1, int dim2, int dim3, int dim4) {
     /**
      * @brief initialise 4D tensor and attach to the field
-     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldPointer pointer of the field to which the tensor will be
+     * attached
      * @param fieldName Name of the field to which the tensor will be attached
      * @param dim1 number of rows in the tensor
      * @param dim2 number of columns in the tensor

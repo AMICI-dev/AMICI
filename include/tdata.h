@@ -16,7 +16,7 @@ class Solver;
 /** @brief struct that provides temporary storage for different variables */
 class TempData {
 
-public:
+  public:
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
 
@@ -111,7 +111,8 @@ public:
     realtype *dsigmazdp = nullptr;
 
     /** array of flags indicating which root has beend found.
-     *  array of length nr with the indices of the user functions gi found to have a
+     *  array of length nr with the indices of the user functions gi found to
+     * have a
      *  root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
     int *rootsfound = nullptr;

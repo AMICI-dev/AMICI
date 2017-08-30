@@ -175,7 +175,7 @@ class UserData {
 
     /** state ordering */
     int ordering = 0;
-    
+
     /** function to print the contents of the UserData object */
     void print() const;
 

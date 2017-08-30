@@ -2,23 +2,18 @@
 #include <cstdio>
 #include <cstring>
 
+UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
 
-UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx)
-{
-
-}
-
-UserData::UserData() : np(0), nk(0), nx(0)
-{
-
-}
+UserData::UserData() : np(0), nk(0), nx(0) {}
 
 int UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
-     * unscaleParameters removes parameter scaling according to the parameter scaling in pscale
+     * unscaleParameters removes parameter scaling according to the parameter
+     * scaling in pscale
      *
-     * @param[out] bufferUnscaled unscaled parameters are written to the array @type double
-     * 
+     * @param[out] bufferUnscaled unscaled parameters are written to the array
+     * @type double
+     *
      * @return status flag indicating success of execution @type int
      */
     switch (pscale) {
@@ -40,9 +35,8 @@ int UserData::unscaleParameters(double *bufferUnscaled) const {
     return AMICI_SUCCESS;
 }
 
-void UserData::setTimepoints(const double *timepoints, int numTimepoints)
-{
-    if(ts) {
+void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
+    if (ts) {
         delete[] ts;
     }
 
@@ -51,9 +45,8 @@ void UserData::setTimepoints(const double *timepoints, int numTimepoints)
     memcpy(ts, timepoints, sizeof(double) * nt);
 }
 
-void UserData::setParameters(const double *parameters)
-{
-    if(p) {
+void UserData::setParameters(const double *parameters) {
+    if (p) {
         delete[] p;
     }
 
@@ -61,9 +54,8 @@ void UserData::setParameters(const double *parameters)
     memcpy(p, parameters, sizeof(double) * np);
 }
 
-void UserData::setConstants(const double *constants)
-{
-    if(k) {
+void UserData::setConstants(const double *constants) {
+    if (k) {
         delete[] k;
     }
 
@@ -71,9 +63,8 @@ void UserData::setConstants(const double *constants)
     memcpy(k, constants, sizeof(double) * nk);
 }
 
-void UserData::setPlist(const double *plist, int nplist)
-{
-    if(this->plist) {
+void UserData::setPlist(const double *plist, int nplist) {
+    if (this->plist) {
         delete[] this->plist;
     }
 
@@ -85,9 +76,8 @@ void UserData::setPlist(const double *plist, int nplist)
     }
 }
 
-void UserData::setPlist(const int *plist, int nplist)
-{
-    if(this->plist) {
+void UserData::setPlist(const int *plist, int nplist) {
+    if (this->plist) {
         delete[] this->plist;
     }
 
@@ -96,9 +86,8 @@ void UserData::setPlist(const int *plist, int nplist)
     memcpy(this->plist, plist, sizeof(int) * nplist);
 }
 
-void UserData::setPbar(const double *parameterScaling)
-{
-    if(pbar) {
+void UserData::setPbar(const double *parameterScaling) {
+    if (pbar) {
         delete[] pbar;
     }
 
@@ -106,20 +95,18 @@ void UserData::setPbar(const double *parameterScaling)
     memcpy(pbar, parameterScaling, sizeof(double) * nplist);
 }
 
-void UserData::setStateInitialization(const double *stateInitialization)
-{
-    if(x0data) {
+void UserData::setStateInitialization(const double *stateInitialization) {
+    if (x0data) {
         delete[] x0data;
     }
 
     x0data = new double[nx];
     memcpy(x0data, stateInitialization, sizeof(double) * nx);
-
 }
 
-void UserData::setSensitivityInitialization(const double *sensitivityInitialization)
-{
-    if(sx0data) {
+void UserData::setSensitivityInitialization(
+    const double *sensitivityInitialization) {
+    if (sx0data) {
         delete[] sx0data;
     }
 

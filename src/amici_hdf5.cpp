@@ -135,14 +135,13 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
 ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
                                         const char *dataObject, Model *model) {
 
-
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     ExpData *edata = NULL;
 
     hsize_t m, n;
 
-    if(H5Lexists(file_id, dataObject, 0)) {
+    if (H5Lexists(file_id, dataObject, 0)) {
 
         edata = new ExpData(udata, model);
 
@@ -460,17 +459,17 @@ void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
     }
 }
 
-int AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id,
-                                        const char *optionsObject,
-                                        const char *attributeName,
-                                        double **destination, hsize_t *m,
-                                        hsize_t *n, hsize_t *o) {
-    if(!AMI_HDF5_attributeExists(file_id, optionsObject, attributeName))
+int AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id, const char *optionsObject,
+                                       const char *attributeName,
+                                       double **destination, hsize_t *m,
+                                       hsize_t *n, hsize_t *o) {
+    if (!AMI_HDF5_attributeExists(file_id, optionsObject, attributeName))
         return 1;
 
     int rank;
-    herr_t status = H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
-    if(status < 0)
+    herr_t status =
+        H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    if (status < 0)
         return status;
 
     assert(rank == 3);

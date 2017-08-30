@@ -167,9 +167,12 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
 
 int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
     /**
@@ -239,9 +242,12 @@ int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
     return updateHeavisideB(iroot, tdata, model->ne);
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
 
 int BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
                                       TempData *tdata, Solver *solver,
@@ -270,13 +276,17 @@ int BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
     return solver->getDiagnosisB(it, rdata, tdata);
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
 
 int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
     /**
-     * updateHeavisideB updates the heaviside variables h on event occurences for the backward problem
+     * updateHeavisideB updates the heaviside variables h on event occurences
+     * for the backward problem
      *
      * @param[in] iroot discontinuity occurance index @type int
      * @param[out] tdata pointer to the temporary data struct @type TempData
@@ -294,9 +304,12 @@ int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
     return AMICI_SUCCESS;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
+/* --------------------------------------------------------------------------------
+ */
 
 realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
                                    int it, Model *model) {
@@ -338,10 +351,8 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
     return (tnext);
 }
 
-BackwardProblem::BackwardProblem()
-{
+BackwardProblem::BackwardProblem() {
     /**
      * this is a placeholder, nothing needs to be done at initialization.
      */
-
 }

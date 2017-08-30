@@ -7,7 +7,7 @@ class Model;
 /** @brief struct that carries all information about experimental data */
 class ExpData {
 
-public:
+  public:
     /** default constructor */
     ExpData();
     ExpData(const UserData *udata, Model *model);
@@ -19,7 +19,7 @@ public:
     void setObservedEventsStdDev(const double *observedEventsStdDev);
 
     ~ExpData();
-    
+
     /** observed data */
     double *my = nullptr;
     /** standard deviation of observed data */

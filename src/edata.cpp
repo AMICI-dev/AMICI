@@ -2,13 +2,14 @@
 
 #include "include/amici_defines.h"
 #include "include/amici_model.h"
-#include <include/udata.h>
 #include <cstring>
+#include <include/udata.h>
 
-ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) { }
+ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
-ExpData::ExpData(const UserData *udata, Model *model) : nytrue(model->nytrue),
-nztrue(model->nztrue), nt(udata->nt), nmaxevent(udata->nmaxevent) {
+ExpData::ExpData(const UserData *udata, Model *model)
+    : nytrue(model->nytrue), nztrue(model->nztrue), nt(udata->nt),
+      nmaxevent(udata->nmaxevent) {
     /**
      * constructor that initializes with UserData and model
      *
@@ -24,28 +25,23 @@ nztrue(model->nztrue), nt(udata->nt), nmaxevent(udata->nmaxevent) {
     }
 }
 
-void ExpData::setObservedData(const double *observedData)
-{
+void ExpData::setObservedData(const double *observedData) {
     memcpy(my, observedData, nytrue * nt * sizeof(double));
 }
 
-void ExpData::setObservedDataStdDev(const double *observedDataStdDev)
-{
+void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
     memcpy(sigmay, observedDataStdDev, nytrue * nt * sizeof(double));
 }
 
-void ExpData::setObservedEvents(const double *observedEvents)
-{
+void ExpData::setObservedEvents(const double *observedEvents) {
     memcpy(mz, observedEvents, nmaxevent * nztrue * sizeof(double));
 }
 
-void ExpData::setObservedRoots(const double *observedRoots)
-{
+void ExpData::setObservedRoots(const double *observedRoots) {
     memcpy(mrz, observedRoots, nmaxevent * nztrue * sizeof(double));
 }
 
-void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev)
-{
+void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
     memcpy(sigmaz, observedEventsStdDev, nmaxevent * nztrue * sizeof(double));
 }
 

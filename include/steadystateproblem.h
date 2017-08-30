@@ -19,7 +19,6 @@ class NewtonSolver;
 
 class SteadystateProblem {
   public:
-
     static int workSteadyStateProblem(const UserData *udata, TempData *tdata,
                                       ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
@@ -32,16 +31,17 @@ class SteadystateProblem {
                                   TempData *tdata, Model *model,
                                   NewtonSolver *newtonSolver, int newton_try);
 
-    static void getNewtonOutput(TempData *tdata, ReturnData *rdata, Model *model,
-                               int newton_status, double run_time, int it);
+    static void getNewtonOutput(TempData *tdata, ReturnData *rdata,
+                                Model *model, int newton_status,
+                                double run_time, int it);
 
     static int getNewtonSimulation(const UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
                                    Model *model);
-    
+
     static int linsolveSPBCG(const UserData *udata, ReturnData *rdata,
-                             TempData *tdata, Model *model, int ntry,
-                             int nnewt, N_Vector ns_delta);
+                             TempData *tdata, Model *model, int ntry, int nnewt,
+                             N_Vector ns_delta);
 
   private:
     SteadystateProblem();

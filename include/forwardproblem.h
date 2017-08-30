@@ -52,9 +52,9 @@ class ForwardProblem {
     static int prepDataSensis(int it, ReturnData *rdata, const ExpData *edata,
                               TempData *tdata, Model *model);
 
-    static int getDataSensisFSA(int it, const UserData *udata, ReturnData *rdata,
-                                const ExpData *edata, TempData *tdata,
-                                Solver *solver, Model *model);
+    static int getDataSensisFSA(int it, const UserData *udata,
+                                ReturnData *rdata, const ExpData *edata,
+                                TempData *tdata, Solver *solver, Model *model);
 
     static int applyEventBolus(TempData *tdata, Model *model);
 
