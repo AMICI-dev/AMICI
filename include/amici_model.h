@@ -53,6 +53,8 @@ class Model {
      */
     UserData getUserData() const;
 
+    UserData *getNewUserData() const;
+
     /** Retrieves the solver object 
      * @return Solver solver object @type Solver
      */

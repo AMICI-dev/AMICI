@@ -11,22 +11,31 @@ public:
     /** default constructor */
     ExpData();
     ExpData(const UserData *udata, Model *model);
+
+    void setObservedData(const double *observedData);
+    void setObservedDataStdDev(const double *observedDataStdDev);
+    void setObservedEvents(const double *observedEvents);
+    void setObservedRoots(const double *observedRoots);
+    void setObservedEventsStdDev(const double *observedEventsStdDev);
+
     ~ExpData();
     
-    /** initialization with default values */
-    void setDefaults();
-
     /** observed data */
-    double *my;
+    double *my = nullptr;
     /** standard deviation of observed data */
-    double *sigmay;
+    double *sigmay = nullptr;
 
     /** observed events */
-    double *mz;
+    double *mz = nullptr;
     /** observed roots */
-    double *mrz;
+    double *mrz = nullptr;
     /** standard deviation of observed events/roots */
-    double *sigmaz;
+    double *sigmaz = nullptr;
+
+    const int nytrue;
+    const int nztrue;
+    const int nt;
+    const int nmaxevent;
 };
 
 #endif /* _MY_EDATA */

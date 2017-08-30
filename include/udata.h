@@ -64,6 +64,10 @@ class UserData {
      */
     void setStateInitialization(const double *stateInitialization);
 
+    /**
+     * @brief setSensitivityInitialization
+     * @param sensitivityInitialization
+     */
     void setSensitivityInitialization(const double *sensitivityInitialization);
 
     ~UserData();

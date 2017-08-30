@@ -32,7 +32,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
                                                         Model *model) {
     assert(fileId > 0);
 
-    UserData *udata = new UserData();
+    UserData *udata = model->getNewUserData();
 
     if (udata == NULL)
         return (NULL);

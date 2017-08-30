@@ -18,6 +18,11 @@ UserData Model::getUserData() const
     return UserData(np, nk, nx);
 }
 
+UserData *Model::getNewUserData() const
+{
+    return new UserData(np, nk, nx);
+}
+
 Model::~Model() {
     if (z2event)
         delete[] z2event;
