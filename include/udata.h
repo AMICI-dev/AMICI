@@ -26,6 +26,46 @@ class UserData {
 
     int unscaleParameters(double *bufferUnscaled) const;
 
+    /**
+     * @brief setTimepoints
+     * @param timepoints
+     * @param numTimepoints
+     */
+    void setTimepoints(const double *timepoints, int numTimepoints);
+
+    /**
+     * @brief setParameters
+     * @param parameters
+     */
+    void setParameters(const double *parameters);
+
+    /**
+     * @brief setConstants
+     * @param constants
+     */
+    void setConstants(const double *constants);
+
+    /**
+     * @brief setPlist set parameter selection and ordering
+     * @param plist
+     */
+    void setPlist(const double *plist, int nplist);
+    void setPlist(const int *plist, int nplist);
+
+    /**
+     * @brief setPbar. Must not be called before setPlist
+     * @param parameterScaling
+     */
+    void setPbar(const double *parameterScaling);
+
+    /**
+     * @brief setStateInitialization
+     * @param stateInitialization
+     */
+    void setStateInitialization(const double *stateInitialization);
+
+    void setSensitivityInitialization(const double *sensitivityInitialization);
+
     ~UserData();
 
     /* Options */
@@ -123,10 +163,10 @@ class UserData {
     /** flag controlling stability limit detection */
     booleantype stldet = true;
 
-    /** state initialisation */
+    /** state initialisation (size np) */
     double *x0data = nullptr;
 
-    /** sensitivity initialisation */
+    /** sensitivity initialisation (size nx * nplist) */
     double *sx0data = nullptr;
 
     /** state ordering */

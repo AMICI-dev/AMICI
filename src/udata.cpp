@@ -40,6 +40,93 @@ int UserData::unscaleParameters(double *bufferUnscaled) const {
     return AMICI_SUCCESS;
 }
 
+void UserData::setTimepoints(const double *timepoints, int numTimepoints)
+{
+    if(ts) {
+        delete[] ts;
+    }
+
+    nt = numTimepoints;
+    ts = new double[nt];
+    memcpy(ts, timepoints, sizeof(double) * nt);
+}
+
+void UserData::setParameters(const double *parameters)
+{
+    if(p) {
+        delete[] p;
+    }
+
+    p = new double[np];
+    memcpy(p, parameters, sizeof(double) * np);
+}
+
+void UserData::setConstants(const double *constants)
+{
+    if(k) {
+        delete[] k;
+    }
+
+    k = new double[nk];
+    memcpy(k, constants, sizeof(double) * nk);
+}
+
+void UserData::setPlist(const double *plist, int nplist)
+{
+    if(this->plist) {
+        delete[] this->plist;
+    }
+
+    this->nplist = nplist;
+    this->plist = new int[nplist];
+
+    for (int ip = 0; ip < nplist; ip++) {
+        this->plist[ip] = (int)plist[ip];
+    }
+}
+
+void UserData::setPlist(const int *plist, int nplist)
+{
+    if(this->plist) {
+        delete[] this->plist;
+    }
+
+    this->nplist = nplist;
+    this->plist = new int[nplist];
+    memcpy(this->plist, plist, sizeof(int) * nplist);
+}
+
+void UserData::setPbar(const double *parameterScaling)
+{
+    if(pbar) {
+        delete[] pbar;
+    }
+
+    pbar = new double[nplist];
+    memcpy(pbar, parameterScaling, sizeof(double) * nplist);
+}
+
+void UserData::setStateInitialization(const double *stateInitialization)
+{
+    if(x0data) {
+        delete[] x0data;
+    }
+
+    x0data = new double[nx];
+    memcpy(x0data, stateInitialization, sizeof(double) * nx);
+
+}
+
+void UserData::setSensitivityInitialization(const double *sensitivityInitialization)
+{
+    if(sx0data) {
+        delete[] sx0data;
+    }
+
+    sx0data = new double[nx * nplist];
+    memcpy(sx0data, sensitivityInitialization, sizeof(double) * nx * nplist);
+}
+
 UserData::~UserData() {
     if (qpositivex)
         delete[] qpositivex;

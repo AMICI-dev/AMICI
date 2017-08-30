@@ -25,13 +25,28 @@
 #endif
 
 /**
+ * @brief The mexFunctionArguments enum takes care of the ordering of mex file arguments (indexing in prhs)
+ */
+enum mexRhsArguments {
+    RHS_TIMEPOINTS,
+    RHS_PARAMETERS,
+    RHS_CONSTANTS,
+    RHS_OPTIONS,
+    RHS_PLIST,
+    RHS_PBAR,
+    RHS_XSCALE_UNUSED,
+    RHS_DATA,
+    RHS_NUMARGS
+};
+
+/**
  * @ brief extract information from a property of a matlab class (scalar)
  * @ param OPTION name of the property
  * @ param TYPE class to which the information should be cast
  */
 #define readOptionScalar(OPTION, TYPE)                                         \
-    if (mxGetProperty(prhs[3], 0, #OPTION)) {                                  \
-        udata->OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[3], 0, #OPTION)); \
+    if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                                  \
+        udata->OPTION = (TYPE)mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)); \
     } else {                                                                   \
         warnMsgIdAndTxt("AMICI:mex:OPTION",                                    \
                         "Provided options do not have field " #OPTION "!");    \
@@ -43,8 +58,8 @@
  * @ param OPTION name of the property
  */
 #define readOptionData(OPTION)                                                 \
-    if (mxGetProperty(prhs[3], 0, #OPTION)) {                                  \
-        mxArray *a = mxGetProperty(prhs[3], 0, #OPTION);                       \
+    if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                                  \
+        mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION);                       \
         int len = (int)mxGetM(a) * mxGetN(a);                                  \
         udata->OPTION = new double[len];                                       \
         memcpy(udata->OPTION, mxGetData(a), sizeof(double) * len);             \
@@ -117,41 +132,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
  */
 UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                  Model *model) {
-    if (nrhs < 8) {
+    if (nrhs < RHS_NUMARGS) {
         errMsgIdAndTxt(
             "AMICI:mex",
             "Incorrect number of input arguments (must be at least 7)!");
-        return NULL;
+        return nullptr;
     };
 
-    UserData *udata = new UserData();
+    UserData *udata = new UserData(model->np, model->nk, model->nx);
 
     /* time */
-    if (prhs[0] || mxGetM(prhs[0]) * mxGetN(prhs[0]) == 0) {
-        udata->nt = (int)mxGetM(prhs[0]) * mxGetN(prhs[0]);
-        udata->ts = new double[udata->nt];
-        memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(double) * udata->nt);
+    if (prhs[RHS_TIMEPOINTS] && mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]) > 0) {
+        udata->setTimepoints(mxGetPr(prhs[RHS_TIMEPOINTS]), (int) mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]));
     } else {
-        errMsgIdAndTxt("AMICI:mex:tout", "No time vector provided!");
+        errMsgIdAndTxt("AMICI:mex:tout", "No valid time vector provided!");
         goto freturn;
     }
 
-    /*
-     `if(udata->nX > 0)` checks here are necessary as respective [1x0] MATLAB
-     inputs
-     will procude NULL pointers when calling mxGetPr. checking nrhs ensures that
-     prhs[irhs]
-     actually exist, otherwise mxGetPr will segfault. (checking phrs[irhs] does
-     not help)
-     */
-
     /* parameters */
-
-    if (model->np > 0) {
-        if (mxGetPr(prhs[1])) {
-            if (mxGetM(prhs[1]) * mxGetN(prhs[1]) == model->np) {
-                udata->p = new double[model->np];
-                memcpy(udata->p, mxGetPr(prhs[1]), sizeof(double) * model->np);
+    if (udata->np > 0) {
+        if (mxGetPr(prhs[RHS_PARAMETERS])) {
+            if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) == model->np) {
+                udata->setParameters(mxGetPr(prhs[RHS_PARAMETERS]));
             } else {
                 errMsgIdAndTxt(
                     "AMICI:mex:theta",
@@ -166,10 +168,9 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
 
     /* constants */
     if (model->nk > 0) {
-        if (mxGetPr(prhs[2])) {
-            if (mxGetM(prhs[2]) * mxGetN(prhs[2]) == model->nk) {
-                udata->k = new double[model->nk];
-                memcpy(udata->k, mxGetPr(prhs[2]), sizeof(double) * model->nk);
+        if (mxGetPr(prhs[RHS_CONSTANTS])) {
+            if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) == model->nk) {
+                udata->setConstants(mxGetPr(prhs[RHS_CONSTANTS]));
             } else {
                 errMsgIdAndTxt(
                     "AMICI:mex:kappa",
@@ -183,7 +184,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* options */
-    if (mxGetPr(prhs[3])) {
+    if (mxGetPr(prhs[RHS_OPTIONS])) {
         readOptionScalar(nmaxevent, int);
         readOptionScalar(tstart, double);
         readOptionScalar(atol, double);
@@ -210,30 +211,18 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* plist */
-    if (mxGetPr(prhs[4])) {
-        udata->nplist = (int)mxGetM(prhs[4]) * mxGetN(prhs[4]);
-        udata->plist = new int[udata->nplist]();
-        realtype *plistdata = mxGetPr(prhs[4]);
-
-        for (int ip = 0; ip < udata->nplist; ip++) {
-            udata->plist[ip] = (int)plistdata[ip];
-        }
-    } else {
-        if (udata->sensi != AMICI_SENSI_ORDER_NONE) {
-            errMsgIdAndTxt("AMICI:mex:plist", "No parameter list provided!");
-            goto freturn;
-        } else {
-            udata->nplist = 0;
-        }
+    if (mxGetPr(prhs[RHS_PLIST])) {
+        udata->setPlist(mxGetPr(prhs[RHS_PLIST]), mxGetM(prhs[RHS_PLIST]) * mxGetN(prhs[RHS_PLIST]));
+    } else if (udata->sensi != AMICI_SENSI_ORDER_NONE) {
+        errMsgIdAndTxt("AMICI:mex:plist", "No parameter list provided!");
+        goto freturn;
     }
 
     /* pbar */
     if (udata->nplist > 0) {
-        if (mxGetPr(prhs[5])) {
-            if (mxGetM(prhs[5]) * mxGetN(prhs[5]) == udata->nplist) {
-                udata->pbar = new double[udata->nplist]();
-                memcpy(udata->pbar, mxGetPr(prhs[5]),
-                       sizeof(double) * udata->nplist);
+        if (mxGetPr(prhs[RHS_PBAR])) {
+            if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) == udata->nplist) {
+                udata->setPbar(mxGetPr(prhs[RHS_PBAR]));
             } else {
                 errMsgIdAndTxt(
                     "AMICI:mex:pbar",
@@ -265,8 +254,8 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
 
     /* Check, if initial states and sensitivities are passed by user or must be
      * calculated */
-    if (mxGetPr(prhs[7])) {
-        mxArray *x0 = mxGetField(prhs[7], 0, "x0");
+    if (mxGetPr(prhs[RHS_DATA])) {
+        mxArray *x0 = mxGetField(prhs[RHS_DATA], 0, "x0");
         if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
             /* check dimensions */
             if (mxGetN(x0) != 1) {
@@ -282,13 +271,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                 goto freturn;
             }
 
-            if ((mxGetM(x0) * mxGetN(x0)) > 0) {
-                udata->x0data = new double[model->nx];
-                memcpy(udata->x0data, mxGetPr(x0), sizeof(double) * model->nx);
-            }
+            udata->setStateInitialization(mxGetPr(x0));
         }
 
-        mxArray *sx0 = mxGetField(prhs[7], 0, "sx0");
+        mxArray *sx0 = mxGetField(prhs[RHS_DATA], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
             if (mxGetN(sx0) != udata->nplist) {
@@ -303,17 +289,14 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                                 "number of model states!");
                 goto freturn;
             }
-
-            udata->sx0data = new double[model->nx * udata->nplist];
-            memcpy(udata->sx0data, mxGetPr(sx0),
-                   sizeof(double) * model->nx * udata->nplist);
+            udata->setSensitivityInitialization(mxGetPr(sx0));
         }
     }
     return udata;
 
 freturn:
     delete udata;
-    return NULL;
+    return nullptr;
 }
 
 
