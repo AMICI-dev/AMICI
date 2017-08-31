@@ -92,6 +92,7 @@ target_link_libraries(${PROJECT_NAME}
     ${AMICI_DIR}/build/libamici.a
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
     ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
+    ${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
