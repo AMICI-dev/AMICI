@@ -59,7 +59,7 @@ TEST(userData, testScalingLog10) {
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
-    DOUBLES_EQUAL(pow10(p[0]), unscaled[0], 1e-16);
+    DOUBLES_EQUAL(pow(10, p[0]), unscaled[0], 1e-16);
 }
 
 
