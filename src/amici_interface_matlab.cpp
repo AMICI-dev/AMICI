@@ -217,7 +217,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         readOptionScalar(lmm, int);
         readOptionScalar(iter, int);
         readOptionScalar(interpType, int);
-        readOptionScalar(linsol, int);
+        readOptionScalar(linsol, LinearSolver);
         readOptionScalar(stldet, booleantype);
         readOptionData(qpositivex);
         readOptionScalar(sensi, AMICI_sensi_order);

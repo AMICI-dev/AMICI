@@ -47,7 +47,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
     udata->lmm = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
     udata->iter = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
-    udata->linsol =
+    udata->linsol = (LinearSolver)
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol");
     udata->stldet =
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");

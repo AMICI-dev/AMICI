@@ -10,7 +10,9 @@
  */
 class UserData {
 
-  public:
+public:
+
+
     /**
      * @brief UserData
      * @param np total number of model parameters
@@ -145,7 +147,7 @@ class UserData {
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
 
     /** linear solver specification */
-    int linsol = 9;
+    LinearSolver linsol = AMICI_KLU;
 
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem. can be either CV_POLYNOMIAL or
