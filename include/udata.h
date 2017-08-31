@@ -10,9 +10,7 @@
  */
 class UserData {
 
-public:
-
-
+  public:
     /**
      * @brief UserData
      * @param np total number of model parameters

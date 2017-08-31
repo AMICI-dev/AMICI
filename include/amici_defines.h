@@ -47,7 +47,6 @@
 #ifndef TRUE
 #define TRUE 1
 #endif
-// clang-format on
 
 typedef double realtype;
 
@@ -126,5 +125,7 @@ enum StateOrdering {
     COLAMD,
     natural
 };
+
+// clang-format on
 
 #endif
