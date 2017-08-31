@@ -100,7 +100,10 @@ function amiwrap( varargin )
     addpath(fullfile(wrap_path,'models',modelname));
     if(exist([commit_hash '_' model_hash '.mat'],'file')==2);
         load([commit_hash '_' model_hash '.mat']);
+        % update modelname according to this function call
         model.updateModelName(modelname);
+        % update wrap_path to this function call
+        model.updateWrapPath(wrap_path);
     end
     
     if(~exist('model','var'))
@@ -132,7 +135,10 @@ function amiwrap( varargin )
         end
         if(exist([commit_hash '_' model_hash '_' o2_hash '.mat'],'file')==2);
             load([commit_hash '_' model_hash '_' o2_hash '.mat']);
+            % update modelname according to this function call
             modelo2.updateModelName([modelname '_' o2string]);
+            % update wrap_path to this function call
+            modelo2.updateWrapPath(wrap_path);
         end
         if(~exist('modelo2','var'))
             disp('Augmenting to second order ...')
