@@ -100,4 +100,25 @@ enum LinearSolver {
 };
 
 
+enum InternalSensitivityMethod {
+    SIMULTANEOUS = 1,
+    STAGGERED = 2,
+    STAGGERED1 = 3
+};
+
+enum InterpolationType {
+    HERMITE = 1,
+    POLYNOMIAL = 2
+};
+
+enum LinearMultistepMethod {
+    ADAMS = 1,
+    BDF = 2
+};
+
+enum NonlinearSolverIteration {
+    FUNCTIONAL = 1,
+    NEWTON = 2
+};
+
 #endif

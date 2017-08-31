@@ -139,9 +139,8 @@ public:
     int newton_precon = 1;
 
     /** internal sensitivity method flag used to select the sensitivity solution
-     * method. Its value can be CV SIMULTANEOUS or CV STAGGERED. Only applies
-     * for Forward Sensitivities. */
-    int ism = 1;
+     * method. Only applies for Forward Sensitivities. */
+    InternalSensitivityMethod ism = SIMULTANEOUS;
 
     /** method for sensitivity computation */
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
@@ -150,21 +149,19 @@ public:
     LinearSolver linsol = AMICI_KLU;
 
     /** interpolation type for the forward problem solution which
-     * is then used for the backwards problem. can be either CV_POLYNOMIAL or
-     * CV_HERMITE
+     * is then used for the backwards problem.
      */
-    int interpType = 1;
+    InterpolationType interpType = HERMITE;
 
     /** specifies the linear multistep method and may be one of two possible
      * values: CV ADAMS or CV BDF.
      */
-    int lmm = 2;
+    LinearMultistepMethod lmm = BDF;
 
     /**
-     * specifies the type of nonlinear solver iteration and may be either CV
-     * NEWTON or CV FUNCTIONAL.
+     * specifies the type of nonlinear solver iteration
      */
-    int iter = 2;
+    NonlinearSolverIteration iter = NEWTON;
 
     /** flag controlling stability limit detection */
     booleantype stldet = true;

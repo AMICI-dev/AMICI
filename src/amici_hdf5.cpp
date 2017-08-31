@@ -45,15 +45,15 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps");
     udata->tstart =
         AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
-    udata->lmm = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
-    udata->iter = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
+    udata->lmm = (LinearMultistepMethod) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
+    udata->iter = (NonlinearSolverIteration) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
     udata->linsol = (LinearSolver)
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol");
     udata->stldet =
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
-    udata->interpType =
+    udata->interpType = (InterpolationType)
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
-    udata->ism = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
+    udata->ism = (InternalSensitivityMethod) AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
     udata->sensi_meth = (AMICI_sensi_meth)AMI_HDF5_getIntScalarAttribute(
         fileId, datasetPath, "sensi_meth");
     udata->sensi = (AMICI_sensi_order)AMI_HDF5_getIntScalarAttribute(
