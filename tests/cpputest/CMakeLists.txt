@@ -51,6 +51,7 @@ set_property(TARGET amici PROPERTY INTERFACE_LINK_LIBRARIES
 
 enable_testing()
 
+add_subdirectory(unittests)
 add_subdirectory(dirac)
 add_subdirectory(steadystate)
 add_subdirectory(jakstat_adjoint)
