@@ -121,4 +121,10 @@ enum NonlinearSolverIteration {
     NEWTON = 2
 };
 
+enum StateOrdering {
+    AMD,
+    COLAMD,
+    natural
+};
+
 #endif

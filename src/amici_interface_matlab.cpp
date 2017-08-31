@@ -224,7 +224,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         readOptionScalar(pscale, AMICI_parameter_scaling);
         readOptionScalar(ism, InternalSensitivityMethod);
         readOptionScalar(sensi_meth, AMICI_sensi_meth);
-        readOptionScalar(ordering, int);
+        readOptionScalar(ordering, StateOrdering);
         readOptionScalar(newton_preeq, int);
         readOptionScalar(newton_precon, int);
         readOptionScalar(newton_maxsteps, int);

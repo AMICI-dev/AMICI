@@ -173,7 +173,7 @@ public:
     double *sx0data = nullptr;
 
     /** state ordering */
-    int ordering = 0;
+    StateOrdering ordering = AMD;
 
     /** function to print the contents of the UserData object */
     void print() const;

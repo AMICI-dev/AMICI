@@ -60,7 +60,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         fileId, datasetPath, "sensi");
     udata->nmaxevent =
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
-    udata->ordering =
+    udata->ordering = (StateOrdering)
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
 
     hsize_t length;
