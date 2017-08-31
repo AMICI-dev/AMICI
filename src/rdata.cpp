@@ -12,21 +12,20 @@ ReturnData::ReturnData()
     : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
       pscale(AMICI_SCALING_NONE), o2mode(AMICI_O2MODE_NONE),
-      sensi(AMICI_SENSI_ORDER_NONE), sensi_meth(AMICI_SENSI_NONE) {
-}
+      sensi(AMICI_SENSI_ORDER_NONE), sensi_meth(AMICI_SENSI_NONE) {}
 
-ReturnData::ReturnData(const UserData *udata, const Model *model) : ReturnData(udata, model, true)
-{
+ReturnData::ReturnData(const UserData *udata, const Model *model)
+    : ReturnData(udata, model, true) {
     /**
      * @brief constructor that uses information from model and userdata to
      * appropriately initialize fields
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] model pointer to model specification object @type Model
      */
-
 }
 
-ReturnData::ReturnData(const UserData *udata, const Model *model, bool initializeFields)
+ReturnData::ReturnData(const UserData *udata, const Model *model,
+                       bool initializeFields)
     : np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
@@ -39,19 +38,20 @@ ReturnData::ReturnData(const UserData *udata, const Model *model, bool initializ
      * appropriately initialize fields
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] model pointer to model specification object @type Model
-     * @param[in] initialize arrays (needs to happen elsewhere if false) @type bool
+     * @param[in] initialize arrays (needs to happen elsewhere if false) @type
+     * bool
      */
 
-    if(initializeFields) {
+    if (initializeFields) {
         initFields();
         copyFromUserData(udata);
     }
-
 }
 
 void ReturnData::invalidate() {
     /**
-     * @brief routine to set likelihood and respective sensitivities to NaN (typically after integration failure)
+     * @brief routine to set likelihood and respective sensitivities to NaN
+     * (typically after integration failure)
      */
     if (llh)
         *llh = amiGetNaN();
@@ -65,14 +65,16 @@ void ReturnData::invalidate() {
 
 void ReturnData::setLikelihoodSensitivityFirstOrderNaN() {
     /**
-     * @brief routine to set first order sensitivities to NaN (typically after integration failure)
+     * @brief routine to set first order sensitivities to NaN (typically after
+     * integration failure)
      */
     fillArray(sllh, nplist, amiGetNaN());
 }
 
 void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
     /**
-     * @brief routine to set second order sensitivities to NaN (typically after integration failure)
+     * @brief routine to set second order sensitivities to NaN (typically after
+     * integration failure)
      */
     fillArray(s2llh, nplist * (nJ - 1), amiGetNaN());
 }
@@ -83,7 +85,8 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
      * @brief applies the chain rule to account for parameter transformation
      * in the sensitivities of simulation results
      * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] unscaledParameters pointer to the non-transformed parameters @type realtype
+     * @param[in] unscaledParameters pointer to the non-transformed parameters
+     * @type realtype
      * @return status flag indicating success of execution @type int
      */
     if (pscale == AMICI_SCALING_NONE)
@@ -175,7 +178,7 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                             chainRule(rz, iz, nztrue, nz, ie, nmaxevent)
                                 chainRule(x0, ix, nxtrue, nx, it, 1)
     }
-    
+
     if (o2mode == AMICI_O2MODE_FULL) { // full
         if (s2llh) {
             if (sllh) {
@@ -420,7 +423,8 @@ void ReturnData::initField1(double **fieldPointer, const char *fieldName,
                             int dim) {
     /**
      * @brief initialise vector and attach to the field
-     * @param fieldPointer pointer of the field to which the vector will be attached
+     * @param fieldPointer pointer of the field to which the vector will be
+     * attached
      * @param fieldName Name of the field to which the vector will be attached
      * @param dim number of elements in the vector
      */
@@ -431,7 +435,8 @@ void ReturnData::initField2(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2) {
     /**
      * @brief initialise matrix and attach to the field
-     * @param fieldPointer pointer of the field to which the matrix will be attached
+     * @param fieldPointer pointer of the field to which the matrix will be
+     * attached
      * @param fieldName Name of the field to which the matrix will be attached
      * @param dim1 number of rows in the matrix
      * @param dim2 number of columns in the matrix
@@ -443,7 +448,8 @@ void ReturnData::initField3(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3) {
     /**
      * @brief initialise 3D tensor and attach to the field
-     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldPointer pointer of the field to which the tensor will be
+     * attached
      * @param fieldName Name of the field to which the tensor will be attached
      * @param dim1 number of rows in the tensor
      * @param dim2 number of columns in the tensor
@@ -457,7 +463,8 @@ void ReturnData::initField4(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3, int dim4) {
     /**
      * @brief initialise 4D tensor and attach to the field
-     * @param fieldPointer pointer of the field to which the tensor will be attached
+     * @param fieldPointer pointer of the field to which the tensor will be
+     * attached
      * @param fieldName Name of the field to which the tensor will be attached
      * @param dim1 number of rows in the tensor
      * @param dim2 number of columns in the tensor

@@ -1,37 +1,117 @@
 #include "include/udata.h"
-#include "include/amici_model.h"
 #include <cstdio>
 #include <cstring>
 
-UserData::UserData() { init(); }
+UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
 
-int UserData::unscaleParameters(const Model *model,
-                                double *bufferUnscaled) const {
+UserData::UserData() : np(0), nk(0), nx(0) {}
+
+int UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
-     * unscaleParameters removes parameter scaling according to the parameter scaling in pscale
+     * unscaleParameters removes parameter scaling according to the parameter
+     * scaling in pscale
      *
-     * @param[in] model pointer to model specification object @type Model
-     * @param[out] bufferUnscaled unscaled parameters are written to the array @type double
-     * 
+     * @param[out] bufferUnscaled unscaled parameters are written to the array
+     * @type double
+     *
      * @return status flag indicating success of execution @type int
      */
     switch (pscale) {
     case AMICI_SCALING_LOG10:
-        for (int ip = 0; ip < model->np; ++ip) {
+        for (int ip = 0; ip < np; ++ip) {
             bufferUnscaled[ip] = pow(10, p[ip]);
         }
         break;
     case AMICI_SCALING_LN:
-        for (int ip = 0; ip < model->np; ++ip)
+        for (int ip = 0; ip < np; ++ip)
             bufferUnscaled[ip] = exp(p[ip]);
         break;
     case AMICI_SCALING_NONE:
-        for (int ip = 0; ip < model->np; ++ip)
+        for (int ip = 0; ip < np; ++ip)
             bufferUnscaled[ip] = p[ip];
         break;
     }
 
     return AMICI_SUCCESS;
+}
+
+void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
+    if (ts) {
+        delete[] ts;
+    }
+
+    nt = numTimepoints;
+    ts = new double[nt];
+    memcpy(ts, timepoints, sizeof(double) * nt);
+}
+
+void UserData::setParameters(const double *parameters) {
+    if (p) {
+        delete[] p;
+    }
+
+    p = new double[np];
+    memcpy(p, parameters, sizeof(double) * np);
+}
+
+void UserData::setConstants(const double *constants) {
+    if (k) {
+        delete[] k;
+    }
+
+    k = new double[nk];
+    memcpy(k, constants, sizeof(double) * nk);
+}
+
+void UserData::setPlist(const double *plist, int nplist) {
+    if (this->plist) {
+        delete[] this->plist;
+    }
+
+    this->nplist = nplist;
+    this->plist = new int[nplist];
+
+    for (int ip = 0; ip < nplist; ip++) {
+        this->plist[ip] = (int)plist[ip];
+    }
+}
+
+void UserData::setPlist(const int *plist, int nplist) {
+    if (this->plist) {
+        delete[] this->plist;
+    }
+
+    this->nplist = nplist;
+    this->plist = new int[nplist];
+    memcpy(this->plist, plist, sizeof(int) * nplist);
+}
+
+void UserData::setPbar(const double *parameterScaling) {
+    if (pbar) {
+        delete[] pbar;
+    }
+
+    pbar = new double[nplist];
+    memcpy(pbar, parameterScaling, sizeof(double) * nplist);
+}
+
+void UserData::setStateInitialization(const double *stateInitialization) {
+    if (x0data) {
+        delete[] x0data;
+    }
+
+    x0data = new double[nx];
+    memcpy(x0data, stateInitialization, sizeof(double) * nx);
+}
+
+void UserData::setSensitivityInitialization(
+    const double *sensitivityInitialization) {
+    if (sx0data) {
+        delete[] sx0data;
+    }
+
+    sx0data = new double[nx * nplist];
+    memcpy(sx0data, sensitivityInitialization, sizeof(double) * nx * nplist);
 }
 
 UserData::~UserData() {
@@ -55,41 +135,7 @@ UserData::~UserData() {
         delete[] plist;
 }
 
-void UserData::init() {
-    qpositivex = NULL;
-    plist = NULL;
-    nplist = 0;
-    nt = 0;
-    p = NULL;
-    k = NULL;
-    ts = NULL;
-    tstart = 0;
-    pbar = NULL;
-    xbar = NULL;
-    sensi = AMICI_SENSI_ORDER_NONE;
-    atol = 1e-16;
-    rtol = 1e-8;
-    maxsteps = 0;
-    newton_maxsteps = 0;
-    newton_maxlinsteps = 0;
-    newton_precon = 1;
-    newton_preeq = FALSE;
-    ism = 1;
-    nmaxevent = 10;
-
-    sensi_meth = AMICI_SENSI_FSA;
-    linsol = 9;
-    interpType = 1;
-    lmm = 2;
-    iter = 2;
-    stldet = true;
-    x0data = NULL;
-
-    sx0data = NULL;
-    ordering = 0;
-}
-
-void UserData::print() {
+void UserData::print() const {
     printf("qpositivex: %p\n", qpositivex);
     printf("plist: %p\n", plist);
     printf("nplist: %d\n", nplist);

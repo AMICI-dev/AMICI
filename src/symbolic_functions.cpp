@@ -29,9 +29,7 @@
  * @return isnan(what)
  *
  */
-int amiIsNaN(double what) {
-    return std::isnan(what);
-}
+int amiIsNaN(double what) { return std::isnan(what); }
 
 /**
  * c++ interface to the isinf function
@@ -40,9 +38,7 @@ int amiIsNaN(double what) {
  * @return isnan(what)
  *
  */
-int amiIsInf(double what) {
-    return std::isinf(what);
-}
+int amiIsInf(double what) { return std::isinf(what); }
 
 /**
  * function returning nan
@@ -50,9 +46,7 @@ int amiIsInf(double what) {
  * @return NaN
  *
  */
-double amiGetNaN() {
-    return NAN;
-}
+double amiGetNaN() { return NAN; }
 
 /**
  * c implementation of log function, this prevents returning NaN values for
@@ -216,9 +210,12 @@ double Dam_max(int id, double a, double b, double c) {
 }
 
 /**
- * spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined 
- * and `dudt` user defined slope at first node. All arguments must be of type double.
+ * spline function, takes variable argument pairs (ti,pi) with `ti`: location of
+ * node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ * indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments must be of type
+ * double.
  *
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
@@ -266,9 +263,12 @@ double am_spline(double t, int num, ...) {
 }
 
 /**
- * exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
- * and `dudt` user defined slope at first node. All arguments must be of type double.
+ * exponentiated spline function, takes variable argument pairs (ti,pi) with
+ `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments must be of type
+ double.
 
  *
  * @param t point at which the spline should be evaluated
@@ -318,11 +318,15 @@ double am_spline_pos(double t, int num, ...) {
 }
 
 /**
- * derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
- * and `dudt` user defined slope at first node. All arguments but id must be of type double.
+ * derivation of a spline function, takes variable argument pairs (ti,pi) with
+ * `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ * indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of
+ * type double.
  *
- * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
+ * @param id index of node to which the derivative of the corresponding spline
+ * coefficient should be computed
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
  *
@@ -374,11 +378,15 @@ double am_Dspline(int id, double t, int num, ...) {
 }
 
 /**
- * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
- * and `dudt` user defined slope at first node. All arguments but id must be of type double.
+ * derivation of an exponentiated spline function, takes variable argument pairs
+ * (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ * indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id must be of
+ * type double.
  *
- * @param id index of node to which the derivative of the corresponding spline coefficient should be computed
+ * @param id index of node to which the derivative of the corresponding spline
+ * coefficient should be computed
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
  *
@@ -438,12 +446,17 @@ double am_Dspline_pos(int id, double t, int num, ...) {
 }
 
 /**
- * second derivation of a spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
- * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
+ * second derivation of a spline function, takes variable argument pairs (ti,pi)
+ * with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ * indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2
+ * must be of type double.
  *
- * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
- * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
+ * @param id1 index of node to which the first derivative of the corresponding
+ * spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding
+ * spline coefficient should be computed
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
  *
@@ -453,12 +466,17 @@ double am_Dspline_pos(int id, double t, int num, ...) {
 double am_DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
 
 /**
- * derivation of an exponentiated spline function, takes variable argument pairs (ti,pi) with `ti`: location of node i and
- * `pi`: spline value at node i. the last two arguments are always `ss`: flag indicating whether slope at first node should be user defined
- * and `dudt` user defined slope at first node. All arguments but id1 and id2 must be of type double.
+ * derivation of an exponentiated spline function, takes variable argument pairs
+ * (ti,pi) with `ti`: location of node i and
+ * `pi`: spline value at node i. the last two arguments are always `ss`: flag
+ * indicating whether slope at first node should be user defined
+ * and `dudt` user defined slope at first node. All arguments but id1 and id2
+ * must be of type double.
  *
- * @param id1 index of node to which the first derivative of the corresponding spline coefficient should be computed
- * @param id2 index of node to which the second derivative of the corresponding spline coefficient should be computed
+ * @param id1 index of node to which the first derivative of the corresponding
+ * spline coefficient should be computed
+ * @param id2 index of node to which the second derivative of the corresponding
+ * spline coefficient should be computed
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
  *

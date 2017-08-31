@@ -8,11 +8,30 @@
 #include "include/udata.h"
 #include <cstring>
 
-int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
+// Ensure AMICI options are in sync with Sundials options
+static_assert(InternalSensitivityMethod::SIMULTANEOUS == CV_SIMULTANEOUS, "");
+static_assert(InternalSensitivityMethod::STAGGERED == CV_STAGGERED, "");
+static_assert(InternalSensitivityMethod::STAGGERED1 == CV_STAGGERED1, "");
+
+static_assert(InterpolationType::HERMITE == CV_HERMITE, "");
+static_assert(InterpolationType::POLYNOMIAL == CV_POLYNOMIAL, "");
+
+static_assert(LinearMultistepMethod::ADAMS == CV_ADAMS, "");
+static_assert(LinearMultistepMethod::BDF == CV_BDF, "");
+
+static_assert(NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
+static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
+
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+
+int ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
                                        ReturnData *rdata, const ExpData *edata,
                                        Model *model) {
     /**
-     * workForwardProblem solves the forward problem. if forward sensitivities are enabled this will also compute sensitivies
+     * workForwardProblem solves the forward problem. if forward sensitivities
+     * are enabled this will also compute sensitivies
      *
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] tdata pointer to the temporary data struct @type TempData
@@ -40,7 +59,7 @@ int ForwardProblem::workForwardProblem(UserData *udata, TempData *tdata,
         if (status != AMICI_SUCCESS)
             goto freturn;
     }
-    
+
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
         if (rdata->sensi_meth == AMICI_SENSI_FSA &&
@@ -124,28 +143,30 @@ freturn:
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata,
+int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
                                 ReturnData *rdata, const ExpData *edata,
                                 TempData *tdata, int seflag, Solver *solver,
                                 Model *model) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
-     * @param[out] tlastroot pointer to the timepoint of the last event @type *realtype
+     * @param[out] tlastroot pointer to the timepoint of the last event @type
+     * *realtype
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[out] rdata pointer to the return data struct @type ReturnData
      * @param[in] edata pointer to the experimental data struct @type ExpData
      * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[in] seflag flag indicating whether this is a secondary event @type int
+     * @param[in] seflag flag indicating whether this is a secondary event @type
+     * int
      * @param[in] solver pointer to solver object @type Solver
      * @param[in] model pointer to model specification object @type Model
      * @return status flag indicating success of execution @type int
      */
-    
+
     int ie;
     int secondevent = 0;
     int status = AMICI_SUCCESS;
@@ -322,15 +343,16 @@ int ForwardProblem::handleEvent(realtype *tlastroot, UserData *udata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
                                                            ReturnData *rdata,
                                                            Model *model) {
     /**
-     * evalues the Jacobian and differential equation right hand side, stores it in tdata and
+     * evalues the Jacobian and differential equation right hand side, stores it
+     * in tdata and
      * and copies it to rdata
      *
      * @param[out] tdata pointer to the temporary data struct @type TempData
@@ -366,16 +388,15 @@ int ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
     if (rdata->J)
         memcpy(rdata->J, tdata->Jtmp->data,
                model->nx * model->nx * sizeof(realtype));
-    
+
     return status;
 }
 
-/* ----------------------------------------------------------------------------------
- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata,
+int ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
                                    const ExpData *edata, TempData *tdata,
                                    Model *model) {
     /**
@@ -400,10 +421,9 @@ int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata,
     }
 
     /* EVENT OUTPUT */
-    for (
-        int ie = 0; ie < model->ne;
-        ie++) { /* only look for roots of the rootfunction not discontinuities
-                   */
+    for (int ie = 0; ie < model->ne;
+         ie++) { /* only look for roots of the rootfunction not discontinuities
+                    */
         if (tdata->nroots[ie] >= rdata->nmaxevent)
             continue;
 
@@ -470,15 +490,16 @@ int ForwardProblem::getEventOutput(UserData *udata, ReturnData *rdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::prepEventSensis(int ie, ReturnData *rdata,
                                     const ExpData *edata, TempData *tdata,
                                     Model *model) {
     /**
-     * prepEventSensis preprocesses the provided experimental data to compute event sensitivities via adjoint or forward methods later on
+     * prepEventSensis preprocesses the provided experimental data to compute
+     * event sensitivities via adjoint or forward methods later on
      *
      * @param[in] ie index of current event @type int
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -583,15 +604,16 @@ int ForwardProblem::prepEventSensis(int ie, ReturnData *rdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
                                       const ExpData *edata, TempData *tdata,
                                       Model *model) {
     /**
-     * getEventSensisFSA extracts event information for forward sensitivity analysis
+     * getEventSensisFSA extracts event information for forward sensitivity
+     * analysis
      *
      * @param[in] ie index of event type @type int
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -600,7 +622,7 @@ int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
      * @param[in] model pointer to model specification object @type Model
      * @return status flag indicating success of execution @type int
      */
-    
+
     int status = AMICI_SUCCESS;
 
     if (tdata->t ==
@@ -626,15 +648,17 @@ int ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
     return AMICI_SUCCESS;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata,
-                                    const ExpData *edata, TempData *tdata,
-                                    Solver *solver, Model *model) {
+int ForwardProblem::handleDataPoint(int it, const UserData *udata,
+                                    ReturnData *rdata, const ExpData *edata,
+                                    TempData *tdata, Solver *solver,
+                                    Model *model) {
     /**
-     * handleDataPoint executes everything necessary for the handling of data points
+     * handleDataPoint executes everything necessary for the handling of data
+     * points
      *
      * @param[in] it index of data point @type int
      * @param[in] udata pointer to the user data struct @type UserData
@@ -645,7 +669,6 @@ int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata,
      * @param[in] model pointer to model specification object @type Model
      * @return status flag indicating success of execution @type int
      */
-
 
     if (model->nx > 0) {
         realtype *x_tmp = NV_DATA_S(tdata->x);
@@ -665,13 +688,14 @@ int ForwardProblem::handleDataPoint(int it, UserData *udata, ReturnData *rdata,
     return getDataOutput(it, udata, rdata, edata, tdata, solver, model);
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-int ForwardProblem::getDataOutput(int it, UserData *udata, ReturnData *rdata,
-                                  const ExpData *edata, TempData *tdata,
-                                  Solver *solver, Model *model) {
+int ForwardProblem::getDataOutput(int it, const UserData *udata,
+                                  ReturnData *rdata, const ExpData *edata,
+                                  TempData *tdata, Solver *solver,
+                                  Model *model) {
     /**
      * getDataOutput extracts output information for data-points
      *
@@ -727,15 +751,16 @@ int ForwardProblem::getDataOutput(int it, UserData *udata, ReturnData *rdata,
     return AMICI_SUCCESS;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
                                    const ExpData *edata, TempData *tdata,
                                    Model *model) {
     /**
-     * prepDataSensis preprocesses the provided experimental data to compute sensitivities via adjoint or forward methods later on
+     * prepDataSensis preprocesses the provided experimental data to compute
+     * sensitivities via adjoint or forward methods later on
      *
      * @param[in] it index of current timepoint @type int
      * @param[out] rdata pointer to the return data struct @type ReturnData
@@ -808,15 +833,17 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
-                                     const ExpData *edata, TempData *tdata,
-                                     Solver *solver, Model *model) {
+int ForwardProblem::getDataSensisFSA(int it, const UserData *udata,
+                                     ReturnData *rdata, const ExpData *edata,
+                                     TempData *tdata, Solver *solver,
+                                     Model *model) {
     /**
-     * getDataSensisFSA extracts data information for forward sensitivity analysis
+     * getDataSensisFSA extracts data information for forward sensitivity
+     * analysis
      *
      * @param[in] it index of current timepoint @type int
      * @param[in] udata pointer to the user data struct @type UserData
@@ -844,7 +871,8 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
                 if (!sx_tmp)
                     return AMICI_ERROR_FSA;
                 for (int ix = 0; ix < model->nx; ix++) {
-                    rdata->sx[(ip * model->nx + ix) * rdata->nt + it] = sx_tmp[ix];
+                    rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
+                        sx_tmp[ix];
                 }
             }
         }
@@ -882,9 +910,9 @@ int ForwardProblem::getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
     /**
@@ -918,13 +946,14 @@ int ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
     /**
-     * applyEventSensiBolusFSA applies the event bolus to the current sensitivities
+     * applyEventSensiBolusFSA applies the event bolus to the current
+     * sensitivities
      *
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[in] model pointer to model specification object @type Model
@@ -956,9 +985,9 @@ int ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
     return status;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 int ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
     /**
@@ -979,8 +1008,8 @@ int ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
     return AMICI_SUCCESS;
 }
 
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
 ForwardProblem::ForwardProblem() {}

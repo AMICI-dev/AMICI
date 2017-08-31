@@ -27,141 +27,141 @@ class TempData {
     realtype t;
 
     /** state vector */
-    N_Vector x;
+    N_Vector x = nullptr;
     /** old state vector */
-    N_Vector x_old;
+    N_Vector x_old = nullptr;
     /** array of state vectors at discontinuities*/
-    N_Vector *x_disc;
+    N_Vector *x_disc = nullptr;
     /** array of differential state vectors at discontinuities*/
-    N_Vector *xdot_disc;
+    N_Vector *xdot_disc = nullptr;
     /** array of old differential state vectors at discontinuities*/
-    N_Vector *xdot_old_disc;
+    N_Vector *xdot_old_disc = nullptr;
     /** differential state vector */
-    N_Vector dx;
+    N_Vector dx = nullptr;
     /** old differential state vector */
-    N_Vector dx_old;
+    N_Vector dx_old = nullptr;
     /** time derivative state vector */
-    N_Vector xdot;
+    N_Vector xdot = nullptr;
     /** old time derivative state vector */
-    N_Vector xdot_old;
+    N_Vector xdot_old = nullptr;
     /** adjoint state vector */
-    N_Vector xB;
+    N_Vector xB = nullptr;
     /** old adjoint state vector */
-    N_Vector xB_old;
+    N_Vector xB_old = nullptr;
     /** differential adjoint state vector */
-    N_Vector dxB;
+    N_Vector dxB = nullptr;
     /** quadrature state vector */
-    N_Vector xQB;
+    N_Vector xQB = nullptr;
     /** old quadrature state vector */
-    N_Vector xQB_old;
+    N_Vector xQB_old = nullptr;
     /** sensitivity state vector array */
-    N_Vector *sx;
+    N_Vector *sx = nullptr;
     /** differential sensitivity state vector array */
-    N_Vector *sdx;
+    N_Vector *sdx = nullptr;
     /** Jacobian */
-    DlsMat Jtmp;
+    DlsMat Jtmp = nullptr;
 
     /** parameter derivative of likelihood array */
-    realtype *llhS0;
+    realtype *llhS0 = nullptr;
     /** data likelihood */
-    realtype *Jy;
+    realtype *Jy = nullptr;
     /** parameter derivative of data likelihood */
-    realtype *dJydp;
+    realtype *dJydp = nullptr;
     /** observable derivative of data likelihood */
-    realtype *dJydy;
+    realtype *dJydy = nullptr;
     /** observable sigma derivative of data likelihood */
-    realtype *dJydsigma;
+    realtype *dJydsigma = nullptr;
     /** state derivative of data likelihood */
-    realtype *dJydx;
+    realtype *dJydx = nullptr;
     /** event likelihood */
-    realtype *Jz;
+    realtype *Jz = nullptr;
     /** parameter derivative of event likelihood */
-    realtype *dJzdp;
+    realtype *dJzdp = nullptr;
     /** state derivative of event likelihood */
-    realtype *dJzdx;
+    realtype *dJzdx = nullptr;
     /** event ouput derivative of event likelihood */
-    realtype *dJzdz;
+    realtype *dJzdz = nullptr;
     /** event sigma derivative of event likelihood */
-    realtype *dJzdsigma;
+    realtype *dJzdsigma = nullptr;
     /** event ouput derivative of event likelihood at final timepoint */
-    realtype *dJrzdz;
+    realtype *dJrzdz = nullptr;
     /** event sigma derivative of event likelihood at final timepoint */
-    realtype *dJrzdsigma;
+    realtype *dJrzdsigma = nullptr;
     /** state derivative of event output */
-    realtype *dzdx;
+    realtype *dzdx = nullptr;
     /** parameter derivative of event output */
-    realtype *dzdp;
+    realtype *dzdp = nullptr;
     /** state derivative of event timepoint */
-    realtype *drzdx;
+    realtype *drzdx = nullptr;
     /** parameter derivative of event timepoint */
-    realtype *drzdp;
+    realtype *drzdp = nullptr;
     /** parameter derivative of observable */
-    realtype *dydp;
+    realtype *dydp = nullptr;
     /** state derivative of observable */
-    realtype *dydx;
+    realtype *dydx = nullptr;
     /** initial sensitivity of observable */
-    realtype *yS0;
+    realtype *yS0 = nullptr;
     /** data standard deviation */
-    realtype *sigmay;
+    realtype *sigmay = nullptr;
     /** parameter derivative of data standard deviation */
-    realtype *dsigmaydp;
+    realtype *dsigmaydp = nullptr;
     /** event standard deviation */
-    realtype *sigmaz;
+    realtype *sigmaz = nullptr;
     /** parameter derivative of event standard deviation */
-    realtype *dsigmazdp;
+    realtype *dsigmazdp = nullptr;
 
-    /** array of flags indicating which root has beend found */
-    /*!
-    array of length nr with the indices of the user functions gi found to have a
-    root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
-    */
-    int *rootsfound;
+    /** array of flags indicating which root has beend found.
+     *  array of length nr with the indices of the user functions gi found to
+     * have a
+     *  root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
+     */
+    int *rootsfound = nullptr;
     /** array of index which root has been found */
-    int *rootidx;
+    int *rootidx = nullptr;
     /** array of number of found roots for a certain event type */
-    int *nroots;
+    int *nroots = nullptr;
     /** array of values of the root function */
-    realtype *rootvals;
+    realtype *rootvals = nullptr;
     /** temporary rootval storage to check crossing in secondary event */
-    realtype *rvaltmp;
+    realtype *rvaltmp = nullptr;
 
     /** flag indicating whether a certain heaviside function should be active or
        not */
-    realtype *h;
+    realtype *h = nullptr;
 
     /** change in x */
-    realtype *deltax;
+    realtype *deltax = nullptr;
     /** change in sx */
-    realtype *deltasx;
+    realtype *deltasx = nullptr;
     /** change in xB */
-    realtype *deltaxB;
+    realtype *deltaxB = nullptr;
     /** change in qB */
-    realtype *deltaqB;
+    realtype *deltaqB = nullptr;
 
     /** integer for indexing of backwards problems */
-    int which;
+    int which = 0;
 
     /** array containing the time-points of discontinuities*/
-    realtype *discs;
+    realtype *discs = nullptr;
     /** array containing the index of discontinuities */
-    realtype *irdiscs;
+    realtype *irdiscs = nullptr;
 
     /** tempory storage of Jacobian data across functions */
-    SlsMat J = NULL;
+    SlsMat J = nullptr;
     /** tempory storage of dxdotdp data across functions */
-    realtype *dxdotdp = NULL;
+    realtype *dxdotdp = nullptr;
     /** tempory storage of w data across functions */
-    realtype *w = NULL;
+    realtype *w = nullptr;
     /** tempory storage of dwdx data across functions */
-    realtype *dwdx = NULL;
+    realtype *dwdx = nullptr;
     /** tempory storage of dwdp data across functions */
-    realtype *dwdp = NULL;
+    realtype *dwdp = nullptr;
     /** tempory storage of M data across functions */
-    realtype *M = NULL;
+    realtype *M = nullptr;
     /** tempory storage of dfdx data across functions */
-    realtype *dfdx = NULL;
+    realtype *dfdx = nullptr;
     /** tempory storage of stau data across functions */
-    realtype *stau = NULL;
+    realtype *stau = nullptr;
 
     /** number of parameters, copied from udata, necessary for deallocation */
     int nplist;
@@ -186,11 +186,11 @@ class TempData {
     booleantype nan_qBdot = false;
 
     /** attached UserData object */
-    const UserData *udata;
+    const UserData *udata = nullptr;
     /** attached Model object */
-    Model *model;
+    Model *model = nullptr;
     /** attached ReturnData object */
-    ReturnData *rdata;
+    ReturnData *rdata = nullptr;
     /** attached Solver object */
     Solver *solver = nullptr;
 };

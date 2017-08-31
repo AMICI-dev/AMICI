@@ -32,7 +32,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
                                                         Model *model) {
     assert(fileId > 0);
 
-    UserData *udata = new UserData();
+    UserData *udata = model->getNewUserData();
 
     if (udata == NULL)
         return (NULL);
@@ -45,23 +45,26 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps");
     udata->tstart =
         AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
-    udata->lmm = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm");
-    udata->iter = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter");
-    udata->linsol =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol");
+    udata->lmm = (LinearMultistepMethod)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "lmm");
+    udata->iter = (NonlinearSolverIteration)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "iter");
+    udata->linsol = (LinearSolver)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "linsol");
     udata->stldet =
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
-    udata->interpType =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType");
-    udata->ism = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism");
+    udata->interpType = (InterpolationType)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "interpType");
+    udata->ism = (InternalSensitivityMethod)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "ism");
     udata->sensi_meth = (AMICI_sensi_meth)AMI_HDF5_getIntScalarAttribute(
         fileId, datasetPath, "sensi_meth");
     udata->sensi = (AMICI_sensi_order)AMI_HDF5_getIntScalarAttribute(
         fileId, datasetPath, "sensi");
     udata->nmaxevent =
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
-    udata->ordering =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering");
+    udata->ordering = (StateOrdering)AMI_HDF5_getIntScalarAttribute(
+        fileId, datasetPath, "ordering");
 
     hsize_t length;
     int status = 0;
@@ -135,14 +138,13 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
 ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
                                         const char *dataObject, Model *model) {
 
-
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     ExpData *edata = NULL;
 
     hsize_t m, n;
 
-    if(H5Lexists(file_id, dataObject, 0)) {
+    if (H5Lexists(file_id, dataObject, 0)) {
 
         edata = new ExpData(udata, model);
 
@@ -460,17 +462,17 @@ void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
     }
 }
 
-int AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id,
-                                        const char *optionsObject,
-                                        const char *attributeName,
-                                        double **destination, hsize_t *m,
-                                        hsize_t *n, hsize_t *o) {
-    if(!AMI_HDF5_attributeExists(file_id, optionsObject, attributeName))
+int AMI_HDF5_getDoubleArrayAttribute3D(hid_t file_id, const char *optionsObject,
+                                       const char *attributeName,
+                                       double **destination, hsize_t *m,
+                                       hsize_t *n, hsize_t *o) {
+    if (!AMI_HDF5_attributeExists(file_id, optionsObject, attributeName))
         return 1;
 
     int rank;
-    herr_t status = H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
-    if(status < 0)
+    herr_t status =
+        H5LTget_attribute_ndims(file_id, optionsObject, attributeName, &rank);
+    if (status < 0)
         return status;
 
     assert(rank == 3);

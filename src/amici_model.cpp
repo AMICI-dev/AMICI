@@ -13,6 +13,10 @@
 //    return fdx0(udata->k, x0_tmp);
 //}
 
+UserData Model::getUserData() const { return UserData(np, nk, nx); }
+
+UserData *Model::getNewUserData() const { return new UserData(np, nk, nx); }
+
 Model::~Model() {
     if (z2event)
         delete[] z2event;
@@ -49,7 +53,8 @@ int Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
     return status;
 }
 
-/** Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative
+/** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
+ * total derivative
  * @param[in] ie event index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
@@ -70,13 +75,14 @@ int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
     return status;
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
+ * derivative
  * @param[in] it timepoint index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
  * @return status flag indicating successful execution @type int
  */
-int Model::fsJy(const int it,const TempData *tdata, ReturnData *rdata) {
+int Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
     int status = AMICI_SUCCESS;
 
     // Compute dJydx*sx for current 'it'
@@ -122,7 +128,8 @@ int Model::fsJy(const int it,const TempData *tdata, ReturnData *rdata) {
     return (status);
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. parameters
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+ * parameters
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -173,7 +180,8 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. state variables
+/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+ * state variables
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -216,7 +224,8 @@ int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
     return (status);
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz, total derivative
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
+ * derivative
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] rdata pointer to return data object @type ReturnData
@@ -278,7 +287,8 @@ freturn:
     return (status);
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. parameters
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
+ * parameters
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -356,7 +366,8 @@ int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. state variables
+/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
+ * state variables
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
@@ -471,7 +482,6 @@ int Model::initializeStates(const double *x0data, TempData *tdata) {
  * @return status flag indicating success of execution @type int
  */
 int Model::initHeaviside(TempData *tdata) {
-
 
     int status = AMICI_SUCCESS;
 

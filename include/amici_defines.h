@@ -2,16 +2,6 @@
 #define AMICI_DEFINES_H
 
 // clang-format off
-/* linear solvers */
-#define AMICI_DENSE       1
-#define AMICI_BAND        2
-#define AMICI_LAPACKDENSE 3
-#define AMICI_LAPACKBAND  4
-#define AMICI_DIAG        5
-#define AMICI_SPGMR       6
-#define AMICI_SPBCG       7
-#define AMICI_SPTFQMR     8
-#define AMICI_KLU         9
 
 #define AMICI_ONEOUTPUT   5
 
@@ -57,7 +47,6 @@
 #ifndef TRUE
 #define TRUE 1
 #endif
-// clang-format on
 
 typedef double realtype;
 
@@ -65,6 +54,7 @@ typedef enum {
     AMICI_BLAS_RowMajor = 101,
     AMICI_BLAS_ColMajor = 102
 } AMICI_BLAS_LAYOUT;
+
 typedef enum {
     AMICI_BLAS_NoTrans = 111,
     AMICI_BLAS_Trans = 112,
@@ -95,5 +85,47 @@ typedef enum AMICI_sensi_meth_TAG {
     AMICI_SENSI_ASA,
     AMICI_SENSI_SS
 } AMICI_sensi_meth;
+
+enum LinearSolver {
+    AMICI_DENSE       = 1,
+    AMICI_BAND        = 2,
+    AMICI_LAPACKDENSE = 3,
+    AMICI_LAPACKBAND  = 4,
+    AMICI_DIAG        = 5,
+    AMICI_SPGMR       = 6,
+    AMICI_SPBCG       = 7,
+    AMICI_SPTFQMR     = 8,
+    AMICI_KLU         = 9
+};
+
+
+enum InternalSensitivityMethod {
+    SIMULTANEOUS = 1,
+    STAGGERED = 2,
+    STAGGERED1 = 3
+};
+
+enum InterpolationType {
+    HERMITE = 1,
+    POLYNOMIAL = 2
+};
+
+enum LinearMultistepMethod {
+    ADAMS = 1,
+    BDF = 2
+};
+
+enum NonlinearSolverIteration {
+    FUNCTIONAL = 1,
+    NEWTON = 2
+};
+
+enum StateOrdering {
+    AMD,
+    COLAMD,
+    natural
+};
+
+// clang-format on
 
 #endif

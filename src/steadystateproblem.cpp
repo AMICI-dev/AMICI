@@ -13,9 +13,11 @@
 
 SteadystateProblem::SteadystateProblem() {}
 
-int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
-                                               ReturnData *rdata, Solver *solver,
-                                               Model *model, int it) {
+int SteadystateProblem::workSteadyStateProblem(const UserData *udata,
+                                               TempData *tdata,
+                                               ReturnData *rdata,
+                                               Solver *solver, Model *model,
+                                               int it) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -40,7 +42,7 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
 
     NewtonSolver *newtonSolver = NewtonSolver::getSolver(
         udata->linsol, model, rdata, udata, tdata, &status);
-    
+
     status = applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 1);
 
     if (status == AMICI_SUCCESS) {
@@ -67,19 +69,21 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
             }
         }
     }
-    
+
     /* Compute steady state sensitvities */
-    if (rdata->sensi_meth == AMICI_SENSI_FSA && rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+    if (rdata->sensi_meth == AMICI_SENSI_FSA &&
+        rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
         if (status == AMICI_SUCCESS)
             status = newtonSolver->getSensis(it);
-    
+
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
 
         status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                status = solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
+                status =
+                    solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
         if (status != AMICI_SUCCESS)
             status = AMICI_ERROR_PREEQUILIBRATION;
     }
@@ -88,21 +92,28 @@ int SteadystateProblem::workSteadyStateProblem(UserData *udata, TempData *tdata,
     return status;
 }
 
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
 
-int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
-                                           TempData *tdata, Model *model,
-                                           NewtonSolver *newtonSolver, int newton_try) {
+int SteadystateProblem::applyNewtonsMethod(const UserData *udata,
+                                           ReturnData *rdata, TempData *tdata,
+                                           Model *model,
+                                           NewtonSolver *newtonSolver,
+                                           int newton_try) {
     /**
-     * Runs the Newton solver iterations and checks for convergence to steady state
+     * Runs the Newton solver iterations and checks for convergence to steady
+     * state
      *
      * @param[in] udata pointer to the user data object @type UserData
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] newtonSolver pointer to the NewtonSolver object @type NewtonSolver
+     * @param[in] newtonSolver pointer to the NewtonSolver object @type
+     * NewtonSolver
      * @param[in] newton_try integer start number of Newton solver (1 or 2)
      * @return stats integer flag indicating success of the method
      */
@@ -240,36 +251,37 @@ int SteadystateProblem::applyNewtonsMethod(UserData *udata, ReturnData *rdata,
     return (status);
 }
 
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
 
 void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
-                                        Model *model, int newton_status,
-                                        double run_time, int it) {
+                                         Model *model, int newton_status,
+                                         double run_time, int it) {
     /**
      * Stores output of workSteadyStateProblem in return data
      *
      * @param[in] tdata pointer to the temporary data object @type UserData
      * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] newton_status integer flag indicating when a steady state was found
+     * @param[in] newton_status integer flag indicating when a steady state was
+     * found
      * @param[in] run_time double coputation time of the solver in milliseconds
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @return stats integer flag indicating success of the method
      */
 
-    realtype *x_tmp;
-    int status = AMICI_SUCCESS;
-    
     /* Get time for Newton solve */
     rdata->newton_time[0] = run_time;
 
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
         tdata->t = rdata->ts[0];
-        
+
         /* Write steady state to output */
-        x_tmp = NV_DATA_S(tdata->x);
+        realtype *x_tmp = NV_DATA_S(tdata->x);
         for (int ix = 0; ix < model->nx; ix++) {
             rdata->x0[ix] = x_tmp[ix];
         }
@@ -281,11 +293,14 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
     *rdata->newton_status = (double)newton_status;
 }
 
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
 
-int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
+int SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tdata,
                                             ReturnData *rdata, Solver *solver,
                                             Model *model, int it) {
     /**
@@ -366,20 +381,25 @@ int SteadystateProblem::getNewtonSimulation(UserData *udata, TempData *tdata,
     return status;
 }
 
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
+/* ----------------------------------------------------------------------------------
+ */
 
-int SteadystateProblem::linsolveSPBCG(UserData *udata, ReturnData *rdata,
+int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
                                       TempData *tdata, Model *model, int ntry,
                                       int nnewt, N_Vector ns_delta) {
     /**
      * Iterative linear solver created from SPILS BiCG-Stab.
-     * Solves the linear system within each Newton step if iterative solver is chosen.
+     * Solves the linear system within each Newton step if iterative solver is
+     * chosen.
      *
      * @param[in] udata pointer to the user data object @type UserData
      * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] ntry integer newton_try integer start number of Newton solver (1 or 2)
+     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
      * @param[in] nnewt integer number of current Newton step
      * @param[in] ns_delta ???
      * @param[out] tdata pointer to the temporary data object @type TempData
