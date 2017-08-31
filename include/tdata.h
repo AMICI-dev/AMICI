@@ -123,12 +123,11 @@ class TempData {
     /** array of values of the root function */
     realtype *rootvals = nullptr;
     /** temporary rootval storage to check crossing in secondary event */
-    realtype *h = nullptr;
+    realtype *rvaltmp = nullptr;
 
     /** flag indicating whether a certain heaviside function should be active or
-       not
-        Moved from UserData to TempData; TODO: better naming */
-    realtype *h_udata = nullptr;
+       not */
+    realtype *h = nullptr;
 
     /** change in x */
     realtype *deltax = nullptr;

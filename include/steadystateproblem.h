@@ -37,11 +37,11 @@ class SteadystateProblem {
 
     static int getNewtonSimulation(const UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
-                                   Model *model);
-
+                                   Model *model, int it);
+    
     static int linsolveSPBCG(const UserData *udata, ReturnData *rdata,
-                             TempData *tdata, Model *model, int ntry, int nnewt,
-                             N_Vector ns_delta);
+                             TempData *tdata, Model *model, int ntry,
+                             int nnewt, N_Vector ns_delta);
 
   private:
     SteadystateProblem();

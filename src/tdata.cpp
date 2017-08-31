@@ -53,8 +53,8 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
     /* EVENTS */
     rootsfound = new int[model->ne]();
     rootvals = new realtype[model->ne]();
+    rvaltmp = new realtype[model->ne]();
     h = new realtype[model->ne]();
-    h_udata = new realtype[model->ne]();
 
     rootidx = new int[udata->nmaxevent * model->ne * model->ne]();
     nroots = new int[model->ne]();
@@ -180,10 +180,10 @@ TempData::~TempData() {
         delete[] deltaxB;
     if (deltaqB)
         delete[] deltaqB;
+    if (rvaltmp)
+        delete[] rvaltmp;
     if (h)
         delete[] h;
-    if (h_udata)
-        delete[] h_udata;
     if (sigmay)
         delete[] sigmay;
     if (dydx)
