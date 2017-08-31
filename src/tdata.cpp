@@ -7,28 +7,17 @@
 
 TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
     : udata(udata), model(model), rdata(rdata) {
-        /**
-         * @brief Default constructor
-         *
-         * @param[in] udata pointer to the user data struct @type UserData
-         * @param[in] model pointer to model specification object @type Model
-         * @param[in] rdata pointer to the return data struct @type ReturnData
-         
-         */
+    /**
+     * @brief Default constructor
+     *
+     * @param[in] udata pointer to the user data struct @type UserData
+     * @param[in] model pointer to model specification object @type Model
+     * @param[in] rdata pointer to the return data struct @type ReturnData
 
-    xB = xB_old = dxB = xQB = xQB_old = NULL;
-    x_disc = xdot_disc = xdot_old_disc = NULL;
-    x = x_old = dx = dx_old = xdot = xdot_old = NULL;
-    sx = sdx = NULL;
-    Jtmp = NULL;
-    dydx = dydp = dJydp = dJydx = dJydy = dzdp = dzdx = drzdp = drzdx = dJzdp =
-        dJzdx = dJzdz = dJrzdz = NULL;
-    dJydsigma = dJzdsigma = dJrzdsigma = dsigmaydp = dsigmazdp = llhS0 = NULL;
-
-    which = 0;
+     */
 
     p = new realtype[model->np];
-    udata->unscaleParameters(model, p);
+    udata->unscaleParameters(p);
 
     nplist = udata->nplist;
 

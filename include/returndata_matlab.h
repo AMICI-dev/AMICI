@@ -16,13 +16,12 @@ class ReturnDataMatlab : public ReturnData {
 
   public:
     ReturnDataMatlab(const UserData *udata, const Model *model);
-    ~ReturnDataMatlab() {}
 
     /** sol struct that is passed back to matlab */
-    mxArray *mxsol;
+    mxArray *matlabSolutionStruct = nullptr;
 
   protected:
-    void initFields();
+    void initFields() override;
 
     virtual void initField1(double **fieldPointer, const char *fieldName,
                             int dim) override;

@@ -10,17 +10,16 @@ class ExpData;
 class Solver;
 class Model;
 
-//!  class to solve backwards problems. 
+//!  class to solve backwards problems.
 /*!
-  solves the backwards problem for adjoint sensitivity analysis and handles events and data-points
+  solves the backwards problem for adjoint sensitivity analysis and handles
+  events and data-points
 */
 
-
-class BackwardProblem
-{
-public:
-
-    static int workBackwardProblem(UserData *udata, TempData *tdata, ReturnData *rdata, Model *model);
+class BackwardProblem {
+  public:
+    static int workBackwardProblem(const UserData *udata, TempData *tdata,
+                                   ReturnData *rdata, Model *model);
 
     static int handleEventB(int iroot, TempData *tdata, Model *model);
 

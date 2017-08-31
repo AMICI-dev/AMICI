@@ -1,26 +1,23 @@
 #ifndef _MY_RDATA
 #define _MY_RDATA
 #include <include/udata.h>
-class UserData;
+
 class Model;
 
 /** @brief struct that stores all data which is later returned by the mex
  * function
  *
- * NOTE: MATLAB stores multidimensional arrays in column-major order
+ * NOTE: multidimensional arrays are stored in column-major order
  * (FORTRAN-style)
  */
 class ReturnData {
   public:
-    ReturnData();
-
     ReturnData(const UserData *udata, const Model *model);
-
-    ReturnData(const UserData *udata, const Model *model, bool initializeFields);
 
     void invalidate();
 
     void setLikelihoodSensitivityFirstOrderNaN();
+
     void setLikelihoodSensitivitySecondOrderNaN();
 
     int
@@ -129,7 +126,7 @@ class ReturnData {
 
     /** preequilibration steady state found be Newton solver */
     double *x0 = nullptr;
-    
+
     /** preequilibration sensitivities found be Newton solver */
     double *sx0 = nullptr;
 
@@ -150,6 +147,11 @@ class ReturnData {
     double *status = nullptr;
 
   protected:
+    ReturnData();
+
+    ReturnData(const UserData *udata, const Model *model,
+               bool initializeFields);
+
     virtual void copyFromUserData(const UserData *udata);
 
     virtual void initFields();
@@ -166,7 +168,8 @@ class ReturnData {
     virtual void initField4(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3, int dim4);
 
-    /** flag indicating whether memory for fields needs to be freed on destruction */
+    /** flag indicating whether memory for fields needs to be freed on
+     * destruction */
     bool freeFieldsOnDestruction = true;
 
   public:

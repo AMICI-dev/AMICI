@@ -17,11 +17,11 @@ class Model;
  */
 class ForwardProblem {
   public:
-    static int workForwardProblem(UserData *udata, TempData *tdata,
+    static int workForwardProblem(const UserData *udata, TempData *tdata,
                                   ReturnData *rdata, const ExpData *edata,
                                   Model *model);
 
-    static int handleEvent(realtype *tlastroot, UserData *udata,
+    static int handleEvent(realtype *tlastroot, const UserData *udata,
                            ReturnData *rdata, const ExpData *edata,
                            TempData *tdata, int seflag, Solver *solver,
                            Model *model);
@@ -30,7 +30,7 @@ class ForwardProblem {
                                                       ReturnData *rdata,
                                                       Model *model);
 
-    static int getEventOutput(UserData *udata, ReturnData *rdata,
+    static int getEventOutput(const UserData *udata, ReturnData *rdata,
                               const ExpData *edata, TempData *tdata,
                               Model *model);
 
@@ -41,20 +41,20 @@ class ForwardProblem {
                                  const ExpData *edata, TempData *tdata,
                                  Model *model);
 
-    static int handleDataPoint(int it, UserData *udata, ReturnData *rdata,
+    static int handleDataPoint(int it, const UserData *udata, ReturnData *rdata,
                                const ExpData *edata, TempData *tdata,
                                Solver *solver, Model *model);
 
-    static int getDataOutput(int it, UserData *udata, ReturnData *rdata,
+    static int getDataOutput(int it, const UserData *udata, ReturnData *rdata,
                              const ExpData *edata, TempData *tdata,
                              Solver *solver, Model *model);
 
     static int prepDataSensis(int it, ReturnData *rdata, const ExpData *edata,
                               TempData *tdata, Model *model);
 
-    static int getDataSensisFSA(int it, UserData *udata, ReturnData *rdata,
-                                const ExpData *edata, TempData *tdata,
-                                Solver *solver, Model *model);
+    static int getDataSensisFSA(int it, const UserData *udata,
+                                ReturnData *rdata, const ExpData *edata,
+                                TempData *tdata, Solver *solver, Model *model);
 
     static int applyEventBolus(TempData *tdata, Model *model);
 
