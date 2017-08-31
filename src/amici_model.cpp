@@ -481,7 +481,7 @@ int Model::initHeaviside(TempData *tdata) {
 
     for (int ie = 0; ie < ne; ie++) {
         if (tdata->rootvals[ie] < 0) {
-            tdata->h_udata[ie] = 0.0;
+            tdata->h[ie] = 0.0;
         } else if (tdata->rootvals[ie] == 0) {
             errMsgIdAndTxt("AMICI:mex:initHeaviside",
                            "Simulation started in an event. This could lead to "
@@ -490,7 +490,7 @@ int Model::initHeaviside(TempData *tdata) {
                            "@amimodel.t0");
             return AMICI_ERROR_EVENT;
         } else {
-            tdata->h_udata[ie] = 1.0;
+            tdata->h[ie] = 1.0;
         }
     }
     return status;

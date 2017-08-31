@@ -289,7 +289,7 @@ int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
          the right update to the heaviside variables */
 
     for (int ie = 0; ie < ne; ie++) {
-        tdata->h_udata[ie] -= tdata->rootidx[iroot * ne + ie];
+        tdata->h[ie] -= tdata->rootidx[iroot * ne + ie];
     }
     return AMICI_SUCCESS;
 }

@@ -127,7 +127,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     UserData *udata = new UserData();
 
     /* time */
-    if (prhs[0] || mxGetM(prhs[0]) * mxGetN(prhs[0]) == 0) {
+    if (prhs[0] && mxGetM(prhs[0]) * mxGetN(prhs[0]) > 0) {
         udata->nt = (int)mxGetM(prhs[0]) * mxGetN(prhs[0]);
         udata->ts = new double[udata->nt];
         memcpy(udata->ts, mxGetPr(prhs[0]), sizeof(double) * udata->nt);
@@ -184,24 +184,26 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
 
     /* options */
     if (mxGetPr(prhs[3])) {
-        readOptionScalar(nmaxevent, int) readOptionScalar(tstart, double)
-            readOptionScalar(atol, double) readOptionScalar(rtol, double)
-                readOptionScalar(maxsteps, int) readOptionScalar(lmm, int)
-                    readOptionScalar(iter, int) readOptionScalar(
-                        interpType, int) readOptionScalar(linsol, int)
-                        readOptionScalar(stldet, booleantype) readOptionData(
-                            qpositivex) readOptionScalar(sensi,
-                                                         AMICI_sensi_order)
-                            readOptionScalar(pscale, AMICI_parameter_scaling)
-                                readOptionScalar(ism, int) readOptionScalar(
-                                    sensi_meth, AMICI_sensi_meth)
-                                    readOptionScalar(ordering, int)
-                                        readOptionScalar(newton_preeq, int)
-                                            readOptionScalar(newton_precon, int)
-                                                readOptionScalar(
-                                                    newton_maxsteps, int)
-                                                    readOptionScalar(
-                                                        newton_maxlinsteps, int)
+        readOptionScalar(nmaxevent, int)
+        readOptionScalar(tstart, double)
+        readOptionScalar(atol, double)
+        readOptionScalar(rtol, double)
+        readOptionScalar(maxsteps, int)
+        readOptionScalar(lmm, int)
+        readOptionScalar(iter, int)
+        readOptionScalar(interpType, int)
+        readOptionScalar(linsol, int)
+        readOptionScalar(stldet, booleantype)
+        readOptionData(qpositivex)
+        readOptionScalar(sensi,AMICI_sensi_order)
+        readOptionScalar(pscale, AMICI_parameter_scaling)
+        readOptionScalar(ism, int)
+        readOptionScalar(sensi_meth, AMICI_sensi_meth)
+        readOptionScalar(ordering, int)
+        readOptionScalar(newton_preeq, int)
+        readOptionScalar(newton_precon, int)
+        readOptionScalar(newton_maxsteps, int)
+        readOptionScalar(newton_maxlinsteps, int)
     } else {
         errMsgIdAndTxt("AMICI:mex:options", "No options provided!");
         goto freturn;
