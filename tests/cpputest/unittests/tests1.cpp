@@ -7,8 +7,34 @@
 
 #include <include/amici_solver_idas.h>
 #include <include/symbolic_functions.h>
+#include <include/amici_model.h>
 #include <cstring>
 #include <cmath>
+
+TEST_GROUP(amici)
+{
+    void setup() {
+
+    }
+
+    void teardown() {
+
+    }
+};
+
+TEST(amici, testRunAmiciSimulationStateMismatch) {
+    UserData udata(1, 2, 3);
+    Model model(4, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
+
+    CHECK_EQUAL(AMICI_ERROR_UDATA, runAmiciSimulation(&udata, nullptr, nullptr, &model));
+}
+
+TEST(amici, testRunAmiciSimulationRdataMissing) {
+    UserData udata(1, 2, 3);
+    Model model(1, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
+
+    CHECK_EQUAL(AMICI_ERROR_RDATA, runAmiciSimulation(&udata, nullptr, nullptr, &model));
+}
 
 TEST_GROUP(userData)
 {
@@ -96,7 +122,28 @@ TEST(symbolicFunctions, testMin) {
     CHECK_EQUAL(-1, am_min(amiGetNaN(), -1, 0));
 }
 
+TEST(symbolicFunctions, testMax) {
+    CHECK_EQUAL(2, am_max(-1, 2, 0));
+    CHECK_EQUAL(1, am_max(1, -2, 0));
+    CHECK_TRUE(amiIsNaN(am_max(amiGetNaN(), amiGetNaN(), 0)));
+    CHECK_EQUAL(-1, am_max(-1, amiGetNaN(), 0));
+    CHECK_EQUAL(-1, am_max(amiGetNaN(), -1, 0));
+}
 
+
+TEST(symbolicFunctions, testDMin) {
+    CHECK_EQUAL(0, Dam_min(1, -1, -2, 0));
+    CHECK_EQUAL(1, Dam_min(1, -1, 2, 0));
+    CHECK_EQUAL(1, Dam_min(2, -1, -2, 0));
+    CHECK_EQUAL(0, Dam_min(2, -1, 2, 0));
+}
+
+TEST(symbolicFunctions, testDMax) {
+    CHECK_EQUAL(1, Dam_max(1, -1, -2, 0));
+    CHECK_EQUAL(0, Dam_max(1, -1, 2, 0));
+    CHECK_EQUAL(0, Dam_max(2, -1, -2, 0));
+    CHECK_EQUAL(1, Dam_max(2, -1, 2, 0));
+}
 
 TEST_GROUP(amiciSolverIdas)
 {
