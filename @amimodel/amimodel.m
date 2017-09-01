@@ -226,6 +226,17 @@ classdef amimodel < handle
             this.modelname = modelname;
         end
         
+        function updateWrapPath(this,wrap_path)
+            % updateModelName updates the modelname
+            %
+            % Parameters:
+            %  wrap_path: new wrap_path
+            %
+            % Return values:
+            %  void
+            this.wrap_path = wrap_path;
+        end
+        
         parseModel(this)
         
         generateC(this)
