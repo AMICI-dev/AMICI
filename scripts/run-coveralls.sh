@@ -11,12 +11,8 @@ fi
 
 lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH} --zerocounters -q
 
-for MODELSTR in $TESTMODELS; do
-    MODEL=${MODELSTR#model_}
-    cd ${AMICI_PATH}/tests/cpputest/build/${MODEL}
-    ./model_${MODEL}_test
-done
-
+cd ${AMICI_PATH}/tests/cpputest/build
+ctest -V
 cd ${AMICI_PATH}
 
 lcov --compat-libtool --no-external --directory ${AMICI_PATH}/build/CMakeFiles/amici.dir/src --base-directory ${AMICI_PATH} --capture --output-file coverage.info

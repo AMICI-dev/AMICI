@@ -435,7 +435,7 @@ fprintf(fid,['        z2event = new int[' num2str(this.nz) '] {' num2str(transpo
 fprintf(fid,['        idlist = new realtype[' num2str(this.nx) '] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
 fprintf(fid,'    }\n\n');
 
-fprintf(fid,'    Solver *getSolver(){\n');
+fprintf(fid,'    Solver *getSolver() override {\n');
 if(strcmp(this.wtype,'iw'))
     fprintf(fid, '        return new IDASolver();\n');
 else
@@ -451,7 +451,7 @@ for iffun = this.funs
     else
         fun = amifun(iffun{1},this);
     end
-    fprintf(fid,['    int f' iffun{1} fun.fargstr ' {\n']);
+    fprintf(fid,['    int f' iffun{1} fun.fargstr ' override {\n']);
     fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
     fprintf(fid,'    }\n\n');
 end

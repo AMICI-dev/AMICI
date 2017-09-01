@@ -36,6 +36,7 @@ set_property(TARGET amici PROPERTY IMPORTED_LOCATION "${AMICI_DIR}/build/libamic
 set_property(TARGET amici PROPERTY INTERFACE_LINK_LIBRARIES
     "${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}"
     "${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}"
+    "${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}"
     "${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}"
     "${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}"
     "${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}"
@@ -50,6 +51,7 @@ set_property(TARGET amici PROPERTY INTERFACE_LINK_LIBRARIES
 
 enable_testing()
 
+add_subdirectory(unittests)
 add_subdirectory(dirac)
 add_subdirectory(steadystate)
 add_subdirectory(jakstat_adjoint)

@@ -10,8 +10,6 @@
 // TODO: don't use cvodes includes here
 #include <cvodes/cvodes_spils.h>
 
-Solver::~Solver() {}
-
 /**
  * @brief setupAMIs initialises the ami memory object
  * @param[in] udata pointer to the user data object @type UserData
