@@ -760,6 +760,46 @@ class Model {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
 
+    /**
+     * @brief Recurring terms in xdot
+     * @param[in] t timepoint @type realtype
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] dx Vector with the derivative states (only DAE) @type
+     *N_Vector
+     * @param[in] user_data object with model specifications @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fw(realtype t, N_Vector x, N_Vector dx, void *user_data) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+
+    /**
+     * @brief Recurring terms in xdot, parameter derivative
+     * @param[in] t timepoint @type realtype
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] dx Vector with the derivative states (only DAE) @type
+     *N_Vector
+     * @param[in] user_data object with model specifications @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fdwdp(realtype t, N_Vector x, N_Vector dx, void *user_data) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+
+    /**
+     * @brief Recurring terms in xdot, state derivative
+     * @param[in] t timepoint @type realtype
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] dx Vector with the derivative states (only DAE) @type
+     *N_Vector
+     * @param[in] user_data object with model specifications @type TempData
+     * @return status flag indicating successful execution @type int
+     * @return
+     */
+    virtual int fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+
     virtual ~Model();
 
     // Generic implementations
