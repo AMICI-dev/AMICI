@@ -246,3 +246,4 @@ examples/example_neuron/simulate_model_neuron_hdf.m
 examples/example_neuron/simulate_model_neuron.m
 
 scripts/env.sh
+examples/example_events/simulate_model_events_hdf.m
