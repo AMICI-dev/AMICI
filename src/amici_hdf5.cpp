@@ -158,7 +158,7 @@ ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
             assert(n == (unsigned)udata->nt);
             assert(m == (unsigned)model->nytrue);
         }
-        memcpy(edata->my, tmp_data, udata->nt * model->nytrue * sizeof(double));
+        edata->setObservedData(tmp_data);
         delete[] tmp_data;
 
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Y",
@@ -171,8 +171,7 @@ ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
             assert(n == (unsigned)udata->nt);
             assert(m == (unsigned)model->nytrue);
         }
-        memcpy(edata->sigmay, tmp_data,
-               udata->nt * model->nytrue * sizeof(double));
+        edata->setObservedDataStdDev(tmp_data);
         delete[] tmp_data;
 
         if (model->nz) {
@@ -188,8 +187,7 @@ ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
                 assert(n == (unsigned)udata->nmaxevent);
                 assert(m == (unsigned)model->nztrue);
             }
-            memcpy(edata->mz, tmp_data,
-                   udata->nmaxevent * model->nztrue * sizeof(double));
+            edata->setObservedEvents(tmp_data);
             delete[] tmp_data;
 
             AMI_HDF5_getDoubleArrayAttribute2D(file_id, dataObject, "Sigma_Z",
@@ -204,8 +202,7 @@ ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
                 assert(n == (unsigned)udata->nmaxevent);
                 assert(m == (unsigned)model->nztrue);
             }
-            memcpy(edata->sigmaz, tmp_data,
-                   udata->nmaxevent * model->nztrue * sizeof(double));
+            edata->setObservedEventsStdDev(tmp_data);
             delete[] tmp_data;
         }
     }
