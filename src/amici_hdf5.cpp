@@ -370,7 +370,7 @@ double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id,
 #endif
 
     if(status < 0)
-        warnMsgIdAndTxt("Attribute %s not found for object %s.", attributeName, optionsObject);
+        warnMsgIdAndTxt("", "Attribute %s not found for object %s.", attributeName, optionsObject);
 
     return status >= 0;
 }
@@ -384,7 +384,7 @@ int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char *optionsObject,
 #endif
 
     if(status < 0)
-        warnMsgIdAndTxt("Attribute %s not found for object %s.", attributeName, optionsObject);
+        warnMsgIdAndTxt("", "Attribute %s not found for object %s.", attributeName, optionsObject);
 
     return status >= 0;
 }
