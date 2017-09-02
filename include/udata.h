@@ -46,12 +46,18 @@ class UserData {
     void setConstants(const double *constants);
 
     /**
-     * @brief setPlist set parameter selection and ordering
+     * @brief setPlist set parameter selection and ordering.
+     * accepts array of doubles to deal with user input from matlab.
      * @param plist
      */
     void setPlist(const double *plist, int nplist);
     void setPlist(const int *plist, int nplist);
 
+    /**
+     * @brief Require computation of sensitiivities for all parameters p [0..np[
+     * in natural order.
+     */
+    void requireSensitivitiesForAllParameters();
     /**
      * @brief setPbar. Must not be called before setPlist
      * @param parameterScaling

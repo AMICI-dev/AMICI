@@ -86,6 +86,15 @@ void UserData::setPlist(const int *plist, int nplist) {
     memcpy(this->plist, plist, sizeof(int) * nplist);
 }
 
+void UserData::requireSensitivitiesForAllParameters()
+{
+    nplist = np;
+    plist = new int[nplist];
+    for (int i = 0; i < nplist; ++i)
+        plist[i] = i;
+
+}
+
 void UserData::setPbar(const double *parameterScaling) {
     if (pbar) {
         delete[] pbar;

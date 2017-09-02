@@ -1,6 +1,8 @@
 #include "include/amici_hdf5.h"
-#include "include/amici_interface_cpp.h"
 #include "include/amici_model.h"
+#include "include/udata.h"
+#include "include/edata.h"
+#include "include/rdata.h"
 
 #include <cassert>
 #include <cstring>
@@ -101,22 +103,17 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
             fileId, datasetPath, "pscale");
     }
 
-    // parameter selection and reordering for sensitivities (matlab: fifth
-    // argument)
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind",
                                   &udata->plist, &length);
-    assert(udata->nplist <= model->np);
-
     if (length > 0) {
         udata->nplist = length;
-        // TODO: currently base 1 indices are written
-        for (int i = 0; i < udata->nplist; ++i)
+        // currently base 1 indices are written
+        for (int i = 0; i < udata->nplist; ++i) {
             udata->plist[i] -= 1;
+            assert(udata->plist[i] >= 0 && udata->plist[i] < udata->np && "Indices in plist must be in [0..np[");
+        }
     } else {
-        udata->nplist = model->np;
-        udata->plist = new int[udata->nplist];
-        for (int i = 0; i < model->np; ++i)
-            udata->plist[i] = i;
+        udata->requireSensitivitiesForAllParameters();
     }
 
     /* Options ; matlab: fourth argument   */
