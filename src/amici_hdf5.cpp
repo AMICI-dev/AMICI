@@ -39,45 +39,25 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (udata == NULL)
         return (NULL);
 
-    udata->atol =
-        AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "atol");
-    udata->rtol =
-        AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "rtol");
-    udata->maxsteps =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps");
-    udata->tstart =
-        AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart");
-    udata->lmm = (LinearMultistepMethod)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "lmm");
-    udata->iter = (NonlinearSolverIteration)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "iter");
-    udata->linsol = (LinearSolver)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "linsol");
-    udata->stldet =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet");
-    udata->interpType = (InterpolationType)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "interpType");
-    udata->ism = (InternalSensitivityMethod)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "ism");
-    udata->sensi_meth = (AMICI_sensi_meth)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "sensi_meth");
-    udata->sensi = (AMICI_sensi_order)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "sensi");
-    udata->nmaxevent =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
-    udata->ordering = (StateOrdering)AMI_HDF5_getIntScalarAttribute(
-        fileId, datasetPath, "ordering");
-    udata->pscale = (AMICI_parameter_scaling)
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "pscale");
-
-    udata->newton_preeq =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_preeq");
-    udata->newton_precon =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_precon");
-    udata->newton_maxsteps =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxsteps");
-    udata->newton_maxlinsteps =
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxlinsteps");
+    AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "atol", &udata->atol);
+    AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "rtol", &udata->rtol);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps", &udata->maxsteps);
+    AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart", &udata->tstart);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm", (int*)&udata->lmm);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter", (int*)&udata->iter);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol", (int*)&udata->linsol);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "stldet", &udata->stldet);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "interpType", (int*)&udata->interpType);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ism", (int*)&udata->ism);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi_meth", (int*)&udata->sensi_meth);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "sensi", (int*)&udata->sensi);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent", &udata->nmaxevent);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "ordering", (int*)&udata->ordering);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "pscale", (int*)&udata->pscale);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_preeq", &udata->newton_preeq);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_precon", &udata->newton_precon);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxsteps", &udata->newton_maxsteps);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxlinsteps", &udata->newton_maxlinsteps);
 
     hsize_t length0, length1;
     double *buffer;
@@ -105,14 +85,9 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts",
                                                    &udata->ts, &length0);
-        udata->nt = AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt");
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt", &udata->nt);
         if (length0 != (unsigned)udata->nt || status > 0)
             return NULL;
-    }
-
-    if (AMI_HDF5_attributeExists(fileId, datasetPath, "pscale")) {
-        udata->pscale = (AMICI_parameter_scaling)AMI_HDF5_getIntScalarAttribute(
-            fileId, datasetPath, "pscale");
     }
 
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind",
@@ -377,31 +352,31 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata,
 
 double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id,
                                          const char *optionsObject,
-                                         const char *attributeName) {
-    double doubleScalar = NAN;
-
+                                         const char *attributeName, double *attributeValue) {
     herr_t status = H5LTget_attribute_double(file_id, optionsObject,
-                                             attributeName, &doubleScalar);
-    assert(status >= 0);
-
+                                             attributeName, attributeValue);
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %e\n", attributeName, doubleScalar);
+    printf("%s: %e\n", attributeName, *attributeValue);
 #endif
 
-    return doubleScalar;
+    if(status < 0)
+        warnMsgIdAndTxt("Attribute %s not found for object %s.", attributeName, optionsObject);
+
+    return status >= 0;
 }
 
 int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char *optionsObject,
-                                   const char *attributeName) {
-    int intScalar = 0;
-
-    H5LTget_attribute_int(file_id, optionsObject, attributeName, &intScalar);
+                                   const char *attributeName, int *attributeValue) {
+    herr_t status = H5LTget_attribute_int(file_id, optionsObject, attributeName, attributeValue);
 
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %d\n", attributeName, intScalar);
+    printf("%s: %d\n", attributeName, *attributeValue);
 #endif
 
-    return intScalar;
+    if(status < 0)
+        warnMsgIdAndTxt("Attribute %s not found for object %s.", attributeName, optionsObject);
+
+    return status >= 0;
 }
 
 int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id, const char *optionsObject,
