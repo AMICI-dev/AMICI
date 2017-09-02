@@ -67,6 +67,17 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nmaxevent");
     udata->ordering = (StateOrdering)AMI_HDF5_getIntScalarAttribute(
         fileId, datasetPath, "ordering");
+    udata->pscale = (AMICI_parameter_scaling)
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "pscale");
+
+    udata->newton_preeq =
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_preeq");
+    udata->newton_precon =
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_precon");
+    udata->newton_maxsteps =
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxsteps");
+    udata->newton_maxlinsteps =
+        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxlinsteps");
 
     hsize_t length0, length1;
     double *buffer;
@@ -367,7 +378,7 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata,
 double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id,
                                          const char *optionsObject,
                                          const char *attributeName) {
-    double doubleScalar;
+    double doubleScalar = NAN;
 
     herr_t status = H5LTget_attribute_double(file_id, optionsObject,
                                              attributeName, &doubleScalar);
@@ -382,7 +393,7 @@ double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id,
 
 int AMI_HDF5_getIntScalarAttribute(hid_t file_id, const char *optionsObject,
                                    const char *attributeName) {
-    int intScalar;
+    int intScalar = 0;
 
     H5LTget_attribute_int(file_id, optionsObject, attributeName, &intScalar);
 
