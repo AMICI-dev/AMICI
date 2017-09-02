@@ -26,7 +26,7 @@ function createTestingData()
     !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_steadystate_hdf.m
         
     % time vector
-    t = linspace(0,300,20);
+    t = linspace(0,100,50);
     p = [1;0.5;0.4;2;0.1];
     k = [0.1,0.4,0.7,1];
     
@@ -152,7 +152,33 @@ function createTestingData()
     amiHDFprefix = '/model_events/sensiforward/';
     options.sensi_meth = 'forward';
     simulate_model_events_hdf([],log10(p),[],D,options);
+
+    %% EXAMPLE EVENTS
+    cd([amiciPath '/examples/example_events/']);
     
+    [exdir,~,~]=fileparts(which('example_events.m'));
+    amiwrap('model_events', 'model_events_syms', exdir);
+    
+    !sed '$d' simulate_model_events.m > simulate_model_events_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_events_hdf.m
+    
+    t = linspace(0,10,20);
+    p = [0.5;2;0.5;0.5];
+    k = [4,8,10,4];
+    
+    options = amioption('sensi',0,...
+        'maxsteps',1e4);
+    D = amidata(length(t),1,2,2,4);
+    
+    amiHDFprefix = '/model_events/nosensi/';
+    options.sensi = 0;
+    simulate_model_events_hdf(t,log10(p),k,D,options);
+    
+    options.sensi = 1;
+    amiHDFprefix = '/model_events/sensiforward/';
+    options.sensi_meth = 'forward';
+    simulate_model_events_hdf(t,log10(p),k,D,options);
+
     %%
     chdir(oldwd)
 end

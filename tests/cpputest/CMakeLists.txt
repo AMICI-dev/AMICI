@@ -53,6 +53,7 @@ enable_testing()
 
 add_subdirectory(unittests)
 add_subdirectory(dirac)
+add_subdirectory(events)
 add_subdirectory(steadystate)
 add_subdirectory(jakstat_adjoint)
 add_subdirectory(neuron)
