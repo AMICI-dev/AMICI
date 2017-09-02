@@ -100,8 +100,12 @@ void UserData::setPbar(const double *parameterScaling) {
         delete[] pbar;
     }
 
-    pbar = new double[nplist];
-    memcpy(pbar, parameterScaling, sizeof(double) * nplist);
+    if(parameterScaling) {
+        pbar = new double[nplist];
+        memcpy(pbar, parameterScaling, sizeof(double) * nplist);
+    } else {
+        pbar = nullptr;
+    }
 }
 
 void UserData::setStateInitialization(const double *stateInitialization) {
@@ -109,8 +113,12 @@ void UserData::setStateInitialization(const double *stateInitialization) {
         delete[] x0data;
     }
 
-    x0data = new double[nx];
-    memcpy(x0data, stateInitialization, sizeof(double) * nx);
+    if(stateInitialization) {
+        x0data = new double[nx];
+        memcpy(x0data, stateInitialization, sizeof(double) * nx);
+    } else {
+        x0data = nullptr;
+    }
 }
 
 void UserData::setSensitivityInitialization(
@@ -119,8 +127,12 @@ void UserData::setSensitivityInitialization(
         delete[] sx0data;
     }
 
-    sx0data = new double[nx * nplist];
-    memcpy(sx0data, sensitivityInitialization, sizeof(double) * nx * nplist);
+    if(sensitivityInitialization) {
+        sx0data = new double[nx * nplist];
+        memcpy(sx0data, sensitivityInitialization, sizeof(double) * nx * nplist);
+    } else {
+        sx0data = nullptr;
+    }
 }
 
 UserData::~UserData() {
