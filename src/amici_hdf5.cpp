@@ -41,8 +41,8 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
 
     AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "atol", &udata->atol);
     AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "rtol", &udata->rtol);
-    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps", &udata->maxsteps);
     AMI_HDF5_getDoubleScalarAttribute(fileId, datasetPath, "tstart", &udata->tstart);
+    AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "maxsteps", &udata->maxsteps);
     AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "lmm", (int*)&udata->lmm);
     AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "iter", (int*)&udata->iter);
     AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "linsol", (int*)&udata->linsol);
@@ -60,26 +60,26 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "newton_maxlinsteps", &udata->newton_maxlinsteps);
 
     hsize_t length0, length1;
-    double *buffer;
+    double *buffer = NULL;
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(
         fileId, datasetPath, "qpositivex", &udata->qpositivex, &length0);
     if (length0 != (unsigned)model->nx)
-        return NULL;
+        goto freturn;
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta",
                                                    &udata->p, &length0);
         if ((unsigned)model->np != length0)
-            return NULL;
+            goto freturn;
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa",
                                                    &udata->k, &length0);
         if (length0 != (unsigned)model->nk)
-            return NULL;
+            goto freturn;
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
@@ -87,7 +87,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
                                                    &udata->ts, &length0);
         AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt", &udata->nt);
         if (length0 != (unsigned)udata->nt || status > 0)
-            return NULL;
+            goto freturn;
     }
 
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind",
@@ -106,31 +106,44 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "x0")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "x0",
                                                    &buffer, &length0);
-        if (length0 != 0 && length0 != (unsigned)model->nx)
-            return NULL;
-        udata->setStateInitialization(buffer);
-        delete[] buffer;
+        if (length0 == 0 || length0 == (unsigned)model->nx) {
+            udata->setStateInitialization(buffer);
+            delete[] buffer;
+            buffer = NULL;
+        } else {
+            goto freturn;
+        }
+
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "sx0")) {
         status += AMI_HDF5_getDoubleArrayAttribute2D(fileId, datasetPath, "sx0",
                                                    &buffer, &length0, &length1);
-        if ((length0 * length1 != 0) && (length0 != (unsigned)model->nx || length1 != (unsigned)udata->nplist))
-            return NULL;
+        if ((length0 * length1 != 0) &&
+                        (length0 != (unsigned)model->nx || length1 != (unsigned)udata->nplist))
+            goto freturn;
         udata->setSensitivityInitialization(buffer);
         delete[] buffer;
+        buffer = NULL;
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "pbar")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "pbar",
                                                    &buffer, &length0);
         if (length0 != 0 && length0 != (unsigned)udata->nplist)
-            return NULL;
+            goto freturn;
         udata->setPbar(buffer);
         delete[] buffer;
+        buffer = NULL;
     }
 
     return udata;
+
+freturn:
+    delete udata;
+    if(buffer)
+        delete[] buffer;
+    return NULL;
 }
 
 ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
