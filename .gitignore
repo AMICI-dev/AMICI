@@ -59,6 +59,14 @@ models/model_neuron/build/*
 
 models/model_neuron_o2/build/*
 
+!models/model_events
+
+models/model_events/build/*
+
+!models/model_nested_events
+
+models/model_nested_events/build/*
+
 .DS_Store
 
 index.html
@@ -226,6 +234,10 @@ examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint.m
 examples/example_steadystate/simulate_model_steadystate_hdf.m
 
 examples/example_dirac/simulate_model_dirac_hdf.m
+
+examples/example_nested_events/simulate_model_nested_events_hdf.m
+
+examples/example_events/simulate_model_events_hdf.m
 
 examples/example_jakstat_adjoint/simulate_model_jakstat_adjoint_hdf.m
 

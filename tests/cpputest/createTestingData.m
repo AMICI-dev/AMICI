@@ -14,6 +14,7 @@ function createTestingData()
     global amiHDFfile
     global amiHDFprefix;
     amiHDFfile = [amiciPath '/tests/cpputest/expectedResults.h5'];
+    delete(amiHDFfile) 
 
     %% EXAMPLE STEADYSTATE
 
@@ -122,13 +123,62 @@ function createTestingData()
     options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
-    %% EXAMPLE NEURON
+        %% EXAMPLE NEURON
+    cd([amiciPath '/examples/example_neuron/']);
+    
+    [exdir,~,~]=fileparts(which('example_neuron.m'));
+     amiwrap('model_neuron', 'model_neuron_syms', exdir, 1);
+
+    !sed '$d' simulate_model_neuron.m > simulate_model_neuron_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_neuron_hdf.m
+
+    p = [0.02 0.3 65 0.9];
+
+    k = [-60,10];
+    
+    t = linspace(0,100,100);
+
+    options = amioption('sensi',0,...
+        'maxsteps',1e5,...
+        'nmaxevent',22);
+
+    sol = simulate_model_neuron(t,log10(p),k,[],options);
+    
+    D = amidata(length(t),1,size(sol.z(sol.z<t(end)),2),size(sol.z(sol.z<t(end)),1),2);
+    
+    rng(0);
+    D.Z = sol.z(sol.z<t(end));
+    t = linspace(0,D.Z(end)-0.1,100);
+    D.Z = D.Z + 0.5*randn(size(D.Z));
+    D.Z(3) = NaN;
+    D.Sigma_Z = 0.5*ones(size(D.Z));
+    D.Z = D.Z + D.Sigma_Z.*randn(size(D.Z));
+    
+    D.t = t;
+    D.condition = k;
+    
+    amiHDFprefix = '/model_neuron/nosensi/';
+    options.sensi = 0;
+    simulate_model_neuron_hdf([],log10(p),[],D,options);
+    
+    options.sensi = 1;
+    amiHDFprefix = '/model_neuron/sensiforward/';
+    options.sensi_meth = 'forward';
+    simulate_model_neuron_hdf([],log10(p),[],D,options);
+
+    amiHDFprefix = '/model_neuron/sensi2forward/';
+    options.sensi = 2;
+    options.sensi_meth = 'forward';
+    simulate_model_neuron_hdf([],log10(p),[],D,options);
+    
+    
+    %% EXAMPLE EVENTS
     cd([amiciPath '/examples/example_events/']);
     
     [exdir,~,~]=fileparts(which('example_events.m'));
-     amiwrap('model_events', 'model_events_syms', exdir, 1);
+     amiwrap('model_events', 'model_events_syms', exdir);
 
-    !sed '$d' simulate_model_events.m > simulate_model_evetns_hdf.m
+    !sed '$d' simulate_model_events.m > simulate_model_events_hdf.m
     !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_events_hdf.m
 
     p = [0.5;2;0.5;0.5];
@@ -148,36 +198,43 @@ function createTestingData()
     options.sensi = 0;
     simulate_model_events_hdf([],log10(p),k,D,options);
     
-    options.sensi = 1;
     amiHDFprefix = '/model_events/sensiforward/';
+    options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_events_hdf([],log10(p),[],D,options);
-
-    %% EXAMPLE EVENTS
-    cd([amiciPath '/examples/example_events/']);
     
-    [exdir,~,~]=fileparts(which('example_events.m'));
-    amiwrap('model_events', 'model_events_syms', exdir);
+    %% EXAMPLE NESTED_EVENTS
+    cd([amiciPath '/examples/example_nested_events/']);
     
-    !sed '$d' simulate_model_events.m > simulate_model_events_hdf.m
-    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_events_hdf.m
+    [exdir,~,~]=fileparts(which('example_nested_events.m'));
+    amiwrap('model_nested_events', 'model_nested_events_syms', exdir);
     
-    t = linspace(0,10,20);
-    p = [0.5;2;0.5;0.5];
-    k = [4,8,10,4];
+    !sed '$d' simulate_model_nested_events.m > simulate_model_nested_events_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_nested_events_hdf.m
+    
+    t = linspace(0,20,100);
+    p = [ 0.1
+        1000
+        2
+        8e-1
+        1.6   ];
+    k = [];
     
     options = amioption('sensi',0,...
-        'maxsteps',1e4);
-    D = amidata(length(t),1,2,2,4);
+        'maxsteps',1e4,...
+        'rtol',1e-12,...
+        'ato',1e-10,...
+        'nmaxevent', 2);
+    D = amidata(length(t),1,0,2,0);
     
-    amiHDFprefix = '/model_events/nosensi/';
+    amiHDFprefix = '/model_nested_events/nosensi/';
     options.sensi = 0;
-    simulate_model_events_hdf(t,log10(p),k,D,options);
+    simulate_model_nested_events_hdf(t,log10(p),k,D,options);
     
+    amiHDFprefix = '/model_nested_events/sensiforward/';
     options.sensi = 1;
-    amiHDFprefix = '/model_events/sensiforward/';
     options.sensi_meth = 'forward';
-    simulate_model_events_hdf(t,log10(p),k,D,options);
+    simulate_model_nested_events_hdf(t,log10(p),k,D,options);
 
     %%
     chdir(oldwd)
