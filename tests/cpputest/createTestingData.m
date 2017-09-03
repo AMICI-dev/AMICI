@@ -123,6 +123,18 @@ function createTestingData()
     options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
+    amiHDFprefix = '/model_jakstat_adjoint/sensiforwardlogparam/';
+    options.sensi = 1;
+    options.pscale = 'log';
+    options.sensi_meth = 'forward';
+    simulate_model_jakstat_adjoint_hdf([],log(10.^xi_rand),[],D,options);
+    
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2forwardlogparam/';
+    options.sensi = 2;
+    options.pscale = 'log';
+    options.sensi_meth = 'forward';
+    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
+    
     %% EXAMPLE NEURON
     cd([amiciPath '/examples/example_neuron/']);
     
