@@ -84,10 +84,12 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "ts",
-                                                   &udata->ts, &length0);
-        AMI_HDF5_getIntScalarAttribute(fileId, datasetPath, "nt", &udata->nt);
-        if (length0 != (unsigned)udata->nt || status > 0)
+                                                   &buffer, &length0);
+        if (status != 0)
             goto freturn;
+        udata->setTimepoints(buffer, length0);
+        delete[] buffer;
+        buffer = NULL;
     }
 
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind",
