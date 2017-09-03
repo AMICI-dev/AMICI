@@ -123,7 +123,7 @@ function createTestingData()
     options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
-        %% EXAMPLE NEURON
+    %% EXAMPLE NEURON
     cd([amiciPath '/examples/example_neuron/']);
     
     [exdir,~,~]=fileparts(which('example_neuron.m'));
