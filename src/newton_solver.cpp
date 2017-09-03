@@ -317,12 +317,16 @@ int NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
 
     /* Get factorization of sparse Jacobian */
     if (status == AMICI_SUCCESS) {
+        if(symbolic) /* if symbolic was already created free first to avoid memory leak */
+            klu_free_symbolic(&symbolic, &common);
         symbolic = klu_analyze(model->nx, (tdata->J)->indexptrs,
                                (tdata->J)->indexvals, &common);
-        if (symbolic != NULL) {
+        if (symbolic) {
+            if(numeric) /* if numeric was already created free first to avoid memory leak */
+                klu_free_numeric(&numeric, &common);
             numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals,
                                  (tdata->J)->data, symbolic, &common);
-            if (numeric != NULL) {
+            if (numeric) {
                 status = AMICI_SUCCESS;
             } else {
                 status = AMICI_ERROR_NEWTON_LINSOLVER;
@@ -365,8 +369,10 @@ NewtonSolverSparse::~NewtonSolverSparse() {
     N_VDestroy_Serial(tmp1);
     N_VDestroy_Serial(tmp2);
     N_VDestroy_Serial(tmp3);
-    klu_free_symbolic(&symbolic, &common);
-    klu_free_numeric(&numeric, &common);
+    if(symbolic)
+        klu_free_symbolic(&symbolic, &common);
+    if(numeric)
+        klu_free_numeric(&numeric, &common);
 }
 
 /* ----------------------------------------------------------------------------------
