@@ -115,9 +115,9 @@ class NewtonSolverSparse : public NewtonSolver {
     /** klu common storage? */
     klu_common common;
     /** klu symbolic storage? */
-    klu_symbolic *symbolic;
+    klu_symbolic *symbolic = nullptr;
     /** klu numeric stoarge? */
-    klu_numeric *numeric;
+    klu_numeric *numeric = nullptr;
     /** klu status flag  */
     int klu_status = 0;
 };

@@ -67,6 +67,9 @@ rm ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
 if [ -f ${AMICI_PATH}/mtoc/warnings.log  ]; then
     # check if warnings log is empty
 if [ -s ${AMICI_PATH}/mtoc/warnings.log ]; then
+        echo "DOXYGEN failed:"
+        cat ${AMICI_PATH}/mtoc/warnings.log
+        rm ${AMICI_PATH}/mtoc/warnings.log
         exit 1
     else
         exit 0

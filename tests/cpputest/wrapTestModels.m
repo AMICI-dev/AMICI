@@ -55,5 +55,29 @@ function wrapTestModels()
 
     cd(fileparts(mfilename('fullpath')));
     
+    %% EXAMPLE EVENTS
+    cd([amiciPath '/examples/example_events/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_events.m'));
+        amiwrap('model_events', 'model_events_syms', exdir);
+    catch err
+        disp(err.message)
+        cd(fileparts(mfilename('fullpath')));
+    end
+    
+    %% EXAMPLE NESTED EVENTS
+    cd([amiciPath '/examples/example_nested_events/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_nested_events.m'));
+        amiwrap('model_nested_events', 'model_nested_events_syms', exdir);
+    catch err
+        disp(err.message)
+        cd(fileparts(mfilename('fullpath')));
+    end
+
+    cd(fileparts(mfilename('fullpath')));
+    
 end
 

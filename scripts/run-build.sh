@@ -105,7 +105,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 
-TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_adjoint_o2 model_neuron model_neuron_o2"
+TESTMODELS="model_dirac model_steadystate model_jakstat_adjoint model_jakstat_adjoint_o2 model_neuron model_neuron_o2 model_events model_nested_events"
 for MODEL in $TESTMODELS; do
 mkdir -p ${AMICI_PATH}/models/${MODEL}/build
 cd ${AMICI_PATH}/models/${MODEL}/build
