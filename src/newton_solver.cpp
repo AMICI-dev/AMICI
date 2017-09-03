@@ -354,6 +354,11 @@ int NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
     klu_status = klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
     if (klu_status == 1)
         status = AMICI_SUCCESS;
+    
+    if(symbolic)
+        klu_free_symbolic(&symbolic, &common);
+    if(numeric)
+        klu_free_numeric(&numeric, &common);
 
     return status;
 }
@@ -365,10 +370,6 @@ NewtonSolverSparse::~NewtonSolverSparse() {
     N_VDestroy_Serial(tmp1);
     N_VDestroy_Serial(tmp2);
     N_VDestroy_Serial(tmp3);
-    if(symbolic)
-        klu_free_symbolic(&symbolic, &common);
-    if(numeric)
-        klu_free_numeric(&numeric, &common);
 }
 
 /* ----------------------------------------------------------------------------------
