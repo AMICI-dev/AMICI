@@ -84,11 +84,11 @@ EXTERNC herr_t AMI_HDF5_createAndWriteDouble3DAttribute(
 
 EXTERNC double AMI_HDF5_getDoubleScalarAttribute(hid_t file_id,
                                                  const char *optionsObject,
-                                                 const char *attributeName);
+                                                 const char *attributeName, double *attributeValue);
 
 EXTERNC int AMI_HDF5_getIntScalarAttribute(hid_t file_id,
                                            const char *optionsObject,
-                                           const char *attributeName);
+                                           const char *attributeName, int *attributeValue);
 
 EXTERNC int AMI_HDF5_getDoubleArrayAttribute(hid_t file_id,
                                              const char *optionsObject,
@@ -101,7 +101,7 @@ EXTERNC void AMI_HDF5_getIntArrayAttribute(hid_t file_id,
                                            const char *attributeName,
                                            int **destination, hsize_t *length);
 
-EXTERNC void AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
+EXTERNC int AMI_HDF5_getDoubleArrayAttribute2D(hid_t file_id,
                                                 const char *optionsObject,
                                                 const char *attributeName,
                                                 double **destination,

@@ -1,10 +1,8 @@
 #ifndef amici_h
 #define amici_h
 
-#include <cstdbool>
 #include <cvodes/cvodes.h>
 #include <include/symbolic_functions.h>
-
 #include <include/amici_defines.h>
 
 class UserData;
@@ -23,21 +21,23 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN,
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 
-void printErrMsgIdAndTxt(const char *identifier, const char *msg, ...);
 
-void printWarnMsgIdAndTxt(const char *identifier, const char *msg, ...);
+void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
+
+void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...);
 
 /**
  * @brief msgIdAndTxtFp
  * @param identifier string with error message identifier
- * @param err_msg string with error message printf-style format
- * @param ... unused
+ * @param format string with error message printf-style format
+ * @param ... arguments to be formatted
  */
-typedef void (*msgIdAndTxtFp)(const char *identifier, const char *err_msg, ...);
+typedef void (*msgIdAndTxtFp)(const char *identifier, const char *format, ...);
 
 // function pointers to process errors / warnings
 extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
+
 
 int runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model);
