@@ -40,6 +40,16 @@ function createTestingData()
     amiHDFprefix = '/model_steadystate/sensiforward/';
     options.sensi = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/sensiforwarddense/';
+    options.sensi = 1;
+    options.linsol = 1;
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/nosensiSPBCG/';
+    options.sensi = 0;
+    options.linsol = 7;
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
 
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
