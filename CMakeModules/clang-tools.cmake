@@ -5,7 +5,6 @@ execute_process(COMMAND sh -c "git ls-tree -r HEAD --name-only src/*.cpp include
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE ALL_CXX_SOURCE_FILES
     )
-message(STATUS ${ALL_CXX_SOURCE_FILES})
 ############ clang-tidy ############
 
 # Try to find clang-format and add target if successful
