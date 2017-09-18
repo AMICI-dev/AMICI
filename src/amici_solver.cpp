@@ -82,8 +82,7 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                     AMICI_SUCCESS)
                     goto freturn;
             } else {
-                int ip;
-                for (ip = 0; ip < udata->nplist; ip++) {
+                for (int ip = 0; ip < udata->nplist; ip++) {
                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                     if (!sx_tmp)
                         goto freturn;
