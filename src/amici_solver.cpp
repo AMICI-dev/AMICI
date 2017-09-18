@@ -70,35 +70,37 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
         goto freturn;
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (udata->sensi_meth == AMICI_SENSI_FSA) {
-            if (model->nx > 0) {
+        
+        if (model->nx > 0) {
 
-                /* initialise sensitivities, this can either be user provided or
-                 * come from the model definition */
-                realtype *sx_tmp;
+            /* initialise sensitivities, this can either be user provided or
+             * come from the model definition */
+            realtype *sx_tmp;
 
-                if (!udata->sx0data) {
-                    if (model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata) !=
-                        AMICI_SUCCESS)
-                        goto freturn;
-                } else {
-                    int ip;
-                    for (ip = 0; ip < udata->nplist; ip++) {
-                        sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                        if (!sx_tmp)
-                            goto freturn;
-                        int ix;
-                        for (ix = 0; ix < model->nx; ix++) {
-                            sx_tmp[ix] =
-                                (realtype)udata->sx0data[ix + model->nx * ip];
-                        }
-                    }
-                }
-
-                if (model->fsdx0(tdata->sdx, tdata->x, tdata->dx, tdata) !=
+            if (!udata->sx0data) {
+                if (model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata) !=
                     AMICI_SUCCESS)
                     goto freturn;
+            } else {
+                int ip;
+                for (ip = 0; ip < udata->nplist; ip++) {
+                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                    if (!sx_tmp)
+                        goto freturn;
+                    int ix;
+                    for (ix = 0; ix < model->nx; ix++) {
+                        sx_tmp[ix] =
+                            (realtype)udata->sx0data[ix + model->nx * ip];
+                    }
+                }
+            }
 
+            if (model->fsdx0(tdata->sdx, tdata->x, tdata->dx, tdata) !=
+                AMICI_SUCCESS)
+                goto freturn;
+            
+            if (udata->sensi_meth == AMICI_SENSI_FSA) {
+                
                 /* Activate sensitivity calculations */
                 if (sensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS)
                     goto freturn;
