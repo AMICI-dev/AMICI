@@ -104,21 +104,47 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
             }
         }
     }
-
+    
+    realtype *x_tmp;
+    if(udata->x0data) {
+        x_tmp = NV_DATA_S(tdata->x);
+        for (ix = 0; ix < model->nx; ix++)
+            x_tmp[ix] = (realtype)udata->x0data[ix];
+    } else {
+        status = model->fx0(tdata->x, tdata);
+        if (status != AMICI_SUCCESS)
+            return status;
+    }
+    /*
     status = model->fx0(tdata->x, tdata);
     if (status != AMICI_SUCCESS)
         return status;
+     */
     status = model->fdx0(tdata->x, tdata->dx, tdata);
     if (status != AMICI_SUCCESS)
         return status;
+    
+    realtype *sx_tmp;
+    if(udata->sx0data) {
+        for (ip = 0; ip < rdata->nplist; ip++) {
+            sx_tmp = NV_DATA_S(tdata->sx[ip]);
+            for (ix = 0; ix < model->nx; ix++)
+                sx_tmp[ix] = (realtype)udata->sx0data[ix + model->nx * ip];
+        }
+    } else {
+        status = model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata);
+        if (status != AMICI_SUCCESS)
+            return status;
+    }
+    /*
     status = model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata);
     if (status != AMICI_SUCCESS)
         return status;
-
+     */
+    
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
         return AMICI_ERROR_ASA;
-    realtype *sx_tmp;
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
