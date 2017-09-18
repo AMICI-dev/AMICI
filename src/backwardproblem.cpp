@@ -104,21 +104,11 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
             }
         }
     }
-
-    status = model->fx0(tdata->x, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
-    status = model->fdx0(tdata->x, tdata->dx, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
-    status = model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
-
+    
+    realtype *sx_tmp;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
         return AMICI_ERROR_ASA;
-    realtype *sx_tmp;
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
