@@ -87,8 +87,7 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                     sx_tmp = NV_DATA_S(tdata->sx[ip]);
                     if (!sx_tmp)
                         goto freturn;
-                    int ix;
-                    for (ix = 0; ix < model->nx; ix++) {
+                    for (int ix = 0; ix < model->nx; ix++) {
                         sx_tmp[ix] =
                             (realtype)udata->sx0data[ix + model->nx * ip];
                     }
