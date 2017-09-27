@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <cstdarg>
 /** MS definition of PI and other constants */
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -81,8 +82,16 @@ int runAmiciSimulation(const UserData *udata, const ExpData *edata,
  * @param[in] msg error message @type char
  * @return void
  */
-void printErrMsgIdAndTxt(const char *identifier, const char *msg, ...) {
-    printf("[Error] %s: %s\n", identifier, msg);
+void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
+    if(identifier != NULL && *identifier != '\0')
+        fprintf(stderr, "[Error] %s: ", identifier);
+    else
+        fprintf(stderr, "[Error] ");
+    va_list argptr;
+    va_start(argptr,format);
+    vfprintf(stderr, format, argptr);
+    va_end(argptr);
+    fprintf(stderr, "\n");
 }
 
 /*!
@@ -93,6 +102,14 @@ void printErrMsgIdAndTxt(const char *identifier, const char *msg, ...) {
  * @param[in] msg warning message @type char
  * @return void
  */
-void printWarnMsgIdAndTxt(const char *identifier, const char *msg, ...) {
-    printf("[Warning] %s: %s\n", identifier, msg);
+void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
+    if(identifier != NULL && *identifier != '\0')
+        printf("[Warning] %s: ", identifier);
+    else
+        printf("[Warning] ");
+    va_list argptr;
+    va_start(argptr,format);
+    vprintf(format, argptr);
+    va_end(argptr);
+    printf("\n");
 }

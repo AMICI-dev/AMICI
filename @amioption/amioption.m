@@ -31,10 +31,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         stldet = true;
         % interpolation type
         interpType = 1;
-        % linear multistep method (backwards)
-        lmmB = 2;
-        % iteration method for linear multistep (backwards).
-        iterB = 2;
         % forward sensitivity mode
         ism = 1;
         % sensitivity method

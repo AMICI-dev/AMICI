@@ -22,6 +22,8 @@
 #include <include/tdata.h>
 #include <include/udata.h>
 
+
+
 int CVodeSolver::init(N_Vector x, N_Vector dx, realtype t) {
     return CVodeInit(ami_mem, resultFunction, RCONST(t), x);
 }

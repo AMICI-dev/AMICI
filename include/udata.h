@@ -46,11 +46,18 @@ class UserData {
     void setConstants(const double *constants);
 
     /**
-     * @brief setPlist set parameter selection and ordering
+     * @brief setPlist set parameter selection and ordering.
+     * accepts array of doubles to deal with user input from matlab.
      * @param plist
      */
     void setPlist(const double *plist, int nplist);
     void setPlist(const int *plist, int nplist);
+
+    /**
+     * @brief Require computation of sensitiivities for all parameters p [0..np[
+     * in natural order.
+     */
+    void requireSensitivitiesForAllParameters();
 
     /**
      * @brief setPbar. Must not be called before setPlist
@@ -107,7 +114,8 @@ class UserData {
     /** scaling of parameters (size nplist) */
     double *pbar = nullptr;
 
-    /** scaling of states (size nx) */
+    /** scaling of states (size nx)
+     * NOTE: currently not used */
     double *xbar = nullptr;
 
     /** flag indicating whether sensitivities are supposed to be computed */
@@ -151,8 +159,7 @@ class UserData {
      */
     InterpolationType interpType = HERMITE;
 
-    /** specifies the linear multistep method and may be one of two possible
-     * values: CV ADAMS or CV BDF.
+    /** specifies the linear multistep method.
      */
     LinearMultistepMethod lmm = BDF;
 
@@ -164,7 +171,7 @@ class UserData {
     /** flag controlling stability limit detection */
     booleantype stldet = true;
 
-    /** state initialisation (size np) */
+    /** state initialisation (size nx) */
     double *x0data = nullptr;
 
     /** sensitivity initialisation (size nx * nplist) */

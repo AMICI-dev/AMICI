@@ -91,7 +91,8 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     hsize_t m, n;
     double *expected;
 
-    double llhExp = AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh");
+    double llhExp = NAN;
+    AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh", &llhExp);
     CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);

@@ -35,6 +35,7 @@ else()
 endif()
 
 include_directories("${AMICI_DIR}")
+include_directories("${AMICI_DIR}/include")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${AMICI_DIR}/sundials/src")
@@ -68,9 +69,16 @@ set(AMICI_SRC_LIST
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
+if(APPLE)
+    set(SHARED_OBJECT_EXTENSION .dylib)
+else()
+    set(SHARED_OBJECT_EXTENSION .so)
+endif()
+
 target_link_libraries(${PROJECT_NAME}
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
     ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
+    ${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
@@ -87,3 +95,25 @@ if($ENV{ENABLE_GCOV_COVERAGE})
 endif()
 
 include(CMakeModules/clang-tools.cmake)
+
+# <Export cmake configuration>
+include(GenerateExportHeader)
+generate_export_header(amici)
+install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+export(EXPORT AmiciTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake"
+  NAMESPACE Upstream::
+)
+get_property(AmiciConfigIncludes DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+configure_file(CMakeModules/AmiciConfig.cmake
+  "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+  @ONLY
+)
+# Register package
+export(PACKAGE Amici)
+# </Export cmake configuration>

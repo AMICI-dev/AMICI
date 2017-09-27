@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
 
-set(AMICI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+set(AMICI_DIR "${CMAKE_CURRENT_LIST_DIR}/../../")
 set(MODEL_DIR "${AMICI_DIR}/models/model_jakstat_adjoint_o2")
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
@@ -92,6 +92,7 @@ target_link_libraries(${PROJECT_NAME}
     ${AMICI_DIR}/build/libamici.a
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
     ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
+    ${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
     ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}

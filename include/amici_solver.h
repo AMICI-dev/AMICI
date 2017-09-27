@@ -16,9 +16,9 @@ class Model;
 */
 class Solver {
   public:
-    Solver() {}
+    Solver() = default;
 
-    virtual ~Solver();
+    virtual ~Solver() = default;
 
     int setupAMI(const UserData *udata, TempData *tdata, Model *model);
 
@@ -769,7 +769,7 @@ class Solver {
      */
     virtual void *AMIGetAdjBmem(void *ami_mem, int which) = 0;
 
-    int setLinearSolver(const UserData *udata, Model *model);
+    int setLinearSolver(const UserData *udata, Model *model);  
 
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
