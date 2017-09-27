@@ -57,7 +57,7 @@ this.HTable(1).p = CalcMD5(char(this.sym.p));
 this.HTable(1).k = CalcMD5(char(this.sym.k));
 this.HTable(1).x0 = CalcMD5(char(this.sym.x0));
 if(nevent>0)
-    this.HTable(1).trigger = CalcMD5(char([this.event.trigger]));
+    this.HTable(1).root = CalcMD5(char([this.event.trigger]));
     this.HTable(1).deltax = CalcMD5(char([this.event.bolus]));
     this.HTable(1).z = CalcMD5(char([this.event.z]));
 end
