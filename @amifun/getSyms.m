@@ -220,7 +220,7 @@ function [this,model] = getSyms(this,model)
 
             
             ws = cell(nw,1);
-            ts = cell(nw,1);
+            % ts = cell(nw,1);
             % fill cell array
             for iw = 1:nw
                 ws{iw} = sprintf('var_w_%i', iw-1);
@@ -245,7 +245,7 @@ function [this,model] = getSyms(this,model)
             w = this.strsym;
 
         case 'dwdx'
-            if(length(model.fun.w.sym)>0)
+            if(~isempty(model.fun.w.sym))
                 jacx = jacobian(model.fun.w.sym,x);
                 this.sym = jacx;
                 for idw = 1:ndw
@@ -272,7 +272,7 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'dwdp'
-            if(length(model.fun.w.sym)>0)
+            if(~isempty(model.fun.w.sym))
                 jacp = jacobian(model.fun.w.sym,p);
                 this.sym = jacp;
                 for idw = 1:ndw
@@ -330,6 +330,72 @@ function [this,model] = getSyms(this,model)
             % fill nonzero entries
             this.strsym(idx) = Js;
             
+        case 'dJdx'
+            if(strcmp(model.wtype,'iw'))
+                syms cj
+                this.sym = jacobian(model.fun.dfdx.sym - cj*model.fun.M.sym,x);
+            else
+                if(~isempty(w))
+                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),x) ...
+                        + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym,x) ...
+                        + jacobian(jacobian(model.fun.xdot.sym,w),w)*model.fun.dwdx.strsym*model.fun.dwdx.strsym ...
+                        + jacobian(model.fun.xdot.sym,w)*jacobian(model.fun.dwdx.strsym,x);
+                    this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,x),x);
+                else
+                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),x);
+                    this.sym_noopt = this.sym;
+                end
+            end
+            
+            %%
+            % build short strings for reuse of jacobian
+            
+            % find nonzero entries
+            idx = find(this.sym);
+            % create cell array of same size
+            dJdxs = sym(zeros(length(idx),1));
+            % fill cells with strings
+            for iJ = 1:length(idx)
+                dJdxs(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
+            end
+            % create full symbolic matrix
+            this.strsym = sym(zeros(nx,nx));
+            % fill nonzero entries
+            this.strsym(idx) = dJdxs;
+            
+        case 'dJdp'
+            if(strcmp(model.wtype,'iw'))
+                syms cj
+                this.sym = jacobian(model.fun.dfdx.sym - cj*model.fun.M.sym,x);
+            else
+                if(~isempty(w))
+                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),p) ...
+                        + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym,p) ...
+                        + jacobian(jacobian(model.fun.xdot.sym,w),w)*model.fun.dwdx.strsym*model.fun.dwdp.strsym ...
+                        + jacobian(model.fun.xdot.sym,w)*jacobian(model.fun.dwdx.strsym,p);
+                    this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,x),p);
+                else
+                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),p);
+                    this.sym_noopt = this.sym;
+                end
+            end
+            
+            %%
+            % build short strings for reuse of jacobian
+            
+            % find nonzero entries
+            idx = find(this.sym);
+            % create cell array of same size
+            dJdxs = sym(zeros(length(idx),1));
+            % fill cells with strings
+            for iJ = 1:length(idx)
+                dJdxs(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
+            end
+            % create full symbolic matrix
+            this.strsym = sym(zeros(nx,nx));
+            % fill nonzero entries
+            this.strsym(idx) = dJdxs;
+            
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);
             this = makeStrSyms(this);
@@ -366,8 +432,31 @@ function [this,model] = getSyms(this,model)
             % create full symbolic array
             this.strsym = sym(dxdotdps);
             
+        case 'ddxdotdpdp'
+            if(~isempty(w))
+                this.sym=jacobian(jacobian(model.fun.xdot.sym,p),p)  + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym,p);
+                this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,p),p);
+            else
+                this.sym=jacobian(jacobian(model.fun.xdot.sym,p),p);
+                this.sym_noopt = this.sym;
+            end
+            
+            %%
+            % build short strings for reuse of dxdotdp
+            % create cell array of same size
+            dxdotdps = cell(nx,1);
+            % fill cells with strings
+            for ix = 1:nx
+                dxdotdps{ix} = sprintf('tmp_dxdotdp_%i',ix-1);
+            end
+            % create full symbolic array
+            this.strsym = sym(dxdotdps);
+            
         case 'sx0'
             this.sym=jacobian(model.fun.x0.sym,p);
+            
+        case 's2x0'
+            this.sym=jacobian(model.fun.sx0.sym,p);
             
         case 'sdx0'
             this.sym=jacobian(model.fun.dx0.sym,p);

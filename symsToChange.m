@@ -1,0 +1,11 @@
+done;   'dJdx';
+done;   'dJdp';
+done;   'ddxdotdpdp';
+done;   's2x0';
+'ddJydydy';
+'ddydpdp';
+'ddydpdx';
+'ddydxdx';
+'ddJydsigmady';
+'ddJydsigmadsigma';
+'ddsigma_ydpdp';
