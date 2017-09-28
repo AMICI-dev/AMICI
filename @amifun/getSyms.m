@@ -335,14 +335,16 @@ function [this,model] = getSyms(this,model)
                 syms cj
                 this.sym = jacobian(model.fun.dfdx.sym - cj*model.fun.M.sym,x);
             else
+                tmp = reshape(model.fun.J.sym, [model.nx^2,1]);
                 if(~isempty(w))
-                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),x) ...
-                        + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym,x) ...
-                        + jacobian(jacobian(model.fun.xdot.sym,w),w)*model.fun.dwdx.strsym*model.fun.dwdx.strsym ...
-                        + jacobian(model.fun.xdot.sym,w)*jacobian(model.fun.dwdx.strsym,x);
-                    this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,x),x);
+                    
+                    tmp2 = jacobian(tmp,x) ...
+                        + jacobian(tmp,w) * model.fun.dwdx.strsym ...
+                        + jacobian(tmp,model.fun.dwdx.strsym) * jacobian(model.fun.dwdx.strsym,x);
+                    this.sym = reshape(tmp2, [model.nx,model.nx,model.nx]);
+                    this.sym_noopt = reshape(jacobian(tmp,x), [model.nx,model.nx,model.nx]);
                 else
-                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),x);
+                    this.sym = reshape(jacobian(tmp,x), [model.nx,model.nx,model.nx]);
                     this.sym_noopt = this.sym;
                 end
             end
@@ -368,14 +370,15 @@ function [this,model] = getSyms(this,model)
                 syms cj
                 this.sym = jacobian(model.fun.dfdx.sym - cj*model.fun.M.sym,x);
             else
+                tmp = reshape(model.fun.J.sym, [model.nx^2,1]);
                 if(~isempty(w))
-                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),p) ...
-                        + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdx.strsym,p) ...
-                        + jacobian(jacobian(model.fun.xdot.sym,w),w)*model.fun.dwdx.strsym*model.fun.dwdp.strsym ...
-                        + jacobian(model.fun.xdot.sym,w)*jacobian(model.fun.dwdx.strsym,p);
-                    this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,x),p);
+                    tmp2 = jacobian(tmp,p) ...
+                        + jacobian(tmp,w) * model.fun.dwdp.strsym ...
+                        + jacobian(tmp,model.fun.dwdx.strsym) * jacobian(model.fun.dwdx.strsym,p);
+                    this.sym = reshape(tmp2, [model.nx,model.nx,model.np]);
+                    this.sym_noopt = reshape(jacobian(tmp,p), [model.nx,model.nx,model.np]);
                 else
-                    this.sym = jacobian(jacobian(model.fun.xdot.sym,x),p);
+                    this.sym = reshape(jacobian(tmp,p), [model.nx,model.nx,model.np]);
                     this.sym_noopt = this.sym;
                 end
             end
@@ -433,13 +436,15 @@ function [this,model] = getSyms(this,model)
             this.strsym = sym(dxdotdps);
             
         case 'ddxdotdpdp'
+            tmp = reshape(model.fun.dxdotdp.sym, [model.nx*model.np,1]);
             if(~isempty(w))
-                this.sym = jacobian(dxdotdp,p) ...
-                    + jacobian(dxdotdp,w)*model.fun.dwdp.strsym ...
-                    + jacobian(dxdotdp,dwdp)*jacobian(model.fun.dwdp.strsym,p);
-                this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,p),p);
+                tmp2 = jacobian(tmp,p) ...
+                    + jacobian(tmp,w)*model.fun.dwdp.strsym ...
+                    + jacobian(tmp,dwdp)*jacobian(model.fun.dwdp.strsym,p);
+                this.sym = reshape(tmp2, [model.nx,model.np^2]);
+                this.sym_noopt = reshape(jacobian(tmp,p),[model.nx,model.np^2]);
             else
-                this.sym=jacobian(jacobian(model.fun.xdot.sym,p),p);
+                this.sym = reshape(jacobian(tmp,p),[model.nx,model.np^2]);
                 this.sym_noopt = this.sym;
             end
             
@@ -458,7 +463,7 @@ function [this,model] = getSyms(this,model)
             this.sym=jacobian(model.fun.x0.sym,p);
             
         case 's2x0'
-            this.sym=jacobian(model.fun.sx0.sym,p);
+            this.sym=reshape(jacobian(reshape(model.fun.sx0.sym, [model.nx*model.np,1]),p),[model.nx,model.np^2]);
             
         case 'sdx0'
             this.sym=jacobian(model.fun.dx0.sym,p);
@@ -531,15 +536,7 @@ function [this,model] = getSyms(this,model)
             end
             
         case 'qBdot'
-            % If we do second order adjoints, we have to augment
             this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
-            
-        case 'o2qBdot'
-            % If we do second order adjoints, we have to augment
-            dfdp = model.fun.ddxdotdpdp.sym ...
-                + model.fun.dJdp.sym * model.fun.sx.sym ...
-                + model.fun.dJdp.sym * model.fun.sx.sym;
-            this.sym = -transpose(model.fun.xB.sym)*dfdp;
 
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);

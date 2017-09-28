@@ -1,8 +1,8 @@
-control;   'dJdx';
-control;   'dJdp';
-control;   'ddxdotdpdp';
-control;   's2x0';
-control;   'o2qBdot';
+ok;   'dJdx';
+ok;   'dJdp';
+ok;   'ddxdotdpdp';
+ok;   's2x0';
+ok;   'o2qBdot';
 ok;   'ddJydydy';
 control;   'ddydpdp';
 control;   'ddydpdx';
