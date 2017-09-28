@@ -434,7 +434,9 @@ function [this,model] = getSyms(this,model)
             
         case 'ddxdotdpdp'
             if(~isempty(w))
-                this.sym=jacobian(jacobian(model.fun.xdot.sym,p),p)  + jacobian(jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym,p);
+                this.sym = jacobian(dxdotdp,p) ...
+                    + jacobian(dxdotdp,w)*model.fun.dwdp.strsym ...
+                    + jacobian(dxdotdp,dwdp)*jacobian(model.fun.dwdp.strsym,p);
                 this.sym_noopt = jacobian(jacobian(model.fun.xdot.sym_noopt,p),p);
             else
                 this.sym=jacobian(jacobian(model.fun.xdot.sym,p),p);
@@ -444,13 +446,13 @@ function [this,model] = getSyms(this,model)
             %%
             % build short strings for reuse of dxdotdp
             % create cell array of same size
-            dxdotdps = cell(nx,1);
+            ddxdotdps = cell(nx,1);
             % fill cells with strings
             for ix = 1:nx
-                dxdotdps{ix} = sprintf('tmp_dxdotdp_%i',ix-1);
+                ddxdotdps{ix} = sprintf('tmp_ddxdotdpdp_%i',ix-1);
             end
             % create full symbolic array
-            this.strsym = sym(dxdotdps);
+            this.strsym = sym(ddxdotdps);
             
         case 'sx0'
             this.sym=jacobian(model.fun.x0.sym,p);
@@ -479,10 +481,22 @@ function [this,model] = getSyms(this,model)
             % fill cell array
             this = makeStrSyms(this);
             
+        case 'ddydxdx'
+            this.sym = reshape(jacobian(reshape(model.fun.dydx.sym, ...
+                [model.nx*model.ny 1]), x), [model.ny, model.nx, model.nx]);
+            
         case 'dydp'
             this.sym=jacobian(model.fun.y.sym,p);
             % create cell array of same size
             this = makeStrSyms(this);
+            
+        case 'ddydpdp'
+            this.sym = reshape(jacobian(reshape(model.fun.dydp.sym, ...
+                [model.np*model.ny 1]), p), [model.ny, model.np, model.np]);
+            
+        case 'ddydpdx'
+            this.sym = reshape(jacobian(reshape(model.fun.dydp.sym, ...
+                [model.np*model.ny 1]), x), [model.ny, model.np, model.nx]);
             
         case 'Jv'
             % create cell array of same size
@@ -513,39 +527,29 @@ function [this,model] = getSyms(this,model)
                 syms t
                 this.sym = diff(transpose(model.fun.M.sym),t)*model.fun.xB.sym + transpose(model.fun.M.sym)*model.fun.dxB.sym - transpose(model.fun.dfdx.sym)*model.fun.xB.sym;
             else
-                % Augmenting the system needs transposition of submatrices
-                % I'm sure, there is a more intelligent solution to it...
-                this.sym = sym(zeros(nx,1));
-                if(model.o2flag)
-                    for ix = 1 : model.ng
-                        for jx = 1 : model.ng
-                            this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) = this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) - ...
-                                transpose(model.fun.J.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue , (jx-1)*model.nxtrue+1 : jx*model.nxtrue)) ...
-                                * model.fun.xB.sym((jx-1)*model.nxtrue+1 : jx*model.nxtrue);
-                        end
-                    end
-                else
-                    this.sym = -transpose(model.fun.J.sym) * model.fun.xB.sym;
-                end
+                this.sym = -transpose(model.fun.J.sym) * model.fun.xB.sym;
             end
             
         case 'qBdot'
             % If we do second order adjoints, we have to augment
-            if (model.nxtrue < nx)
-                this.sym = sym(zeros(model.ng, model.np));
-                this.sym(1,:) = -transpose(model.fun.xB.sym(1:model.nxtrue)) * model.fun.dxdotdp.sym(1:model.nxtrue, :);
-                for ig = 2 : model.ng
-                    this.sym(ig,:) = ...
-                        -transpose(model.fun.xB.sym(1:model.nxtrue)) * model.fun.dxdotdp.sym((ig-1)*model.nxtrue+1 : ig*model.nxtrue, :) ...
-                        -transpose(model.fun.xB.sym((ig-1)*model.nxtrue+1 : ig*model.nxtrue)) * model.fun.dxdotdp.sym(1:model.nxtrue, :);
-                end                    
-            else
-                this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
-            end
+            this.sym = -transpose(model.fun.xB.sym)*model.fun.dxdotdp.sym;
+            
+        case 'o2qBdot'
+            % If we do second order adjoints, we have to augment
+            dfdp = model.fun.ddxdotdpdp.sym ...
+                + model.fun.dJdp.sym * model.fun.sx.sym ...
+                + model.fun.dJdp.sym * model.fun.sx.sym;
+            this.sym = -transpose(model.fun.xB.sym)*dfdp;
 
         case 'dsigma_ydp'
             this.sym = jacobian(model.fun.sigma_y.sym,p);
             this = makeStrSyms(this);
+            
+        case 'ddJy_s2sigma'
+            tmp = reshape(model.fun.dsigma_ydp.sym, [model.ny*model.np,1]);
+            tmp = reshape(jacobian(tmp, p), [model.ny, model.np, model.np]);
+            tmp = reshape(permute(tmp, [2,3,1]), [model.np^2,model.ny]);
+            this.sym = reshape(tmp*reshape(model.fun.dJydsigma.sym, [model.ny,1]), [model.np, model.np]);
             
         case 'dsigma_zdp'
             if(nz>0)
@@ -866,16 +870,58 @@ function [this,model] = getSyms(this,model)
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.y.strsym);
             tmp = arrayfun(@(iy)sym(sprintf('sigma_y_%i',iy-1)),1:ny,'UniformOutput',false);
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_y.strsym);
+            
         case 'dJydy'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
-            for iyt = 1 : model.nytrue
-                this.sym(iyt,:,:) = jacobian(model.fun.Jy.sym(iyt,:),model.fun.y.strsym);
+            for j = 1 : model.ng
+                this.sym(:,j,:) = jacobian(model.fun.Jy.sym(1:model.nytrue,j),model.fun.y.strsym);
             end
+            
+        case 'ddJydydy'
+            if (model.ng > 1)
+                error('The symbolic expression ddJydydy should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
+            end
+            tmp = reshape(model.fun.dJydy.sym, [model.nytrue*model.ny, 1]);
+            tmp = permute(reshape(jacobian(tmp, model.fun.y.strsym), ...
+                [model.nytrue,model.ny,model.ny]), [2,3,1]);
+            tmp2 = sym(zeros(model.ny, model.ny));
+            for iyt = 1:model.nytrue
+                tmp2 = tmp2 + tmp(:,:,iyt);
+            end
+            this.sym = tmp2;
+            
         case 'dJydsigma'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
-            for iyt = 1 : model.nytrue
-                this.sym(iyt,:,:) = jacobian(model.fun.Jy.sym(iyt,:),model.fun.sigma_y.strsym);
+            for j = 1 : model.ng
+                this.sym(:,j,:) = jacobian(model.fun.Jy.sym(1:model.nytrue,j),model.sigma_y.y.strsym);
             end
+            
+        case 'ddJydsigmadsigma'
+            if (model.ng > 1)
+                error('The symbolic expression ddJydsigmadsigma should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
+            end
+            tmp = reshape(model.fun.dJydsigma.sym, [model.nytrue*model.ny, 1]);
+            tmp = permute(reshape(jacobian(tmp, model.sigma_y.y.strsym), ...
+                [model.nytrue,model.ny,model.ny]), [2,3,1]);
+            tmp2 = sym(zeros(model.ny, model.ny));
+            for iyt = 1:model.nytrue
+                tmp2 = tmp(:,:,iyt);
+            end
+            this.sym = tmp2;
+            
+        case 'ddJydsigmady'
+            if (model.ng > 1)
+                error('The symbolic expression ddJydsigmady should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
+            end
+            tmp = reshape(model.fun.dJydy.sym, [model.nytrue*model.ny, 1]);
+            tmp = permute(reshape(jacobian(tmp, model.sigma_y.y.strsym), ...
+                [model.nytrue,model.ny,model.ny]), [2,3,1]);
+            tmp2 = sym(zeros(model.ny, model.ny));
+            for iyt = 1:model.nytrue
+                tmp2 = tmp(:,:,iyt);
+            end
+            this.sym = tmp2;
+            
         case 'Jz'
             this.sym = model.sym.Jz;
             this = unifySyms(this,model);
@@ -883,6 +929,7 @@ function [this,model] = getSyms(this,model)
             this.sym = mysubs(this.sym,[z{:}],model.fun.z.strsym);
             tmp = arrayfun(@(iz)sym(sprintf('sigma_z_%i',iz-1)),1:nz,'UniformOutput',false);
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_z.strsym);
+            
         case 'Jrz'
             this.sym = model.sym.Jrz;
             this = unifySyms(this,model);
@@ -890,23 +937,27 @@ function [this,model] = getSyms(this,model)
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.z.strsym);
             tmp = arrayfun(@(iz)sym(sprintf('sigma_z_%i',iz-1)),1:nz,'UniformOutput',false);
             this.sym = mysubs(this.sym,[tmp{:}],model.fun.sigma_z.strsym);
+            
         case 'dJzdz'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.z.strsym);
             end
             this = makeStrSyms(this);
+            
         case 'dJrzdz'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
                 this.sym(iz,:,:) = jacobian(model.fun.Jrz.sym(iz,:),model.fun.rz.strsym);
             end
             this = makeStrSyms(this);
+            
         case 'dJzdsigma'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
                 this.sym(iz,:,:) = jacobian(model.fun.Jz.sym(iz,:),model.fun.sigma_z.strsym);
             end
+            
         case 'dJrzdsigma'
             this.sym = sym(zeros(model.nztrue, model.ng, model.nz));
             for iz = 1 : model.nztrue
