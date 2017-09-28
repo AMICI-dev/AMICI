@@ -60,7 +60,8 @@ function this = getArgs(this,model)
             this.argstr = ['(long int N, realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
             this.fargstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
         case 'JDiag'
-            this.argstr = '(realtype t, N_Vector JDiag, N_Vector x, void *user_data)';
+            this.argstr = ['(realtype t, N_Vector JDiag,' rtcj ' N_Vector x,' dxvec ' void *user_data)'];
+            this.argstr = ['(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data)'];
         case 'JSparse'
             this.argstr = ['(realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
         case 'JBandB'
