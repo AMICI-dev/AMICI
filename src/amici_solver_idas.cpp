@@ -345,7 +345,7 @@ int IDASolver::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
 }
 
 int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,
-                      N_Vector dx, N_Vector *sx, N_Vector *sxdot, N_Vector *sdx,
+                      N_Vector dx, N_Vector *sx, N_Vector *sdx, N_Vector *sxdot,
                       void *user_data, N_Vector tmp1, N_Vector tmp2,
                       N_Vector tmp3) {
     TempData *tdata = (TempData *)user_data;
