@@ -85,25 +85,16 @@ for ifun = this.funs
                 end
             end
             if( strcmp(ifun{1},'sxdot') )
+                fprintf(fid,'if(ip == 0) {\n');
                 if(strcmp(this.wtype,'iw'))
-                    fprintf(fid,'int ip;\n');
-                    fprintf(fid,['status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,['status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,['status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
-                    fprintf(fid,'sx_tmp = N_VGetArrayPointer(sx[udata->plist[ip]]);\n');
-                    fprintf(fid,'sdx_tmp = N_VGetArrayPointer(sdx[udata->plist[ip]]);\n');
-                    fprintf(fid,'sxdot_tmp = N_VGetArrayPointer(sxdot[udata->plist[ip]]);\n');
-                    fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
-                    this.fun.(ifun{1}).writeCcode(this,fid);
-                    fprintf(fid,'}\n');
+                    fprintf(fid,['    status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['    status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 else
-                    fprintf(fid,'if(ip == 0) {\n');
                     fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tdata->J,user_data,NULL,NULL,NULL);\n']);
-                    fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,'}\n');
-                    this.fun.(ifun{1}).writeCcode(this,fid);
                 end
+                fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                fprintf(fid,'}\n');
+                this.fun.(ifun{1}).writeCcode(this,fid);
             elseif( strcmp(ifun{1},'qBdot') )
                 fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');

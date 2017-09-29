@@ -141,7 +141,11 @@ class Model {
     /** Jacobian of xBdot with respect to adjoint state xB
       * @param[in] NeqBdot number of adjoint state variables @type long_int
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scaling factor, inverse of the step size (only DAE) @type
+      *realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
@@ -151,7 +155,7 @@ class Model {
       * @param[in] tmp3B temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
      **/
-    virtual int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
+    virtual int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                     N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                     N_Vector tmp2B, N_Vector tmp3B) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -161,11 +165,15 @@ class Model {
       * @param[in] t timepoint @type realtype
       * @param[out] JDiag Vector to which the Jacobian diagonal will be written
       *@type NVector
+      * @param[in] cj scaling factor, inverse of the step size (only DAE) @type
+      *realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] user_data object with model specifications @type TempData
       * @return status flag indicating successful execution @type int
      **/
-    virtual int fJDiag(realtype t, N_Vector JDiag, N_Vector x,
+    virtual int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx,
                        void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
@@ -175,14 +183,19 @@ class Model {
       * @param[out] Jv Vector to which the Jacobian vector product will be
       *written @type N_Vector
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scaling factor, inverse of the step size (only DAE) @type
+      *realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xdot Vector with the right hand side @type N_Vector
       * @param[in] user_data object with model specifications @type TempData
-      * @param[in] tmp temporary storage vector @type N_Vector
+      * @param[in] tmp1 temporary storage vector @type N_Vector
+      * @param[in] tmp2 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
      **/
-    virtual int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                    N_Vector xdot, void *user_data, N_Vector tmp) {
+    virtual int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
+                    realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -389,7 +402,7 @@ class Model {
       * @param[in] user_data pointer to temp data object @type TempData
       * @return status flag indicating successful execution @type int
       */
-    virtual int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+    virtual int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                        void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
@@ -658,15 +671,18 @@ class Model {
       * @param[in] tmp2 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
       */
-    virtual int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                       N_Vector sx, N_Vector sxdot, void *user_data,
-                       N_Vector tmp1, N_Vector tmp2) {
+    virtual int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot, int ip,
+                       N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data,
+                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
 
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scalar in Jacobian (inverse stepsize, only DAE) @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xdot Vector with the right hand side @type N_Vector
       * @param[out] J Matrix to which the Jacobian will be written @type SlsMat
       * @param[in] user_data object with model specifications @type TempData
@@ -675,7 +691,7 @@ class Model {
       * @param[in] tmp3 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
       */
-    virtual int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+    virtual int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J,
                          void *user_data, N_Vector tmp1, N_Vector tmp2,
                          N_Vector tmp3) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -686,7 +702,10 @@ class Model {
       * @param[in] mupper upper matrix bandwidth @type long int
       * @param[in] mlower lower matrix bandwidth @type long int
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scalar in Jacobian (inverse stepsize, only DAE) @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xdot Vector with the right hand side @type N_Vector
       * @param[out] J Matrix to which the Jacobian will be written @type DlsMat
       * @param[in] user_data object with model specifications @type TempData
@@ -695,8 +714,8 @@ class Model {
       * @param[in] tmp3 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
       */
-    virtual int fJBand(long int N, long int mupper, long int mlower, realtype t,
-                       N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
+    virtual int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj,
+                       N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data,
                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
@@ -706,7 +725,10 @@ class Model {
       * @param[in] mupper upper matrix bandwidth @type long int
       * @param[in] mlower lower matrix bandwidth @type long int
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scalar in Jacobian (inverse stepsize, only DAE) @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
@@ -717,7 +739,7 @@ class Model {
       * @return status flag indicating successful execution @type int
       */
     virtual int fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                        realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                        realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
                         DlsMat JB, void *user_data, N_Vector tmp1B,
                         N_Vector tmp2B, N_Vector tmp3B) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -736,15 +758,18 @@ class Model {
       * @param[in] tmpB temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
      **/
-    virtual int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                     N_Vector xB, N_Vector xBdot, void *user_data,
-                     N_Vector tmpB) {
+    virtual int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                     N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
+                     N_Vector tmpB1, N_Vector tmpB2) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
 
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
       * @param[in] t timepoint @type realtype
+      * @param[in] cj scalar in Jacobian (inverse stepsize, only DAE) @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
@@ -754,7 +779,7 @@ class Model {
       * @param[in] tmp3B temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
       */
-    virtual int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+    virtual int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
                           SlsMat JB, void *user_data, N_Vector tmp1B,
                           N_Vector tmp2B, N_Vector tmp3B) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
@@ -794,9 +819,34 @@ class Model {
      *N_Vector
      * @param[in] user_data object with model specifications @type TempData
      * @return status flag indicating successful execution @type int
-     * @return
      */
     virtual int fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /**
+     * @brief Mass matrix for DAE systems (only DAE)
+     * @param[in] t timepoint @type realtype
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] dx Vector with the derivative states (only DAE) @type
+     *N_Vector
+     * @param[in] user_data object with model specifications @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fM(realtype t, N_Vector x, N_Vector dx, void *user_data) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /**
+     * @brief jacobian of the right hand side (only DAE)
+     * @param[in] t timepoint @type realtype
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] dx Vector with the derivative states (only DAE) @type
+     *N_Vector
+     * @param[in] user_data object with model specifications @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fdfdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
 

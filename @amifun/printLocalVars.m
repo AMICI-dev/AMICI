@@ -86,9 +86,7 @@ function printLocalVars(this,model,fid)
                 fprintf(fid,['  JB->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
             end
         case 'sxdot'
-            if(~strcmp(model.wtype,'iw'))
-                fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
-            end
+            fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'sx0'
             fprintf(fid,['realtype t = udata->tstart;\n']);
             % nothing

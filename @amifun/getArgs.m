@@ -11,23 +11,23 @@ function this = getArgs(this,model)
     %  this: updated function definition object @type amifun
     %
     
-    if(strcmp(model.wtype,'iw'))
+%     if(strcmp(model.wtype,'iw'))
         dxvec = ' N_Vector dx,';
-        sdxvec = ' N_Vector *sdx,';
+        sdxvec = ' N_Vector sdx,';
         dxBvec = ' N_Vector dxB,';
         rtcj = ' realtype cj,';
-        s = '*';
-        intip = '';
+%         s = '*';
+%         intip = '';
         tmp3vec = ', N_Vector tmp3';
-    else
-        dxvec = '';
-        sdxvec = '';
-        dxBvec = '';
-        rtcj = '';
+%     else
+%         dxvec = '';
+%         sdxvec = '';
+%         dxBvec = '';
+%         rtcj = '';
         s = '';
         intip = 'int ip, ';
-        tmp3vec = '';
-    end
+%         tmp3vec = '';
+%     end
     
     
     switch(this.funstr)

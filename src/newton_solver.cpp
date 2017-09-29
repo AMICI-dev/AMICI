@@ -312,7 +312,7 @@ int NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         return AMICI_ERROR_NEWTON_LINSOLVER;
 
     /* Get sparse Jacobian */
-    int status = model->fJSparse(tdata->t, tdata->x, tdata->xdot, tdata->J,
+    int status = model->fJSparse(tdata->t, 0.0, tdata->x, tdata->dx, tdata->xdot, tdata->J,
                                  tdata, tmp1, tmp2, tmp3);
 
     /* Get factorization of sparse Jacobian */
