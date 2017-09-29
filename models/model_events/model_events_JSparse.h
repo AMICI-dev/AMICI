@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int JSparse_model_events(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int JSparse_model_events(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 
 #endif /* _am_model_events_JSparse_h */

@@ -8,13 +8,14 @@
 #include "model_neuron_dwdp.h"
 #include "model_neuron_w.h"
 
-int qBdot_model_neuron(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
+int qBdot_model_neuron(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
+realtype *dxB_tmp = N_VGetArrayPointer(dxB);
 realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
 int ip;
 memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*model->nJ);

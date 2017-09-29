@@ -8,13 +8,14 @@
 #include "model_steadystate_dwdx.h"
 #include "model_steadystate_w.h"
 
-int xBdot_model_steadystate(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data) {
+int xBdot_model_steadystate(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
+realtype *dxB_tmp = N_VGetArrayPointer(dxB);
 realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
 int ix;
 memset(xBdot_tmp,0,sizeof(realtype)*3);

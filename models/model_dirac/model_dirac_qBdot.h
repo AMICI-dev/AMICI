@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int qBdot_model_dirac(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
+int qBdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
 
 
 #endif /* _am_model_dirac_qBdot_h */

@@ -25,8 +25,8 @@ int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
 int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);
 int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
+int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
 int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp);
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
 int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata);
@@ -41,10 +41,10 @@ int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata);
 int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata);
 int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata);
 int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata);
-int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
+int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
-int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
+int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
 int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
 int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
 int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata);
@@ -54,10 +54,10 @@ int fsigma_y(realtype t, TempData *tdata);
 int fdsigma_ydp(realtype t, TempData *tdata);
 int fsigma_z(realtype t, int ie, TempData *tdata);
 int fdsigma_zdp(realtype t, int ie, TempData *tdata);
-int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
 int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
 int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
@@ -98,31 +98,31 @@ public:
     }
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        return J_model_events(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+        return J_model_events(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
     }
 
-    int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        return JB_model_events(NeqBdot, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
+        return JB_model_events(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
     }
 
-    int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        return JBand_model_events(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+    int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
+        return JBand_model_events(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
     }
 
-    int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        return JBandB_model_events(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
+        return JBandB_model_events(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
     }
 
-    int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data) override {
-        return JDiag_model_events(t, JDiag, x, user_data);
+    int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) override {
+        return JDiag_model_events(t, JDiag, cj, x, dx, user_data);
     }
 
-    int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        return JSparse_model_events(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+    int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
+        return JSparse_model_events(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
     }
 
-    int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        return JSparseB_model_events(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
+        return JSparseB_model_events(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
     }
 
     int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
@@ -229,12 +229,12 @@ public:
         return dzdx_model_events(t, ie, x, tdata);
     }
 
-    int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) override {
-        return qBdot_model_events(t, x, xB, qBdot, user_data);
+    int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) override {
+        return qBdot_model_events(t, x, dx, xB, dxB, qBdot, user_data);
     }
 
     int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) override {
-        return root_model_events(t, x, root, user_data);
+        return root_model_events(t, x, dx, root, user_data);
     }
 
     int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) override {
@@ -261,8 +261,8 @@ public:
         return sx0_model_events(sx0, x, dx, user_data);
     }
 
-    int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2) override {
-        return sxdot_model_events(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1, tmp2);
+    int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
+        return sxdot_model_events(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
     }
 
     int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) override {
@@ -278,11 +278,11 @@ public:
     }
 
     int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) override {
-        return xBdot_model_events(t, x, xB, xBdot, user_data);
+        return xBdot_model_events(t, x, dx, xB, dxB, xBdot, user_data);
     }
 
     int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) override {
-        return xdot_model_events(t, x, xdot, user_data);
+        return xdot_model_events(t, x, dx, xdot, user_data);
     }
 
     int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata) override {

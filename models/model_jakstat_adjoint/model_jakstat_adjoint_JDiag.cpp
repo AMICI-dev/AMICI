@@ -8,7 +8,7 @@
 #include "model_jakstat_adjoint_dwdx.h"
 #include "model_jakstat_adjoint_w.h"
 
-int JDiag_model_jakstat_adjoint(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
+int JDiag_model_jakstat_adjoint(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;

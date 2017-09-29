@@ -7,7 +7,7 @@
 #include <include/udata.h>
 #include "model_nested_events_w.h"
 
-int xdot_model_nested_events(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
+int xdot_model_nested_events(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;

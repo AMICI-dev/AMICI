@@ -8,13 +8,14 @@
 #include "model_steadystate_dwdx.h"
 #include "model_steadystate_w.h"
 
-int JB_model_steadystate(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
+int JB_model_steadystate(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = N_VGetArrayPointer(x);
 realtype *xB_tmp = N_VGetArrayPointer(xB);
+realtype *dxB_tmp = N_VGetArrayPointer(dxB);
 realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
   memset(JB->data,0,sizeof(realtype)*9);
 status = w_model_steadystate(t,x,NULL,tdata);
