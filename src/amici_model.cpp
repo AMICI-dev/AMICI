@@ -180,6 +180,110 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
     return (status);
 }
 
+/** Second order sensitivity of time-resolved measurement negative 
+ * log-likelihood Jy w.r.t. parameters
+ * @param[in] it timepoint index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
+                  const ReturnData *rdata) {
+    
+    int status = AMICI_SUCCESS;
+    
+    // dJydy         nytrue x nJ x ny
+    // dydp          ny x rdata->nplist
+    // dJydp         nJ x rdata->nplist
+    
+    memset(tdata->dJydp, 0, nJ * rdata->nplist * sizeof(double));
+    
+    realtype *dJydyTmp = new double[nJ * ny];
+    realtype *dJydsigmaTmp = new double[nJ * ny];
+    
+    for (int iyt = 0; iyt < nytrue; ++iyt) {
+        if (amiIsNaN(edata->my[rdata->nt * iyt + it]))
+            continue;
+        
+        // copy current (iyt) dJydy and dJydsigma slices
+        // dJydyTmp     nJ x ny
+        // dJydsigmaTmp nJ x ny
+        for (int iJ = 0; iJ < nJ; ++iJ) {
+            for (int iy = 0; iy < ny; ++iy) {
+                dJydyTmp[iJ + iy * nJ] =
+                tdata->dJydy[iyt + (iJ + iy * nJ) * nytrue];
+                dJydsigmaTmp[iJ + iy * nJ] =
+                tdata->dJydsigma[iyt + (iJ + iy * nJ) * nytrue];
+            }
+        }
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    nJ, rdata->nplist, ny, 1.0, dJydyTmp, nJ, tdata->dydp, ny,
+                    1.0, tdata->dJydp, nJ);
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    nJ, rdata->nplist, ny, 1.0, dJydsigmaTmp, nJ,
+                    tdata->dsigmaydp, ny, 1.0, tdata->dJydp, nJ);
+    }
+    delete[] dJydyTmp;
+    delete[] dJydsigmaTmp;
+    
+    return (status);
+}
+
+/** Quadrature equation for second order adjoint sensitivities 
+ * for negative log-likelihood Jy w.r.t. parameters
+ * @param[in] it timepoint index @type int
+ * @param[in,out] tdata pointer to temp data object @type TempData
+ * @param[in] edata pointer to experimental data object @type ExpData
+ * @param[in] rdata pointer to return data object @type ReturnData
+ * @return status flag indicating successful execution @type int
+ */
+int Model::fqBo2dot(const int it, TempData *tdata, const ExpData *edata,
+                     const ReturnData *rdata) {
+    
+    int status = AMICI_SUCCESS;
+    
+    // dJydy         nytrue x nJ x ny
+    // dydp          ny x rdata->nplist
+    // dJydp         nJ x rdata->nplist
+    
+    memset(tdata->dJydp, 0, nJ * rdata->nplist * sizeof(double));
+    
+    realtype *dJydyTmp = new double[nJ * ny];
+    realtype *dJydsigmaTmp = new double[nJ * ny];
+    
+    for (int iyt = 0; iyt < nytrue; ++iyt) {
+        if (amiIsNaN(edata->my[rdata->nt * iyt + it]))
+            continue;
+        
+        // copy current (iyt) dJydy and dJydsigma slices
+        // dJydyTmp     nJ x ny
+        // dJydsigmaTmp nJ x ny
+        for (int iJ = 0; iJ < nJ; ++iJ) {
+            for (int iy = 0; iy < ny; ++iy) {
+                dJydyTmp[iJ + iy * nJ] =
+                tdata->dJydy[iyt + (iJ + iy * nJ) * nytrue];
+                dJydsigmaTmp[iJ + iy * nJ] =
+                tdata->dJydsigma[iyt + (iJ + iy * nJ) * nytrue];
+            }
+        }
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    nJ, rdata->nplist, ny, 1.0, dJydyTmp, nJ, tdata->dydp, ny,
+                    1.0, tdata->dJydp, nJ);
+        
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                    nJ, rdata->nplist, ny, 1.0, dJydsigmaTmp, nJ,
+                    tdata->dsigmaydp, ny, 1.0, tdata->dJydp, nJ);
+    }
+    delete[] dJydyTmp;
+    delete[] dJydsigmaTmp;
+    
+    return (status);
+}
+
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
  * state variables
  * @param[in] it timepoint index @type int

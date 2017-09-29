@@ -32,8 +32,12 @@ int CVodeSolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
     return CVodeInitB(ami_mem, which, resultFunctionB, RCONST(t), xB);
 }
 
-int CVodeSolver::qbinit(int which, N_Vector qBdot) {
-    return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
+int CVodeSolver::qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) {
+    if (AMICI_SENSI_ORDER < AMICI_SENSI_ORDER_SECOND) {
+        return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
+    } else {
+        return CVodeQuadInitB(ami_mem, which, fqBo2dot, qBdot);
+    }
 }
 
 int CVodeSolver::rootInit(int ne) {

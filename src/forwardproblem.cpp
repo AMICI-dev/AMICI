@@ -62,8 +62,9 @@ int ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
 
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
-        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
-            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if ((rdata->sensi_meth == AMICI_SENSI_FSA &&
+            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) ||
+            (rdata->sensi >= AMICI_SENSI_ORDER_SECOND)){
             status = solver->AMISetStopTime(rdata->ts[it]);
         }
         if (status == AMICI_SUCCESS) {
@@ -741,7 +742,9 @@ int ForwardProblem::getDataOutput(int it, const UserData *udata,
         status = prepDataSensis(it, rdata, edata, tdata, model);
         if (status != AMICI_SUCCESS)
             return status;
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if ((rdata->sensi_meth == AMICI_SENSI_FSA) ||
+            (rdata->sensi_meth == AMICI_SENSI_ASA &&
+             rdata->sensi >= AMICI_SENSI_ORDER_SECOND)) {
             status =
                 getDataSensisFSA(it, udata, rdata, edata, tdata, solver, model);
             if (status != AMICI_SUCCESS)
@@ -815,17 +818,26 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
         return status;
 
-    for (int iJ = 0; iJ < model->nJ; iJ++) {
+    if (rdata->sensi == AMICI_SENSI_ORDER_FIRST) {
+        for (int iJ = 0; iJ < model->nJ; iJ++) {
+            for (int ip = 0; ip < rdata->nplist; ip++) {
+                if (iJ == 0) {
+                    if (model->ny > 0) {
+                        rdata->sllh[ip] -= tdata->dJydp[ip * model->nJ];
+                    }
+                } else {
+                    if (model->ny > 0) {
+                        rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
+                            tdata->dJydp[iJ + ip * model->nJ];
+                    }
+                }
+            }
+        }
+    } else {
         for (int ip = 0; ip < rdata->nplist; ip++) {
-            if (iJ == 0) {
-                if (model->ny > 0) {
-                    rdata->sllh[ip] -= tdata->dJydp[ip * model->nJ];
-                }
-            } else {
-                if (model->ny > 0) {
-                    rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
-                        tdata->dJydp[iJ + ip * model->nJ];
-                }
+            for (int jp = 0; jp < rdata->nplist; jp++) {
+                rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
+                    tdata->ddJydpdp[ip + jp * rdata->nplist];
             }
         }
     }

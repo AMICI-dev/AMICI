@@ -97,7 +97,9 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                 AMICI_SUCCESS)
                 goto freturn;
             
-            if (udata->sensi_meth == AMICI_SENSI_FSA) {
+            if ((udata->sensi_meth == AMICI_SENSI_FSA) ||
+                (udata->sensi_meth == AMICI_SENSI_ASA &&
+                 udata->sensi >= AMICI_SENSI_ORDER_SECOND)){
                 
                 /* Activate sensitivity calculations */
                 if (sensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS)
@@ -330,7 +332,11 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     }
 
     /* Initialise quadrature calculation */
-    status = qbinit(tdata->which, tdata->xQB);
+    if (udata-sensi < AMICI_SENSI_ORDER_SECOND) {
+        status = qbinit(tdata->which, tdata->xQB, AMICI_SENSI_ORDER_FIRST);
+    } else {
+        status = qbinit(tdata->which, tdata->xQB, AMICI_SENSI_ORDER_SECOND);
+    }
     if (status != AMICI_SUCCESS)
         return status;
 
