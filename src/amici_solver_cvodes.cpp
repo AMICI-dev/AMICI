@@ -343,6 +343,12 @@ int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     return tdata->model->fqBdot(t, x, xB, qBdot, user_data);
 }
 
+int CVodeSolver::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+                        void *user_data) {
+    TempData *tdata = (TempData *)user_data;
+    return tdata->model->fqBo2dot(t, x, xB, qBdot, user_data);
+}
+
 int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                         N_Vector sx, N_Vector sxdot, void *user_data,
                         N_Vector tmp1, N_Vector tmp2) {

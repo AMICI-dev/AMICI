@@ -349,22 +349,6 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
-            %%
-            % build short strings for reuse of jacobian
-            
-            % find nonzero entries
-            idx = find(this.sym);
-            % create cell array of same size
-            dJdxs = sym(zeros(length(idx),1));
-            % fill cells with strings
-            for iJ = 1:length(idx)
-                dJdxs(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
-            end
-            % create full symbolic matrix
-            this.strsym = sym(zeros(nx,nx));
-            % fill nonzero entries
-            this.strsym(idx) = dJdxs;
-            
         case 'dJdp'
             if(strcmp(model.wtype,'iw'))
                 syms cj
@@ -382,22 +366,6 @@ function [this,model] = getSyms(this,model)
                     this.sym_noopt = this.sym;
                 end
             end
-            
-            %%
-            % build short strings for reuse of jacobian
-            
-            % find nonzero entries
-            idx = find(this.sym);
-            % create cell array of same size
-            dJdxs = sym(zeros(length(idx),1));
-            % fill cells with strings
-            for iJ = 1:length(idx)
-                dJdxs(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
-            end
-            % create full symbolic matrix
-            this.strsym = sym(zeros(nx,nx));
-            % fill nonzero entries
-            this.strsym(idx) = dJdxs;
             
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);
@@ -447,17 +415,6 @@ function [this,model] = getSyms(this,model)
                 this.sym = reshape(jacobian(tmp,p),[model.nx,model.np^2]);
                 this.sym_noopt = this.sym;
             end
-            
-            %%
-            % build short strings for reuse of dxdotdp
-            % create cell array of same size
-            ddxdotdps = cell(nx,1);
-            % fill cells with strings
-            for ix = 1:nx
-                ddxdotdps{ix} = sprintf('tmp_ddxdotdpdp_%i',ix-1);
-            end
-            % create full symbolic array
-            this.strsym = sym(ddxdotdps);
             
         case 'sx0'
             this.sym=jacobian(model.fun.x0.sym,p);
@@ -726,7 +683,6 @@ function [this,model] = getSyms(this,model)
                 this.sym(:,ievent) = -transpose(squeeze(model.fun.ddeltaxdx.sym(:,ievent,:)))*model.fun.xB.sym;
             end
             
-            
         case 'z'
             if(nevent>0)
                 this.sym = transpose([model.event.z]);
@@ -879,18 +835,13 @@ function [this,model] = getSyms(this,model)
                 error('The symbolic expression ddJydydy should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
             end
             tmp = reshape(model.fun.dJydy.sym, [model.nytrue*model.ny, 1]);
-            tmp = permute(reshape(jacobian(tmp, model.fun.y.strsym), ...
-                [model.nytrue,model.ny,model.ny]), [2,3,1]);
-            tmp2 = sym(zeros(model.ny, model.ny));
-            for iyt = 1:model.nytrue
-                tmp2 = tmp2 + tmp(:,:,iyt);
-            end
-            this.sym = tmp2;
+            tmp = reshape(jacobian(tmp, model.fun.y.strsym), [model.nytrue,model.ny,model.ny]);
+            this.sym = tmp;
             
         case 'dJydsigma'
             this.sym = sym(zeros(model.nytrue, model.ng, model.ny));
             for j = 1 : model.ng
-                this.sym(:,j,:) = jacobian(model.fun.Jy.sym(1:model.nytrue,j),model.sigma_y.y.strsym);
+                this.sym(:,j,:) = jacobian(model.fun.Jy.sym(1:model.nytrue,j),model.fun.sigma_y.strsym);
             end
             
         case 'ddJydsigmadsigma'
@@ -898,26 +849,16 @@ function [this,model] = getSyms(this,model)
                 error('The symbolic expression ddJydsigmadsigma should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
             end
             tmp = reshape(model.fun.dJydsigma.sym, [model.nytrue*model.ny, 1]);
-            tmp = permute(reshape(jacobian(tmp, model.sigma_y.y.strsym), ...
-                [model.nytrue,model.ny,model.ny]), [2,3,1]);
-            tmp2 = sym(zeros(model.ny, model.ny));
-            for iyt = 1:model.nytrue
-                tmp2 = tmp(:,:,iyt);
-            end
-            this.sym = tmp2;
+            tmp = reshape(jacobian(tmp, model.sigma_y.y.strsym), [model.nytrue,model.ny,model.ny]);
+            this.sym = tmp;
             
         case 'ddJydsigmady'
             if (model.ng > 1)
                 error('The symbolic expression ddJydsigmady should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
             end
             tmp = reshape(model.fun.dJydy.sym, [model.nytrue*model.ny, 1]);
-            tmp = permute(reshape(jacobian(tmp, model.sigma_y.y.strsym), ...
-                [model.nytrue,model.ny,model.ny]), [2,3,1]);
-            tmp2 = sym(zeros(model.ny, model.ny));
-            for iyt = 1:model.nytrue
-                tmp2 = tmp(:,:,iyt);
-            end
-            this.sym = tmp2;
+            tmp = reshape(jacobian(tmp, model.sigma_y.y.strsym), [model.nytrue,model.ny,model.ny]);
+            this.sym = tmp;
             
         case 'Jz'
             this.sym = model.sym.Jz;

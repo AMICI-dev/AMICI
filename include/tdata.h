@@ -109,6 +109,20 @@ class TempData {
     realtype *sigmaz = nullptr;
     /** parameter derivative of event standard deviation */
     realtype *dsigmazdp = nullptr;
+    /** 2nd order adjoint quadrature, contribution part 1 */
+    realtype *qBo2_part1_1 = nullptr;
+    /** 2nd order adjoint quadrature, contribution part 2 */
+    realtype *qBo2_part1 = nullptr;
+    /** 2nd order adjoint quadrature, contribution part 3 */
+    realtype *qBo2_part2_1 = nullptr;
+    /** 2nd order adjoint quadrature, contribution part 4 */
+    realtype *qBo2_part2 = nullptr;
+    /** state derivative of jacobian */
+    realtype *dJdxTmp = nullptr;
+    /** parameter derivative of jacobian */
+    realtype *dJdpTmp = nullptr;
+    /** 2nd order parameter derivative of right hand side */
+    realtype *ddfdpdpTmp = nullptr;
 
     /** array of flags indicating which root has beend found.
      *  array of length nr with the indices of the user functions gi found to

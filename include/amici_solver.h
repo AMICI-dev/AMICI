@@ -239,7 +239,7 @@ class Solver {
      * N_Vector
      * @return status flag indicating success of execution @type int
      */
-    virtual int qbinit(int which, N_Vector qBdot) = 0;
+    virtual int qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) = 0;
 
     /**
      * RootInit initialises the rootfinding for events

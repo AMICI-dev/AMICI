@@ -196,7 +196,7 @@ class IDASolver : public Solver {
 
     int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
 
-    int qbinit(int which, N_Vector qBdot) override;
+    int qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) override;
 
     int rootInit(int ne) override;
 

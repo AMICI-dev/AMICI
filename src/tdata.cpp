@@ -114,6 +114,17 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                 } else {
                     xQB = N_VNew_Serial(model->nJ * udata->nplist);
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
+                    
+                    // use variables from tdata instead
+                    qBo2_part1_1 = new double[nx * nx];
+                    qBo2_part1 = new double[nx * nx];
+                    qBo2_part2_1 = new double[nx * np];
+                    qBo2_part2 = new double[nx * np];
+                    
+                    // use variables from tdata instead
+                    dJdxTmp = new double[nx * nx * nx];
+                    dJdpTmp = new double[nx * nx * np];
+                    ddfdpdpTmp = new double[nx * np * np];
                 }
             }
         }

@@ -187,20 +187,27 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
  * @param[in] edata pointer to experimental data object @type ExpData
  * @param[in] rdata pointer to return data object @type ReturnData
  * @return status flag indicating successful execution @type int
- */
+ *
 int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                   const ReturnData *rdata) {
     
     int status = AMICI_SUCCESS;
     
-    // dJydy         nytrue x nJ x ny
-    // dydp          ny x rdata->nplist
-    // dJydp         nJ x rdata->nplist
+    // nJ should be == 1 in this case
     
-    memset(tdata->dJydp, 0, nJ * rdata->nplist * sizeof(double));
+    // dJydy                nytrue x nJ x ny
+    // dydp                 ny x rdata->nplist
+    // dJydp                nJ x rdata->nplist
+    // ddJydsigmadsigma     ny x ny
+    // ddJydsigmady         ny x ny
+    // ddJy_s2sigma         rdata->nplist x rdata->nplist
+    // ddJydydy             ny x ny
     
-    realtype *dJydyTmp = new double[nJ * ny];
-    realtype *dJydsigmaTmp = new double[nJ * ny];
+    
+    memset(tdata->ddJydpdp, 0, rdata->nplist * rdata->nplist * sizeof(double));
+    
+    realtype *dJydyTmp = new double[ny];
+    realtype *dJydsigmaTmp = new double[ny];
     
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (amiIsNaN(edata->my[rdata->nt * iyt + it]))
@@ -231,8 +238,9 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     
     return (status);
 }
+*/
 
-/** Quadrature equation for second order adjoint sensitivities 
+/** Quadrature equations for second order adjoint sensitivities
  * for negative log-likelihood Jy w.r.t. parameters
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
@@ -240,46 +248,88 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
  * @param[in] rdata pointer to return data object @type ReturnData
  * @return status flag indicating successful execution @type int
  */
-int Model::fqBo2dot(const int it, TempData *tdata, const ExpData *edata,
-                     const ReturnData *rdata) {
+int Model::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+                    void *user_data) {
     
     int status = AMICI_SUCCESS;
     
-    // dJydy         nytrue x nJ x ny
-    // dydp          ny x rdata->nplist
-    // dJydp         nJ x rdata->nplist
+    realtype *qBo2dot_tmp = N_VGetArrayPointer(qBdot);
+    realtype *xB_tmp = N_VGetArrayPointer(xB);
+    realtype *sx_tmp = N_VGetArrayPointer(tdata->sx);
     
-    memset(tdata->dJydp, 0, nJ * rdata->nplist * sizeof(double));
+    // use variables from tdata instead
+    realtype *qBo2_part1_1 = new double[nx * nx];
+    realtype *qBo2_part1 = new double[nx * nx];
+    realtype *qBo2_part2_1 = new double[nx * np];
+    realtype *qBo2_part2 = new double[nx * np];
     
-    realtype *dJydyTmp = new double[nJ * ny];
-    realtype *dJydsigmaTmp = new double[nJ * ny];
+    // use variables from tdata instead
+    realtype *dJdxTmp = new double[nx * nx * nx];
+    realtype *dJdpTmp = new double[nx * nx * np];
+    realtype *ddfdpdpTmp = new double[nx * np * np];
     
-    for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (amiIsNaN(edata->my[rdata->nt * iyt + it]))
-            continue;
+    /* Prepare quadrature fields to be read */
+    //status = fdJydx();
+    if (status != AMICI_SUCCESS)
+        return status;
+    //status = fdJydp();
+    if (status != AMICI_SUCCESS)
+        return status;
+    //status = ddxdotdpdp();
+    if (status != AMICI_SUCCESS)
+        return status;
+    
+    // Compute matrix xB' * dJdx
+    for (int ix = 0; ix < user_data->nplist; ix++) {
         
-        // copy current (iyt) dJydy and dJydsigma slices
-        // dJydyTmp     nJ x ny
-        // dJydsigmaTmp nJ x ny
-        for (int iJ = 0; iJ < nJ; ++iJ) {
-            for (int iy = 0; iy < ny; ++iy) {
-                dJydyTmp[iJ + iy * nJ] =
-                tdata->dJydy[iyt + (iJ + iy * nJ) * nytrue];
-                dJydsigmaTmp[iJ + iy * nJ] =
-                tdata->dJydsigma[iyt + (iJ + iy * nJ) * nytrue];
-            }
-        }
-        
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, dJydyTmp, nJ, tdata->dydp, ny,
-                    1.0, tdata->dJydp, nJ);
-        
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, dJydsigmaTmp, nJ,
-                    tdata->dsigmaydp, ny, 1.0, tdata->dJydp, nJ);
+        // col ix of xBdJdxTmp' = xB' * dJdx
+        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
+                    nx, nx, 1.0, dJdxTmp,
+                    nx, xB_tmp, 1,
+                    0.0, qBo2_part1_1, nx);
+        // increment pointer to next row
+        dJdpTmp += nx*nx;
     }
-    delete[] dJydyTmp;
-    delete[] dJydsigmaTmp;
+    
+    // qBo2_part1 = qBo2_part1_1 * sx
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+                nx, user_data->nplist, nx, 1.0, qBo2_part1_1, nx, sx_tmp, nx,
+                0.0, qBo2_part1, nx);
+    
+    // qBo2dot_tmp = sx' * qBo2_part1
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+                user_data->nplist, user_data->nplist, nx, 1.0, sx_tmp, user_data->nplist,
+                qBo2_part1, nx, 0.0, qBo2dot_tmp, user_data->nplist);
+
+    
+    // Compute matrix xB' * dJdp
+    for (int ip = 0; ip < user_data->nplist; ip++) {
+
+        /* col ip of qBo2_part2_1' = xB' * dJdp */
+        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
+                    nx, nx, 1.0, dJdpTmp,
+                    nx, xB_tmp, 1,
+                    0.0, qBo2_part2_1, nx);
+        /* increment pointer to next row */
+        dJdpTmp += nx*nx;
+    }
+    
+    // qBo2_part2 = qBo2_part2_1 * sx
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+                user_data->nplist, user_data->nplist, nx, 1.0, qBo2_part2_1, user_data->nplist, sx_tmp, nx,
+                0.0, qBo2_part2, user_data->nplist);
+    
+    // qBo2dot_tmp += qBo2_part2 + qBo2_part2'
+    for (int ip = 0; ip < user_data->nplist; ip++) {
+        for (int jp = 0; jp < user_data->nplist; jp++) {
+            qBo2dot_tmp(jp + ip*user_data->nplist) +=
+                qBo2_part2(jp + ip*user_data->nplist) +
+                qBo2_part2(ip + jp*user_data->nplist);
+    
+    // qBo2dot_tmp += xB' * ddfdpdp
+    amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
+                nx, user_data->nplist * user_data->nplist, 1.0, ddfdpdpTmp,
+                nx, xB_tmp, 1, 1.0, qBo2dot_tmp, 1);
     
     return (status);
 }

@@ -32,7 +32,7 @@ int IDASolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
     return IDAInitB(ami_mem, which, resultFunctionB, RCONST(t), xB, dxB);
 }
 
-int IDASolver::qbinit(int which, N_Vector qBdot) {
+int IDASolver::qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) {
     return IDAQuadInitB(ami_mem, which, fqBdot, qBdot);
 }
 
