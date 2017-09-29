@@ -21,6 +21,8 @@ classdef amimodel < handle
         debug = false;
         % flag indicating whether adjoint sensitivities should be enabled @type bool
         adjoint = true;
+        % flag indicating whether second order adjoint sensitivities should be enabled @type bool
+        adjoint_o2 = false;
         % flag indicating whether forward sensitivities should be enabled @type bool
         forward = true;
         % default initial time @type double
