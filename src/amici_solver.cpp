@@ -332,10 +332,10 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     }
 
     /* Initialise quadrature calculation */
-    if (udata-sensi < AMICI_SENSI_ORDER_SECOND) {
-        status = qbinit(tdata->which, tdata->xQB, AMICI_SENSI_ORDER_FIRST);
+    if (udata->sensi < AMICI_SENSI_ORDER_SECOND) {
+        status = qbinit(tdata->which, tdata->xQB);
     } else {
-        status = qbinit(tdata->which, tdata->xQB, AMICI_SENSI_ORDER_SECOND);
+        status = qbsinit(tdata->which, tdata->xQB);
     }
     if (status != AMICI_SUCCESS)
         return status;

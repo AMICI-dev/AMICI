@@ -152,8 +152,8 @@ class CVodeSolver : public Solver {
     static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                       void *user_data);
 
-    static int fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                      void *user_data);
+    static int fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
+                        N_Vector qBdot, void *user_data);
     
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                       N_Vector sx, N_Vector sxdot, void *user_data,
@@ -194,7 +194,9 @@ class CVodeSolver : public Solver {
 
     int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
 
-    int qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) override;
+    int qbinit(int which, N_Vector qBdot) override;
+    
+    int qbsinit(int which, N_Vector qBdot) override;
 
     int rootInit(int ne) override;
 

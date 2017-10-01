@@ -108,7 +108,7 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                 xB = N_VNew_Serial(model->nxtrue * model->nJ);
                 xB_old = N_VNew_Serial(model->nxtrue * model->nJ);
                 dxB = N_VNew_Serial(model->nxtrue * model->nJ);
-                if (udata->sensi >= AMICI_SENSI_SECOND) {
+                if (udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
                     xQB = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
                 } else {
@@ -116,15 +116,15 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
                     
                     // use variables from tdata instead
-                    qBo2_part1_1 = new double[nx * nx];
-                    qBo2_part1 = new double[nx * nx];
-                    qBo2_part2_1 = new double[nx * np];
-                    qBo2_part2 = new double[nx * np];
+                    qBo2_part1_1 = new double[model->nx * model->nx];
+                    qBo2_part1 = new double[model->nx * model->nx];
+                    qBo2_part2_1 = new double[model->nx * udata->nplist];
+                    qBo2_part2 = new double[model->nx * udata->nplist];
                     
                     // use variables from tdata instead
-                    dJdxTmp = new double[nx * nx * nx];
-                    dJdpTmp = new double[nx * nx * np];
-                    ddfdpdpTmp = new double[nx * np * np];
+                    dJdxTmp = new double[model->nx * model->nx * model->nx];
+                    dJdpTmp = new double[model->nx * model->nx * udata->nplist];
+                    ddfdpdpTmp = new double[model->nx * udata->nplist * udata->nplist];
                 }
             }
         }

@@ -812,8 +812,8 @@ class Model {
     int fdJydp(const int it, TempData *tdata, const ExpData *edata,
                const ReturnData *rdata);
     
-    int fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                 void *user_data);
+    int fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
+                 N_Vector qBdot, void *user_data);
 
     int fdJydx(const int it, TempData *tdata, const ExpData *edata);
 

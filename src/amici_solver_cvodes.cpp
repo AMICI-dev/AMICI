@@ -32,12 +32,12 @@ int CVodeSolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
     return CVodeInitB(ami_mem, which, resultFunctionB, RCONST(t), xB);
 }
 
-int CVodeSolver::qbinit(int which, N_Vector qBdot, int AMICI_SENSI_ORDER) {
-    if (AMICI_SENSI_ORDER < AMICI_SENSI_ORDER_SECOND) {
-        return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
-    } else {
-        return CVodeQuadInitB(ami_mem, which, fqBo2dot, qBdot);
-    }
+int CVodeSolver::qbinit(int which, N_Vector qBdot) {
+    return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
+}
+
+int CVodeSolver::qbsinit(int which, N_Vector qBdot) {
+    return CVodeQuadInitBS(ami_mem, which, fqBo2dot, qBdot);
 }
 
 int CVodeSolver::rootInit(int ne) {
@@ -343,10 +343,10 @@ int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     return tdata->model->fqBdot(t, x, xB, qBdot, user_data);
 }
 
-int CVodeSolver::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+int CVodeSolver::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fqBo2dot(t, x, xB, qBdot, user_data);
+    return tdata->model->fqBo2dot(t, x, sx, xB, qBdot, user_data);
 }
 
 int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,

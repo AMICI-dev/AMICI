@@ -248,14 +248,17 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
  * @param[in] rdata pointer to return data object @type ReturnData
  * @return status flag indicating successful execution @type int
  */
-int Model::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                    void *user_data) {
+int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
+                    N_Vector qBdot, void *user_data) {
     
+    UserData *udata = (UserData*) user_data;
     int status = AMICI_SUCCESS;
+    int np = udata->nplist;
+    //int nx = udata->nx;
     
     realtype *qBo2dot_tmp = N_VGetArrayPointer(qBdot);
     realtype *xB_tmp = N_VGetArrayPointer(xB);
-    realtype *sx_tmp = N_VGetArrayPointer(tdata->sx);
+    realtype *sx_tmp = N_VGetArrayPointer(sx[0]);
     
     // use variables from tdata instead
     realtype *qBo2_part1_1 = new double[nx * nx];
@@ -280,7 +283,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
         return status;
     
     // Compute matrix xB' * dJdx
-    for (int ix = 0; ix < user_data->nplist; ix++) {
+    for (int ix = 0; ix < udata->nplist; ix++) {
         
         // col ix of xBdJdxTmp' = xB' * dJdx
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
@@ -293,18 +296,17 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     
     // qBo2_part1 = qBo2_part1_1 * sx
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                nx, user_data->nplist, nx, 1.0, qBo2_part1_1, nx, sx_tmp, nx,
+                nx, udata->nplist, nx, 1.0, qBo2_part1_1, nx, sx_tmp, nx,
                 0.0, qBo2_part1, nx);
     
     // qBo2dot_tmp = sx' * qBo2_part1
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                user_data->nplist, user_data->nplist, nx, 1.0, sx_tmp, user_data->nplist,
-                qBo2_part1, nx, 0.0, qBo2dot_tmp, user_data->nplist);
+                udata->nplist, udata->nplist, nx, 1.0, sx_tmp, udata->nplist,
+                qBo2_part1, nx, 0.0, qBo2dot_tmp, udata->nplist);
 
     
     // Compute matrix xB' * dJdp
-    for (int ip = 0; ip < user_data->nplist; ip++) {
-
+    for (int ip = 0; ip < udata->nplist; ip++) {
         /* col ip of qBo2_part2_1' = xB' * dJdp */
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
                     nx, nx, 1.0, dJdpTmp,
@@ -316,22 +318,22 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     
     // qBo2_part2 = qBo2_part2_1 * sx
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                user_data->nplist, user_data->nplist, nx, 1.0, qBo2_part2_1, user_data->nplist, sx_tmp, nx,
-                0.0, qBo2_part2, user_data->nplist);
+                udata->nplist, udata->nplist, nx, 1.0, qBo2_part2_1, udata->nplist, sx_tmp, nx,
+                0.0, qBo2_part2, udata->nplist);
     
     // qBo2dot_tmp += qBo2_part2 + qBo2_part2'
-    for (int ip = 0; ip < user_data->nplist; ip++) {
-        for (int jp = 0; jp < user_data->nplist; jp++) {
-            qBo2dot_tmp(jp + ip*user_data->nplist) +=
-                qBo2_part2(jp + ip*user_data->nplist) +
-                qBo2_part2(ip + jp*user_data->nplist);
+    for (int ip = 0; ip < udata->nplist; ip++)
+        for (int jp = 0; jp < udata->nplist; jp++)
+            qBo2dot_tmp[jp + ip*udata->nplist] +=
+                qBo2_part2[jp + ip*udata->nplist] +
+                qBo2_part2[ip + jp*udata->nplist];
     
     // qBo2dot_tmp += xB' * ddfdpdp
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                nx, user_data->nplist * user_data->nplist, 1.0, ddfdpdpTmp,
+                nx, udata->nplist * udata->nplist, 1.0, ddfdpdpTmp,
                 nx, xB_tmp, 1, 1.0, qBo2dot_tmp, 1);
     
-    return (status);
+    return status;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.

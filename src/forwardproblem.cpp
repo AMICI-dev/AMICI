@@ -833,13 +833,11 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
                 }
             }
         }
-    } else {
-        for (int ip = 0; ip < rdata->nplist; ip++) {
-            for (int jp = 0; jp < rdata->nplist; jp++) {
+    } else { /*
+        for (int ip = 0; ip < rdata->nplist; ip++)
+            for (int jp = 0; jp < rdata->nplist; jp++)
                 rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
-                    tdata->ddJydpdp[ip + jp * rdata->nplist];
-            }
-        }
+                    tdata->ddJydpdp[ip + jp * rdata->nplist]; */
     }
 
     return status;
