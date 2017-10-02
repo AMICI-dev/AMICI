@@ -28,7 +28,6 @@ matrix:
         - gem install coveralls-lcov
       after_success: 
         - ./scripts/run-coveralls.sh
-        - ./scripts/run-doxygen.sh
     - os: osx
       compiler: clang
       before_install: brew install hdf5 cppcheck
@@ -40,6 +39,7 @@ script:
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
 notifications:
   slack: 

@@ -56,12 +56,8 @@ doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
 
 #cleanup
 rm ${AMICI_PATH}/mtoc/config/latexextras.sty
-rm ${AMICI_PATH}/mtoc/config/latexextras.sty-e
 rm ${AMICI_PATH}/mtoc/config/Doxyfile
-rm ${AMICI_PATH}/mtoc/config/Doxyfile-e
 rm ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
-
-
 
 # check if warnings log was created
 if [ -f ${AMICI_PATH}/mtoc/warnings.log  ]; then
