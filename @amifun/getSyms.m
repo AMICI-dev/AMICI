@@ -340,7 +340,7 @@ function [this,model] = getSyms(this,model)
                     
                     tmp2 = jacobian(tmp,x) ...
                         + jacobian(tmp,w) * model.fun.dwdx.strsym ...
-                        + jacobian(tmp,model.fun.dwdx.strsym) * jacobian(model.fun.dwdx.strsym,x);
+                        + jacobian(tmp,model.fun.dwdx.sym) * jacobian(model.fun.dwdx.sym,x);
                     this.sym = reshape(tmp2, [model.nx,model.nx,model.nx]);
                     this.sym_noopt = reshape(jacobian(tmp,x), [model.nx,model.nx,model.nx]);
                 else
@@ -358,7 +358,7 @@ function [this,model] = getSyms(this,model)
                 if(~isempty(w))
                     tmp2 = jacobian(tmp,p) ...
                         + jacobian(tmp,w) * model.fun.dwdp.strsym ...
-                        + jacobian(tmp,model.fun.dwdx.strsym) * jacobian(model.fun.dwdx.strsym,p);
+                        + jacobian(tmp,model.fun.dwdx.sym) * jacobian(model.fun.dwdx.sym,p);
                     this.sym = reshape(tmp2, [model.nx,model.nx,model.np]);
                     this.sym_noopt = reshape(jacobian(tmp,p), [model.nx,model.nx,model.np]);
                 else
@@ -408,7 +408,7 @@ function [this,model] = getSyms(this,model)
             if(~isempty(w))
                 tmp2 = jacobian(tmp,p) ...
                     + jacobian(tmp,w)*model.fun.dwdp.strsym ...
-                    + jacobian(tmp,dwdp)*jacobian(model.fun.dwdp.strsym,p);
+                    + jacobian(tmp,model.fun.dwdp.sym)*jacobian(model.fun.dwdp.sym,p);
                 this.sym = reshape(tmp2, [model.nx,model.np^2]);
                 this.sym_noopt = reshape(jacobian(tmp,p),[model.nx,model.np^2]);
             else
@@ -503,7 +503,8 @@ function [this,model] = getSyms(this,model)
             tmp = reshape(model.fun.dsigma_ydp.sym, [model.ny*model.np,1]);
             tmp = reshape(jacobian(tmp, p), [model.ny, model.np, model.np]);
             tmp = reshape(permute(tmp, [2,3,1]), [model.np^2,model.ny]);
-            this.sym = reshape(tmp*reshape(model.fun.dJydsigma.sym, [model.ny,1]), [model.np, model.np]);
+            this.sym = reshape(tmp*reshape(model.fun.dJydsigma.sym, ...
+                [model.nytrue,model.ny]), [model.nytrue, model.np, model.np]);
             
         case 'dsigma_zdp'
             if(nz>0)
@@ -849,7 +850,7 @@ function [this,model] = getSyms(this,model)
                 error('The symbolic expression ddJydsigmadsigma should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
             end
             tmp = reshape(model.fun.dJydsigma.sym, [model.nytrue*model.ny, 1]);
-            tmp = reshape(jacobian(tmp, model.sigma_y.y.strsym), [model.nytrue,model.ny,model.ny]);
+            tmp = reshape(jacobian(tmp, model.fun.sigma_y.strsym), [model.nytrue,model.ny,model.ny]);
             this.sym = tmp;
             
         case 'ddJydsigmady'
@@ -857,7 +858,7 @@ function [this,model] = getSyms(this,model)
                 error('The symbolic expression ddJydsigmady should not be computed when using o2flag. Please change o2flag to 0 or switch off model.o2adjoint before wrapping.');
             end
             tmp = reshape(model.fun.dJydy.sym, [model.nytrue*model.ny, 1]);
-            tmp = reshape(jacobian(tmp, model.sigma_y.y.strsym), [model.nytrue,model.ny,model.ny]);
+            tmp = reshape(jacobian(tmp, model.fun.sigma_y.strsym), [model.nytrue,model.ny,model.ny]);
             this.sym = tmp;
             
         case 'Jz'
