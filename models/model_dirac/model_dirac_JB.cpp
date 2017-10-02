@@ -13,10 +13,21 @@ int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *xB_tmp = N_VGetArrayPointer(xB);
-realtype *dxB_tmp = N_VGetArrayPointer(dxB);
-realtype *xBdot_tmp = N_VGetArrayPointer(xBdot);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
+realtype *xB_tmp = nullptr;
+if(xB)
+    xB_tmp = N_VGetArrayPointer(xB);
+realtype *dxB_tmp = nullptr;
+if(dxB)
+    dxB_tmp = N_VGetArrayPointer(dxB);
+realtype *xBdot_tmp = nullptr;
+if(xBdot)
+    xBdot_tmp = N_VGetArrayPointer(xBdot);
   memset(JB->data,0,sizeof(realtype)*4);
 status = w_model_dirac(t,x,NULL,tdata);
 status = dwdx_model_dirac(t,x,NULL,user_data);

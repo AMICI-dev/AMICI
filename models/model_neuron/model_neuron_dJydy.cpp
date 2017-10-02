@@ -13,7 +13,9 @@ int dJydy_model_neuron(realtype t, int it, N_Vector x, TempData *tdata, const Ex
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJydy,0,sizeof(realtype)*model->ny*model->nytrue*model->nJ);
 status = w_model_neuron(t,x,NULL,tdata);
 int iy;

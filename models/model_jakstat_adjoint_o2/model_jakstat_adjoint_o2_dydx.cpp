@@ -11,7 +11,9 @@ int dydx_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, TempData *tdat
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
   tdata->dydx[0+1*54] = tdata->p[13]/tdata->p[4];
   tdata->dydx[0+2*54] = (tdata->p[13]*2.0)/tdata->p[4];

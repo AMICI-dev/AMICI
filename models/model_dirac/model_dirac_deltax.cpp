@@ -11,9 +11,15 @@ int deltax_model_dirac(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector x
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *xdot_tmp = N_VGetArrayPointer(xdot);
-realtype *xdot_old_tmp = N_VGetArrayPointer(xdot_old);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *xdot_tmp = nullptr;
+if(xdot)
+    xdot_tmp = N_VGetArrayPointer(xdot);
+realtype *xdot_old_tmp = nullptr;
+if(xdot_old)
+    xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 memset(tdata->deltax,0,sizeof(realtype)*2);
 status = w_model_dirac(t,x,NULL,tdata);
               switch(ie) { 

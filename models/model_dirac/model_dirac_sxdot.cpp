@@ -14,14 +14,27 @@ int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *sx_tmp = N_VGetArrayPointer(sx);
-realtype *sdx_tmp = N_VGetArrayPointer(sdx);
-realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
-realtype *xdot_tmp = N_VGetArrayPointer(xdot);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
+realtype *sx_tmp = nullptr;
+if(sx)
+    sx_tmp = N_VGetArrayPointer(sx);
+realtype *sdx_tmp = nullptr;
+if(sdx)
+    sdx_tmp = N_VGetArrayPointer(sdx);
+realtype *sxdot_tmp = nullptr;
+if(sxdot)
+    sxdot_tmp = N_VGetArrayPointer(sxdot);
+realtype *xdot_tmp = nullptr;
+if(xdot)
+    xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*2);
 if(ip == 0) {
-    status = JSparse_model_dirac(t,x,xdot,tdata->J,user_data,NULL,NULL,NULL);
+    status = JSparse_model_dirac(t,0.0,x,NULL,xdot,tdata->J,user_data,NULL,NULL,NULL);
     status = dxdotdp_model_dirac(t,x,NULL,user_data);
 }
   sxdot_tmp[0] = tdata->dxdotdp[0 + ip*model->nx]+tdata->J->data[0]*sx_tmp[0];

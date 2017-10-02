@@ -34,8 +34,8 @@ int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, voi
     return JDiag_model_neuron_o2(t, JDiag, cj, x, dx, user_data);
 }
 
-int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp){
-    return Jv_model_neuron_o2(v, Jv, t, x, xdot, user_data, tmp);
+int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2){
+    return Jv_model_neuron_o2(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
 }
 
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){
@@ -158,8 +158,8 @@ int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, real
     return JBandB_model_neuron_o2(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB){
-    return JvB_model_neuron_o2(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
+int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2){
+    return JvB_model_neuron_o2(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
 }
 
 int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){

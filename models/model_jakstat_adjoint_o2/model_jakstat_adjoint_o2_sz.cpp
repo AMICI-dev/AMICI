@@ -12,7 +12,9 @@ int sz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, Te
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;
 status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);

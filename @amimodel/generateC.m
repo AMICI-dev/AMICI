@@ -10,7 +10,7 @@ if(strcmp(this.wtype,'iw'))
     rtcj = 'cj,';
 else
     dxvec = 'NULL,';
-    rtcj = '';
+    rtcj = '0.0,';
 end
 
 
@@ -90,7 +90,7 @@ for ifun = this.funs
                     fprintf(fid,['    status = dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                     fprintf(fid,['    status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 else
-                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,xdot,tdata->J,user_data,NULL,NULL,NULL);\n']);
+                    fprintf(fid,['    status = JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tdata->J,user_data,NULL,NULL,NULL);\n']);
                 end
                 fprintf(fid,['    status = dxdotdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 fprintf(fid,'}\n');
