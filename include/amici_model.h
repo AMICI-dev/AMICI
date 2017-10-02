@@ -57,6 +57,10 @@ class Model {
      */
     UserData getUserData() const;
 
+    /**
+     * @brief Returns a new UserData instance with preset model dimensions
+     * @return The UserData instance
+     */
     UserData *getNewUserData() const;
 
     /** Retrieves the solver object
@@ -147,6 +151,8 @@ class Model {
       * @param[in] dx Vector with the derivative states (only DAE) @type
       *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
+      * @param[in] dxB Vector with the adjoint derivative states (only DAE)
+      * @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
       * @param[in] user_data object with model specifications @type TempData
@@ -179,9 +185,6 @@ class Model {
     }
 
     /** Matrix vector product of J with a vector v (for iterative solvers)
-      * @param[in] v Vector with which the Jacobian is multiplied @type N_Vector
-      * @param[out] Jv Vector to which the Jacobian vector product will be
-      *written @type N_Vector
       * @param[in] t timepoint @type realtype
       * @param[in] cj scaling factor, inverse of the step size (only DAE) @type
       *realtype
@@ -189,6 +192,9 @@ class Model {
       * @param[in] dx Vector with the derivative states (only DAE) @type
       *N_Vector
       * @param[in] xdot Vector with the right hand side @type N_Vector
+      * @param[in] v Vector with which the Jacobian is multiplied @type N_Vector
+      * @param[out] Jv Vector to which the Jacobian vector product will be
+      *written @type N_Vector
       * @param[in] user_data object with model specifications @type TempData
       * @param[in] tmp1 temporary storage vector @type N_Vector
       * @param[in] tmp2 temporary storage vector @type N_Vector
@@ -380,10 +386,10 @@ class Model {
       * @param[in] t timepoint @type realtype
       * @param[in] x Vector with the states @type N_Vector
       * @param[in] dx Vector with the derivative states (only DAE) @type
-     * N_Vector
+      * N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
       * @param[in] dxB Vector with the adjoint derivative states (only DAE)
-     * @type N_Vector
+      * @type N_Vector
       * @param[out] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[in] user_data pointer to temp data object @type TempData
       * @return status flag indicating successful execution @type int
@@ -396,9 +402,13 @@ class Model {
     /** Right hand side of integral equation for quadrature states qB
       * @param[in] t timepoint @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
+      * @param[in] dxB Vector with the adjoint derivative states (only DAE)
+      * @type N_Vector
       * @param[out] qBdot Vector with the adjoint quadrature right hand side
-     * @type N_Vector
+      * @type N_Vector
       * @param[in] user_data pointer to temp data object @type TempData
       * @return status flag indicating successful execution @type int
       */
@@ -411,7 +421,7 @@ class Model {
       * @param[in] t timepoint @type realtype
       * @param[in] x Vector with the states @type N_Vector
       * @param[in] dx Vector with the derivative states (only DAE) @type
-     * N_Vector
+      * N_Vector
       * @param[in] user_data pointer to temp data object @type TempData
       * @return status flag indicating successful execution @type int
       */
@@ -661,14 +671,19 @@ class Model {
       * @param[in] Ns number of parameters @type int
       * @param[in] t timepoint @type realtype
       * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
       * @param[in] xdot Vector with the right hand side @type N_Vector
       * @param[in] ip parameter index @type int
       * @param[in] sx Vector with the state sensitivities @type N_Vector
-      * @param[in] sxdot Vector with the sensitivity right hand side @type
-     * N_Vector
+      * @param[in] sdx Vector with the derivative state sensitivities (only DAE)
+      * @type N_Vector
+      * @param[out] sxdot Vector with the sensitivity right hand side @type
+      * N_Vector
       * @param[in] user_data pointer to temp data object @type TempData
       * @param[in] tmp1 temporary storage vector @type N_Vector
       * @param[in] tmp2 temporary storage vector @type N_Vector
+      * @param[in] tmp3 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
       */
     virtual int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot, int ip,
@@ -730,6 +745,8 @@ class Model {
       * @param[in] dx Vector with the derivative states (only DAE) @type
       *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
+      * @param[in] dxB Vector with the adjoint derivative states (only DAE)
+      * @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
       * @param[in] user_data object with model specifications @type TempData
@@ -746,16 +763,22 @@ class Model {
     }
 
     /** Matrix vector product of JB with a vector v (for iterative solvers)
+      * @param[in] t timepoint @type realtype
+      * @param[in] x Vector with the states @type N_Vector
+      * @param[in] dx Vector with the derivative states (only DAE) @type
+      *N_Vector
+      * @param[in] xB Vector with the adjoint states @type N_Vector
+      * @param[in] dxB Vector with the adjoint derivative states (only DAE)
+      * @type N_Vector
+      * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[in] vB Vector with which the Jacobian is multiplied @type
       *N_Vector
       * @param[out] JvB Vector to which the Jacobian vector product will be
       *written @type N_Vector
-      * @param[in] t timepoint @type realtype
-      * @param[in] x Vector with the states @type N_Vector
-      * @param[in] xB Vector with the adjoint states @type N_Vector
-      * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
+      * @param[in] cj scalar in Jacobian (inverse stepsize, only DAE) @type realtype
       * @param[in] user_data object with model specifications @type TempData
-      * @param[in] tmpB temporary storage vector @type N_Vector
+      * @param[in] tmpB1 temporary storage vector @type N_Vector
+      * @param[in] tmpB2 temporary storage vector @type N_Vector
       * @return status flag indicating successful execution @type int
      **/
     virtual int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
@@ -771,6 +794,8 @@ class Model {
       * @param[in] dx Vector with the derivative states (only DAE) @type
       *N_Vector
       * @param[in] xB Vector with the adjoint states @type N_Vector
+      * @param[in] dxB Vector with the adjoint derivative states (only DAE)
+      * @type N_Vector
       * @param[in] xBdot Vector with the adjoint right hand side @type N_Vector
       * @param[out] JB Matrix to which the Jacobian will be written @type DlsMat
       * @param[in] user_data object with model specifications @type TempData

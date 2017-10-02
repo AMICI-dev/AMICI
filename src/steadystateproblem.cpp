@@ -270,6 +270,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
      * found
      * @param[in] run_time double coputation time of the solver in milliseconds
      * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      * @return stats integer flag indicating success of the method
      */
 
@@ -311,6 +312,7 @@ int SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tda
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      * @return stats integer flag indicating success of the method
      */
  

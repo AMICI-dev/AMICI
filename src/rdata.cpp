@@ -38,7 +38,7 @@ ReturnData::ReturnData(const UserData *udata, const Model *model,
      * appropriately initialize fields
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] model pointer to model specification object @type Model
-     * @param[in] initialize arrays (needs to happen elsewhere if false) @type
+     * @param[in] initializeFields flag to initialize arrays (needs to happen elsewhere if false) @type
      * bool
      */
 
