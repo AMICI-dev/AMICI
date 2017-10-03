@@ -13,7 +13,9 @@ int Jy_model_steadystate(realtype t, int it, N_Vector x, TempData *tdata, const 
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 status = w_model_steadystate(t,x,NULL,tdata);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){

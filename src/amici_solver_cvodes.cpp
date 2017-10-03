@@ -336,43 +336,43 @@ int CVodeSolver::J(long N, realtype t, N_Vector x, N_Vector xdot, DlsMat J,
 int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fqBdot(t, x, xB, qBdot, user_data);
+    return tdata->model->fqBdot(t, x, NULL, xB, NULL, qBdot, user_data);
 }
 
 int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                         N_Vector sx, N_Vector sxdot, void *user_data,
                         N_Vector tmp1, N_Vector tmp2) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fsxdot(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1,
-                                tmp2);
+    return tdata->model->fsxdot(Ns, t, x, NULL, xdot, ip, sx, NULL, sxdot, user_data, tmp1,
+                                tmp2, NULL);
 }
 
 int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
                           void *user_data, N_Vector tmp1, N_Vector tmp2,
                           N_Vector tmp3) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparse(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+    return tdata->model->fJSparse(t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
 int CVodeSolver::fJBand(long N, long mupper, long mlower, realtype t,
                         N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBand(N, mupper, mlower, t, x, xdot, J, user_data,
+    return tdata->model->fJBand(N, mupper, mlower, t, 0.0, x, NULL, xdot, J, user_data,
                                 tmp1, tmp2, tmp3);
 }
 
 int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
                      N_Vector xdot, void *user_data, N_Vector tmp) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJv(v, Jv, t, x, xdot, user_data, tmp);
+    return tdata->model->fJv(t, x, NULL, xdot, v, Jv, 0.0, user_data, tmp, NULL);
 }
 
 int CVodeSolver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                      N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                      N_Vector tmp2B, N_Vector tmp3B) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJB(NeqBdot, t, x, xB, xBdot, JB, user_data, tmp1B,
+    return tdata->model->fJB(NeqBdot, t, 0.0, x, NULL, xB, NULL, xBdot, JB, user_data, tmp1B,
                              tmp2B, tmp3B);
 }
 
@@ -380,7 +380,7 @@ int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                            SlsMat JB, void *user_data, N_Vector tmp1B,
                            N_Vector tmp2B, N_Vector tmp3B) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparseB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B,
+    return tdata->model->fJSparseB(t, 0.0, x, NULL, xB, NULL, xBdot, JB, user_data, tmp1B, tmp2B,
                                    tmp3B);
 }
 
@@ -389,7 +389,7 @@ int CVodeSolver::fJBandB(long int NeqBdot, long int mupper, long int mlower,
                          DlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBandB(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB,
+    return tdata->model->fJBandB(NeqBdot, mupper, mlower, t, 0.0, x, NULL, xB, NULL, xBdot, JB,
                                  user_data, tmp1B, tmp2B, tmp3B);
 }
 
@@ -397,7 +397,7 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                       N_Vector xB, N_Vector xBdot, void *user_data,
                       N_Vector tmpB) {
     TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJvB(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
+    return tdata->model->fJvB(t, x, NULL, xB, NULL, xBdot, vB, JvB, 0.0, user_data, tmpB, NULL);
 }
 
 CVodeSolver::~CVodeSolver() { AMIFree(); }

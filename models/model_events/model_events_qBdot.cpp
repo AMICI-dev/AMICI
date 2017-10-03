@@ -8,14 +8,26 @@
 #include "model_events_dwdp.h"
 #include "model_events_w.h"
 
-int qBdot_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
+int qBdot_model_events(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *xB_tmp = N_VGetArrayPointer(xB);
-realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
+realtype *xB_tmp = nullptr;
+if(xB)
+    xB_tmp = N_VGetArrayPointer(xB);
+realtype *dxB_tmp = nullptr;
+if(dxB)
+    dxB_tmp = N_VGetArrayPointer(dxB);
+realtype *qBdot_tmp = nullptr;
+if(qBdot)
+    qBdot_tmp = N_VGetArrayPointer(qBdot);
 int ip;
 memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*model->nJ);
 status = dwdp_model_events(t,x,NULL,user_data);

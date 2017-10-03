@@ -14,7 +14,7 @@ class UserData {
     /**
      * @brief UserData
      * @param np total number of model parameters
-     * @param nk number of f ixed parameters
+     * @param nk number of fixed parameters
      * @param nx number of states
      */
     UserData(int np, int nk, int nx);
@@ -49,8 +49,15 @@ class UserData {
      * @brief setPlist set parameter selection and ordering.
      * accepts array of doubles to deal with user input from matlab.
      * @param plist
+     * @param nplist length of plist
      */
     void setPlist(const double *plist, int nplist);
+    /**
+     * @brief setPlist set parameter selection and ordering.
+     * accepts array of ints.
+     * @param plist
+     * @param nplist length of plist
+     */
     void setPlist(const int *plist, int nplist);
 
     /**

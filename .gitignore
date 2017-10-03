@@ -25,9 +25,9 @@ fonts/*
 
 sed-ml/*
 
-src/doc/*
-
 stylesheets/*
+
+scripts/env.sh
 
 images/*
 
@@ -109,15 +109,11 @@ CMakeLists.txt.user
 
 *.md5
 
-*.dox
-
 *.json
 
 *.mat
 
 *.js
-
-*.dox
 
 *.json
 
@@ -245,5 +241,10 @@ examples/example_neuron/simulate_model_neuron_hdf.m
 
 examples/example_neuron/simulate_model_neuron.m
 
-scripts/env.sh
 examples/example_events/simulate_model_events_hdf.m
+
+mtoc/config/latexextras.sty-e
+
+mtoc/config/latexextras.sty
+
+mtoc/config/Doxyfile-e

@@ -52,16 +52,13 @@ cp ${AMICI_PATH}/mtoc/config/latexextras.template ${AMICI_PATH}/mtoc/config/late
 sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${AMICI_PATH}/mtoc/config/latexextras.sty
 
 doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
+doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
 
 
 #cleanup
-rm ${AMICI_PATH}/mtoc/config/latexextras.sty
-rm ${AMICI_PATH}/mtoc/config/latexextras.sty-e
+#rm ${AMICI_PATH}/mtoc/config/latexextras.sty
 rm ${AMICI_PATH}/mtoc/config/Doxyfile
-rm ${AMICI_PATH}/mtoc/config/Doxyfile-e
 rm ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
-
-
 
 # check if warnings log was created
 if [ -f ${AMICI_PATH}/mtoc/warnings.log  ]; then

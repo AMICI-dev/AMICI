@@ -25,12 +25,9 @@ function printLocalVars(this,model,fid)
         elseif(strcmp(nvec{1},'*sdx0'))
             fprintf(fid,'realtype *sdx0_tmp;\n');
         else
-            if(or(strcmp(model.wtype,'iw'),~strcmp(nvec{1},'dx')))
-                % check for nx ==0, otherwise we will access a NULL pointer and crash
-                if(not(and(nx==0,strcmp(nvec{1},'x'))))
-                    fprintf(fid,['realtype *' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
-                end
-            end
+            fprintf(fid,['realtype *' nvec{1} '_tmp = nullptr;\n']);
+            fprintf(fid,['if(' nvec{1} ')\n']);
+            fprintf(fid,['    ' nvec{1} '_tmp = N_VGetArrayPointer(' nvec{1} ');\n']);
         end
     end
     
@@ -86,9 +83,7 @@ function printLocalVars(this,model,fid)
                 fprintf(fid,['  JB->indexptrs[' num2str(i-1) '] = ' num2str(model.colptrsB(i)) ';\n']);
             end
         case 'sxdot'
-            if(~strcmp(model.wtype,'iw'))
-                fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
-            end
+            fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'sx0'
             fprintf(fid,['realtype t = udata->tstart;\n']);
             % nothing

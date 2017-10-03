@@ -79,7 +79,8 @@ int runAmiciSimulation(const UserData *udata, const ExpData *edata,
  * specified identifier
  *
  * @param[in] identifier error identifier @type char
- * @param[in] msg error message @type char
+ * @param[in] format string with error message printf-style format
+ * @param ... arguments to be formatted
  * @return void
  */
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
@@ -99,7 +100,8 @@ void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
  * specified identifier
  *
  * @param[in] identifier warning identifier @type char
- * @param[in] msg warning message @type char
+ * @param[in] format string with error message printf-style format
+ * @param ... arguments to be formatted
  * @return void
  */
 void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {

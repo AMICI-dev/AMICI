@@ -26,22 +26,47 @@ ExpData::ExpData(const UserData *udata, Model *model)
 }
 
 void ExpData::setObservedData(const double *observedData) {
+    /**
+     * set function that copies data from input to ExpData::my
+     *
+     * @param[in] observedData observed data @type *double
+     */
     memcpy(my, observedData, nytrue * nt * sizeof(double));
 }
 
 void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
+    /**
+     * set function that copies data from input to ExpData::sigmay
+     *
+     * @param[in] observedDataStdDev standard deviation of observed data @type *double
+     */
     memcpy(sigmay, observedDataStdDev, nytrue * nt * sizeof(double));
 }
 
 void ExpData::setObservedEvents(const double *observedEvents) {
+    /**
+     * set function that copies data from input to ExpData::mz
+     *
+     * @param[in] observedEvents observed event data @type *double
+     */
     memcpy(mz, observedEvents, nmaxevent * nztrue * sizeof(double));
 }
 
 void ExpData::setObservedRoots(const double *observedRoots) {
+    /**
+     * set function that copies data from input to ExpData::mrz
+     *
+     * @param[in] observedRoots observed roots of event data @type *double
+     */
     memcpy(mrz, observedRoots, nmaxevent * nztrue * sizeof(double));
 }
 
 void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
+    /**
+     * set function that copies data from input to ExpData::sigmaz
+     *
+     * @param[in] observedEventsStdDev standard deviation of observed event data @type *double
+     */
     memcpy(sigmaz, observedEventsStdDev, nmaxevent * nztrue * sizeof(double));
 }
 

@@ -31,10 +31,14 @@ class ExpData {
     double *mrz = nullptr;
     /** standard deviation of observed events/roots */
     double *sigmaz = nullptr;
-
+    
+    /** number of observables */
     const int nytrue;
+    /** number of event observables */
     const int nztrue;
+    /** number of timepoints */
     const int nt;
+    /** maximal number of event occurences */
     const int nmaxevent;
 };
 

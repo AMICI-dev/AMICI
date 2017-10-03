@@ -7,12 +7,17 @@
 #include <include/udata.h>
 #include "model_neuron_w.h"
 
-int root_model_neuron(realtype t, N_Vector x, realtype *root, void *user_data) {
+int root_model_neuron(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
 status = w_model_neuron(t,x,NULL,tdata);
   root[0] = x_tmp[0]-3.0E1;
 return(status);

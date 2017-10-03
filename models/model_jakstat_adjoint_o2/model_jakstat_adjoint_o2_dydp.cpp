@@ -11,7 +11,9 @@ int dydp_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, TempData *tdat
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 int ip;
 status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {

@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int JvB_model_dirac(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB);
+int JvB_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
 
 
 #endif /* _am_model_dirac_JvB_h */

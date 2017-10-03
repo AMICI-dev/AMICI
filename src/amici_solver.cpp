@@ -131,6 +131,12 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
 
     if (AMISetSuppressAlg(TRUE) != AMICI_SUCCESS)
         goto freturn;
+    
+    /* calculate consistent DAE initial conditions (no effect for ODE) */
+    //if(udata->nt>1){
+    //    if (AMICalcIC(udata->ts[1]) != AMICI_SUCCESS)
+    //        goto freturn;
+    //}
 
     return AMICI_SUCCESS;
 

@@ -84,7 +84,9 @@ function this = gccode(this,model,fid)
             % fix various function specific variable names/indexes
             
             cstr = regexprep(cstr,'var_x_([0-9]+)','x_tmp[$1]');
+            cstr = regexprep(cstr,'var_dx_([0-9]+)','dx_tmp[$1]');
             cstr = regexprep(cstr,'var_sx_([0-9]+)','sx_tmp[$1]');
+            cstr = regexprep(cstr,'var_sdx_([0-9]+)','sdx_tmp[$1]');
             % sxdot needs to preces xdot
             cstr = regexprep(cstr,'var_sxdot_([0-9]+)','sxdot_tmp[$1]');
             cstr = regexprep(cstr,'var_xdot_([0-9]+)','xdot_tmp[$1]');
@@ -92,6 +94,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'xdot_old_([0-9]+)','xdot_old_tmp[$1]');
             cstr = regexprep(cstr,'xdot_([0-9]+)','xdot_tmp[$1]');
             cstr = regexprep(cstr,'var_xB_([0-9]+)','xB_tmp[$1]');
+            cstr = regexprep(cstr,'var_dxB_([0-9]+)','dxB_tmp[$1]');
             cstr = regexprep(cstr,'var_qBdot_([0-9]+)','qBdot_tmp[ip + udata->nplist*$1]');
             cstr = regexprep(cstr,'var_v_([0-9]+)', 'v_tmp[$1]');
             cstr = regexprep(cstr,'var_vB_([0-9]+)', 'vB_tmp[$1]');
@@ -113,6 +116,8 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_w_([0-9]+)','tdata->w[$1]');
             cstr = regexprep(cstr,'var_dxdotdp_([0-9]+)','tdata->dxdotdp[$1 + ip*model->nx]');
             cstr = regexprep(cstr,'var_stau_([0-9]+)','tdata->stau[ip]');
+            cstr = regexprep(cstr,'dfdx_([0-9]+)','tdata->dfdx[$1]');
+            cstr = regexprep(cstr,'M_([0-9]+)','tdata->M[$1]');
             cstr = regexprep(cstr,'var_dwdx_([0-9]+)','tdata->dwdx[$1]');
             cstr = regexprep(cstr,'var_dwdp_([0-9]+)','tdata->dwdp[$1]');
             cstr = regexprep(cstr,'tmp_J_([0-9]+)','tdata->J->data[$1]');
