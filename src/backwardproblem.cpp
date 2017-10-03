@@ -112,14 +112,30 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
-            for (ip = 0; ip < rdata->nplist; ++ip) {
-                tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
-                sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                if (!sx_tmp)
-                    return AMICI_ERROR_ASA;
-                for (ix = 0; ix < model->nxtrue; ++ix) {
-                    tdata->llhS0[ip] =
-                        tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+            if (rdata->sensi <= AMICI_SENSI_ORDER_FIRST) {
+                for (ip = 0; ip < rdata->nplist; ++ip) {
+                    tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
+                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                    if (!sx_tmp)
+                        return AMICI_ERROR_ASA;
+                    for (ix = 0; ix < model->nxtrue; ++ix) {
+                        tdata->llhS0[ip] =
+                            tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                    }
+                }
+            } else {
+                for (ip = 0; ip < rdata->nplist; ++ip) {
+                    for (jp = 0; jp < rdata->nplist; ++jp) {
+                        tdata->llhS20[ip * rdata->nplist + jp] = 0.0;
+                        sx_tmp = NV_DATA_S(tdata->s2x[ip * rdata->nplist + jp]);
+                        if (!sx_tmp)
+                            return AMICI_ERROR_ASA;
+                        for (ix = 0; ix < model->nxtrue; ++ix) {
+                            tdata->llhS20[ip * rdata->nplist + jp] =
+                            tdata->llhS20[ip * rdata->nplist + jp] +
+                            xB_tmp[ix] * sx_tmp[ix];
+                        }
+                    }
                 }
             }
         } else {

@@ -111,9 +111,10 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                 if (udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
                     xQB = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
-                } else {
-                    xQB = N_VNew_Serial(model->nJ * udata->nplist);
-                    xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
+                    
+                    s2x = N_VCloneVectorArray_Serial(udata->nplist*udata->nplist, x);
+                    s2dx = N_VCloneVectorArray_Serial(udata->nplist*udata->nplist, x);
+                    llhS20 = new realtype[model->nJ * udata->nplist * udata->nplist]();
                     
                     // use variables from tdata instead
                     qBo2_part1_1 = new double[model->nx * model->nx];
@@ -125,6 +126,9 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                     dJdxTmp = new double[model->nx * model->nx * model->nx];
                     dJdpTmp = new double[model->nx * model->nx * udata->nplist];
                     ddfdpdpTmp = new double[model->nx * udata->nplist * udata->nplist];
+                } else {
+                    xQB = N_VNew_Serial(model->nJ * udata->nplist);
+                    xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
                 }
             }
         }
@@ -169,6 +173,8 @@ TempData::~TempData() {
         N_VDestroyVectorArray_Serial(sx, nplist);
     if (sdx)
         N_VDestroyVectorArray_Serial(sdx, nplist);
+    if (s2x)
+        N_VDestroyVectorArray_Serial(s2x, nplist);
 
     if (Jy)
         delete[] Jy;
@@ -241,6 +247,8 @@ TempData::~TempData() {
 
     if (llhS0)
         delete[] llhS0;
+    if (llhS20)
+        delete[] llhS20;
 
     if (dxdotdp)
         delete[] dxdotdp;

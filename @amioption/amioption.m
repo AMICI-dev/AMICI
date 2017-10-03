@@ -47,6 +47,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
+        % custom initial second order sensitivity
+        s2x0 = double.empty();
         % newton solver: preconditioning method
         % (0 = none, 1 = diagonal, 2 = incomplete LU)
         newton_precon = 1;

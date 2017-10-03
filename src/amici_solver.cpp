@@ -97,9 +97,38 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                 AMICI_SUCCESS)
                 goto freturn;
             
+            
+            if ((udata->sensi_meth == AMICI_SENSI_ASA &&
+                 udata->sensi >= AMICI_SENSI_ORDER_SECOND)) {
+                
+                /* initialize second order sensitivities s2x0 for second order */
+                if (!udata->s2x0data) {
+                    if (model->fs2x0(tdata->s2x, tdata->x, tdata->dx, tdata) !=
+                        AMICI_SUCCESS)
+                        goto freturn;
+                } else {
+                    for (int ip = 0; ip < udata->nplist; ip++) {
+                        for (int jp = 0; jp < udata->nplist; ip++) {
+                            sx_tmp = NV_DATA_S(tdata->s2x[ip * udata->nplist + jp]);
+                                if (!sx_tmp)
+                                    goto freturn;
+                            for (int ix = 0; ix < model->nx; ix++) {
+                                sx_tmp[ix] =
+                                (realtype)udata->s2x0data[ix + model->nx *
+                                                          (ip * udata->nplist + jp)];
+                            }
+                        }
+                    }
+                }
+                
+                if (model->fs2dx0(tdata->s2dx, tdata->x, tdata->dx, tdata) !=
+                    AMICI_SUCCESS)
+                    goto freturn;
+            }
+            
             if ((udata->sensi_meth == AMICI_SENSI_FSA) ||
                 (udata->sensi_meth == AMICI_SENSI_ASA &&
-                 udata->sensi >= AMICI_SENSI_ORDER_SECOND)){
+                 udata->sensi >= AMICI_SENSI_ORDER_SECOND)) {
                 
                 /* Activate sensitivity calculations */
                 if (sensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS)

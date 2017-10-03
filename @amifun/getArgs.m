@@ -59,6 +59,10 @@ function this = getArgs(this,model)
         case 'J'
             this.argstr = ['(long int N, realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
             this.fargstr = '(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)';
+        case 'dJdx'
+            this.argstr = '(realtype t, N_Vector x, N_Vector dx, void *user_data)';
+        case 'dJdp'
+            this.argstr = '(realtype t, N_Vector x, N_Vector dx, void *user_data)';
         case 'JDiag'
             this.argstr = '(realtype t, N_Vector JDiag, N_Vector x, void *user_data)';
         case 'JSparse'
@@ -73,8 +77,12 @@ function this = getArgs(this,model)
             this.argstr = ['(int Ns, realtype t, N_Vector x,' dxvec ' N_Vector xdot,' intip ' N_Vector ' s 'sx,' sdxvec ' N_Vector ' s 'sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2' tmp3vec ')'];
         case 'sx0'
             this.argstr = '(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data)';
+        case 's2x0'
+            this.argstr = '(N_Vector *s2x0, N_Vector x, N_Vector dx, void *user_data)';
         case 'sdx0'
             this.argstr = '(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data)';
+        case 's2dx0'
+            this.argstr = '(N_Vector *s2dx0, N_Vector x, N_Vector dx, void *user_data)';
         case 'root'
             this.argstr = ['(realtype t, N_Vector x,' dxvec ' realtype *root, void *user_data)'];
         case 'y'
@@ -90,6 +98,12 @@ function this = getArgs(this,model)
         case 'dydp'
             this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
         case 'dydx'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
+        case 'ddydpdp'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
+        case 'ddydpdx'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
+        case 'ddydxdx'
             this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
         case 'dzdp'
             this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata)';
@@ -108,7 +122,9 @@ function this = getArgs(this,model)
         case 'deltasx'
             this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata)';
         case 'dxdotdp'
-            this.argstr = ['(realtype t, N_Vector x, N_Vector dx, void *user_data)'];
+            this.argstr = '(realtype t, N_Vector x, N_Vector dx, void *user_data)';
+        case 'ddxdotdpdp'
+            this.argstr = '(realtype t, N_Vector x, N_Vector dx, void *user_data)';
         case 'sigma_y'
             this.argstr = '(realtype t, TempData *tdata)';
         case 'dsigma_ydp'
@@ -126,6 +142,14 @@ function this = getArgs(this,model)
         case 'dJydy'
             this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
         case 'dJydsigma'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+        case 'ddJydydy'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+        case 'ddJydsigmady'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+        case 'ddJydsigmadsigma'
+            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+        case 'ddJy_s2sigma'
             this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
         case 'Jz'
             this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';

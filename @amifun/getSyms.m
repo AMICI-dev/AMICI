@@ -425,6 +425,9 @@ function [this,model] = getSyms(this,model)
         case 'sdx0'
             this.sym=jacobian(model.fun.dx0.sym,p);
             
+        case 's2dx0'
+            this.sym=jacobian(model.fun.sdx0.sym,p);
+            
         case 'sxdot'
             if(np>0)
                 if(strcmp(model.wtype,'iw'))

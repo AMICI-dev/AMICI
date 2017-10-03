@@ -10,16 +10,34 @@ function [ this ] = getSensiFlag(this)
         case 'dxdotdp'
             this.sensiflag = true;
             
+        case 'ddxdotdpdp'
+            this.sensiflag = true;
+            
         case 'sx0'
             this.sensiflag = true;  
             
         case 'sdx0'
             this.sensiflag = true;
             
+        case 's2x0'
+            this.sensiflag = true;  
+            
+        case 's2dx0'
+            this.sensiflag = true;
+            
         case 'sxdot'
             this.sensiflag = true;
             
         case 'dydp'
+            this.sensiflag = true;
+            
+        case 'ddydpdp'
+            this.sensiflag = true;
+            
+        case 'ddydpdx'
+            this.sensiflag = true;
+            
+        case 'ddydxdx'
             this.sensiflag = true;
           
         case 'sy'
@@ -68,6 +86,24 @@ function [ this ] = getSensiFlag(this)
             this.sensiflag = true;
             
         case 'sdx'
+            this.sensiflag = true;
+            
+        case 'dJdx'
+            this.sensiflag = true;
+            
+        case 'dJdp'
+            this.sensiflag = true;
+            
+        case 'ddJydsigmady'
+            this.sensiflag = true;
+            
+        case 'ddJydsigmadsigma'
+            this.sensiflag = true;
+            
+        case 'ddJy_s2sigma'
+            this.sensiflag = true;
+            
+        case 'ddJydydy'
             this.sensiflag = true;
 
         otherwise

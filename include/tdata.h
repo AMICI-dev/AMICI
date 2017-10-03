@@ -58,11 +58,17 @@ class TempData {
     N_Vector *sx = nullptr;
     /** differential sensitivity state vector array */
     N_Vector *sdx = nullptr;
+    /** second order sensitivity state vector array */
+    N_Vector *s2x = nullptr;
+    /** differential second order sensitivity state vector array */
+    N_Vector *s2dx = nullptr;
     /** Jacobian */
     DlsMat Jtmp = nullptr;
 
     /** parameter derivative of likelihood array */
     realtype *llhS0 = nullptr;
+    /** Second order parameter derivative of likelihood array */
+    realtype *llhS20 = nullptr;
     /** data likelihood */
     realtype *Jy = nullptr;
     /** parameter derivative of data likelihood */
