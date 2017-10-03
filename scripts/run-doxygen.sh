@@ -66,6 +66,7 @@ if [ -s ${AMICI_PATH}/mtoc/warnings.log ]; then
         echo "DOXYGEN failed:"
         cat ${AMICI_PATH}/mtoc/warnings.log
         rm ${AMICI_PATH}/mtoc/warnings.log
+        cat ${AMICI_PATH}/doc/_formulas.log
         exit 1
     else
         exit 0
