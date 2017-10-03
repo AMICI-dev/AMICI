@@ -42,7 +42,7 @@ sed -i -e "s#_ProjectLogo_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_ProjectVersion_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_MTOCFILTER_#$AMICI_PATH/mtoc/config/mtocpp_filter.sh#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_LatexExtras_#$AMICI_PATH/mtoc/config/latexextras#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_GenLatex_#NO#g" ${AMICI_PATH}/mtoc/config/Doxyfile
+sed -i -e "s#_GenLatex_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_HaveDot_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =$AMICI_PATH/mtoc/warnings.log#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 
@@ -51,6 +51,7 @@ sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =$AMICI_PATH/mtoc/warnings.lo
 cp ${AMICI_PATH}/mtoc/config/latexextras.template ${AMICI_PATH}/mtoc/config/latexextras.sty
 sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${AMICI_PATH}/mtoc/config/latexextras.sty
 
+doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
 doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
 
 
@@ -66,7 +67,6 @@ if [ -s ${AMICI_PATH}/mtoc/warnings.log ]; then
         echo "DOXYGEN failed:"
         cat ${AMICI_PATH}/mtoc/warnings.log
         rm ${AMICI_PATH}/mtoc/warnings.log
-        cat ${AMICI_PATH}/doc/_formulas.log
         exit 1
     else
         exit 0
