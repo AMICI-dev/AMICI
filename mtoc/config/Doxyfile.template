@@ -1730,7 +1730,7 @@ GENERATE_HTML          = YES
 HTML_OUTPUT            = "_OutputDir_"
 
 # Latex is an extra option.
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO
 
 # NO causes LaTeX to stop when errors occur
 LATEX_BATCHMODE        = YES
