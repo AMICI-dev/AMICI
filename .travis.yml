@@ -23,6 +23,7 @@ matrix:
             - graphviz
             - doxygen
             - doxygen-latex
+            - texlive-base
             - cppcheck
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 

@@ -42,7 +42,7 @@ sed -i -e "s#_ProjectLogo_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_ProjectVersion_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_MTOCFILTER_#$AMICI_PATH/mtoc/config/mtocpp_filter.sh#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_LatexExtras_#$AMICI_PATH/mtoc/config/latexextras#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_GenLatex_#NO#g" ${AMICI_PATH}/mtoc/config/Doxyfile
+sed -i -e "s#_GenLatex_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#_HaveDot_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =$AMICI_PATH/mtoc/warnings.log#g" ${AMICI_PATH}/mtoc/config/Doxyfile
 
