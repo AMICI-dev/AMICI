@@ -67,7 +67,7 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
         end
         fprintf(fid,'              } \n');
     end
-elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
+elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy','ddJydsigmadsigma','ddJydsigmady','ddJydydy','ddJy_s2sigma'})))
     tmpfun = this;
     if(any(any(any(nonzero))))
         fprintf(fid,['int iy;\n']);

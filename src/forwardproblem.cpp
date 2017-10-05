@@ -825,31 +825,35 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
         } else {
             /* Calling all the model files which are necessary to compute 
              the total derivative ddJy/dpdp (except s2x) */
-            status = model->fddJydsigmadsigma();
+            status = model->fddJydsigmadsigma(rdata->ts[it], it, tdata->x,
+                                              tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddJydsigmady();
+            status = model->fddJydsigmady(rdata->ts[it], it, tdata->x,
+                                          tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddJydydy();
+            status = model->fddJydydy(rdata->ts[it], it, tdata->x,
+                                      tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddJy_s2sigma();
+            status = model->fddJy_s2sigma(rdata->ts[it], it, tdata->x,
+                                          tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddydxdx();
+            status = model->fddydxdx(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddydxdp();
+            status = model->fddydpdx(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            status = model->fddydpdp();
+            status = model->fddydpdp(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
             

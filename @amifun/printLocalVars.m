@@ -188,11 +188,11 @@ function printLocalVars(this,model,fid)
         case 'ddJy_s2sigma'
             fprintf(fid,'memset(tdata->ddJy_s2sigma,0,sizeof(realtype)*model->nytrue*udata->nplist*udata->nplist);\n');
         case 'ddydpdp'
-            % nothing
+            fprintf(fid,'memset(tdata->ddydpdp,0,sizeof(realtype)*model->ny*udata->nplist*udata->nplist);\n');
         case 'ddydpdx'
-            % nothing
+            fprintf(fid,'memset(tdata->ddydpdx,0,sizeof(realtype)*model->ny*udata->nplist*model->nx);\n');
         case 'ddydxdx'
-            % nothing
+            fprintf(fid,'memset(tdata->ddydxdx,0,sizeof(realtype)*model->ny*model->nx*model->nx);\n');
         otherwise
             error(['unkown function: ' this.funstr])
     end

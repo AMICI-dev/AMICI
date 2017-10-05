@@ -674,7 +674,100 @@ class Model {
                             const ExpData *edata, ReturnData *rdata) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
+    
+    /** Second order Sensitivity of observables y w.r.t. state variables x
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in,out] tdata pointer to temp data object @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddydxdx(realtype t, int it, N_Vector x, TempData *tdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
 
+    /** Second order Sensitivity of observables y w.r.t. s.vs x and pars p
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in,out] tdata pointer to temp data object @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddydpdx(realtype t, int it, N_Vector x, TempData *tdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /** Second order Sensitivity of observables y w.r.t. parameters p
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in,out] tdata pointer to temp data object @type TempData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddydpdp(realtype t, int it, N_Vector x, TempData *tdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /** Second order sensitivity of time-resolved measurement negative 
+     * log-likelihood Jy w.r.t. observables y
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] tdata pointer to temp data object @type TempData
+     * @param[in] edata pointer to experimental data object @type ExpData
+     * @param[in,out] rdata pointer to return data object @type ReturnData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddJydydy(realtype t, int it, N_Vector x, TempData *tdata,
+                       const ExpData *edata, ReturnData *rdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /** Second order sensitivity of time-resolved measurement negative
+     * log-likelihood Jy w.r.t. standard deviation sigma and observables y
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] tdata pointer to temp data object @type TempData
+     * @param[in] edata pointer to experimental data object @type ExpData
+     * @param[in,out] rdata pointer to return data object @type ReturnData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddJydsigmady(realtype t, int it, N_Vector x, TempData *tdata,
+                          const ExpData *edata, ReturnData *rdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /** Second order sensitivity of time-resolved measurement negative
+     * log-likelihood Jy w.r.t. standard deviation sigma
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] tdata pointer to temp data object @type TempData
+     * @param[in] edata pointer to experimental data object @type ExpData
+     * @param[in,out] rdata pointer to return data object @type ReturnData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddJydsigmadsigma(realtype t, int it, N_Vector x, TempData *tdata,
+                                  const ExpData *edata, ReturnData *rdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    /** Sensitivity of time-resolved measurement negative log-likelihood Jy 
+     * w.r.t. standard deviation sigma in second order
+     * @param[in] t timepoint @type realtype
+     * @param[in] it timepoint index @type int
+     * @param[in] x Vector with the states @type N_Vector
+     * @param[in] tdata pointer to temp data object @type TempData
+     * @param[in] edata pointer to experimental data object @type ExpData
+     * @param[in,out] rdata pointer to return data object @type ReturnData
+     * @return status flag indicating successful execution @type int
+     */
+    virtual int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata,
+                                  const ExpData *edata, ReturnData *rdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
     /** Right hand side of differential equation for state sensitivities sx
       * @param[in] Ns number of parameters @type int
       * @param[in] t timepoint @type realtype
@@ -840,6 +933,9 @@ class Model {
 
     int fsJy(const int it, const TempData *tdata, ReturnData *rdata);
 
+    int fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
+               const ReturnData *rdata);
+    
     int fdJydp(const int it, TempData *tdata, const ExpData *edata,
                const ReturnData *rdata);
     

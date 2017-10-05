@@ -223,7 +223,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     
     
     for (int ip = 0; ip < np; ip++) {
-        sx_tmp = N_VGetArrayPointer(sx[ip]);
+        sx_tmp = N_VGetArrayPointer(tdata->sx[ip]);
         for (int ix = 0; ix < nx; ix++)
             sxTmp[ix + ip * nx] = sx_tmp[ix];
         for (int iy = 0; iy < ny; iy++)
@@ -245,12 +245,12 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     ny, rdata->nplist, ny, 1.0, ddJy_tmp1, ny, tdata->dsigmaydp, ny,
                     0.0, ddJy_tmp2, nJ);
-        //          fddJydpdp += dsdp' * ddJy_tmp2
+        //          tdata->ddJydpdp += dsdp' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                     ny, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist,
                     tdata->dsigmaydp, ny, 1.0, tdata->ddJydpdp, rdata->nplist);
         
-        // Part 1b: fddJydpdp += ddJy_s2sigma
+        // Part 1b: tdata->ddJydpdp += ddJy_s2sigma
         for (int ip = 0; ip < rdata->nplist; ++ip)
             for (int jp = 0; jp < rdata->nplist; ++jp)
                 tdata->ddJydpdp[jp + ip * rdata->nplist] +=
@@ -263,22 +263,22 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
         //          ddJy_tmp3 = sy' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                     ny, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist,
-                    tdata->sy, ny, 1.0, ddJy_tmp3, rdata->nplist);
-        //          fddJydpdp += ddJy_tmp3 + ddJy_tmp3'
+                    syTmp, ny, 1.0, ddJy_tmp3, rdata->nplist);
+        //          tdata->ddJydpdp += ddJy_tmp3 + ddJy_tmp3'
         for (int ip = 0; ip < np; ip++)
             for (int jp = 0; jp < np; jp++)
-                fddJydpdp[jp + ip*udata->nplist] +=
-                ddJy_tmp3[jp + ip*udata->nplist] +
-                ddJy_tmp3[ip + jp*udata->nplist];
+                tdata->ddJydpdp[jp + ip*rdata->nplist] +=
+                ddJy_tmp3[jp + ip*rdata->nplist] +
+                ddJy_tmp3[ip + jp*rdata->nplist];
         
         // Part 3:  ddJy_tmp2 = ddJy/dydy * sy
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    ny, rdata->nplist, ny, 1.0, tdata->ddJydydy, nytrue*ny, tdata->sy, ny,
+                    ny, rdata->nplist, ny, 1.0, tdata->ddJydydy, nytrue*ny, syTmp, ny,
                     0.0, ddJy_tmp2, ny);
         //          fddJydpdp += sy' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    ny, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist, tdata->sy, ny,
-                    1.0, fddJydpdp, rdata->nplist);
+                    ny, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist, syTmp, ny,
+                    1.0, tdata->ddJydpdp, rdata->nplist);
         
         // Part 4a: ddJy_tmp4 = dJy/dy * ddy/dxdx
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
@@ -288,10 +288,10 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     nx, rdata->nplist, nx, 1.0, ddJy_tmp4, nx, sxTmp, rdata->nplist,
                     0.0, ddJy_tmp5, nx);
-        //          fddJydpdp += sx' * ddJy_tmp5
+        //          tdata->ddJydpdp += sx' * ddJy_tmp5
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                     nx, rdata->nplist, nx, 1.0, ddJy_tmp5, rdata->nplist, sxTmp, nx,
-                    1.0, fddJydpdp, rdata->nplist);
+                    1.0, tdata->ddJydpdp, rdata->nplist);
         
         // Part 4b: ddJy_tmp5 = dJy/dy * ddy/dpdx
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
@@ -301,17 +301,17 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, rdata->nplist,
                     sxTmp, nx, 0.0, ddJy_tmp3, rdata->nplist);
-        //          fddJydpdp += ddJy_tmp3 + ddJy_tmp3'
+        //          tdata->ddJydpdp += ddJy_tmp3 + ddJy_tmp3'
         for (int ip = 0; ip < np; ip++)
             for (int jp = 0; jp < np; jp++)
-                fddJydpdp[jp + ip*udata->nplist] +=
-                ddJy_tmp3[jp + ip*udata->nplist] +
-                ddJy_tmp3[ip + jp*udata->nplist];
+                tdata->ddJydpdp[jp + ip*rdata->nplist] +=
+                ddJy_tmp3[jp + ip*rdata->nplist] +
+                ddJy_tmp3[ip + jp*rdata->nplist];
         
-        // Part 4c: fddJydpdp += dJy/dy * ddy/dpdp
+        // Part 4c: tdata->ddJydpdp += dJy/dy * ddy/dpdp
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
                     ny, rdata->nplist*rdata->nplist, 1.0, tdata->ddydpdp, ny, tdata->dJydy, 1,
-                    1.0, fddJydpdp, 1);
+                    1.0, tdata->ddJydpdp, 1);
     }
     
     delete[] sxTmp;

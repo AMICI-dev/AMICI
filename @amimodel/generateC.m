@@ -52,7 +52,10 @@ for ifun = this.funs
             end
         elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+        elseif(strcmp(ifun{1},'dJdp'))
+            fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
+            fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
+        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'dJdx'))
             fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
         elseif(strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -128,15 +131,14 @@ for ifun = this.funs
                     fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 fprintf(fid,'switch (udata->plist[ip]) {\n');
-                try
-                    this.fun.(ifun{1}).writeCcode_sensi(this,fid);
-                catch
-                    disp('ouh');
+                if( strcmp(ifun{1},'dJdp') )
+                    fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
+                this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             else
-                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
+                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'dJdx'))
                     fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 this.fun.(ifun{1}).writeCcode(this,fid);
@@ -406,7 +408,9 @@ for iffun = ffuns
     else
         fun = amifun(iffun{1},this);
     end
-    fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
+    if (~any(strcmp(iffun, {'ddxdotdpdp','dJdx','dJdp'})))
+        fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
+    end
 end
 
 % Subclass Model
@@ -458,9 +462,11 @@ for iffun = this.funs
     else
         fun = amifun(iffun{1},this);
     end
-    fprintf(fid,['    int f' iffun{1} fun.fargstr ' override {\n']);
-    fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
-    fprintf(fid,'    }\n\n');
+    if (~any(strcmp(iffun, {'ddxdotdpdp','dJdx','dJdp'})))
+        fprintf(fid,['    int f' iffun{1} fun.fargstr ' override {\n']);
+        fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
+        fprintf(fid,'    }\n\n');
+    end
 end
 fprintf(fid,'};\n\n');
 
