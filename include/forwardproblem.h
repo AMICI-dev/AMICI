@@ -51,6 +51,9 @@ class ForwardProblem {
 
     static int prepDataSensis(int it, ReturnData *rdata, const ExpData *edata,
                               TempData *tdata, Model *model);
+    
+    static int prepDataSensiso2(int it, ReturnData *rdata, const ExpData *edata,
+                                TempData *tdata, Model *model);
 
     static int getDataSensisFSA(int it, const UserData *udata,
                                 ReturnData *rdata, const ExpData *edata,

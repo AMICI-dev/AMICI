@@ -742,13 +742,17 @@ int ForwardProblem::getDataOutput(int it, const UserData *udata,
         status = prepDataSensis(it, rdata, edata, tdata, model);
         if (status != AMICI_SUCCESS)
             return status;
-        if ((rdata->sensi_meth == AMICI_SENSI_FSA) ||
-            (rdata->sensi_meth == AMICI_SENSI_ASA &&
-             rdata->sensi >= AMICI_SENSI_ORDER_SECOND)) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA ||
+            rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
             status =
                 getDataSensisFSA(it, udata, rdata, edata, tdata, solver, model);
             if (status != AMICI_SUCCESS)
                 return status;
+            if (rdata->sensi_meth == AMICI_SENSI_ASA) {
+                status = prepDataSensiso2(it, rdata, edata, tdata, model);
+                if (status != AMICI_SUCCESS)
+                    return status;
+            }
         }
     }
     return AMICI_SUCCESS;
@@ -818,64 +822,87 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
         return status;
     
-    if (model->ny > 0) {
-        if (rdata->sensi == AMICI_SENSI_ORDER_FIRST) {
+    if (model->ny > 0)
+        if (rdata->sensi == AMICI_SENSI_ORDER_FIRST)
             for (int ip = 0; ip < rdata->nplist; ip++)
                 rdata->sllh[ip] -= tdata->dJydp[ip];
-        } else {
-            /* Calling all the model files which are necessary to compute 
-             the total derivative ddJy/dpdp (except s2x) */
+
+    return status;
+}
+
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+
+int ForwardProblem::prepDataSensiso2(int it, ReturnData *rdata,
+                                     const ExpData *edata, TempData *tdata,
+                                     Model *model) {
+    /**
+     * prepDataSensiso2 preprocesses the provided experimental data to compute
+     * second order adjoint sensitivities later on
+     *
+     * @param[in] it index of current timepoint @type int
+     * @param[out] rdata pointer to the return data struct @type ReturnData
+     * @param[in] edata pointer to the experimental data struct @type ExpData
+     * @param[out] tdata pointer to the temporary data struct @type TempData
+     * @param[in] model pointer to model specification object @type Model
+     * @return status flag indicating success of execution @type int
+     */
+  
+    int status = AMICI_SUCCESS;
+    
+    if (model->ny > 0) {
+        if (model->nJ == 1) {
             status = model->fddJydsigmadsigma(rdata->ts[it], it, tdata->x,
                                               tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddJydsigmady(rdata->ts[it], it, tdata->x,
                                           tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddJydydy(rdata->ts[it], it, tdata->x,
                                       tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddJy_s2sigma(rdata->ts[it], it, tdata->x,
                                           tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddydxdx(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddydpdx(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddydpdp(rdata->ts[it], it, tdata->x, tdata);
             if (status != AMICI_SUCCESS)
                 return status;
-            
+        
             status = model->fddJydpdp(it, tdata, edata, rdata);
             if (status != AMICI_SUCCESS)
                 return status;
             
-            if (model->nJ == 1) {
+            for (int ip = 0; ip < rdata->nplist; ip++)
+                for (int jp = 0; jp < rdata->nplist; jp++)
+                    rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
+                    tdata->ddJydpdp[ip + jp * rdata->nplist];
+        } else {
+            for (int ip = 0; ip < rdata->nplist; ip++)
+                rdata->sllh[ip] -= tdata->dJydp[ip * model->nJ];
+            for (int iJ = 1; iJ < model->nJ; iJ++)
                 for (int ip = 0; ip < rdata->nplist; ip++)
-                    for (int jp = 0; jp < rdata->nplist; jp++)
-                        rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
-                        tdata->ddJydpdp[ip + jp * rdata->nplist];
-            } else {
-                for (int iJ = 1; iJ < model->nJ; iJ++)
-                    for (int ip = 0; ip < rdata->nplist; ip++)
-                        if (model->ny > 0)
-                            rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
-                            tdata->dJydp[iJ + ip * model->nJ];
-            }
+                    rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
+                    tdata->dJydp[iJ + ip * model->nJ];
         }
     }
-
+    
     return status;
 }
 
