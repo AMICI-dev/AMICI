@@ -127,6 +127,10 @@ void UserData::setSensitivityInitialization(
         delete[] sx0data;
     }
 
+    if (s2x0data) {
+        delete[] s2x0data;
+    }
+    
     if(sensitivityInitialization) {
         sx0data = new double[nx * nplist];
         memcpy(sx0data, sensitivityInitialization, sizeof(double) * nx * nplist);
@@ -152,6 +156,8 @@ UserData::~UserData() {
         delete[] x0data;
     if (sx0data)
         delete[] sx0data;
+    if (s2x0data)
+        delete[] s2x0data;
     if (plist)
         delete[] plist;
 }

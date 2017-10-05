@@ -125,7 +125,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                 }
             } else {
                 for (ip = 0; ip < rdata->nplist; ++ip) {
-                    for (jp = 0; jp < rdata->nplist; ++jp) {
+                    for (int jp = 0; jp < rdata->nplist; ++jp) {
                         tdata->llhS20[ip * rdata->nplist + jp] = 0.0;
                         sx_tmp = NV_DATA_S(tdata->s2x[ip * rdata->nplist + jp]);
                         if (!sx_tmp)

@@ -116,16 +116,14 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                     s2dx = N_VCloneVectorArray_Serial(udata->nplist*udata->nplist, x);
                     llhS20 = new realtype[model->nJ * udata->nplist * udata->nplist]();
                     
-                    // use variables from tdata instead
-                    qBo2_part1_1 = new double[model->nx * model->nx];
-                    qBo2_part1 = new double[model->nx * model->nx];
-                    qBo2_part2_1 = new double[model->nx * udata->nplist];
-                    qBo2_part2 = new double[model->nx * udata->nplist];
-                    
-                    // use variables from tdata instead
-                    dJdxTmp = new double[model->nx * model->nx * model->nx];
-                    dJdpTmp = new double[model->nx * model->nx * udata->nplist];
-                    ddfdpdpTmp = new double[model->nx * udata->nplist * udata->nplist];
+                    ddydpdp = new realtype[model->ny * udata->nplist * udata->nplist]();
+                    ddydpdx = new realtype[model->ny * udata->nplist * model->nx]();
+                    ddydxdx = new realtype[model->ny * model->nx * model->nx]();
+                    ddJydsigmady = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJydsigmaddsigma = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJydydy = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJy_s2sigma = new realtype[model->nytrue * udata->nplist * udata->nplist]();
+                    ddJydpdp = new realtype[udata->nplist * udata->nplist]();
                 } else {
                     xQB = N_VNew_Serial(model->nJ * udata->nplist);
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist);

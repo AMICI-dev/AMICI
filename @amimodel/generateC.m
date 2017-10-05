@@ -128,7 +128,11 @@ for ifun = this.funs
                     fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 fprintf(fid,'switch (udata->plist[ip]) {\n');
-                this.fun.(ifun{1}).writeCcode_sensi(this,fid);
+                try
+                    this.fun.(ifun{1}).writeCcode_sensi(this,fid);
+                catch
+                    disp('ouh');
+                end
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             else
@@ -330,7 +334,10 @@ ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
     'JSparse', 'JBand', 'JSparseB', 'JBandB', 'JvB', ...
-    'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma'};
+    'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma',...
+    'dJrzdz','dJrzdsigma','dJdx','dJdp','ddxdotdpdp',...
+    'ddydpdp','ddydpdx','ddydxdx','s2x0',...'s2dx0',...
+    'ddJydsigmady','ddJydsigmadsigma','ddJy_s2sigma','ddJydydy'};
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but

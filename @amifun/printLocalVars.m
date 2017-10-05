@@ -172,13 +172,13 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(tdata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         case 'dJdx'
             fprintf(fid,'int ix;\n');
-            fprintf(fid,['memset(tdata->dJdx,0,sizeof(realtype)*' num2str(nx^3) ');\n']);
+            fprintf(fid,['memset(dJdx,0,sizeof(realtype)*' num2str(nx^3) ');\n']);
         case 'dJdp'
             fprintf(fid,'int ix;\n');
-            fprintf(fid,['memset(tdata->dJdx,0,sizeof(realtype)*' num2str(nx^2) '*udata->nplist);\n']);
+            fprintf(fid,['memset(dJdp,0,sizeof(realtype)*' num2str(nx^2) '*udata->nplist);\n']);
         case 'ddxdotdpdp'
             fprintf(fid,'int ix;\n');
-            fprintf(fid,['memset(tdata->ddxdotdpdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist*udata->nplist);\n']);
+            fprintf(fid,['memset(ddxdotdpdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist*udata->nplist);\n']);
         case 'ddJydydy'
             fprintf(fid,'memset(tdata->ddJydydy,0,sizeof(realtype)*model->nytrue*model->ny*model->ny);\n');
         case 'ddJydsigmady'

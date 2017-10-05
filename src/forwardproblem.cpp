@@ -817,27 +817,59 @@ int ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
 
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
         return status;
-
-    if (rdata->sensi == AMICI_SENSI_ORDER_FIRST) {
-        for (int iJ = 0; iJ < model->nJ; iJ++) {
-            for (int ip = 0; ip < rdata->nplist; ip++) {
-                if (iJ == 0) {
-                    if (model->ny > 0) {
-                        rdata->sllh[ip] -= tdata->dJydp[ip * model->nJ];
-                    }
-                } else {
-                    if (model->ny > 0) {
-                        rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
+    
+    if (model->ny > 0) {
+        if (rdata->sensi == AMICI_SENSI_ORDER_FIRST) {
+            for (int ip = 0; ip < rdata->nplist; ip++)
+                rdata->sllh[ip] -= tdata->dJydp[ip];
+        } else {
+            /* Calling all the model files which are necessary to compute 
+             the total derivative ddJy/dpdp (except s2x) */
+            status = model->fddJydsigmadsigma();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddJydsigmady();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddJydydy();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddJy_s2sigma();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddydxdx();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddydxdp();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddydpdp();
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            status = model->fddJydpdp(it, tdata, edata, rdata);
+            if (status != AMICI_SUCCESS)
+                return status;
+            
+            if (model->nJ == 1) {
+                for (int ip = 0; ip < rdata->nplist; ip++)
+                    for (int jp = 0; jp < rdata->nplist; jp++)
+                        rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
+                        tdata->ddJydpdp[ip + jp * rdata->nplist];
+            } else {
+                for (int iJ = 1; iJ < model->nJ; iJ++)
+                    for (int ip = 0; ip < rdata->nplist; ip++)
+                        if (model->ny > 0)
+                            rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
                             tdata->dJydp[iJ + ip * model->nJ];
-                    }
-                }
             }
         }
-    } else { /*
-        for (int ip = 0; ip < rdata->nplist; ip++)
-            for (int jp = 0; jp < rdata->nplist; jp++)
-                rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
-                    tdata->ddJydpdp[ip + jp * rdata->nplist]; */
     }
 
     return status;
