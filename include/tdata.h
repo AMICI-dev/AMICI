@@ -128,7 +128,7 @@ class TempData {
     /** second order mixed derivative of data likelihood */
     realtype *ddJydsigmady = nullptr;
     /** second order sigma derivative of data likelihood */
-    realtype *ddJydsigmaddsigma = nullptr;
+    realtype *ddJydsigmadsigma = nullptr;
     /** second order sigma sensitivity of data likelihood */
     realtype *ddJy_s2sigma = nullptr;
     

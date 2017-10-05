@@ -120,7 +120,7 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                     ddydpdx = new realtype[model->ny * udata->nplist * model->nx]();
                     ddydxdx = new realtype[model->ny * model->nx * model->nx]();
                     ddJydsigmady = new realtype[model->nytrue * model->ny * model->ny]();
-                    ddJydsigmaddsigma = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJydsigmadsigma = new realtype[model->nytrue * model->ny * model->ny]();
                     ddJydydy = new realtype[model->nytrue * model->ny * model->ny]();
                     ddJy_s2sigma = new realtype[model->nytrue * udata->nplist * udata->nplist]();
                     ddJydpdp = new realtype[udata->nplist * udata->nplist]();
