@@ -382,7 +382,8 @@ void ReturnData::initFields() {
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         initField2(&sllh, "sllh", nplist, 1);
 
-        if (sensi_meth == AMICI_SENSI_FSA) {
+        if ((sensi_meth == AMICI_SENSI_FSA) ||
+            (sensi > AMICI_SENSI_ORDER_FIRST)) {
             initField3(&sx, "sx", nt, nx, nplist);
             if (ny > 0) {
                 initField3(&sy, "sy", nt, ny, nplist);
@@ -414,7 +415,11 @@ void ReturnData::initFields() {
         }
 
         if (sensi >= AMICI_SENSI_ORDER_SECOND) {
-            initField2(&s2llh, "s2llh", nJ - 1, nplist);
+            if (nJ == 1) {
+                initField2(&s2llh, "s2llh", nplist, nplist);
+            } else {
+                initField2(&s2llh, "s2llh", nJ - 1, nplist);
+            }
         }
     }
 }

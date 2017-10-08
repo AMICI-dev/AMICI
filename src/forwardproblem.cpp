@@ -62,9 +62,8 @@ int ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
 
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
-        if ((rdata->sensi_meth == AMICI_SENSI_FSA &&
-            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) ||
-            (rdata->sensi >= AMICI_SENSI_ORDER_SECOND)){
+        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
+            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             status = solver->AMISetStopTime(rdata->ts[it]);
         }
         if (status == AMICI_SUCCESS) {
@@ -195,8 +194,9 @@ int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
 
     if (seflag == 0) {
         /* only extract in the first event fired */
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST &&
-            rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if ((rdata->sensi >= AMICI_SENSI_ORDER_FIRST &&
+             rdata->sensi_meth == AMICI_SENSI_FSA) ||
+             rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
             status = solver->AMIGetSens(&(tdata->t), tdata->sx);
             if (status != AMICI_SUCCESS)
                 return AMICI_ERROR_SA;
@@ -223,7 +223,8 @@ int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* store x and xdot to compute jump in sensitivities */
         N_VScale(1.0, tdata->x, tdata->x_old);
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA ||
+            rdata->sensi > AMICI_SENSI_ORDER_FIRST) {
             status =
                 model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
             N_VScale(1.0, tdata->xdot, tdata->xdot_old);
@@ -275,7 +276,8 @@ int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
     }
 
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA ||
+            rdata->sensi > AMICI_SENSI_ORDER_FIRST) {
 
             /* compute the new xdot  */
             status =
@@ -333,7 +335,8 @@ int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
             return status;
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+            if (rdata->sensi_meth == AMICI_SENSI_FSA ||
+                rdata->sensi > AMICI_SENSI_ORDER_FIRST) {
                 status =
                     solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
                 if (status != AMICI_SUCCESS)
@@ -479,7 +482,8 @@ int ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
                 status = prepEventSensis(ie, rdata, edata, tdata, model);
                 if (status != AMICI_SUCCESS)
                     return status;
-                if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+                if (rdata->sensi_meth == AMICI_SENSI_FSA ||
+                    rdata->sensi > AMICI_SENSI_ORDER_FIRST) {
                     status = getEventSensisFSA(ie, rdata, edata, tdata, model);
                     if (status != AMICI_SUCCESS)
                         return status;
@@ -891,7 +895,7 @@ int ForwardProblem::prepDataSensiso2(int it, ReturnData *rdata,
             
             for (int ip = 0; ip < rdata->nplist; ip++)
                 for (int jp = 0; jp < rdata->nplist; jp++)
-                    rdata->s2llh[(ip - 1) + jp * (rdata->nplist - 1)] -=
+                    rdata->s2llh[jp + ip * rdata->nplist] -=
                     tdata->ddJydpdp[ip + jp * rdata->nplist];
         } else {
             for (int ip = 0; ip < rdata->nplist; ip++)
