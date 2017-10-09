@@ -5,9 +5,10 @@
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
+
 int fdJdx(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
-int fdJdp(realtype t, N_Vector x, N_Vector dx, realtype *dJdp, void *user_data);
-int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, realtype *ddxdotdpdp, void *user_data);
+int fdJdp(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
 
 class UserData;
 class ExpData;

@@ -330,6 +330,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     
     delete[] sxTmp;
     delete[] syTmp;
+    delete[] dJydyTmp;
     delete[] ddJy_tmp1;
     delete[] ddJy_tmp2;
     delete[] ddJy_tmp3;
@@ -351,13 +352,13 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
 int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
                     N_Vector qBdot, void *user_data) {
     
-    UserData *udata = (UserData*) user_data;
     int status = AMICI_SUCCESS;
-    int np = udata->nplist;
+    TempData *tdata = (TempData*) user_data;
+    int np = tdata->nplist;
     
-    realtype *qBo2dot = N_VGetArrayPointer(qBdot);
-    realtype *xB_tmp = N_VGetArrayPointer(xB);
-    realtype *sx_tmp = N_VGetArrayPointer(sx[0]);
+    realtype *qBo2dot = NV_DATA_S(qBdot);
+    realtype *xB_tmp = NV_DATA_S(xB);
+    realtype *sx_tmp;
     
     /* Temporary variables, think of how to do this more efficiently */
     realtype *sxTmp = new double[nx * np];
@@ -387,50 +388,39 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
         return status;
     
     // Compute matrix xB' * dJdx
-    for (int ix = 0; ix < nx; ix++) {
-        
-        // col ix of xBdJdxTmp' = xB' * dJdx
-        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                    nx, nx, 1.0, dJdx,
-                    nx, xB_tmp, 1,
-                    0.0, qBo2_tmp1, nx);
-        // increment pointer to next row
-        dJdx += nx*nx;
-    }
+    amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
+                nx, nx*nx, 1.0, dJdx,
+                nx, xB_tmp, 1,
+                0.0, qBo2_tmp1, 1);
     
-    // qBo2_part1 = qBo2_part1_1 * sx
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+    // qBo2_tmp2 = qBo2_tmp1 * sx
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                 nx, np, nx, 1.0, qBo2_tmp1, nx, sxTmp, nx,
                 0.0, qBo2_tmp2, nx);
     
-    // qBo2dot_tmp = sx' * qBo2_part1
+    // qBo2dot = sx' * qBo2_tmp2
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                 np, np, nx, 1.0, sxTmp, np,
                 qBo2_tmp2, nx, 0.0, qBo2dot, np);
 
     
     // Compute matrix xB' * dJdp
-    for (int ip = 0; ip < udata->nplist; ip++) {
-        /* col ip of qBo2_part2_1' = xB' * dJdp */
-        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                    nx, nx, 1.0, dJdp,
-                    nx, xB_tmp, 1,
-                    0.0, qBo2_tmp2, nx);
-        /* increment pointer to next row */
-        dJdp += nx*nx;
-    }
+    amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
+                nx, nx*np, 1.0, dJdp,
+                nx, xB_tmp, 1,
+                0.0, qBo2_tmp2, 1);
     
-    // qBo2_part2 = qBo2_part2_1 * sx
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+    // qBo2_tmp3 = qBo2_tmp2 * sx
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                 np, np, nx, 1.0, qBo2_tmp2, np, sxTmp, nx,
                 0.0, qBo2_tmp3, np);
     
     // qBo2dot_tmp += qBo2_part2 + qBo2_part2'
     for (int ip = 0; ip < np; ip++)
         for (int jp = 0; jp < np; jp++)
-            qBo2dot[jp + ip*udata->nplist] +=
-                qBo2_tmp3[jp + ip*udata->nplist] +
-                qBo2_tmp3[ip + jp*udata->nplist];
+            qBo2dot[jp + ip*np] +=
+                qBo2_tmp3[jp + ip*np] +
+                qBo2_tmp3[ip + jp*np];
     
     // qBo2dot_tmp += xB' * ddfdpdp
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,

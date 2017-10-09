@@ -172,8 +172,10 @@ TempData::~TempData() {
     if (sdx)
         N_VDestroyVectorArray_Serial(sdx, nplist);
     if (s2x)
-        N_VDestroyVectorArray_Serial(s2x, nplist);
-
+        N_VDestroyVectorArray_Serial(s2x, nplist*nplist);
+    if (s2dx)
+        N_VDestroyVectorArray_Serial(s2dx, nplist*nplist);
+    
     if (Jy)
         delete[] Jy;
     if (Jz)
@@ -243,6 +245,23 @@ TempData::~TempData() {
     if (dsigmazdp)
         delete[] dsigmazdp;
 
+    if (ddydpdp)
+        delete[] ddydpdp;
+    if (ddydpdx)
+        delete[] ddydpdx;
+    if (ddydxdx)
+        delete[] ddydxdx;
+    if (ddJydsigmady)
+        delete[] ddJydsigmady;
+    if (ddJydsigmadsigma)
+        delete[] ddJydsigmadsigma;
+    if (ddJydydy)
+        delete[] ddJydydy;
+    if (ddJy_s2sigma)
+        delete[] ddJy_s2sigma;
+    if (ddJydpdp)
+        delete[] ddJydpdp;
+    
     if (llhS0)
         delete[] llhS0;
     if (llhS20)
