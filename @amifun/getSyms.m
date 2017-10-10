@@ -337,10 +337,11 @@ function [this,model] = getSyms(this,model)
             else
                 tmp = reshape(model.fun.J.sym, [model.nx^2,1]);
                 if(~isempty(w))
-                    
+                    id_dwdx = find(model.fun.dwdx.strsym);
+                    tmp_dwdx = model.fun.dwdx.strsym(id_dwdx);
                     tmp2 = jacobian(tmp,x) ...
                         + jacobian(tmp,w) * model.fun.dwdx.strsym ...
-                        + jacobian(tmp,model.fun.dwdx.sym) * jacobian(model.fun.dwdx.sym,x);
+                        + jacobian(tmp,tmp_dwdx) * jacobian(model.fun.dwdx.sym,x);
                     this.sym = reshape(tmp2, [model.nx,model.nx,model.nx]);
                     this.sym_noopt = reshape(jacobian(tmp,x), [model.nx,model.nx,model.nx]);
                 else
@@ -356,9 +357,11 @@ function [this,model] = getSyms(this,model)
             else
                 tmp = reshape(model.fun.J.sym, [model.nx^2,1]);
                 if(~isempty(w))
+                    id_dwdx = find(model.fun.dwdx.strsym);
+                    tmp_dwdx = model.fun.dwdx.strsym(id_dwdx);
                     tmp2 = jacobian(tmp,p) ...
                         + jacobian(tmp,w) * model.fun.dwdp.strsym ...
-                        + jacobian(tmp,model.fun.dwdx.sym) * jacobian(model.fun.dwdx.sym,p);
+                        + jacobian(tmp,tmp_dwdx) * jacobian(model.fun.dwdx.sym,p);
                     this.sym = reshape(tmp2, [model.nx,model.nx,model.np]);
                     this.sym_noopt = reshape(jacobian(tmp,p), [model.nx,model.nx,model.np]);
                 else

@@ -55,6 +55,20 @@ elseif(strcmp(this.funstr,'s2root'))
             end
         end
     end
+elseif(strcmp(this.funstr,'dJdp'))
+    nonzero = this.sym ~=0;
+    if(any(any(any(nonzero))))
+        tmpfun = this;
+        for ip=1:np
+            if(any(any(nonzero(:,:,ip))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = this.sym(:,:,ip);
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
 elseif(strcmp(this.funstr,'qBdot'))
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))
