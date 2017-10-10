@@ -248,7 +248,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                     tdata->dsigmaydp, ny, 0.0, ddJy_tmp2, ny);
         //          tdata->ddJydpdp += dsdp' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist,
+                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, ny,
                     tdata->dsigmaydp, ny, 1.0, tdata->ddJydpdp, rdata->nplist);
         
         // Part 1b: tdata->ddJydpdp += ddJy_s2sigma
@@ -268,7 +268,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                     tdata->dsigmaydp, ny, 0.0, ddJy_tmp2, ny);
         //          ddJy_tmp3 = sy' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist,
+                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, ny,
                     syTmp, ny, 0.0, ddJy_tmp3, rdata->nplist);
         //          tdata->ddJydpdp += ddJy_tmp3 + ddJy_tmp3'
         for (int ip = 0; ip < np; ip++)
@@ -288,7 +288,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                     0.0, ddJy_tmp2, ny);
         //          fddJydpdp += sy' * ddJy_tmp2
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, rdata->nplist, syTmp, ny,
+                    rdata->nplist, rdata->nplist, ny, 1.0, ddJy_tmp2, ny, syTmp, ny,
                     1.0, tdata->ddJydpdp, rdata->nplist);
         
         // Part 4:  dJydyTmp = Slicing dJy/dy
@@ -301,10 +301,10 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
         //          ddJy_tmp5 = ddJy_tmp4 * sx
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     nx, rdata->nplist, nx, 1.0, ddJy_tmp4, nx,
-                    sxTmp, nx, 0.0, ddJy_tmp5, rdata->nplist);
+                    sxTmp, nx, 0.0, ddJy_tmp5, nx);
         //          tdata->ddJydpdp += sx' * ddJy_tmp5
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, rdata->nplist,
+                    rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, nx,
                     sxTmp, nx, 1.0, tdata->ddJydpdp, rdata->nplist);
         
         // Part 4b: ddJy_tmp5 = dJy/dy * ddy/dpdx
@@ -362,9 +362,6 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     
     /* Temporary variables, think of how to do this more efficiently */
     realtype *sxTmp = new double[nx * np];
-    realtype *dJdx = new double[nx * nx * nx];
-    realtype *dJdp = new double[nx * nx * np];
-    realtype *ddfdpdp = new double[nx * np * np];
     realtype *qBo2_tmp1 = new double[nx * nx];
     realtype *qBo2_tmp2 = new double[nx * np];
     realtype *qBo2_tmp3 = new double[np * np];
@@ -377,20 +374,19 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     }
     
     /* Prepare quadrature fields to be read */
-    status = fdJdx(t, x, x, dJdx, user_data);
+    status = fdJdx(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
-    status = fdJdp(t, x, x, dJdp, user_data);
+    status = fdJdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
-    status = fddxdotdpdp(t, x, x, ddfdpdp, user_data);
+    status = fddxdotdpdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
     
     // Compute matrix xB' * dJdx
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                nx, nx*nx, 1.0, dJdx,
-                nx, xB_tmp, 1,
+                nx, nx*nx, 1.0, tdata->dJdx, nx, xB_tmp, 1,
                 0.0, qBo2_tmp1, 1);
     
     // qBo2_tmp2 = qBo2_tmp1 * sx
@@ -400,14 +396,13 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     
     // qBo2dot = sx' * qBo2_tmp2
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                np, np, nx, 1.0, sxTmp, np,
+                np, np, nx, 1.0, sxTmp, nx,
                 qBo2_tmp2, nx, 0.0, qBo2dot, np);
 
     
     // Compute matrix xB' * dJdp
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                nx, nx*np, 1.0, dJdp,
-                nx, xB_tmp, 1,
+                nx, nx*np, 1.0, tdata->dJdp, nx, xB_tmp, 1,
                 0.0, qBo2_tmp2, 1);
     
     // qBo2_tmp3 = qBo2_tmp2 * sx
@@ -424,13 +419,10 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     
     // qBo2dot_tmp += xB' * ddfdpdp
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                nx, np * np, 1.0, ddfdpdp,
+                nx, np * np, 1.0, tdata->ddxdotdpdp,
                 nx, xB_tmp, 1, 1.0, qBo2dot, 1);
     
     delete[] sxTmp;
-    delete[] dJdx;
-    delete[] dJdp;
-    delete[] ddfdpdp;
     delete[] qBo2_tmp1;
     delete[] qBo2_tmp2;
     delete[] qBo2_tmp3;

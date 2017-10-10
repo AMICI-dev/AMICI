@@ -112,9 +112,13 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                     xQB = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
                     xQB_old = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
                     
-                    s2x = N_VCloneVectorArray_Serial(udata->nplist*udata->nplist, x);
-                    s2dx = N_VCloneVectorArray_Serial(udata->nplist*udata->nplist, x);
+                    s2x = new realtype[model->nx*udata->nplist*udata->nplist]();
+                    s2dx = new realtype[model->nx*udata->nplist*udata->nplist]();
                     llhS20 = new realtype[model->nJ * udata->nplist * udata->nplist]();
+                    
+                    dJdp = new realtype[model->nx * model->nx * udata->nplist]();
+                    dJdx = new realtype[model->nx * model->nx * model->nx]();
+                    ddxdotdpdp = new realtype[model->nx * udata->nplist * udata->nplist]();
                     
                     ddydpdp = new realtype[model->ny * udata->nplist * udata->nplist]();
                     ddydpdx = new realtype[model->ny * udata->nplist * model->nx]();
@@ -171,10 +175,6 @@ TempData::~TempData() {
         N_VDestroyVectorArray_Serial(sx, nplist);
     if (sdx)
         N_VDestroyVectorArray_Serial(sdx, nplist);
-    if (s2x)
-        N_VDestroyVectorArray_Serial(s2x, nplist*nplist);
-    if (s2dx)
-        N_VDestroyVectorArray_Serial(s2dx, nplist*nplist);
     
     if (Jy)
         delete[] Jy;
@@ -261,12 +261,22 @@ TempData::~TempData() {
         delete[] ddJy_s2sigma;
     if (ddJydpdp)
         delete[] ddJydpdp;
+    if (dJdx)
+        delete[] dJdx;
+    if (dJdp)
+        delete[] dJdp;
+    if (ddxdotdpdp)
+        delete[] ddxdotdpdp;
     
     if (llhS0)
         delete[] llhS0;
     if (llhS20)
         delete[] llhS20;
-
+    if (s2x)
+        delete[] s2x;
+    if (s2dx)
+        delete[] s2dx;
+    
     if (dxdotdp)
         delete[] dxdotdp;
     if (w)

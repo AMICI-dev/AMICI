@@ -50,7 +50,7 @@ for ifun = this.funs
                 fprintf(fid,['#include "' this.modelname '_dfdx.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_M.h"\n']);
             end
-        elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
+        elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot') || strcmp(ifun{1},'ddxdotdpdp'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
         elseif(strcmp(ifun{1},'dJdp'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
@@ -115,7 +115,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             elseif(this.fun.(ifun{1}).sensiflag)
-                if( strcmp(ifun{1},'dxdotdp'))
+                if( strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'ddxdotdpdp'))
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');

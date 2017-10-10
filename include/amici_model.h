@@ -6,9 +6,9 @@
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
 
-int fdJdx(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
-int fdJdp(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
-int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, realtype *dJdx, void *user_data);
+int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data);
+int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
 
 class UserData;
 class ExpData;
@@ -129,7 +129,7 @@ class Model {
      * @param[in] user_data object with model specifications @type TempData
      * @return status flag indicating successful execution @type int
      **/
-    virtual int fs2x0(N_Vector *s2x0, N_Vector x, N_Vector dx, void *user_data) {
+    virtual int fs2x0(realtype *s2x0, N_Vector x, N_Vector dx, void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     
@@ -143,7 +143,7 @@ class Model {
      * @param[in] user_data object with model specifications @type TempData
      * @return status flag indicating successful execution @type int
      **/
-    virtual int fs2dx0(N_Vector *s2dx0, N_Vector x, N_Vector dx,
+    virtual int fs2dx0(realtype *s2dx0, N_Vector x, N_Vector dx,
                       void *user_data) {
         return AMICI_SUCCESS;
     }

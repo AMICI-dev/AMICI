@@ -58,10 +58,6 @@ class TempData {
     N_Vector *sx = nullptr;
     /** differential sensitivity state vector array */
     N_Vector *sdx = nullptr;
-    /** second order sensitivity state vector array */
-    N_Vector *s2x = nullptr;
-    /** differential second order sensitivity state vector array */
-    N_Vector *s2dx = nullptr;
     /** Jacobian */
     DlsMat Jtmp = nullptr;
 
@@ -131,6 +127,16 @@ class TempData {
     realtype *ddJydsigmadsigma = nullptr;
     /** second order sigma sensitivity of data likelihood */
     realtype *ddJy_s2sigma = nullptr;
+    /** derivative of Jacobian w.r.t. state variables */
+    realtype *dJdx = nullptr;
+    /** derivative of Jacobian w.r.t. parameters */
+    realtype *dJdp = nullptr;
+    /** second order derivative of right hand side w.r.t. parameters */
+    realtype *ddxdotdpdp = nullptr;
+    /** second order sensitivity state vector array */
+    realtype *s2x = nullptr;
+    /** differential second order sensitivity state vector array */
+    realtype *s2dx = nullptr;
     
     /** array of flags indicating which root has beend found.
      *  array of length nr with the indices of the user functions gi found to
