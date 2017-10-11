@@ -165,7 +165,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
             for (ip = 0; ip < rdata->nplist; ip++) {
                 for (int jp = 0; jp < rdata->nplist; jp++) {
                     rdata->s2llh[jp + ip * rdata->nplist] -=
-                        tdata->llhS20[ip * rdata->nplist + jp] +
+                        tdata->llhS20[ip * rdata->nplist + jp] -
                         xQB_tmp[jp + ip * rdata->nplist];
                 }
             }

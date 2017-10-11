@@ -356,7 +356,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     TempData *tdata = (TempData*) user_data;
     int np = tdata->nplist;
     
-    realtype *qBo2dot = NV_DATA_S(qBdot);
+    realtype *qBo2dot = N_VGetArrayPointer(qBdot);
     realtype *xB_tmp = NV_DATA_S(xB);
     realtype *sx_tmp;
     
@@ -397,7 +397,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     // qBo2dot = sx' * qBo2_tmp2
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                 np, np, nx, 1.0, sxTmp, nx,
-                qBo2_tmp2, nx, 0.0, qBo2dot, np);
+                qBo2_tmp2, nx, 1.0, qBo2dot, np);
 
     
     // Compute matrix xB' * dJdp
@@ -406,8 +406,8 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
                 0.0, qBo2_tmp2, 1);
     
     // qBo2_tmp3 = qBo2_tmp2 * sx
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                np, np, nx, 1.0, qBo2_tmp2, np, sxTmp, nx,
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
+                np, np, nx, 1.0, qBo2_tmp2, nx, sxTmp, nx,
                 0.0, qBo2_tmp3, np);
     
     // qBo2dot_tmp += qBo2_part2 + qBo2_part2'
