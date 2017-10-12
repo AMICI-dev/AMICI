@@ -29,7 +29,7 @@ function this = gccode(this,model,fid)
                 tokens = regexp(symstr, 't\,\s(\w+\.\w+)\,', 'tokens');
                 nNodes = round(str2double(tokens{1}));
             end
-            if (regexp(symstr, 'D\(\[(\w+|\w+\,\w+)\]\,.am_spline'))
+            if (regexp(symstr, 'D\(\[(\w+|\w+\,.\w+)\]\,.am_spline'))
                 isDSpline = true;
             else
                 isDSpline = false;
@@ -39,7 +39,7 @@ function this = gccode(this,model,fid)
                 [~, nCol] = size(this.sym);
                 for iCol = 1 : nCol
                     for iNode = 1 : nNodes
-                        if (model.o2flag)
+                        if (model.o2flag || model.adjoint_o2)
                             for jNode = 1:nNodes
                                 this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline_pos']));
                                 this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline']));
@@ -59,7 +59,7 @@ function this = gccode(this,model,fid)
             elseif(any(strcmp(this.funstr,{'ddJydsigmadsigma','ddJydsigmady','ddJydydy','ddJy_s2sigma','dJdp'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '_$1_$2']);
             elseif( strcmp(this.funstr,'dJdx') )
-                cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]]\[([0-9]*)\]',[this.cvar '_$1_$2_$3']);
+                cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '_$1_$2_$3']);
             else
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[0\]',[this.cvar '_$1']);
                 cstr = regexprep(cstr,'T\[0\]\[([0-9]*)\]',[this.cvar '_$1']);
@@ -165,7 +165,8 @@ function this = gccode(this,model,fid)
             
             cstr = regexprep(cstr,'var_dJdp_([0-9]+)_([0-9]+)','tdata->dJdp[udata->plist[ip]*model->nx*model->nx + $2*model->nx + $1]');
             cstr = regexprep(cstr,'var_dJdx_([0-9]+)_([0-9]+)_([0-9]+)','tdata->dJdx[$3*model->nx*model->nx + $2*model->nx + $1]');
-            
+            cstr = regexprep(cstr,'var_ddxdotdpdp_([0-9]+)','tdata->ddxdotdpdp[udata->plist[ip]*model->nx*udata->nplist + udata->plist[jp]*model->nx + $1]');
+            cstr = regexprep(cstr,'var_s2x0_([0-9]+)','tdata->s2x[udata->plist[ip]*model->nx*udata->nplist + udata->plist[jp]*model->nx + $1]');
             if(~isempty(strfind(this.cvar,'Jy')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');
             end

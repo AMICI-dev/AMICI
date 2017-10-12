@@ -69,7 +69,7 @@ elseif(strcmp(this.funstr,'dJdp'))
             end
         end
     end
-elseif(strcmp(this.funstr,'ddxdotdpdp'))
+elseif(strcmp(this.funstr,'ddxdotdpdp') || strcmp(this.funstr,'s2x0'))
     nonzero = this.sym ~=0;
     if(any(any(any(nonzero))))
         tmpfun = this;

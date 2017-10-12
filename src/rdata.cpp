@@ -105,18 +105,16 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
         for (int ip = 0; ip < nplist; ++ip)
             pcoefficient[ip] = unscaledParameters[udata->plist[ip]] * log(10);
         if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip] * log(10);
+            for (int ip = 0; ip < np; ++ip)
+                augcoefficient[ip] = unscaledParameters[ip] * log(10);
         break;
     case AMICI_SCALING_LN:
         coefficient = 1.0;
         for (int ip = 0; ip < nplist; ++ip)
             pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
         if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip];
+            for (int ip = 0; ip < np; ++ip)
+                augcoefficient[ip] = unscaledParameters[ip];
         break;
     case AMICI_SCALING_NONE:
         // this should never be reached
@@ -215,6 +213,36 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                     s2ChainRule(z, iz, nztrue, nz, ie, nmaxevent)
                         s2ChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
                             s2ChainRule(rz, iz, nztrue, nz, ie, nmaxevent)
+    }
+    
+    if ( (udata->sensi == AMICI_SENSI_ORDER_SECOND) &&
+         (udata->sensi_meth == AMICI_SENSI_ASA) && (nJ == 1) ) { // full
+        if (s2llh) {
+            if (sllh) {
+                for (int ip = 0; ip < nplist; ++ip) {
+                    for (int jp = 0; jp < nplist; ++jp) {
+                        s2llh[ip * nplist + jp] *=
+                        pcoefficient[ip] * augcoefficient[jp];
+                        if (udata->plist[ip] == udata->plist[jp])
+                            s2llh[ip * nplist + jp] +=
+                            sllh[ip] * coefficient;
+                    }
+                }
+            }
+        }
+        
+#define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                              \
+    if (s##QUANT)                                                              \
+        for (int ip = 0; ip < nplist; ++ip)                                    \
+            for (int IND1 = 0; IND1 < N1T; ++IND1)                             \
+                for (int IND2 = 0; IND2 < N2; ++IND2) {                        \
+                    s##QUANT[(ip * N1 + IND1) * N2 + IND2] *=                  \
+                        pcoefficient[ip];                                      \
+}
+        
+        chainRule(x, ix, nxtrue, nx, it, nt)
+            chainRule(y, iy, nytrue, ny, it, nt)
+                chainRule(sigmay, iy, nytrue, ny, it, nt)
     }
 
     if (o2mode == AMICI_O2MODE_DIR) { // directional

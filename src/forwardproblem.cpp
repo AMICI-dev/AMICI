@@ -747,7 +747,7 @@ int ForwardProblem::getDataOutput(int it, const UserData *udata,
         if (status != AMICI_SUCCESS)
             return status;
         if (rdata->sensi_meth == AMICI_SENSI_FSA ||
-            rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+            (rdata->sensi >= AMICI_SENSI_ORDER_SECOND && model->nJ == 1)) {
             status =
                 getDataSensisFSA(it, udata, rdata, edata, tdata, solver, model);
             if (status != AMICI_SUCCESS)
