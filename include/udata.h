@@ -204,6 +204,12 @@ class UserData {
     /** number of states */
     const int nx;
 
+    /**
+     * @brief Serialize UserData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
 

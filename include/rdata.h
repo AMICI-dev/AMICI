@@ -220,6 +220,12 @@ class ReturnData {
     /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
 
+    /**
+     * @brief Serialize ReturnData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r, const unsigned int version);
 };
