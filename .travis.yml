@@ -24,6 +24,7 @@ matrix:
             - doxygen
             - doxygen-latex
             - cppcheck
+            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
