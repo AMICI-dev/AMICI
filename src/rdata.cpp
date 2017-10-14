@@ -122,38 +122,6 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
     }
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        // recover first order sensitivies from states for adjoint sensitivity
-        // analysis
-        if (udata->sensi == AMICI_SENSI_ORDER_SECOND) {
-            if (udata->sensi_meth == AMICI_SENSI_ASA) {
-                if (x)
-                    if (sx)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int ix = 0; ix < nxtrue; ++ix)
-                                for (int it = 0; it < nt; ++it)
-                                    sx[(ip * nxtrue + ix) * nt + it] =
-                                        x[(nxtrue + ip * nxtrue + ix) * nt +
-                                          it];
-
-                if (y)
-                    if (sy)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int iy = 0; iy < nytrue; ++iy)
-                                for (int it = 0; it < nt; ++it)
-                                    sy[(ip * nytrue + iy) * nt + it] =
-                                        y[(nytrue + ip * nytrue + iy) * nt +
-                                          it];
-
-                if (z)
-                    if (sz)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int iz = 0; iz < nztrue; ++iz)
-                                for (int it = 0; it < nt; ++it)
-                                    sz[(ip * nztrue + iz) * nt + it] =
-                                        z[(nztrue + ip * nztrue + iz) * nt +
-                                          it];
-            }
-        }
 
         if (sllh)
             for (int ip = 0; ip < nplist; ++ip)

@@ -418,9 +418,14 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
                 qBo2_tmp3[ip + jp*np];
     
     // qBo2dot_tmp += xB' * ddfdpdp
+    for (int ip = 0; ip < np; ip++)
+        for (int jp = 0; jp < np; jp++)
+            for (int ix = 0; ix < nx; ix++)
+                qBo2dot[ip * np + jp] = xB_tmp[ix] * tdata->ddxdotdpdp[ix + nx * (ip * np + jp)];
+    /*
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                nx, np * np, 1.0, tdata->ddxdotdpdp,
-                nx, xB_tmp, 1, 1.0, qBo2dot, 1);
+                np * np, nx, 1.0, tdata->ddxdotdpdp,
+                nx, xB_tmp, 1, 1.0, qBo2dot, 1);*/
     
     delete[] sxTmp;
     delete[] qBo2_tmp1;
