@@ -32,7 +32,9 @@ matrix:
         - ./scripts/run-coveralls.sh
     - os: osx
       compiler: clang
-      before_install: brew install hdf5 cppcheck
+      before_install: 
+        - rvm install ruby-2.3.3 && rvm --default use 2.3.3 # otherwise homebrew fails
+        - brew install hdf5 cppcheck
         
 install:
     - ./scripts/run-build.sh
