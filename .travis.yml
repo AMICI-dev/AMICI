@@ -33,7 +33,8 @@ matrix:
     - os: osx
       compiler: clang
       before_install: 
-        - rvm install ruby-2.3.3 && rvm --default use 2.3.3 # otherwise homebrew fails
+        - brew update 
+        #- rvm install ruby-2.3.3 && rvm --default use 2.3.3 # otherwise homebrew fails
         - brew install hdf5 cppcheck
         
 install:
