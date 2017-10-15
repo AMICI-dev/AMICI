@@ -198,19 +198,6 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                 }
             }
         }
-        
-#define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                              \
-    if (s##QUANT)                                                              \
-        for (int ip = 0; ip < nplist; ++ip)                                    \
-            for (int IND1 = 0; IND1 < N1T; ++IND1)                             \
-                for (int IND2 = 0; IND2 < N2; ++IND2) {                        \
-                    s##QUANT[(ip * N1 + IND1) * N2 + IND2] *=                  \
-                        pcoefficient[ip];                                      \
-}
-        
-        chainRule(x, ix, nxtrue, nx, it, nt)
-            chainRule(y, iy, nytrue, ny, it, nt)
-                chainRule(sigmay, iy, nytrue, ny, it, nt)
     }
 
     if (o2mode == AMICI_O2MODE_DIR) { // directional

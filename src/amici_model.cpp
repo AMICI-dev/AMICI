@@ -380,7 +380,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     status = fdJdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
-    status = fddxdotdpdp(t, x, x, user_data);
+    //status = fddxdotdpdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
     
