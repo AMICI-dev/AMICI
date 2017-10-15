@@ -357,7 +357,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     int np = tdata->nplist;
     
     realtype *qBo2dot = N_VGetArrayPointer(qBdot);
-    realtype *xB_tmp = NV_DATA_S(xB);
+    realtype *xB_tmp = N_VGetArrayPointer(xB);
     realtype *sx_tmp;
     
     /* Temporary variables, think of how to do this more efficiently */
@@ -416,22 +416,33 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
             qBo2dot[jp + ip*np] +=
                 qBo2_tmp3[jp + ip*np] +
                 qBo2_tmp3[ip + jp*np];
-    
+
     // qBo2dot_tmp += xB' * ddfdpdp
+    /*
     for (int ip = 0; ip < np; ip++)
         for (int jp = 0; jp < np; jp++)
-            for (int ix = 0; ix < nx; ix++)
-                qBo2dot[ip * np + jp] = xB_tmp[ix] * tdata->ddxdotdpdp[ix + nx * (ip * np + jp)];
-    /*
+            qBo2_tmp3[jp + ip*np] = 0;
+    
+    for (int ip = 0; ip < np; ++ip)
+        for (int jp = 0; jp < np; ++jp)
+            for (int ix = 0; ix < nx; ++ix)
+                qBo2_tmp3[ip * np + jp] += xB_tmp[ix] * tdata->ddxdotdpdp[ix + nxtrue * (jp * np + ip)];
+    
+    for (int ip = 0; ip < np; ip++)
+        for (int jp = 0; jp < np; jp++)
+            qBo2dot[jp + ip*np] +=
+            qBo2_tmp3[jp + ip*np] +
+            qBo2_tmp3[ip + jp*np];*/
+    
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
-                np * np, nx, 1.0, tdata->ddxdotdpdp,
-                nx, xB_tmp, 1, 1.0, qBo2dot, 1);*/
+                nx, np * np, 1.0, tdata->ddxdotdpdp,
+                nx, xB_tmp, 1, 1.0, qBo2dot, 1);
     
     delete[] sxTmp;
     delete[] qBo2_tmp1;
     delete[] qBo2_tmp2;
     delete[] qBo2_tmp3;
-    
+
     return status;
 }
 

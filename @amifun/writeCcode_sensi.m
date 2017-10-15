@@ -81,9 +81,9 @@ elseif(strcmp(this.funstr,'ddxdotdpdp') || strcmp(this.funstr,'s2x0'))
                 for jp=1:np
                      if(any(any(nonzero(:,jp,ip))))
                          fprintf(fid,['            case ' num2str(jp-1) ': {\n']);
-                         tmpfun.sym = this.sym(:,jp,ip);
+                         tmpfun.sym = this.sym(:,ip,jp);
                          tmpfun.writeCcode(model,fid);
-                         fprintf(fid,'            }\n');
+                         fprintf(fid,'            } break;\n\n');
                      end
                 end
                 fprintf(fid,'          }\n');
