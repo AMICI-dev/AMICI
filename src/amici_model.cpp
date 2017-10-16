@@ -200,12 +200,12 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     /* Temporary variables, think of how to do this more efficiently */
     realtype *sxTmp = new double[nx * rdata->nplist];
     realtype *syTmp = new double[ny * rdata->nplist];
-    realtype *dJydyTmp = new double[ny];
     realtype *ddJy_tmp1 = new double[ny * ny];
     realtype *ddJy_tmp2 = new double[ny * rdata->nplist];
     realtype *ddJy_tmp3 = new double[rdata->nplist * rdata->nplist];
     realtype *ddJy_tmp4 = new double[nx * nx];
     realtype *ddJy_tmp5 = new double[nx * rdata->nplist];
+    realtype *dJydyTmp = new double[ny];
     
     /*
      Short description:
@@ -313,7 +313,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                     dJydyTmp, 1, 0.0, ddJy_tmp5, 1);
         //          ddJy_tmp3 = ddJy_tmp5 * sx
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
-                    rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, rdata->nplist,
+                    rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, nx,
                     sxTmp, nx, 0.0, ddJy_tmp3, rdata->nplist);
         //          tdata->ddJydpdp += ddJy_tmp3 + ddJy_tmp3'
         for (int ip = 0; ip < np; ip++)
@@ -330,12 +330,12 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     
     delete[] sxTmp;
     delete[] syTmp;
-    delete[] dJydyTmp;
     delete[] ddJy_tmp1;
     delete[] ddJy_tmp2;
     delete[] ddJy_tmp3;
     delete[] ddJy_tmp4;
     delete[] ddJy_tmp5;
+    delete[] dJydyTmp;
     
     return (status);
 }
