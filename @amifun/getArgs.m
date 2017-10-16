@@ -11,23 +11,23 @@ function this = getArgs(this,model)
     %  this: updated function definition object @type amifun
     %
     
-    if(strcmp(model.wtype,'iw'))
+%     if(strcmp(model.wtype,'iw'))
         dxvec = ' N_Vector dx,';
-        sdxvec = ' N_Vector *sdx,';
+        sdxvec = ' N_Vector sdx,';
         dxBvec = ' N_Vector dxB,';
         rtcj = ' realtype cj,';
-        s = '*';
-        intip = '';
+%         s = '*';
+%         intip = '';
         tmp3vec = ', N_Vector tmp3';
-    else
-        dxvec = '';
-        sdxvec = '';
-        dxBvec = '';
-        rtcj = '';
+%     else
+%         dxvec = '';
+%         sdxvec = '';
+%         dxBvec = '';
+%         rtcj = '';
         s = '';
         intip = 'int ip, ';
-        tmp3vec = '';
-    end
+%         tmp3vec = '';
+%     end
     
     
     switch(this.funstr)
@@ -43,17 +43,9 @@ function this = getArgs(this,model)
         case 'dx0'
             this.argstr = '(N_Vector x0, N_Vector dx0, void *user_data)';
         case 'Jv'
-            if(strcmp(model.wtype,'iw'))
-                this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xdot, N_Vector v, N_Vector Jv,' rtcj ' void *user_data, N_Vector tmp1, N_Vector tmp2)'];
-            else
-                this.argstr = '(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp)';
-            end
+            this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xdot, N_Vector v, N_Vector Jv,' rtcj ' void *user_data, N_Vector tmp1, N_Vector tmp2)'];
         case 'JvB'
-            if(strcmp(model.wtype,'iw'))
-                this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xB,' dxBvec ' N_Vector xBdot, N_Vector vB, N_Vector JvB,' rtcj ' void *user_data, N_Vector tmpB1, N_Vector tmpB2)'];
-            else
-                this.argstr = '(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB)';
-            end
+            this.argstr = ['(realtype t, N_Vector x,' dxvec ' N_Vector xB,' dxBvec ' N_Vector xBdot, N_Vector vB, N_Vector JvB,' rtcj ' void *user_data, N_Vector tmpB1, N_Vector tmpB2)'];
         case 'JBand'
             this.argstr = ['(long int N, long int mupper, long int mlower, realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
         case 'J'
@@ -63,7 +55,7 @@ function this = getArgs(this,model)
         case 'dJdp'
             this.argstr = '(realtype t, N_Vector x, N_Vector dx, void *user_data)';
         case 'JDiag'
-            this.argstr = '(realtype t, N_Vector JDiag, N_Vector x, void *user_data)';
+            this.argstr = ['(realtype t, N_Vector JDiag,' rtcj ' N_Vector x,' dxvec ' void *user_data)'];
         case 'JSparse'
             this.argstr = ['(realtype t,' rtcj ' N_Vector x,' dxvec ' N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)'];
         case 'JBandB'

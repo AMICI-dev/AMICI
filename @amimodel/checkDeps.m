@@ -22,7 +22,11 @@ function cflag = checkDeps(this,HTable,deps)
                 cflagdep = this.checkDeps(HTable,fun.deps);
                 cflags(id) = cflagdep;
             else
-                cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
+                if(~isfield(HTable,deps{id})) %newly added field in HTable, need to recompile
+                    cflags(id) = 1;
+                else
+                    cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
+                end
             end
         end
         cflag = any(cflags);

@@ -12,7 +12,12 @@ int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
 int ip;
 realtype t = udata->tstart;
 for(ip = 0; ip<udata->nplist; ip++) {

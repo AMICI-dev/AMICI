@@ -153,7 +153,7 @@ function [this,model] = getSyms(this,model)
             this = unifySyms(this,model);
             
         case 'M'
-            this.sym = model.sym.M;
+            this.sym = sym(model.sym.M);
             % replace unify symbolic expression
             this = unifySyms(this,model);
             this = makeStrSyms(this);
@@ -932,7 +932,7 @@ function this = makeStrSyms(this)
     idx = find(this.sym);
     idx = transpose(idx(:));
     for isym = idx
-        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
+        this.strsym(isym) = sym(sprintf([strrep(this.cvar,'tdata->','') '_%i'], isym-1));
     end
 end
 

@@ -132,7 +132,8 @@ function [modelo2] = augmento2(this)
     modelo2.o2flag = 1;
     modelo2.debug = this.debug;
     modelo2.forward = this.forward;
-    modelo2.adjoint = this.adjoint;
+    modelo2.adjoint = false;
+    modelo2.adjoint_o2 = false;
     modelo2.param = this.param;
 end
 

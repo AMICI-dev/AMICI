@@ -13,7 +13,9 @@ int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
   rdata->y[it + udata->nt*0] = tdata->p[11]+(tdata->p[13]*(x_tmp[1]+x_tmp[2]*2.0))/tdata->p[4];
   rdata->y[it + udata->nt*1] = tdata->p[10]+(tdata->p[12]*(x_tmp[0]+x_tmp[1]+x_tmp[2]*2.0))/tdata->p[4];

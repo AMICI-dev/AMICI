@@ -42,13 +42,5 @@
 #include "model_jakstat_adjoint_o2_dzdp.h"
 #include "model_jakstat_adjoint_o2_drzdx.h"
 #include "model_jakstat_adjoint_o2_drzdp.h"
-#include "model_jakstat_adjoint_o2_xBdot.h"
-#include "model_jakstat_adjoint_o2_qBdot.h"
-#include "model_jakstat_adjoint_o2_JB.h"
-#include "model_jakstat_adjoint_o2_JvB.h"
-#include "model_jakstat_adjoint_o2_JBandB.h"
-#include "model_jakstat_adjoint_o2_JSparseB.h"
-#include "model_jakstat_adjoint_o2_deltaxB.h"
-#include "model_jakstat_adjoint_o2_deltaqB.h"
 
 #endif /* _am_model_jakstat_adjoint_o2_h */

@@ -13,7 +13,7 @@ fi
 
 cd ${AMICI_PATH}
 
-cppcheck ${AMICI_PATH}/src 2> cppcheck.txt
+cppcheck -i${AMICI_PATH}/src/doc ${AMICI_PATH}/src 2> cppcheck.txt
 # check if error log was created
 if [ -f cppcheck.txt  ]; then
     # check if error log is empty

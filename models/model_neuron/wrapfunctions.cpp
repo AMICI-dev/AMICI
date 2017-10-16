@@ -23,23 +23,23 @@ int fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data){
 }
 
 int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
-    return J_model_neuron(N, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+    return J_model_neuron(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JB_model_neuron(NeqBdot, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JB_model_neuron(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data){
-    return JDiag_model_neuron(t, JDiag, x, user_data);
+int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data){
+    return JDiag_model_neuron(t, JDiag, cj, x, dx, user_data);
 }
 
-int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot, void *user_data, N_Vector tmp){
-    return Jv_model_neuron(v, Jv, t, x, xdot, user_data, tmp);
+int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2){
+    return Jv_model_neuron(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
 }
 
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){
-    return root_model_neuron(t, x, root, user_data);
+    return root_model_neuron(t, x, dx, root, user_data);
 }
 
 int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata){
@@ -90,20 +90,20 @@ int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata){
     return drzdx_model_neuron(t, ie, x, tdata);
 }
 
-int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2){
-    return sxdot_model_neuron(Ns, t, x, xdot, ip, sx, sxdot, user_data, tmp1, tmp2);
+int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return sxdot_model_neuron(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
 }
 
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){
-    return xdot_model_neuron(t, x, xdot, user_data);
+    return xdot_model_neuron(t, x, dx, xdot, user_data);
 }
 
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data){
-    return xBdot_model_neuron(t, x, xB, xBdot, user_data);
+    return xBdot_model_neuron(t, x, dx, xB, dxB, xBdot, user_data);
 }
 
-int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data){
-    return qBdot_model_neuron(t, x, xB, qBdot, user_data);
+int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data){
+    return qBdot_model_neuron(t, x, dx, xB, dxB, qBdot, user_data);
 }
 
 int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
@@ -142,24 +142,24 @@ int fdsigma_zdp(realtype t, int ie, TempData *tdata){
     return dsigma_zdp_model_neuron(t, ie, tdata);
 }
 
-int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
-    return JSparse_model_neuron(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JSparse_model_neuron(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJBand(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
-    return JBand_model_neuron(N, mupper, mlower, t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3){
+    return JBand_model_neuron(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JSparseB_model_neuron(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JSparseB_model_neuron(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JBandB_model_neuron(NeqBdot, mupper, mlower, t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
+    return JBandB_model_neuron(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data, N_Vector tmpB){
-    return JvB_model_neuron(vB, JvB, t, x, xB, xBdot, user_data, tmpB);
+int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2){
+    return JvB_model_neuron(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
 }
 
 int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
@@ -196,5 +196,60 @@ int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edat
 
 int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
     return dJrzdsigma_model_neuron(t, ie, x, tdata, edata, rdata);
+}
+
+int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdx:NotAvailable","ERROR: The function dJdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdp:NotAvailable","ERROR: The function dJdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:ddxdotdpdp:NotAvailable","ERROR: The function ddxdotdpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdp(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdp:NotAvailable","ERROR: The function ddydpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdx:NotAvailable","ERROR: The function ddydpdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydxdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydxdx:NotAvailable","ERROR: The function ddydxdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fs2x0(realtype *s2x0, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:s2x0:NotAvailable","ERROR: The function s2x0 was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmady(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmady:NotAvailable","ERROR: The function ddJydsigmady was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmadsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmadsigma:NotAvailable","ERROR: The function ddJydsigmadsigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJy_s2sigma:NotAvailable","ERROR: The function ddJy_s2sigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydydy:NotAvailable","ERROR: The function ddJydydy was called but not compiled for this model.");
+    return -1;
 }
 

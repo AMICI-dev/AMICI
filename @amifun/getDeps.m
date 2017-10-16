@@ -29,7 +29,7 @@ function [ this ] = getDeps(this, model)
             if(strcmp(model.wtype,'iw'))
                 this.deps = {'dfdx','M','x','xdot'};
             else
-                this.deps = {'xdot','x','dwdx','dwdp'};
+                this.deps = {'xdot','x','dwdx'};
             end
             
         case 'dJdx'
@@ -46,7 +46,7 @@ function [ this ] = getDeps(this, model)
             this.deps = {'xdot','p','dwdp'};
             
         case 'ddxdotdpdp'
-            this.deps = {'xdot','p','dwdp','dxdotdp'};
+            this.deps = {'xdot','p','dwdp'};
             
         case 'sx0'
             this.deps = {'x0','p'};    

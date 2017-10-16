@@ -270,6 +270,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
      * found
      * @param[in] run_time double coputation time of the solver in milliseconds
      * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      * @return stats integer flag indicating success of the method
      */
 
@@ -311,6 +312,7 @@ int SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tda
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      * @return stats integer flag indicating success of the method
      */
  
@@ -430,7 +432,7 @@ int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
     N_VScale(-1.0, tdata->xdot, tdata->xdot);
 
     // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiag(tdata->t, ns_Jdiag, tdata->x, tdata);
+    model->fJDiag(tdata->t, ns_Jdiag, 0.0, tdata->x, tdata->dx, tdata);
 
     // Ensure positivity of entries in ns_Jdiag
     N_VConst(1.0, ns_p);
@@ -449,7 +451,7 @@ int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
     alpha = 1.0;
 
     // can be set to 0 at the moment
-    model->fJv(ns_delta, ns_Jv, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
+    model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_delta, ns_Jv, 0.0,  tdata, ns_tmp, NULL);
 
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
@@ -469,7 +471,7 @@ int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
         N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
 
         // ns_v = J * ns_p
-        model->fJv(ns_p, ns_v, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
+        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_p, ns_v, 0.0,  tdata, ns_tmp, NULL);
         N_VDiv(ns_v, ns_Jdiag, ns_v);
 
         // Compute factor
@@ -481,7 +483,7 @@ int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
         N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
 
         // ns_t = J * ns_s
-        model->fJv(ns_s, ns_t, tdata->t, tdata->x, tdata->xdot, tdata, ns_tmp);
+        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_s, ns_t, 0.0,  tdata, ns_tmp, NULL);
         N_VDiv(ns_t, ns_Jdiag, ns_t);
 
         // Compute factor

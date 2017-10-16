@@ -8,13 +8,20 @@
 #include "model_jakstat_adjoint_dwdx.h"
 #include "model_jakstat_adjoint_w.h"
 
-int JDiag_model_jakstat_adjoint(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
+int JDiag_model_jakstat_adjoint(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *JDiag_tmp = N_VGetArrayPointer(JDiag);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
+realtype *JDiag_tmp = nullptr;
+if(JDiag)
+    JDiag_tmp = N_VGetArrayPointer(JDiag);
 int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*9);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);

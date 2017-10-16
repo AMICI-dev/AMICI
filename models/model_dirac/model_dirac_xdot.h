@@ -11,7 +11,7 @@ class ReturnData;
 class TempData;
 class ExpData;
 
-int xdot_model_dirac(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+int xdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 
 
 #endif /* _am_model_dirac_xdot_h */

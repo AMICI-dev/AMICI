@@ -11,10 +11,18 @@ int deltaxB_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector xB, N
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *xB_tmp = N_VGetArrayPointer(xB);
-realtype *xdot_tmp = N_VGetArrayPointer(xdot);
-realtype *xdot_old_tmp = N_VGetArrayPointer(xdot_old);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *xB_tmp = nullptr;
+if(xB)
+    xB_tmp = N_VGetArrayPointer(xB);
+realtype *xdot_tmp = nullptr;
+if(xdot)
+    xdot_tmp = N_VGetArrayPointer(xdot);
+realtype *xdot_old_tmp = nullptr;
+if(xdot_old)
+    xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 memset(tdata->deltaxB,0,sizeof(realtype)*9);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
 return(status);

@@ -8,13 +8,20 @@
 #include "model_neuron_dwdx.h"
 #include "model_neuron_w.h"
 
-int JSparse_model_neuron(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+int JSparse_model_neuron(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
-realtype *xdot_tmp = N_VGetArrayPointer(xdot);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
+realtype *dx_tmp = nullptr;
+if(dx)
+    dx_tmp = N_VGetArrayPointer(dx);
+realtype *xdot_tmp = nullptr;
+if(xdot)
+    xdot_tmp = N_VGetArrayPointer(xdot);
 int inz;
 SparseSetMatToZero(J);
 J->indexvals[0] = 0;

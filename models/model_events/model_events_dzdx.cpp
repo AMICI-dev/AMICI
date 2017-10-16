@@ -11,7 +11,9 @@ int dzdx_model_events(realtype t, int ie, N_Vector x, TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 status = w_model_events(t,x,NULL,tdata);
   tdata->dzdx[0+1*2] = 1.0/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));
   tdata->dzdx[0+2*2] = -1.0/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));

@@ -492,6 +492,20 @@ int ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
             tdata->nroots[ie]++;
         }
     }
+    if (tdata->t ==
+        rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
+        // loop until all events are filled
+        bool continue_loop = false;
+        for (int ie = 0; ie < model->ne;
+             ie++) {
+            if (tdata->nroots[ie] < rdata->nmaxevent) {
+                continue_loop = true;
+                break;
+            }
+        }
+        if(continue_loop)
+            status = getEventOutput(udata, rdata, edata, tdata, model);
+    }
     return status;
 }
 

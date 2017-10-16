@@ -36,9 +36,6 @@ function [ this ] = getSensiFlag(this)
             
         case 'ddydpdx'
             this.sensiflag = true;
-            
-        case 'ddydxdx'
-            this.sensiflag = true;
           
         case 'sy'
             this.sensiflag = true;
@@ -89,9 +86,6 @@ function [ this ] = getSensiFlag(this)
             this.sensiflag = true;
             
         case 'dJdp'
-            this.sensiflag = true;
-            
-        case 'ddJy_s2sigma'
             this.sensiflag = true;
 
         otherwise

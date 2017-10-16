@@ -11,7 +11,9 @@ int ddydxdx_model_jakstat_adjoint(realtype t, int it, N_Vector x, TempData *tdat
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 int ip;
 memset(tdata->ddydxdx,0,sizeof(realtype)*model->ny*model->nx*model->nx);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);

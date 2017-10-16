@@ -13,7 +13,9 @@ int ddJy_s2sigma_model_jakstat_adjoint(realtype t, int it, N_Vector x, TempData 
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = N_VGetArrayPointer(x);
+realtype *x_tmp = nullptr;
+if(x)
+    x_tmp = N_VGetArrayPointer(x);
 int ip;
 memset(tdata->ddJy_s2sigma,0,sizeof(realtype)*model->nytrue*udata->nplist*udata->nplist);
 status = w_model_jakstat_adjoint(t,x,NULL,tdata);
