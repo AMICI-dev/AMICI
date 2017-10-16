@@ -194,10 +194,11 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     int status = AMICI_SUCCESS;
     
     memset(tdata->ddJydpdp, 0, rdata->nplist * rdata->nplist * sizeof(double));
-    
+    /*
     realtype *sx_tmp;
     
     /* Temporary variables, think of how to do this more efficiently */
+    /*
     realtype *sxTmp = new double[nx * rdata->nplist];
     realtype *syTmp = new double[ny * rdata->nplist];
     realtype *ddJy_tmp1 = new double[ny * ny];
@@ -206,7 +207,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     realtype *ddJy_tmp4 = new double[nx * nx];
     realtype *ddJy_tmp5 = new double[nx * rdata->nplist];
     realtype *dJydyTmp = new double[ny];
-    
+    */
     /*
      Short description:
      
@@ -222,7 +223,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
        + dJy/dy * ddy/dpdp             -- Part 4c
      */
     
-    
+    /*
     for (int ip = 0; ip < np; ip++) {
         sx_tmp = N_VGetArrayPointer(tdata->sx[ip]);
         for (int ix = 0; ix < nx; ix++)
@@ -336,7 +337,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
     delete[] ddJy_tmp4;
     delete[] ddJy_tmp5;
     delete[] dJydyTmp;
-    
+    */
     return (status);
 }
 
