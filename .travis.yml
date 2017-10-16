@@ -31,7 +31,11 @@ matrix:
         - ./scripts/run-coveralls.sh
     - os: osx
       compiler: clang
+      dependencies:
+        pre:
+          - brew update
       before_install: brew install hdf5 cppcheck
+      
         
 install:
     - ./scripts/run-build.sh
