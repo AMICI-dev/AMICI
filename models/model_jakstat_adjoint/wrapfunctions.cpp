@@ -198,3 +198,47 @@ int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *
     return dJrzdsigma_model_jakstat_adjoint(t, ie, x, tdata, edata, rdata);
 }
 
+int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    return dJdx_model_jakstat_adjoint(t, x, dx, user_data);
+}
+
+int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    return dJdp_model_jakstat_adjoint(t, x, dx, user_data);
+}
+
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    return ddxdotdpdp_model_jakstat_adjoint(t, x, dx, user_data);
+}
+
+int fddydpdp(realtype t, int it, N_Vector x, TempData *tdata){
+    return ddydpdp_model_jakstat_adjoint(t, it, x, tdata);
+}
+
+int fddydpdx(realtype t, int it, N_Vector x, TempData *tdata){
+    return ddydpdx_model_jakstat_adjoint(t, it, x, tdata);
+}
+
+int fddydxdx(realtype t, int it, N_Vector x, TempData *tdata){
+    return ddydxdx_model_jakstat_adjoint(t, it, x, tdata);
+}
+
+int fs2x0(realtype *s2x0, N_Vector x, N_Vector dx, void *user_data){
+    return s2x0_model_jakstat_adjoint(s2x0, x, dx, user_data);
+}
+
+int fddJydsigmady(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return ddJydsigmady_model_jakstat_adjoint(t, it, x, tdata, edata, rdata);
+}
+
+int fddJydsigmadsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return ddJydsigmadsigma_model_jakstat_adjoint(t, it, x, tdata, edata, rdata);
+}
+
+int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return ddJy_s2sigma_model_jakstat_adjoint(t, it, x, tdata, edata, rdata);
+}
+
+int fddJydydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    return ddJydydy_model_jakstat_adjoint(t, it, x, tdata, edata, rdata);
+}
+

@@ -312,7 +312,7 @@ int Model::fddJydpdp(const int it, TempData *tdata, const ExpData *edata,
                     ny, nx*rdata->nplist, 1.0, tdata->ddydpdx, ny,
                     dJydyTmp, 1, 0.0, ddJy_tmp5, 1);
         //          ddJy_tmp3 = ddJy_tmp5 * sx
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans, AMICI_BLAS_NoTrans,
                     rdata->nplist, rdata->nplist, nx, 1.0, ddJy_tmp5, rdata->nplist,
                     sxTmp, nx, 0.0, ddJy_tmp3, rdata->nplist);
         //          tdata->ddJydpdp += ddJy_tmp3 + ddJy_tmp3'
@@ -380,7 +380,7 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     status = fdJdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
-    //status = fddxdotdpdp(t, x, x, user_data);
+    status = fddxdotdpdp(t, x, x, user_data);
     if (status != AMICI_SUCCESS)
         return status;
     
