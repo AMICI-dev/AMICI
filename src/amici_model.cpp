@@ -375,14 +375,31 @@ int Model::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB,
     
     /* Prepare quadrature fields to be read */
     status = fdJdx(t, x, x, user_data);
-    if (status != AMICI_SUCCESS)
+    if (status != AMICI_SUCCESS) {
+        delete[] sxTmp;
+        delete[] qBo2_tmp1;
+        delete[] qBo2_tmp2;
+        delete[] qBo2_tmp3;
         return status;
+    }
+    
     status = fdJdp(t, x, x, user_data);
-    if (status != AMICI_SUCCESS)
+    if (status != AMICI_SUCCESS) {
+        delete[] sxTmp;
+        delete[] qBo2_tmp1;
+        delete[] qBo2_tmp2;
+        delete[] qBo2_tmp3;
         return status;
+    }
+
     status = fddxdotdpdp(t, x, x, user_data);
-    if (status != AMICI_SUCCESS)
+    if (status != AMICI_SUCCESS) {
+        delete[] sxTmp;
+        delete[] qBo2_tmp1;
+        delete[] qBo2_tmp2;
+        delete[] qBo2_tmp3;
         return status;
+    }
     
     // Compute matrix xB' * dJdx
     amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_Trans,
