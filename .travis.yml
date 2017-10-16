@@ -47,7 +47,7 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
 notifications:
-  slack: 
-    rooms:
-      - icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI#amici-dev
+  webhooks: 
+    urls:
+      - https://icb-mmost.helmholtz-muenchen.de/hooks/ux65x1zqbpr8xy7nr9sexidhgy
     on_success: change
