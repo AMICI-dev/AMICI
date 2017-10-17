@@ -12,7 +12,7 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME}
     ${CPPUTEST_LIBRARY}
-    amici
+    Upstream::amici
     )
 
 if($ENV{ENABLE_GCOV_COVERAGE})
