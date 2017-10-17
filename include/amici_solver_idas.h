@@ -52,7 +52,7 @@ class IDASolver : public Solver {
     int AMIAdjInit(long int steps, int interp) override;
 
     int AMICreateB(int lmm, int iter, int *which) override;
-
+    
     int AMIReInitB(int which, realtype tB0, N_Vector yyB0,
                    N_Vector ypB0) override;
 

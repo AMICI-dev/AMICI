@@ -788,15 +788,15 @@ class Model {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     
-    virtual int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    virtual int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     
-    virtual int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    virtual int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     
-    virtual int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    virtual int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data) {
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     

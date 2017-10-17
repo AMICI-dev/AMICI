@@ -109,8 +109,8 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                 xB_old = N_VNew_Serial(model->nxtrue * model->nJ);
                 dxB = N_VNew_Serial(model->nxtrue * model->nJ);
                 if (udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-                    xQB = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
-                    xQB_old = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
+                    xQB = N_VNew_Serial(udata->nplist * udata->nplist);
+                    xQB_old = N_VNew_Serial(udata->nplist * udata->nplist);
                     
                     s2x = new realtype[model->nx*udata->nplist*udata->nplist]();
                     s2dx = new realtype[model->nx*udata->nplist*udata->nplist]();
