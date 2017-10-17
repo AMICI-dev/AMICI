@@ -15,7 +15,6 @@ class ExpData {
     void setObservedData(const double *observedData);
     void setObservedDataStdDev(const double *observedDataStdDev);
     void setObservedEvents(const double *observedEvents);
-    void setObservedRoots(const double *observedRoots);
     void setObservedEventsStdDev(const double *observedEventsStdDev);
 
     ~ExpData();
@@ -27,8 +26,6 @@ class ExpData {
 
     /** observed events */
     double *mz = nullptr;
-    /** observed roots */
-    double *mrz = nullptr;
     /** standard deviation of observed events/roots */
     double *sigmaz = nullptr;
     
