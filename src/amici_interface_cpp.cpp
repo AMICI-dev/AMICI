@@ -13,7 +13,10 @@
 #elif defined(AMICI_BLAS_MKL)
 #include <mkl.h>
 #else
-#include <cblas.h>
+extern "C"
+{
+   #include <cblas.h>
+}
 #endif
 
 #include <cstring>
