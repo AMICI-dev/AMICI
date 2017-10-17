@@ -22,14 +22,12 @@ find_package(HDF5 COMPONENTS C HL REQUIRED)
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
 set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
-set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
-
+set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
+add_definitions(-DAMICI_BLAS_${BLAS})
 if(${BLAS} STREQUAL "MKL")
-    add_definitions(-DAMICI_BLAS_MKL)
-    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
+    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
 else()
-    add_definitions(-DAMICI_BLAS_CBLAS)
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
