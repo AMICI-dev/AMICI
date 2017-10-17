@@ -6,10 +6,6 @@
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
 
-int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data);
-int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-
 class UserData;
 class ExpData;
 
@@ -789,6 +785,18 @@ class Model {
      */
     virtual int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata,
                                   const ExpData *edata, ReturnData *rdata) {
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    virtual int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    virtual int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+        return AMICI_ERROR_NOT_IMPLEMENTED;
+    }
+    
+    virtual int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
         return AMICI_ERROR_NOT_IMPLEMENTED;
     }
     

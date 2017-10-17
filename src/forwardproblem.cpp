@@ -62,8 +62,8 @@ int ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
 
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
-        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
-            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if ((rdata->sensi_meth == AMICI_SENSI_FSA &&
+             rdata->sensi >= AMICI_SENSI_ORDER_FIRST)) {
             status = solver->AMISetStopTime(rdata->ts[it]);
         }
         if (status == AMICI_SUCCESS) {

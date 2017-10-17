@@ -399,9 +399,7 @@ for iffun = ffuns
     else
         fun = amifun(iffun{1},this);
     end
-    if (~any(strcmp(iffun, {'ddxdotdpdp','dJdx','dJdp'})))
-        fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
-    end
+    fprintf(fid,['int f' iffun{1} fun.fargstr ';\n']);
 end
 
 % Subclass Model
@@ -453,11 +451,9 @@ for iffun = this.funs
     else
         fun = amifun(iffun{1},this);
     end
-    if (~any(strcmp(iffun, {'ddxdotdpdp','dJdx','dJdp'})))
-        fprintf(fid,['    int f' iffun{1} fun.fargstr ' override {\n']);
-        fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
-        fprintf(fid,'    }\n\n');
-    end
+    fprintf(fid,['    int f' iffun{1} fun.fargstr ' override {\n']);
+    fprintf(fid,['        return ' iffun{1} '_' this.modelname removeTypes(fun.argstr) ';\n']);
+    fprintf(fid,'    }\n\n');
 end
 fprintf(fid,'};\n\n');
 
