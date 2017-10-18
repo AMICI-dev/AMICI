@@ -148,6 +148,21 @@ TEST(userDataSerialization, testChar) {
     checkUserDataEqual(u, v);
 }
 
+TEST(userDataSerialization, testStdVec) {
+
+    UserData u(1, 2, 3);
+    u.p = new double[2];
+    u.p[0] = 1;
+    u.p[1] = 2;
+
+    auto buf = serializeToStdVec(&u);
+
+    UserData v = deserializeFromChar<UserData>(buf.data(), buf.size());
+
+    checkUserDataEqual(u, v);
+}
+
+
 TEST_GROUP(returnDataSerialization){void setup(){}
 
                           void teardown(){}};
