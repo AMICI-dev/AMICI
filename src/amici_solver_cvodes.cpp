@@ -38,6 +38,7 @@ int CVodeSolver::qbinit(int which, N_Vector qBdot) {
 
 int CVodeSolver::qbsinit(int which, N_Vector qBdot) {
     return CVodeQuadInitBS(ami_mem, which, fqBo2dot, qBdot);
+    return AMICI_SUCCESS;
 }
 
 int CVodeSolver::rootInit(int ne) {
@@ -45,7 +46,7 @@ int CVodeSolver::rootInit(int ne) {
 }
 
 int CVodeSolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
-    return CVodeSensInit1(ami_mem, udata->nplist, udata->sensi_meth, fsxdot,
+    return CVodeSensInit1(ami_mem, udata->nplist, STAGGERED, fsxdot,
                           sx);
 }
 

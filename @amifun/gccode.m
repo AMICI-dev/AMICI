@@ -56,7 +56,7 @@ function this = gccode(this,model,fid)
         if(~strcmp(cstr(3:4),'t0'))
             if(any(strcmp(this.funstr,{'J','JB','JDiag','dJydsigma','dJydy','dJzdsigma','dJzdz','dJrzdsigma','dJrzdz','dydx','dzdx','drzdx','M','dfdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '[$1+$2*' num2str(size(this.sym,1)) ']']);
-            elseif(any(strcmp(this.funstr,{'ddJydsigmadsigma','ddJydsigmady','ddJydydy','ddJy_s2sigma','dJdp'}) ))
+            elseif(any(strcmp(this.funstr,{'ddJydsigmadsigma','ddJydsigmady','ddJydydy','ddJy_s2sigma','dJdp','ddydpdx'}) ))
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '_$1_$2']);
             elseif( strcmp(this.funstr,'dJdx') )
                 cstr = regexprep(cstr,'T\[([0-9]*)\]\[([0-9]*)\]\[([0-9]*)\]',[this.cvar '_$1_$2_$3']);
@@ -171,6 +171,8 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dJdp_([0-9]+)_([0-9]+)','tdata->dJdp[udata->plist[ip]*model->nx*model->nx + $2*model->nx + $1]');
             cstr = regexprep(cstr,'var_dJdx_([0-9]+)_([0-9]+)_([0-9]+)','tdata->dJdx[$3*model->nx*model->nx + $2*model->nx + $1]');
             cstr = regexprep(cstr,'var_ddxdotdpdp_([0-9]+)','tdata->ddxdotdpdp[udata->plist[ip]*model->nx*udata->nplist + udata->plist[jp]*model->nx + $1]');
+            cstr = regexprep(cstr,'var_ddydpdp_([0-9]+)','tdata->ddydpdp[udata->plist[ip]*model->ny*udata->nplist + udata->plist[jp]*model->ny + $1]');
+            cstr = regexprep(cstr,'var_ddydpdx_([0-9]+)_([0-9]+)','tdata->ddydpdx[$1 + model->ny * udata->plist[ip] + model->ny * udata->nplist * $2]');
             cstr = regexprep(cstr,'var_s2x0_([0-9]+)','tdata->s2x[udata->plist[ip]*model->nx*udata->nplist + udata->plist[jp]*model->nx + $1]');
             if(~isempty(strfind(this.cvar,'Jy')))
                 cstr = regexprep(cstr,'my_([0-9]+)','edata->my[it+udata->nt*$1]');

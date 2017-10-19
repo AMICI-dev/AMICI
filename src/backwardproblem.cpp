@@ -54,7 +54,6 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         }
 
         /* handle discontinuity */
-
         if (model->ne > 0 && rdata->nmaxevent > 0 && tdata->iroot >= 0) {
             if (tnext == tdata->discs[tdata->iroot]) {
                 handleEventB(tdata->iroot, tdata, model);

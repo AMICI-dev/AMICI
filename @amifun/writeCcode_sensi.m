@@ -55,6 +55,20 @@ elseif(strcmp(this.funstr,'s2root'))
             end
         end
     end
+elseif(strcmp(this.funstr,'ddydpdx'))
+    nonzero = this.sym ~=0;
+    if(any(any(any(nonzero))))
+        tmpfun = this;
+        for ip=1:np
+            if(any(any(nonzero(:,ip,:))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = squeeze(this.sym(:,ip,:));
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
 elseif(strcmp(this.funstr,'dJdp'))
     nonzero = this.sym ~=0;
     if(any(any(any(nonzero))))
@@ -69,7 +83,7 @@ elseif(strcmp(this.funstr,'dJdp'))
             end
         end
     end
-elseif(strcmp(this.funstr,'ddxdotdpdp') || strcmp(this.funstr,'s2x0'))
+elseif(strcmp(this.funstr,'ddxdotdpdp') || strcmp(this.funstr,'s2x0') || strcmp(this.funstr,'ddydpdp'))
     nonzero = this.sym ~=0;
     if(any(any(any(nonzero))))
         tmpfun = this;
