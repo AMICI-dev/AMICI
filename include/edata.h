@@ -19,9 +19,9 @@ class ExpData {
 
     ~ExpData();
 
-    /** observed data (dimension: nytrue x nt, column-major) */
+    /** observed data (dimension: nt x nytrue, column-major) */
     double *my = nullptr;
-    /** standard deviation of observed data (dimension: nytrue x nt, column-major) */
+    /** standard deviation of observed data (dimension: nt x nytrue, column-major) */
     double *sigmay = nullptr;
 
     /** observed events (dimension: nmaxevents x nztrue, column-major) */
