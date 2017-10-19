@@ -66,6 +66,13 @@ bool withinTolerance(double expected, double actual, double atol, double rtol, i
 }
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol) {
+    if(!expected && !actual)
+        return;
+    if(!length)
+        return;
+
+    CHECK_TRUE(expected && actual);
+
     for(int i = 0; i < length; ++i)
     {
         bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i);
@@ -74,6 +81,11 @@ void checkEqualArray(const double *expected, const double *actual, int length, d
 }
 
 void checkEqualArrayStrided(const double *expected, const double *actual, int length, int strideExpected, int strideActual, double atol, double rtol) {
+    if(!expected && !actual)
+        return;
+
+    CHECK_TRUE(expected && actual);
+
     for(int i = 0; i < length; ++i)
     {
         bool withinTol = withinTolerance(expected[i * strideExpected], actual[i * strideActual], atol, rtol, i);

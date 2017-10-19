@@ -4,6 +4,13 @@
 
 #include <cmath>
 
+class UserData;
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, UserData &u, const unsigned int version);
+}}
+
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
  * (FORTRAN-style)
@@ -196,6 +203,16 @@ class UserData {
     const int nk;
     /** number of states */
     const int nx;
+
+    /**
+     * @brief Serialize UserData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
+
 };
 
 #endif /* _MY_UDATA */

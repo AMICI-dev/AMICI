@@ -24,6 +24,7 @@ matrix:
             - doxygen
             - doxygen-latex
             - cppcheck
+            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
@@ -32,9 +33,8 @@ matrix:
     - os: osx
       compiler: clang
       before_install: 
-        - brew update
+        - brew update # without this homebrew can stumble over wrong ruby version
         - brew install hdf5 cppcheck
-      
         
 install:
     - ./scripts/run-build.sh

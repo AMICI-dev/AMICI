@@ -19,14 +19,15 @@ class ExpData {
 
     ~ExpData();
 
-    /** observed data */
+    /** observed data (dimension: nt x nytrue, column-major) */
     double *my = nullptr;
-    /** standard deviation of observed data */
+    /** standard deviation of observed data (dimension: nt x nytrue, column-major) */
     double *sigmay = nullptr;
 
-    /** observed events */
+    /** observed events (dimension: nmaxevents x nztrue, column-major) */
     double *mz = nullptr;
-    /** standard deviation of observed events/roots */
+    /** standard deviation of observed events/roots
+     * (dimension: nmaxevents x nztrue, column-major)*/
     double *sigmaz = nullptr;
     
     /** number of observables */
