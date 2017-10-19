@@ -4,9 +4,13 @@
 #include "include/amici.h"
 #include <mex.h>
 
+amici::Model *getModel();
+
+namespace amici {
+
 class ReturnDataMatlab;
 
-Model *getModel();
+
 
 /**
  * @brief userDataFromMatlabCall extracts information from the matlab call and
@@ -44,5 +48,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc);
+
+} // namespace amici
 
 #endif

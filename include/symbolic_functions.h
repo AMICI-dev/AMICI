@@ -1,6 +1,8 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
 
+namespace amici {
+
 double amilog(double x);
 double dirac(double x);
 double heaviside(double x);
@@ -115,4 +117,7 @@ double DDspline_pos10(int id1, int id2, double t, double t1, double p1,
                       double p4, double t5, double p5, double t6, double p6,
                       double t7, double p7, double t8, double p8, double t9,
                       double p9, double t10, double p10, int ss, double dudt);
+
+} // namespace amici
+
 #endif /* amici_symbolic_functions_h */

@@ -21,6 +21,8 @@ extern "C"
 
 #include <cstring>
 
+namespace amici {
+
 /*!
  * getSimulationResults is the core cpp interface function. It initializes the
  * model and return data and
@@ -101,3 +103,5 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
     cblas_dgemv((CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A,
                 lda, X, incX, beta, Y, incY);
 }
+
+} // namespace amici

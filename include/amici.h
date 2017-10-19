@@ -5,6 +5,8 @@
 #include <include/symbolic_functions.h>
 #include <include/amici_defines.h>
 
+namespace amici {
+
 class UserData;
 class TempData;
 class ReturnData;
@@ -52,5 +54,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc);
+
+} // namespace amici
 
 #endif /* amici_h */

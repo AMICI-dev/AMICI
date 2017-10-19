@@ -5,8 +5,10 @@
 #include "model_neuron.h"
 #include <include/amici_solver_cvodes.h>
 
+namespace amici {
 class UserData;
 class Solver;
+}
 
 
 #define pi M_PI
@@ -17,9 +19,9 @@ class Solver;
 #define EXTERNC
 #endif
 
-UserData getUserData();
-Solver *getSolver();
-Model *getModel();
+amici::UserData getUserData();
+amici::Solver *getSolver();
+amici::Model *getModel();
 int fx0(N_Vector x0, void *user_data);
 int fdx0(N_Vector x0, N_Vector dx0, void *user_data);
 int fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
@@ -29,49 +31,49 @@ int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Ve
 int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
 int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
-int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata);
-int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata);
-int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata);
-int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata);
-int fdydp(realtype t, int it, N_Vector x, TempData *tdata);
-int fdydx(realtype t, int it, N_Vector x, TempData *tdata);
-int fz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata);
-int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata);
-int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata);
-int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata);
-int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata);
-int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata);
+int frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
+int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
+int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
+int fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata);
+int fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata);
+int fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata);
+int fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
+int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
+int fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+int fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+int fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+int fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
 int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
 int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
-int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata);
-int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
-int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata);
-int fsigma_y(realtype t, TempData *tdata);
-int fdsigma_ydp(realtype t, TempData *tdata);
-int fsigma_z(realtype t, int ie, TempData *tdata);
-int fdsigma_zdp(realtype t, int ie, TempData *tdata);
+int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
+int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+int fsigma_y(realtype t, amici::TempData *tdata);
+int fdsigma_ydp(realtype t, amici::TempData *tdata);
+int fsigma_z(realtype t, int ie, amici::TempData *tdata);
+int fdsigma_zdp(realtype t, int ie, amici::TempData *tdata);
 int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
-int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
-int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata);
+int fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+int fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
-class Model_model_neuron : public Model {
+class Model_model_neuron : public amici::Model {
 public:
-    Model_model_neuron() : Model(4,
+    Model_model_neuron() : amici::Model(4,
                     2,
                     2,
                     2,
@@ -87,14 +89,14 @@ public:
                     4,
                     1,
                     1,
-                    AMICI_O2MODE_NONE)
+                    amici::AMICI_O2MODE_NONE)
     {
         z2event = new int[1] {1,};
         idlist = new realtype[2] {0, 0,};
     }
 
-    Solver *getSolver() override {
-        return new CVodeSolver();
+    amici::Solver *getSolver() override {
+        return new amici::CVodeSolver();
     }
 
     int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
@@ -125,7 +127,7 @@ public:
         return JSparseB_model_neuron(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
     }
 
-    int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return Jrz_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
@@ -137,67 +139,67 @@ public:
         return JvB_model_neuron(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
     }
 
-    int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return Jy_model_neuron(t, it, x, tdata, edata, rdata);
     }
 
-    int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return Jz_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
-    int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJrzdsigma_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
-    int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJrzdz_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
-    int fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJydsigma_model_neuron(t, it, x, tdata, edata, rdata);
     }
 
-    int fdJydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJydy_model_neuron(t, it, x, tdata, edata, rdata);
     }
 
-    int fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJzdsigma_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
-    int fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) override {
+    int fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
         return dJzdz_model_neuron(t, ie, x, tdata, edata, rdata);
     }
 
-    int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata) override {
+    int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
         return deltaqB_model_neuron(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
     }
 
-    int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata) override {
+    int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) override {
         return deltasx_model_neuron(t, ie, x, xdot, xdot_old, sx, tdata);
     }
 
-    int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata) override {
+    int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
         return deltax_model_neuron(t, ie, x, xdot, xdot_old, tdata);
     }
 
-    int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata) override {
+    int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
         return deltaxB_model_neuron(t, ie, x, xB, xdot, xdot_old, tdata);
     }
 
-    int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata) override {
+    int fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
         return drzdp_model_neuron(t, ie, x, tdata);
     }
 
-    int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata) override {
+    int fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
         return drzdx_model_neuron(t, ie, x, tdata);
     }
 
-    int fdsigma_ydp(realtype t, TempData *tdata) override {
+    int fdsigma_ydp(realtype t, amici::TempData *tdata) override {
         return dsigma_ydp_model_neuron(t, tdata);
     }
 
-    int fdsigma_zdp(realtype t, int ie, TempData *tdata) override {
+    int fdsigma_zdp(realtype t, int ie, amici::TempData *tdata) override {
         return dsigma_zdp_model_neuron(t, ie, tdata);
     }
 
@@ -213,19 +215,19 @@ public:
         return dxdotdp_model_neuron(t, x, dx, user_data);
     }
 
-    int fdydp(realtype t, int it, N_Vector x, TempData *tdata) override {
+    int fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
         return dydp_model_neuron(t, it, x, tdata);
     }
 
-    int fdydx(realtype t, int it, N_Vector x, TempData *tdata) override {
+    int fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
         return dydx_model_neuron(t, it, x, tdata);
     }
 
-    int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata) override {
+    int fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
         return dzdp_model_neuron(t, ie, x, tdata);
     }
 
-    int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata) override {
+    int fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
         return dzdx_model_neuron(t, ie, x, tdata);
     }
 
@@ -237,23 +239,23 @@ public:
         return root_model_neuron(t, x, dx, root, user_data);
     }
 
-    int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) override {
+    int frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
         return rz_model_neuron(t, ie, x, tdata, rdata);
     }
 
-    int fsigma_y(realtype t, TempData *tdata) override {
+    int fsigma_y(realtype t, amici::TempData *tdata) override {
         return sigma_y_model_neuron(t, tdata);
     }
 
-    int fsigma_z(realtype t, int ie, TempData *tdata) override {
+    int fsigma_z(realtype t, int ie, amici::TempData *tdata) override {
         return sigma_z_model_neuron(t, ie, tdata);
     }
 
-    int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) override {
+    int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
         return srz_model_neuron(t, ie, x, sx, tdata, rdata);
     }
 
-    int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata) override {
+    int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) override {
         return stau_model_neuron(t, ie, x, sx, tdata);
     }
 
@@ -265,7 +267,7 @@ public:
         return sxdot_model_neuron(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
     }
 
-    int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) override {
+    int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
         return sz_model_neuron(t, ie, x, sx, tdata, rdata);
     }
 
@@ -285,11 +287,11 @@ public:
         return xdot_model_neuron(t, x, dx, xdot, user_data);
     }
 
-    int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata) override {
+    int fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) override {
         return y_model_neuron(t, it, x, user_data, rdata);
     }
 
-    int fz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) override {
+    int fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
         return z_model_neuron(t, ie, x, tdata, rdata);
     }
 

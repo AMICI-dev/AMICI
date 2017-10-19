@@ -22,6 +22,8 @@
 #include <include/tdata.h>
 #include <include/udata.h>
 
+namespace amici {
+
 IDASolver::IDASolver() : Solver() {}
 
 int IDASolver::init(N_Vector x, N_Vector dx, realtype t) {
@@ -420,3 +422,5 @@ int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
 }
 
 IDASolver::~IDASolver() { AMIFree(); }
+
+} // namespace amici

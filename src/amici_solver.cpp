@@ -10,6 +10,9 @@
 // TODO: don't use cvodes includes here
 #include <cvodes/cvodes_spils.h>
 
+namespace amici {
+
+
 /**
  * @brief setupAMIs initialises the ami memory object
  * @param[in] udata pointer to the user data object @type UserData
@@ -578,3 +581,5 @@ int Solver::setLinearSolver(const UserData *udata, Model *model) {
 
     return AMICI_ERROR_OTHER;
 }
+
+} // namespace amici

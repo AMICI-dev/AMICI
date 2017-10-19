@@ -24,6 +24,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+namespace amici {
+
 /**
  * @brief The mexFunctionArguments enum takes care of the ordering of mex file
  * arguments (indexing in prhs)
@@ -568,3 +570,5 @@ freturn:
         delete edata;
     return nullptr;
 }
+
+} // namespace amici

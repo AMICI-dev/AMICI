@@ -5,6 +5,8 @@
 #include <include/tdata.h>
 #include <include/udata.h>
 
+namespace amici {
+
 // int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
 //{
 //    UserData *udata = (UserData*) user_data;
@@ -505,3 +507,6 @@ int Model::initHeaviside(TempData *tdata) {
     }
     return status;
 }
+
+
+} // namespace amici

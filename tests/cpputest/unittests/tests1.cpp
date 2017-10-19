@@ -11,6 +11,8 @@
 #include <cstring>
 #include <cmath>
 
+using namespace amici;
+
 TEST_GROUP(amici)
 {
     void setup() {

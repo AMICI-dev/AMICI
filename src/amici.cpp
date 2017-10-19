@@ -26,6 +26,8 @@
 #include <include/amici_misc.h>
 #include <include/symbolic_functions.h>
 
+namespace amici {
+
 /** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 /** warnMsgIdAndTxt is a function pointer for printWarnMsgIdAndTxt  */
@@ -115,3 +117,5 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
     va_end(argptr);
     printf("\n");
 }
+
+} // namespace amici

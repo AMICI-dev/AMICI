@@ -5,6 +5,8 @@
 #include <cstring>
 #include <include/udata.h>
 
+namespace amici {
+
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
 ExpData::ExpData(const UserData *udata, Model *model)
@@ -70,3 +72,5 @@ ExpData::~ExpData() {
     if (sigmaz)
         delete[] sigmaz;
 }
+
+} // namespace amici

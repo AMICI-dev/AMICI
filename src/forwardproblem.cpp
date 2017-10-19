@@ -8,6 +8,8 @@
 #include "include/udata.h"
 #include <cstring>
 
+namespace amici {
+
 // Ensure AMICI options are in sync with Sundials options
 static_assert(InternalSensitivityMethod::SIMULTANEOUS == CV_SIMULTANEOUS, "");
 static_assert(InternalSensitivityMethod::STAGGERED == CV_STAGGERED, "");
@@ -1027,3 +1029,5 @@ int ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
 /* ------------------------------------------------------------------------ */
 
 ForwardProblem::ForwardProblem() {}
+
+} // namespace amici

@@ -8,6 +8,7 @@
 #include <cmath>
 #include <unistd.h>
 
+namespace amici {
 
 void simulateAndVerifyFromFile(Model *model, const std::string path)
 {
@@ -218,3 +219,4 @@ void printBacktrace(int depth) {
     backtrace_symbols_fd(array, size, STDERR_FILENO);
 }
 
+} // namespace amici

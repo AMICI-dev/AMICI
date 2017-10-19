@@ -6,6 +6,12 @@
 #include <hdf5.h>
 #include <string>
 
+#ifndef __APPLE__
+#include <iostream>
+#endif
+
+namespace amici {
+
 class UserData;
 class ReturnData;
 class ExpData;
@@ -15,9 +21,6 @@ class Model;
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
 
-#ifndef __APPLE__
-#include <iostream>
-#endif
 
 void simulateAndVerifyFromFile(Model *model, const std::string path);
 
@@ -36,4 +39,7 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
 void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
 
 void printBacktrace(int depth);
+
+} // namespace amici
+
 #endif

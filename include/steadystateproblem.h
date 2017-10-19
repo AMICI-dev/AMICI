@@ -4,6 +4,8 @@
 #include "include/amici_defines.h"
 #include <sundials/sundials_nvector.h>
 
+namespace amici {
+
 class UserData;
 class TempData;
 class ReturnData;
@@ -47,4 +49,5 @@ class SteadystateProblem {
     SteadystateProblem();
 };
 
+} // namespace amici
 #endif // STEADYSTATEPROBLEM_H

@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cstring>
 
+namespace amici {
+
 void fillArray(double *destination, int count, double value) {
     for (int i = 0; i < count; ++i)
         destination[i] = value;
@@ -21,3 +23,5 @@ void printfArray(double const *array, int numElements, char const *format) {
         printf(format, array[i]);
     }
 }
+
+} // namespace amici

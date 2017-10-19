@@ -5,6 +5,8 @@
 #include "include/udata.h"
 #include <cstring>
 
+namespace amici {
+
 ReturnData::ReturnData()
     /**
      * @brief default constructor
@@ -473,3 +475,5 @@ void ReturnData::initField4(double **fieldPointer, const char *fieldName,
      */
     *fieldPointer = new double[(dim1) * (dim2) * (dim3) * (dim4)]();
 }
+
+} // namespace amici

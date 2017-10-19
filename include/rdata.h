@@ -2,6 +2,8 @@
 #define _MY_RDATA
 #include <include/udata.h>
 
+namespace amici {
+
 class Model;
 
 /** @brief struct that stores all data which is later returned by the mex
@@ -211,5 +213,7 @@ class ReturnData {
     /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
 };
+
+} // namespace amici
 
 #endif /* _MY_RDATA */

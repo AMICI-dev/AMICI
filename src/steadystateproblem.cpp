@@ -11,6 +11,8 @@
 #include <ctime>
 #include <sundials/sundials_dense.h>
 
+namespace amici {
+
 SteadystateProblem::SteadystateProblem() {}
 
 int SteadystateProblem::workSteadyStateProblem(const UserData *udata,
@@ -531,3 +533,5 @@ int SteadystateProblem::linsolveSPBCG(const UserData *udata, ReturnData *rdata,
     // Return
     return (status);
 }
+
+} // namespace amici

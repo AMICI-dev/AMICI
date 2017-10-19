@@ -4,6 +4,8 @@
 
 #include <cmath>
 
+namespace amici {
+
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
  * (FORTRAN-style)
@@ -197,5 +199,7 @@ class UserData {
     /** number of states */
     const int nx;
 };
+
+} // namespace amici
 
 #endif /* _MY_UDATA */

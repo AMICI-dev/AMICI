@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
-int sigma_z_model_jakstat_adjoint(realtype t, int ie, TempData *tdata) {
+using namespace amici;
+
+int sigma_z_model_jakstat_adjoint(realtype t, int ie, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

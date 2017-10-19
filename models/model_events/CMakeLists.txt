@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
 
-find_package(Amici)
+find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 get_property(AmiciConfigIncludes TARGET Upstream::amici PROPERTY INCLUDE_DIRECTORIES)
 
 set(MODEL_DIR "${Amici_DIR}/../models/model_events")

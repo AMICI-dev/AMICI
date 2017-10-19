@@ -22,6 +22,8 @@
 #include <alloca.h>
 #endif
 
+namespace amici {
+
 /**
  * c++ interface to the isNaN function
  *
@@ -549,3 +551,5 @@ double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
 
     return (uout);
 }
+
+} // namespace amici

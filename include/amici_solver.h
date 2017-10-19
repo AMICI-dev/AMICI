@@ -4,6 +4,8 @@
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
 
+namespace amici {
+
 class ReturnData;
 class UserData;
 class TempData;
@@ -774,5 +776,7 @@ class Solver {
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
 };
+
+} // namespace amici
 
 #endif // AMICISOLVER_H

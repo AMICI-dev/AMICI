@@ -59,6 +59,9 @@ for ifun = this.funs
         end
         fprintf(fid,['#include "' this.modelname '_w.h"\n']);
         fprintf(fid,'\n');
+        
+        fprintf(fid,'using namespace amici;\n\n');
+        
         % function definition
         fprintf(fid,['int ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
         fprintf(fid,'int status = 0;\n');
@@ -290,7 +293,8 @@ for ifun = this.funs
     fprintf(fid,'#include <sundials/sundials_nvector.h>\n');
     fprintf(fid,'#include <sundials/sundials_sparse.h>\n');
     fprintf(fid,'#include <sundials/sundials_direct.h>\n\n');
-    fprintf(fid,'class UserData;\nclass ReturnData;\nclass TempData;\nclass ExpData;\n\n');
+    fprintf(fid,'using namespace amici;\n\n');
+    fprintf(fid,'namespace amici {\nclass UserData;\nclass ReturnData;\nclass TempData;\nclass ExpData;\n}\n\n');
     fprintf(fid,['int ' ifun{1} '_' this.modelname '' fun.argstr ';\n']);
     fprintf(fid,'\n');
     fprintf(fid,'\n');
@@ -311,6 +315,7 @@ fprintf(fid,'#include "wrapfunctions.h"\n');
 fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,'#include <include/udata.h>\n');
 fprintf(fid,'\n');
+fprintf(fid,'using namespace amici;\n\n');
 
 fprintf(fid,'Model *getModel() {\n');
     fprintf(fid, ['    return new Model_' this.modelname '();\n']);
@@ -370,7 +375,7 @@ else
     fprintf(fid,'#include <include/amici_solver_idas.h>\n');
 end
 fprintf(fid,'\n');
-fprintf(fid,'class UserData;\nclass Solver;\n');
+fprintf(fid,'namespace amici {\nclass UserData;\nclass Solver;\n}\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
 
@@ -378,9 +383,9 @@ fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'UserData getUserData();\n');
-fprintf(fid,'Solver *getSolver();\n');
-fprintf(fid,'Model *getModel();\n');
+fprintf(fid,'amici::UserData getUserData();\n');
+fprintf(fid,'amici::Solver *getSolver();\n');
+fprintf(fid,'amici::Model *getModel();\n');
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but
@@ -395,9 +400,9 @@ end
 
 % Subclass Model
 fprintf(fid,'\n');
-fprintf(fid,['class Model_' this.modelname ' : public Model {\n']);
+fprintf(fid,['class Model_' this.modelname ' : public amici::Model {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '() : Model(' num2str(this.np) ',\n']);
+fprintf(fid,['    Model_' this.modelname '() : amici::Model(' num2str(this.np) ',\n']);
 fprintf(fid,['                    ' num2str(this.nx) ',\n']);
 fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.nk) ',\n']);
@@ -415,22 +420,22 @@ fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
 switch(this.o2flag)
     case 1
-        fprintf(fid,'                    AMICI_O2MODE_FULL)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_FULL)\n');
     case 2
-        fprintf(fid,'                    AMICI_O2MODE_DIR)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_DIR)\n');
     otherwise
-        fprintf(fid,'                    AMICI_O2MODE_NONE)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_NONE)\n');
 end
 fprintf(fid,'    {\n');
 fprintf(fid,['        z2event = new int[' num2str(this.nz) '] {' num2str(transpose(this.z2event), '%d, ') '};\n']);
 fprintf(fid,['        idlist = new realtype[' num2str(this.nx) '] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
 fprintf(fid,'    }\n\n');
 
-fprintf(fid,'    Solver *getSolver() override {\n');
+fprintf(fid,'    amici::Solver *getSolver() override {\n');
 if(strcmp(this.wtype,'iw'))
-    fprintf(fid, '        return new IDASolver();\n');
+    fprintf(fid, '        return new amici::IDASolver();\n');
 else
-    fprintf(fid, '        return new CVodeSolver();\n');
+    fprintf(fid, '        return new amici::CVodeSolver();\n');
 end
 fprintf(fid,'    }\n\n');
 
@@ -475,9 +480,9 @@ function argstr = removeTypes(argstr)
 argstr = strrep(argstr,'realtype','');
 argstr = strrep(argstr,'int','');
 argstr = strrep(argstr,'void','');
-argstr = strrep(argstr,'TempData','');
-argstr = strrep(argstr,'ReturnData','');
-argstr = strrep(argstr,'const ExpData','');
+argstr = strrep(argstr,'amici::TempData','');
+argstr = strrep(argstr,'amici::ReturnData','');
+argstr = strrep(argstr,'const amici::ExpData','');
 argstr = strrep(argstr,'N_Vector','');
 argstr = strrep(argstr,'long','');
 argstr = strrep(argstr,'DlsMat','');

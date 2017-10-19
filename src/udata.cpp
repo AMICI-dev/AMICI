@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <cstring>
 
+namespace amici {
+
 UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
 
 UserData::UserData() : np(0), nk(0), nx(0) {}
@@ -185,3 +187,5 @@ void UserData::print() const {
     printf("sx0data: %p\n", sx0data);
     printf("ordering: %d\n", ordering);
 }
+
+} // namespace amici

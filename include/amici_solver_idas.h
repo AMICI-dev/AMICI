@@ -5,6 +5,8 @@
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 
+namespace amici {
+
 class IDASolver : public Solver {
   public:
     IDASolver();
@@ -218,5 +220,7 @@ class IDASolver : public Solver {
 
     int setJacTimesVecFnB(int which) override;
 };
+
+} // namespace amici
 
 #endif /* idawrap_h */

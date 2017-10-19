@@ -15,6 +15,8 @@
 #endif
 #include <unistd.h>
 
+namespace amici {
+
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char *fileName,
                                                       const char *datasetPath,
                                                       Model *model) {
@@ -642,3 +644,5 @@ int AMI_HDF5_attributeExists(hid_t fileId, const char *datasetPath,
 
     return 0;
 }
+
+} // namespace amici

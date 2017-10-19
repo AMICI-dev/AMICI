@@ -1,6 +1,8 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 
+namespace amici {
+
 // clang-format off
 
 #define AMICI_ONEOUTPUT   5
@@ -127,5 +129,7 @@ enum StateOrdering {
 };
 
 // clang-format on
+
+} // namespace amici
 
 #endif

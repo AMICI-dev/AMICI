@@ -7,6 +7,8 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
+using namespace amici;
+
 int JvB_model_jakstat_adjoint(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

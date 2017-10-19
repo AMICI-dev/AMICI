@@ -8,6 +8,8 @@
 #include "model_steadystate_dwdx.h"
 #include "model_steadystate_w.h"
 
+using namespace amici;
+
 int J_model_steadystate(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

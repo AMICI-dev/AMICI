@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_events_w.h"
 
-int dsigma_zdp_model_events(realtype t, int ie, TempData *tdata) {
+using namespace amici;
+
+int dsigma_zdp_model_events(realtype t, int ie, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

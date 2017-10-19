@@ -8,6 +8,8 @@
 #include "model_jakstat_adjoint_o2_dwdx.h"
 #include "model_jakstat_adjoint_o2_w.h"
 
+using namespace amici;
+
 int xBdot_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

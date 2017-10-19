@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_nested_events_w.h"
 
-int dydp_model_nested_events(realtype t, int it, N_Vector x, TempData *tdata) {
+using namespace amici;
+
+int dydp_model_nested_events(realtype t, int it, N_Vector x, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
