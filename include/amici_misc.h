@@ -1,6 +1,8 @@
 #ifndef AMICI_MISC_H
 #define AMICI_MISC_H
 
+#include<algorithm>
+
 namespace amici {
 
 void zeros(double *destination, int count);

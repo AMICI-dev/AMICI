@@ -5,6 +5,14 @@
 namespace amici {
 
 class Model;
+class ReturnData;
+
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, ReturnData &u, const unsigned int version);
+}}
+
 
 /** @brief struct that stores all data which is later returned by the mex
  * function
@@ -14,6 +22,8 @@ class Model;
  */
 class ReturnData {
   public:
+    ReturnData();
+
     ReturnData(const UserData *udata, const Model *model);
 
     void invalidate();
@@ -149,7 +159,6 @@ class ReturnData {
     double *status = nullptr;
 
   protected:
-    ReturnData();
 
     ReturnData(const UserData *udata, const Model *model,
                bool initializeFields);
@@ -212,6 +221,15 @@ class ReturnData {
     const AMICI_sensi_order sensi;
     /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
+
+    /**
+     * @brief Serialize ReturnData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, const unsigned int version);
 };
 
 } // namespace amici

@@ -1,10 +1,17 @@
 #ifndef _MY_UDATA
 #define _MY_UDATA
-#include "include/amici_defines.h"
 
+#include "include/amici_defines.h"
 #include <cmath>
 
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::UserData &u, const unsigned int version);
+}}
+
 namespace amici {
+
+class UserData;
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
@@ -198,6 +205,16 @@ class UserData {
     const int nk;
     /** number of states */
     const int nx;
+
+    /**
+     * @brief Serialize UserData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
+
 };
 
 } // namespace amici
