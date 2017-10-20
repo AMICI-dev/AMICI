@@ -21,7 +21,8 @@ class TempData {
   public:
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
-    TempData (const UserData &other) = delete;
+
+    TempData (const TempData &other) = delete;
 
     /** parameter array, unscaled */
     realtype *p = nullptr;
