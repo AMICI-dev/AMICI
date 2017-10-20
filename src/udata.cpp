@@ -1,12 +1,85 @@
 #include "include/udata.h"
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 namespace amici {
 
 UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
 
 UserData::UserData() : np(0), nk(0), nx(0) {}
+
+UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.nx)
+{
+    nmaxevent = other.nmaxevent;
+    qpositivex = other.qpositivex;
+
+    if(other.plist) {
+        plist = new int[nplist];
+        std::copy(other.plist, other.plist + other.nplist, plist);
+    }
+
+    nplist = other.nplist;
+    nt = other.nt;
+
+    if(other.p) {
+        p = new double[np];
+        std::copy(other.p, other.p + other.np, p);
+    }
+    if(other.k) {
+        k = new double[nk];
+        std::copy(other.k, other.k + other.nk, k);
+    }
+
+    pscale = other.pscale;
+    tstart = other.tstart;
+
+    if(other.ts) {
+        ts = new double[nt];
+        std::copy(other.ts, other.ts + other.nt, ts);
+    }
+    if(other.pbar) {
+        pbar = new double[nplist];
+        std::copy(other.pbar, other.pbar + other.nplist, pbar);
+    }
+    if(other.xbar) {
+        xbar = new double[nx];
+        std::copy(other.xbar, other.xbar + other.nx, xbar);
+    }
+
+    sensi = other.sensi;
+    atol = other.atol;
+    rtol = other.rtol;
+    maxsteps = other.maxsteps;
+    newton_maxsteps = other.newton_maxsteps;
+    newton_maxlinsteps = other.newton_maxlinsteps;
+    newton_preeq = other.newton_preeq;
+    newton_precon = other.newton_precon;
+    ism = other.ism;
+
+
+    sensi_meth = other.sensi_meth;
+    linsol = other.linsol;
+    interpType = other.interpType;
+    lmm = other.lmm;
+    iter = other.iter;
+    stldet = other.stldet;
+
+    if(other.x0data) {
+        x0data = new double[nx];
+        std::copy(other.x0data, other.x0data + other.nx, x0data);
+    }
+
+    if(other.sx0data) {
+        sx0data = new double[nx];
+        std::copy(other.sx0data, other.sx0data + other.nx * other.nplist, sx0data);
+    }
+
+    ordering = other.ordering;
+    newton_precon = other.newton_precon;
+    ism = other.ism;
+}
+
 
 int UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
