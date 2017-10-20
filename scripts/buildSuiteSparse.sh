@@ -9,7 +9,7 @@ AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
 SUITESPARSE_ROOT="${AMICI_PATH}/SuiteSparse"
 
-for subdir in SuiteSparse_config BTF CAMD COLAMD KLU
+for subdir in SuiteSparse_config BTF AMD CAMD COLAMD KLU
   do cd ${SUITESPARSE_ROOT}/${subdir} && make library
 done
 
