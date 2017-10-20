@@ -5,6 +5,14 @@
 #include "include/rdata.h"
 #include <cassert>
 #include <boost/serialization/array.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <fstream>
+#include <iostream>
 
 /* Helper functions and forward declarations for boost::serialization */
 namespace boost {
@@ -24,7 +32,7 @@ void archiveRawArray(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, UserData &u, const unsigned int version) {
+void serialize(Archive &ar, amici::UserData &u, const unsigned int version) {
     ar &const_cast<int &>(u.np);
     ar &const_cast<int &>(u.nk);
     ar &const_cast<int &>(u.nx);
@@ -59,7 +67,7 @@ void serialize(Archive &ar, UserData &u, const unsigned int version) {
 
 
 template <class Archive>
-void serialize(Archive &ar, ReturnData &r, const unsigned int version) {
+void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.freeFieldsOnDestruction;
 
     ar &const_cast<int &>(r.np);
@@ -76,10 +84,10 @@ void serialize(Archive &ar, ReturnData &r, const unsigned int version) {
     ar &const_cast<int &>(r.nmaxevent);
     ar &const_cast<int &>(r.nt);
     ar &const_cast<int &>(r.newton_maxsteps);
-    ar &const_cast<AMICI_parameter_scaling &>(r.pscale);
-    ar &const_cast<AMICI_o2mode &>(r.o2mode);
-    ar &const_cast<AMICI_sensi_order &>(r.sensi);
-    ar &const_cast<AMICI_sensi_meth &>(r.sensi_meth);
+    ar &const_cast<amici::AMICI_parameter_scaling &>(r.pscale);
+    ar &const_cast<amici::AMICI_o2mode &>(r.o2mode);
+    ar &const_cast<amici::AMICI_sensi_order &>(r.sensi);
+    ar &const_cast<amici::AMICI_sensi_meth &>(r.sensi_meth);
 
     archiveRawArray(ar, &r.ts, r.nt);
     archiveRawArray(ar, &r.xdot, r.nx);
@@ -126,24 +134,15 @@ void serialize(Archive &ar, ReturnData &r, const unsigned int version) {
 } // namespace serialization
 } // namespace boost
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <fstream>
-#include <iostream>
-
-
+namespace amici {
 
 template <typename T>
 char *serializeToChar(const T *data, int *size) {
     std::string serialized;
-    boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    boost::iostreams::stream<boost::iostreams::back_insert_device<std::string>>
+    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+    ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
-    boost::archive::binary_oarchive oar(s);
+    ::boost::archive::binary_oarchive oar(s);
     oar << *data;
     s.flush();
 
@@ -166,10 +165,10 @@ char *serializeToChar(const T *data, int *size) {
 
 template <typename T>
 T deserializeFromChar(const char *buffer, int size) {
-    boost::iostreams::basic_array_source<char> device(buffer, size);
-    boost::iostreams::stream<boost::iostreams::basic_array_source<char>> s(
+    ::boost::iostreams::basic_array_source<char> device(buffer, size);
+    ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
         device);
-    boost::archive::binary_iarchive iar(s);
+    ::boost::archive::binary_iarchive iar(s);
     T data;
     iar >> data;
 
@@ -180,11 +179,11 @@ T deserializeFromChar(const char *buffer, int size) {
 template <typename T>
 std::string serializeToString(T const& data) {
     std::string serialized;
-    boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    boost::iostreams::stream<
-        boost::iostreams::back_insert_device<std::string>>
+    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+    ::boost::iostreams::stream<
+        ::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
-    boost::archive::binary_oarchive oar(s);
+    ::boost::archive::binary_oarchive oar(s);
     oar << data;
     s.flush();
 
@@ -194,10 +193,10 @@ std::string serializeToString(T const& data) {
 template <typename T>
 std::vector<char> serializeToStdVec(const T *data) {
     std::string serialized;
-    boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    boost::iostreams::stream<boost::iostreams::back_insert_device<std::string>>
+    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+    ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
-    boost::archive::binary_oarchive oar(s);
+    ::boost::archive::binary_oarchive oar(s);
     oar << *data;
     s.flush();
 
@@ -208,15 +207,17 @@ std::vector<char> serializeToStdVec(const T *data) {
 
 template <typename T>
 T deserializeFromString(std::string const& serialized) {
-    boost::iostreams::basic_array_source<char> device(serialized.data(),
+    ::boost::iostreams::basic_array_source<char> device(serialized.data(),
                                                       serialized.size());
-    boost::iostreams::stream<boost::iostreams::basic_array_source<char>> s(
+    ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
         device);
-    boost::archive::binary_iarchive iar(s);
+    ::boost::archive::binary_iarchive iar(s);
     T deserialized;
     iar >> deserialized;
 
     return deserialized;
 }
 
+
+} // namespace amici
 #endif // AMICI_SERIALIZATION_H

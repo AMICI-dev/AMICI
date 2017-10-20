@@ -3,16 +3,17 @@
 #include <include/udata.h>
 
 namespace amici {
-
 class Model;
 class ReturnData;
+}
 
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, ReturnData &u, const unsigned int version);
+void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
 }}
 
+namespace amici {
 
 /** @brief struct that stores all data which is later returned by the mex
  * function
