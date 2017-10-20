@@ -4,14 +4,16 @@
 #include "include/amici_defines.h"
 #include <cmath>
 
+namespace amici {
+class UserData;
+}
+
 namespace boost { namespace serialization {
 template <class Archive>
 void serialize(Archive &ar, amici::UserData &u, const unsigned int version);
 }}
 
 namespace amici {
-
-class UserData;
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
