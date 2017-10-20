@@ -42,11 +42,11 @@ class UserData {
     UserData (const UserData &other);
 
     /**
-     * @brief Copy assignment
+     * @brief Copy assignment is disabled until const members are removed
      * @param other object to copy from
      * @return
      */
-    UserData& operator=(UserData const &other);
+    UserData& operator=(UserData const &other)=delete;
 
     int unscaleParameters(double *bufferUnscaled) const;
 

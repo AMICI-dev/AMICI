@@ -14,6 +14,8 @@ class ExpData {
     ExpData();
     ExpData(const UserData *udata, Model *model);
 
+    ExpData (const ExpData &other) = delete;
+
     void setObservedData(const double *observedData);
     void setObservedDataStdDev(const double *observedDataStdDev);
     void setObservedEvents(const double *observedEvents);
