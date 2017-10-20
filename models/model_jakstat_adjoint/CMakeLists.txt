@@ -2,7 +2,15 @@ project(model_jakstat_adjoint)
 
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
+include(CheckCXXCompilerFlag)
+set(MY_CXX_FLAGS -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
+foreach(FLAG ${MY_CXX_FLAGS})
+    unset(CUR_FLAG_SUPPORTED CACHE)
+    CHECK_CXX_COMPILER_FLAG(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    endif()
+endforeach(FLAG)
 
 find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 get_property(AmiciConfigIncludes TARGET Upstream::amici PROPERTY INCLUDE_DIRECTORIES)
