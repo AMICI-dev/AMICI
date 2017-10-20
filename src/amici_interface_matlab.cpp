@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <blas.h>
 #include <cstring>
+#include <memory>
 
 /** MS definition of PI and other constants */
 #define _USE_MATH_DEFINES
@@ -533,44 +534,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         return;
     }
 
-    amici::Model *model = getModel();
-    if (!model) {
+    auto model = std::unique_ptr<amici::Model>(getModel());
+    if (!model)
         return;
-    }
 
-    const amici::UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
-    if (!udata) {
-        delete model;
+    auto udata = std::unique_ptr<const amici::UserData>(
+                userDataFromMatlabCall(prhs, nrhs, model.get()));
+    if (!udata)
         return;
-    }
 
-    auto rdata = new amici::ReturnDataMatlab(udata, model);
-    if (!rdata || *(rdata->status) != AMICI_SUCCESS) {
-        delete model;
-        delete rdata;
+    auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(
+                new amici::ReturnDataMatlab(udata.get(), model.get()));
+    if (!rdata || *(rdata->status) != AMICI_SUCCESS)
         return;
-    }
+
     plhs[0] = rdata->matlabSolutionStruct;
 
-    amici::ExpData *edata = nullptr;
+    std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-        edata = expDataFromMatlabCall(prhs, udata, model);
-        if (!edata) {
-            goto freturn;
-        }
+        edata.reset(expDataFromMatlabCall(prhs, udata.get(), model.get()));
+        if (!edata)
+            return;
     } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
                udata->sensi_meth == amici::AMICI_SENSI_ASA) {
         amici::errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
-        goto freturn;
+        return;
     }
 
-    *(rdata->status) = (double)amici::runAmiciSimulation(udata, edata, rdata, model);
-
-freturn:
-    delete model;
-    delete udata;
-    delete rdata;
-
-    if (edata)
-        delete edata;
+    *(rdata->status) = (double)amici::runAmiciSimulation(udata.get(), edata.get(), rdata.get(), model.get());
 }
