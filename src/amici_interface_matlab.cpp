@@ -75,71 +75,6 @@ enum mexRhsArguments {
         goto freturn;                                                          \
     }
 
-/*!
- * mexFunction is the main interface function for the MATLAB interface. It reads
- * in input data (udata and edata) and
- * creates output data compound (rdata) and then calls the AMICI simulation
- * routine to carry out numerical integration.
- *
- * @param[in] nlhs number of output arguments of the matlab call @type int
- * @param[out] plhs pointer to the array of output arguments @type mxArray
- * @param[in] nrhs number of input arguments of the matlab call @type int
- * @param[in] prhs pointer to the array of input arguments @type mxArray
- * @return void
- */
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    // use matlab error reporting
-    warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
-    errMsgIdAndTxt = &mexErrMsgIdAndTxt;
-
-    /* ensures that plhs[0] is available */
-    if (nlhs != 1) {
-        errMsgIdAndTxt("AMICI:mex",
-                       "Incorrect number of output arguments (must be 1)!");
-        return;
-    }
-
-    Model *model = getModel();
-    if (!model) {
-        return;
-    }
-
-    const UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
-    if (!udata) {
-        delete model;
-        return;
-    }
-
-    ReturnDataMatlab *rdata = new ReturnDataMatlab(udata, model);
-    if (!rdata || *(rdata->status) != AMICI_SUCCESS) {
-        delete model;
-        delete rdata;
-        return;
-    }
-    plhs[0] = rdata->matlabSolutionStruct;
-
-    ExpData *edata = nullptr;
-    if (nrhs > RHS_DATA && mxGetPr(prhs[RHS_DATA])) {
-        edata = expDataFromMatlabCall(prhs, udata, model);
-        if (!edata) {
-            goto freturn;
-        }
-    } else if (udata->sensi >= AMICI_SENSI_ORDER_FIRST &&
-               udata->sensi_meth == AMICI_SENSI_ASA) {
-        errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
-        goto freturn;
-    }
-
-    *(rdata->status) = (double)runAmiciSimulation(udata, edata, rdata, model);
-
-freturn:
-    delete model;
-    delete udata;
-    delete rdata;
-
-    if (edata)
-        delete edata;
-}
 
 /*!
  * userDataFromMatlabCall parses the input from the matlab call and writes it to
@@ -572,3 +507,70 @@ freturn:
 }
 
 } // namespace amici
+
+
+/*!
+ * mexFunction is the main interface function for the MATLAB interface. It reads
+ * in input data (udata and edata) and
+ * creates output data compound (rdata) and then calls the AMICI simulation
+ * routine to carry out numerical integration.
+ *
+ * @param[in] nlhs number of output arguments of the matlab call @type int
+ * @param[out] plhs pointer to the array of output arguments @type mxArray
+ * @param[in] nrhs number of input arguments of the matlab call @type int
+ * @param[in] prhs pointer to the array of input arguments @type mxArray
+ * @return void
+ */
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+    // use matlab error reporting
+    amici::warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
+    amici::errMsgIdAndTxt = &mexErrMsgIdAndTxt;
+
+    /* ensures that plhs[0] is available */
+    if (nlhs != 1) {
+        amici::errMsgIdAndTxt("AMICI:mex",
+                       "Incorrect number of output arguments (must be 1)!");
+        return;
+    }
+
+    amici::Model *model = getModel();
+    if (!model) {
+        return;
+    }
+
+    const amici::UserData *udata = userDataFromMatlabCall(prhs, nrhs, model);
+    if (!udata) {
+        delete model;
+        return;
+    }
+
+    auto rdata = new amici::ReturnDataMatlab(udata, model);
+    if (!rdata || *(rdata->status) != AMICI_SUCCESS) {
+        delete model;
+        delete rdata;
+        return;
+    }
+    plhs[0] = rdata->matlabSolutionStruct;
+
+    amici::ExpData *edata = nullptr;
+    if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
+        edata = expDataFromMatlabCall(prhs, udata, model);
+        if (!edata) {
+            goto freturn;
+        }
+    } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
+               udata->sensi_meth == amici::AMICI_SENSI_ASA) {
+        amici::errMsgIdAndTxt("AMICI:mex:data", "No data provided!");
+        goto freturn;
+    }
+
+    *(rdata->status) = (double)amici::runAmiciSimulation(udata, edata, rdata, model);
+
+freturn:
+    delete model;
+    delete udata;
+    delete rdata;
+
+    if (edata)
+        delete edata;
+}
