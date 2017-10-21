@@ -22,6 +22,10 @@ class TempData {
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
 
+    /**
+     * @brief TempData is currently not copyable
+     * @param other object to copy from
+     */
     TempData (const TempData &other) = delete;
 
     /** parameter array, unscaled */
