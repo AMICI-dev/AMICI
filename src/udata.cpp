@@ -15,7 +15,7 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     qpositivex = other.qpositivex;
 
     if(other.plist) {
-        plist = new int[nplist];
+        plist = new int[other.nplist];
         std::copy(other.plist, other.plist + other.nplist, plist);
     }
 
@@ -23,11 +23,11 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     nt = other.nt;
 
     if(other.p) {
-        p = new double[np];
+        p = new double[other.np];
         std::copy(other.p, other.p + other.np, p);
     }
     if(other.k) {
-        k = new double[nk];
+        k = new double[other.nk];
         std::copy(other.k, other.k + other.nk, k);
     }
 
@@ -35,15 +35,15 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     tstart = other.tstart;
 
     if(other.ts) {
-        ts = new double[nt];
+        ts = new double[other.nt];
         std::copy(other.ts, other.ts + other.nt, ts);
     }
     if(other.pbar) {
-        pbar = new double[nplist];
+        pbar = new double[other.nplist];
         std::copy(other.pbar, other.pbar + other.nplist, pbar);
     }
     if(other.xbar) {
-        xbar = new double[nx];
+        xbar = new double[other.nx];
         std::copy(other.xbar, other.xbar + other.nx, xbar);
     }
 
@@ -66,12 +66,12 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     stldet = other.stldet;
 
     if(other.x0data) {
-        x0data = new double[nx];
+        x0data = new double[other.nx];
         std::copy(other.x0data, other.x0data + other.nx, x0data);
     }
 
     if(other.sx0data) {
-        sx0data = new double[nx];
+        sx0data = new double[other.nx];
         std::copy(other.sx0data, other.sx0data + other.nx * other.nplist, sx0data);
     }
 
