@@ -12,7 +12,11 @@ UserData::UserData() : np(0), nk(0), nx(0) {}
 UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.nx)
 {
     nmaxevent = other.nmaxevent;
-    qpositivex = other.qpositivex;
+
+    if(other.qpositivex) {
+        qpositivex = new double[other.nx];
+        std::copy(other.qpositivex, other.qpositivex + other.nx, qpositivex);
+    }
 
     if(other.plist) {
         plist = new int[other.nplist];
