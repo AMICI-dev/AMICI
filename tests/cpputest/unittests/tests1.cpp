@@ -56,7 +56,6 @@ TEST(userData, testConstructionDestruction) {
 
 TEST(userData, testCopy) {
     UserData udata1(1, 2, 3);
-    udata1.k = new double[udata1.nk];
     UserData udata2(udata1);
 }
 
