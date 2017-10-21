@@ -5,7 +5,13 @@
 
 namespace amici {
 
-UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
+UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {
+    // these fields must always be initialized, others are optional or can be set later
+    k = new double[nk]();
+    p = new double[np]();
+    qpositivex = new double[nx];
+    std::fill(qpositivex, qpositivex + nx, 1);
+}
 
 UserData::UserData() : np(0), nk(0), nx(0) {}
 
@@ -14,7 +20,6 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     nmaxevent = other.nmaxevent;
 
     if(other.qpositivex) {
-        qpositivex = new double[other.nx];
         std::copy(other.qpositivex, other.qpositivex + other.nx, qpositivex);
     }
 
@@ -27,11 +32,9 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     nt = other.nt;
 
     if(other.p) {
-        p = new double[other.np];
         std::copy(other.p, other.p + other.np, p);
     }
     if(other.k) {
-        k = new double[other.nk];
         std::copy(other.k, other.k + other.nk, k);
     }
 
@@ -60,8 +63,6 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     newton_preeq = other.newton_preeq;
     newton_precon = other.newton_precon;
     ism = other.ism;
-
-
     sensi_meth = other.sensi_meth;
     linsol = other.linsol;
     interpType = other.interpType;
@@ -125,20 +126,10 @@ void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
 }
 
 void UserData::setParameters(const double *parameters) {
-    if (p) {
-        delete[] p;
-    }
-
-    p = new double[np];
     memcpy(p, parameters, sizeof(double) * np);
 }
 
 void UserData::setConstants(const double *constants) {
-    if (k) {
-        delete[] k;
-    }
-
-    k = new double[nk];
     memcpy(k, constants, sizeof(double) * nk);
 }
 
