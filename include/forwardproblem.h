@@ -2,6 +2,7 @@
 #define FORWARDPROBLEM_H
 
 #include "include/amici_defines.h"
+namespace amici {
 
 class UserData;
 class TempData;
@@ -65,5 +66,8 @@ class ForwardProblem {
   private:
     ForwardProblem();
 };
+
+
+} // namespace amici
 
 #endif // FORWARDPROBLEM_H

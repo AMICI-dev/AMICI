@@ -9,7 +9,9 @@
 #include <include/edata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+using namespace amici;
+
+int dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

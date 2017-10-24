@@ -4,6 +4,8 @@
 #include "include/rdata.h"
 #include <mex.h>
 
+namespace amici {
+
 class UserData;
 class Model;
 
@@ -35,5 +37,7 @@ class ReturnDataMatlab : public ReturnData {
     virtual void initField4(double **fieldPointer, const char *fieldName,
                             int dim1, int dim2, int dim3, int dim4) override;
 };
+
+} // namespace amici
 
 #endif // RETURNDATA_MATLAB_H

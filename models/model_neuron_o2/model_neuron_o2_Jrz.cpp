@@ -9,7 +9,9 @@
 #include <include/edata.h>
 #include "model_neuron_o2_w.h"
 
-int Jrz_model_neuron_o2(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
+using namespace amici;
+
+int Jrz_model_neuron_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

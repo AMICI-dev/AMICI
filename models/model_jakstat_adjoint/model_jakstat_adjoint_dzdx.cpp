@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
-int dzdx_model_jakstat_adjoint(realtype t, int ie, N_Vector x, TempData *tdata) {
+using namespace amici;
+
+int dzdx_model_jakstat_adjoint(realtype t, int ie, N_Vector x, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

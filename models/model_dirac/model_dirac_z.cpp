@@ -8,7 +8,9 @@
 #include <include/rdata.h>
 #include "model_dirac_w.h"
 
-int z_model_dirac(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) {
+using namespace amici;
+
+int z_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

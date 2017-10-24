@@ -5,6 +5,8 @@
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 
+namespace amici {
+
 class UserData;
 
 class CVodeSolver : public Solver {
@@ -213,5 +215,7 @@ class CVodeSolver : public Solver {
 
     int setJacTimesVecFnB(int which) override;
 };
+
+} // namespace amici
 
 #endif /* CVodewrap_h */

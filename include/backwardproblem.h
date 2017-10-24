@@ -3,6 +3,8 @@
 
 #include "include/amici_defines.h"
 
+namespace amici {
+
 class UserData;
 class TempData;
 class ReturnData;
@@ -34,5 +36,7 @@ class BackwardProblem {
   private:
     BackwardProblem();
 };
+
+} // namespace amici
 
 #endif // BACKWARDPROBLEM_H

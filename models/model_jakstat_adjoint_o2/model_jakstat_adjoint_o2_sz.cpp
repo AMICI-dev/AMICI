@@ -8,7 +8,9 @@
 #include <include/rdata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int sz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata) {
+using namespace amici;
+
+int sz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

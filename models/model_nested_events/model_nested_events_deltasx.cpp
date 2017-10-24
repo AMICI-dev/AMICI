@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_nested_events_w.h"
 
-int deltasx_model_nested_events(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata) {
+using namespace amici;
+
+int deltasx_model_nested_events(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

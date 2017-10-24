@@ -22,7 +22,7 @@
 #include <include/tdata.h>
 #include <include/udata.h>
 
-
+namespace amici {
 
 int CVodeSolver::init(N_Vector x, N_Vector dx, realtype t) {
     return CVodeInit(ami_mem, resultFunction, RCONST(t), x);
@@ -401,3 +401,5 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
 }
 
 CVodeSolver::~CVodeSolver() { AMIFree(); }
+
+} // namespace amici

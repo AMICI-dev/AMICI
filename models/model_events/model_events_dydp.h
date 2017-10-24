@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int dydp_model_events(realtype t, int it, N_Vector x, TempData *tdata);
+int dydp_model_events(realtype t, int it, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_events_dydp_h */

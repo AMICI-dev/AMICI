@@ -6,6 +6,8 @@
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
 
+namespace amici {
+
 class UserData;
 class ExpData;
 
@@ -943,5 +945,7 @@ class Model {
     /** flag array for DAE equations */
     realtype *idlist = nullptr;
 };
+
+} // namespace amici
 
 #endif // MODEL_H

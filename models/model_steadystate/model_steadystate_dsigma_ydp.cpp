@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_steadystate_w.h"
 
-int dsigma_ydp_model_steadystate(realtype t, TempData *tdata) {
+using namespace amici;
+
+int dsigma_ydp_model_steadystate(realtype t, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

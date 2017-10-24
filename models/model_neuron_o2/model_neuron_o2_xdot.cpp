@@ -7,6 +7,8 @@
 #include <include/udata.h>
 #include "model_neuron_o2_w.h"
 
+using namespace amici;
+
 int xdot_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

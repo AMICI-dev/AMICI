@@ -8,6 +8,8 @@
 #include "model_jakstat_adjoint_J.h"
 #include "model_jakstat_adjoint_w.h"
 
+using namespace amici;
+
 int JBand_model_jakstat_adjoint(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 int status = 0;
 return(J_model_jakstat_adjoint(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3));}

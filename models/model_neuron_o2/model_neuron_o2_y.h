@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int y_model_neuron_o2(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata);
+int y_model_neuron_o2(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_neuron_o2_y_h */

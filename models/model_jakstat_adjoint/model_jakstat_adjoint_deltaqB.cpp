@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
-int deltaqB_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata) {
+using namespace amici;
+
+int deltaqB_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

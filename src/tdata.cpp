@@ -5,6 +5,8 @@
 #include <include/rdata.h>
 #include <include/udata.h>
 
+namespace amici {
+
 TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
     : udata(udata), model(model), rdata(rdata) {
     /**
@@ -243,3 +245,5 @@ TempData::~TempData() {
     if (J)
         SparseDestroyMat(J);
 }
+
+} // namespace amici

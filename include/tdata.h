@@ -8,6 +8,8 @@
 #include <sundials/sundials_sparse.h>   /* def. of type sparse stuff */
 #include <sundials/sundials_types.h>    /* def. of type realtype */
 
+namespace amici {
+
 class UserData;
 class ReturnData;
 class Model;
@@ -194,5 +196,7 @@ class TempData {
     /** attached Solver object */
     Solver *solver = nullptr;
 };
+
+} // namespace amici
 
 #endif /* _MY_TDATA */

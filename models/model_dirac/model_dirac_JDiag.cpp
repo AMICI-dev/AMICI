@@ -8,6 +8,8 @@
 #include "model_dirac_dwdx.h"
 #include "model_dirac_w.h"
 
+using namespace amici;
+
 int JDiag_model_dirac(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

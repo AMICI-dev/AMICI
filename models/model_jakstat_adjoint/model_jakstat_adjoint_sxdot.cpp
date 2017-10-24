@@ -9,6 +9,8 @@
 #include "model_jakstat_adjoint_dxdotdp.h"
 #include "model_jakstat_adjoint_w.h"
 
+using namespace amici;
+
 int sxdot_model_jakstat_adjoint(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

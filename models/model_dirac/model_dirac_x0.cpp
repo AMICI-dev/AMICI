@@ -7,6 +7,8 @@
 #include <include/udata.h>
 #include "model_dirac_w.h"
 
+using namespace amici;
+
 int x0_model_dirac(N_Vector x0, void *user_data) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;

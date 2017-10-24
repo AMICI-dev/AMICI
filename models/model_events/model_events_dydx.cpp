@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_events_w.h"
 
-int dydx_model_events(realtype t, int it, N_Vector x, TempData *tdata) {
+using namespace amici;
+
+int dydx_model_events(realtype t, int it, N_Vector x, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

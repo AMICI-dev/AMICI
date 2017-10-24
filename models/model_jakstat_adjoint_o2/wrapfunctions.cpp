@@ -2,6 +2,8 @@
 #include <include/amici_model.h>
 #include <include/udata.h>
 
+using namespace amici;
+
 Model *getModel() {
     return new Model_model_jakstat_adjoint_o2();
 }
@@ -42,51 +44,51 @@ int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data){
     return root_model_jakstat_adjoint_o2(t, x, dx, root, user_data);
 }
 
-int frz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata){
+int frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata){
     return rz_model_jakstat_adjoint_o2(t, ie, x, tdata, rdata);
 }
 
-int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata){
+int fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata){
     return srz_model_jakstat_adjoint_o2(t, ie, x, sx, tdata, rdata);
 }
 
-int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata){
+int fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata){
     return stau_model_jakstat_adjoint_o2(t, ie, x, sx, tdata);
 }
 
-int fy(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata){
+int fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata){
     return y_model_jakstat_adjoint_o2(t, it, x, user_data, rdata);
 }
 
-int fdydp(realtype t, int it, N_Vector x, TempData *tdata){
+int fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata){
     return dydp_model_jakstat_adjoint_o2(t, it, x, tdata);
 }
 
-int fdydx(realtype t, int it, N_Vector x, TempData *tdata){
+int fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata){
     return dydx_model_jakstat_adjoint_o2(t, it, x, tdata);
 }
 
-int fz(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata){
+int fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata){
     return z_model_jakstat_adjoint_o2(t, ie, x, tdata, rdata);
 }
 
-int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata){
+int fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata){
     return sz_model_jakstat_adjoint_o2(t, ie, x, sx, tdata, rdata);
 }
 
-int fdzdp(realtype t, int ie, N_Vector x, TempData *tdata){
+int fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata){
     return dzdp_model_jakstat_adjoint_o2(t, ie, x, tdata);
 }
 
-int fdzdx(realtype t, int ie, N_Vector x, TempData *tdata){
+int fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata){
     return dzdx_model_jakstat_adjoint_o2(t, ie, x, tdata);
 }
 
-int fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata){
+int fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata){
     return drzdp_model_jakstat_adjoint_o2(t, ie, x, tdata);
 }
 
-int fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata){
+int fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata){
     return drzdx_model_jakstat_adjoint_o2(t, ie, x, tdata);
 }
 
@@ -110,35 +112,35 @@ int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
     return dxdotdp_model_jakstat_adjoint_o2(t, x, dx, user_data);
 }
 
-int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+int fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata){
     return deltax_model_jakstat_adjoint_o2(t, ie, x, xdot, xdot_old, tdata);
 }
 
-int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata){
+int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata){
     return deltasx_model_jakstat_adjoint_o2(t, ie, x, xdot, xdot_old, sx, tdata);
 }
 
-int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata){
     return deltaxB_model_jakstat_adjoint_o2(t, ie, x, xB, xdot, xdot_old, tdata);
 }
 
-int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
+int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata){
     return deltaqB_model_jakstat_adjoint_o2(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
 }
 
-int fsigma_y(realtype t, TempData *tdata){
+int fsigma_y(realtype t, amici::TempData *tdata){
     return sigma_y_model_jakstat_adjoint_o2(t, tdata);
 }
 
-int fdsigma_ydp(realtype t, TempData *tdata){
+int fdsigma_ydp(realtype t, amici::TempData *tdata){
     return dsigma_ydp_model_jakstat_adjoint_o2(t, tdata);
 }
 
-int fsigma_z(realtype t, int ie, TempData *tdata){
+int fsigma_z(realtype t, int ie, amici::TempData *tdata){
     return sigma_z_model_jakstat_adjoint_o2(t, ie, tdata);
 }
 
-int fdsigma_zdp(realtype t, int ie, TempData *tdata){
+int fdsigma_zdp(realtype t, int ie, amici::TempData *tdata){
     return dsigma_zdp_model_jakstat_adjoint_o2(t, ie, tdata);
 }
 
@@ -162,39 +164,39 @@ int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vecto
     return JvB_model_jakstat_adjoint_o2(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
 }
 
-int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return Jy_model_jakstat_adjoint_o2(t, it, x, tdata, edata, rdata);
 }
 
-int fJz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return Jz_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 
-int fJrz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return Jrz_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJydy_model_jakstat_adjoint_o2(t, it, x, tdata, edata, rdata);
 }
 
-int fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJydsigma_model_jakstat_adjoint_o2(t, it, x, tdata, edata, rdata);
 }
 
-int fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJzdz_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJzdsigma_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJrzdz_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 
-int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+int fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata){
     return dJrzdsigma_model_jakstat_adjoint_o2(t, ie, x, tdata, edata, rdata);
 }
 

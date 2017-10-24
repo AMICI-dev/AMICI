@@ -1,5 +1,7 @@
 #include "returndata_matlab.h"
 
+namespace amici {
+
 ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
     : ReturnData(udata, model, false) {
     /**
@@ -142,3 +144,5 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
     if (status && array == NULL)
         *status = AMICI_ERROR_RDATA;
 }
+
+} // namespace amici

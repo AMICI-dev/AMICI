@@ -6,6 +6,8 @@
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_sparse.h> // SlsMat
 
+namespace amici {
+
 class NewtonSolverDense;
 class NewtonSolverSparse;
 class NewtonSolverIterative;
@@ -142,5 +144,8 @@ class NewtonSolverIterative : public NewtonSolver {
     /** number of iterations  */
     int i_newton;
 };
+
+
+} // namespace amici
 
 #endif // NEWTON_SOLVER

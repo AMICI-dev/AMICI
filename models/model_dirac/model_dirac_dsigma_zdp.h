@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int dsigma_zdp_model_dirac(realtype t, int ie, TempData *tdata);
+int dsigma_zdp_model_dirac(realtype t, int ie, amici::TempData *tdata);
 
 
 #endif /* _am_model_dirac_dsigma_zdp_h */

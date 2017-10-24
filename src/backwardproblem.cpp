@@ -7,6 +7,8 @@
 #include "include/udata.h"
 #include <cstring>
 
+namespace amici {
+
 int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                                          ReturnData *rdata, Model *model) {
     /**
@@ -341,3 +343,5 @@ BackwardProblem::BackwardProblem() {
      * this is a placeholder, nothing needs to be done at initialization.
      */
 }
+
+} // namespace amici

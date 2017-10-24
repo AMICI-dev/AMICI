@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_neuron_w.h"
 
-int stau_model_neuron(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata) {
+using namespace amici;
+
+int stau_model_neuron(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

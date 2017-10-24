@@ -12,6 +12,8 @@
 #include <cstring>
 #include <ctime>
 
+namespace amici {
+
 NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata,
                            const UserData *udata, TempData *tdata)
     : model(model), rdata(rdata), udata(udata), tdata(tdata) {
@@ -441,3 +443,5 @@ int NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
  */
 
 NewtonSolverIterative::~NewtonSolverIterative(){};
+
+} // namespace amici

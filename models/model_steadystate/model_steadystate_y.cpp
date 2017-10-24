@@ -8,7 +8,9 @@
 #include <include/rdata.h>
 #include "model_steadystate_w.h"
 
-int y_model_steadystate(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata) {
+using namespace amici;
+
+int y_model_steadystate(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) {
 int status = 0;
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;

@@ -8,7 +8,9 @@
 #include <include/rdata.h>
 #include "model_nested_events_w.h"
 
-int z_model_nested_events(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) {
+using namespace amici;
+
+int z_model_nested_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

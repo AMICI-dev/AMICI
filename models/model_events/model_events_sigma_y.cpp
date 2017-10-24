@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_events_w.h"
 
-int sigma_y_model_events(realtype t, TempData *tdata) {
+using namespace amici;
+
+int sigma_y_model_events(realtype t, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;

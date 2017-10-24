@@ -8,6 +8,7 @@
 #undef k
 #undef ss
 
+namespace amici {
 /************************************************/
 /*  adapted from                                */
 /*  CMATH.  Copyright (c) 1989 Design Software  */
@@ -290,3 +291,5 @@ double sinteg(int n, double u, double x[], double y[], double b[], double c[],
 
     return (sum);
 }
+
+} // namespace amici

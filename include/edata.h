@@ -1,6 +1,8 @@
 #ifndef _MY_EDATA
 #define _MY_EDATA
 
+namespace amici {
+
 class UserData;
 class Model;
 
@@ -39,5 +41,7 @@ class ExpData {
     /** maximal number of event occurences */
     const int nmaxevent;
 };
+
+} // namespace amici
 
 #endif /* _MY_EDATA */

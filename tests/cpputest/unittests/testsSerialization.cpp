@@ -7,7 +7,7 @@
 
 #include <include/amici_model.h>
 
-void checkUserDataEqual(UserData const& u, UserData const& v) {
+void checkUserDataEqual(amici::UserData const& u, amici::UserData const& v) {
     CHECK_EQUAL(u.np, v.np);
     CHECK_EQUAL(u.nx, v.nx);
     CHECK_EQUAL(u.nk, v.nk);
@@ -31,12 +31,12 @@ void checkUserDataEqual(UserData const& u, UserData const& v) {
     CHECK_EQUAL(u.stldet, v.stldet);
     CHECK_EQUAL(u.ordering, v.ordering);
 
-    checkEqualArray(u.p, v.p, u.np, 1e-16, 1e-16);
-    checkEqualArray(u.k, v.k, u.nk, 1e-16, 1e-16);
+    amici::checkEqualArray(u.p, v.p, u.np, 1e-16, 1e-16);
+    amici::checkEqualArray(u.k, v.k, u.nk, 1e-16, 1e-16);
 }
 
 
-void checkReturnDataEqual(ReturnData const& r, ReturnData const& s) {
+void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s) {
     CHECK_EQUAL(r.np, s.np);
     CHECK_EQUAL(r.nk, s.nk);
     CHECK_EQUAL(r.nx, s.nx);
@@ -56,6 +56,7 @@ void checkReturnDataEqual(ReturnData const& r, ReturnData const& s) {
     CHECK_EQUAL(r.sensi, s.sensi);
     CHECK_EQUAL(r.sensi_meth, s.sensi_meth);
 
+    using amici::checkEqualArray;
     checkEqualArray(r.ts, s.ts, r.nt, 1e-16, 1e-16);
     checkEqualArray(r.xdot, s.xdot, r.nx, 1e-16, 1e-16);
     checkEqualArray(r.J, s.J, r.nx * r.nx, 1e-16, 1e-16);
@@ -108,7 +109,7 @@ TEST_GROUP(userDataSerialization){void setup(){}
 
 TEST(userDataSerialization, testFile) {
 
-    UserData u(1, 2, 3);
+    amici::UserData u(1, 2, 3);
     {
         std::ofstream ofs("sstore.dat");
         boost::archive::text_oarchive oar(ofs);
@@ -117,7 +118,7 @@ TEST(userDataSerialization, testFile) {
     {
         std::ifstream ifs("sstore.dat");
         boost::archive::text_iarchive iar(ifs);
-        UserData v;
+        amici::UserData v;
         iar &v;
         checkUserDataEqual(u, v);
     }
@@ -125,16 +126,16 @@ TEST(userDataSerialization, testFile) {
 
 TEST(userDataSerialization, testString) {
 
-    UserData u(1, 2, 3);
+    amici::UserData u(1, 2, 3);
 
     std::string serialized = serializeToString(u);
 
-    checkUserDataEqual(u, deserializeFromString<UserData>(serialized));
+    checkUserDataEqual(u, amici::deserializeFromString<amici::UserData>(serialized));
 }
 
 TEST(userDataSerialization, testChar) {
 
-    UserData u(1, 2, 3);
+    amici::UserData u(1, 2, 3);
     u.p = new double[2];
     u.p[0] = 1;
     u.p[1] = 2;
@@ -142,7 +143,7 @@ TEST(userDataSerialization, testChar) {
     int length;
     char *buf = serializeToChar(&u, &length);
 
-    UserData v = deserializeFromChar<UserData>(buf, length);
+    amici::UserData v = amici::deserializeFromChar<amici::UserData>(buf, length);
 
     delete[] buf;
     checkUserDataEqual(u, v);
@@ -150,14 +151,14 @@ TEST(userDataSerialization, testChar) {
 
 TEST(userDataSerialization, testStdVec) {
 
-    UserData u(1, 2, 3);
+    amici::UserData u(1, 2, 3);
     u.p = new double[2];
     u.p[0] = 1;
     u.p[1] = 2;
 
-    auto buf = serializeToStdVec(&u);
+    auto buf = amici::serializeToStdVec(&u);
 
-    UserData v = deserializeFromChar<UserData>(buf.data(), buf.size());
+    amici::UserData v = amici::deserializeFromChar<amici::UserData>(buf.data(), buf.size());
 
     checkUserDataEqual(u, v);
 }
@@ -168,13 +169,13 @@ TEST_GROUP(returnDataSerialization){void setup(){}
                           void teardown(){}};
 
 TEST(returnDataSerialization, testString) {
-    UserData u(1, 2, 3);
-    Model m(1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, AMICI_O2MODE_NONE);
+    amici::UserData u(1, 2, 3);
+    amici::Model m(1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE);
 
-    ReturnData r(&u, &m);
+    amici::ReturnData r(&u, &m);
 
-    std::string serialized = serializeToString(r);
+    std::string serialized = amici::serializeToString(r);
 
-    checkReturnDataEqual(r, deserializeFromString<ReturnData>(serialized));
+    checkReturnDataEqual(r, amici::deserializeFromString<amici::ReturnData>(serialized));
 }
 

@@ -7,11 +7,7 @@
 #include <include/rdata.h>
 #include <include/udata.h>
 
-#ifdef __cplusplus
-#define EXTERNC extern "C"
-#else
-#define EXTERNC
-#endif
+namespace amici {
 
 /**
  * getSimulationResults runs the forward an backwards simulation and returns
@@ -22,7 +18,8 @@
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-EXTERNC ReturnData *getSimulationResults(Model *model, UserData *udata,
+ReturnData *getSimulationResults(Model *model, UserData *udata,
                                          const ExpData *edata);
 
+} // namespace amici
 #endif

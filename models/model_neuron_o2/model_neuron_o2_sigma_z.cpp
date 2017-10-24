@@ -7,7 +7,9 @@
 #include <include/udata.h>
 #include "model_neuron_o2_w.h"
 
-int sigma_z_model_neuron_o2(realtype t, int ie, TempData *tdata) {
+using namespace amici;
+
+int sigma_z_model_neuron_o2(realtype t, int ie, amici::TempData *tdata) {
 int status = 0;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
