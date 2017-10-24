@@ -133,7 +133,7 @@ TEST(userDataSerialization, testString) {
 }
 
 TEST(userDataSerialization, testChar) {
-    amici::UserData u(1, 2, 3);
+    amici::UserData u(2, 1, 3);
     u.p[0] = 1;
     u.p[1] = 2;
 
@@ -148,7 +148,7 @@ TEST(userDataSerialization, testChar) {
 
 TEST(userDataSerialization, testStdVec) {
 
-    amici::UserData u(1, 2, 3);
+    amici::UserData u(2, 1, 3);
     u.p[0] = 1;
     u.p[1] = 2;
 
