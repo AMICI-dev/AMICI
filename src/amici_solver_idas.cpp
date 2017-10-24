@@ -296,8 +296,12 @@ void *IDASolver::AMIGetAdjBmem(void *ami_mem, int which) {
     return IDAGetAdjIDABmem(ami_mem, which);
 }
 
-int IDASolver::AMICalcIC(realtype tout1) {
-    return IDACalcIC(ami_mem, IDA_YA_YDP_INIT, tout1);
+int IDASolver::AMICalcIC(realtype tout1, TempData *tdata) {
+    int status;
+    status = IDACalcIC(ami_mem, IDA_YA_YDP_INIT, tout1);
+    if(status != AMICI_SUCCESS)
+        return status;
+    return IDAGetConsistentIC(ami_mem, tdata->x, tdata->dx);
 }
 
 int IDASolver::AMICalcICB(int which, realtype tout1, N_Vector xB,

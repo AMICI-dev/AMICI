@@ -329,7 +329,7 @@ int ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
             return status;
 
         /* make time derivative consistent */
-        status = solver->AMICalcIC(tdata->t);
+        status = solver->AMICalcIC(tdata->t,tdata);
         if (status != AMICI_SUCCESS)
             return status;
 
