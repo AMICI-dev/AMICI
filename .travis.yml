@@ -37,7 +37,11 @@ matrix:
         - brew install hdf5 cppcheck
         
 install:
-    - ./scripts/run-build.sh
+    - ./scripts/buildSuiteSparse.sh
+    - ./scripts/buildSundials.sh
+    - ./scripts/buildCpputest.sh
+    - ./scripts/buildAmici.sh
+    - ./scripts/buildTests.sh
 
 script:  
     - ./scripts/run-cpputest.sh
