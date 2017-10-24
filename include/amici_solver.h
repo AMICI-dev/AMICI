@@ -240,6 +240,18 @@ class Solver {
      * @return status flag indicating success of execution @type int
      */
     virtual int qbinit(int which, N_Vector qBdot) = 0;
+    
+    
+    /**
+     * qbsinit initialises the quadrature states at the specified final timepoint
+     * with quadrature equations which depend on forward sensitivities
+     *
+     * @param[in] which identifier of the backwards problem @type int
+     * @param[in] qBdot initial adjoint quadrature state variables @type
+     * N_Vector
+     * @return status flag indicating success of execution @type int
+     */
+    virtual int qbsinit(int which, N_Vector qBdot) = 0;
 
     /**
      * RootInit initialises the rootfinding for events

@@ -78,7 +78,7 @@ function createTestingData()
     cd([amiciPath '/examples/example_jakstat_adjoint/']);
     
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
-     amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir, 1);
+     amiwrap('model_jakstat_adjoint', 'model_jakstat_adjoint_syms', exdir);
 
     !sed '$d' simulate_model_jakstat_adjoint.m > simulate_model_jakstat_adjoint_hdf.m
     !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_jakstat_adjoint_hdf.m
@@ -123,10 +123,10 @@ function createTestingData()
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
 
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2forward/';
-    options.sensi = 2;
-    options.sensi_meth = 'forward';
-    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
+%     amiHDFprefix = '/model_jakstat_adjoint/sensi2forward/';
+%     options.sensi = 2;
+%     options.sensi_meth = 'forward';
+%     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
     amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint/';
     options.sensi = 2;
@@ -139,11 +139,11 @@ function createTestingData()
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],log(10.^xi_rand),[],D,options);
     
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2forwardlogparam/';
-    options.sensi = 2;
-    options.pscale = 'log';
-    options.sensi_meth = 'forward';
-    simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
+%     amiHDFprefix = '/model_jakstat_adjoint/sensi2forwardlogparam/';
+%     options.sensi = 2;
+%     options.pscale = 'log';
+%     options.sensi_meth = 'forward';
+%     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
     %% EXAMPLE NEURON
     cd([amiciPath '/examples/example_neuron/']);

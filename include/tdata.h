@@ -63,6 +63,8 @@ class TempData {
 
     /** parameter derivative of likelihood array */
     realtype *llhS0 = nullptr;
+    /** Second order parameter derivative of likelihood array */
+    realtype *llhS20 = nullptr;
     /** data likelihood */
     realtype *Jy = nullptr;
     /** parameter derivative of data likelihood */
@@ -109,7 +111,33 @@ class TempData {
     realtype *sigmaz = nullptr;
     /** parameter derivative of event standard deviation */
     realtype *dsigmazdp = nullptr;
-
+    /** second order parameter derivative of data likelihood */
+    realtype *ddJydpdp = nullptr;
+    /** second order parameter derivative of observable */
+    realtype *ddydpdp = nullptr;
+    /** second order mixed derivative of observable */
+    realtype *ddydpdx = nullptr;
+    /** second order state derivative of observable */
+    realtype *ddydxdx = nullptr;
+    /** second order observable derivative of data likelihood */
+    realtype *ddJydydy = nullptr;
+    /** second order mixed derivative of data likelihood */
+    realtype *ddJydsigmady = nullptr;
+    /** second order sigma derivative of data likelihood */
+    realtype *ddJydsigmadsigma = nullptr;
+    /** second order sigma sensitivity of data likelihood */
+    realtype *ddJy_s2sigma = nullptr;
+    /** derivative of Jacobian w.r.t. state variables */
+    realtype *dJdx = nullptr;
+    /** derivative of Jacobian w.r.t. parameters */
+    realtype *dJdp = nullptr;
+    /** second order derivative of right hand side w.r.t. parameters */
+    realtype *ddxdotdpdp = nullptr;
+    /** second order sensitivity state vector array */
+    realtype *s2x = nullptr;
+    /** differential second order sensitivity state vector array */
+    realtype *s2dx = nullptr;
+    
     /** array of flags indicating which root has beend found.
      *  array of length nr with the indices of the user functions gi found to
      * have a

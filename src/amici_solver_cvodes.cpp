@@ -36,6 +36,10 @@ int CVodeSolver::qbinit(int which, N_Vector qBdot) {
     return CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
 }
 
+int CVodeSolver::qbsinit(int which, N_Vector qBdot) {
+    return CVodeQuadInitBS(ami_mem, which, fqBo2dot, qBdot);
+}
+
 int CVodeSolver::rootInit(int ne) {
     return CVodeRootInit(ami_mem, ne, rootFunction);
 }
@@ -337,6 +341,12 @@ int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     TempData *tdata = (TempData *)user_data;
     return tdata->model->fqBdot(t, x, NULL, xB, NULL, qBdot, user_data);
+}
+
+int CVodeSolver::fqBo2dot(realtype t, N_Vector x, N_Vector *sx, N_Vector xB, N_Vector qBdot,
+                        void *user_data) {
+    TempData *tdata = (TempData *)user_data;
+    return tdata->model->fqBo2dot(t, x, sx, xB, qBdot, user_data);
 }
 
 int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,

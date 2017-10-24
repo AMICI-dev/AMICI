@@ -120,12 +120,20 @@ end
 if(this.adjoint)
     funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
 end
+if(this.adjoint_o2)
+    funs = {funs{:},'xBdot','JB','JvB','JBandB','JSparseB',...
+        'dydx','dzdx','dzdp','drzdx','drzdp','deltaxB',...
+        'dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma',...
+        'dwdp','dxdotdp','dydp','dJdx','dJdp','ddxdotdpdp',...
+        'ddydpdp','ddydpdx','ddydxdx','s2x0',...'s2dx0',...
+        'ddJydsigmady','ddJydsigmadsigma','ddJy_s2sigma','ddJydydy'};
+end
 
 if(strcmp(this.wtype,'iw'))
     funs = {funs{:},'dx0','sdx0','dfdx','M'};
 end
 
-funs = unique(funs);
+funs = unique(funs,'stable');
 
 this.funs = funs;
 

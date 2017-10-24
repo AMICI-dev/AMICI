@@ -50,9 +50,12 @@ for ifun = this.funs
                 fprintf(fid,['#include "' this.modelname '_dfdx.h"\n']);
                 fprintf(fid,['#include "' this.modelname '_M.h"\n']);
             end
-        elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot'))
+        elseif(strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'qBdot') || strcmp(ifun{1},'ddxdotdpdp'))
             fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
-        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx'))
+        elseif(strcmp(ifun{1},'dJdp'))
+            fprintf(fid,['#include "' this.modelname '_dwdp.h"\n']);
+            fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
+        elseif( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'dJdx'))
             fprintf(fid,['#include "' this.modelname '_dwdx.h"\n']);
         elseif(strcmp(ifun{1},'qBdot'))
             fprintf(fid,['#include "' this.modelname '_dxdotdp.h"\n']);
@@ -103,7 +106,7 @@ for ifun = this.funs
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             elseif(this.fun.(ifun{1}).sensiflag)
-                if( strcmp(ifun{1},'dxdotdp'))
+                if( strcmp(ifun{1},'dxdotdp') || strcmp(ifun{1},'ddxdotdpdp'))
                     fprintf(fid,['status = dwdp_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 fprintf(fid,'for(ip = 0; ip<udata->nplist; ip++) {\n');
@@ -119,11 +122,14 @@ for ifun = this.funs
                     fprintf(fid,['memset(sdx0_tmp,0,sizeof(realtype)*' num2str(this.nx) ');\n']);
                 end
                 fprintf(fid,'switch (udata->plist[ip]) {\n');
+                if( strcmp(ifun{1},'dJdp') )
+                    fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                end
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
                 fprintf(fid,'}\n');
             else
-                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') )
+                if( strcmp(ifun{1},'J') || strcmp(ifun{1},'JDiag') || strcmp(ifun{1},'JB') || strcmp(ifun{1},'JSparse') || strcmp(ifun{1},'JSparseB') || strcmp(ifun{1},'xBdot') || strcmp(ifun{1},'dfdx') || strcmp(ifun{1},'dJdx'))
                     fprintf(fid,['status = dwdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 end
                 this.fun.(ifun{1}).writeCcode(this,fid);
@@ -321,7 +327,10 @@ ffuns = {'x0','dx0','sx0','sdx0','J','JB','JDiag','Jv','root','rz','srz','stau',
     'xdot','xBdot','qBdot','dxdotdp','deltax','deltasx','deltaxB','deltaqB',...
     'sigma_y','dsigma_ydp','sigma_z','dsigma_zdp',...
     'JSparse', 'JBand', 'JSparseB', 'JBandB', 'JvB', ...
-    'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma'};
+    'Jy','Jz','Jrz','dJydy','dJydsigma','dJzdz','dJzdsigma',...
+    'dJrzdz','dJrzdsigma','dJdx','dJdp','ddxdotdpdp',...
+    'ddydpdp','ddydpdx','ddydxdx','s2x0',...'s2dx0',...
+    'ddJydsigmady','ddJydsigmadsigma','ddJy_s2sigma','ddJydydy'};
 
 for iffun = ffuns
     % check whether the function was generated, otherwise generate (but

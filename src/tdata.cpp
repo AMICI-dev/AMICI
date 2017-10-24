@@ -108,8 +108,30 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
                 xB = N_VNew_Serial(model->nxtrue * model->nJ);
                 xB_old = N_VNew_Serial(model->nxtrue * model->nJ);
                 dxB = N_VNew_Serial(model->nxtrue * model->nJ);
-                xQB = N_VNew_Serial(model->nJ * udata->nplist);
-                xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
+                if (udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+                    xQB = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
+                    xQB_old = N_VNew_Serial(model->nJ * udata->nplist * udata->nplist);
+                    
+                    s2x = new realtype[model->nx*udata->nplist*udata->nplist]();
+                    s2dx = new realtype[model->nx*udata->nplist*udata->nplist]();
+                    llhS20 = new realtype[model->nJ * udata->nplist * udata->nplist]();
+                    
+                    dJdp = new realtype[model->nx * model->nx * udata->nplist]();
+                    dJdx = new realtype[model->nx * model->nx * model->nx]();
+                    ddxdotdpdp = new realtype[model->nx * udata->nplist * udata->nplist]();
+                    
+                    ddydpdp = new realtype[model->ny * udata->nplist * udata->nplist]();
+                    ddydpdx = new realtype[model->ny * udata->nplist * model->nx]();
+                    ddydxdx = new realtype[model->ny * model->nx * model->nx]();
+                    ddJydsigmady = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJydsigmadsigma = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJydydy = new realtype[model->nytrue * model->ny * model->ny]();
+                    ddJy_s2sigma = new realtype[model->nytrue * udata->nplist * udata->nplist]();
+                    ddJydpdp = new realtype[udata->nplist * udata->nplist]();
+                } else {
+                    xQB = N_VNew_Serial(model->nJ * udata->nplist);
+                    xQB_old = N_VNew_Serial(model->nJ * udata->nplist);
+                }
             }
         }
     }
@@ -153,7 +175,7 @@ TempData::~TempData() {
         N_VDestroyVectorArray_Serial(sx, nplist);
     if (sdx)
         N_VDestroyVectorArray_Serial(sdx, nplist);
-
+    
     if (Jy)
         delete[] Jy;
     if (Jz)
@@ -223,9 +245,38 @@ TempData::~TempData() {
     if (dsigmazdp)
         delete[] dsigmazdp;
 
+    if (ddydpdp)
+        delete[] ddydpdp;
+    if (ddydpdx)
+        delete[] ddydpdx;
+    if (ddydxdx)
+        delete[] ddydxdx;
+    if (ddJydsigmady)
+        delete[] ddJydsigmady;
+    if (ddJydsigmadsigma)
+        delete[] ddJydsigmadsigma;
+    if (ddJydydy)
+        delete[] ddJydydy;
+    if (ddJy_s2sigma)
+        delete[] ddJy_s2sigma;
+    if (ddJydpdp)
+        delete[] ddJydpdp;
+    if (dJdx)
+        delete[] dJdx;
+    if (dJdp)
+        delete[] dJdp;
+    if (ddxdotdpdp)
+        delete[] ddxdotdpdp;
+    
     if (llhS0)
         delete[] llhS0;
-
+    if (llhS20)
+        delete[] llhS20;
+    if (s2x)
+        delete[] s2x;
+    if (s2dx)
+        delete[] s2dx;
+    
     if (dxdotdp)
         delete[] dxdotdp;
     if (w)

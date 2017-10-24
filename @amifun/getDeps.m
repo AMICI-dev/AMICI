@@ -25,17 +25,40 @@ function [ this ] = getDeps(this, model)
                 this.deps = {'xdot','x','dwdx'};
             end
             
+        case 'dJdp'
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'dfdx','M','x','xdot'};
+            else
+                this.deps = {'xdot','x','dwdx'};
+            end
+            
+        case 'dJdx'
+            if(strcmp(model.wtype,'iw'))
+                this.deps = {'dfdx','M','x','xdot'};
+            else
+                this.deps = {'xdot','x','dwdx'};
+            end
+            
         case 'JB'
             this.deps = {'J'};
             
         case 'dxdotdp'
             this.deps = {'xdot','p','dwdp'};
             
+        case 'ddxdotdpdp'
+            this.deps = {'xdot','p','dwdp'};
+            
         case 'sx0'
             this.deps = {'x0','p'};    
             
+        case 's2x0'
+            this.deps = {'sx0','x0','p'};
+            
         case 'sdx0'
             this.deps = {'dx0','p'}; 
+            
+        case 's2dx0'
+            this.deps = {'sdx0','dx0','p'}; 
             
         case 'sxdot'
             if(strcmp(model.wtype,'iw'))
@@ -49,6 +72,15 @@ function [ this ] = getDeps(this, model)
             
         case 'dydp'
             this.deps = {'y','p'};
+            
+        case 'ddydpdp'
+            this.deps = {'dydp','y','p'};
+            
+        case 'ddydpdx'
+            this.deps = {'dydp','y','p','x'};
+            
+        case 'ddydxdx'
+            this.deps = {'y','p','x'};
           
         case 'sy'
             this.deps = {'dydp','dydx','sx'};
@@ -221,6 +253,14 @@ function [ this ] = getDeps(this, model)
             this.deps = {'Jy','y'};
         case 'dJydsigma'
             this.deps = {'Jy','sigma_y'};
+        case 'ddJydydy'
+            this.deps = {'Jy','sigma_y','y'};
+        case 'ddJydsigmady'
+            this.deps = {'Jy','sigma_y','y'};
+        case 'ddJydsigmadsigma'
+            this.deps = {'Jy','sigma_y','y'};
+        case 'ddJy_s2sigma'
+            this.deps = {'Jy','sigma_y','y'};
             
         case 'Jz'
             this.deps = {'z','sigma_z'};

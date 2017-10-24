@@ -174,11 +174,11 @@ fprintf(fid,'    options_ami = amioption();\n');
 fprintf(fid,'end\n');
 fprintf(fid,'if(isempty(options_ami.sens_ind))\n');
 fprintf(fid,['    options_ami.sens_ind = 1:' num2str(np) ';\n']);
-fprintf(fid,['end\n']);
-if(o2flag == 0)
-fprintf(fid,'if(options_ami.sensi>1)\n');
-fprintf(fid,'    error(''Second order sensitivities were requested but not computed'');\n');
 fprintf(fid,'end\n');
+if(o2flag == 0)
+    fprintf(fid,'if((options_ami.sensi>1) && (options_ami.sensi_meth==1))\n');
+    fprintf(fid,'    error(''Second order sensitivities were requested but not computed'');\n');
+    fprintf(fid,'end\n');
 end
 fprintf(fid,'\n');
 fprintf(fid,'if(~isempty(options_ami.pbar))\n');
@@ -244,6 +244,13 @@ if(~this.adjoint)
     fprintf(fid,'if(options_ami.sensi>0)\n');
     fprintf(fid,'    if(options_ami.sensi_meth == 2)\n');
     fprintf(fid,'        error(''adjoint sensitivities are disabled as necessary routines were not compiled'');\n');
+    fprintf(fid,'    end\n');
+    fprintf(fid,'end\n');
+end
+if(~this.adjoint_o2)
+    fprintf(fid,'if(options_ami.sensi>1)\n');
+    fprintf(fid,'    if(options_ami.sensi_meth == 2)\n');
+    fprintf(fid,'        error(''second order adjoint sensitivities are disabled as necessary routines were not compiled'');\n');
     fprintf(fid,'    end\n');
     fprintf(fid,'end\n');
 end
@@ -339,7 +346,11 @@ if(o2flag)
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+            fprintf(fid, '    if(options_ami.sensi_meth==2)\n');
+            fprintf(fid,['        sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+            fprintf(fid, '    else\n');
+            fprintf(fid,['        sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+            fprintf(fid, '    end\n');
         case 2
             fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
     end

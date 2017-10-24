@@ -198,3 +198,58 @@ int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *
     return dJrzdsigma_model_events(t, ie, x, tdata, edata, rdata);
 }
 
+int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdx:NotAvailable","ERROR: The function dJdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdp:NotAvailable","ERROR: The function dJdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:ddxdotdpdp:NotAvailable","ERROR: The function ddxdotdpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdp(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdp:NotAvailable","ERROR: The function ddydpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdx:NotAvailable","ERROR: The function ddydpdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydxdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydxdx:NotAvailable","ERROR: The function ddydxdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fs2x0(realtype *s2x0, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:s2x0:NotAvailable","ERROR: The function s2x0 was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmady(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmady:NotAvailable","ERROR: The function ddJydsigmady was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmadsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmadsigma:NotAvailable","ERROR: The function ddJydsigmadsigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJy_s2sigma:NotAvailable","ERROR: The function ddJy_s2sigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydydy:NotAvailable","ERROR: The function ddJydydy was called but not compiled for this model.");
+    return -1;
+}
+

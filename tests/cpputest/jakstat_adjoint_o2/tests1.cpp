@@ -19,7 +19,7 @@ TEST_GROUP(groupJakstatAdjointO2)
     }
 };
 
-
+/*
 TEST(groupJakstatAdjointO2, testSensitivityForward2) {
     Model *model = getModel();
     simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2forward/");
@@ -31,7 +31,7 @@ TEST(groupJakstatAdjointO2, testSensitivityForward2LogParam) {
     simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2forwardlogparam/");
     delete model;
 }
-
+*/
 TEST(groupJakstatAdjointO2, testSensitivityAdjoint2) {
     Model *model = getModel();
     simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2adjoint/");

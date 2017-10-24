@@ -1,0 +1,12 @@
+ok;   'dJdx';
+ok;   'dJdp';
+ok;   'ddxdotdpdp';
+ok;   's2x0';
+ok;   'o2qBdot';
+ok;   'ddJydydy';
+control;   'ddydpdp';
+control;   'ddydpdx';
+control;   'ddydxdx';
+ok;   'ddJydsigmady';
+ok;   'ddJydsigmadsigma';
+ok;   'ddsigma_ydpdp';

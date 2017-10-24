@@ -107,6 +107,7 @@ function [modelo2vec] = augmento2vec(this)
     modelo2vec.debug = this.debug;
     modelo2vec.forward = this.forward;
     modelo2vec.adjoint = this.adjoint;
+    modelo2vec.adjoint_o2 = false;
     modelo2vec.param = this.param;
 end
 

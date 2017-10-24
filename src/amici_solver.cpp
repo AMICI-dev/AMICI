@@ -97,7 +97,30 @@ int Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
                 AMICI_SUCCESS)
                 goto freturn;
             
-            if (udata->sensi_meth == AMICI_SENSI_FSA) {
+            
+            if ((udata->sensi_meth == AMICI_SENSI_ASA &&
+                 udata->sensi >= AMICI_SENSI_ORDER_SECOND)) {
+                
+                /* initialize second order sensitivities s2x0 for second order */
+                if (!udata->s2x0data) {
+                    if (model->fs2x0(tdata->s2x, tdata->x, tdata->dx, tdata) !=
+                        AMICI_SUCCESS)
+                        goto freturn;
+                } else {
+                    for (int ip = 0; ip < udata->nplist; ip++)
+                        for (int jp = 0; jp < udata->nplist; ip++)
+                            for (int ix = 0; ix < model->nx; ix++)
+                                tdata->s2x[ix + model->nx * (ip * udata->nplist + jp)] =
+                                    udata->s2x0data[ix + model->nx *(ip * udata->nplist + jp)];
+                }
+                
+                if (model->fs2dx0(tdata->s2dx, tdata->x, tdata->dx, tdata) !=
+                    AMICI_SUCCESS)
+                    goto freturn;
+            }
+            
+            if (udata->sensi_meth == AMICI_SENSI_FSA ||
+                udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
                 
                 /* Activate sensitivity calculations */
                 if (sensInit1(tdata->sx, tdata->sdx, udata) != AMICI_SUCCESS)
@@ -179,8 +202,13 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
         return AMICI_ERROR_SETUPB;
     if (!NV_DATA_S(tdata->xQB))
         return AMICI_ERROR_SETUPB;
-    memset(NV_DATA_S(tdata->xQB), 0,
-           sizeof(realtype) * model->nJ * tdata->rdata->nplist);
+    if (udata->sensi == AMICI_SENSI_ORDER_SECOND && model->nJ == 1) {
+        memset(NV_DATA_S(tdata->xQB), 0,
+           sizeof(realtype) * tdata->rdata->nplist * tdata->rdata->nplist);
+    } else {
+        memset(NV_DATA_S(tdata->xQB), 0,
+               sizeof(realtype) * model->nJ * tdata->rdata->nplist);
+    }
 
     /* create backward problem */
     if (udata->lmm > 2 || udata->lmm < 1) {
@@ -336,7 +364,11 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     }
 
     /* Initialise quadrature calculation */
-    status = qbinit(tdata->which, tdata->xQB);
+    if (udata->sensi < AMICI_SENSI_ORDER_SECOND) {
+        status = qbinit(tdata->which, tdata->xQB);
+    } else {
+        status = qbsinit(tdata->which, tdata->xQB);
+    }
     if (status != AMICI_SUCCESS)
         return status;
 

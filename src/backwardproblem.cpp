@@ -28,7 +28,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         rdata->sensi_meth != AMICI_SENSI_ASA || status != AMICI_SUCCESS) {
         return status;
     }
-
+    
     Solver *solver = tdata->solver;
     solver->setupAMIB(udata, tdata, model);
 
@@ -105,6 +105,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         }
     }
     
+    /* Add the term including sensitivities for t0 */
     realtype *sx_tmp;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
@@ -112,14 +113,27 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
-            for (ip = 0; ip < rdata->nplist; ++ip) {
-                tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
-                sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                if (!sx_tmp)
-                    return AMICI_ERROR_ASA;
-                for (ix = 0; ix < model->nxtrue; ++ix) {
-                    tdata->llhS0[ip] =
-                        tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+            if (rdata->sensi <= AMICI_SENSI_ORDER_FIRST) {
+                for (ip = 0; ip < rdata->nplist; ++ip) {
+                    tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
+                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
+                    if (!sx_tmp)
+                        return AMICI_ERROR_ASA;
+                    for (ix = 0; ix < model->nxtrue; ++ix) {
+                        tdata->llhS0[ip] =
+                            tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+                    }
+                }
+            } else {
+                for (ip = 0; ip < rdata->nplist; ++ip) {
+                    for (int jp = 0; jp < rdata->nplist; ++jp) {
+                        tdata->llhS20[ip * rdata->nplist + jp] = 0.0;
+                        for (ix = 0; ix < model->nxtrue; ++ix) {
+                            tdata->llhS20[ip * rdata->nplist + jp] +=
+                            xB_tmp[ix] * tdata->s2x[ix + model->nx * (ip
+                                                    * rdata->nplist + jp)];
+                        }
+                    }
                 }
             }
         } else {
@@ -138,21 +152,38 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         }
     }
 
+    /* Add quadratures */
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if (!xQB_tmp)
         return AMICI_ERROR_ASA;
 
-    for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (ip = 0; ip < rdata->nplist; ip++) {
-            if (iJ == 0) {
-                rdata->sllh[ip] -= tdata->llhS0[ip] + xQB_tmp[ip];
-            } else {
-                rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
-                    tdata->llhS0[ip + iJ * rdata->nplist] +
-                    xQB_tmp[ip + iJ * rdata->nplist];
+    if (rdata->sensi <= AMICI_SENSI_ORDER_FIRST) {
+        for (ip = 0; ip < rdata->nplist; ip++)
+            rdata->sllh[ip] -= tdata->llhS0[ip] + xQB_tmp[ip];
+    } else {
+        if (model->nJ == 1) {
+            for (ip = 0; ip < rdata->nplist; ip++) {
+                for (int jp = 0; jp < rdata->nplist; jp++) {
+                    rdata->s2llh[jp + ip * rdata->nplist] -=
+                        tdata->llhS20[ip * rdata->nplist + jp] -
+                        xQB_tmp[jp + ip * rdata->nplist];
+                }
+            }
+        } else {
+            for (int iJ = 0; iJ < model->nJ; iJ++) {
+                for (ip = 0; ip < rdata->nplist; ip++) {
+                    if (iJ == 0) {
+                        rdata->sllh[ip] -= tdata->llhS0[ip] + xQB_tmp[ip];
+                    } else {
+                        rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
+                        tdata->llhS0[ip + iJ * rdata->nplist] +
+                        xQB_tmp[ip + iJ * rdata->nplist];
+                    }
+                }
             }
         }
     }
+    
 
     return status;
 }

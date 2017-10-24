@@ -55,6 +55,44 @@ elseif(strcmp(this.funstr,'s2root'))
             end
         end
     end
+elseif(strcmp(this.funstr,'dJdp'))
+    nonzero = this.sym ~=0;
+    if(any(any(any(nonzero))))
+        tmpfun = this;
+        for ip=1:np
+            if(any(any(nonzero(:,:,ip))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                tmpfun.sym = this.sym(:,:,ip);
+                tmpfun.writeCcode(model,fid);
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
+elseif(strcmp(this.funstr,'ddxdotdpdp') || strcmp(this.funstr,'s2x0'))
+    nonzero = this.sym ~=0;
+    if(any(any(any(nonzero))))
+        tmpfun = this;
+        for ip=1:np
+            if(any(any(nonzero(:,:,ip))))
+                fprintf(fid,['  case ' num2str(ip-1) ': {\n']);
+                fprintf(fid,'      for (int jp=0; jp<udata->nplist; jp++) {\n');
+                fprintf(fid,'          switch (udata->plist[jp]) {\n');
+                for jp=1:np
+                     if(any(any(nonzero(:,jp,ip))))
+                         fprintf(fid,['            case ' num2str(jp-1) ': {\n']);
+                         tmpfun.sym = this.sym(:,ip,jp);
+                         tmpfun.writeCcode(model,fid);
+                         fprintf(fid,'            } break;\n\n');
+                     end
+                end
+                fprintf(fid,'          }\n');
+                fprintf(fid,'      }\n');
+                fprintf(fid,'\n');
+                fprintf(fid,'  } break;\n\n');
+            end
+        end
+    end
 elseif(strcmp(this.funstr,'qBdot'))
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))

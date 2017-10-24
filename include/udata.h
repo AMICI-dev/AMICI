@@ -191,6 +191,9 @@ class UserData {
     /** sensitivity initialisation (size nx * nplist) */
     double *sx0data = nullptr;
 
+    /** second order sensitivity initialisation (size nx * nplist^2) */
+    double *s2x0data = nullptr;
+    
     /** state ordering */
     StateOrdering ordering = AMD;
 

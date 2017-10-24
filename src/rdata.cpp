@@ -105,18 +105,16 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
         for (int ip = 0; ip < nplist; ++ip)
             pcoefficient[ip] = unscaledParameters[udata->plist[ip]] * log(10);
         if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip] * log(10);
+            for (int ip = 0; ip < np; ++ip)
+                augcoefficient[ip] = unscaledParameters[ip] * log(10);
         break;
     case AMICI_SCALING_LN:
         coefficient = 1.0;
         for (int ip = 0; ip < nplist; ++ip)
             pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
         if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip];
+            for (int ip = 0; ip < np; ++ip)
+                augcoefficient[ip] = unscaledParameters[ip];
         break;
     case AMICI_SCALING_NONE:
         // this should never be reached
@@ -124,38 +122,6 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
     }
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        // recover first order sensitivies from states for adjoint sensitivity
-        // analysis
-        if (udata->sensi == AMICI_SENSI_ORDER_SECOND) {
-            if (udata->sensi_meth == AMICI_SENSI_ASA) {
-                if (x)
-                    if (sx)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int ix = 0; ix < nxtrue; ++ix)
-                                for (int it = 0; it < nt; ++it)
-                                    sx[(ip * nxtrue + ix) * nt + it] =
-                                        x[(nxtrue + ip * nxtrue + ix) * nt +
-                                          it];
-
-                if (y)
-                    if (sy)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int iy = 0; iy < nytrue; ++iy)
-                                for (int it = 0; it < nt; ++it)
-                                    sy[(ip * nytrue + iy) * nt + it] =
-                                        y[(nytrue + ip * nytrue + iy) * nt +
-                                          it];
-
-                if (z)
-                    if (sz)
-                        for (int ip = 0; ip < nplist; ++ip)
-                            for (int iz = 0; iz < nztrue; ++iz)
-                                for (int it = 0; it < nt; ++it)
-                                    sz[(ip * nztrue + iz) * nt + it] =
-                                        z[(nztrue + ip * nztrue + iz) * nt +
-                                          it];
-            }
-        }
 
         if (sllh)
             for (int ip = 0; ip < nplist; ++ip)
@@ -215,6 +181,23 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                     s2ChainRule(z, iz, nztrue, nz, ie, nmaxevent)
                         s2ChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
                             s2ChainRule(rz, iz, nztrue, nz, ie, nmaxevent)
+    }
+    
+    if ( (udata->sensi == AMICI_SENSI_ORDER_SECOND) &&
+         (udata->sensi_meth == AMICI_SENSI_ASA) && (nJ == 1) ) { // full
+        if (s2llh) {
+            if (sllh) {
+                for (int ip = 0; ip < nplist; ++ip) {
+                    for (int jp = 0; jp < nplist; ++jp) {
+                        s2llh[ip * nplist + jp] *=
+                        pcoefficient[ip] * augcoefficient[jp];
+                        if (udata->plist[ip] == udata->plist[jp])
+                            s2llh[ip * nplist + jp] +=
+                            sllh[ip] * coefficient;
+                    }
+                }
+            }
+        }
     }
 
     if (o2mode == AMICI_O2MODE_DIR) { // directional
@@ -382,7 +365,8 @@ void ReturnData::initFields() {
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         initField2(&sllh, "sllh", nplist, 1);
 
-        if (sensi_meth == AMICI_SENSI_FSA) {
+        if ((sensi_meth == AMICI_SENSI_FSA) ||
+            (sensi > AMICI_SENSI_ORDER_FIRST)) {
             initField3(&sx, "sx", nt, nx, nplist);
             if (ny > 0) {
                 initField3(&sy, "sy", nt, ny, nplist);
@@ -414,7 +398,11 @@ void ReturnData::initFields() {
         }
 
         if (sensi >= AMICI_SENSI_ORDER_SECOND) {
-            initField2(&s2llh, "s2llh", nJ - 1, nplist);
+            if (nJ == 1) {
+                initField2(&s2llh, "s2llh", nplist, nplist);
+            } else {
+                initField2(&s2llh, "s2llh", nJ - 1, nplist);
+            }
         }
     }
 }

@@ -27,7 +27,8 @@ int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xd
 }
 
 int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JB_model_neuron_o2(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    warnMsgIdAndTxt("AMICI:mex:JB:NotAvailable","ERROR: The function JB was called but not compiled for this model.");
+    return -1;
 }
 
 int fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data){
@@ -99,11 +100,13 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data){
 }
 
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data){
-    return xBdot_model_neuron_o2(t, x, dx, xB, dxB, xBdot, user_data);
+    warnMsgIdAndTxt("AMICI:mex:xBdot:NotAvailable","ERROR: The function xBdot was called but not compiled for this model.");
+    return -1;
 }
 
 int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data){
-    return qBdot_model_neuron_o2(t, x, dx, xB, dxB, qBdot, user_data);
+    warnMsgIdAndTxt("AMICI:mex:qBdot:NotAvailable","ERROR: The function qBdot was called but not compiled for this model.");
+    return -1;
 }
 
 int fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
@@ -119,11 +122,13 @@ int fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N
 }
 
 int fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
-    return deltaxB_model_neuron_o2(t, ie, x, xB, xdot, xdot_old, tdata);
+    warnMsgIdAndTxt("AMICI:mex:deltaxB:NotAvailable","ERROR: The function deltaxB was called but not compiled for this model.");
+    return -1;
 }
 
 int fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata){
-    return deltaqB_model_neuron_o2(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
+    warnMsgIdAndTxt("AMICI:mex:deltaqB:NotAvailable","ERROR: The function deltaqB was called but not compiled for this model.");
+    return -1;
 }
 
 int fsigma_y(realtype t, TempData *tdata){
@@ -151,15 +156,18 @@ int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj
 }
 
 int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JSparseB_model_neuron_o2(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    warnMsgIdAndTxt("AMICI:mex:JSparseB:NotAvailable","ERROR: The function JSparseB was called but not compiled for this model.");
+    return -1;
 }
 
 int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B){
-    return JBandB_model_neuron_o2(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+    warnMsgIdAndTxt("AMICI:mex:JBandB:NotAvailable","ERROR: The function JBandB was called but not compiled for this model.");
+    return -1;
 }
 
 int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2){
-    return JvB_model_neuron_o2(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
+    warnMsgIdAndTxt("AMICI:mex:JvB:NotAvailable","ERROR: The function JvB was called but not compiled for this model.");
+    return -1;
 }
 
 int fJy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
@@ -196,5 +204,60 @@ int fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edat
 
 int fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
     return dJrzdsigma_model_neuron_o2(t, ie, x, tdata, edata, rdata);
+}
+
+int fdJdx(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdx:NotAvailable","ERROR: The function dJdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fdJdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:dJdp:NotAvailable","ERROR: The function dJdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddxdotdpdp(realtype t, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:ddxdotdpdp:NotAvailable","ERROR: The function ddxdotdpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdp(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdp:NotAvailable","ERROR: The function ddydpdp was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydpdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydpdx:NotAvailable","ERROR: The function ddydpdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fddydxdx(realtype t, int it, N_Vector x, TempData *tdata){
+    warnMsgIdAndTxt("AMICI:mex:ddydxdx:NotAvailable","ERROR: The function ddydxdx was called but not compiled for this model.");
+    return -1;
+}
+
+int fs2x0(realtype *s2x0, N_Vector x, N_Vector dx, void *user_data){
+    warnMsgIdAndTxt("AMICI:mex:s2x0:NotAvailable","ERROR: The function s2x0 was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmady(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmady:NotAvailable","ERROR: The function ddJydsigmady was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydsigmadsigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydsigmadsigma:NotAvailable","ERROR: The function ddJydsigmadsigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJy_s2sigma(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJy_s2sigma:NotAvailable","ERROR: The function ddJy_s2sigma was called but not compiled for this model.");
+    return -1;
+}
+
+int fddJydydy(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata){
+    warnMsgIdAndTxt("AMICI:mex:ddJydydy:NotAvailable","ERROR: The function ddJydydy was called but not compiled for this model.");
+    return -1;
 }
 

@@ -36,6 +36,10 @@ int IDASolver::qbinit(int which, N_Vector qBdot) {
     return IDAQuadInitB(ami_mem, which, fqBdot, qBdot);
 }
 
+int IDASolver::qbsinit(int which, N_Vector qBdot) {
+    return IDAQuadInitBS(ami_mem, which, fqBo2dot, qBdot);
+}
+
 int IDASolver::rootInit(int ne) {
     return IDARootInit(ami_mem, ne, rootFunction);
 }
@@ -342,6 +346,13 @@ int IDASolver::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector qBdot, void *user_data) {
     TempData *tdata = (TempData *)user_data;
     return tdata->model->fqBdot(t, x, dx, xB, dxB, qBdot, user_data);
+}
+
+int IDASolver::fqBo2dot(realtype t, N_Vector x, N_Vector dx, N_Vector *sx,
+                        N_Vector *sdx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                        void *user_data) {
+    TempData *tdata = (TempData *)user_data;
+    return tdata->model->fqBo2dot(t, x, sx, xB, qBdot, user_data);
 }
 
 int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,

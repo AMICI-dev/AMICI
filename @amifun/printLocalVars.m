@@ -85,10 +85,12 @@ function printLocalVars(this,model,fid)
         case 'sxdot'
             fprintf(fid,['memset(sxdot_tmp,0,sizeof(realtype)*' num2str(nx) ');\n']);
         case 'sx0'
-            fprintf(fid,['realtype t = udata->tstart;\n']);
+            fprintf(fid,'realtype t = udata->tstart;\n');
+        case 's2x0'
+            fprintf(fid,'realtype t = udata->tstart;\n');
             % nothing
         case 'sdx0'
-            fprintf(fid,['realtype t = udata->tstart;\n']);
+            fprintf(fid,'realtype t = udata->tstart;\n');
             % nothing
         case 'y'
             % nothing
@@ -163,6 +165,29 @@ function printLocalVars(this,model,fid)
             fprintf(fid,['memset(tdata->M,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
         case 'dfdx'
             fprintf(fid,['memset(tdata->dfdx,0,sizeof(realtype)*' num2str(model.nx^2) ');\n']);
+        case 'dJdx'
+            fprintf(fid,'int ix;\n');
+            fprintf(fid,['memset(tdata->dJdx,0,sizeof(realtype)*' num2str(nx^3) ');\n']);
+        case 'dJdp'
+            fprintf(fid,'int ix;\n');
+            fprintf(fid,['memset(tdata->dJdp,0,sizeof(realtype)*' num2str(nx^2) '*udata->nplist);\n']);
+        case 'ddxdotdpdp'
+            fprintf(fid,'int ix;\n');
+            fprintf(fid,['memset(tdata->ddxdotdpdp,0,sizeof(realtype)*' num2str(nx) '*udata->nplist*udata->nplist);\n']);
+        case 'ddJydydy'
+            fprintf(fid,'memset(tdata->ddJydydy,0,sizeof(realtype)*model->nytrue*model->ny*model->ny);\n');
+        case 'ddJydsigmady'
+            fprintf(fid,'memset(tdata->ddJydsigmady,0,sizeof(realtype)*model->nytrue*model->ny*model->ny);\n');
+        case 'ddJydsigmadsigma'
+            fprintf(fid,'memset(tdata->ddJydsigmadsigma,0,sizeof(realtype)*model->nytrue*model->ny*model->ny);\n');
+        case 'ddJy_s2sigma'
+            fprintf(fid,'memset(tdata->ddJy_s2sigma,0,sizeof(realtype)*model->nytrue*udata->nplist*udata->nplist);\n');
+        case 'ddydpdp'
+            fprintf(fid,'memset(tdata->ddydpdp,0,sizeof(realtype)*model->ny*udata->nplist*udata->nplist);\n');
+        case 'ddydpdx'
+            fprintf(fid,'memset(tdata->ddydpdx,0,sizeof(realtype)*model->ny*udata->nplist*model->nx);\n');
+        case 'ddydxdx'
+            fprintf(fid,'memset(tdata->ddydxdx,0,sizeof(realtype)*model->ny*model->nx*model->nx);\n');
         otherwise
             error(['unkown function: ' this.funstr])
     end

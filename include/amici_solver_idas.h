@@ -149,6 +149,14 @@ class IDASolver : public Solver {
 
     static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector qBdot, void *user_data);
+ 
+    static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector *sx,
+                      N_Vector *sdx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                      void *user_data);
+    
+    static int fqBo2dot(realtype t, N_Vector x, N_Vector dx, N_Vector *sx,
+                        N_Vector *sdx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                        void *user_data);
 
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,
                       N_Vector dx, N_Vector *sx, N_Vector *sxdot, N_Vector *sdx,
@@ -197,6 +205,8 @@ class IDASolver : public Solver {
     int binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
 
     int qbinit(int which, N_Vector qBdot) override;
+    
+    int qbsinit(int which, N_Vector qBdot) override;
 
     int rootInit(int ne) override;
 
