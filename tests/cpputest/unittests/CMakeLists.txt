@@ -4,8 +4,6 @@ project(unittests)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_OLD}")
 find_package(Boost COMPONENTS serialization)
 
-include_directories("${Boost_INCLUDE_DIR}")
-
 set(SRC_LIST
     main.cpp
     tests1.cpp
@@ -14,6 +12,7 @@ set(SRC_LIST
 
 if(Boost_FOUND)
     set(SRC_LIST ${SRC_LIST} testsSerialization.cpp)
+    include_directories("${Boost_INCLUDE_DIR}")
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
