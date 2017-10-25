@@ -21,7 +21,8 @@ namespace serialization {
 template <class Archive, typename T>
 void archiveRawArray(Archive &ar, T **p, int size) {
     if (Archive::is_loading::value) {
-        assert(*p == nullptr); // ensure it's unset, otherwise would have to deallocate
+        if(*p != nullptr)
+            delete[] *p;
         ar &size;
         *p = size ? new T[size] : nullptr;
     } else {

@@ -58,7 +58,7 @@ int runAmiciSimulation(const UserData *udata, const ExpData *edata,
         return AMICI_ERROR_NOTHINGTODO;
     }
 
-    TempData tdata = TempData(udata, model, rdata);
+    TempData tdata(udata, model, rdata);
 
     if (status == AMICI_SUCCESS)
         status = ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata,

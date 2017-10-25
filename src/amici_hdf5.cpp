@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <algorithm>
 #ifdef AMI_HDF5_H_DEBUG
 #ifndef __APPLE__
 #include <cexecinfo>
@@ -66,22 +67,31 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     int status = 0;
 
     status += AMI_HDF5_getDoubleArrayAttribute(
-        fileId, datasetPath, "qpositivex", &udata->qpositivex, &length0);
+        fileId, datasetPath, "qpositivex", &buffer, &length0);
     if (length0 != (unsigned)model->nx)
         goto freturn;
+    std::copy(buffer, buffer + udata->nx, udata->qpositivex);
+    delete[] buffer;
+    buffer = NULL;
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta",
-                                                   &udata->p, &length0);
+                                                   &buffer, &length0);
         if ((unsigned)model->np != length0)
             goto freturn;
+        udata->setParameters(buffer);
+        delete[] buffer;
+        buffer = NULL;
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa",
-                                                   &udata->k, &length0);
+                                                   &buffer, &length0);
         if (length0 != (unsigned)model->nk)
             goto freturn;
+        udata->setConstants(buffer);
+        delete[] buffer;
+        buffer = NULL;
     }
 
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "ts")) {

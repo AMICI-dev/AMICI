@@ -125,7 +125,6 @@ TEST(userDataSerialization, testFile) {
 }
 
 TEST(userDataSerialization, testString) {
-
     amici::UserData u(1, 2, 3);
 
     std::string serialized = serializeToString(u);
@@ -134,9 +133,7 @@ TEST(userDataSerialization, testString) {
 }
 
 TEST(userDataSerialization, testChar) {
-
-    amici::UserData u(1, 2, 3);
-    u.p = new double[2];
+    amici::UserData u(2, 1, 3);
     u.p[0] = 1;
     u.p[1] = 2;
 
@@ -151,8 +148,7 @@ TEST(userDataSerialization, testChar) {
 
 TEST(userDataSerialization, testStdVec) {
 
-    amici::UserData u(1, 2, 3);
-    u.p = new double[2];
+    amici::UserData u(2, 1, 3);
     u.p[0] = 1;
     u.p[1] = 2;
 
