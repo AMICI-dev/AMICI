@@ -1,4 +1,4 @@
-s2xfunction printLocalVars(this,model,fid)
+function printLocalVars(this,model,fid)
     % printlocalvars prints the C code for the initialisation of local variables into the file specified by fid.
     %
     % Parameters:
