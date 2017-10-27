@@ -54,6 +54,12 @@ TEST(userData, testConstructionDestruction) {
     UserData udata;
 }
 
+TEST(userData, testCopy) {
+    UserData udata1(1, 2, 3);
+    UserData udata2(udata1);
+}
+
+
 TEST(userData, testScalingLin) {
     UserData udata(1, 0, 0);
     const double p[1] = {1};

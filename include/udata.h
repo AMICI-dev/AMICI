@@ -35,6 +35,19 @@ class UserData {
      */
     UserData();
 
+    /**
+     * @brief Copy constructor
+     * @param other object to copy from
+     */
+    UserData (const UserData &other);
+
+    /**
+     * @brief Copy assignment is disabled until const members are removed
+     * @param other object to copy from
+     * @return
+     */
+    UserData& operator=(UserData const &other)=delete;
+
     int unscaleParameters(double *bufferUnscaled) const;
 
     /**
