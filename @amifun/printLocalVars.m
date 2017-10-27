@@ -1,4 +1,4 @@
-function printLocalVars(this,model,fid)
+s2xfunction printLocalVars(this,model,fid)
     % printlocalvars prints the C code for the initialisation of local variables into the file specified by fid.
     %
     % Parameters:
@@ -88,6 +88,7 @@ function printLocalVars(this,model,fid)
             fprintf(fid,'realtype t = udata->tstart;\n');
         case 's2x0'
             fprintf(fid,'realtype t = udata->tstart;\n');
+            fprintf(fid,['memset(tdata->s2x,0,sizeof(realtype)*' num2str(nx) '*udata->nplist*udata->nplist);\n']);
             % nothing
         case 'sdx0'
             fprintf(fid,'realtype t = udata->tstart;\n');

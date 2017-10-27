@@ -373,7 +373,7 @@ int Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
         return status;
 
     /* Enable Quadrature Error Control */
-    status = AMISetQuadErrConB(tdata->which, TRUE);
+    status = AMISetQuadErrConB(tdata->which, FALSE);
     if (status != AMICI_SUCCESS)
         return status;
 
