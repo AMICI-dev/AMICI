@@ -35,7 +35,7 @@ ExpData *getTestExpData(const UserData *udata, Model *model);
 
 bool withinTolerance(double expected, double actual, double atol, double rtol, int index);
 
-void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol);
+void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol, const char *name);
 
 void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
 

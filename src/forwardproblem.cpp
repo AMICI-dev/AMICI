@@ -132,7 +132,7 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
     if (edata && status == AMICI_SUCCESS) {
         *rdata->llh = -tdata->Jy[0] - tdata->Jz[0];
     } else {
-        rdata->invalidate();
+        //rdata->invalidate();
     }
 
     storeJacobianAndDerivativeInReturnData(tdata, rdata, model);
