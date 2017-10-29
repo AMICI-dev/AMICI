@@ -81,7 +81,7 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
     fillArray(s2llh, nplist * (nJ - 1), amiGetNaN());
 }
 
-int ReturnData::applyChainRuleFactorToSimulationResults(
+void ReturnData::applyChainRuleFactorToSimulationResults(
     const UserData *udata, const realtype *unscaledParameters) {
     /**
      * @brief applies the chain rule to account for parameter transformation
@@ -89,10 +89,9 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
      * @param[in] udata pointer to the user data struct @type UserData
      * @param[in] unscaledParameters pointer to the non-transformed parameters
      * @type realtype
-     * @return status flag indicating success of execution @type int
      */
     if (pscale == AMICI_SCALING_NONE)
-        return AMICI_SUCCESS;
+        return;
 
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
@@ -172,13 +171,13 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                         pcoefficient[ip];                                      \
                 }
 
-        chainRule(x, ix, nxtrue, nx, it, nt)
-            chainRule(y, iy, nytrue, ny, it, nt)
-                chainRule(sigmay, iy, nytrue, ny, it, nt)
-                    chainRule(z, iz, nztrue, nz, ie, nmaxevent)
-                        chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
-                            chainRule(rz, iz, nztrue, nz, ie, nmaxevent)
-                                chainRule(x0, ix, nxtrue, nx, it, 1)
+        chainRule(x, ix, nxtrue, nx, it, nt);
+        chainRule(y, iy, nytrue, ny, it, nt);
+        chainRule(sigmay, iy, nytrue, ny, it, nt);
+        chainRule(z, iz, nztrue, nz, ie, nmaxevent);
+        chainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
+        chainRule(rz, iz, nztrue, nz, ie, nmaxevent);
+        chainRule(x0, ix, nxtrue, nx, it, 1);
     }
 
     if (o2mode == AMICI_O2MODE_FULL) { // full
@@ -211,12 +210,12 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                                 coefficient;                                   \
                     }
 
-        s2ChainRule(x, ix, nxtrue, nx, it, nt)
-            s2ChainRule(y, iy, nytrue, ny, it, nt)
-                s2ChainRule(sigmay, iy, nytrue, ny, it, nt)
-                    s2ChainRule(z, iz, nztrue, nz, ie, nmaxevent)
-                        s2ChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
-                            s2ChainRule(rz, iz, nztrue, nz, ie, nmaxevent)
+        s2ChainRule(x, ix, nxtrue, nx, it, nt);
+        s2ChainRule(y, iy, nytrue, ny, it, nt);
+        s2ChainRule(sigmay, iy, nytrue, ny, it, nt);
+        s2ChainRule(z, iz, nztrue, nz, ie, nmaxevent);
+        s2ChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
+        s2ChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
     }
 
     if (o2mode == AMICI_O2MODE_DIR) { // directional
@@ -243,17 +242,17 @@ int ReturnData::applyChainRuleFactorToSimulationResults(
                         unscaledParameters[udata->plist[ip]];                  \
                 }
 
-        s2vecChainRule(x, ix, nxtrue, nx, it, nt)
-            s2vecChainRule(y, iy, nytrue, ny, it, nt)
-                s2vecChainRule(sigmay, iy, nytrue, ny, it, nt)
-                    s2vecChainRule(z, iz, nztrue, nz, ie, nmaxevent)
-                        s2vecChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent)
-                            s2vecChainRule(rz, iz, nztrue, nz, ie, nmaxevent)
+        s2vecChainRule(x, ix, nxtrue, nx, it, nt);
+        s2vecChainRule(y, iy, nytrue, ny, it, nt);
+        s2vecChainRule(sigmay, iy, nytrue, ny, it, nt);
+        s2vecChainRule(z, iz, nztrue, nz, ie, nmaxevent);
+        s2vecChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
+        s2vecChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
     }
 
     delete[] pcoefficient;
     delete[] augcoefficient;
-    return AMICI_SUCCESS;
+    return;
 }
 
 ReturnData::~ReturnData() {

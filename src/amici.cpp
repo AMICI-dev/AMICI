@@ -68,7 +68,7 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
 
     rdata->applyChainRuleFactorToSimulationResults(udata, tdata.p);
 
-    rdata->invalidate();
+    //rdata->invalidate();
 
     return;
 }

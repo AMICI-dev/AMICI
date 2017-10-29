@@ -33,7 +33,7 @@ class ReturnData {
 
     void setLikelihoodSensitivitySecondOrderNaN();
 
-    int
+    void 
     applyChainRuleFactorToSimulationResults(const UserData *udata,
                                             const realtype *unscaledParameters);
 

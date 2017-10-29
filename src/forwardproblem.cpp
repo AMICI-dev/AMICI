@@ -110,11 +110,12 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
                         if (status == AMICI_ROOT_RETURN) {
                             handleEvent(&tlastroot, udata, rdata, edata,
                                             tdata, 0, solver, model);
+                            status = AMICI_SUCCESS;
                         }
                     }
                 }
             }
-            if (status == CV_SUCCESS) {
+            if (status == AMICI_SUCCESS) {
                 handleDataPoint(it, udata, rdata, edata, tdata, solver, model);
             }
         } else {
@@ -129,7 +130,7 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
     }
 
     // set likelihood
-    if (edata && status == CV_SUCCESS) {
+    if (edata && status == AMICI_SUCCESS) {
         *rdata->llh = -tdata->Jy[0] - tdata->Jz[0];
     } else {
         rdata->invalidate();
