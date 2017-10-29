@@ -82,7 +82,7 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
  * @param ... arguments to be formatted
  * @return void
  */
-void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) __attribute__((format(printf,2,3))) {
+void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
     if(identifier != NULL && *identifier != '\0')
         fprintf(stderr, "[Error] %s: ", identifier);
     else
@@ -103,7 +103,7 @@ void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) __attr
  * @param ... arguments to be formatted
  * @return void
  */
-void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) __attribute__((format(printf,2,3))) {
+void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
     if(identifier != NULL && *identifier != '\0')
         printf("[Warning] %s: ", identifier);
     else

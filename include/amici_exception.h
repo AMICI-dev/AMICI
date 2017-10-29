@@ -9,7 +9,7 @@ namespace amici {
 
     class AmiException : public std::exception {
     public:
-        AmiException(char const* fmt, ...) __attribute__((format(printf,2,3))) {
+        AmiException(char const* fmt, ...) {
             va_list ap;
             va_start(ap, fmt);
             vsnprintf(msg, sizeof msg, fmt, ap);
