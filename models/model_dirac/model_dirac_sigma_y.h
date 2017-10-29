@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int sigma_y_model_dirac(realtype t, amici::TempData *tdata);
+void sigma_y_model_dirac(realtype t, amici::TempData *tdata);
 
 
 #endif /* _am_model_dirac_sigma_y_h */

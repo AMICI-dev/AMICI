@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int stau_model_dirac(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
+void stau_model_dirac(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
 
 
 #endif /* _am_model_dirac_stau_h */

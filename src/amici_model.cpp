@@ -31,12 +31,9 @@ Model::~Model() {
  * @param[in] it timepoint index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
+void Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
-
-    int status = AMICI_SUCCESS;
 
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         for (int iy = 0; iy < ny; ++iy)
@@ -52,7 +49,7 @@ int Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
                     &rdata->sy[it + ip * rdata->nt * ny], rdata->nt);
     }
 
-    return status;
+    return;
 }
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
@@ -60,12 +57,9 @@ int Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
  * @param[in] ie event index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
+void Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
-
-    int status = AMICI_SUCCESS;
 
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         for (int iz = 0; iz < nz; ++iz)
@@ -74,7 +68,7 @@ int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
                 0;
     }
 
-    return status;
+    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
@@ -82,10 +76,8 @@ int Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
  * @param[in] it timepoint index @type int
  * @param[in] tdata pointer to temp data object @type TempData
  * @param[in,out] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
-    int status = AMICI_SUCCESS;
+void Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
 
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
@@ -127,7 +119,7 @@ int Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
     delete[] multResult;
     delete[] sxTmp;
 
-    return (status);
+    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
@@ -136,12 +128,9 @@ int Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
  * @param[in] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
+void Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
                   const ReturnData *rdata) {
-
-    int status = AMICI_SUCCESS;
 
     // dJydy         nytrue x nJ x ny
     // dydp          ny x rdata->nplist
@@ -179,7 +168,7 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
     delete[] dJydyTmp;
     delete[] dJydsigmaTmp;
 
-    return (status);
+    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
@@ -187,11 +176,8 @@ int Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
  * @param[in] it timepoint index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
- * @return status flag indicating successful execution @type int
  */
-
-int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
-    int status = AMICI_SUCCESS;
+void Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
 
     // dJydy         nytrue x nJ x ny
     // dydx          ny x nx
@@ -223,7 +209,7 @@ int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
     delete[] dJydyTmp;
     delete[] multResult;
 
-    return (status);
+    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
@@ -231,11 +217,8 @@ int Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
-    int status = AMICI_SUCCESS;
-
+void Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     // sJz           nJ x rdata->nplist
     // dJzdp         nJ x rdata->nplist
     // dJzdx         nmaxevent x nJ x nx
@@ -252,8 +235,7 @@ int Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
         if (!sx_tmp) {
-            status = AMICI_ERROR_FSA;
-            goto freturn;
+            throw NullPointerException("sx_tmp");
         }
         for (int ix = 0; ix < nx; ++ix)
             sxTmp[ix + ip * nx] = sx_tmp[ix];
@@ -286,7 +268,7 @@ freturn:
     delete[] multResult;
     delete[] sxTmp;
 
-    return (status);
+    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
@@ -295,12 +277,9 @@ freturn:
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
  * @param[in] rdata pointer to return data object @type ReturnData
- * @return status flag indicating successful execution @type int
  */
-int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
+void Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
                   const ReturnData *rdata) {
-    int status = AMICI_SUCCESS;
-
     // dJzdz         nztrue x nJ x nz
     // dJzdsigma     nztrue x nJ x nz
     // dzdp          nz x rdata->nplist
@@ -365,7 +344,7 @@ int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
     if (dJrzdsigmaTmp)
         delete[] dJrzdsigmaTmp;
 
-    return (status);
+    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
@@ -373,11 +352,8 @@ int Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
  * @param[in] ie event index @type int
  * @param[in,out] tdata pointer to temp data object @type TempData
  * @param[in] edata pointer to experimental data object @type ExpData
- * @return status flag indicating successful execution @type int
  */
-int Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
-    int status = AMICI_SUCCESS;
-
+void Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
     // dJzdz         nztrue x nJ x nz
     // dzdx          nz x nx
     // dJzdx         nmaxevent x nJ x nx
@@ -422,58 +398,50 @@ int Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
     delete[] dJzdzTmp;
     delete[] multResult;
 
-    return (status);
+    return;
 }
 
 /** initialization of model properties
  * @param[in] udata pointer to user data object @type UserData
  * @param[out] tdata pointer to temp data object @type TempData
- * @return status flag indicating success of execution @type int
  */
-int Model::initialize(const UserData *udata, TempData *tdata) {
+void Model::initialize(const UserData *udata, TempData *tdata) {
     if (nx < 1)
-        return AMICI_SUCCESS;
-
-    int status;
-
-    if ((status = initializeStates(udata->x0data, tdata)) != AMICI_SUCCESS)
-        return status;
-
-    if ((status = fdx0(tdata->x, tdata->dx, tdata)) != AMICI_SUCCESS)
-        return status;
-
-    if ((status = initHeaviside(tdata)) != AMICI_SUCCESS)
-        return status;
-
-    return AMICI_SUCCESS;
+        return;
+    
+    initializeStates(udata->x0data, tdata);
+    
+    fdx0(tdata->x, tdata->dx, tdata);
+    
+    initHeaviside(tdata);
+    
+    return;
 }
 
 /** initialization of initial states
  * @param[in] x0data array with initial state values @type double
  * @param[out] tdata pointer to temp data object @type TempData
- * @return status flag indicating success of execution @type int
  */
-int Model::initializeStates(const double *x0data, TempData *tdata) {
+void Model::initializeStates(const double *x0data, TempData *tdata) {
     if (nx < 1)
-        return AMICI_SUCCESS;
+        return;
 
-    if (tdata->x == NULL)
-        return AMICI_ERROR_TDATA;
+    if (!tdata->x)
+        throw NullPointerException("tdata->x");
 
-    if (x0data == NULL) {
-        if (fx0(tdata->x, tdata) != AMICI_SUCCESS)
-            return AMICI_ERROR_MODEL;
+    if (!x0data) {
+        fx0(tdata->x, tdata);
     } else {
         realtype *x_tmp = NV_DATA_S(tdata->x);
         if (!x_tmp)
-            return AMICI_ERROR_TDATA;
+            throw NullPointerException("x_tmp");
 
         for (int ix = 0; ix < nx; ix++) {
             x_tmp[ix] = (realtype)x0data[ix];
         }
     }
 
-    return AMICI_SUCCESS;
+    return;
 }
 
 /**
@@ -481,31 +449,24 @@ int Model::initializeStates(const double *x0data, TempData *tdata) {
  * heaviside variables activate/deactivate on event occurences
  *
  * @param[out] tdata pointer to the temporary data struct @type TempData
- * @return status flag indicating success of execution @type int
  */
-int Model::initHeaviside(TempData *tdata) {
-
-    int status = AMICI_SUCCESS;
-
-    status = froot(tdata->t, tdata->x, tdata->dx, tdata->rootvals, tdata);
-    if (status != AMICI_SUCCESS)
-        return status;
+void Model::initHeaviside(TempData *tdata) {
+    
+    froot(tdata->t, tdata->x, tdata->dx, tdata->rootvals, tdata);
 
     for (int ie = 0; ie < ne; ie++) {
         if (tdata->rootvals[ie] < 0) {
             tdata->h[ie] = 0.0;
         } else if (tdata->rootvals[ie] == 0) {
-            errMsgIdAndTxt("AMICI:mex:initHeaviside",
-                           "Simulation started in an event. This could lead to "
-                           "unexpected results, aborting simulation! Please "
-                           "specify an earlier simulation start via "
-                           "@amimodel.t0");
-            return AMICI_ERROR_EVENT;
+            throw AmiException("Simulation started in an event. This could lead to "
+                               "unexpected results, aborting simulation! Please "
+                               "specify an earlier simulation start via "
+                               "@amimodel.t0");
         } else {
             tdata->h[ie] = 1.0;
         }
     }
-    return status;
+    return;
 }
 
 

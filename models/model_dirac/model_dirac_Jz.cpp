@@ -11,15 +11,14 @@
 
 using namespace amici;
 
-int Jz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-int status = 0;
+void Jz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_dirac(t,x,NULL,tdata);
-return(status);
+w_model_dirac(t,x,NULL,tdata);
+return;
 
 }
 

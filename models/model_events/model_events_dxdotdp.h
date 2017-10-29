@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dxdotdp_model_events(realtype t, N_Vector x, N_Vector dx, void *user_data);
+void dxdotdp_model_events(realtype t, N_Vector x, N_Vector dx, void *user_data);
 
 
 #endif /* _am_model_events_dxdotdp_h */

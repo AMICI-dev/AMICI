@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int rz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
+void rz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_dirac_rz_h */

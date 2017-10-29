@@ -76,18 +76,15 @@ int SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     if (rdata->sensi_meth == AMICI_SENSI_FSA &&
         rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
         if (status == AMICI_SUCCESS)
-            status = newtonSolver->getSensis(it);
+            newtonSolver->getSensis(it);
 
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
 
-        status = solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
+        solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                status =
-                    solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
-        if (status != AMICI_SUCCESS)
-            status = AMICI_ERROR_PREEQUILIBRATION;
+                solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
     }
 
     delete newtonSolver;
@@ -328,10 +325,8 @@ int SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tda
         tstart = udata->ts[it-1];
     tdata->t = tstart;
     
-    if (model->fx0(tdata->x, tdata) != AMICI_SUCCESS)
-        return AMICI_ERROR_SIM2STEADYSTATE;
-    if (solver->AMIReInit(udata->tstart, tdata->x, tdata->dx) != AMICI_SUCCESS)
-        return AMICI_ERROR_SIM2STEADYSTATE;
+    model->fx0(tdata->x, tdata);
+    solver->AMIReInit(udata->tstart, tdata->x, tdata->dx);
     
     /* Loop over steps and check for convergence */
     double res_abs;

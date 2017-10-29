@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int drzdx_model_events(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+void drzdx_model_events(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_events_drzdx_h */

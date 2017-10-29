@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int srz_model_events(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
-int status = 0;
+void srz_model_events(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -19,7 +18,7 @@ if(x)
     x_tmp = N_VGetArrayPointer(x);
 realtype *sx_tmp;
 int ip;
-status = w_model_events(t,x,NULL,tdata);
+w_model_events(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {
 sx_tmp = N_VGetArrayPointer(sx[ip]);
 switch (udata->plist[ip]) {
@@ -121,7 +120,7 @@ switch (udata->plist[ip]) {
 
 }
 }
-return(status);
+return;
 
 }
 
