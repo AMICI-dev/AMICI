@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int JSparseB_model_jakstat_adjoint(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+void JSparseB_model_jakstat_adjoint(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 
 
 #endif /* _am_model_jakstat_adjoint_JSparseB_h */

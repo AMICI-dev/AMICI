@@ -9,15 +9,14 @@
 
 using namespace amici;
 
-int sigma_y_model_jakstat_adjoint(realtype t, amici::TempData *tdata) {
-int status = 0;
+void sigma_y_model_jakstat_adjoint(realtype t, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 memset(tdata->sigmay,0,sizeof(realtype)*3);
   tdata->sigmay[0] = tdata->p[14];
   tdata->sigmay[1] = tdata->p[15];
   tdata->sigmay[2] = tdata->p[16];
-return(status);
+return;
 
 }
 

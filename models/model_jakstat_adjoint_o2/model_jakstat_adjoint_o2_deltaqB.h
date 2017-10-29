@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int deltaqB_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+void deltaqB_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_deltaqB_h */

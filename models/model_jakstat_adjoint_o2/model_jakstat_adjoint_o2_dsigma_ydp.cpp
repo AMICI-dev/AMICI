@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int dsigma_ydp_model_jakstat_adjoint_o2(realtype t, amici::TempData *tdata) {
-int status = 0;
+void dsigma_ydp_model_jakstat_adjoint_o2(realtype t, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 int ip;
@@ -34,7 +33,7 @@ switch (udata->plist[ip]) {
 
 }
 }
-return(status);
+return;
 
 }
 

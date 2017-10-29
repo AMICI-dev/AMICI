@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dwdx_model_nested_events(realtype t, N_Vector x, N_Vector dx, void *user_data);
+void dwdx_model_nested_events(realtype t, N_Vector x, N_Vector dx, void *user_data);
 
 
 #endif /* _am_model_nested_events_dwdx_h */

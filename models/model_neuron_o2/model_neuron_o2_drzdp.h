@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int drzdp_model_neuron_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+void drzdp_model_neuron_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_neuron_o2_drzdp_h */

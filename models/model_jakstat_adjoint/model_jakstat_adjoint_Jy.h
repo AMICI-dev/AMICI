@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int Jy_model_jakstat_adjoint(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void Jy_model_jakstat_adjoint(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_jakstat_adjoint_Jy_h */

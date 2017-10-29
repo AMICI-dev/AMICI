@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int deltaxB_model_nested_events(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+void deltaxB_model_nested_events(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
 
 
 #endif /* _am_model_nested_events_deltaxB_h */

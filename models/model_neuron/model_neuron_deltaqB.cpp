@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int deltaqB_model_neuron(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
-int status = 0;
+void deltaqB_model_neuron(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -30,7 +29,7 @@ if(xdot_old)
     xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 int ip;
 memset(tdata->deltaqB,0,sizeof(realtype)*udata->nplist*model->nJ);
-status = w_model_neuron(t,x,NULL,tdata);
+w_model_neuron(t,x,NULL,tdata);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 2: {
@@ -57,7 +56,7 @@ switch (udata->plist[ip]) {
 
 }
 }
-return(status);
+return;
 
 }
 

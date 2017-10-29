@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dJzdz_model_steadystate(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void dJzdz_model_steadystate(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_steadystate_dJzdz_h */

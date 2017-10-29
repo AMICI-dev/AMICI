@@ -10,15 +10,14 @@
 
 using namespace amici;
 
-int rz_model_nested_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
-int status = 0;
+void rz_model_nested_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_nested_events(t,x,NULL,tdata);
-return(status);
+w_model_nested_events(t,x,NULL,tdata);
+return;
 
 }
 

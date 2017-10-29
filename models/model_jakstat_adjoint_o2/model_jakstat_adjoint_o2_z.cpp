@@ -10,15 +10,14 @@
 
 using namespace amici;
 
-int z_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
-int status = 0;
+void z_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
-return(status);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+return;
 
 }
 

@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int sigma_z_model_steadystate(realtype t, int ie, amici::TempData *tdata);
+void sigma_z_model_steadystate(realtype t, int ie, amici::TempData *tdata);
 
 
 #endif /* _am_model_steadystate_sigma_z_h */

@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int J_model_nested_events(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+void J_model_nested_events(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -26,8 +25,8 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(J->data,0,sizeof(realtype)*1);
-status = w_model_nested_events(t,x,NULL,tdata);
-status = dwdx_model_nested_events(t,x,NULL,user_data);
+w_model_nested_events(t,x,NULL,tdata);
+dwdx_model_nested_events(t,x,NULL,user_data);
   J->data[0] = -tdata->p[4]+tdata->h[1]*tdata->p[3];
 for(ix = 0; ix<1; ix++) {
    if(amiIsNaN(J->data[ix])) {
@@ -39,10 +38,10 @@ for(ix = 0; ix<1; ix++) {
    }
    if(amiIsInf(J->data[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

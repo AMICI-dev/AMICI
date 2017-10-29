@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int sigma_z_model_neuron(realtype t, int ie, amici::TempData *tdata);
+void sigma_z_model_neuron(realtype t, int ie, amici::TempData *tdata);
 
 
 #endif /* _am_model_neuron_sigma_z_h */

@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int dwdx_model_nested_events(realtype t, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+void dwdx_model_nested_events(realtype t, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -21,8 +20,8 @@ realtype *dx_tmp = nullptr;
 if(dx)
     dx_tmp = N_VGetArrayPointer(dx);
 memset(tdata->dwdx,0,sizeof(realtype)*0);
-status = w_model_nested_events(t,x,NULL,tdata);
-return(status);
+w_model_nested_events(t,x,NULL,tdata);
+return;
 
 }
 

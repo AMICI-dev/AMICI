@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int JDiag_model_neuron(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
+void JDiag_model_neuron(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
 
 
 #endif /* _am_model_neuron_JDiag_h */
