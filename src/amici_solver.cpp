@@ -253,7 +253,6 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
     AMIGetLastOrder(ami_mem, &order);
     rdata->order[it] = (double)order;
     
-    return;
 }
 
 /**
@@ -282,7 +281,6 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata,
     AMIGetNumNonlinSolvConvFails(ami_memB, &number);
     rdata->numnonlinsolvconvfailsB[it] = (double)number;
 
-    return;
 }
 
 /**
@@ -360,7 +358,6 @@ void Solver::setLinearSolver(const UserData *udata, Model *model) {
             throw AmiException("Invalid choice of solver!");
             
     }
-    return;
 }
     
     /**

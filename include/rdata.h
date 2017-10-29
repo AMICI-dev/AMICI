@@ -27,15 +27,15 @@ class ReturnData {
 
     ReturnData(const UserData *udata, const Model *model);
 
-    void invalidate();
+    void invalidate(const int t);
+    void invalidateLLH();
 
     void setLikelihoodSensitivityFirstOrderNaN();
 
     void setLikelihoodSensitivitySecondOrderNaN();
 
     void 
-    applyChainRuleFactorToSimulationResults(const UserData *udata,
-                                            const realtype *unscaledParameters);
+    applyChainRuleFactorToSimulationResults(const UserData *udata);
 
     virtual ~ReturnData();
 

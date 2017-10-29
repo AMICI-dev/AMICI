@@ -29,11 +29,11 @@ class NewtonSolver {
 
     static NewtonSolver *getSolver(int linsolType, Model *model,
                                    ReturnData *rdata, const UserData *udata,
-                                   TempData *tdata, int *status);
+                                   TempData *tdata);
 
-    int getStep(int ntry, int nnewt, N_Vector delta);
+    void getStep(int ntry, int nnewt, N_Vector delta);
 
-    int getSensis(int it);
+    void getSensis(int it);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -44,7 +44,7 @@ class NewtonSolver {
      * @param[in] nnewt integer number of current Newton step
      * @return stats integer flag indicating success of the method
      */
-    virtual int prepareLinearSystem(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
 
     /**
      * Solves the linear system for the Newton step
@@ -53,9 +53,12 @@ class NewtonSolver {
      * overwritten by solution to the linear system @type N_Vector
      * @return stats integer flag indicating success of the method
      */
-    virtual int solveLinearSystem(N_Vector rhs) = 0;
+    virtual void solveLinearSystem(N_Vector rhs) = 0;
 
-    virtual ~NewtonSolver();
+    ~NewtonSolver() {
+        if(sx_ip)
+            N_VDestroy_Serial(sx_ip);
+    };
 
   protected:
     /** pointer to the AMICI model object */
@@ -66,6 +69,8 @@ class NewtonSolver {
     const UserData *udata;
     /** pointer to the temporary data object */
     TempData *tdata;
+    /** sensitivity N_Vector */
+    N_Vector sx_ip = nullptr;
 };
 
 /**
@@ -78,8 +83,8 @@ class NewtonSolverDense : public NewtonSolver {
   public:
     NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
                       TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs);
+    void prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverDense();
 
   private:
@@ -103,8 +108,8 @@ class NewtonSolverSparse : public NewtonSolver {
   public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
                        TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs);
+    void prepareLinearSystem(int ntry, int nnewt);
     ~NewtonSolverSparse();
 
   private:
@@ -134,8 +139,9 @@ class NewtonSolverIterative : public NewtonSolver {
   public:
     NewtonSolverIterative(Model *model, ReturnData *rdata,
                           const UserData *udata, TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs);
+    void prepareLinearSystem(int ntry, int nnewt);
+    void linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta);
     ~NewtonSolverIterative();
 
   private:
@@ -143,6 +149,26 @@ class NewtonSolverIterative : public NewtonSolver {
     int newton_try;
     /** number of iterations  */
     int i_newton;
+    /** ???  */
+    N_Vector ns_p;
+    /** ???  */
+    N_Vector ns_h;
+    /** ???  */
+    N_Vector ns_t;
+    /** ???  */
+    N_Vector ns_s;
+    /** ???  */
+    N_Vector ns_r;
+    /** ???  */
+    N_Vector ns_rt;
+    /** ???  */
+    N_Vector ns_v;
+    /** ???  */
+    N_Vector ns_Jv;
+    /** ???  */
+    N_Vector ns_tmp;
+    /** ???  */
+    N_Vector ns_Jdiag;
 };
 
 

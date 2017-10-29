@@ -134,7 +134,6 @@ void BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata
         }
     }
 
-    return;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -200,7 +199,6 @@ void BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
     }
 
     updateHeavisideB(iroot, tdata, model->ne);
-    return;
 }
 
     /**

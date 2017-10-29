@@ -13,7 +13,7 @@ namespace amici {
      */
     class AmiException : public std::exception {
     public:
-        AmiException(char const* fmt, ...) {
+        AmiException(char const* fmt, ...) : std::exception() {
             /** constructor with printf style interface
              * @param[in] fmt error message with printf format
              * @param[in] ... printf formating variables
@@ -66,6 +66,53 @@ namespace amici {
          */
         NullPointerException(const char *variable) :
         AmiException("AMICI encountered a null pointer for variable (%s)",variable){}
+    };
+    
+    /** @brief integration failure exception
+     * this exception should be thrown when an integration failure occured
+     * for this exception we can assume that we can recover from the exception
+     * and return a solution struct to the user
+     */
+    class IntegrationFailure : public AmiException  {
+    public:
+        /** error code returned by cvode/ida */
+        int error_code;
+        /** time of integration failure */
+        realtype time;
+        /** constructor
+         * @param[in] error_code name of variable that was supposed to be accesssed
+         */
+        IntegrationFailure(int code, realtype t) :
+        AmiException("AMICI failed to integrate the problem") {
+            error_code = code;
+            time = t;
+        }
+    };
+    
+    /** @brief setup failure exception
+     * this exception should be thrown when the solver setup failed
+     * for this exception we can assume that we cannot recover from the exception
+     * and an error will be thrown
+     */
+    class SetupFailure : public AmiException {
+    public:
+        /** constructor, simply calls AmiException constructor
+         * @param[in] msg
+         */
+        SetupFailure(const char *msg) : AmiException(msg) {}
+    };
+    
+    /** @brief newton failure exception
+     * this exception should be thrown when the steady state computation
+     * failed to converge for this exception we can assume that we can
+     * recover from the exception and return a solution struct to the user
+     */
+    class NewtonFailure : public AmiException {
+    public:
+        /** constructor, simply calls AmiException constructor
+         * @param[in] msg
+         */
+        NewtonFailure(const char *msg) : AmiException(msg) {}
     };
     
     

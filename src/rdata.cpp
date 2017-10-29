@@ -50,17 +50,45 @@ ReturnData::ReturnData(const UserData *udata, const Model *model,
     }
 }
 
-void ReturnData::invalidate() {
+void ReturnData::invalidate(const int t) {
+    /**
+     * @brief routine to set likelihood, state variables, outputs and respective sensitivities to NaN
+     * (typically after integration failure)
+     * @param t time of integration failure
+     */
+    invalidateLLH();
+    
+    // find it corresponding to datapoint after integration failure
+    int it_start;
+    for (it_start = 0; it_start < nt; it_start++)
+        if(ts[it_start]>t)
+            break;
+    
+    for (int it = it_start; it < nt; it++){
+        for (int ix = 0; ix < nx; ix++)
+            x[ix * nt + it] = amiGetNaN();
+        for (int iy = 0; iy < ny; iy++)
+            y[iy * nt + it] = amiGetNaN();
+        for (int ip = 0; ip < np; ip++) {
+            for (int ix = 0; ix < nx; ix++)
+                sx[(ip*nx + ix) * nt + it] = amiGetNaN();
+            for (int iy = 0; iy < ny; iy++)
+                sy[(ip*ny + iy) * nt + it] = amiGetNaN();
+        }
+    }
+}
+    
+void ReturnData::invalidateLLH() {
     /**
      * @brief routine to set likelihood and respective sensitivities to NaN
      * (typically after integration failure)
      */
     if (llh)
         *llh = amiGetNaN();
-
+    
     if (sllh)
         setLikelihoodSensitivityFirstOrderNaN();
-
+    
     if (s2llh)
         setLikelihoodSensitivitySecondOrderNaN();
 }
@@ -82,12 +110,11 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(
-    const UserData *udata, const realtype *unscaledParameters) {
+    const UserData *udata) {
     /**
      * @brief applies the chain rule to account for parameter transformation
      * in the sensitivities of simulation results
      * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] unscaledParameters pointer to the non-transformed parameters
      * @type realtype
      */
     if (pscale == AMICI_SCALING_NONE)
@@ -95,34 +122,36 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
 
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
-    realtype *pcoefficient, *augcoefficient;
+    realtype *pcoefficient, *augcoefficient, *unscaledParameters;
 
     pcoefficient = new realtype[nplist]();
+    unscaledParameters = new realtype[nplist]();
     augcoefficient = new realtype[np]();
 
     switch (pscale) {
     case AMICI_SCALING_LOG10:
         coefficient = log(10.0);
         for (int ip = 0; ip < nplist; ++ip)
-            pcoefficient[ip] = unscaledParameters[udata->plist[ip]] * log(10);
-        if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip] * log(10);
+            unscaledParameters[ip] = log(udata->p[ip])/log(10);
         break;
     case AMICI_SCALING_LN:
         coefficient = 1.0;
         for (int ip = 0; ip < nplist; ++ip)
-            pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
-        if (udata->sensi == 2)
-            if (o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient[ip] = unscaledParameters[ip];
+            unscaledParameters[ip] = log(udata->p[ip]);
         break;
     case AMICI_SCALING_NONE:
-        // this should never be reached
-        break;
+        break; //this should never happen
     }
+    // same transformation for log and log10:
+    // for log10(x) = log(x)/log(10)
+    // the division by log(10) cancels with the factor from the chainrule
+    for (int ip = 0; ip < nplist; ++ip)
+        pcoefficient[ip] = log(udata->p[udata->plist[ip]]);
+    if (udata->sensi == 2)
+        if (o2mode == AMICI_O2MODE_FULL)
+            for (int ip = 0; ip < np; ++ip)
+                augcoefficient[ip] = log(udata->p[ip]);
+    
 
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity

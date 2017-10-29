@@ -52,9 +52,9 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model) {
     if (!udata || udata->nx != model->nx || udata->np != model->np ||
         udata->nk != model->nk)
-        throw AmiException("udata was not allocated or does not agree with model!");
+        throw SetupFailure("udata was not allocated or does not agree with model!");
     if (!rdata)
-        throw AmiException("rdata was not allocated!");
+        throw SetupFailure("rdata was not allocated!");
 
     if (model->nx <= 0) {
         return;
@@ -65,10 +65,6 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
     ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata,
                                                     model);
     BackwardProblem::workBackwardProblem(udata, &tdata, rdata, model);
-
-    rdata->applyChainRuleFactorToSimulationResults(udata, tdata.p);
-
-    //rdata->invalidate();
 
     return;
 }

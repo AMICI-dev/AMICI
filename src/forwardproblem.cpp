@@ -55,17 +55,13 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
-    
-    int status = AMICI_SUCCESS;
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */
     if (udata->newton_preeq == 1) {
-        status = SteadystateProblem::workSteadyStateProblem(udata, tdata, rdata,
-                                                            solver, model, -1);
-        if (status != AMICI_SUCCESS)
-            throw AmiException("Preequilibration failed to converge!");
+        SteadystateProblem::workSteadyStateProblem(udata, tdata, rdata,
+                                                   solver, model, -1);
     }
 
     /* loop over timepoints */
@@ -74,53 +70,38 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             solver->AMISetStopTime(rdata->ts[it]);
         }
-        if (status == AMICI_SUCCESS) {
-            /* only integrate if no errors occured */
-            if (rdata->ts[it] > udata->tstart) {
-                while (tdata->t < rdata->ts[it]) {
-                    if (rdata->sensi_meth == AMICI_SENSI_ASA &&
-                        rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                        if (model->nx > 0) {
-                            status = solver->AMISolveF(
-                                RCONST(rdata->ts[it]), tdata->x, tdata->dx,
-                                &(tdata->t), AMICI_NORMAL, &ncheck);
-                        } else {
-                            tdata->t = rdata->ts[it];
-                        }
+        if (rdata->ts[it] > udata->tstart) {
+            while (tdata->t < rdata->ts[it]) {
+                if (model->nx > 0) {
+                    if (std::isinf(rdata->ts[it])) {
+                        SteadystateProblem::workSteadyStateProblem(udata, tdata,
+                                                                   rdata, solver, model, it);
                     } else {
-                        if (model->nx > 0) {
-                            if (std::isinf(rdata->ts[it])) {
-                                status = SteadystateProblem::workSteadyStateProblem(
-                                        udata, tdata, rdata, solver, model, it);
-                            } else {
-                                status = solver->AMISolve(
-                                    RCONST(rdata->ts[it]), tdata->x, tdata->dx,
-                                    &(tdata->t), AMICI_NORMAL);
-                            }
+                        int status;
+                        if (rdata->sensi_meth == AMICI_SENSI_ASA &&
+                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                            status = solver->AMISolveF(RCONST(rdata->ts[it]), tdata->x, tdata->dx,
+                                                       &(tdata->t), AMICI_NORMAL, &ncheck);
+                            
                         } else {
-                            tdata->t = rdata->ts[it];
+                            status = solver->AMISolve(RCONST(rdata->ts[it]), tdata->x, tdata->dx,
+                                                      &(tdata->t), AMICI_NORMAL);
                         }
-                    }
-                    if (model->nx > 0) {
                         if (status == -22) {
                             /* clustering of roots => turn off rootfinding */
                             solver->turnOffRootFinding();
                         }
                         if (status == AMICI_ROOT_RETURN) {
                             handleEvent(&tlastroot, udata, rdata, edata,
-                                            tdata, 0, solver, model);
-                            status = AMICI_SUCCESS;
+                                        tdata, 0, solver, model);
                         }
                     }
+                } else {
+                    tdata->t = rdata->ts[it];
                 }
             }
-            if (status == AMICI_SUCCESS) {
-                handleDataPoint(it, udata, rdata, edata, tdata, solver, model);
-            }
-        } else {
-            for (int ix = 0; ix < model->nx; ix++)
-                rdata->x[ix * rdata->nt + it] = amiGetNaN();
         }
+        handleDataPoint(it, udata, rdata, edata, tdata, solver, model);
     }
 
     /* fill events */
@@ -129,10 +110,10 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
     }
 
     // set likelihood
-    if (edata && status == AMICI_SUCCESS) {
+    if (edata) {
         *rdata->llh = -tdata->Jy[0] - tdata->Jz[0];
     } else {
-        //rdata->invalidate();
+        rdata->invalidateLLH();
     }
 
     storeJacobianAndDerivativeInReturnData(tdata, rdata, model);
@@ -300,7 +281,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
             }
         }
     }
-    return;
 }
 
 void ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
@@ -339,7 +319,6 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData(TempData *tdata,
         memcpy(rdata->J, tdata->Jtmp->data,
                model->nx * model->nx * sizeof(realtype));
 
-    return;
 }
 
 void ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
@@ -425,7 +404,6 @@ void ForwardProblem::getEventOutput(const UserData *udata, ReturnData *rdata,
         if(continue_loop)
             getEventOutput(udata, rdata, edata, tdata, model);
     }
-    return;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -511,7 +489,6 @@ void ForwardProblem::prepEventSensis(int ie, ReturnData *rdata,
             }
         }
     }
-    return;
 }
 
 void ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
@@ -538,7 +515,6 @@ void ForwardProblem::getEventSensisFSA(int ie, ReturnData *rdata,
     if (edata) {
         model->fsJz(ie, tdata, rdata);
     }
-    return;
 }
 
 void ForwardProblem::handleDataPoint(int it, const UserData *udata,
@@ -615,7 +591,6 @@ void ForwardProblem::getDataOutput(int it, const UserData *udata,
             getDataSensisFSA(it, udata, rdata, edata, tdata, solver, model);
         }
     }
-    return;
 }
 
 void ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
@@ -674,7 +649,6 @@ void ForwardProblem::prepDataSensis(int it, ReturnData *rdata,
             }
         }
     }
-    return;
 }
 
 void ForwardProblem::getDataSensisFSA(int it, const UserData *udata,
@@ -736,7 +710,6 @@ void ForwardProblem::getDataSensisFSA(int it, const UserData *udata,
     if (edata) {
         model->fsJy(it, tdata, rdata);
     }
-    return;
 }
 
 void ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
@@ -762,7 +735,6 @@ void ForwardProblem::applyEventBolus(TempData *tdata, Model *model) {
             }
         }
     }
-    return;
 }
 
 void ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
@@ -791,7 +763,6 @@ void ForwardProblem::applyEventSensiBolusFSA(TempData *tdata, Model *model) {
             }
         }
     }
-    return;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -813,7 +784,6 @@ void ForwardProblem::updateHeaviside(TempData *tdata, const int ne) {
     for (int ie = 0; ie < ne; ie++) {
         tdata->h[ie] += tdata->rootsfound[ie];
     }
-    return;
 }
 
 /* ------------------------------------------------------------------------ */
