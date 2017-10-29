@@ -1,6 +1,3 @@
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
-
 #include "testfunctions.h"
 #include <include/amici_hdf5.h>
 #include <include/amici_interface_cpp.h>
@@ -10,6 +7,9 @@
 #include <include/amici_model.h>
 #include <cstring>
 #include <cmath>
+
+#include "CppUTest/TestHarness.h"
+#include "CppUTestExt/MockSupport.h"
 
 using namespace amici;
 

@@ -13,7 +13,7 @@ set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include" CACHE PATH "cppUTest include 
 set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/lib/libCppUTest.a" "${CPPUTEST_DIR}/lib/libCppUTestExt.a"  CACHE PATH "cppUTest libraries")
 
 set(CMAKE_CXX_FLAGS_OLD "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories(${AmiciConfigIncludes})

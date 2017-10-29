@@ -4,6 +4,8 @@
 #include "include/amici_interface_cpp.h"
 #include <cstring>
 #include <execinfo.h>
+#include <dlfcn.h>    // for dladdr
+#include <cxxabi.h>   // for __cxa_demangle
 #include <cstdio>
 #include <cmath>
 #include <unistd.h>
@@ -224,11 +226,36 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
 }
 
 
-void printBacktrace(int depth) {
-    void *array[depth];
-    size_t size;
-    size = backtrace(array, depth);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
+void printBacktrace(const int nMaxFrames) {
+    void *callstack[nMaxFrames];
+    char buf[1024];
+    int nFrames = backtrace(callstack, nMaxFrames);
+    char **symbols = backtrace_symbols(callstack, nFrames);
+    
+    std::ostringstream trace_buf;
+    for (int i = 0; i < nFrames; i++) {
+        Dl_info info;
+        if (dladdr(callstack[i], &info) && info.dli_sname) {
+            char *demangled = NULL;
+            int status = -1;
+            if (info.dli_sname[0] == '_')
+                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+            snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
+                     i, int(2 + sizeof(void*) * 2), callstack[i],
+                     status == 0 ? demangled :
+                     info.dli_sname == 0 ? symbols[i] : info.dli_sname,
+                     (char *)callstack[i] - (char *)info.dli_saddr);
+            free(demangled);
+        } else {
+            snprintf(buf, sizeof(buf), "%-3d %*p %s\n",
+                     i, int(2 + sizeof(void*) * 2), callstack[i], symbols[i]);
+        }
+        trace_buf << buf;
+    }
+    free(symbols);
+    if (nFrames == nMaxFrames)
+        trace_buf << "[truncated]\n";
+    printf("%s\n",trace_buf.str().c_str());
 }
 
 } // namespace amici

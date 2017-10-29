@@ -1,14 +1,17 @@
 #ifndef TESTFUNCTIONS_H
 #define TESTFUNCTIONS_H
 
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
+
 #include <hdf5.h>
 #include <string>
 
 #ifndef __APPLE__
 #include <iostream>
 #endif
+
+#include <sstream>    // make std::ostringstream available (needs to come before TestHarness.h)
+#include "CppUTest/TestHarness.h"
+#include "CppUTestExt/MockSupport.h"
 
 namespace amici {
 
