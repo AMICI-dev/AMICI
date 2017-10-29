@@ -234,9 +234,9 @@ void Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     realtype *sx_tmp;
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
-        if (!sx_tmp) {
-            throw NullPointerException("sx_tmp");
-        }
+        //if (!sx_tmp) {
+        //    throw NullPointerException("sx_tmp");
+        //}
         for (int ix = 0; ix < nx; ++ix)
             sxTmp[ix + ip * nx] = sx_tmp[ix];
     }
