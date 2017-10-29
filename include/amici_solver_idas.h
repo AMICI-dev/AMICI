@@ -1,5 +1,5 @@
-#ifndef idawrap_h
-#define idawrap_h
+#ifndef AMICI_SOLVER_IDAS_h
+#define AMICI_SOLVER_IDAS_h
 
 #include "include/amici_solver.h"
 #include <cvodes/cvodes_dense.h>

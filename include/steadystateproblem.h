@@ -1,5 +1,5 @@
-#ifndef STEADYSTATEPROBLEM_H
-#define STEADYSTATEPROBLEM_H
+#ifndef AMICI_STEADYSTATEPROBLEM_H
+#define AMICI_STEADYSTATEPROBLEM_H
 
 #include "include/amici_defines.h"
 #include <sundials/sundials_nvector.h>

@@ -1,5 +1,5 @@
-#ifndef _MY_RDATA
-#define _MY_RDATA
+#ifndef AMICI_RDATA_H
+#define AMICI_RDATA_H
 #include <include/udata.h>
 
 namespace amici {

@@ -1,5 +1,5 @@
-#ifndef FORWARDPROBLEM_H
-#define FORWARDPROBLEM_H
+#ifndef AMICI_FORWARDPROBLEM_H
+#define AMICI_FORWARDPROBLEM_H
 
 #include "include/amici_defines.h"
 namespace amici {

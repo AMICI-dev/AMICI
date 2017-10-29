@@ -1,5 +1,5 @@
-#ifndef cvodewrap_h
-#define cvodewrap_h
+#ifndef AMICI_SOLVER_CVODES_h
+#define AMICI_SOLVER_CVODES_h
 
 #include "include/amici_solver.h"
 #include "include/amici_exception.h"

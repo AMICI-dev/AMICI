@@ -1,5 +1,5 @@
-#ifndef BACKWARDPROBLEM_H
-#define BACKWARDPROBLEM_H
+#ifndef AMICI_BACKWARDPROBLEM_H
+#define AMICI_BACKWARDPROBLEM_H
 
 #include "include/amici_defines.h"
 

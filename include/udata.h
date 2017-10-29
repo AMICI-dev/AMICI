@@ -1,5 +1,5 @@
-#ifndef _MY_UDATA
-#define _MY_UDATA
+#ifndef AMICI_UDATA_H
+#define AMICI_UDATA_H
 
 #include "include/amici_defines.h"
 #include <cmath>

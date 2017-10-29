@@ -1,5 +1,5 @@
-#ifndef AMICISOLVER_H
-#define AMICISOLVER_H
+#ifndef AMICI_SOLVER_H
+#define AMICI_SOLVER_H
 
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
