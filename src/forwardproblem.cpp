@@ -58,7 +58,6 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
     
     int status = AMICI_SUCCESS;
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
-    realtype *x_tmp;
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */

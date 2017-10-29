@@ -262,8 +262,6 @@ void Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
                 rdata->s2llh[(iJ - 1) + ip * (nJ - 1)] -=
                     multResult[iJ + ip * nJ] + tdata->dJzdp[iJ + ip * nJ];
     }
-
-freturn:
     delete[] dJzdxTmp;
     delete[] multResult;
     delete[] sxTmp;
