@@ -15,7 +15,7 @@ void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
 
 namespace amici {
 
-/** @brief struct that stores all data which is later returned by the mex
+/** @brief class that stores all data which is later returned by the mex
  * function
  *
  * NOTE: multidimensional arrays are stored in column-major order

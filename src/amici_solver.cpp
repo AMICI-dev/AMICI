@@ -368,8 +368,9 @@ void Solver::setLinearSolver(const UserData *udata, Model *model) {
      *
      * @param[out] udata pointer to the user data object @type UserData
      * @param[in] model pointer to the model object @type Model
+     * @param[in] which index of the backward problem @type int
      */
-void Solver::setLinearSolverB(const UserData *udata, Model *model, int which) {
+void Solver::setLinearSolverB(const UserData *udata, Model *model, const int which) {
     switch (udata->linsol) {
             
             /* DIRECT SOLVERS */
