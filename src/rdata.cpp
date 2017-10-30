@@ -132,12 +132,12 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
     case AMICI_SCALING_LOG10:
         coefficient = log(10.0);
         for (int ip = 0; ip < nplist; ++ip)
-            unscaledParameters[ip] = log(udata->p[ip])/log(10);
+            unscaledParameters[ip] = log(udata->p[udata->plist[ip]])/log(10);
         break;
     case AMICI_SCALING_LN:
         coefficient = 1.0;
         for (int ip = 0; ip < nplist; ++ip)
-            unscaledParameters[ip] = log(udata->p[ip]);
+            unscaledParameters[ip] = log(udata->p[udata->plist[ip]]);
         break;
     case AMICI_SCALING_NONE:
         break; //this should never happen
@@ -253,7 +253,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                 for (int ip = 0; ip < nplist; ++ip) {
                     s2llh[ip] *= pcoefficient[ip];
                     s2llh[ip] += udata->k[nk - nplist + ip] * sllh[ip] /
-                                 unscaledParameters[udata->plist[ip]];
+                                 unscaledParameters[ip];
                 }
             }
         }
@@ -268,7 +268,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     s##QUANT[(ip * N1 + N1T + IND1) * N2 + IND2] +=            \
                         udata->k[nk - nplist + ip] *                           \
                         s##QUANT[(ip * N1 + IND1) * N2 + IND2] /               \
-                        unscaledParameters[udata->plist[ip]];                  \
+                        unscaledParameters[ip];                  \
                 }
 
         s2vecChainRule(x, ix, nxtrue, nx, it, nt);
@@ -281,6 +281,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
 
     delete[] pcoefficient;
     delete[] augcoefficient;
+    delete[] unscaledParameters;
     return;
 }
 
