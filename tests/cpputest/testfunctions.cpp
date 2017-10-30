@@ -33,7 +33,6 @@ void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::str
     ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata, measurementPath.c_str(), model);
 
     ReturnData *rdata = getSimulationResults(model, udata, edata);
-    CHECK_EQUAL(0, *rdata->status);
 
     std::string resultPath = path + "/results";
     verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata, udata, model, atol, rtol);
@@ -106,6 +105,10 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     hsize_t m, n;
     double *expected;
 
+    double statusExp = NAN;
+    AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "status", &statusExp);
+    CHECK_EQUAL((int) statusExp, *rdata->status);
+    
     double llhExp = NAN;
     AMI_HDF5_getDoubleScalarAttribute(file_id, resultPath, "llh", &llhExp);
     CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1, "llh"));
