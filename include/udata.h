@@ -48,7 +48,7 @@ class UserData {
      */
     UserData& operator=(UserData const &other)=delete;
 
-    int unscaleParameters(double *bufferUnscaled) const;
+    void unscaleParameters(double *bufferUnscaled) const;
 
     /**
      * @brief setTimepoints

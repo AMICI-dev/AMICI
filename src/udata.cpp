@@ -86,7 +86,7 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
 }
 
 
-int UserData::unscaleParameters(double *bufferUnscaled) const {
+void UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
      * unscaleParameters removes parameter scaling according to the parameter
      * scaling in pscale
@@ -111,8 +111,6 @@ int UserData::unscaleParameters(double *bufferUnscaled) const {
             bufferUnscaled[ip] = p[ip];
         break;
     }
-
-    return AMICI_SUCCESS;
 }
 
 void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
