@@ -7,13 +7,6 @@
 
 namespace amici {
 
-// int Model::fdx0(N_Vector x0, N_Vector dx0, void *user_data)
-//{
-//    UserData *udata = (UserData*) user_data;
-//    realtype *x0_tmp = N_VGetArrayPointer(x0);
-
-//    return fdx0(udata->k, x0_tmp);
-//}
 
 UserData Model::getUserData() const { return UserData(np, nk, nx); }
 

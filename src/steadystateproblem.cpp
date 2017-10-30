@@ -51,12 +51,13 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
             /* Newton solver did not find a steady state, so try integration */
             getNewtonSimulation(udata, tdata, rdata, solver, model, it);
             newton_status = 2;
-        } catch(NewtonFailure& ex) {
+        } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
             try {
                 applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 2);
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
-                throw NewtonFailure("Steady state computation failed to converge");
+                // TODO: more informative NewtonFailure to give more informative error code
+                throw amici::IntegrationFailure(AMICI_CONV_FAILURE,tdata->t);
             } catch(...) {
                 throw AmiException("Internal error in steady state problem");
             }
@@ -139,8 +140,10 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     }
     N_VDiv(tdata->xdot, x_newton, rel_x_newton);
     res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+    
+    rdata->newton_numsteps[newton_try - 1] = 0.0;
 
-    if (res_abs >= udata->atol && res_rel >= udata->rtol) {
+    while (res_abs >= udata->atol && res_rel >= udata->rtol) {
 
         /* If Newton steps are necessary, compute the inital search direction */
         try{
@@ -157,65 +160,52 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         N_VScale(1.0, tdata->x, tdata->x_old);
         N_VScale(1.0, tdata->xdot, tdata->xdot_old);
         
-        /* Newton iterations */
-        for (i_newtonstep = 0; i_newtonstep < udata->newton_maxsteps;
-             i_newtonstep++) {
-            
-            /* Try a full, undamped Newton step */
-            N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
-            
-            /* Ensure positivity of the state */
-            x_tmp = N_VGetArrayPointer(tdata->x);
-            for (ix = 0; ix < model->nx; ix++) {
-                if (x_tmp[ix] < udata->atol) {
-                    x_tmp[ix] = udata->atol;
-                }
-            }
-            
-            /* Compute new xdot */
-            model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-            N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
-            res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
-            
-            /* Check if new residuals are smaller than old ones */
-            res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
-            
-            if (res_tmp < res_abs) {
-                /* update state */
-                res_abs = res_tmp;
-                N_VScale(1.0, tdata->x, tdata->x_old);
-                N_VScale(1.0, tdata->xdot, tdata->xdot_old);
-                
-                /* Check residuals vs tolerances */
-                if ((res_abs < udata->atol) || (res_rel < udata->rtol)) {
-                    /* Return number of Newton steps */
-                    rdata->newton_numsteps[newton_try - 1] =
-                    i_newtonstep + 1;
-                    break;
-                }
-                /* increase dampening factor */
-                gamma = fmax(1.0, 2.0 * gamma);
-                
-                /* Do another Newton step */
-                try{
-                    newtonSolver->getStep(newton_try, i_newtonstep, delta);
-                } catch(...) {
-                    rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
-                    throw NewtonFailure("Newton method failed to compute new step!");
-                }
-            } else {
-                /* Reduce dampening factor */
-                gamma = gamma / 4.0;
+        /* Try a full, undamped Newton step */
+        N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
+        
+        /* Ensure positivity of the state */
+        x_tmp = N_VGetArrayPointer(tdata->x);
+        for (ix = 0; ix < model->nx; ix++) {
+            if (x_tmp[ix] < udata->atol) {
+                x_tmp[ix] = udata->atol;
             }
         }
         
-        /* Set return values */
-        rdata->newton_numsteps[newton_try - 1] = i_newtonstep;
+        /* Compute new xdot */
+        model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
+        N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
+        res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+        
+        /* Check if new residuals are smaller than old ones */
+        res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
+        
+        if (res_tmp < res_abs) {
+            /* update state */
+            res_abs = res_tmp;
+            N_VScale(1.0, tdata->x, tdata->x_old);
+            N_VScale(1.0, tdata->xdot, tdata->xdot_old);
+            
+            /* Check residuals vs tolerances */
+            if ((res_abs < udata->atol) || (res_rel < udata->rtol)) {
+                /* Return number of Newton steps */
+                rdata->newton_numsteps[newton_try - 1] =
+                i_newtonstep + 1;
+                break;
+            }
+            /* increase dampening factor */
+            gamma = fmax(1.0, 2.0 * gamma);
+        } else {
+            /* Reduce dampening factor */
+            gamma = gamma / 4.0;
+        }
 
-    } else {
-        /* Set return values */
-        rdata->newton_numsteps[newton_try - 1] = 0.0;
+        if(i_newtonstep >= udata->newton_maxsteps)
+            throw NewtonFailure("Newton method failed to converge!");
+        i_newtonstep++;
     }
+    
+    /* Set return values */
+    rdata->newton_numsteps[newton_try - 1] = i_newtonstep;
 
     /* Clean up worksapce */
     N_VDestroy_Serial(delta);
@@ -298,13 +288,14 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
     solver->AMIReInit(udata->tstart, tdata->x, tdata->dx);
     
     /* Loop over steps and check for convergence */
-    double res_abs;
-    double res_rel;
+    double res_abs = INFINITY;
+    double res_rel = INFINITY;
     realtype *x_tmp;
     N_Vector rel_x_newton = N_VNew_Serial(model->nx);
     N_Vector x_newton = N_VNew_Serial(model->nx);
     
-    for (int it_newton = 0; it_newton < udata->maxsteps; it_newton++) {
+    int it_newton = 0;
+    while(res_abs > udata->atol && res_rel > udata->rtol) {
         /* One step of ODE integration */
         solver->AMISolve(1e12, tdata->x, tdata->dx, &(tdata->t),
                                   AMICI_ONE_STEP);
@@ -324,11 +315,13 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
         res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
         
         /* Check for convergence */
-        if (res_abs < udata->atol || res_rel < udata->rtol) {
+        if (res_abs < udata->atol || res_rel < udata->rtol) 
             break;
-        } else {
+            
+        if (it_newton >= udata->maxsteps)
             throw NewtonFailure("Simulation based steady state failed to converge");
-        }
+            
+        it_newton++;
     }
 
     N_VDestroy_Serial(rel_x_newton);

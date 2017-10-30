@@ -8,12 +8,10 @@ namespace amici {
 #define AMICI_ONEOUTPUT   5
 
 /* Return codes */
-#define AMICI_FAILURE            -99
-#define AMICI_ERROR_SS_SENSIS          -89
-#define AMICI_ERROR_NEWTONSOLVER       -85
-#define AMICI_ERROR_NEWTON_LINSOLVER   -84
-#define AMICI_ERROR_SIM2STEADYSTATE    -80
-#define AMICI_ERROR_PREEQUILIBRATION   -79
+#define AMICI_TOO_MUCH_WORK             -1
+#define AMICI_TOO_MUCH_ACC              -2
+#define AMICI_ERR_FAILURE               -3
+#define AMICI_CONV_FAILURE              -4
 #define AMICI_SUCCESS                    0
 #define AMICI_DATA_RETURN                1
 #define AMICI_ROOT_RETURN                2
