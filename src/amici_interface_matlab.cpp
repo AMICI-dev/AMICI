@@ -469,48 +469,50 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // use matlab error reporting
     amici::warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
     amici::errMsgIdAndTxt = &mexErrMsgIdAndTxt;
+    
+    if (nlhs != 1) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
+    }
+    
+    auto model = std::unique_ptr<amici::Model>(getModel());
+    if (!model)
+        amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to create model object!");
+    
+    auto udata = std::unique_ptr<const amici::UserData>(userDataFromMatlabCall(prhs, nrhs, model.get()));
+    if (!udata)
+        amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to create user data object!");
+
+    
+    auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));
+    if (!rdata)
+        amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to create return data object!");
+    
+    /* ensures that plhs[0] is available */
+    plhs[0] = rdata->matlabSolutionStruct;
+    
+    std::unique_ptr<amici::ExpData> edata;
+    if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
+        edata.reset(expDataFromMatlabCall(prhs, udata.get(), model.get()));
+        if (!edata)
+            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
+    } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
+               udata->sensi_meth == amici::AMICI_SENSI_ASA) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
+    }
+    
     try {
-        /* ensures that plhs[0] is available */
-        if (nlhs != 1) {
-            throw amici::SetupFailure("Incorrect number of output arguments (must be 1)!");
-        }
-        
-        auto model = std::unique_ptr<amici::Model>(getModel());
-        if (!model)
-            throw amici::SetupFailure("Failed to create model object!");
-        
-        auto udata = std::unique_ptr<const amici::UserData>(
-                                                            userDataFromMatlabCall(prhs, nrhs, model.get()));
-        if (!udata)
-            throw amici::SetupFailure("Failed to create user data object!");
-        
-        auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(
-                                                              new amici::ReturnDataMatlab(udata.get(), model.get()));
-        if (!rdata || *(rdata->status) != AMICI_SUCCESS)
-            throw amici::SetupFailure("Failed to create return data object!");
-        
-        plhs[0] = rdata->matlabSolutionStruct;
-        
-        std::unique_ptr<amici::ExpData> edata;
-        if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-            edata.reset(expDataFromMatlabCall(prhs, udata.get(), model.get()));
-            if (!edata)
-                throw amici::SetupFailure("Failed to read experimental data!");
-        } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
-                   udata->sensi_meth == amici::AMICI_SENSI_ASA) {
-            throw amici::SetupFailure("No data provided!");
-        }
         amici::runAmiciSimulation(udata.get(), edata.get(), rdata.get(), model.get());
         *rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure& ex) {
         rdata->invalidate(ex.time);
         *(rdata->status) = ex.error_code;
-    } catch {amici::SetupFailure& ex) {
+    } catch (amici::SetupFailure& ex) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
-    } catch {amici::NullPointerException& ex) {
+    } catch (amici::NullPointerException& ex) {
         amici::errMsgIdAndTxt("AMICI:mex:null","AMICI internal memory was corrupted:\n(%s)",ex.what());
     } catch (...) {
         amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }
-    rdata->applyChainRuleFactorToSimulationResults(udata);
+    rdata->applyChainRuleFactorToSimulationResults(udata.get());
+    
 }

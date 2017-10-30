@@ -38,7 +38,9 @@ namespace amici {
 ReturnData *getSimulationResults(Model *model, UserData *udata,
                                  const ExpData *edata) {
 
-    ReturnData *rdata = new ReturnData(udata, model);
+    auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));
+    if (!rdata)
+        throw runtimer_error("Failed to create return data object!");
     
     try {
         runAmiciSimulation(udata, edata, rdata, model);
