@@ -7,6 +7,8 @@
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
 
+#include <vector>
+
 namespace amici {
     
     class UserData;
@@ -52,7 +54,16 @@ namespace amici {
               const AMICI_o2mode o2mode)
         : np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-        nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode) {}
+        nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode) {
+        
+            dJydyTmp.resize(nJ * ny, 0);
+            dJydxTmp.resize(nJ * nx, 0);
+            dJydsigmaTmp.resize(nJ * ny, 0);
+            dJzdzTmp.resize(nJ * nz, 0);
+            dJzdxTmp.resize(nJ * nx, 0);
+            dJzdsigmaTmp.resize(nJ * nz, 0);
+            dJrzdsigmaTmp.resize(nJ * nz, 0);
+        }
         
         /**
          * @brief Returns a UserData instance with preset model dimensions
@@ -961,6 +972,23 @@ namespace amici {
         int *z2event = nullptr;
         /** flag array for DAE equations */
         realtype *idlist = nullptr;
+        
+
+
+        /** storage for dJydy slice */
+        std::vector<double> dJydyTmp;
+        /** storage for dJydx slice */
+        std::vector<double> dJydxTmp;
+        /** storage for dJydsigma slice */
+        std::vector<double> dJydsigmaTmp;
+        /** storage for dJzdz slice */
+        std::vector<double> dJzdzTmp;
+        /** storage for dJzdx slice */
+        std::vector<double> dJzdxTmp;
+        /** storage for dJzdsigma slice */
+        std::vector<double> dJzdsigmaTmp;
+        /** storage for dJrzdsigma slice */
+        std::vector<double> dJrzdsigmaTmp;
     };
     
 } // namespace amici

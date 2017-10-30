@@ -301,7 +301,11 @@ void CVodeSolver::AMIGetQuadB(int which, realtype *tret, N_Vector qB) {
          throw CvodeException(status,"CVodeGetQuadB");
 }
 
-void CVodeSolver::AMIDense(int nx) { int status = CVDense(ami_mem, nx); }
+void CVodeSolver::AMIDense(int nx) {
+    int status = CVDense(ami_mem, nx);
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVDense");
+}
 
 void CVodeSolver::AMIDenseB(int which, int nx) {
     int status = CVDenseB(ami_mem, which, nx);

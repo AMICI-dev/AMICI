@@ -53,14 +53,22 @@ void IDASolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensInit");
 }
-void IDASolver::setDenseJacFn() {  int status = IDADlsSetDenseJacFn(ami_mem, J); }
+void IDASolver::setDenseJacFn() {
+    int status = IDADlsSetDenseJacFn(ami_mem, J);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status,"IDADlsSetDenseJacFn");
+}
 
 void IDASolver::setSparseJacFn() {
     int status = IDASlsSetSparseJacFn(ami_mem, fJSparse);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASlsSetSparseJacFn");
 }
-void IDASolver::setBandJacFn() {  int status = IDADlsSetBandJacFn(ami_mem, fJBand); }
+void IDASolver::setBandJacFn() {
+    int status = IDADlsSetBandJacFn(ami_mem, fJBand);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status,"IDADlsSetBandJacFn");
+}
 
 void IDASolver::setJacTimesVecFn() {
     int status = IDASpilsSetJacTimesVecFn(ami_mem, fJv);
