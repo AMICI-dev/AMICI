@@ -50,6 +50,18 @@ function createTestingData()
     options.sensi = 0;
     options.linsol = 7;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/sensiforwarderrorint/';
+    options.sensi = 1;
+    options.linsol = 9;
+    options.maxsteps = 100;
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/sensiforwarderrornewt/';
+    options.sensi = 1;
+    options.linsol = 9;
+    options.newton_maxsteps = 10;
+    sol = simulate_model_steadystate_hdf([0,inf],log10(p),k,[],options);
 
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
@@ -192,8 +204,7 @@ function createTestingData()
     options.sensi = 2;
     options.sensi_meth = 'forward';
     simulate_model_neuron_hdf([],log10(p),[],D,options);
-    
-    
+     
     %% EXAMPLE EVENTS
     cd([amiciPath '/examples/example_events/']);
     
