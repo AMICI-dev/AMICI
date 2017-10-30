@@ -14,8 +14,6 @@
 
 namespace amici {
 
-SteadystateProblem::SteadystateProblem() {}
-
 void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
                                                TempData *tdata,
                                                ReturnData *rdata,
@@ -118,10 +116,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     double gamma = 1.0;
     realtype *x_tmp;
 
-    N_Vector delta = N_VNew_Serial(model->nx);
-    N_Vector rel_x_newton = N_VNew_Serial(model->nx);
-    N_Vector x_newton = N_VNew_Serial(model->nx);
-
     /* initialize output von linear solver for Newton step */
     N_VConst(0.0, delta);
 
@@ -207,12 +201,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     
     /* Set return values */
     rdata->newton_numsteps[newton_try - 1] = i_newtonstep;
-
-    /* Clean up worksapce */
-    N_VDestroy_Serial(delta);
-    N_VDestroy_Serial(rel_x_newton);
-    N_VDestroy_Serial(x_newton);
-
     return;
 }
 

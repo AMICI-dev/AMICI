@@ -60,8 +60,9 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
 
     /* if preequilibration is necessary, start Newton solver */
     if (udata->newton_preeq == 1) {
-        SteadystateProblem::workSteadyStateProblem(udata, tdata, rdata,
-                                                   solver, model, -1);
+        SteadystateProblem sstate = SteadystateProblem(model->nx);
+        sstate.workSteadyStateProblem(udata, tdata, rdata,
+                                       solver, model, -1);
     }
 
     /* loop over timepoints */
@@ -74,8 +75,9 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
             while (tdata->t < rdata->ts[it]) {
                 if (model->nx > 0) {
                     if (std::isinf(rdata->ts[it])) {
-                        SteadystateProblem::workSteadyStateProblem(udata, tdata,
-                                                                   rdata, solver, model, it);
+                        SteadystateProblem sstate = SteadystateProblem(model->nx);
+                        sstate.workSteadyStateProblem(udata, tdata,
+                                                      rdata, solver, model, it);
                     } else {
                         int status;
                         if (rdata->sensi_meth == AMICI_SENSI_ASA &&
