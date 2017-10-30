@@ -80,7 +80,8 @@ namespace amici {
         /** time of integration failure */
         realtype time;
         /** constructor
-         * @param[in] error_code name of variable that was supposed to be accesssed
+         * @param[in] code error code returned by cvode/ida
+         * @param[in] t time of integration failure
          */
         IntegrationFailure(int code, realtype t) :
         AmiException("AMICI failed to integrate the problem") {

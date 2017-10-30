@@ -399,14 +399,10 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
      * Solves the linear system within each Newton step if iterative solver is
      * chosen.
      *
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param[in] nnewt integer number of current Newton step
      * @param[in] ns_delta ???
-     * @param[out] tdata pointer to the temporary data object @type TempData
-     * @param[out] rdata pointer to the return data object @type ReturnData
      */
     
     double rho;
