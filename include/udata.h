@@ -95,6 +95,12 @@ class UserData {
      * @param parameterScaling
      */
     void setPbar(const double *parameterScaling);
+    
+    /**
+     * @brief setXbar.
+     * @param stateScaling
+     */
+    void setXbar(const double *stateScaling);
 
     /**
      * @brief setStateInitialization
