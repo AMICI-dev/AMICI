@@ -21,6 +21,17 @@ void simulateAndVerifyFromFile(Model *model, std::string path, double atol, doub
 {
     simulateAndVerifyFromFile(model, HDFFILE, path, atol, rtol);
 }
+    
+    
+void simulateAndWriteToFile(Model *model, const std::string path)
+{
+    simulateAndWriteToFile(model, HDFFILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
+}
+    
+void simulateAndWriteToFile(Model *model, std::string path, double atol, double rtol)
+{
+    simulateAndWriteToFile(model, HDFFILE, HDFFILEWRITE, path, atol, rtol);
+}
 
 
 void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::string path, double atol, double rtol)
@@ -42,6 +53,28 @@ void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::str
     delete rdata;
     delete udata;
 }
+    
+void simulateAndWriteToFile(Model *model, const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)
+{
+    // read simulation options
+    std::string optionsPath = path + "/options";
+    UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str(), model);
+    
+    std::string measurementPath = path + "/data";
+    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata, measurementPath.c_str(), model);
+    
+    ReturnData *rdata = getSimulationResults(model, udata, edata);
+    
+    std::string writePath = path + "/write";
+    AMI_HDF5_writeReturnData(rdata,udata,hdffilewrite.c_str(), writePath.c_str());
+    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata, udata, model, atol, rtol);
+    
+    if(edata)
+        delete edata;
+    delete rdata;
+    delete udata;
+}
+    
 
 ExpData *getTestExpData(const UserData *udata, Model *model) {
     ExpData *edata = new ExpData(udata, model);

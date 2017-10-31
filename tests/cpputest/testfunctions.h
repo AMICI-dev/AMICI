@@ -21,6 +21,7 @@ class ExpData;
 class Model;
 
 #define HDFFILE "../../expectedResults.h5"
+#define HDFFILEWRITE "../../writeResults.h5"
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
 
@@ -30,6 +31,12 @@ void simulateAndVerifyFromFile(Model *model, const std::string path);
 void simulateAndVerifyFromFile(Model *model, std::string path, double atol, double rtol);
 
 void simulateAndVerifyFromFile(Model *model, const std::string hdffile, std::string path, double atol, double rtol);
+
+void simulateAndWriteToFile(Model *model, const std::string path);
+
+void simulateAndWriteToFile(Model *model, std::string path, double atol, double rtol);
+
+void simulateAndWriteToFile(Model *model, const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol);
 
 ExpData *getTestExpData(const UserData *udata, Model *model);
 

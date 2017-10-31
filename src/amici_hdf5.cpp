@@ -265,6 +265,9 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata, const UserData *udata,
 
     if (rdata->llh)
         H5LTset_attribute_double(file_id, datasetPath, "llh", rdata->llh, 1);
+    
+    if (rdata->status)
+        H5LTset_attribute_double(file_id, datasetPath, "status", rdata->status, 1);
 
     if (rdata->sllh)
         H5LTset_attribute_double(file_id, datasetPath, "sllh", rdata->sllh,
