@@ -164,7 +164,7 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
     int status;
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sllh", &expected, &m, &n);
-    checkEqualArray(expected, rdata->sllh, model->np, atol, rtol, "sllh");
+    checkEqualArray(expected, rdata->sllh, rdata->nplist, atol, rtol, "sllh");
     delete[] expected;
 
     if(udata->sensi_meth == AMICI_SENSI_FSA) {
