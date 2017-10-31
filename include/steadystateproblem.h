@@ -3,6 +3,7 @@
 
 #include "include/amici_defines.h"
 #include <nvector/nvector_serial.h>
+#include <include/newton_solver.h>
 
 namespace amici {
 
@@ -13,6 +14,9 @@ class ExpData;
 class Solver;
 class Model;
 class NewtonSolver;
+class NewtonSolverDense;
+class NewtonSolverSparse;
+class NewtonSolverIterative;
 
 /**
  * @brief The SteadystateProblem class solves a steady-state problem using
@@ -55,8 +59,22 @@ class SteadystateProblem {
         N_VDestroy_Serial(delta);
         N_VDestroy_Serial(rel_x_newton);
         N_VDestroy_Serial(x_newton);
+        // TODO: fix this ugly code :(
+        if(dynamic_cast<NewtonSolverDense*>(newtonSolver)){
+            delete dynamic_cast<NewtonSolverDense*>(newtonSolver);
+        } else {
+            if(dynamic_cast<NewtonSolverSparse*>(newtonSolver)) {
+                delete dynamic_cast<NewtonSolverSparse*>(newtonSolver);
+            } else {
+                if(dynamic_cast<NewtonSolverIterative*>(newtonSolver))
+                    delete dynamic_cast<NewtonSolverIterative*>(newtonSolver);
+            }
+        }
+
     };
   private:
+    /** newton solver object */
+    NewtonSolver *newtonSolver = nullptr;
     /** newton step? */
     N_Vector delta = nullptr;
     /** container for relative error calcuation? */

@@ -8,9 +8,6 @@
 
 namespace amici {
 
-class NewtonSolverDense;
-class NewtonSolverSparse;
-class NewtonSolverIterative;
 class UserData;
 class ReturnData;
 class TempData;
@@ -56,8 +53,8 @@ class NewtonSolver {
     virtual void solveLinearSystem(N_Vector rhs) = 0;
 
     ~NewtonSolver() {
-        if(sx_ip)
-            N_VDestroy_Serial(sx_ip);
+    if(sx_ip)
+        N_VDestroy_Serial(sx_ip);
     };
 
   protected:
@@ -91,11 +88,11 @@ class NewtonSolverDense : public NewtonSolver {
     /** temporary storage of pivot array */
     long int *pivots;
     /** temporary N_Vector storage  */
-    N_Vector tmp1;
+    N_Vector tmp1 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp2;
+    N_Vector tmp2 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp3;
+    N_Vector tmp3 = nullptr;
 };
 
 /**
@@ -114,11 +111,11 @@ class NewtonSolverSparse : public NewtonSolver {
 
   private:
     /** temporary N_Vector storage  */
-    N_Vector tmp1;
+    N_Vector tmp1 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp2;
+    N_Vector tmp2 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp3;
+    N_Vector tmp3 = nullptr;
     /** klu common storage? */
     klu_common common;
     /** klu symbolic storage? */
@@ -150,25 +147,25 @@ class NewtonSolverIterative : public NewtonSolver {
     /** number of iterations  */
     int i_newton;
     /** ???  */
-    N_Vector ns_p;
+    N_Vector ns_p = nullptr;
     /** ???  */
-    N_Vector ns_h;
+    N_Vector ns_h = nullptr;
     /** ???  */
-    N_Vector ns_t;
+    N_Vector ns_t = nullptr;
     /** ???  */
-    N_Vector ns_s;
+    N_Vector ns_s = nullptr;
     /** ???  */
-    N_Vector ns_r;
+    N_Vector ns_r = nullptr;
     /** ???  */
-    N_Vector ns_rt;
+    N_Vector ns_rt = nullptr;
     /** ???  */
-    N_Vector ns_v;
+    N_Vector ns_v = nullptr;
     /** ???  */
-    N_Vector ns_Jv;
+    N_Vector ns_Jv = nullptr;
     /** ???  */
-    N_Vector ns_tmp;
+    N_Vector ns_tmp = nullptr;
     /** ???  */
-    N_Vector ns_Jdiag;
+    N_Vector ns_Jdiag = nullptr;
 };
 
 
