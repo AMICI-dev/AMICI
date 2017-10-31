@@ -41,8 +41,16 @@ function createTestingData()
     options.sensi = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
+    
+    amiHDFprefix = '/model_steadystate/sensiforwardplist/';
+    options.sensi = 1;
+    options.sens_ind = [3,1,2,4];
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    
     amiHDFprefix = '/model_steadystate/sensiforwarddense/';
     options.sensi = 1;
+    options.sens_ind = 1:5;
     options.linsol = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     

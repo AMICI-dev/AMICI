@@ -122,12 +122,18 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
 
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
-    realtype *pcoefficient, *augcoefficient, *unscaledParameters;
 
-    pcoefficient = new realtype[nplist]();
-    unscaledParameters = new realtype[nplist]();
-    augcoefficient = new realtype[np]();
-    udata->unscaleParameters(unscaledParameters);
+    std::vector<realtype> pcoefficient;
+    pcoefficient.reserve(nplist);
+    
+    std::vector<realtype> unscaledParameters;
+    unscaledParameters.reserve(np);
+    udata->unscaleParameters(unscaledParameters.data());
+    
+    std::vector<realtype> augcoefficient;
+    augcoefficient.reserve(np);
+    
+    
 
     switch (pscale) {
         case AMICI_SCALING_LOG10:
@@ -279,10 +285,6 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
         s2vecChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
         s2vecChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
     }
-
-    delete[] pcoefficient;
-    delete[] augcoefficient;
-    delete[] unscaledParameters;
     return;
 }
 
