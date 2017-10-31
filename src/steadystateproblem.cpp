@@ -38,11 +38,11 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    newtonSolver = NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata);
+    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata));
                                                       
     int newton_status;
     try {
-        applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 1);
+        applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver.get(), 1);
         newton_status = 1;
     } catch(NewtonFailure& ex) {
         try {
@@ -51,7 +51,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
             newton_status = 2;
         } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
             try {
-                applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver, 2);
+                applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver.get(), 2);
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
                 // TODO: more informative NewtonFailure to give more informative error code

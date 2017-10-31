@@ -52,7 +52,7 @@ class NewtonSolver {
      */
     virtual void solveLinearSystem(N_Vector rhs) = 0;
 
-    ~NewtonSolver() {
+    virtual ~NewtonSolver() {
     if(sx_ip)
         N_VDestroy_Serial(sx_ip);
     };
@@ -80,8 +80,8 @@ class NewtonSolverDense : public NewtonSolver {
   public:
     NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
                       TempData *tdata);
-    void solveLinearSystem(N_Vector rhs);
-    void prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverDense();
 
   private:
@@ -105,8 +105,8 @@ class NewtonSolverSparse : public NewtonSolver {
   public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
                        TempData *tdata);
-    void solveLinearSystem(N_Vector rhs);
-    void prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverSparse();
 
   private:
