@@ -309,9 +309,6 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
             
         it_newton++;
     }
-
-    N_VDestroy_Serial(rel_x_newton);
-    N_VDestroy_Serial(x_newton);
     return;
 }
 
