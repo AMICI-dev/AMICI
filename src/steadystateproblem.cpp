@@ -279,8 +279,6 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
     double res_abs = INFINITY;
     double res_rel = INFINITY;
     realtype *x_tmp;
-    N_Vector rel_x_newton = N_VNew_Serial(model->nx);
-    N_Vector x_newton = N_VNew_Serial(model->nx);
     
     int it_newton = 0;
     while(res_abs > udata->atol && res_rel > udata->rtol) {
