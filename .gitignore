@@ -67,6 +67,10 @@ models/model_events/build/*
 
 models/model_nested_events/build/*
 
+!models/model_robertson
+
+models/model_robertson/build/*
+
 .DS_Store
 
 index.html
@@ -248,3 +252,5 @@ mtoc/config/latexextras.sty-e
 mtoc/config/latexextras.sty
 
 mtoc/config/Doxyfile-e
+
+examples/example_robertson/simulate_model_robertson_hdf.m

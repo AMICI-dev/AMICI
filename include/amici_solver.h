@@ -76,10 +76,11 @@ class Solver {
      * states to be correct (DAE only)
       *
       * @param[in] tout1 next timepoint to be computed (sets timescale) @type
-     * realtype
+      * realtype
+      * @param[in] tdata pointer to the temporary data object @type TempData
       * @return status flag indicating success of execution @type int
       */
-    virtual int AMICalcIC(realtype tout1) = 0;
+    virtual int AMICalcIC(realtype tout1,TempData *tdata) = 0;
 
     /**
       * AMICalcIBC calculates consistent initial conditions for the backwards

@@ -290,11 +290,11 @@ void *CVodeSolver::AMIGetAdjBmem(void *ami_mem, int which) {
     return CVodeGetAdjCVodeBmem(ami_mem, which);
 }
 
-int CVodeSolver::AMICalcIC(realtype tout1) { return (0); }
+int CVodeSolver::AMICalcIC(realtype tout1,TempData *tdata) { return AMICI_SUCCESS; }
 
 int CVodeSolver::AMICalcICB(int which, realtype tout1, N_Vector xB,
                             N_Vector dxB) {
-    return (0);
+    return AMICI_SUCCESS;
 }
 
 int CVodeSolver::AMISetStopTime(realtype tstop) {

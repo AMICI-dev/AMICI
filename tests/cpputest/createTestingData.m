@@ -257,6 +257,35 @@ function createTestingData()
     options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_nested_events_hdf(t,log10(p),k,D,options);
+    
+    
+    %% EXAMPLE ROBERTSON
+    cd([amiciPath '/examples/example_robertson/']);
+    
+    [exdir,~,~]=fileparts(which('example_robertson.m'));
+    amiwrap('model_robertson', 'model_robertson_syms', exdir);
+    
+    !sed '$d' simulate_model_robertson.m > simulate_model_robertson_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_robertson_hdf.m
+    
+    t = [0 4*logspace(-6,6)];
+    p = [0.04;1e4;3e7];
+    k = [0.9];
+    
+
+    options = amioption('sensi',0,...
+        'maxsteps',1e4,...
+        'atol',1e-6,...
+        'rtol',1e-4);
+    
+    amiHDFprefix = '/model_robertson/nosensi/';
+    options.sensi = 0;
+    simulate_model_robertson_hdf(t,log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_robertson/sensiforward/';
+    options.sensi = 1;
+    options.sensi_meth = 'forward';
+    simulate_model_robertson_hdf(t,log10(p),k,[],options);
 
     %%
     chdir(oldwd)
