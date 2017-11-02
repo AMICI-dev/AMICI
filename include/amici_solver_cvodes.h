@@ -129,7 +129,8 @@ class CVodeSolver : public Solver {
 
     void *AMIGetAdjBmem(void *ami_mem, int which) override;
 
-    void AMICalcIC(realtype tout1) override;
+
+    void AMICalcIC(realtype tout1, TempData *tdata) override;
 
     void AMICalcICB(int which, realtype tout1, N_Vector xB,
                    N_Vector dxB) override;

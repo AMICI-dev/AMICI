@@ -275,7 +275,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
         solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
 
         /* make time derivative consistent */
-        solver->AMICalcIC(tdata->t);
+        solver->AMICalcIC(tdata->t,tdata);
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {

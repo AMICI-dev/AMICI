@@ -34,6 +34,7 @@ add_subdirectory(nested_events)
 add_subdirectory(steadystate)
 add_subdirectory(jakstat_adjoint)
 add_subdirectory(neuron)
+add_subdirectory(robertson)
 add_subdirectory(jakstat_adjoint_o2)
 add_subdirectory(neuron_o2)
 

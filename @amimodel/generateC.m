@@ -90,7 +90,7 @@ for ifun = this.funs
                 fprintf(fid,'if(ip == 0) {\n');
                 if(strcmp(this.wtype,'iw'))
                     fprintf(fid,['    dfdx_' this.modelname '(t,x,' dxvec 'user_data);\n']);
-                    fprintf(fid,['    status = M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
+                    fprintf(fid,['    M_' this.modelname '(t,x,' dxvec 'user_data);\n']);
                 else
                     fprintf(fid,['    JSparse_' this.modelname '(t,' rtcj 'x,' dxvec 'xdot,tdata->J,user_data,NULL,NULL,NULL);\n']);
                 end
