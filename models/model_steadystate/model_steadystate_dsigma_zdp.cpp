@@ -16,3 +16,10 @@ int ip;
 memset(tdata->dsigmazdp,0,sizeof(realtype)*0*udata->nplist);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
+}
+}
+return;
+
+}
+
+
