@@ -89,7 +89,7 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
                             status = solver->AMISolve(RCONST(rdata->ts[it]), tdata->x, tdata->dx,
                                                       &(tdata->t), AMICI_NORMAL);
                         }
-                        if (status == -22) {
+                        if (status == AMICI_ILL_INPUT) {
                             /* clustering of roots => turn off rootfinding */
                             solver->turnOffRootFinding();
                         }

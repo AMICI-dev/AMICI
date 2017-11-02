@@ -286,7 +286,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
             throw NewtonFailure("KLU factorization failed!");
         }
     } else {
-        throw NewtonFailure("KLU symbolic analisis failed!");
+        throw NewtonFailure("KLU symbolic analysis failed!");
     }
 }
 

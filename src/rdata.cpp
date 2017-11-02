@@ -123,17 +123,10 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
     // chain-rule factor: multiplier for am_p
     realtype coefficient;
 
-    std::vector<realtype> pcoefficient;
-    pcoefficient.reserve(nplist);
-    
-    std::vector<realtype> unscaledParameters;
-    unscaledParameters.reserve(np);
+    std::vector<realtype> pcoefficient(nplist);
+    std::vector<realtype> unscaledParameters(np);
     udata->unscaleParameters(unscaledParameters.data());
-    
-    std::vector<realtype> augcoefficient;
-    augcoefficient.reserve(np);
-    
-    
+    std::vector<realtype> augcoefficient(np);
 
     switch (pscale) {
         case AMICI_SCALING_LOG10:

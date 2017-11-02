@@ -41,8 +41,6 @@ void Model::fsy(const int it, const TempData *tdata, ReturnData *rdata) {
                     tdata->dydx, ny, sx_tmp, 1, 1.0,
                     &rdata->sy[it + ip * rdata->nt * ny], rdata->nt);
     }
-
-    return;
 }
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
@@ -60,8 +58,6 @@ void Model::fsz_tf(const int ie, const TempData *tdata, ReturnData *rdata) {
             rdata->sz[tdata->nroots[ie] + (iz + ip * nz) * rdata->nmaxevent] =
                 0;
     }
-
-    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
@@ -75,10 +71,9 @@ void Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
     // sx           rdata->nt x nx x rdata->nplist
-    std::vector<double> multResult;
-    multResult.resize(nJ * rdata->nplist, 0);
-    std::vector<double> sxTmp;
-    sxTmp.resize(rdata->nplist * nx, 0);
+    std::vector<double> multResult(nJ * rdata->nplist, 0);
+    std::vector<double> sxTmp(rdata->nplist * nx, 0);
+    
     for (int ix = 0; ix < nx; ++ix) {
         for (int ip = 0; ip < rdata->nplist; ++ip)
             sxTmp[ix + ip * nx] = rdata->sx[it + (ix + ip * nx) * rdata->nt];
@@ -107,7 +102,6 @@ void Model::fsJy(const int it, const TempData *tdata, ReturnData *rdata) {
                 rdata->s2llh[(iJ - 1) + ip * (nJ - 1)] -=
                     multResult[iJ + ip * nJ] + tdata->dJydp[iJ + ip * nJ];
     }
-    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
@@ -148,7 +142,6 @@ void Model::fdJydp(const int it, TempData *tdata, const ExpData *edata,
                     nJ, rdata->nplist, ny, 1.0, dJydsigmaTmp.data(), nJ,
                     tdata->dsigmaydp, ny, 1.0, tdata->dJydp, nJ);
     }
-    return;
 }
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
@@ -163,8 +156,7 @@ void Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
     // dydx          ny x nx
     // dJydx         rdata->nt x nJ x nx
     
-    std::vector<double> multResult;
-    multResult.resize(nJ * nx, 0);
+    std::vector<double> multResult(nJ * nx, 0);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (amiIsNaN(edata->my[tdata->rdata->nt * iyt + it]))
             continue;
@@ -184,7 +176,6 @@ void Model::fdJydx(const int it, TempData *tdata, const ExpData *edata) {
         for (int ix = 0; ix < nx; ++ix)
             tdata->dJydx[it + (iJ + ix * nJ) * tdata->rdata->nt] =
                 multResult[iJ + ix * nJ];
-    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
@@ -203,10 +194,8 @@ void Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
     // dJzdx        rdata->nt x nJ x nx
     // sx           rdata->nt x nx x rdata->nplist
 
-    std::vector<double> multResult;
-    multResult.resize(nJ * rdata->nplist, 0);
-    std::vector<double> sxTmp;
-    sxTmp.resize(rdata->nplist * nx, 0);
+    std::vector<double> multResult(nJ * rdata->nplist, 0);
+    std::vector<double> sxTmp(rdata->nplist * nx, 0);
     realtype *sx_tmp;
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         sx_tmp = NV_DATA_S(tdata->sx[ip]);
@@ -238,9 +227,6 @@ void Model::fsJz(const int ie, TempData *tdata, const ReturnData *rdata) {
                 rdata->s2llh[(iJ - 1) + ip * (nJ - 1)] -=
                     multResult[iJ + ip * nJ] + tdata->dJzdp[iJ + ip * nJ];
     }
- 
-
-    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
@@ -304,8 +290,6 @@ void Model::fdJzdp(const int ie, TempData *tdata, const ExpData *edata,
                     nJ, rdata->nplist, nz, 1.0, dJzdsigmaTmp.data(), nJ,
                     tdata->dsigmazdp, nz, 1.0, tdata->dJzdp, nJ);
     }
-
-    return;
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
@@ -319,8 +303,7 @@ void Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
     // dzdx          nz x nx
     // dJzdx         nmaxevent x nJ x nx
 
-    std::vector<double> multResult;
-    multResult.resize(nJ * nx, 0);
+    std::vector<double> multResult(nJ * nx, 0);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (amiIsNaN(
                 edata->mz[tdata->nroots[ie] + izt * tdata->rdata->nmaxevent]))
@@ -355,8 +338,6 @@ void Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
             tdata->dJzdx[tdata->nroots[ie] +
                          (iJ + ix * nJ) * tdata->rdata->nmaxevent] =
                 multResult[iJ + ix * nJ];
-
-    return;
 }
 
 /** initialization of model properties
@@ -364,16 +345,13 @@ void Model::fdJzdx(const int ie, TempData *tdata, const ExpData *edata) {
  * @param[out] tdata pointer to temp data object @type TempData
  */
 void Model::initialize(const UserData *udata, TempData *tdata) {
-    if (nx < 1)
-        return;
-    
+
     initializeStates(udata->x0data, tdata);
     
     fdx0(tdata->x, tdata->dx, tdata);
     
     initHeaviside(tdata);
     
-    return;
 }
 
 /** initialization of initial states
@@ -381,11 +359,6 @@ void Model::initialize(const UserData *udata, TempData *tdata) {
  * @param[out] tdata pointer to temp data object @type TempData
  */
 void Model::initializeStates(const double *x0data, TempData *tdata) {
-    if (nx < 1)
-        return;
-
-    if (!tdata->x)
-        throw NullPointerException("tdata->x");
 
     if (!x0data) {
         fx0(tdata->x, tdata);
@@ -398,8 +371,6 @@ void Model::initializeStates(const double *x0data, TempData *tdata) {
             x_tmp[ix] = (realtype)x0data[ix];
         }
     }
-
-    return;
 }
 
 /**
@@ -424,7 +395,6 @@ void Model::initHeaviside(TempData *tdata) {
             tdata->h[ie] = 1.0;
         }
     }
-    return;
 }
 
 

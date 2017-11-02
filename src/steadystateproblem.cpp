@@ -200,7 +200,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     
     /* Set return values */
     rdata->newton_numsteps[newton_try - 1] = i_newtonstep;
-    return;
 }
 
 /* ----------------------------------------------------------------------------------
