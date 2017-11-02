@@ -18,59 +18,6 @@ TEST_GROUP(groupRobertson)
     }
 };
 
-
-UserData *getTestUserData() {
-    Model *model = getModel();
-    UserData *udata = new UserData();
-
-    udata->qpositivex = new double[model->nx];
-    udata->p = new double[model->np];
-    udata->k = new double[model->nk];
-
-    delete model;
-    return udata;
-}
-
-
-/*
- * Test for mem leaks in UserData initalization / destruction
- */
-TEST(groupRobertson, testCreateAndFreeUserData) {
-    UserData *udata = getTestUserData();
-
-    delete udata;
-}
-
-/*
- * Test for mem leaks in ExpData initalization / destruction
- */
-
-TEST(groupRobertson, testCreateAndFreeExpData) {
-    UserData udata;
-    
-    Model *model = getModel();
-
-    ExpData *edata = getTestExpData(&udata, model);
-    
-    delete model;
-    delete edata;
-}
-
-/*
- * Test for mem leaks in ReturnData initalization / destruction
- */
-
-TEST(groupRobertson, testCreateAndFreeReturnData) {
-    Model *model = getModel();
-
-    UserData udata;
-    ReturnData *rdata = new ReturnData(&udata, model);
-    delete model;
-
-    delete rdata;
-}
-
-
 TEST(groupRobertson, testSimulation) {
     Model *model = getModel();
     simulateAndVerifyFromFile(model, "/model_robertson/nosensi/");
