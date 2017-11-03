@@ -80,7 +80,6 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
                 solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
     }
-    return;
 }
 
 /* ----------------------------------------------------------------------------------
@@ -190,7 +189,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     rdata->newton_numsteps[newton_try-1] = (double) i_newtonstep;
     if (!converged)
         throw NewtonFailure("Newton method failed to converge!");
-    return;
 }
 
 /* ----------------------------------------------------------------------------------

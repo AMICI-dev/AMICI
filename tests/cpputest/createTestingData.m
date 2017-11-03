@@ -68,7 +68,7 @@ function createTestingData()
     amiHDFprefix = '/model_steadystate/sensiforwarderrornewt/';
     options.sensi = 1;
     options.linsol = 9;
-    options.newton_maxsteps = 10;
+    options.newton_maxsteps = 2;
     sol = simulate_model_steadystate_hdf([0,inf],log10(p),k,[],options);
 
     %% EXAMPLE DIRAC
