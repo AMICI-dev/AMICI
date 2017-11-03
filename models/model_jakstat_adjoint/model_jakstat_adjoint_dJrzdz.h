@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dJrzdz_model_jakstat_adjoint(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void dJrzdz_model_jakstat_adjoint(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_jakstat_adjoint_dJrzdz_h */

@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int JSparseB_model_robertson(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
-int status = 0;
+void JSparseB_model_robertson(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -44,8 +43,8 @@ if(xBdot)
   JB->indexptrs[1] = 3;
   JB->indexptrs[2] = 6;
   JB->indexptrs[3] = 9;
-status = w_model_robertson(t,x,dx,tdata);
-status = dwdx_model_robertson(t,x,dx,user_data);
+w_model_robertson(t,x,dx,tdata);
+dwdx_model_robertson(t,x,dx,user_data);
   JB->data[0] = cj+tdata->p[0];
   JB->data[1] = -tdata->dwdx[0];
   JB->data[2] = -tdata->dwdx[1];
@@ -55,7 +54,7 @@ status = dwdx_model_robertson(t,x,dx,user_data);
   JB->data[6] = -1.0;
   JB->data[7] = -1.0;
   JB->data[8] = -1.0;
-return(status);
+return;
 
 }
 

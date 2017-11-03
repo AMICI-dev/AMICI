@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int JvB_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) {
-int status = 0;
+void JvB_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -36,7 +35,7 @@ realtype *JvB_tmp = nullptr;
 if(JvB)
     JvB_tmp = N_VGetArrayPointer(JvB);
 memset(JvB_tmp,0,sizeof(realtype)*162);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
   JvB_tmp[0] = -tdata->p[0]*tdata->w[0]*vB_tmp[1]+udata->k[0]*tdata->p[0]*tdata->w[0]*tdata->w[2]*vB_tmp[0];
   JvB_tmp[1] = tdata->p[1]*vB_tmp[1]*tdata->dwdx[0]*2.0-tdata->p[1]*vB_tmp[2]*tdata->dwdx[0];
   JvB_tmp[2] = tdata->p[2]*vB_tmp[2]-udata->k[0]*tdata->p[2]*tdata->w[3]*vB_tmp[3];
@@ -199,7 +198,7 @@ status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
   JvB_tmp[159] = tdata->p[3]*vB_tmp[159]-tdata->p[3]*vB_tmp[160];
   JvB_tmp[160] = tdata->p[3]*vB_tmp[160]-tdata->p[3]*vB_tmp[161];
   JvB_tmp[161] = tdata->p[3]*vB_tmp[161]-udata->k[1]*tdata->p[3]*tdata->w[2]*vB_tmp[153];
-return(status);
+return;
 
 }
 

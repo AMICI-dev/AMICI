@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int JDiag_model_robertson(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+void JDiag_model_robertson(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -26,8 +25,8 @@ if(JDiag)
     JDiag_tmp = N_VGetArrayPointer(JDiag);
 int ix;
 memset(JDiag_tmp,0,sizeof(realtype)*3);
-status = w_model_robertson(t,x,dx,tdata);
-status = dwdx_model_robertson(t,x,dx,user_data);
+w_model_robertson(t,x,dx,tdata);
+dwdx_model_robertson(t,x,dx,user_data);
   JDiag_tmp[0+0*3] = -cj-tdata->p[0];
   JDiag_tmp[1+0*3] = -cj-tdata->dwdx[0]-tdata->p[2]*x_tmp[1]*2.0;
   JDiag_tmp[2+0*3] = 1.0;
@@ -41,10 +40,10 @@ for(ix = 0; ix<3; ix++) {
    }
    if(amiIsInf(JDiag_tmp[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value on Jacobian diagonal! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

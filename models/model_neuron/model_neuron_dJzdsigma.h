@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dJzdsigma_model_neuron(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void dJzdsigma_model_neuron(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_neuron_dJzdsigma_h */

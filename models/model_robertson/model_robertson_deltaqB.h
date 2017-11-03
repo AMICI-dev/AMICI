@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int deltaqB_model_robertson(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+void deltaqB_model_robertson(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
 
 
 #endif /* _am_model_robertson_deltaqB_h */

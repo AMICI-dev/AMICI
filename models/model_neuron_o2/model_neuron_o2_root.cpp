@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int root_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) {
-int status = 0;
+void root_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -20,9 +19,9 @@ if(x)
 realtype *dx_tmp = nullptr;
 if(dx)
     dx_tmp = N_VGetArrayPointer(dx);
-status = w_model_neuron_o2(t,x,NULL,tdata);
+w_model_neuron_o2(t,x,NULL,tdata);
   root[0] = x_tmp[0]-3.0E1;
-return(status);
+return;
 
 }
 

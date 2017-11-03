@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int srz_model_robertson(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
-int status = 0;
+void srz_model_robertson(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -24,7 +23,7 @@ sx_tmp = N_VGetArrayPointer(sx[ip]);
 switch (udata->plist[ip]) {
 }
 }
-return(status);
+return;
 
 }
 

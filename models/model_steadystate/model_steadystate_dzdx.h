@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dzdx_model_steadystate(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+void dzdx_model_steadystate(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_steadystate_dzdx_h */

@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dJydsigma_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void dJydsigma_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_robertson_dJydsigma_h */

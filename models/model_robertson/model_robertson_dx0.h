@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dx0_model_robertson(N_Vector x0, N_Vector dx0, void *user_data);
+void dx0_model_robertson(N_Vector x0, N_Vector dx0, void *user_data);
 
 
 #endif /* _am_model_robertson_dx0_h */

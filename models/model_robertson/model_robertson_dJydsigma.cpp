@@ -11,8 +11,7 @@
 
 using namespace amici;
 
-int dJydsigma_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-int status = 0;
+void dJydsigma_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -32,7 +31,7 @@ if(!amiIsNaN(edata->my[2* udata->nt+it])){
     iy = 2;
   tdata->dJydsigma[iy+(0+2*1)*model->nytrue] = 1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*pow(edata->my[it+udata->nt*2]-rdata->y[it + udata->nt*2],2.0)*-1.0+1.0/tdata->sigmay[2];
 }
-return(status);
+return;
 
 }
 

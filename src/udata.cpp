@@ -76,7 +76,7 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     }
 
     if(other.sx0data) {
-        sx0data = new double[other.nx];
+        sx0data = new double[other.nx * other.nplist];
         std::copy(other.sx0data, other.sx0data + other.nx * other.nplist, sx0data);
     }
 
@@ -86,7 +86,7 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
 }
 
 
-int UserData::unscaleParameters(double *bufferUnscaled) const {
+void UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
      * unscaleParameters removes parameter scaling according to the parameter
      * scaling in pscale
@@ -111,8 +111,6 @@ int UserData::unscaleParameters(double *bufferUnscaled) const {
             bufferUnscaled[ip] = p[ip];
         break;
     }
-
-    return AMICI_SUCCESS;
 }
 
 void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
@@ -126,11 +124,13 @@ void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
 }
 
 void UserData::setParameters(const double *parameters) {
-    memcpy(p, parameters, sizeof(double) * np);
+    if(parameters)
+        memcpy(p, parameters, sizeof(double) * np);
 }
 
 void UserData::setConstants(const double *constants) {
-    memcpy(k, constants, sizeof(double) * nk);
+    if(constants)
+        memcpy(k, constants, sizeof(double) * nk);
 }
 
 void UserData::setPlist(const double *plist, int nplist) {
@@ -138,11 +138,16 @@ void UserData::setPlist(const double *plist, int nplist) {
         delete[] this->plist;
     }
 
-    this->nplist = nplist;
-    this->plist = new int[nplist];
-
-    for (int ip = 0; ip < nplist; ip++) {
-        this->plist[ip] = (int)plist[ip];
+    if(plist){
+        this->nplist = nplist;
+        this->plist = new int[nplist];
+        
+        for (int ip = 0; ip < nplist; ip++) {
+            this->plist[ip] = (int)plist[ip];
+        }
+    } else {
+        this->plist = nullptr;
+        nplist = 0;
     }
 }
 
@@ -151,9 +156,14 @@ void UserData::setPlist(const int *plist, int nplist) {
         delete[] this->plist;
     }
 
-    this->nplist = nplist;
-    this->plist = new int[nplist];
-    memcpy(this->plist, plist, sizeof(int) * nplist);
+    if(plist){
+        this->nplist = nplist;
+        this->plist = new int[nplist];
+        memcpy(this->plist, plist, sizeof(int) * nplist);
+    } else {
+        this->plist = nullptr;
+        nplist = 0;
+    }
 }
 
 void UserData::requireSensitivitiesForAllParameters()
@@ -175,6 +185,19 @@ void UserData::setPbar(const double *parameterScaling) {
         memcpy(pbar, parameterScaling, sizeof(double) * nplist);
     } else {
         pbar = nullptr;
+    }
+}
+    
+void UserData::setXbar(const double *stateScaling) {
+    if (xbar) {
+        delete[] xbar;
+    }
+    
+    if(stateScaling) {
+        xbar = new double[nx];
+        memcpy(xbar, stateScaling, sizeof(double) * nx);
+    } else {
+        xbar = nullptr;
     }
 }
 

@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int dydx_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata) {
-int status = 0;
+void dydx_model_robertson(realtype t, int it, N_Vector x, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -19,7 +18,7 @@ if(x)
   tdata->dydx[0+0*3] = 1.0;
   tdata->dydx[1+1*3] = 1.0E4;
   tdata->dydx[2+2*3] = 1.0;
-return(status);
+return;
 
 }
 

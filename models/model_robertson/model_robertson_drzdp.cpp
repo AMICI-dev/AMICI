@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int drzdp_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata) {
-int status = 0;
+void drzdp_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -21,7 +20,7 @@ for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
 }
 }
-return(status);
+return;
 
 }
 

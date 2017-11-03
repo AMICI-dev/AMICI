@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int dxdotdp_model_robertson(realtype t, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+void dxdotdp_model_robertson(realtype t, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -24,7 +23,7 @@ if(dx)
 int ip;
 int ix;
 memset(tdata->dxdotdp,0,sizeof(realtype)*3*udata->nplist);
-status = dwdp_model_robertson(t,x,dx,user_data);
+dwdp_model_robertson(t,x,dx,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
@@ -57,11 +56,11 @@ for(ip = 0; ip<udata->nplist; ip++) {
        }
        if(amiIsInf(tdata->dxdotdp[ix+ip*model->nx])) {
            warnMsgIdAndTxt("AMICI:mex:fdxdotdp:Inf","AMICI encountered an Inf value in dxdotdp, aborting.");
-           return(-1);
+           return;
        }
    }
 }
-return(status);
+return;
 
 }
 

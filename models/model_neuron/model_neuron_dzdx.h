@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dzdx_model_neuron(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+void dzdx_model_neuron(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_neuron_dzdx_h */

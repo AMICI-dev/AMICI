@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int JSparse_model_robertson(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+void JSparse_model_robertson(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -39,8 +38,8 @@ J->indexptrs[0] = 0;
 J->indexptrs[1] = 3;
 J->indexptrs[2] = 6;
 J->indexptrs[3] = 9;
-status = w_model_robertson(t,x,dx,tdata);
-status = dwdx_model_robertson(t,x,dx,user_data);
+w_model_robertson(t,x,dx,tdata);
+dwdx_model_robertson(t,x,dx,user_data);
   J->data[0] = -cj-tdata->p[0];
   J->data[1] = tdata->p[0];
   J->data[2] = 1.0;
@@ -60,10 +59,10 @@ for(inz = 0; inz<9; inz++) {
    }
    if(amiIsInf(J->data[inz])) {
        warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

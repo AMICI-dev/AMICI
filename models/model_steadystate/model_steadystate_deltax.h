@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int deltax_model_steadystate(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
+void deltax_model_steadystate(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
 
 
 #endif /* _am_model_steadystate_deltax_h */

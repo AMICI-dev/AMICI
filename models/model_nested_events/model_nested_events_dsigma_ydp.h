@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dsigma_ydp_model_nested_events(realtype t, amici::TempData *tdata);
+void dsigma_ydp_model_nested_events(realtype t, amici::TempData *tdata);
 
 
 #endif /* _am_model_nested_events_dsigma_ydp_h */

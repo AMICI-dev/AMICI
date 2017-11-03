@@ -1,5 +1,5 @@
-#ifndef _MY_RDATA
-#define _MY_RDATA
+#ifndef AMICI_RDATA_H
+#define AMICI_RDATA_H
 #include <include/udata.h>
 
 namespace amici {
@@ -15,7 +15,7 @@ void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
 
 namespace amici {
 
-/** @brief struct that stores all data which is later returned by the mex
+/** @brief class that stores all data which is later returned by the mex
  * function
  *
  * NOTE: multidimensional arrays are stored in column-major order
@@ -27,15 +27,15 @@ class ReturnData {
 
     ReturnData(const UserData *udata, const Model *model);
 
-    void invalidate();
+    void invalidate(const int t);
+    void invalidateLLH();
 
     void setLikelihoodSensitivityFirstOrderNaN();
 
     void setLikelihoodSensitivitySecondOrderNaN();
 
-    int
-    applyChainRuleFactorToSimulationResults(const UserData *udata,
-                                            const realtype *unscaledParameters);
+    void 
+    applyChainRuleFactorToSimulationResults(const UserData *udata);
 
     virtual ~ReturnData();
 

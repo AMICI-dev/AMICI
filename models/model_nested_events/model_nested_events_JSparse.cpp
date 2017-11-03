@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int JSparse_model_nested_events(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+void JSparse_model_nested_events(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -29,8 +28,8 @@ SparseSetMatToZero(J);
 J->indexvals[0] = 0;
 J->indexptrs[0] = 0;
 J->indexptrs[1] = 1;
-status = w_model_nested_events(t,x,NULL,tdata);
-status = dwdx_model_nested_events(t,x,NULL,user_data);
+w_model_nested_events(t,x,NULL,tdata);
+dwdx_model_nested_events(t,x,NULL,user_data);
   J->data[0] = -tdata->p[4]+tdata->h[1]*tdata->p[3];
 for(inz = 0; inz<1; inz++) {
    if(amiIsNaN(J->data[inz])) {
@@ -42,10 +41,10 @@ for(inz = 0; inz<1; inz++) {
    }
    if(amiIsInf(J->data[inz])) {
        warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dfdx_model_robertson(realtype t, N_Vector x, N_Vector dx, void *user_data);
+void dfdx_model_robertson(realtype t, N_Vector x, N_Vector dx, void *user_data);
 
 
 #endif /* _am_model_robertson_dfdx_h */

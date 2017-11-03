@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int sx0_model_jakstat_adjoint_o2(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+void sx0_model_jakstat_adjoint_o2(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -34,7 +33,7 @@ switch (udata->plist[ip]) {
 
 }
 }
-return(status);
+return;
 
 }
 

@@ -13,8 +13,7 @@
 
 using namespace amici;
 
-int sxdot_model_robertson(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+void sxdot_model_robertson(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -38,14 +37,14 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*3);
 if(ip == 0) {
-    status = dfdx_model_robertson(t,x,dx,user_data);
-    status = M_model_robertson(t,x,dx,user_data);
-    status = dxdotdp_model_robertson(t,x,dx,user_data);
+    dfdx_model_robertson(t,x,dx,user_data);
+    M_model_robertson(t,x,dx,user_data);
+    dxdotdp_model_robertson(t,x,dx,user_data);
 }
   sxdot_tmp[0] = tdata->dxdotdp[0 + ip*model->nx]-tdata->M[0]*sdx_tmp[0]+tdata->dfdx[0]*sx_tmp[0]+tdata->dfdx[3]*sx_tmp[1]+tdata->dfdx[6]*sx_tmp[2];
   sxdot_tmp[1] = tdata->dxdotdp[1 + ip*model->nx]-tdata->M[4]*sdx_tmp[1]+tdata->dfdx[1]*sx_tmp[0]+tdata->dfdx[4]*sx_tmp[1]+tdata->dfdx[7]*sx_tmp[2];
   sxdot_tmp[2] = tdata->dxdotdp[2 + ip*model->nx]+tdata->dfdx[2]*sx_tmp[0]+tdata->dfdx[5]*sx_tmp[1]+tdata->dfdx[8]*sx_tmp[2];
-return(status);
+return;
 
 }
 

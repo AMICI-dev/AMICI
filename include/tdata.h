@@ -1,5 +1,5 @@
-#ifndef _MY_TDATA
-#define _MY_TDATA
+#ifndef AMICI_TDATA_H
+#define AMICI_TDATA_H
 
 #include <nvector/nvector_serial.h> /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_config.h>

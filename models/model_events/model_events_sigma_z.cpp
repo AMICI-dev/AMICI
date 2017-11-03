@@ -9,14 +9,13 @@
 
 using namespace amici;
 
-int sigma_z_model_events(realtype t, int ie, amici::TempData *tdata) {
-int status = 0;
+void sigma_z_model_events(realtype t, int ie, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 memset(tdata->sigmaz,0,sizeof(realtype)*2);
   tdata->sigmaz[0] = 1.0;
   tdata->sigmaz[1] = 1.0;
-return(status);
+return;
 
 }
 

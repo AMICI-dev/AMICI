@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dJrzdsigma_model_nested_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void dJrzdsigma_model_nested_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_nested_events_dJrzdsigma_h */

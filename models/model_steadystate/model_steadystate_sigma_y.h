@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int sigma_y_model_steadystate(realtype t, amici::TempData *tdata);
+void sigma_y_model_steadystate(realtype t, amici::TempData *tdata);
 
 
 #endif /* _am_model_steadystate_sigma_y_h */

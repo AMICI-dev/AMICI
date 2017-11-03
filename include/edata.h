@@ -1,5 +1,5 @@
-#ifndef _MY_EDATA
-#define _MY_EDATA
+#ifndef AMICI_EDATA_H
+#define AMICI_EDATA_H
 
 namespace amici {
 

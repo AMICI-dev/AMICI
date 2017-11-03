@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dydp_model_nested_events(realtype t, int it, N_Vector x, amici::TempData *tdata);
+void dydp_model_nested_events(realtype t, int it, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_nested_events_dydp_h */

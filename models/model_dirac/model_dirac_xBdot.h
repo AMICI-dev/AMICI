@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int xBdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
+void xBdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
 
 
 #endif /* _am_model_dirac_xBdot_h */

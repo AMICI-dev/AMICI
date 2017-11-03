@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int drzdx_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata);
+void drzdx_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_robertson_drzdx_h */

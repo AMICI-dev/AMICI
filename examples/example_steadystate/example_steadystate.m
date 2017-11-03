@@ -189,8 +189,8 @@ function example_steadystate
     sol = simulate_model_steadystate(inf,log10(p),k,[],options);
     
     % Test recapturing in the case of Newton solver failing
-    options.newton_maxsteps = 10;
-    options.maxsteps = 250;
+    options.newton_maxsteps = 4;
+    options.maxsteps = 200;
     sol_newton_fail = simulate_model_steadystate(inf,log10(p),k,[],options);
     
     %%
@@ -201,10 +201,10 @@ function example_steadystate
         hold on;
         for ix = 1:size(sol.x,2)
             plot(t,abs(ssxdot(:,ix)),'o-','Color',c_x(ix,:));
-            plot([10 1000], abs(sol.xdot(ix))*[1, 1],'--','Color',c_x(ix,:));
+            plot([10 1000], abs(sol_newton_fail.xdot(ix))*[1, 1],'--','Color',c_x(ix,:));
         end
         plot(t,sqrt(sum(ssxdot.^2,2)), 'ko-');
-        plot(t,sqrt(sum(sol.xdot.^2,2)), 'k--');
+        plot([10 1000],sqrt(sum(sol_newton_fail.xdot.^2,2))*[1, 1], 'k--');
         legend('dx_1/dt','dx_1/dt, ss','dx_2/dt','dx_2/dt, ss',...
             'dx_3/dt','dx_3/dt, ss','||dx/dt||','||dx/dt||, ss',...
             'Location','NorthEastOutside');
@@ -224,7 +224,7 @@ function example_steadystate
         xlabel('Solver run');
         ylabel('Newton steps');
         xlim([0.5,2.5]);
-        ylim([-1 12]);
+        ylim([-1 5]);
         a = gca();
         a.Children.BarWidth = 0.6;
         box on;

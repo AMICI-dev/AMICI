@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int dsigma_ydp_model_dirac(realtype t, amici::TempData *tdata) {
-int status = 0;
+void dsigma_ydp_model_dirac(realtype t, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 int ip;
@@ -19,7 +18,7 @@ for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
 }
 }
-return(status);
+return;
 
 }
 

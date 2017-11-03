@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int root_model_events(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
+void root_model_events(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
 
 
 #endif /* _am_model_events_root_h */

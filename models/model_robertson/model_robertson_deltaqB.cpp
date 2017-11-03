@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int deltaqB_model_robertson(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
-int status = 0;
+void deltaqB_model_robertson(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -34,7 +33,7 @@ for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
 }
 }
-return(status);
+return;
 
 }
 

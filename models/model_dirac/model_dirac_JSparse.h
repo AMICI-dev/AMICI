@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int JSparse_model_dirac(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+void JSparse_model_dirac(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 
 #endif /* _am_model_dirac_JSparse_h */

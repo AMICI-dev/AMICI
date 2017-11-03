@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int y_model_robertson(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) {
-int status = 0;
+void y_model_robertson(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -21,7 +20,7 @@ if(x)
   rdata->y[it + udata->nt*0] = x_tmp[0];
   rdata->y[it + udata->nt*1] = x_tmp[1]*1.0E4;
   rdata->y[it + udata->nt*2] = x_tmp[2];
-return(status);
+return;
 
 }
 

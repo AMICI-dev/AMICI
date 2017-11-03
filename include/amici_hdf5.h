@@ -1,5 +1,5 @@
-#ifndef AMI_HDF5_H
-#define AMI_HDF5_H
+#ifndef AMICI_HDF5_H
+#define AMICI_HDF5_H
 
 #include <hdf5.h>
 #include <hdf5_hl.h>

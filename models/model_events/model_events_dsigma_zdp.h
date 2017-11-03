@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dsigma_zdp_model_events(realtype t, int ie, amici::TempData *tdata);
+void dsigma_zdp_model_events(realtype t, int ie, amici::TempData *tdata);
 
 
 #endif /* _am_model_events_dsigma_zdp_h */

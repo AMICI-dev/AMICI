@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int deltasx_model_dirac(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
+void deltasx_model_dirac(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
 
 
 #endif /* _am_model_dirac_deltasx_h */

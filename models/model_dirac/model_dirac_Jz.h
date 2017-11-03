@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int Jz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+void Jz_model_dirac(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_dirac_Jz_h */

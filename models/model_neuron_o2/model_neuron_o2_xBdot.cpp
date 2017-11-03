@@ -10,8 +10,7 @@
 
 using namespace amici;
 
-int xBdot_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) {
-int status = 0;
+void xBdot_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -32,8 +31,8 @@ if(xBdot)
     xBdot_tmp = N_VGetArrayPointer(xBdot);
 int ix;
 memset(xBdot_tmp,0,sizeof(realtype)*10);
-status = w_model_neuron_o2(t,x,NULL,tdata);
-status = dwdx_model_neuron_o2(t,x,NULL,user_data);
+w_model_neuron_o2(t,x,NULL,tdata);
+dwdx_model_neuron_o2(t,x,NULL,user_data);
   xBdot_tmp[0] = -xB_tmp[0]*(x_tmp[0]*(2.0/2.5E1)+5.0)-tdata->p[0]*tdata->p[1]*xB_tmp[1];
   xBdot_tmp[1] = xB_tmp[0]+tdata->p[0]*xB_tmp[1];
   xBdot_tmp[2] = -tdata->p[1]*xB_tmp[1]-tdata->w[1]*xB_tmp[2]-tdata->p[0]*tdata->p[1]*xB_tmp[3]-x_tmp[2]*xB_tmp[0]*tdata->dwdx[1];
@@ -52,9 +51,9 @@ for(ix = 0; ix<10; ix++) {
        }
    }   if(amiIsInf(xBdot_tmp[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fxBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");
-       return(-1);
+       return;
    }}
-return(status);
+return;
 
 }
 

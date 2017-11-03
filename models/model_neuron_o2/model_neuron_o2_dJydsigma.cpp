@@ -11,15 +11,14 @@
 
 using namespace amici;
 
-int dJydsigma_model_neuron_o2(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-int status = 0;
+void dJydsigma_model_neuron_o2(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJydsigma,0,sizeof(realtype)*model->nytrue*model->ny*model->nJ);
-status = w_model_neuron_o2(t,x,NULL,tdata);
+w_model_neuron_o2(t,x,NULL,tdata);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;
@@ -29,7 +28,7 @@ if(!amiIsNaN(edata->my[0* udata->nt+it])){
   tdata->dJydsigma[iy+(3+0*5)*model->nytrue] = rdata->y[it + udata->nt*3]*1.0/(tdata->sigmay[0]*tdata->sigmay[0]*tdata->sigmay[0])*(edata->my[it+udata->nt*0]*2.0-rdata->y[it + udata->nt*0]*2.0)*1.0;
   tdata->dJydsigma[iy+(4+0*5)*model->nytrue] = rdata->y[it + udata->nt*4]*1.0/(tdata->sigmay[0]*tdata->sigmay[0]*tdata->sigmay[0])*(edata->my[it+udata->nt*0]*2.0-rdata->y[it + udata->nt*0]*2.0)*1.0;
 }
-return(status);
+return;
 
 }
 

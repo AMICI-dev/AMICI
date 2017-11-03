@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int deltax_model_robertson(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
-int status = 0;
+void deltax_model_robertson(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -23,7 +22,7 @@ realtype *xdot_old_tmp = nullptr;
 if(xdot_old)
     xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 memset(tdata->deltax,0,sizeof(realtype)*3);
-return(status);
+return;
 
 }
 

@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int srz_model_dirac(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
+void srz_model_dirac(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_dirac_srz_h */

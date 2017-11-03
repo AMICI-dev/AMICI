@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int xdot_model_robertson(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
+void xdot_model_robertson(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 
 
 #endif /* _am_model_robertson_xdot_h */

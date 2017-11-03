@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dsigma_ydp_model_jakstat_adjoint_o2(realtype t, amici::TempData *tdata);
+void dsigma_ydp_model_jakstat_adjoint_o2(realtype t, amici::TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_dsigma_ydp_h */

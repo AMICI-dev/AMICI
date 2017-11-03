@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int dydp_model_dirac(realtype t, int it, N_Vector x, amici::TempData *tdata);
+void dydp_model_dirac(realtype t, int it, N_Vector x, amici::TempData *tdata);
 
 
 #endif /* _am_model_dirac_dydp_h */

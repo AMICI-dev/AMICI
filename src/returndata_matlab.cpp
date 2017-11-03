@@ -78,8 +78,6 @@ void ReturnDataMatlab::initField1(double **fieldPointer, const char *fieldName,
     mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
     array = mxGetField(matlabSolutionStruct, 0, fieldName);
-    if (status && array == NULL)
-        *status = AMICI_ERROR_RDATA;
 }
 
 void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName,
@@ -97,8 +95,6 @@ void ReturnDataMatlab::initField2(double **fieldPointer, const char *fieldName,
     mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
     array = mxGetField(matlabSolutionStruct, 0, fieldName);
-    if (status && array == NULL)
-        *status = AMICI_ERROR_RDATA;
 }
 
 void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName,
@@ -118,8 +114,6 @@ void ReturnDataMatlab::initField3(double **fieldPointer, const char *fieldName,
     mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
     array = mxGetField(matlabSolutionStruct, 0, fieldName);
-    if (status && array == NULL)
-        *status = AMICI_ERROR_RDATA;
 }
 
 void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
@@ -141,8 +135,6 @@ void ReturnDataMatlab::initField4(double **fieldPointer, const char *fieldName,
     mxSetField(matlabSolutionStruct, 0, fieldName, array);
 
     array = mxGetField(matlabSolutionStruct, 0, fieldName);
-    if (status && array == NULL)
-        *status = AMICI_ERROR_RDATA;
 }
 
 } // namespace amici

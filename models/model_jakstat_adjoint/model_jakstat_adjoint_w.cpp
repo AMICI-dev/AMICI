@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int w_model_jakstat_adjoint(realtype t, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+void w_model_jakstat_adjoint(realtype t, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -23,7 +22,7 @@ if(dx)
 memset(tdata->w,0,sizeof(realtype)*2);
   tdata->w[0] = am_spline_pos(t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
   tdata->w[1] = x_tmp[1]*x_tmp[1];
-return(status);
+return;
 
 }
 

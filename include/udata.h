@@ -1,5 +1,5 @@
-#ifndef _MY_UDATA
-#define _MY_UDATA
+#ifndef AMICI_UDATA_H
+#define AMICI_UDATA_H
 
 #include "include/amici_defines.h"
 #include <cmath>
@@ -48,7 +48,7 @@ class UserData {
      */
     UserData& operator=(UserData const &other)=delete;
 
-    int unscaleParameters(double *bufferUnscaled) const;
+    void unscaleParameters(double *bufferUnscaled) const;
 
     /**
      * @brief setTimepoints
@@ -95,6 +95,12 @@ class UserData {
      * @param parameterScaling
      */
     void setPbar(const double *parameterScaling);
+    
+    /**
+     * @brief setXbar.
+     * @param stateScaling
+     */
+    void setXbar(const double *stateScaling);
 
     /**
      * @brief setStateInitialization

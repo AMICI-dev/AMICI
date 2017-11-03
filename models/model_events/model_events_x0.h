@@ -15,7 +15,7 @@ class TempData;
 class ExpData;
 }
 
-int x0_model_events(N_Vector x0, void *user_data);
+void x0_model_events(N_Vector x0, void *user_data);
 
 
 #endif /* _am_model_events_x0_h */

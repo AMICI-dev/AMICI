@@ -25,6 +25,7 @@ NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata,
      * @param[in] udata pointer to the user data object @type UserData
      * @param[in] tdata pointer to the temporary data object @type TempData
      */
+    sx_ip = N_VNew_Serial(model->nx);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -32,7 +33,7 @@ NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata,
 
 NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
                                       ReturnData *rdata, const UserData *udata,
-                                      TempData *tdata, int *status) {
+                                      TempData *tdata) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -44,8 +45,6 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
      * @param[in] udata pointer to the user data object @type UserData
      * @param[in,out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
-     * @param[out] status pointer to integer with flag for success of
-     * initialization
      * @return solver NewtonSolver according to the specified linsolType
      */
 
@@ -56,54 +55,40 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
         return new NewtonSolverDense(model, rdata, udata, tdata);
 
     case AMICI_BAND:
-        errMsgIdAndTxt("AMICI:mex:dense", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_LAPACKDENSE:
-        errMsgIdAndTxt("AMICI:mex:lapack", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_LAPACKBAND:
-        errMsgIdAndTxt("AMICI:mex:lapack", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_DIAG:
-        errMsgIdAndTxt("AMICI:mex:dense", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     /* ITERATIVE SOLVERS */
     case AMICI_SPGMR:
-        errMsgIdAndTxt("AMICI:mex:spils", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
         return new NewtonSolverIterative(model, rdata, udata, tdata);
 
     case AMICI_SPTFQMR:
-        errMsgIdAndTxt("AMICI:mex:spils", "Solver currently not supported!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
         return new NewtonSolverSparse(model, rdata, udata, tdata);
 
     default:
-        errMsgIdAndTxt("AMICI:mex:solver", "Invalid choice of solver!");
-        *status = AMICI_ERROR_NEWTONSOLVER;
-        return NULL;
+        throw NewtonFailure("Invalid Choice of Solver!");
     }
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolver::getStep(int ntry, int nnewt, N_Vector delta) {
+void NewtonSolver::getStep(int ntry, int nnewt, N_Vector delta) {
     /**
      * Computes the solution of one Newton iteration
      *
@@ -112,79 +97,55 @@ int NewtonSolver::getStep(int ntry, int nnewt, N_Vector delta) {
      * @param[in] nnewt integer number of current Newton step
      * @param[in,out] delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
      */
 
-    int status = this->prepareLinearSystem(ntry, nnewt);
+    this->prepareLinearSystem(ntry, nnewt);
 
     N_VScale(-1.0, tdata->xdot, delta);
-    if (status == AMICI_SUCCESS) {
-        status = this->solveLinearSystem(delta);
-    }
-
-    return status;
+    this->solveLinearSystem(delta);
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolver::getSensis(int it) {
+void NewtonSolver::getSensis(int it) {
     /**
      * Computes steady state sensitivities
      *
      * @param[in] it integer index of current time step
      * @return stats integer flag indicating success of the method
      */
-
-    N_Vector sx_ip = N_VNew_Serial(model->nx);
     realtype *sx_tmp;
     realtype *sx0_tmp;
-    int status = this->prepareLinearSystem(0, -1);
+    this->prepareLinearSystem(0, -1);
 
-    if (status == AMICI_SUCCESS) {
-        status = model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
-        if (status == AMICI_SUCCESS) {
-            for (int ip = 0; ip < udata->nplist; ip++) {
-
-                /* Copy the content of dxdotdp to sx_ip */
-                sx_tmp = N_VGetArrayPointer(sx_ip);
-                for (int ix = 0; ix < model->nx; ix++) {
-                    sx_tmp[ix] = -tdata->dxdotdp[model->nx * ip + ix];
-                }
-                status = this->solveLinearSystem(sx_ip);
-
-                /* Copy result to return data */
-                if (status == AMICI_SUCCESS) {
-                    if (it == AMICI_PREEQUILIBRATE) {
-                        /* Case of preequlibration */
-                        sx0_tmp = N_VGetArrayPointer(tdata->sx[ip]);
-                        for (int ix = 0; ix < model->nx; ix++) {
-                            rdata->sx0[ip * model->nx + ix] = sx_tmp[ix];
-                            sx0_tmp[ix] = sx_tmp[ix];
-                        }
-                    } else {
-                        /* Classical steady state computation */
-                        for (int ix = 0; ix < model->nx; ix++) {
-                            rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
-                                sx_tmp[ix];
-                        }
-                    }
-                } else {
-                    N_VDestroy_Serial(sx_ip);
-                    return AMICI_ERROR_SS_SENSIS;
-                }
+    model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
+    for (int ip = 0; ip < udata->nplist; ip++) {
+        
+        /* Copy the content of dxdotdp to sx_ip */
+        sx_tmp = N_VGetArrayPointer(sx_ip);
+        for (int ix = 0; ix < model->nx; ix++) {
+            sx_tmp[ix] = -tdata->dxdotdp[model->nx * ip + ix];
+        }
+        this->solveLinearSystem(sx_ip);
+        
+        /* Copy result to return data */
+        if (it == AMICI_PREEQUILIBRATE) {
+            /* Case of preequlibration */
+            sx0_tmp = N_VGetArrayPointer(tdata->sx[ip]);
+            for (int ix = 0; ix < model->nx; ix++) {
+                rdata->sx0[ip * model->nx + ix] = sx_tmp[ix];
+                sx0_tmp[ix] = sx_tmp[ix];
+            }
+        } else {
+            /* Classical steady state computation */
+            for (int ix = 0; ix < model->nx; ix++) {
+                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
+                sx_tmp[ix];
             }
         }
     }
-
-    N_VDestroy_Serial(sx_ip);
-    return status;
 }
-
-/* ----------------------------------------------------------------------------------
- */
-
-NewtonSolver::~NewtonSolver() {}
 
 /* ----------------------------------------------------------------------------------
  */
@@ -216,7 +177,7 @@ NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata,
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
+void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
@@ -224,37 +185,30 @@ int NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      * @param[in] ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param[in] nnewt integer number of current Newton step
-     * @return stats integer flag indicating success of the method
      */
 
     /* Get Jacobian */
-    int status = model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx,
+    model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx,
                            tdata->xdot, tdata->Jtmp, tdata, tmp1, tmp2, tmp3);
-
-    if (status == AMICI_SUCCESS) {
-        /* Compute factorization and pivoting */
-        status = DenseGETRF(tdata->Jtmp, pivots);
-    }
-
-    return status;
+    int status = DenseGETRF(tdata->Jtmp, pivots);
+    if(status != 0)
+        throw NewtonFailure("Dense factorization failed!");
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverDense::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverDense::solveLinearSystem(N_Vector rhs) {
     /**
      * Solves the linear system for the Newton step
      *
      * @param[in,out] rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
      */
 
     /* Pass pointer to the linear solver */
     realtype *x_tmp = N_VGetArrayPointer(rhs);
     DenseGETRS(tdata->Jtmp, pivots, x_tmp);
-    return AMICI_SUCCESS;
 }
 
 /* ----------------------------------------------------------------------------------
@@ -298,7 +252,7 @@ NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata,
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
+void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
@@ -306,45 +260,40 @@ int NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
      * @param[in] ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param[in] nnewt integer number of current Newton step
-     * @return stats integer flag indicating success of the method
      */
 
     /* Check if KLU was initialized successfully */
     if (klu_status != 1)
-        return AMICI_ERROR_NEWTON_LINSOLVER;
+        throw NewtonFailure("KLU was not initialized!");
 
     /* Get sparse Jacobian */
-    int status = model->fJSparse(tdata->t, 0.0, tdata->x, tdata->dx, tdata->xdot, tdata->J,
+    model->fJSparse(tdata->t, 0.0, tdata->x, tdata->dx, tdata->xdot, tdata->J,
                                  tdata, tmp1, tmp2, tmp3);
 
     /* Get factorization of sparse Jacobian */
-    if (status == AMICI_SUCCESS) {
-        if(symbolic) /* if symbolic was already created free first to avoid memory leak */
-            klu_free_symbolic(&symbolic, &common);
-        symbolic = klu_analyze(model->nx, (tdata->J)->indexptrs,
-                               (tdata->J)->indexvals, &common);
-        if (symbolic) {
-            if(numeric) /* if numeric was already created free first to avoid memory leak */
-                klu_free_numeric(&numeric, &common);
-            numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals,
-                                 (tdata->J)->data, symbolic, &common);
-            if (numeric) {
-                status = AMICI_SUCCESS;
-            } else {
-                status = AMICI_ERROR_NEWTON_LINSOLVER;
-            }
+    if(symbolic) /* if symbolic was already created free first to avoid memory leak */
+        klu_free_symbolic(&symbolic, &common);
+    symbolic = klu_analyze(model->nx, (tdata->J)->indexptrs,
+                           (tdata->J)->indexvals, &common);
+    if (symbolic) {
+        if(numeric) /* if numeric was already created free first to avoid memory leak */
+            klu_free_numeric(&numeric, &common);
+        numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals,
+                             (tdata->J)->data, symbolic, &common);
+        if (numeric) {
+            return;
         } else {
-            status = AMICI_ERROR_NEWTON_LINSOLVER;
+            throw NewtonFailure("KLU factorization failed!");
         }
+    } else {
+        throw NewtonFailure("KLU symbolic analysis failed!");
     }
-
-    return status;
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
     /**
      * Solves the linear system for the Newton step
      *
@@ -352,16 +301,12 @@ int NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
      * overwritten by solution to the linear system @type N_Vector
      * @return stats integer flag indicating success of the method
      */
-
-    int status = AMICI_ERROR_NEWTON_LINSOLVER;
     realtype *x_tmp = N_VGetArrayPointer(rhs);
 
     /* Pass pointer to the linear solver */
     klu_status = klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
-    if (klu_status == 1)
-        status = AMICI_SUCCESS;
-
-    return status;
+    if (klu_status != 1)
+        throw NewtonFailure("KLU solver failed");
 }
 
 /* ----------------------------------------------------------------------------------
@@ -396,12 +341,25 @@ NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata,
      * @param[in] udata pointer to the user data object @type UserData
      * @param[in] tdata pointer to the temporary data object @type TempData
      */
+        
+        ns_p = N_VNew_Serial(model->nx);
+        ns_h = N_VNew_Serial(model->nx);
+        ns_t = N_VNew_Serial(model->nx);
+        ns_s = N_VNew_Serial(model->nx);
+        ns_r = N_VNew_Serial(model->nx);
+        ns_rt = N_VNew_Serial(model->nx);
+        ns_v = N_VNew_Serial(model->nx);
+        ns_Jv = N_VNew_Serial(model->nx);
+        ns_tmp = N_VNew_Serial(model->nx);
+        ns_Jdiag = N_VNew_Serial(model->nx);
+        
+        N_VScale(-1.0, tdata->xdot, tdata->xdot);
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
+void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver.
@@ -410,38 +368,150 @@ int NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
      * @param[in] ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param[in] nnewt integer number of current Newton step
-     * @return stats integer flag indicating success of the method
      */
 
     newton_try = ntry;
     i_newton = nnewt;
     if (nnewt == -1) {
-        return AMICI_ERROR_NEWTON_LINSOLVER;
-    } else {
-        return AMICI_SUCCESS;
+        throw NewtonFailure("Linear solver SPBCG does not support sensitivity computation for steady state problems.");
     }
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-int NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
     /**
      * Solves the linear system for the Newton step by passing it to
      * linsolveSPBCG
      *
      * @param[in,out] rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
      */
 
-    return SteadystateProblem::linsolveSPBCG(udata, rdata, tdata, model,
-                                             newton_try, i_newton, rhs);
+    linsolveSPBCG(newton_try, i_newton, rhs);
 }
+    
+    
+void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta) {
+    /**
+     * Iterative linear solver created from SPILS BiCG-Stab.
+     * Solves the linear system within each Newton step if iterative solver is
+     * chosen.
+     *
+     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
+     * @param[in] nnewt integer number of current Newton step
+     * @param[in] ns_delta ???
+     */
+    
+    double rho;
+    double rho1;
+    double alpha;
+    double beta;
+    double omega;
+    double res;
+    
+    // Get the diagonal of the Jacobian for preconditioning
+    model->fJDiag(tdata->t, ns_Jdiag, 0.0, tdata->x, tdata->dx, tdata);
+    
+    // Ensure positivity of entries in ns_Jdiag
+    N_VConst(1.0, ns_p);
+    N_VAbs(ns_Jdiag, ns_tmp);
+    N_VCompare(1e-15, ns_tmp, ns_tmp);
+    N_VLinearSum(-1.0, ns_tmp, 1.0, ns_p, ns_tmp);
+    N_VLinearSum(1.0, ns_Jdiag, 1.0, ns_tmp, ns_Jdiag);
+    
+    // Initialize for linear solve
+    N_VConst(0.0, ns_p);
+    N_VConst(0.0, ns_v);
+    N_VConst(0.0, ns_delta);
+    N_VConst(0.0, ns_tmp);
+    rho = 1.0;
+    omega = 1.0;
+    alpha = 1.0;
+    
+    // can be set to 0 at the moment
+    model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_delta, ns_Jv, 0.0,  tdata, ns_tmp, NULL);
+    
+    // ns_r = xdot - ns_Jv;
+    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
+    N_VDiv(ns_r, ns_Jdiag, ns_r);
+    res = sqrt(N_VDotProd(ns_r, ns_r));
+    N_VScale(1.0, ns_r, ns_rt);
+    
+    for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps;
+         i_linstep++) {
+        // Compute factors
+        rho1 = rho;
+        rho = N_VDotProd(ns_rt, ns_r);
+        beta = rho * alpha / (rho1 * omega);
+        
+        // ns_p = ns_r + beta * (ns_p - omega * ns_v);
+        N_VLinearSum(1.0, ns_p, -omega, ns_v, ns_p);
+        N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
+        
+        // ns_v = J * ns_p
+        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_p, ns_v, 0.0,  tdata, ns_tmp, NULL);
+        N_VDiv(ns_v, ns_Jdiag, ns_v);
+        
+        // Compute factor
+        alpha = rho / N_VDotProd(ns_rt, ns_v);
+        
+        // ns_h = ns_delta + alpha * ns_p;
+        N_VLinearSum(1.0, ns_delta, alpha, ns_p, ns_h);
+        // ns_s = ns_r - alpha * ns_v;
+        N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
+        
+        // ns_t = J * ns_s
+        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_s, ns_t, 0.0,  tdata, ns_tmp, NULL);
+        N_VDiv(ns_t, ns_Jdiag, ns_t);
+        
+        // Compute factor
+        omega = N_VDotProd(ns_t, ns_s) / N_VDotProd(ns_t, ns_t);
+        
+        // ns_delta = ns_h + omega * ns_s;
+        N_VLinearSum(1.0, ns_h, omega, ns_s, ns_delta);
+        // ns_r = ns_s - omega * ns_t;
+        N_VLinearSum(1.0, ns_s, -omega, ns_t, ns_r);
+        
+        // Compute the (unscaled) residual
+        N_VProd(ns_r, ns_Jdiag, ns_r);
+        res = sqrt(N_VDotProd(ns_r, ns_r));
+        
+        // Test convergence
+        if (res < udata->atol) {
+            // Write number of steps needed
+            rdata->newton_numlinsteps[(ntry - 1) * udata->newton_maxsteps +
+                                      nnewt] = i_linstep + 1;
+            
+            // Return success
+            return;
+        }
+        
+        // Scale back
+        N_VDiv(ns_r, ns_Jdiag, ns_r);
+    }
+    throw NewtonFailure("SPBCG solver failed to converge");
+}
+    
 
 /* ----------------------------------------------------------------------------------
  */
 
-NewtonSolverIterative::~NewtonSolverIterative(){};
+NewtonSolverIterative::~NewtonSolverIterative(){
+    N_VDestroy_Serial(ns_p);
+    N_VDestroy_Serial(ns_h);
+    N_VDestroy_Serial(ns_t);
+    N_VDestroy_Serial(ns_s);
+    N_VDestroy_Serial(ns_r);
+    N_VDestroy_Serial(ns_rt);
+    N_VDestroy_Serial(ns_v);
+    N_VDestroy_Serial(ns_Jv);
+    N_VDestroy_Serial(ns_tmp);
+    N_VDestroy_Serial(ns_Jdiag);
+    N_VScale(-1.0, tdata->xdot, tdata->xdot);
+
+};
 
 } // namespace amici

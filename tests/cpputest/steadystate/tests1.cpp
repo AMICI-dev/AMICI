@@ -23,14 +23,39 @@ TEST_GROUP(groupSteadystate)
 TEST(groupSteadystate, testSimulation) {
     Model *model = getModel();
     simulateAndVerifyFromFile(model, "/model_steadystate/nosensi/");
+    simulateAndWriteToFile(model, "/model_steadystate/nosensi/");
     delete model;
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
     Model *model = getModel();
     simulateAndVerifyFromFile(model, "/model_steadystate/sensiforward/");
+    simulateAndWriteToFile(model, "/model_steadystate/sensiforward/");
     delete model;
 }
+
+TEST(groupSteadystate, testSensitivityForwardPlist) {
+    Model *model = getModel();
+    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwardplist/");
+    simulateAndWriteToFile(model, "/model_steadystate/sensiforwardplist/");
+    delete model;
+}
+
+
+TEST(groupSteadystate, testSensitivityForwardErrorInt) {
+    Model *model = getModel();
+    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwarderrorint/");
+    simulateAndWriteToFile(model, "/model_steadystate/sensiforwarderrorint/");
+    delete model;
+}
+
+TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
+    Model *model = getModel();
+    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwarderrornewt/");
+    simulateAndWriteToFile(model, "/model_steadystate/sensiforwarderrornewt/");
+    delete model;
+}
+
 
 TEST(groupSteadystate, testSensitivityForwardDense) {
     Model *model = getModel();

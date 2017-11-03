@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int x0_model_neuron_o2(N_Vector x0, void *user_data) {
-int status = 0;
+void x0_model_neuron_o2(N_Vector x0, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -22,7 +21,7 @@ realtype t = udata->tstart;
   x0_tmp[0] = udata->k[0];
   x0_tmp[1] = udata->k[0]*tdata->p[1];
   x0_tmp[5] = udata->k[0];
-return(status);
+return;
 
 }
 

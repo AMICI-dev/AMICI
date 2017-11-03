@@ -9,8 +9,7 @@
 
 using namespace amici;
 
-int dx0_model_robertson(N_Vector x0, N_Vector dx0, void *user_data) {
-int status = 0;
+void dx0_model_robertson(N_Vector x0, N_Vector dx0, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -21,7 +20,7 @@ realtype *dx0_tmp = nullptr;
 if(dx0)
     dx0_tmp = N_VGetArrayPointer(dx0);
 memset(dx0_tmp,0,sizeof(realtype)*3);
-return(status);
+return;
 
 }
 

@@ -9,14 +9,13 @@
 
 using namespace amici;
 
-int drzdx_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata) {
-int status = 0;
+void drzdx_model_robertson(realtype t, int ie, N_Vector x, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-return(status);
+return;
 
 }
 
