@@ -407,7 +407,7 @@ void ReturnData::initFields() {
         initField2(&newton_numsteps, "newton_numsteps", 1, 2);
         initField2(&newton_numlinsteps, "newton_numlinsteps", newton_maxsteps,
                    2);
-        initField2(&newton_time, "newton_time", 1, 2);
+        initField2(&newton_time, "newton_time", 1, 1);
     }
     if (ny > 0) {
         initField2(&y, "y", nt, ny);

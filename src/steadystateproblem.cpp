@@ -109,10 +109,10 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
      */
     int i_newtonstep = 0;
     int ix = 0;
-    double res_abs;
-    double res_rel;
     double res_tmp;
     double gamma = 1.0;
+    bool compNewStep = TRUE;
+    
     realtype *x_tmp;
 
     /* initialize output von linear solver for Newton step */
@@ -120,7 +120,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
 
     /* Check, how fxdot is used exactly within AMICI... */
     model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-    res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
+    double res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
@@ -133,73 +133,63 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         }
     }
     N_VDiv(tdata->xdot, x_newton, rel_x_newton);
-    res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+    double res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+    N_VScale(1.0, tdata->x, tdata->x_old);
+    N_VScale(1.0, tdata->xdot, tdata->xdot_old);
     
-    rdata->newton_numsteps[newton_try - 1] = 0.0;
-
-    while (res_abs >= udata->atol && res_rel >= udata->rtol) {
+    //rdata->newton_numsteps[newton_try - 1] = 0.0;
+    bool converged = (res_abs < udata->atol || res_rel < udata->rtol);
+    while (!converged && i_newtonstep < udata->newton_maxsteps) {
 
         /* If Newton steps are necessary, compute the inital search direction */
-        try{
-            newtonSolver->getStep(newton_try, i_newtonstep, delta);
-        } catch(...) {
-            rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
-            throw NewtonFailure("Newton method failed to compute new step!");
+        if (compNewStep) {
+            try{
+                newtonSolver->getStep(newton_try, i_newtonstep, delta);
+            } catch(...) {
+                rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
+                throw NewtonFailure("Newton method failed to compute new step!");
+            }
         }
-        /* The linear solver was successful, now the Newton solver needs to
-         * be */
-        
-        /* Copy the current state to the old one, make up a new vector for
-         * JDiag */
-        N_VScale(1.0, tdata->x, tdata->x_old);
-        N_VScale(1.0, tdata->xdot, tdata->xdot_old);
         
         /* Try a full, undamped Newton step */
         N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
-        
         /* Ensure positivity of the state */
         x_tmp = N_VGetArrayPointer(tdata->x);
-        for (ix = 0; ix < model->nx; ix++) {
-            if (x_tmp[ix] < udata->atol) {
+        for (ix = 0; ix < model->nx; ix++)
+            if (x_tmp[ix] < udata->atol)
                 x_tmp[ix] = udata->atol;
-            }
-        }
         
-        /* Compute new xdot */
+        /* Compute new xdot and residuals */
         model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
         N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
         res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
-        
-        /* Check if new residuals are smaller than old ones */
         res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
         
         if (res_tmp < res_abs) {
-            /* update state */
+            /* If new residuals are smaller than old ones, update state */
             res_abs = res_tmp;
             N_VScale(1.0, tdata->x, tdata->x_old);
             N_VScale(1.0, tdata->xdot, tdata->xdot_old);
-            
+            /* New linear solve due to new state */
+            compNewStep = TRUE;
             /* Check residuals vs tolerances */
-            if ((res_abs < udata->atol) || (res_rel < udata->rtol)) {
-                /* Return number of Newton steps */
-                rdata->newton_numsteps[newton_try - 1] =
-                i_newtonstep + 1;
-                break;
-            }
-            /* increase dampening factor */
-            gamma = fmax(1.0, 2.0 * gamma);
+            converged = (res_abs < udata->atol) || (res_rel < udata->rtol);
+            /* increase dampening factor (superfluous, if converged) */
+            gamma = fmin(1.0, 2.0 * gamma);
         } else {
             /* Reduce dampening factor */
             gamma = gamma / 4.0;
+            /* No new linear solve, only try new dampening */
+            compNewStep = FALSE;
         }
-
-        if(i_newtonstep >= udata->newton_maxsteps)
-            throw NewtonFailure("Newton method failed to converge!");
+        /* increase step counter */
         i_newtonstep++;
     }
     
     /* Set return values */
-    rdata->newton_numsteps[newton_try - 1] = i_newtonstep;
+    rdata->newton_numsteps[newton_try-1] = (double) i_newtonstep;
+    if (!converged)
+        throw NewtonFailure("Newton method failed to converge!");
     return;
 }
 
@@ -227,7 +217,8 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
 
     /* Get time for Newton solve */
     rdata->newton_time[0] = run_time;
-
+    rdata->newton_status[0] = newton_status;
+    
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
         tdata->t = rdata->ts[0];
@@ -303,11 +294,12 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
         /* Check for convergence */
         if (res_abs < udata->atol || res_rel < udata->rtol) 
             break;
-            
+        /* increase counter, check for maxsteps */
+        it_newton++;
         if (it_newton >= udata->maxsteps)
             throw NewtonFailure("Simulation based steady state failed to converge");
             
-        it_newton++;
+        
     }
     return;
 }
