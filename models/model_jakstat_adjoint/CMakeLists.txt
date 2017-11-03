@@ -74,12 +74,6 @@ ${MODEL_DIR}/wrapfunctions.cpp
 )
     
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
-
-if(APPLE)
-    set(SHARED_OBJECT_EXTENSION .dylib)
-else()
-    set(SHARED_OBJECT_EXTENSION .so)
-endif()
     
 target_link_libraries(
     ${PROJECT_NAME}
