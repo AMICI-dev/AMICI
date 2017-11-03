@@ -373,7 +373,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     newton_try = ntry;
     i_newton = nnewt;
     if (nnewt == -1) {
-        throw NewtonFailure("No setup necessary");
+        throw NewtonFailure("Linear solver SPBCG does not support sensitivity computation for steady state problems.");
     }
 }
 
