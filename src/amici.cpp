@@ -29,8 +29,6 @@
 #include <include/symbolic_functions.h>
 
 namespace amici {
-    
-    class AmiException;
 
 /** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;

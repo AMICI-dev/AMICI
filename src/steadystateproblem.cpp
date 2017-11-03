@@ -301,7 +301,6 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
             
         
     }
-    return;
 }
 
 } // namespace amici

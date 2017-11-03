@@ -380,17 +380,23 @@ void IDASolver::AMIGetLastOrder(void *ami_mem, int *order) {
 void *IDASolver::AMIGetAdjBmem(void *ami_mem, int which) {
     return IDAGetAdjIDABmem(ami_mem, which);
 }
-void IDASolver::AMICalcIC(realtype tout1) {
+
+void IDASolver::AMICalcIC(realtype tout1, TempData *tdata) {
     int status = IDACalcIC(ami_mem, IDA_YA_YDP_INIT, tout1);
     if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDACalcIC");
+        throw IDAException(status,"IDACalcIC");
+    status = IDAGetConsistentIC(ami_mem, tdata->x, tdata->dx);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status,"IDACalcIC");
 }
+
 void IDASolver::AMICalcICB(int which, realtype tout1, N_Vector xB,
                           N_Vector dxB) {
     int status = IDACalcICB(ami_mem, which, tout1, xB, dxB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDACalcICB");
 }
+    
 void IDASolver::AMISetStopTime(realtype tstop) {
     int status = IDASetStopTime(ami_mem, tstop);
     if(status != IDA_SUCCESS)

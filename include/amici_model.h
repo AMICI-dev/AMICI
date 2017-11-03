@@ -89,7 +89,6 @@ namespace amici {
          **/
         virtual void fx0(N_Vector x0, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Initial value for time derivative of states (only necessary for DAEs)
@@ -99,7 +98,6 @@ namespace amici {
          * @param[in] user_data object with model specifications @type TempData
          **/
         virtual void fdx0(N_Vector x0, N_Vector dx0, void *user_data) {
-            return;
         }
         
         //    virtual void fdx0(const realtype *k, realtype *x) { return
@@ -115,7 +113,6 @@ namespace amici {
          **/
         virtual void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
@@ -129,7 +126,6 @@ namespace amici {
          **/
         virtual void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx,
                            void *user_data) {
-            return;
         }
         
         /** Jacobian of xdot with respect to states x
@@ -152,7 +148,6 @@ namespace amici {
                         N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
                         N_Vector tmp2, N_Vector tmp3) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Jacobian of xBdot with respect to adjoint state xB
@@ -178,7 +173,6 @@ namespace amici {
                          N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** diagonalized Jacobian (for preconditioning)
@@ -195,7 +189,6 @@ namespace amici {
         virtual void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx,
                             void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -217,7 +210,6 @@ namespace amici {
         virtual int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
                          realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Event trigger function for events
@@ -232,7 +224,6 @@ namespace amici {
         virtual int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                           void *user_data) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Event root function of events (equal to froot but does not include
@@ -246,7 +237,6 @@ namespace amici {
         virtual void frz(realtype t, int ie, N_Vector x, TempData *tdata,
                          ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of rz, total derivative
@@ -260,7 +250,6 @@ namespace amici {
         virtual void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx,
                           TempData *tdata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event timepoint, total derivative
@@ -273,7 +262,6 @@ namespace amici {
         virtual void fstau(realtype t, int ie, N_Vector x, N_Vector *sx,
                            TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Observables / measurements
@@ -286,7 +274,6 @@ namespace amici {
         virtual void fy(realtype t, int it, N_Vector x, void *user_data,
                         ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of observables y w.r.t. model parameters p
@@ -297,7 +284,6 @@ namespace amici {
          */
         virtual void fdydp(realtype t, int it, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of observables y w.r.t. state variables x
@@ -308,7 +294,6 @@ namespace amici {
          */
         virtual void fdydx(realtype t, int it, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Event-resolved measurements
@@ -321,7 +306,6 @@ namespace amici {
         virtual void fz(realtype t, int ie, N_Vector x, TempData *tdata,
                         ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of z, total derivative
@@ -335,7 +319,6 @@ namespace amici {
         virtual void fsz(realtype t, int ie, N_Vector x, N_Vector *sx,
                          TempData *tdata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurements z w.r.t. to model parameters
@@ -347,7 +330,6 @@ namespace amici {
          */
         virtual void fdzdp(realtype t, int ie, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurements z w.r.t. to model states x
@@ -358,7 +340,6 @@ namespace amici {
          */
         virtual void fdzdx(realtype t, int ie, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurements rz w.r.t. to model parameters
@@ -370,7 +351,6 @@ namespace amici {
          */
         virtual void fdrzdp(realtype t, int ie, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
@@ -381,7 +361,6 @@ namespace amici {
          */
         virtual void fdrzdx(realtype t, int ie, N_Vector x, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Right hand side of differential equation for states x
@@ -396,7 +375,6 @@ namespace amici {
         virtual int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                           void *user_data) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Right hand side of differential equation for adjoint state xB
@@ -414,7 +392,6 @@ namespace amici {
         virtual int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                            N_Vector dxB, N_Vector xBdot, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Right hand side of integral equation for quadrature states qB
@@ -433,7 +410,6 @@ namespace amici {
         virtual int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                            void *user_data) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Sensitivity of dx/dt w.r.t. model parameters p
@@ -445,7 +421,6 @@ namespace amici {
          */
         virtual void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** State update functions for events
@@ -460,7 +435,6 @@ namespace amici {
         virtual void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot,
                              N_Vector xdot_old, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity update functions for events, total derivative
@@ -476,7 +450,6 @@ namespace amici {
         virtual void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot,
                               N_Vector xdot_old, N_Vector *sx, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Adjoint state update functions for events
@@ -492,7 +465,6 @@ namespace amici {
         virtual void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB,
                               N_Vector xdot, N_Vector xdot_old, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Quadrature state update functions for events
@@ -511,7 +483,6 @@ namespace amici {
                               N_Vector qBdot, N_Vector xdot, N_Vector xdot_old,
                               TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Standard deviation of measurements
@@ -520,7 +491,6 @@ namespace amici {
          */
         virtual void fsigma_y(realtype t, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of standard deviation of measurements w.r.t. model
@@ -530,7 +500,6 @@ namespace amici {
          */
         virtual void fdsigma_ydp(realtype t, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Standard deviation of events
@@ -540,7 +509,6 @@ namespace amici {
          */
         virtual void fsigma_z(realtype t, int ie, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of standard deviation of events w.r.t. model parameters p
@@ -550,7 +518,6 @@ namespace amici {
          */
         virtual void fdsigma_zdp(realtype t, int ie, TempData *tdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** negative log-likelihood of time-resolved measurements y
@@ -564,7 +531,6 @@ namespace amici {
         virtual void fJy(realtype t, int it, N_Vector x, TempData *tdata,
                          const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** negative log-likelihood of event-resolved measurements z
@@ -578,7 +544,6 @@ namespace amici {
         virtual void fJz(realtype t, int ie, N_Vector x, TempData *tdata,
                          const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** regularization of negative log-likelihood with roots of event-resolved
@@ -593,7 +558,6 @@ namespace amici {
         virtual void fJrz(realtype t, int ie, N_Vector x, TempData *tdata,
                           const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -608,7 +572,6 @@ namespace amici {
         virtual void fdJydy(realtype t, int it, N_Vector x, TempData *tdata,
                             const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -623,7 +586,6 @@ namespace amici {
         virtual void fdJydsigma(realtype t, int it, N_Vector x, TempData *tdata,
                                 const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz
@@ -638,7 +600,6 @@ namespace amici {
         virtual void fdJzdz(realtype t, int ie, N_Vector x, TempData *tdata,
                             const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz
@@ -653,7 +614,6 @@ namespace amici {
         virtual void fdJzdsigma(realtype t, int ie, N_Vector x, TempData *tdata,
                                 const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurement negative log-likelihood
@@ -668,7 +628,6 @@ namespace amici {
         virtual void fdJrzdz(realtype t, int ie, N_Vector x, TempData *tdata,
                              const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Sensitivity of event-resolved measurement negative log-likelihood
@@ -683,7 +642,6 @@ namespace amici {
         virtual void fdJrzdsigma(realtype t, int ie, N_Vector x, TempData *tdata,
                                  const ExpData *edata, ReturnData *rdata) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /** Right hand side of differential equation for state sensitivities sx
@@ -709,7 +667,6 @@ namespace amici {
                             N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data,
                             N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -730,7 +687,6 @@ namespace amici {
                               void *user_data, N_Vector tmp1, N_Vector tmp2,
                               N_Vector tmp3) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** J in banded form (for banded solvers)
@@ -754,7 +710,6 @@ namespace amici {
                             N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data,
                             N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** JB in banded form (for banded solvers)
@@ -782,7 +737,6 @@ namespace amici {
                              DlsMat JB, void *user_data, N_Vector tmp1B,
                              N_Vector tmp2B, N_Vector tmp3B) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -808,7 +762,6 @@ namespace amici {
                           N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
                           N_Vector tmpB1, N_Vector tmpB2) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -832,7 +785,6 @@ namespace amici {
                                SlsMat JB, void *user_data, N_Vector tmp1B,
                                N_Vector tmp2B, N_Vector tmp3B) {
             throw AmiException("Missing function implementation!");
-            return(0);
         }
         
         /**
@@ -846,7 +798,6 @@ namespace amici {
          */
         virtual void fw(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /**
@@ -860,7 +811,6 @@ namespace amici {
          */
         virtual void fdwdp(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /**
@@ -874,7 +824,6 @@ namespace amici {
          */
         virtual void fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!");
-            return;
         }
         
         /**
@@ -888,7 +837,6 @@ namespace amici {
          */
         virtual void fM(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!"); 
-            return;
         }
         
         /**
@@ -902,7 +850,6 @@ namespace amici {
          */
         virtual void fdfdx(realtype t, N_Vector x, N_Vector dx, void *user_data) {
             throw AmiException("Missing function implementation!"); 
-            return;
         }
         
         virtual ~Model();

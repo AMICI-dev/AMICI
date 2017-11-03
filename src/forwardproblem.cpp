@@ -89,7 +89,7 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
                             status = solver->AMISolve(RCONST(rdata->ts[it]), tdata->x, tdata->dx,
                                                       &(tdata->t), AMICI_NORMAL);
                         }
-                        if (status == -22) {
+                        if (status == AMICI_ILL_INPUT) {
                             /* clustering of roots => turn off rootfinding */
                             solver->turnOffRootFinding();
                         }
@@ -275,7 +275,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const UserData *udata,
         solver->AMIReInit(tdata->t, tdata->x, tdata->dx);
 
         /* make time derivative consistent */
-        solver->AMICalcIC(tdata->t);
+        solver->AMICalcIC(tdata->t,tdata);
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {

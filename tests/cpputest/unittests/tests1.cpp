@@ -27,25 +27,13 @@ TEST_GROUP(amici)
 TEST(amici, testRunAmiciSimulationStateMismatch) {
     UserData udata(1, 2, 3);
     Model model(4, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    bool exceptionThrown = false;
-    try {
-        runAmiciSimulation(&udata, nullptr, nullptr, &model);
-    } catch (amici::AmiException& ex) {
-        exceptionThrown = true;
-    }
-    CHECK_TRUE(exceptionThrown)
+    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST(amici, testRunAmiciSimulationRdataMissing) {
     UserData udata(1, 2, 3);
     Model model(1, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    bool exceptionThrown = false;
-    try {
-        runAmiciSimulation(&udata, nullptr, nullptr, &model);
-    } catch (amici::AmiException& ex) {
-        exceptionThrown = true;
-    }
-    CHECK_TRUE(exceptionThrown)
+    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST_GROUP(userData)
