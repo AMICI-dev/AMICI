@@ -661,63 +661,6 @@ namespace amici {
          */
         virtual void model_M(realtype *M, const realtype t, const realtype *x, const realtype *p,
                              const realtype *k) {};
-        
-        /**
-         * @brief Recurring terms in xdot
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] udata object with user input
-         */
-        virtual void fw(const realtype t, const N_Vector x, const UserData *udata) {
-            std::fill(w.begin(),w.end(),0.0)
-            w_model(w.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k());
-        }
-        
-        /**
-         * @brief Recurring terms in xdot, parameter derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] udata object with user input
-         */
-        virtual void fdwdp(const realtype t, const N_Vector x, const UserData *udata) {
-            fw(t,x,udata);
-            std::fill(dwdp.begin(),dwdp.end(),0.0)
-            model_dwdp(dwdp.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k(),w.data());
-        }
-        
-        /** model specific implementation of dwdp
-         * @param[out] dwdp Recurring terms in xdot, parameter derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] w vector with helper variables
-         */
-        virtual void model_dwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *w) {};
-        
-        /**
-         * @brief Recurring terms in xdot, state derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states @type N_Vector
-         * @param[in] udata object with user input
-         */
-        virtual void fdwdx(const realtype t, const N_Vector x, const UserData *udata) {
-            fw(t,x,udata);
-            std::fill(dwdx.begin(),dwdx.end(),0.0)
-            model_dwdx(dwdx.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k(),w.data());
-        }
-        
-        /** model specific implementation of dwdx
-         * @param[out] dwdx Recurring terms in xdot, state derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] w vector with helper variables
-         */
-        virtual void model_dwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *w) {};
 
     };
     

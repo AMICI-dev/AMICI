@@ -28,12 +28,12 @@ namespace amici {
 IDASolver::IDASolver() : Solver() {}
 
 void IDASolver::init(N_Vector x, N_Vector dx, realtype t) {
-    int status = IDAInit(ami_mem, residualFunction, RCONST(t), x, dx);
+    int status = IDAInit(ami_mem, model->fxdot, RCONST(t), x, dx);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInit");
 }
 void IDASolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
-    int status = IDAInitB(ami_mem, which, residualFunctionB, RCONST(t), xB, dxB);
+    int status = IDAInitB(ami_mem, which, model->fxBdot, RCONST(t), xB, dxB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInitB");
 }
@@ -43,7 +43,7 @@ void IDASolver::qbinit(int which, N_Vector qBdot) {
          throw IDAException(status,"IDAQuadInitB");
 }
 void IDASolver::rootInit(int ne) {
-    int status = IDARootInit(ami_mem, ne, rootFunction);
+    int status = IDARootInit(ami_mem, ne, model->froot);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDARootInit");
 }
@@ -54,44 +54,44 @@ void IDASolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
          throw IDAException(status,"IDASensInit");
 }
 void IDASolver::setDenseJacFn() {
-    int status = IDADlsSetDenseJacFn(ami_mem, J);
+    int status = IDADlsSetDenseJacFn(ami_mem, model->fJ);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetDenseJacFn");
 }
 
 void IDASolver::setSparseJacFn() {
-    int status = IDASlsSetSparseJacFn(ami_mem, fJSparse);
+    int status = IDASlsSetSparseJacFn(ami_mem, model->fJSparse);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASlsSetSparseJacFn");
 }
 void IDASolver::setBandJacFn() {
-    int status = IDADlsSetBandJacFn(ami_mem, fJBand);
+    int status = IDADlsSetBandJacFn(ami_mem, model->fJBand);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetBandJacFn");
 }
 
 void IDASolver::setJacTimesVecFn() {
-    int status = IDASpilsSetJacTimesVecFn(ami_mem, fJv);
+    int status = IDASpilsSetJacTimesVecFn(ami_mem, model->fJv);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFn");
 }
 void IDASolver::setDenseJacFnB(int which) {
-    int status = IDADlsSetDenseJacFnB(ami_mem, which, fJB);
+    int status = IDADlsSetDenseJacFnB(ami_mem, which, model->fJB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetDenseJacFnB");
 }
 void IDASolver::setSparseJacFnB(int which) {
-    int status = IDASlsSetSparseJacFnB(ami_mem, which, fJSparseB);
+    int status = IDASlsSetSparseJacFnB(ami_mem, which, model->fJSparseB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASlsSetSparseJacFnB");
 }
 void IDASolver::setBandJacFnB(int which) {
-    int status = IDADlsSetBandJacFnB(ami_mem, which, fJBandB);
+    int status = IDADlsSetBandJacFnB(ami_mem, which, model->fJBandB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetBandJacFnB");
 }
 void IDASolver::setJacTimesVecFnB(int which) {
-    int status = IDASpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
+    int status = IDASpilsSetJacTimesVecFnB(ami_mem, which, model->fJvB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFnB");
 }
@@ -409,110 +409,6 @@ void IDASolver::turnOffRootFinding() {
         throw IDAException(status,"IDARootInit");
 }
 
-int IDASolver::residualFunction(realtype tt, N_Vector yy, N_Vector yp,
-                              N_Vector rr, void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fxdot(tt, yy, yp, rr, user_data);
-}
-int IDASolver::residualFunctionB(realtype tt, N_Vector yy, N_Vector yp,
-                               N_Vector yyB, N_Vector ypB, N_Vector rrB,
-                               void *user_dataB) {
-    TempData *tdata = (TempData *)user_dataB;
-
-    return tdata->model->fxBdot(tt, yy, yp, yyB, ypB, rrB, user_dataB);
-}
-int IDASolver::rootFunction(realtype t, N_Vector y, N_Vector yp, realtype *gout,
-                            void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->froot(t, y, yp, gout, user_data);
-}
-int IDASolver::J(long N, realtype t, realtype c_j, N_Vector y, N_Vector yp,
-                 N_Vector r, DlsMat Jac, void *user_data, N_Vector tmp1,
-                 N_Vector tmp2, N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJ(N, t, c_j, y, r, yp, Jac, user_data, tmp1, tmp2,
-                            tmp3);
-}
-int IDASolver::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
-                      N_Vector dxB, N_Vector qBdot, void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fqBdot(t, x, dx, xB, dxB, qBdot, user_data);
-}
-                                            
-int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot,
-                      N_Vector dx, N_Vector *sx, N_Vector *sdx, N_Vector *sxdot,
-                      void *user_data, N_Vector tmp1, N_Vector tmp2,
-                      N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    int status;
-    for(int ip = 0; ip<tdata->udata->nplist; ip++) {
-        status = tdata->model->fsxdot(Ns, t, x, dx, xdot, ip, sx[tdata->udata->plist[ip]],
-                                      sdx[tdata->udata->plist[ip]], sxdot[tdata->udata->plist[ip]],
-                                      user_data, tmp1, tmp2, tmp3);
-        if(status != AMICI_SUCCESS)
-            return status;
-    }
-    return status;
-}
-
-int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                        N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1,
-                        N_Vector tmp2, N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparse(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-}
-                                            
-int IDASolver::fJBand(long int N, long int mupper, long int mlower, realtype t,
-                      realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
-                      DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2,
-                      N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBand(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data,
-                                tmp1, tmp2, tmp3);
-}
-                                            
-int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
-                   N_Vector v, N_Vector Jv, realtype cj, void *user_data,
-                   N_Vector tmp1, N_Vector tmp2) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJv(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
-}
-                                            
-int IDASolver::fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x,
-                   N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                   DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                   N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJB(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B,
-                             tmp2B, tmp3B);
-}
-                                            
-int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                         N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB,
-                         void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                         N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparseB(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B,
-                                   tmp3B);
-}
-                                            
-int IDASolver::fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                       realtype t, realtype cj, N_Vector x, N_Vector dx,
-                       N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB,
-                       void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                       N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBandB(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB,
-                                 user_data, tmp1B, tmp2B, tmp3B);
-}
-                                            
-int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
-                    N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB,
-                    realtype cj, void *user_data, N_Vector tmpB1,
-                    N_Vector tmpB2) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJvB(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
-}
                                             
 IDASolver::~IDASolver() { AMIFree(); }
 

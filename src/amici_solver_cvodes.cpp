@@ -31,13 +31,13 @@
 namespace amici {
 
 void CVodeSolver::init(N_Vector x, N_Vector dx, realtype t) {
-    int status = CVodeInit(ami_mem, residualFunction, RCONST(t), x);
+    int status = CVodeInit(ami_mem, model->fxdot, RCONST(t), x);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInit");
 }
 
 void CVodeSolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
-    int status = CVodeInitB(ami_mem, which, residualFunctionB, RCONST(t), xB);
+    int status = CVodeInitB(ami_mem, which, model->fxBdot, RCONST(t), xB);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInitB");
 }
@@ -49,7 +49,7 @@ void CVodeSolver::qbinit(int which, N_Vector qBdot) {
 }
 
 void CVodeSolver::rootInit(int ne) {
-    int status = CVodeRootInit(ami_mem, ne, rootFunction);
+    int status = CVodeRootInit(ami_mem, ne, model->froot);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
 }
@@ -62,49 +62,49 @@ void CVodeSolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) 
 }
 
 void CVodeSolver::setDenseJacFn() {
-    int status = CVDlsSetDenseJacFn(ami_mem, J);
+    int status = CVDlsSetDenseJacFn(ami_mem, model->J);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVDlsSetDenseJacFn");
 }
 
 void CVodeSolver::setSparseJacFn() {
-    int status = CVSlsSetSparseJacFn(ami_mem, fJSparse);
+    int status = CVSlsSetSparseJacFn(ami_mem, model->fJSparse);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVSlsSetSparseJacFn");
 }
 
 void CVodeSolver::setBandJacFn() {
-    int status = CVDlsSetBandJacFn(ami_mem, fJBand);
+    int status = CVDlsSetBandJacFn(ami_mem, model->fJBand);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVDlsSetBandJacFn");
 }
 
 void CVodeSolver::setJacTimesVecFn() {
-    int status = CVSpilsSetJacTimesVecFn(ami_mem, fJv);
+    int status = CVSpilsSetJacTimesVecFn(ami_mem, model->fJv);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVSpilsSetJacTimesVecFn");
 }
 
 void CVodeSolver::setDenseJacFnB(int which) {
-    int status = CVDlsSetDenseJacFnB(ami_mem, which, fJB);
+    int status = CVDlsSetDenseJacFnB(ami_mem, which, model->fJB);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVDlsSetDenseJacFnB");
 }
 
 void CVodeSolver::setSparseJacFnB(int which) {
-    int status = CVSlsSetSparseJacFnB(ami_mem, which, fJSparseB);
+    int status = CVSlsSetSparseJacFnB(ami_mem, which, model->fJSparseB);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVSlsSetSparseJacFnB");
 }
 
 void CVodeSolver::setBandJacFnB(int which) {
-    int status = CVDlsSetBandJacFnB(ami_mem, which, fJBandB);
+    int status = CVDlsSetBandJacFnB(ami_mem, which, model->fJBandB);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVDlsSetBandJacFnB");
 }
 
 void CVodeSolver::setJacTimesVecFnB(int which) {
-    int status = CVSpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
+    int status = CVSpilsSetJacTimesVecFnB(ami_mem, which, model->fJvB);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVSpilsSetJacTimesVecFnB");
 }
@@ -447,101 +447,6 @@ void CVodeSolver::turnOffRootFinding() {
     int status = CVodeRootInit(ami_mem, 0, NULL);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
-}
-
-int CVodeSolver::residualFunction(realtype t, N_Vector y, N_Vector ydot,
-                                void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-
-    return tdata->model->fxdot(t, y, NULL, ydot, user_data);
-}
-
-int CVodeSolver::residualFunctionB(realtype t, N_Vector y, N_Vector yB,
-                                 N_Vector yBdot, void *user_dataB) {
-    TempData *tdata = (TempData *)user_dataB;
-
-    return tdata->model->fxBdot(t, y, NULL, yB, NULL, yBdot, user_dataB);;
-}
-
-int CVodeSolver::rootFunction(realtype t, N_Vector x, realtype *root,
-                              void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->froot(t, x, NULL, root, user_data);
-}
-
-int CVodeSolver::J(long N, realtype t, N_Vector x, N_Vector xdot, DlsMat J,
-                   void *user_data, N_Vector tmp1, N_Vector tmp2,
-                   N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJ(N, t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2,
-                            tmp3);
-}
-
-int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                        void *user_data) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fqBdot(t, x, NULL, xB, NULL, qBdot, user_data);
-}
-
-int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                        N_Vector sx, N_Vector sxdot, void *user_data,
-                        N_Vector tmp1, N_Vector tmp2) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fsxdot(Ns, t, x, NULL, xdot, ip, sx, NULL, sxdot, user_data, tmp1,
-                                tmp2, NULL);
-}
-
-int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                          void *user_data, N_Vector tmp1, N_Vector tmp2,
-                          N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparse(t, 0.0, x, NULL, xdot, J, user_data, tmp1, tmp2, tmp3);
-}
-
-int CVodeSolver::fJBand(long N, long mupper, long mlower, realtype t,
-                        N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBand(N, mupper, mlower, t, 0.0, x, NULL, xdot, J, user_data,
-                                tmp1, tmp2, tmp3);
-}
-
-int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                     N_Vector xdot, void *user_data, N_Vector tmp) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJv(t, x, NULL, xdot, v, Jv, 0.0, user_data, tmp, NULL);
-}
-
-int CVodeSolver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                     N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                     N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJB(NeqBdot, t, 0.0, x, NULL, xB, NULL, xBdot, JB, user_data, tmp1B,
-                             tmp2B, tmp3B);
-}
-
-int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                           SlsMat JB, void *user_data, N_Vector tmp1B,
-                           N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJSparseB(t, 0.0, x, NULL, xB, NULL, xBdot, JB, user_data, tmp1B, tmp2B,
-                                   tmp3B);
-}
-
-int CVodeSolver::fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                         realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         DlsMat JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJBandB(NeqBdot, mupper, mlower, t, 0.0, x, NULL, xB, NULL, xBdot, JB,
-                                 user_data, tmp1B, tmp2B, tmp3B);
-}
-
-int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                      N_Vector xB, N_Vector xBdot, void *user_data,
-                      N_Vector tmpB) {
-    TempData *tdata = (TempData *)user_data;
-    return tdata->model->fJvB(t, x, NULL, xB, NULL, xBdot, vB, JvB, 0.0, user_data, tmpB, NULL);
 }
 
 CVodeSolver::~CVodeSolver() { AMIFree(); }
