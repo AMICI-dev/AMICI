@@ -101,7 +101,7 @@ namespace amici {
          * param[in] ip parameter index
          **/
         virtual void model_x0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Initial value for time derivative of states (only necessary for DAEs)
@@ -130,7 +130,7 @@ namespace amici {
          * param[in] ip sensitivity index
          **/
         virtual void model_sx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         
@@ -162,7 +162,7 @@ namespace amici {
          * param[in] ie event index
          **/
         virtual void model_stau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip, const int ie) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         
@@ -187,7 +187,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_y(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of observables y w.r.t. model parameters p
@@ -209,7 +209,7 @@ namespace amici {
          * param[in] ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_dydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of observables y w.r.t. state variables x
@@ -228,7 +228,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_dydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Event-resolved output
@@ -253,7 +253,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_z(double *z, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of z, total derivative
@@ -282,7 +282,7 @@ namespace amici {
          * param[in] ip sensitivity index
          **/
         virtual void model_sz(double *sz, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Event root function of events (equal to froot but does not include
@@ -308,7 +308,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_rz(double *rz, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of rz, total derivative
@@ -337,7 +337,7 @@ namespace amici {
          * param[in] ip sensitivity index
          **/
         virtual void model_srz(double *srz, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of event-resolved output z w.r.t. to model parameters p
@@ -359,7 +359,7 @@ namespace amici {
          * param[in] ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_dzdp(double *dzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of event-resolved output z w.r.t. to model states x
@@ -378,7 +378,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_dzdx(double *dzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of event-resolved root output w.r.t. to model parameters p
@@ -400,7 +400,7 @@ namespace amici {
          * param[in] ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_drzdp(double *drzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
@@ -419,7 +419,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_drzdx(double *drzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** State update functions for events
@@ -443,7 +443,7 @@ namespace amici {
          **/
         virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k
                                  const int ie, const realtype *xdot, const realtype *xdot_old) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity update functions for events, total derivative
@@ -473,7 +473,7 @@ namespace amici {
         virtual void model_deltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                    const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx,
                                    const realtype *stau) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Adjoint state update functions for events
@@ -498,7 +498,7 @@ namespace amici {
          **/
         virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k
                                   const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Quadrature state update functions for events
@@ -528,7 +528,7 @@ namespace amici {
         virtual void model_deltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                    const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB,
                                    const realtype *qBdot) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         /** Standard deviation of measurements
          * @param[in] udata object with user input
@@ -545,7 +545,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_sigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of standard deviation of measurements w.r.t. model
@@ -564,7 +564,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_dsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Standard deviation of events
@@ -582,7 +582,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_sigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
@@ -601,7 +601,7 @@ namespace amici {
          * param[in] k constant vector
          **/
         virtual void model_dsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** negative log-likelihood of measurements y
@@ -634,7 +634,7 @@ namespace amici {
          * param[in] my measurements at timepoint
          **/
         virtual void model_Jy(double *nllh, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** negative log-likelihood of event-resolved measurements z
@@ -667,7 +667,7 @@ namespace amici {
          * param[in] mz event measurements at timepoint
          **/
         virtual void model_Jz(double *nllh, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** regularization of negative log-likelihood with roots of event-resolved
@@ -699,7 +699,7 @@ namespace amici {
          * param[in] sigmaz event measurement standard deviation at timepoint
          **/
         virtual void model_Jrz(double *nllh, const realtype *p, const realtype *k, const double *z, const double *sigmaz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of time-resolved measurement negative log-likelihood Jy
@@ -737,7 +737,7 @@ namespace amici {
          **/
         virtual void model_dJydy(double *dJydy, const realtype *p, const realtype *k,
                                  const double *y, const double *sigmay, const double *my) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -777,7 +777,7 @@ namespace amici {
          **/
         virtual void model_dJydsigma(double *dJydsigma, const realtype *p, const realtype *k,
                                  const double *y, const double *sigmay, const double *my) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of event measurement negative log-likelihood Jz
@@ -815,7 +815,7 @@ namespace amici {
          **/
         virtual void model_dJzdz(double *dJzdz, const realtype *p, const realtype *k,
                                  const double *z, const double *sigmaz, const double *mz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of event measurement negative log-likelihood Jz
@@ -855,7 +855,7 @@ namespace amici {
          **/
         virtual void model_dJzdsigma(double *dJzdsigma, const realtype *p, const realtype *k,
                                      const double *z, const double *sigmaz, const double *mz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** partial derivative of event measurement negative log-likelihood Jz
@@ -892,7 +892,7 @@ namespace amici {
          **/
         virtual void model_dJrzdz(double *dJrzdz, const realtype *p, const realtype *k,
                                  const double *rz, const double *sigmaz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         /** Sensitivity of event measurement negative log-likelihood Jz
@@ -930,7 +930,7 @@ namespace amici {
          **/
         virtual void model_dJrzdsigma(double *dJrzdsigma, const realtype *p, const realtype *k,
                                      const double *rz, const double *sigmaz) {
-            throw AmiException("Requested functionality is not supported as " __func__ "is not implemented for this model!");
+            throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
         
         virtual ~Model();
@@ -959,6 +959,22 @@ namespace amici {
         void initializeStates(const double *x0data, TempData *tdata);
         
         void initHeaviside(TempData *tdata);
+        
+    protected:
+        int checkVals(const int N,const realtype *array, const char* fun){
+            for(intidx = 0; idx < N; idx++) {
+                if(amiIsNaN(array[idx])) {
+                    warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value at index (%i) of (%i) in (%s)! Aborting simulation ... ",idx,N,fun);
+                    return(AMICI_ERROR);
+                }
+                if(amiIsInf(JDiag_tmp[idx])) {
+                    warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value at index (%i) of (%i) in (%s)! Aborting simulation ... ",idx,N,fun);
+                    return(AMICI_ERROR);
+                }
+            }
+            return(AMICI_SUCCESS);
+        }
+        
         
     private:
         
