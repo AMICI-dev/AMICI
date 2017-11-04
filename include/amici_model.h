@@ -441,7 +441,7 @@ namespace amici {
          * param[in] xdot new model right hand side
          * param[in] xdot_old previous model right hand side
          **/
-        virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k
+        virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                  const int ie, const realtype *xdot, const realtype *xdot_old) {
             throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
@@ -496,7 +496,7 @@ namespace amici {
          * param[in] xdot_old previous model right hand side
          * param[in] xB current adjoint state
          **/
-        virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k
+        virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                   const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as " __func__ " is not implemented for this model!");
         }
@@ -985,6 +985,16 @@ namespace amici {
             std::fill(w.begin(),w.end(),0.0)
             w_model(w.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k());
         }
+        
+        /** model specific implementation of fw
+         * @param[out] w Recurring terms in xdot
+         * @param[in] t timepoint
+         * @param[in] x Vector with the states
+         * @param[in] p parameter vector
+         * @param[in] k constants vector
+         */
+        virtual void model_w(realtype *w, const realtype t, const realtype *x, const realtype *p,
+                                const realtype *k) {};
         
         /**
          * @brief Recurring terms in xdot, parameter derivative

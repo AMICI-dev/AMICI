@@ -22,58 +22,10 @@ class Solver;
 amici::UserData getUserData();
 amici::Solver *getSolver();
 amici::Model *getModel();
-void fx0(N_Vector x0, void *user_data);
-void fdx0(N_Vector x0, N_Vector dx0, void *user_data);
-void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
-void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);
-void fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
-void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
-void froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
-void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
-void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata);
-void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
-void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
-void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
-void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
-void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fsigma_y(realtype t, amici::TempData *tdata);
-void fdsigma_ydp(realtype t, amici::TempData *tdata);
-void fsigma_z(realtype t, int ie, amici::TempData *tdata);
-void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata);
-void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
-void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
 
-class Model_model_events : public amici::Model {
+class Model_model_events : public amici::Model_ODE {
 public:
-    Model_model_events() : amici::Model(4,
+    Model_model_events() : amici::Model_ODE(4,
                     3,
                     3,
                     4,
@@ -95,255 +47,155 @@ public:
         idlist = new realtype[3] {0, 0, 0,};
     }
 
+    void J_model_events(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    model_J = &J_model_events;
+
+    void JB_model_events(long int NeqBdot, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+    model_JB = &JB_model_events;
+
+    void JBand_model_events(long int N, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    model_JBand = &JBand_model_events;
+
+    void JBandB_model_events(long int NeqBdot, long int mupper, long int mlower, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+    model_JBandB = &JBandB_model_events;
+
+    void JDiag_model_events(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
+    model_JDiag = &JDiag_model_events;
+
+    void JSparse_model_events(realtype t, N_Vector x, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    model_JSparse = &JSparse_model_events;
+
+    void JSparseB_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
+    model_JSparseB = &JSparseB_model_events;
+
+    void Jrz_model_events(double *nllh, const realtype *p, const realtype *k, const double *z, const double *sigmaz);
+    model_Jrz = &Jrz_model_events;
+
+    void Jv_model_events(realtype t, N_Vector x, N_Vector xdot, N_Vector v, N_Vector Jv, void *user_data, N_Vector tmp1, N_Vector tmp2);
+    model_Jv = &Jv_model_events;
+
+    void JvB_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, N_Vector vB, N_Vector JvB, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
+    model_JvB = &JvB_model_events;
+
+    void Jy_model_events(double *nllh, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+    model_Jy = &Jy_model_events;
+
+    void Jz_model_events(double *nllh, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+    model_Jz = &Jz_model_events;
+
+    void dJrzdsigma_model_events(double *dJrzdsigma, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+    model_dJrzdsigma = &dJrzdsigma_model_events;
+
+    void dJrzdz_model_events(double *dJrzdz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+    model_dJrzdz = &dJrzdz_model_events;
+
+    void dJydsigma_model_events(double *dJydsigma, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+    model_dJydsigma = &dJydsigma_model_events;
+
+    void dJydy_model_events(double *dJydy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+    model_dJydy = &dJydy_model_events;
+
+    void dJzdsigma_model_events(double *dJzdsigma, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+    model_dJzdsigma = &dJzdsigma_model_events;
+
+    void dJzdz_model_events(double *dJzdz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+    model_dJzdz = &dJzdz_model_events;
+
+    void deltaqB_model_events(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB, const realtype *qBdot);
+    model_deltaqB = &deltaqB_model_events;
+
+    void deltasx_model_events(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau);
+    model_deltasx = &deltasx_model_events;
+
+    void deltax_model_events(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ie, const realtype *xdot, const realtype *xdot_old);
+    model_deltax = &deltax_model_events;
+
+    void deltaxB_model_events(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
+    model_deltaxB = &deltaxB_model_events;
+
+    void drzdp_model_events(double *drzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
+    model_drzdp = &drzdp_model_events;
+
+    void drzdx_model_events(double *drzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_drzdx = &drzdx_model_events;
+
+    void dsigma_ydp_model_events(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip);
+    model_dsigma_ydp = &dsigma_ydp_model_events;
+
+    void dsigma_zdp_model_events(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip);
+    model_dsigma_zdp = &dsigma_zdp_model_events;
+
+    void dwdp_model_events(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *w);
+    model_dwdp = &dwdp_model_events;
+
+    void dwdx_model_events(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *w);
+    model_dwdx = &dwdx_model_events;
+
+    void dxdotdp_model_events(realtype t, N_Vector x,, void *user_data);
+    model_dxdotdp = &dxdotdp_model_events;
+
+    void dydp_model_events(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
+    model_dydp = &dydp_model_events;
+
+    void dydx_model_events(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_dydx = &dydx_model_events;
+
+    void dzdp_model_events(double *dzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
+    model_dzdp = &dzdp_model_events;
+
+    void dzdx_model_events(double *dzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_dzdx = &dzdx_model_events;
+
+    void qBdot_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data);
+    model_qBdot = &qBdot_model_events;
+
+    void root_model_events(realtype t, N_Vector x, realtype *root, void *user_data);
+    model_root = &root_model_events;
+
+    void rz_model_events(double *rz, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_rz = &rz_model_events;
+
+    void sigma_y_model_events(double *sigmay, const realtype t, const realtype *p, const realtype *k);
+    model_sigma_y = &sigma_y_model_events;
+
+    void sigma_z_model_events(double *sigmaz, const realtype t, const realtype *p, const realtype *k);
+    model_sigma_z = &sigma_z_model_events;
+
+    void srz_model_events(double *srz, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip);
+    model_srz = &srz_model_events;
+
+    void stau_model_events(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip, const int ie);
+    model_stau = &stau_model_events;
+
+    void sx0_model_events(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
+    model_sx0 = &sx0_model_events;
+
+    void sxdot_model_events(int Ns, realtype t, N_Vector x, N_Vector xdot,int ip,  N_Vector sx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
+    model_sxdot = &sxdot_model_events;
+
+    void sz_model_events(double *sz, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip);
+    model_sz = &sz_model_events;
+
+    void w_model_events(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_w = &w_model_events;
+
+    void x0_model_events(realtype *x0, const realtype t, const realtype *p, const realtype *k);
+    model_x0 = &x0_model_events;
+
+    void xBdot_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void *user_data);
+    model_xBdot = &xBdot_model_events;
+
+    void xdot_model_events(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    model_xdot = &xdot_model_events;
+
+    void y_model_events(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_y = &y_model_events;
+
+    void z_model_events(double *z, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+    model_z = &z_model_events;
+
     amici::Solver *getSolver() override {
         return new amici::CVodeSolver();
     }
-
-    int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        J_model_events(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
-    }
-
-    int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JB_model_events(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
-    }
-
-    int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JBand_model_events(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
-    }
-
-    int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JBandB_model_events(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
-    }
-
-    void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) override {
-        JDiag_model_events(t, JDiag, cj, x, dx, user_data);
-        return;
-    }
-
-    int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JSparse_model_events(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
-    }
-
-    int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JSparseB_model_events(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
-    }
-
-    void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jrz_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) override {
-        Jv_model_events(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
-        return(0);
-    }
-
-    int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) override {
-        JvB_model_events(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
-        return(0);
-    }
-
-    void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jy_model_events(t, it, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jz_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdsigma_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdz_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydsigma_model_events(t, it, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydy_model_events(t, it, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdsigma_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdz_model_events(t, ie, x, tdata, edata, rdata);
-        return;
-    }
-
-    void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaqB_model_events(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
-        return;
-    }
-
-    void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) override {
-        deltasx_model_events(t, ie, x, xdot, xdot_old, sx, tdata);
-        return;
-    }
-
-    void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltax_model_events(t, ie, x, xdot, xdot_old, tdata);
-        return;
-    }
-
-    void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaxB_model_events(t, ie, x, xB, xdot, xdot_old, tdata);
-        return;
-    }
-
-    void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdp_model_events(t, ie, x, tdata);
-        return;
-    }
-
-    void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdx_model_events(t, ie, x, tdata);
-        return;
-    }
-
-    void fdsigma_ydp(realtype t, amici::TempData *tdata) override {
-        dsigma_ydp_model_events(t, tdata);
-        return;
-    }
-
-    void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata) override {
-        dsigma_zdp_model_events(t, ie, tdata);
-        return;
-    }
-
-    void fdwdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdp_model_events(t, x, dx, user_data);
-        return;
-    }
-
-    void fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdx_model_events(t, x, dx, user_data);
-        return;
-    }
-
-    void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dxdotdp_model_events(t, x, dx, user_data);
-        return;
-    }
-
-    void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydp_model_events(t, it, x, tdata);
-        return;
-    }
-
-    void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydx_model_events(t, it, x, tdata);
-        return;
-    }
-
-    void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdp_model_events(t, ie, x, tdata);
-        return;
-    }
-
-    void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdx_model_events(t, ie, x, tdata);
-        return;
-    }
-
-    int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) override {
-        qBdot_model_events(t, x, dx, xB, dxB, qBdot, user_data);
-        return(0);
-    }
-
-    int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) override {
-        root_model_events(t, x, dx, root, user_data);
-        return(0);
-    }
-
-    void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        rz_model_events(t, ie, x, tdata, rdata);
-        return;
-    }
-
-    void fsigma_y(realtype t, amici::TempData *tdata) override {
-        sigma_y_model_events(t, tdata);
-        return;
-    }
-
-    void fsigma_z(realtype t, int ie, amici::TempData *tdata) override {
-        sigma_z_model_events(t, ie, tdata);
-        return;
-    }
-
-    void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        srz_model_events(t, ie, x, sx, tdata, rdata);
-        return;
-    }
-
-    void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) override {
-        stau_model_events(t, ie, x, sx, tdata);
-        return;
-    }
-
-    void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) override {
-        sx0_model_events(sx0, x, dx, user_data);
-        return;
-    }
-
-    int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        sxdot_model_events(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
-        return(0);
-    }
-
-    void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        sz_model_events(t, ie, x, sx, tdata, rdata);
-        return;
-    }
-
-    void fw(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        w_model_events(t, x, dx, user_data);
-        return;
-    }
-
-    void fx0(N_Vector x0, void *user_data) override {
-        x0_model_events(x0, user_data);
-        return;
-    }
-
-    int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) override {
-        xBdot_model_events(t, x, dx, xB, dxB, xBdot, user_data);
-        return(0);
-    }
-
-    int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) override {
-        xdot_model_events(t, x, dx, xdot, user_data);
-        return(0);
-    }
-
-    void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) override {
-        y_model_events(t, it, x, user_data, rdata);
-        return;
-    }
-
-    void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        z_model_events(t, ie, x, tdata, rdata);
-        return;
-    }
-
-};
 
 #endif /* _amici_wrapfunctions_h */

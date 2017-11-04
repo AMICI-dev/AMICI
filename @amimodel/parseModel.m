@@ -75,8 +75,8 @@ this.HTable(1).Jz = CalcMD5(char(this.sym.Jz));
 this.HTable(1).Jrz = CalcMD5(char(this.sym.Jrz));
 
 % check if code generation changed
-codegen_amifun = {'gccode','getArgs','getCVar','getFArgs',...
-    'getSensiFlag','getSyms','printLocalVars','writeCcode',...
+codegen_amifun = {'gccode','getArgs','getCVar',...
+    'getSensiFlag','getSyms','writeCcode',...
     'writeCcode_sensi'};
 for ifile = 1:length(codegen_amifun)
     this.HTable(1).(codegen_amifun{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen_amifun{ifile} '.m']),'File');
@@ -84,15 +84,6 @@ end
 codegen_amimodel = {'generateC','makeSyms','makeEvents'};
 for ifile = 1:length(codegen_amimodel)
     this.HTable(1).(codegen_amimodel{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amimodel',[codegen_amimodel{ifile} '.m']),'File');
-end
-this.HTable(1).udata = CalcMD5(fullfile(this.wrap_path,'include','udata.h'),'File');
-this.HTable(1).tdata = CalcMD5(fullfile(this.wrap_path,'include','tdata.h'),'File');
-
-if(not(this.recompile))
-    this.recompile = not(strcmp(this.HTable(1).udata,HTable.udata));
-end
-if(not(this.recompile))
-    this.recompile = not(strcmp(this.HTable(1).tdata,HTable.tdata));
 end
 
 ifile = 1;

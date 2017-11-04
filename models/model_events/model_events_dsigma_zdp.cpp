@@ -1,25 +1,11 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
 #include "model_events_w.h"
 
-using namespace amici;
+using namespace model_events;
 
-void dsigma_zdp_model_events(realtype t, int ie, amici::TempData *tdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-int ip;
-memset(tdata->dsigmazdp,0,sizeof(realtype)*2*udata->nplist);
-for(ip = 0; ip<udata->nplist; ip++) {
+void dsigma_zdp_model_events(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
 switch (udata->plist[ip]) {
 }
 }
-return;
-
-}
-
 
