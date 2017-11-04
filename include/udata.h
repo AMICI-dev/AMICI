@@ -3,6 +3,7 @@
 
 #include "include/amici_defines.h"
 #include <cmath>
+#include <vector>
 
 namespace amici {
 class UserData;
@@ -122,22 +123,22 @@ class UserData {
     int nmaxevent = 10;
 
     /** positivity flag (size nx) */
-    double *qpositivex = nullptr;
+    std::vector<int>qpositivex;
 
     /** parameter selection and reordering (size nplist) */
-    int *plist = nullptr;
+    std::vector<int>plist;
 
-    /** number of parameters in plist */
-    int nplist = 0;
+    /** number of parameters in plist 
+     *  @return length of plist
+     */
+    const int nplist() const{
+        return plist.size();
+    };
 
     /** number of timepoints */
-    int nt = 0;
-
-    /** parameter array (size np) */
-    double *p = nullptr;
-
-    /** constants array (size nk) */
-    double *k = nullptr;
+    const int nt() const{
+        return ts.size();
+    }
 
     /** parameter transformation of p */
     AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
@@ -146,14 +147,14 @@ class UserData {
     double tstart = 0.0;
 
     /** timepoints (size nt) */
-    double *ts = nullptr;
+    std::vector<double>ts;
 
     /** scaling of parameters (size nplist) */
-    double *pbar = nullptr;
+    std::vector<double>pbar;
 
     /** scaling of states (size nx)
      * NOTE: currently not used */
-    double *xbar = nullptr;
+    std::vector<double>xbar;
 
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
@@ -209,10 +210,10 @@ class UserData {
     booleantype stldet = true;
 
     /** state initialisation (size nx) */
-    double *x0data = nullptr;
+    std::vector<double>x0data;
 
     /** sensitivity initialisation (size nx * nplist) */
-    double *sx0data = nullptr;
+    std::vector<double>sx0data;
 
     /** state ordering */
     StateOrdering ordering = AMD;
@@ -221,11 +222,17 @@ class UserData {
     void print() const;
 
     /** total number of model parameters */
-    const int np;
+    const int np() const{
+        return p.size();
+    };
     /** number of fixed parameters */
-    const int nk;
+    const int nk() const{
+        return k.size();
+    };
     /** number of states */
-    const int nx;
+    const int nx() const{
+        return sizex;
+    };
 
     /**
      * @brief Serialize UserData (see boost::serialization::serialize)
@@ -235,6 +242,13 @@ class UserData {
      */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
+private:
+    const int sizex;
+    /** parameter array (size np) */
+    std::vector<double>p;
+    
+    /** constants array (size nk) */
+    std::vector<double>k;
 
 };
 

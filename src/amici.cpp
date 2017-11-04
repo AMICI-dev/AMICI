@@ -48,8 +48,8 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  */
 void runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model) {
-    if (!udata || udata->nx != model->nx || udata->np != model->np ||
-        udata->nk != model->nk)
+    if (!udata || udata->nx() != model->nx || udata->np() != model->np ||
+        udata->nk() != model->nk)
         throw SetupFailure("udata was not allocated or does not agree with model!");
     if (!rdata)
         throw SetupFailure("rdata was not allocated!");
