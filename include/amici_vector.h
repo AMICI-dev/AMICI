@@ -27,6 +27,11 @@ namespace amici {
             nvec = N_VMake_Serial(length,vec.data());
         };
         
+        AmiVector(std::vector<realtype> rvec) {
+            vec = rvec;
+            nvec = N_VMake_Serial(rvec.size(),rvec.data());
+        };
+        
         realtype *data() {
             return vec.data();
         }
@@ -35,7 +40,7 @@ namespace amici {
             return vec.data();
         }
         
-        N_Vector getNvector() {
+        N_Vector getNVector() {
             return nvec;
         }
         
@@ -85,11 +90,15 @@ namespace amici {
             return vec_array.at(idx).data();
         }
         
+        realtype at(int ipos, int jpos) {
+            return vec_array.at(jpos).at(ipos);
+        }
+        
         const realtype *data(int idx) const {
             return vec_array.at(idx).data();
         }
         
-        N_Vector *getNvectorArray() {
+        N_Vector *getNVectorArray() {
             return nvec_array;
         }
         

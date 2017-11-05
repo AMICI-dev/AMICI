@@ -2,6 +2,7 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "include/amici_defines.h"
+#include <vector>
 namespace amici {
 
 class UserData;

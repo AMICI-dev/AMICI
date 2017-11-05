@@ -63,8 +63,10 @@ namespace amici {
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
         nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode), nplist(np),
         dJydy(nJ*nytrue*ny, 0.0),
+        dJydp(nJ*nplist, 0.0),
         dJydsigma(nJ*nytrue*ny, 0.0),
         dJzdz(nJ*nztrue*nz, 0.0),
+        dJzdp(nJ*nplist, 0.0),
         dJzdsigma(nJ*nztrue*nz, 0.0),
         dJrzdz(nJ*nztrue*nz, 0.0),
         dJrzdsigma(nJ*nztrue*nz, 0.0),
@@ -120,8 +122,11 @@ namespace amici {
          */
         virtual Solver *getSolver() { return NULL; }
         
+        virtual void frootwrap(realtype t, N_Vector x, N_Vector dx, realtype *root,
+                               void *user_data) = 0;
+        
 
-        void fx0(AmiVector x, UserData *udata);
+        void fx0(AmiVector x, const UserData *udata);
         
         /** model specific implementation of fx0
          * param[out] sx0 initial state sensitivities
@@ -141,7 +146,7 @@ namespace amici {
          *written (only DAE) @type N_Vector
          * @param[in] user_data object with model specifications @type TempData
          **/
-        virtual void fdx0(N_Vector x0, N_Vector dx0, void *user_data) = 0;
+        virtual void fdx0(AmiVector x0, AmiVector dx0, const UserData *udata) = 0;
         
         void fsx0(AmiVectorArray sx, const AmiVector x, const UserData *udata);
         
@@ -610,25 +615,24 @@ namespace amici {
         
         void fsz_tf(const int ie, ReturnData *rdata);
         
-        void fsJy(const int it, ReturnData *rdata);
+        void fsJy(const int it, const std::vector<double> dJydx, ReturnData *rdata);
         
         void fdJydp(const int it, const ExpData *edata,
                    const ReturnData *rdata);
         
-        void fdJydx(const int it, const ExpData *edata);
+        void fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
-        void fsJz(const int ie, const ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray sx, const ReturnData *rdata);
         
-        void fdJzdp(const int ie, const ExpData *edata,
-                   const ReturnData *rdata);
+        void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void fdJzdx(const int ie, const ExpData *edata);
+        void fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void initialize(const UserData *udata);
+        void initialize(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata);
         
-        void initializeStates(const double *x0data);
+        void initializeStates(AmiVector x, const UserData *udata);
         
-        void initHeaviside();
+        void initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata);
         
         // Model dimensions 
         int nplist;
@@ -670,7 +674,7 @@ namespace amici {
         /** index indicating to which event an event output belongs */
         const std::vector<int> z2event;
         /** flag array for DAE equations */
-        const std::vector<int> idlist;
+        const std::vector<realtype> idlist;
         
     protected:
         int checkVals(const int N,const realtype *array, const char* fun){
@@ -728,19 +732,21 @@ namespace amici {
         
     private:
         
-        void getmy(const int it, const ExpData *edata, const UserData *udata);
+        void getmy(const int it, const ExpData *edata);
         
-        void gety(const int it, const ReturnData *rdata, const UserData *udata);
+        void gety(const int it, const ReturnData *rdata);
         
-        void getx(const int it, const ReturnData *rdata, const UserData *udata);
+        void getx(const int it, const ReturnData *rdata);
         
-        const realtype gett(const int it, const ReturnData *rdata, const UserData *udata) const;
+        void getsx(const int it, const ReturnData *rdata);
         
-        void getmz(const int nroots, const ExpData *edata, const UserData *udata);
+        const realtype gett(const int it, const ReturnData *rdata) const;
         
-        void getz(const int nroots, const ReturnData *rdata, const UserData *udata);
+        void getmz(const int nroots, const ExpData *edata);
         
-        void getrz(const int nroots, const ReturnData *rdata, const UserData *udata);
+        void getz(const int nroots, const ReturnData *rdata);
+        
+        void getrz(const int nroots, const ReturnData *rdata);
 
         /** storage for dJydy slice */
         std::vector<double> dJydyTmp;
@@ -762,6 +768,8 @@ namespace amici {
         
         /** current state */
         std::vector<double> x;
+        /** current state */
+        std::vector<std::vector<double>> sx;
         /** current observable */
         std::vector<double> y;
         /** current observable measurement */
@@ -774,10 +782,14 @@ namespace amici {
         std::vector<double> rz;
         /** observable derivative of data likelihood */
         std::vector<double> dJydy;
+        /** parameter derivative of data likelihood */
+        std::vector<double> dJydp;
         /** observable sigma derivative of data likelihood */
         std::vector<double> dJydsigma;
         /** event ouput derivative of event likelihood */
         std::vector<double> dJzdz;
+        /** parameter derivative of event likelihood */
+        std::vector<double> dJzdp;
         /** event sigma derivative of event likelihood */
         std::vector<double> dJzdsigma;
         /** event ouput derivative of event likelihood at final timepoint */

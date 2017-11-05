@@ -157,6 +157,11 @@ class UserData {
         return nmaxevent;
     };
     
+    /** max number of events */
+    const int sensmeth() const{
+        return sensi_meth;
+    };
+    
     const double *p() const{
         return par.data();
     };
@@ -168,6 +173,10 @@ class UserData {
     const int plist(int pos) const{
         return p_index.at(pos);
     };
+    
+    const std::vector<double> getInitialStates() const {
+        return x0data;
+    }
 
     /**
      * @brief Serialize UserData (see boost::serialization::serialize)

@@ -17,10 +17,9 @@ namespace amici {
 /**
  * @brief setupAMIs initialises the ami memory object
  * @param[in] udata pointer to the user data object @type UserData
- * @param[in] tdata pointer to the temporary data object @type TempData
  * @param[in] model pointer to the model object @type Model
  */
-void Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
+void Solver::setupAMI(const UserData *udata, Model *model) {
     tdata->t = udata->tstart;
 
     model->initialize(udata, tdata);
@@ -110,10 +109,9 @@ void Solver::setupAMI(const UserData *udata, TempData *tdata, Model *model) {
 /**
  * setupAMIB initialises the AMI memory object for the backwards problem
  * @param[in] udata pointer to the user data object @type UserData
- * @param[in] tdata pointer to the temporary data object @type TempData
  * @param[in] model pointer to the model object @type Model
  */
-void Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
+void Solver::setupAMIB(const UserData *udata, Model *model) {
 
     /* write initial conditions */
     if (!tdata->xB)

@@ -189,6 +189,10 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
+        virtual void frootwrap(realtype t, N_Vector x, N_Vector dx, realtype *root,
+                               void *user_data){
+            froot(t,x,root,user_data);
+        }
         
         static int froot(realtype t, N_Vector x, realtype *root,
                   void *user_data);
