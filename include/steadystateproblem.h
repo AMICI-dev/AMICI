@@ -25,7 +25,7 @@ class NewtonSolverIterative;
 
 class SteadystateProblem {
   public:
-    void workSteadyStateProblem(const UserData *udata, TempData *tdata,
+    void workSteadyStateProblem(const UserData *udata,
                                       ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
 
@@ -33,15 +33,14 @@ class SteadystateProblem {
      * applyNewtonsMethod applies Newtons method to the current state x to
      * find the steady state
      */
-    void applyNewtonsMethod(const UserData *udata, ReturnData *rdata,
-                                  TempData *tdata, Model *model,
+    void applyNewtonsMethod(const UserData *udata, ReturnData *rdata, Model *model,
                                   NewtonSolver *newtonSolver, int newton_try);
 
-    void getNewtonOutput(TempData *tdata, ReturnData *rdata,
+    void getNewtonOutput(ReturnData *rdata,
                                 Model *model, int newton_status,
                                 double run_time, int it);
 
-    void getNewtonSimulation(const UserData *udata, TempData *tdata,
+    void getNewtonSimulation(const UserData *udata,
                                    ReturnData *rdata, Solver *solver,
                                    Model *model, int it);
     

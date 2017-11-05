@@ -3,6 +3,7 @@
 
 #include "include/amici_defines.h"
 #include "include/amici_vector.h"
+#include <sundials/sundials_direct.h>
 #include <vector>
 namespace amici {
 
@@ -23,6 +24,10 @@ class ForwardProblem {
     ForwardProblem(const UserData *udata,
                    ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
+    ~ForwardProblem() {
+        DestroyMat(Jtmp);
+    };
+    
     
     void workForwardProblem();
     
@@ -34,7 +39,7 @@ class ForwardProblem {
     const UserData *udata;
     const ExpData *edata;
 
-    void handleEvent(realtype *tlastroot);
+    void handleEvent(realtype *tlastroot,const bool seflag);
 
     void storeJacobianAndDerivativeInReturnData();
 
@@ -56,7 +61,7 @@ class ForwardProblem {
 
     void applyEventSensiBolusFSA();
 
-    void updateHeaviside(const int ne);
+    void updateHeaviside();
     
     /** data likelihood */
     std::vector<double> Jy;
@@ -106,6 +111,7 @@ class ForwardProblem {
      * decreased during backward solve */
     int iroot = 0;
     
+    DlsMat Jtmp;
     
     /** state vector */
     AmiVector x;

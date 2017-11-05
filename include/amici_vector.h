@@ -90,7 +90,7 @@ namespace amici {
             return vec_array.at(idx).data();
         }
         
-        realtype at(int ipos, int jpos) {
+        realtype& at(int ipos, int jpos) {
             return vec_array.at(jpos).at(ipos);
         }
         

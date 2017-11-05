@@ -186,7 +186,25 @@ class UserData {
      */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
-
+    
+    /** maximum number of allowed Newton steps for steady state computation */
+    int newton_maxsteps = 0;
+    
+    /** maximum number of allowed linear steps per Newton step for steady state
+     * computation */
+    int newton_maxlinsteps = 0;
+    
+    /** Preequilibration of model via Newton solver? */
+    int newton_preeq = false;
+    
+    /** Which preconditioner is to be used in the case of iterative linear
+     * Newton solvers */
+    int newton_precon = 1;
+    
+    /** internal sensitivity method flag used to select the sensitivity solution
+     * method. Only applies for Forward Sensitivities. */
+    InternalSensitivityMethod ism = SIMULTANEOUS;
+    
 private:
     /** maximal number of events to track */
     int nmaxevent = 10;
@@ -233,23 +251,6 @@ private:
     /** maximum number of allowed integration steps */
     int maxsteps = 0;
     
-    /** maximum number of allowed Newton steps for steady state computation */
-    int newton_maxsteps = 0;
-    
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    int newton_maxlinsteps = 0;
-    
-    /** Preequilibration of model via Newton solver? */
-    int newton_preeq = false;
-    
-    /** Which preconditioner is to be used in the case of iterative linear
-     * Newton solvers */
-    int newton_precon = 1;
-    
-    /** internal sensitivity method flag used to select the sensitivity solution
-     * method. Only applies for Forward Sensitivities. */
-    InternalSensitivityMethod ism = SIMULTANEOUS;
     
     /** method for sensitivity computation */
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;

@@ -122,8 +122,14 @@ namespace amici {
          */
         virtual Solver *getSolver() { return NULL; }
         
-        virtual void frootwrap(realtype t, N_Vector x, N_Vector dx, realtype *root,
-                               void *user_data) = 0;
+        virtual void frootwrap(realtype t, AmiVector x, AmiVector dx, realtype *root,
+                               const UserData *user_data) = 0;
+        
+        virtual void fxdotwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                               const UserData *user_data) = 0;
+        
+        virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                              AmiVector xdot, DlsMat J, const UserData *user_data) = 0;
         
 
         void fx0(AmiVector x, const UserData *udata);
@@ -498,7 +504,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fJrz(std::vector<double> Jz, const int nroots, const ReturnData *rdata, const UserData *udata, const ExpData *edata);
+        void fJrz(const int nroots, ReturnData *rdata, const UserData *udata, const ExpData *edata);
         
         /** model specific implementation of fJrz
          * param[out] nllh regularization for event measurements z
@@ -678,6 +684,28 @@ namespace amici {
         /** flag array for DAE equations */
         const std::vector<realtype> idlist;
         
+        /** data standard deviation */
+        std::vector<double> sigmay;
+        /** parameter derivative of data standard deviation */
+        std::vector<double> dsigmaydp;
+        /** event standard deviation */
+        std::vector<double> sigmaz;
+        /** parameter derivative of event standard deviation */
+        std::vector<double> dsigmazdp;
+        /** parameter derivative of data likelihood */
+        std::vector<double> dJydp;
+        /** parameter derivative of event likelihood */
+        std::vector<double> dJzdp;
+        
+        /** change in x */
+        std::vector<realtype> deltax;
+        /** change in sx */
+        std::vector<realtype> deltasx;
+        /** change in xB */
+        std::vector<realtype> deltaxB;
+        /** change in qB */
+        std::vector<realtype> deltaqB;
+        
     protected:
         int checkVals(const int N,const realtype *array, const char* fun){
             for(int idx = 0; idx < N; idx++) {
@@ -784,14 +812,10 @@ namespace amici {
         std::vector<double> rz;
         /** observable derivative of data likelihood */
         std::vector<double> dJydy;
-        /** parameter derivative of data likelihood */
-        std::vector<double> dJydp;
         /** observable sigma derivative of data likelihood */
         std::vector<double> dJydsigma;
         /** event ouput derivative of event likelihood */
         std::vector<double> dJzdz;
-        /** parameter derivative of event likelihood */
-        std::vector<double> dJzdp;
         /** event sigma derivative of event likelihood */
         std::vector<double> dJzdsigma;
         /** event ouput derivative of event likelihood at final timepoint */
@@ -810,14 +834,6 @@ namespace amici {
         std::vector<double> dydp;
         /** state derivative of observable */
         std::vector<double> dydx;
-        /** data standard deviation */
-        std::vector<double> sigmay;
-        /** parameter derivative of data standard deviation */
-        std::vector<double> dsigmaydp;
-        /** event standard deviation */
-        std::vector<double> sigmaz;
-        /** parameter derivative of event standard deviation */
-        std::vector<double> dsigmazdp;
         /** tempory storage of dxdotdp data across functions */
         std::vector<realtype> dxdotdp;;
         /** tempory storage of w data across functions */
@@ -830,14 +846,6 @@ namespace amici {
         std::vector<realtype> M;
         /** tempory storage of stau data across functions */
         std::vector<realtype> stau;
-        /** change in x */
-        std::vector<realtype> deltax;
-        /** change in sx */
-        std::vector<realtype> deltasx;
-        /** change in xB */
-        std::vector<realtype> deltaxB;
-        /** change in qB */
-        std::vector<realtype> deltaqB;
     };
     
 } // namespace amici

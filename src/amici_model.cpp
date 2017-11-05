@@ -351,8 +351,7 @@ void Model::initializeStates(AmiVector x, const UserData *udata) {
  */
 void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata) {
     std::vector<realtype> rootvals(ne,0.0);
-    UserData udata_tmp(*udata); // make a copy to remove constness
-    frootwrap(udata->tstart(), x.getNVector(), dx.getNVector(), rootvals.data(), &udata_tmp);
+    frootwrap(udata->tstart(), x, dx, rootvals.data(), udata);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             h.at(ie) = 0.0;
@@ -672,7 +671,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param rdata pointer to return data object
      * @param edata pointer to experimental data object
      */
-    void Model::fJrz(std::vector<double> Jz, const int nroots, const ReturnData *rdata, const UserData *udata, const ExpData *edata) {
+    void Model::fJrz(const int nroots, ReturnData *rdata, const UserData *udata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
         getrz(nroots,rdata);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
@@ -680,7 +679,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jrz(nllh.data(),udata->p(),udata->k(),rz.data(),sigmaz.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
-                    Jz.at(iJ) += nllh.at(iJ);
+                    rdata->llh[iJ] -= nllh.at(iJ);
                 }
             }
         }

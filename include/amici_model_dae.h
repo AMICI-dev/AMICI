@@ -59,6 +59,9 @@ namespace amici {
                       N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
                       N_Vector tmp2, N_Vector tmp3);
         
+        virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                              AmiVector xdot, DlsMat J, const UserData *user_data) = 0;
+        
         /** model specific implementation for fJ
          * @param[out] J Matrix to which the Jacobian will be written
          * @param[in] t timepoint
@@ -204,10 +207,8 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void frootwrap(realtype t, N_Vector x, N_Vector dx, realtype *root,
-                               void *user_data){
-            froot(t,x,dx,root,user_data);
-        }
+        virtual void frootwrap(realtype t, AmiVector x, AmiVector dx, realtype *root,
+                               const UserData *udata);
         
         static int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                          void *user_data);
@@ -226,6 +227,9 @@ namespace amici {
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
         }
+        
+        virtual void fxdotwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                               const UserData *udata);
 
         static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                          void *user_data);

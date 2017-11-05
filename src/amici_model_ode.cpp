@@ -24,6 +24,13 @@ namespace amici {
                 w.data(),dwdx.data());
         return checkVals(N,J->data,"Jacobian");
     }
+    
+    virtual void fJwrapfJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                          AmiVector xdot, DlsMat J, const UserData *user_data){
+        UserData user_data(*udata); // make a copy to remove constness
+        fJ(t,x.getNVector(),root,user_data);
+        
+    }
 
     /** Jacobian of xBdot with respect to adjoint state xB
      * @param[in] NeqBdot number of adjoint state variables
@@ -221,6 +228,12 @@ namespace amici {
         }
         return checkVals(ne,root,"root function");
     }
+    
+    virtual void frootwrap(realtype t, AmiVector x, AmiVector dx, realtype *root,
+                           const UserData *udata){
+        UserData user_data(*udata); // make a copy to remove constness
+        froot(t,x.getNVector(),root,user_data);
+    }
 
     /** residual function of the DAE
      * @param[in] t timepoint
@@ -236,6 +249,12 @@ namespace amici {
         model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
                    w.data());
         return checkVals(nx,xdot,"residual function");
+    }
+    
+    virtual void fxdotwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                           const UserData *udata){
+        UserData user_data(*udata); // make a copy to remove constness
+        fxdot(t,x.getNVector(),xdot.getNVector(),user_data);
     }
 
     /** Right hand side of differential equation for adjoint state xB

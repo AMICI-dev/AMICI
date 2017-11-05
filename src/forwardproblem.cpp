@@ -42,6 +42,7 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
         this->udata = udata;
         this->edata = edata;
         this->rdata = rdata;
+        Jtmp = NewDenseMat(model->nx,model->nx);
     }
 
 /* ------------------------------------------------------------------------ */
@@ -78,7 +79,7 @@ void ForwardProblem::workForwardProblem() {
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             solver->AMISetStopTime(rdata->ts[it]);
         }
-        if (rdata->ts[it] > udata->tstart) {
+        if (rdata->ts[it] > udata->tstart()) {
             while (t < rdata->ts[it]) {
                 if (model->nx > 0) {
                     if (std::isinf(rdata->ts[it])) {
@@ -101,8 +102,7 @@ void ForwardProblem::workForwardProblem() {
                             solver->turnOffRootFinding();
                         }
                         if (status == AMICI_ROOT_RETURN) {
-                            handleEvent(&tlastroot, udata, rdata, edata,
-                                        0, solver, model);
+                            handleEvent(&tlastroot,FALSE);
                         }
                     }
                 } else {
@@ -110,12 +110,12 @@ void ForwardProblem::workForwardProblem() {
                 }
             }
         }
-        handleDataPoint(it, udata, rdata, edata, solver, model);
+        handleDataPoint(it);
     }
 
     /* fill events */
     if (model->ne > 0) {
-        getEventOutput(udata, rdata, edata, model);
+        getEventOutput();
     }
 
     // set likelihood
@@ -130,7 +130,7 @@ void ForwardProblem::workForwardProblem() {
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
-void ForwardProblem::handleEvent(realtype *tlastroot) {
+void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
@@ -141,9 +141,9 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
     int secondevent = 0;
 
     /* store heaviside information at event occurence */
-    model->froot(t, x, dx, rootvals, udata);
+    model->frootwrap(t, x, dx, rootvals, udata);
     
-    if (seflag == 0) {
+    if (!seflag) {
         solver->AMIGetRootInfo(rootsfound);
     }
 
@@ -157,7 +157,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
         rvaltmp[ie] = rootvals[ie];
     }
 
-    if (seflag == 0) {
+    if (!seflag) {
         /* only extract in the first event fired */
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST &&
             rdata->sensi_meth == AMICI_SENSI_FSA) {
@@ -174,23 +174,23 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
         *tlastroot = t;
     }
 
-    getEventOutput(udata, rdata, edata, model);
+    getEventOutput();
 
     /* if we need to do forward sensitivities later on we need to store the old
      * x and the old xdot */
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* store x and xdot to compute jump in sensitivities */
-        N_VScale(1.0, x, x_old);
+        N_VScale(1.0, x.getNVector(), x_old.getNVector());
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-            model->fxdot(t, x, dx, xdot, udata);
-            N_VScale(1.0, xdot, xdot_old);
-            N_VScale(1.0, dx, dx_old);
+            model->fxdotwrap(t, x, dx, xdot, udata);
+            N_VScale(1.0, xdot.getNVector(), xdot_old.getNVector());
+            N_VScale(1.0, dx.getNVector(), dx_old.getNVector());
 
             /* compute event-time derivative only for primary events, we get
              * into trouble with multiple simultaneously firing events here (but
              * is this really well defined then?), in that case just use the
              * last ie and hope for the best. */
-            if (seflag == 0) {
+            if (!seflag) {
                 for (ie = 0; ie < model->ne; ie++) {
                     if (rootsfound[ie] ==
                         1) { /* only consider transitions false -> true */
@@ -201,10 +201,10 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
         } else if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             /* store x to compute jump in discontinuity */
             if (iroot < rdata->nmaxevent * model->ne) {
-                N_VScale(1.0, x, x_disc[iroot]);
-                N_VScale(1.0, xdot, xdot_disc[iroot]);
-                N_VScale(1.0, xdot_old,
-                         xdot_old_disc[iroot]);
+                N_VScale(1.0, x.getNVector(), x_disc[iroot].getNVector());
+                N_VScale(1.0, xdot.getNVector(), xdot_disc[iroot].getNVector());
+                N_VScale(1.0, xdot_old.getNVector(),
+                         xdot_old_disc[iroot].getNVector());
             }
         }
     }
@@ -231,13 +231,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
 
             /* compute the new xdot  */
-            model->fxdot(t, x, dx, xdot, udata);
+            model->fxdotwrap(t, x, dx, xdot, udata);
             applyEventSensiBolusFSA();
         }
     }
 
     /* check whether we need to fire a secondary event */
-    model->froot(t, x, dx, rootvals, udata);
+    model->frootwrap(t, x, dx, rootvals, udata);
     for (ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound[ie] == 0) {
@@ -259,16 +259,15 @@ void ForwardProblem::handleEvent(realtype *tlastroot) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
-        handleEvent(tlastroot, udata, rdata, edata, secondevent,
-                             solver, model);
+        handleEvent(tlastroot, TRUE);
     }
 
     /* only reinitialise in the first event fired */
-    if (seflag == 0) {
+    if (!seflag) {
         solver->AMIReInit(t, x, dx);
 
         /* make time derivative consistent */
-        solver->AMICalcIC(t,udata);
+        solver->AMICalcIC(t, x, dx);
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {
@@ -287,11 +286,10 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     /* entries in rdata are actually (double) while entries in tdata are
        (realtype)
        we should perform proper casting here. */
-    model->fxdot(t, x, dx, xdot, udata);
+    model->fxdotwrap(t, x, dx, xdot, udata);
     memcpy(rdata->xdot, xdot.data(), model->nx * sizeof(realtype));
 
-    model->fJ(model->nx, t, 0, x, dx, xdot,
-                       Jtmp, NULL, NULL, NULL);
+    model->fJwrap(t, 0.0, x, dx, xdot, Jtmp, udata);
     memcpy(rdata->J, Jtmp->data,
            model->nx * model->nx * sizeof(realtype));
 
@@ -303,9 +301,9 @@ void ForwardProblem::getEventOutput() {
      *
      */
 
-    if (t ==
-        rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
-        model->froot(t, x, dx, rootvals, udata);
+    if (t == rdata->ts[rdata->nt - 1]) {
+        // call from fillEvent at last timepoint
+        model->frootwrap(t, x, dx, rootvals, udata);
     }
 
     /* EVENT OUTPUT */
@@ -319,20 +317,19 @@ void ForwardProblem::getEventOutput() {
             /* only consider transitions false
              -> true  or event filling*/
 
-            model->fz(t, ie, x, rdata);
+            model->fz(nroots[ie], t, x, rdata, udata);
 
             if (edata) {
-                model->fsigma_z(t,ie,nroots,rdata,udata)
+                model->fsigma_z(t, ie, nroots, edata, rdata, udata);
 
-                model->fJz(t, ie, x, edata, rdata);
+                model->fJz(nroots[ie], rdata, udata, edata);
 
                 if (t == rdata->ts[rdata->nt - 1]) {
                     // call from fillEvent at last
                     // timepoint, add regularization
                     // based on rz
-                    model->frz(t, ie, x, rdata);
-                    model->fJrz(t, ie, x, edata,
-                                         rdata);
+                    model->frz(nroots[ie], t, x, rdata, udata);
+                    model->fJrz(nroots[ie], rdata, udata, edata);
                 }
             }
 
@@ -378,13 +375,13 @@ void ForwardProblem::prepEventSensis(int ie) {
             if (model->z2event[iz] - 1 == ie) {
                 if (!amiIsNaN(
                               edata->mz[iz * rdata->nmaxevent + nroots[ie]])) {
-                    model->fdzdp(t, ie, x, udata);
+                    model->fdzdp(t, x, udata);
                     
-                    model->fdzdx(t, ie, x, udata);
+                    model->fdzdx(t, x, udata);
                     
                     if (t == rdata->ts[rdata->nt - 1]) {
-                        model->fdrzdp(t, ie, x, udata);
-                        model->fdrzdx(t, ie, x, udata);
+                        model->fdrzdp(t, x, udata);
+                        model->fdrzdx(t, x, udata);
                     }
                     /* extract the value for the standard deviation, if the data
                      value is NaN, use
@@ -392,7 +389,7 @@ void ForwardProblem::prepEventSensis(int ie) {
                      struct */
                     if (amiIsNaN(edata->sigmaz[nroots[ie] +
                                                rdata->nmaxevent * iz])) {
-                        model->fdsigma_zdp(t, ie, udata);
+                        model->fdsigma_zdp(t, udata);
                     } else {
                         for (int ip = 0; ip < rdata->nplist; ip++) {
                             model->dsigmazdp[iz + model->nz * ip] = 0;
@@ -412,15 +409,15 @@ void ForwardProblem::prepEventSensis(int ie) {
                 }
             }
         }
-        model->fdJzdz(t, ie, x, edata, rdata);
-        model->fdJzdsigma(t, ie, x, edata, rdata);
+        model->fdJzdz(nroots[ie], rdata, udata, edata);
+        model->fdJzdsigma(nroots[ie], rdata, udata, edata);
 
         if (t == rdata->ts[rdata->nt - 1]) {
-            model->fdJrzdz(t, ie, x, edata, rdata);
-            model->fdJrzdsigma(t, ie, x, edata, rdata);
+            model->fdJrzdz(nroots[ie], rdata, udata, edata);
+            model->fdJrzdsigma(nroots[ie], rdata, udata, edata);
         }
-        model->fdJzdx(ie, edata);
-        model->fdJzdp(ie, edata, rdata);
+        model->fdJzdx(dJzdx, nroots[ie], t, edata, rdata);
+        model->fdJzdp(nroots[ie], t, edata, rdata);
         if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             for (int iJ = 0; iJ < model->nJ; iJ++) {
                 for (int ip = 0; ip < rdata->nplist; ip++) {
@@ -450,13 +447,13 @@ void ForwardProblem::getEventSensisFSA(int ie) {
     if (t ==
         rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
         model->fsz_tf(ie, rdata);
-        model->fsrz(t, ie, x, sx, rdata);
+        model->fsrz(nroots[ie],t,x,sx,rdata,udata);
     } else {
-        model->fsz(t, ie, x, sx, rdata);
+        model->fsz(nroots[ie],t,x,sx,rdata,udata);
     }
 
     if (edata) {
-        model->fsJz(ie, rdata);
+        model->fsJz(nroots[ie],dJzdx,sx,rdata);
     }
 }
 
@@ -473,11 +470,11 @@ void ForwardProblem::handleDataPoint(int it) {
             rdata->x[it + rdata->nt * ix] = x[ix];
         }
 
-        if (rdata->ts[it] > udata->tstart) {
+        if (rdata->ts[it] > udata->tstart()) {
             solver->getDiagnosis(it, rdata);
         }
     }
-    getDataOutput(it, udata, rdata, edata, solver, model);
+    getDataOutput(it);
 }
 
 void ForwardProblem::getDataOutput(int it) {
@@ -487,14 +484,14 @@ void ForwardProblem::getDataOutput(int it) {
      * @param[in] it index of current timepoint @type int
      */
 
-    model->fy(it, x, rdata);
+    model->fy(it, rdata, udata);
     model->fsigma_y(it, edata, rdata, udata);
-    model->fJy(it, x, edata, rdata);
+    model->fJy(it, rdata, udata, edata);
     
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        prepDataSensis(it, rdata, edata, model);
+        prepDataSensis(it);
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-            getDataSensisFSA(it, udata, rdata, edata, solver, model);
+            getDataSensisFSA(it);
         }
     }
 }
@@ -507,14 +504,13 @@ void ForwardProblem::prepDataSensis(int it) {
      * @param[in] it index of current timepoint @type int
      */
 
-    model->fdydx(rdata->ts[it], it, x, udata);
-
-    model->fdydp(rdata->ts[it], it, x, udata);
+    model->fdydx(it, rdata, udata);
+    model->fdydp(it, rdata, udata);
 
     if (!edata)
         return;
 
-    model->fdsigma_ydp(t, udata);
+    model->fdsigma_ydp(it, rdata, udata);
 
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (!amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
@@ -527,9 +523,9 @@ void ForwardProblem::prepDataSensis(int it) {
                 model->dsigmaydp[ip * model->ny + iy];
         }
     }
-    model->fdJydy(t, it, x, edata, rdata);
-    model->fdJydsigma(t, it, x, edata, rdata);
-    model->fdJydx(it, edata);
+    model->fdJydy(it, rdata, udata, edata);
+    model->fdJydsigma(it, rdata, udata, edata);
+    model->fdJydx(dJydx, it, edata, rdata);
     model->fdJydp(it, edata, rdata);
 
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
@@ -562,7 +558,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     if (!(std::isinf(rdata->ts[it]))) {
         for (int ip = 0; ip < rdata->nplist; ip++) {
             if (model->nx > 0) {
-                if (rdata->ts[it] > udata->tstart) {
+                if (rdata->ts[it] > udata->tstart()) {
                     solver->AMIGetSens(&(t), sx);
                 }
                 for (int ix = 0; ix < model->nx; ix++) {
@@ -576,7 +572,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (edata) {
             if (amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
-                model->fdsigma_ydp(t, udata);
+                model->fdsigma_ydp(it, rdata,udata);
             } else {
                 for (int ip = 0; ip < rdata->nplist; ip++) {
                     model->dsigmaydp[ip * model->ny + iy] = 0;
@@ -594,7 +590,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     }
     model->fsy(it, rdata);
     if (edata) {
-        model->fsJy(it, rdata);
+        model->fsJy(it, dJydx, rdata);
     }
 }
 
@@ -608,7 +604,7 @@ void ForwardProblem::applyEventBolus() {
     for (int ie = 0; ie < model->ne; ie++) {
         if (rootsfound[ie] ==
             1) { /* only consider transitions false -> true */
-            model->fdeltax(t, ie, x, xdot, xdot_old, udata);
+            model->fdeltax(ie, t, x, xdot, xdot_old, udata);
 
             for (int ix = 0; ix < model->nx; ix++) {
                 x[ix] += model->deltax[ix];
@@ -626,8 +622,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
     for (int ie = 0; ie < model->ne; ie++) {
         if (rootsfound[ie] ==
             1) { /* only consider transitions false -> true */
-            model->fdeltasx(t, ie, x_old, xdot,
-                                     xdot_old, sx, udata);
+            model->fdeltasx(ie, t, x, sx, xdot, xdot_old, udata);
 
             for (int ip = 0; ip < udata->nplist(); ip++) {
                 for (int ix = 0; ix < model->nx; ix++) {
@@ -653,15 +648,9 @@ void ForwardProblem::updateHeaviside() {
        it will give
          the right update to the heaviside variables */
 
-    for (int ie = 0; ie < model->ne(); ie++) {
+    for (int ie = 0; ie < model->ne; ie++) {
         h[ie] += rootsfound[ie];
     }
 }
-
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-
-ForwardProblem::ForwardProblem() {}
 
 } // namespace amici

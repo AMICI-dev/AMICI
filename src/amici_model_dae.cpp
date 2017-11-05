@@ -249,6 +249,12 @@ namespace amici {
         return checkVals(ne,root,"root function");
     }
     
+    virtual void frootwrap(realtype t, AmiVector x, AmiVector dx, realtype *root,
+                           const UserData *udata){
+        UserData user_data(*udata); // make a copy to remove constness
+        froot(t,x.getNVector(),dx.getNVector(),root,user_data);
+    }
+    
     /** residual function of the DAE
      * @param[in] t timepoint
      * @param[in] x Vector with the states
@@ -265,6 +271,12 @@ namespace amici {
         model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
                    N_VGetArrayPointer(dx),w.data());
         return checkVals(nx,xdot,"residual function");
+    }
+    
+    virtual void fxdotwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                           const UserData *udata){
+        UserData user_data(*udata); // make a copy to remove constness
+        fxdot(t,x.getNVector(),dx.getNVector(),xdot.getNVector(),user_data);
     }
     
     /** Right hand side of differential equation for adjoint state xB
