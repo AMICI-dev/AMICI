@@ -3,16 +3,22 @@
 
 #include "include/amici_solver.h"
 #include "include/amici_exception.h"
+#include "include/amici_defines.h"
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 
 namespace amici {
 
 class UserData;
+class ExpData;
+class ReturnData;
+class Model_ODE;
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver() = default;
+    CVodeSolver(const Model_ODE *model){
+        this->model = model;
+    }
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -139,58 +145,12 @@ class CVodeSolver : public Solver {
 
     void turnOffRootFinding() override;
 
-    // Static wrapper functions because cannot pass member functions to solver
-    // (CVODES-specific signatures)
-    static int residualFunction(realtype t, N_Vector y, N_Vector ydot,
-                              void *user_data);
-
-    static int residualFunctionB(realtype t, N_Vector y, N_Vector yB,
-                               N_Vector yBdot, void *user_dataB);
-
-    static int rootFunction(realtype t, N_Vector x, realtype *root,
-                            void *user_data);
-
-    static int J(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J,
-                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                      void *user_data);
-
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                      N_Vector sx, N_Vector sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2);
-
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
-
-    static int fJBand(long int N, long int mupper, long int mlower, realtype t,
-                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                   N_Vector xdot, void *user_data, N_Vector tmp);
-
-    static int fJB(long NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SlsMat JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJBandB(long NeqBdot, long mupper, long mlower, realtype t,
-                       N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB,
-                       void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                       N_Vector tmp3B);
-
-    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                    N_Vector xB, N_Vector xBdot, void *user_data,
-                    N_Vector tmpB);
-
     ~CVodeSolver();
 
   protected:
+    
+    const Model_ODE *model;
+    
     void init(N_Vector x, N_Vector dx, realtype t) override;
 
     void binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;

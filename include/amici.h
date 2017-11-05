@@ -8,10 +8,8 @@
 namespace amici {
 
 class UserData;
-class TempData;
 class ReturnData;
 class ExpData;
-class Solver;
 class Model;
 
 // ensure definitions are in sync
@@ -32,14 +30,6 @@ static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
 
 void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...);
-
-/**
- * @brief msgIdAndTxtFp
- * @param identifier string with error message identifier
- * @param format string with error message printf-style format
- * @param ... arguments to be formatted
- */
-typedef void (*msgIdAndTxtFp)(const char *identifier, const char *format, ...);
 
 // function pointers to process errors / warnings
 extern msgIdAndTxtFp errMsgIdAndTxt;

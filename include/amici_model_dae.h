@@ -1,5 +1,5 @@
-#ifndef AMICI_MODEL_H
-#define AMICI_MODEL_H
+#ifndef AMICI_MODEL_DAE_H
+#define AMICI_MODEL_DAE_H
 
 #include <include/amici.h>
 #include <include/amici_exception.h>

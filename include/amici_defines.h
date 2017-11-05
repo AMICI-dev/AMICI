@@ -112,6 +112,14 @@ enum StateOrdering {
     COLAMD,
     natural
 };
+    
+    /**
+     * @brief msgIdAndTxtFp
+     * @param identifier string with error message identifier
+     * @param format string with error message printf-style format
+     * @param ... arguments to be formatted
+     */
+    typedef void (*msgIdAndTxtFp)(const char *identifier, const char *format, ...);
 
 // clang-format on
 

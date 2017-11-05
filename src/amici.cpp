@@ -21,6 +21,7 @@
 #include "include/backwardproblem.h"
 #include "include/forwardproblem.h"
 
+#include "include/udata.h"
 
 #include <include/amici.h> /* amici functions */
 #include <include/amici_misc.h>
@@ -57,12 +58,12 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
         return;
     }
     
-    solver = model->getSolver();
+    auto solver = std::unique_ptr<Solver>(model->getSolver());
     
-    fwd = ForwardProblem(udata, edata, rdata, model);
+    ForwardProblem fwd = ForwardProblem(udata,rdata,edata,model,solver.get());
     fwd.workForwardProblem();
 
-    bwd = BackwardProblem(fwd);
+    BackwardProblem bwd = BackwardProblem(udata,rdata,edata,model,solver.get());
     bwd.workBackwardProblem();
 
     return;

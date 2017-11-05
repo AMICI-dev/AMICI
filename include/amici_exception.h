@@ -1,6 +1,7 @@
 #ifndef amici_exception_h
 #define amici_exception_h
 
+#include <cvodes/cvodes.h> // necessary for realtype
 #include <exception>
 #include <cstdarg>
 #include <cstdio>

@@ -1,5 +1,3 @@
-#include "include/amici_solver_cvodes.h"
-
 #include <cvodes/cvodes.h>
 /*#include <cvodes/cvodes_lapack.h>*/
 #include <cvodes/cvodes_band.h>
@@ -16,11 +14,10 @@
 #include <colamd.h>
 #include <klu.h>
 
+#include <include/amici_model_ode.h>
 #include <include/amici.h>
-#include <include/amici_model.h>
-#include <include/amici_solver.h>
+#include <include/amici_solver_cvodes.h>
 #include <include/amici_exception.h>
-#include <include/tdata.h>
 #include <include/udata.h>
 
 /**
@@ -43,7 +40,7 @@ void CVodeSolver::binit(int which, N_Vector xB, N_Vector dxB, realtype t) {
 }
 
 void CVodeSolver::qbinit(int which, N_Vector qBdot) {
-    int status = CVodeQuadInitB(ami_mem, which, fqBdot, qBdot);
+    int status = CVodeQuadInitB(ami_mem, which, model->fqBdot, qBdot);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeQuadInitB");
 }
@@ -55,7 +52,7 @@ void CVodeSolver::rootInit(int ne) {
 }
 
 void CVodeSolver::sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) {
-    int status = CVodeSensInit1(ami_mem, udata->nplist, udata->sensi_meth, fsxdot,
+    int status = CVodeSensInit1(ami_mem, udata->nplist(), udata->sensi_meth, model->fsxdot,
                           sx);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensInit1");

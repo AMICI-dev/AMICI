@@ -22,9 +22,9 @@ class Solver {
 
     virtual ~Solver() = default;
 
-    void setupAMI(const UserData *udata, TempData *tdata, Model *model);
+    void setupAMI(const UserData *udata, Model *model);
 
-    void setupAMIB(const UserData *udata, TempData *tdata, Model *model);
+    void setupAMIB(const UserData *udata, Model *model);
 
     /**
      * AMIGetSens extracts diagnosis information from solver memory block and
@@ -37,7 +37,7 @@ class Solver {
 
     void getDiagnosis(const int it, ReturnData *rdata);
 
-    void getDiagnosisB(const int it, ReturnData *rdata, const TempData *tdata);
+    void getDiagnosisB(const int it, ReturnData *rdata);
 
     /**
      * AMIGetRootInfo extracts information which event occured

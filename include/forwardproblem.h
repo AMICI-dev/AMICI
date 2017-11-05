@@ -20,58 +20,41 @@ class ForwardProblem {
   public:
     ForwardProblem(const UserData *udata,
                    ReturnData *rdata, const ExpData *edata,
-                   Model *model, Solver *solver) :
-    dJzdx(model->nJ() * model->nx() * udata->nmaxevent(), 0.0),
-    dJydx(model->nJ() * model->nx() * udata->nt(), 0.0) {
-        
-    }
+                   Model *model, Solver *solver);
     
     static void workForwardProblem();
     
   private:
+    
+    Model *model;
+    ReturnData *rdata;
+    Solver *solver;
+    const UserData *udata;
+    const ExpData *edata;
 
-    static void handleEvent(realtype *tlastroot, const UserData *udata,
-                           ReturnData *rdata, const ExpData *edata,
-                           TempData *tdata, int seflag, Solver *solver,
-                           Model *model);
+    static void handleEvent(realtype *tlastroot);
 
-    static void storeJacobianAndDerivativeInReturnData(TempData *tdata,
-                                                      ReturnData *rdata,
-                                                      Model *model);
+    static void storeJacobianAndDerivativeInReturnData();
 
-    static void getEventOutput(const UserData *udata, ReturnData *rdata,
-                              const ExpData *edata, TempData *tdata,
-                              Model *model);
+    static void getEventOutput();
 
-    static void prepEventSensis(int ie, ReturnData *rdata, const ExpData *edata,
-                               TempData *tdata, Model *model);
+    static void prepEventSensis(int ie);
 
-    static void getEventSensisFSA(int ie, ReturnData *rdata,
-                                 const ExpData *edata, TempData *tdata,
-                                 Model *model);
+    static void getEventSensisFSA(int ie);
 
-    static void handleDataPoint(int it, const UserData *udata, ReturnData *rdata,
-                               const ExpData *edata, TempData *tdata,
-                               Solver *solver, Model *model);
+    static void handleDataPoint(int it);
 
-    static void getDataOutput(int it, const UserData *udata, ReturnData *rdata,
-                             const ExpData *edata, TempData *tdata,
-                             Solver *solver, Model *model);
+    static void getDataOutput(int it);
 
-    static void prepDataSensis(int it, ReturnData *rdata, const ExpData *edata,
-                              TempData *tdata, Model *model);
+    static void prepDataSensis(int it);
 
-    static void getDataSensisFSA(int it, const UserData *udata,
-                                ReturnData *rdata, const ExpData *edata,
-                                TempData *tdata, Solver *solver, Model *model);
+    static void getDataSensisFSA(int it);
 
-    static void applyEventBolus(TempData *tdata, Model *model);
+    static void applyEventBolus();
 
-    static void applyEventSensiBolusFSA(TempData *tdata, Model *model);
+    static void applyEventSensiBolusFSA();
 
-    static void updateHeaviside(TempData *tdata, const int ne);
-
-  private:
+    static void updateHeaviside(const int ne);
     
     /** data likelihood */
     std::vector<double> Jy;
@@ -140,20 +123,11 @@ class ForwardProblem {
     AmiVector xdot;
     /** old time derivative state vector */
     AmiVector xdot_old;
-    /** adjoint state vector */
-    AmiVector xB;
-    /** old adjoint state vector */
-    AmiVector xB_old;
-    /** differential adjoint state vector */
-    AmiVector dxB;
-    /** quadrature state vector */
-    AmiVector xQB;
-    /** old quadrature state vector */
-    AmiVector xQB_old;
+
     /** sensitivity state vector array */
-    AmiVectorArray *sx;
+    AmiVectorArray sx;
     /** differential sensitivity state vector array */
-    AmiVectorArray *sdx;
+    AmiVectorArray sdx;
     
     ForwardProblem();
 };

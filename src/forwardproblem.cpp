@@ -26,6 +26,23 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
     
 static_assert(NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
 static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
+    
+    
+    ForwardProblem(const UserData *udata,
+                   ReturnData *rdata, const ExpData *edata,
+                   Model *model, Solver *solver) :
+    dJzdx(model->nJ * model->nx * udata->nme(), 0.0),
+    dJydx(model->nJ * model->nx * udata->nt(), 0.0),
+    x(model->nx), x_old(model->nx), dx(model->nx), dx_old(model->nx),
+    xdot(model->nx), xdot_old(model->nx),
+    sx(model->nx,udata->nplist()), sdx(model->nx,udata->nplist())
+    {
+        this->model = model;
+        this->solver = solver;
+        this->udata = udata;
+        this->edata = edata;
+        this->rdata = rdata;
+    }
 
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
