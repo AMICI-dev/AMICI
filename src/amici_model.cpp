@@ -401,10 +401,9 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param udata object with user input
      */
     void Model::fy(int it, ReturnData *rdata, const UserData *udata) {
-        const realtype t = gett(it,rdata);
         getx(it,rdata);
         std::fill(y.begin(),y.end(),0.0);
-        model_y(y.data(),t,x.data(),udata->p(),udata->k());
+        model_y(y.data(),gett(it,rdata),x.data(),udata->p(),udata->k());
         for(int iy; iy < ny; iy++)
             rdata->y[it + udata->nt()*iy] = y.at(iy);
     }
@@ -413,11 +412,10 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param udata object with user input
      */
     void Model::fdydp(const int it, ReturnData *rdata, const UserData *udata) {
-        const realtype t = gett(it,rdata);
         getx(it,rdata);
         std::fill(dydp.begin(),dydp.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++){
-            model_dydp(dydp.data(),t,x.data(),udata->p(),udata->k(),udata->plist(ip));
+            model_dydp(dydp.data(),gett(it,rdata),x.data(),udata->p(),udata->k(),udata->plist(ip));
         }
     }
     
@@ -575,26 +573,45 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
     /** Standard deviation of measurements
      * @param udata object with user input
      */
-    void Model::fsigma_y(const realtype t, const UserData *udata) {
+    void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata,
+                         const UserData *udata) {
         std::fill(sigmay.begin(),sigmay.end(),0.0);
-        model_sigma_y(sigmay.data(),t,udata->p(),udata->k());
+        model_sigma_y(sigmay.data(),gett(it,rdata),udata->p(),udata->k());
+        for (int iy = 0; iy < nytrue; iy++) {
+            /* extract the value for the standard deviation, if the data value
+             is NaN, use
+             the parameter value. Store this value in the return struct */
+            if (!amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
+                sigmay[iy] = edata->sigmay[iy * rdata->nt + it];
+            }
+            rdata->sigmay[iy * rdata->nt + it] = sigmay[iy];
+        }
     }
     
     /** partial derivative of standard deviation of measurements w.r.t. model
      * @param udata object with user input
      */
-    void Model::fdsigma_ydp(const realtype t, const UserData *udata) {
+    void Model::fdsigma_ydp(const int it, const ReturnData *rdata, const UserData *udata) {
         std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++)
-            model_dsigma_ydp(dsigmaydp.data(),t,udata->p(),udata->k(),udata->plist(ip));
+            model_dsigma_ydp(dsigmaydp.data(),gett(it,rdata),udata->p(),udata->k(),udata->plist(ip));
     }
     
     /** Standard deviation of events
      * @param udata object with user input
      */
-    void Model::fsigma_z(const realtype t, const UserData *udata) {
+    void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
+                         const ExpData *edata, ReturnData *rdata, const UserData *udata) {
         std::fill(sigmaz.begin(),sigmaz.end(),0.0);
         model_sigma_z(sigmaz.data(),t,udata->p(),udata->k());
+        for (int iz = 0; iz < nztrue; iz++) {
+            if (z2event[iz] - 1 == ie) {
+                if (!amiIsNaN(edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz])) {
+                    sigmaz.at(iz) = edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz];
+                }
+                rdata->sigmaz[nroots[ie]+rdata->nmaxevent * iz] = sigmaz.at(iz);
+            }
+        }
     }
     
     /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
@@ -612,7 +629,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param rdata pointer to return data object
      * @param edata pointer to experimental data object
      */
-    void Model::fJy(std::vector<double> Jy,const int it, const ReturnData *rdata, const UserData *udata, const ExpData *edata) {
+    void Model::fJy(const int it, ReturnData *rdata, const UserData *udata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
         gety(it,rdata);
         getmy(it,edata);
@@ -621,7 +638,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jy(nllh.data(),udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
-                    Jy.at(iJ) += nllh.at(iJ);
+                    rdata->llh[iJ] -= nllh.at(iJ);
                 }
             }
         }
@@ -633,7 +650,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param rdata pointer to return data object
      * @param edata pointer to experimental data object
      */
-    void Model::fJz(std::vector<double> Jz, const int nroots, const ReturnData *rdata, const UserData *udata, const ExpData *edata) {
+    void Model::fJz(const int nroots, ReturnData *rdata, const UserData *udata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
         getz(nroots,rdata);
         getmz(nroots,edata);
@@ -642,7 +659,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jz(nllh.data(),udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
-                    Jz.at(iJ) += nllh.at(iJ);
+                    rdata->llh[iJ] -= nllh.at(iJ);
                 }
             }
         }
@@ -943,7 +960,6 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
             rz.at(iz) = rdata->rz[nroots+rdata->nmaxevent*iz];
         }
     }
-    
     
 
 } // namespace amici

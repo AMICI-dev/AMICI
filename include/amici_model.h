@@ -420,7 +420,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
 
-        void fsigma_y(const realtype t, const UserData *udata);
+        void fsigma_y(const int it, const ExpData *edata, ReturnData *rdata,
+                      const UserData *udata);
         
         /** model specific implementation of fsigmay
          * param[out] sigmay standard deviation of measurements
@@ -432,7 +433,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdsigma_ydp(const realtype t, const UserData *udata);
+        void fdsigma_ydp(const int it, const ReturnData *rdata, const UserData *udata);
         
         /** model specific implementation of fsigmay
          * param[out] dsigmaydp partial derivative of standard deviation of measurements
@@ -444,7 +445,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fsigma_z(const realtype t, const UserData *udata);
+        void fsigma_z(const realtype t, const int ie, const int *nroots,
+                      const ExpData *edata, ReturnData *rdata, const UserData *udata);
         
         /** model specific implementation of fsigmaz
          * param[out] sigmaz standard deviation of event measurements
@@ -468,7 +470,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fJy(std::vector<double> Jy,const int it, const ReturnData *rdata, const UserData *udata, const ExpData *edata);
+        void fJy(const int it, ReturnData *rdata, const UserData *udata, const ExpData *edata);
         
         /** model specific implementation of fJy
          * param[out] nllh negative log-likelihood for measurements y
@@ -482,7 +484,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fJz(std::vector<double> Jz, const int nroots, const ReturnData *rdata, const UserData *udata, const ExpData *edata);
+        void fJz(const int nroots, ReturnData *rdata, const UserData *udata, const ExpData *edata);
         
         /** model specific implementation of fJz
          * param[out] nllh negative log-likelihood for event measurements z

@@ -2,6 +2,7 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "include/amici_defines.h"
+#include "include/amici_vector.h"
 #include <vector>
 namespace amici {
 
@@ -23,7 +24,7 @@ class ForwardProblem {
                    ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
     
-    static void workForwardProblem();
+    void workForwardProblem();
     
   private:
     
@@ -33,29 +34,29 @@ class ForwardProblem {
     const UserData *udata;
     const ExpData *edata;
 
-    static void handleEvent(realtype *tlastroot);
+    void handleEvent(realtype *tlastroot);
 
-    static void storeJacobianAndDerivativeInReturnData();
+    void storeJacobianAndDerivativeInReturnData();
 
-    static void getEventOutput();
+    void getEventOutput();
 
-    static void prepEventSensis(int ie);
+    void prepEventSensis(int ie);
 
-    static void getEventSensisFSA(int ie);
+    void getEventSensisFSA(int ie);
 
-    static void handleDataPoint(int it);
+    void handleDataPoint(int it);
 
-    static void getDataOutput(int it);
+    void getDataOutput(int it);
 
-    static void prepDataSensis(int it);
+    void prepDataSensis(int it);
 
-    static void getDataSensisFSA(int it);
+    void getDataSensisFSA(int it);
 
-    static void applyEventBolus();
+    void applyEventBolus();
 
-    static void applyEventSensiBolusFSA();
+    void applyEventSensiBolusFSA();
 
-    static void updateHeaviside(const int ne);
+    void updateHeaviside(const int ne);
     
     /** data likelihood */
     std::vector<double> Jy;
