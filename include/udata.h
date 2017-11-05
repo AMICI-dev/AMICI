@@ -119,119 +119,54 @@ class UserData {
 
     /* Options */
 
-    /** maximal number of events to track */
-    int nmaxevent = 10;
-
-    /** positivity flag (size nx) */
-    std::vector<int>qpositivex;
-
-    /** parameter selection and reordering (size nplist) */
-    std::vector<int>plist;
 
     /** number of parameters in plist 
      *  @return length of plist
      */
     const int nplist() const{
-        return plist.size();
+        return p_index.size();
     };
+    
+    const double tstart() const{
+        return t0;
+    }
 
     /** number of timepoints */
     const int nt() const{
         return ts.size();
     }
 
-    /** parameter transformation of p */
-    AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
-
-    /** starting time */
-    double tstart = 0.0;
-
-    /** timepoints (size nt) */
-    std::vector<double>ts;
-
-    /** scaling of parameters (size nplist) */
-    std::vector<double>pbar;
-
-    /** scaling of states (size nx)
-     * NOTE: currently not used */
-    std::vector<double>xbar;
-
-    /** flag indicating whether sensitivities are supposed to be computed */
-    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
-
-    /** absolute tolerances for integration */
-    double atol = 1e-16;
-
-    /** relative tolerances for integration */
-    double rtol = 1e-8;
-
-    /** maximum number of allowed integration steps */
-    int maxsteps = 0;
-
-    /** maximum number of allowed Newton steps for steady state computation */
-    int newton_maxsteps = 0;
-
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    int newton_maxlinsteps = 0;
-
-    /** Preequilibration of model via Newton solver? */
-    int newton_preeq = false;
-
-    /** Which preconditioner is to be used in the case of iterative linear
-     * Newton solvers */
-    int newton_precon = 1;
-
-    /** internal sensitivity method flag used to select the sensitivity solution
-     * method. Only applies for Forward Sensitivities. */
-    InternalSensitivityMethod ism = SIMULTANEOUS;
-
-    /** method for sensitivity computation */
-    AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
-
-    /** linear solver specification */
-    LinearSolver linsol = AMICI_KLU;
-
-    /** interpolation type for the forward problem solution which
-     * is then used for the backwards problem.
-     */
-    InterpolationType interpType = HERMITE;
-
-    /** specifies the linear multistep method.
-     */
-    LinearMultistepMethod lmm = BDF;
-
-    /**
-     * specifies the type of nonlinear solver iteration
-     */
-    NonlinearSolverIteration iter = NEWTON;
-
-    /** flag controlling stability limit detection */
-    booleantype stldet = true;
-
-    /** state initialisation (size nx) */
-    std::vector<double>x0data;
-
-    /** sensitivity initialisation (size nx * nplist) */
-    std::vector<double>sx0data;
-
-    /** state ordering */
-    StateOrdering ordering = AMD;
-
     /** function to print the contents of the UserData object */
     void print() const;
 
     /** total number of model parameters */
     const int np() const{
-        return p.size();
+        return par.size();
     };
     /** number of fixed parameters */
     const int nk() const{
-        return k.size();
+        return konst.size();
     };
     /** number of states */
     const int nx() const{
         return sizex;
+    };
+    
+    /** max number of events */
+    const int nme() const{
+        return nmaxevent;
+    };
+    
+    const double *p() const{
+        return par.data();
+    };
+    
+    const double *k() const{
+        return konst.data();
+    };
+    
+    const int plist(int pos) const{
+        return p_index.at(pos);
     };
 
     /**
@@ -242,14 +177,102 @@ class UserData {
      */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
+
 private:
+    /** maximal number of events to track */
+    int nmaxevent = 10;
+    
+    /** positivity flag (size nx) */
+    std::vector<int>qpositivex;
+    
+    /** parameter selection and reordering (size nplist) */
+    std::vector<int>p_index;
+    
+    
     const int sizex;
     /** parameter array (size np) */
-    std::vector<double>p;
+    std::vector<double>par;
     
     /** constants array (size nk) */
-    std::vector<double>k;
-
+    std::vector<double>konst;
+    
+    /** starting time */
+    double t0 = 0.0;
+    
+    /** parameter transformation of p */
+    AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
+    
+    /** timepoints (size nt) */
+    std::vector<double>ts;
+    
+    /** scaling of parameters (size nplist) */
+    std::vector<double>pbar;
+    
+    /** scaling of states (size nx)
+     * NOTE: currently not used */
+    std::vector<double>xbar;
+    
+    /** flag indicating whether sensitivities are supposed to be computed */
+    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
+    
+    /** absolute tolerances for integration */
+    double atol = 1e-16;
+    
+    /** relative tolerances for integration */
+    double rtol = 1e-8;
+    
+    /** maximum number of allowed integration steps */
+    int maxsteps = 0;
+    
+    /** maximum number of allowed Newton steps for steady state computation */
+    int newton_maxsteps = 0;
+    
+    /** maximum number of allowed linear steps per Newton step for steady state
+     * computation */
+    int newton_maxlinsteps = 0;
+    
+    /** Preequilibration of model via Newton solver? */
+    int newton_preeq = false;
+    
+    /** Which preconditioner is to be used in the case of iterative linear
+     * Newton solvers */
+    int newton_precon = 1;
+    
+    /** internal sensitivity method flag used to select the sensitivity solution
+     * method. Only applies for Forward Sensitivities. */
+    InternalSensitivityMethod ism = SIMULTANEOUS;
+    
+    /** method for sensitivity computation */
+    AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
+    
+    /** linear solver specification */
+    LinearSolver linsol = AMICI_KLU;
+    
+    /** interpolation type for the forward problem solution which
+     * is then used for the backwards problem.
+     */
+    InterpolationType interpType = HERMITE;
+    
+    /** specifies the linear multistep method.
+     */
+    LinearMultistepMethod lmm = BDF;
+    
+    /**
+     * specifies the type of nonlinear solver iteration
+     */
+    NonlinearSolverIteration iter = NEWTON;
+    
+    /** flag controlling stability limit detection */
+    booleantype stldet = true;
+    
+    /** state initialisation (size nx) */
+    std::vector<double>x0data;
+    
+    /** sensitivity initialisation (size nx * nplist) */
+    std::vector<double>sx0data;
+    
+    /** state ordering */
+    StateOrdering ordering = AMD;
 };
 
 } // namespace amici

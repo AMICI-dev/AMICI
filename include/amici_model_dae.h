@@ -137,7 +137,7 @@ namespace amici {
          **/
         virtual int model_JB(realtype *J, const realtype t, const realtype *x, const double *p, const double *k,
                              const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return(AMICI_ERROR);
         }
         
@@ -227,7 +227,7 @@ namespace amici {
         virtual int model_JSparseB(realtype *J, const realtype t, const realtype *x, const double *p, const double *k,
                                    const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                                    const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         }
         
@@ -341,7 +341,7 @@ namespace amici {
         virtual int model_Jv(realtype *Jv, const realtype t, const realtype *x, const double *p, const double *k,
                              const realtype cj, const realtype *dx,const realtype *v,
                              const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         }
         
@@ -393,7 +393,7 @@ namespace amici {
         virtual int model_JvB(realtype *JvB, const realtype t, const realtype *x, const double *p, const double *k,
                               const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                               const realtype *vB, const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
         }
         
@@ -429,7 +429,7 @@ namespace amici {
          **/
         virtual int model_root(realtype *root, const realtype t, const realtype *x, const double *p, const double *k,
                               const realtype *dx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
         }
 
@@ -501,7 +501,7 @@ namespace amici {
         virtual int model_xBdot(realtype *xBdot, const realtype t, const realtype *x, const double *p, const double *k,
                                const realtype *xB, const realtype *dx, const realtype *dxB,
                                const realtype *w, const realtype *dwdx) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
             
         }
@@ -546,7 +546,7 @@ namespace amici {
         virtual int model_qBdot(realtype *qBdot, const realtype t, const realtype *x, const double *p, const double *k,
                                 const realtype *xB, const realtype *dx, const realtype *dxB,
                                 const realtype *w, const realtype *dwdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
             
         }
@@ -579,7 +579,7 @@ namespace amici {
          */
         virtual int model_dxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                   const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         };
 
@@ -636,7 +636,7 @@ namespace amici {
                                 const int ip, const realtype *dx, const realtype *sx, const realtype *sdx,
                                 const realtype *w, const realtype *dwdx, const realtype *M, const realtype *J,
                                 const realtype *dxdotdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as " __func__ " is not implemented for this model!");
+            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         };
         

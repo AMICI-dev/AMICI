@@ -5,7 +5,7 @@
 using namespace model_events;
 
 void srz_model_events(double *srz, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip) {
-switch (udata->plist[ip]) {
+switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {

@@ -97,31 +97,31 @@ void UserData::setTimepoints(const double * timepoints, int numTimepoints) {
 }
 
 void UserData::setParameters(const double * parameters) {
-    memcpy(p.data(), parameters, sizeof(double) * np());
+    memcpy(par.data(), parameters, sizeof(double) * np());
 }
 
 void UserData::setConstants(const double *constants) {
-    memcpy(k.data(), constants, sizeof(double) * nk());
+    memcpy(konst.data(), constants, sizeof(double) * nk());
 }
 
 void UserData::setPlist(const double *plist, int length) {
-    this->plist.resize(length);
+    p_index.resize(length);
     
     for (int ip = 0; ip < length; ip++) {
-        this->plist[ip] = (int)plist[ip];
+        p_index[ip] = (int)plist[ip];
     }
 }
 
 void UserData::setPlist(const int *plist, int length) {
-    this->plist.resize(length);
-    memcpy(this->plist.data(), plist, sizeof(int) * length);
+    p_index.resize(length);
+    memcpy(p_index.data(), plist, sizeof(int) * length);
 }
 
 void UserData::requireSensitivitiesForAllParameters()
 {
-    plist.resize(nplist());
+    p_index.resize(nplist());
     for (int i = 0; i < nplist(); ++i)
-        plist[i] = i;
+        p_index[i] = i;
 
 }
 
@@ -171,8 +171,8 @@ void UserData::print() const {
     printf("nplist: %d\n", nplist());
     printf("nt: %d\n", nt());
     printf("nmaxevent: %d\n", nmaxevent);
-    printf("p: %p\n", p.data());
-    printf("k: %p\n", k.data());
+    printf("p: %p\n", par.data());
+    printf("k: %p\n", konst.data());
     printf("tstart: %e\n", tstart);
     printf("ts: %p\n", ts.data());
     printf("pbar: %p\n", pbar.data());

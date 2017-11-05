@@ -25,8 +25,6 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
 
     Jy = new realtype[model->nJ]();
     Jz = new realtype[model->nJ]();
-    sigmay = new realtype[model->ny]();
-    sigmaz = new realtype[model->nz]();
 
     if (model->nx > 0) {
         x = N_VNew_Serial(model->nx);
@@ -36,21 +34,7 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
         xdot = N_VNew_Serial(model->nx);
         xdot_old = N_VNew_Serial(model->nx);
         Jtmp = NewDenseMat(model->nx, model->nx);
-
-        /* initialise temporary jacobian storage */
-        J = SparseNewMat(model->nx, model->nx, model->nnz, CSC_MAT);
-        M = new realtype[model->nx * model->nx]();
-        dfdx = new realtype[model->nx * model->nx]();
     }
-
-    if (model->ne > 0) {
-        /* initialise temporary stau storage */
-        stau = new realtype[nplist]();
-    }
-
-    w = new realtype[model->nw]();
-    dwdx = new realtype[model->ndwdx]();
-    dwdp = new realtype[model->ndwdp]();
 
     /* EVENTS */
     rootsfound = new int[model->ne]();
@@ -61,35 +45,16 @@ TempData::TempData(const UserData *udata, Model *model, ReturnData *rdata)
     rootidx = new int[udata->nmaxevent * model->ne * model->ne]();
     nroots = new int[model->ne]();
     discs = new realtype[udata->nmaxevent * model->ne]();
-    deltax = new realtype[model->nx]();
-    deltasx = new realtype[model->nx * udata->nplist]();
-    deltaxB = new realtype[model->nx]();
-    deltaqB = new realtype[model->nJ * udata->nplist]();
 
     /* SENSITIVITIES */
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* initialise temporary dxdotdp storage */
-        dxdotdp = new realtype[model->nx * nplist]();
 
-        dydx = new realtype[model->ny * model->nx]();
-        dydp = new realtype[model->ny * udata->nplist]();
+
         dJydp = new realtype[model->nJ * udata->nplist]();
         dJydx = new realtype[model->nJ * model->nx * udata->nt]();
-        dJydy = new realtype[model->nJ * model->nytrue * model->ny]();
-        dJydsigma = new realtype[model->nJ * model->nytrue * model->ny]();
-        dzdx = new realtype[model->nz * model->nx]();
-        dzdp = new realtype[model->nz * udata->nplist]();
-        drzdx = new realtype[model->nz * model->nx]();
-        drzdp = new realtype[model->nz * udata->nplist]();
         dJzdp = new realtype[model->nJ * udata->nplist]();
         dJzdx = new realtype[model->nJ * model->nx * udata->nmaxevent]();
-        dJzdz = new realtype[model->nJ * model->nztrue * model->nz]();
-        dJzdsigma = new realtype[model->nJ * model->nztrue * model->nz]();
-        dJrzdz = new realtype[model->nJ * model->nztrue * model->nz]();
-        dJrzdsigma = new realtype[model->nJ * model->nztrue * model->nz]();
-
-        dsigmaydp = new realtype[model->ny * udata->nplist]();
-        dsigmazdp = new realtype[model->nz * udata->nplist]();
 
         if (udata->nplist && x) {
             sx = N_VCloneVectorArray_Serial(udata->nplist, x);
@@ -243,7 +208,7 @@ TempData::~TempData() {
     if (stau)
         delete[] stau;
     if (J)
-        SparseDestroyMat(J);
+        ;
 }
 
 } // namespace amici

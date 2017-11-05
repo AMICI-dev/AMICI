@@ -20,9 +20,8 @@
 #include "include/amici_exception.h"
 #include "include/backwardproblem.h"
 #include "include/forwardproblem.h"
-#include "include/rdata.h"
-#include "include/tdata.h"
-#include "include/udata.h"
+
+
 #include <include/amici.h> /* amici functions */
 #include <include/amici_misc.h>
 #include <include/amici_exception.h>
@@ -57,12 +56,14 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
     if (model->nx <= 0) {
         return;
     }
+    
+    solver = model->getSolver();
+    
+    fwd = ForwardProblem(udata, edata, rdata, model);
+    fwd.workForwardProblem();
 
-    TempData tdata(udata, model, rdata);
-
-    ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata,
-                                                    model);
-    BackwardProblem::workBackwardProblem(udata, &tdata, rdata, model);
+    bwd = BackwardProblem(fwd);
+    bwd.workBackwardProblem();
 
     return;
 }

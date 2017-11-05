@@ -5,7 +5,7 @@
 using namespace model_events;
 
 void drzdp_model_events(double *drzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) {
-switch (udata->plist[ip]) {
+switch (ip) {
 }
 }
 

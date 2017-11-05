@@ -35,11 +35,11 @@ for ifun = this.funs
             fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
         else
             if( strcmp(ifun{1},'qBdot') )
-                fprintf(fid,'switch (udata->plist[ip]) {\n');
+                fprintf(fid,'switch (ip) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
             elseif(this.fun.(ifun{1}).sensiflag)
-                fprintf(fid,'switch (udata->plist[ip]) {\n');
+                fprintf(fid,'switch (ip) {\n');
                 this.fun.(ifun{1}).writeCcode_sensi(this,fid);
                 fprintf(fid,'}\n');
             else
@@ -125,7 +125,7 @@ fprintf(fid,'    }\n\n');
 
 for ifun = this.funs
     fprintf(fid,['    void ' ifun{1} '_' this.modelname  this.fun.(ifun{1}).argstr ';\n']);
-    fprintf(fid,['    model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n'])
+    fprintf(fid,['    model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n']);
 end
 
 

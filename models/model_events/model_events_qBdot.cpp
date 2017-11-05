@@ -5,7 +5,7 @@
 using namespace model_events;
 
 void qBdot_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
-switch (udata->plist[ip]) {
+switch (ip) {
   case 0: {
   qBdot_tmp[ip + udata->nplist*0] = tdata->h[3]*x_tmp[0]*xB_tmp[0];
 

@@ -5,7 +5,7 @@
 using namespace model_events;
 
 void dxdotdp_model_events(realtype t, N_Vector x,, void *user_data) {
-switch (udata->plist[ip]) {
+switch (ip) {
   case 0: {
   tdata->dxdotdp[0 + ip*model->nx] = -tdata->h[3]*x_tmp[0];
 

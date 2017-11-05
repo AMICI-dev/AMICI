@@ -5,7 +5,7 @@
 using namespace model_events;
 
 void stau_model_events(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *sx, const int ip, const int ie) {
-switch (udata->plist[ip]) {
+switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {

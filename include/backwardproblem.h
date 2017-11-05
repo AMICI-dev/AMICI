@@ -2,6 +2,8 @@
 #define AMICI_BACKWARDPROBLEM_H
 
 #include "include/amici_defines.h"
+#include "include/amici_vector.h"
+#include <vector>
 
 namespace amici {
 
@@ -34,6 +36,10 @@ class BackwardProblem {
                              int it, Model *model);
 
   private:
+    
+    /** parameter derivative of likelihood array */
+    std::vector<double> llhS0;
+    
     BackwardProblem();
 };
 
