@@ -2,6 +2,7 @@
 #define AMICI_STEADYSTATEPROBLEM_H
 
 #include "include/amici_defines.h"
+#include "include/amici_vector.h"
 #include <nvector/nvector_serial.h>
 #include <include/newton_solver.h>
 
@@ -48,24 +49,36 @@ class SteadystateProblem {
     /** default constructor
      * @param[in] nx number of state variables
      */
-    SteadystateProblem(const int nx) {
-        delta = N_VNew_Serial(nx);
-        rel_x_newton = N_VNew_Serial(nx);
-        x_newton = N_VNew_Serial(nx);
-    }
+    SteadystateProblem(const int nx, const int nplist) :
+    delta(nx), rel_x_newton(nx), x_newton(nx),
+    x(nx), dx(nx), xdot(nx),
+    x_old(nx), xdot_old(nx), sx(nx,nplist), sdx(nx,nplist){};
+    
     /** default destructor */
-    ~SteadystateProblem(){
-        N_VDestroy_Serial(delta);
-        N_VDestroy_Serial(rel_x_newton);
-        N_VDestroy_Serial(x_newton);
-    };
+    ~SteadystateProblem(){};
   private:
+    realtype t;
     /** newton step? */
-    N_Vector delta = nullptr;
+    AmiVector delta;
     /** container for relative error calcuation? */
-    N_Vector rel_x_newton = nullptr;
+    AmiVector rel_x_newton;
     /** container for absolute error calcuation? */
-    N_Vector x_newton = nullptr;
+    AmiVector x_newton;
+    /** state vector */
+    AmiVector x;
+    /** old state vector */
+    AmiVector x_old;
+    /** differential state vector */
+    AmiVector dx;
+    /** time derivative state vector */
+    AmiVector xdot;
+    /** old time derivative state vector */
+    AmiVector xdot_old;
+    /** state sensitivities */
+    AmiVectorArray sx;
+    /** state differential sensitivities */
+    AmiVectorArray sdx;
+    
 };
 
 } // namespace amici

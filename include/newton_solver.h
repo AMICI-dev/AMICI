@@ -21,12 +21,10 @@ class Model;
 class NewtonSolver {
 
   public:
-    NewtonSolver(Model *model, ReturnData *rdata, const UserData *udata,
-                 TempData *tdata);
+    NewtonSolver(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
 
     static NewtonSolver *getSolver(int linsolType, Model *model,
-                                   ReturnData *rdata, const UserData *udata,
-                                   TempData *tdata);
+                                   ReturnData *rdata, const UserData *udata);
 
     void getStep(int ntry, int nnewt, N_Vector delta);
 
@@ -58,6 +56,7 @@ class NewtonSolver {
     };
 
   protected:
+    realtype *t;
     /** pointer to the AMICI model object */
     Model *model;
     /** pointer to the return data object */
@@ -78,8 +77,7 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
-    NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
-                      TempData *tdata);
+    NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(N_Vector rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverDense();
@@ -103,8 +101,7 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
-    NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
-                       TempData *tdata);
+    NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(N_Vector rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverSparse();
@@ -135,7 +132,7 @@ class NewtonSolverIterative : public NewtonSolver {
 
   public:
     NewtonSolverIterative(Model *model, ReturnData *rdata,
-                          const UserData *udata, TempData *tdata);
+                          const UserData *udata);
     void solveLinearSystem(N_Vector rhs);
     void prepareLinearSystem(int ntry, int nnewt);
     void linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta);

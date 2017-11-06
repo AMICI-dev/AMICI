@@ -14,26 +14,25 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata,
-                           const UserData *udata, TempData *tdata)
-    : model(model), rdata(rdata), udata(udata), tdata(tdata) {
+NewtonSolver::NewtonSolver(realtype *t, Model *model, ReturnData *rdata,
+                           const UserData *udata)
+    : model(model), rdata(rdata), udata(udata) {
     /**
      * default constructor, initializes all members with the provided objects
      *
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] rdata pointer to the return data object @type ReturnData
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
      */
     sx_ip = N_VNew_Serial(model->nx);
+    this.t = t;
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
 NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
-                                      ReturnData *rdata, const UserData *udata,
-                                      TempData *tdata) {
+                                      ReturnData *rdata, const UserData *udata) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -43,7 +42,6 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
      * @param[in] linsolType integer indicating which linear solver to use
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] udata pointer to the user data object @type UserData
-     * @param[in,out] tdata pointer to the temporary data object @type TempData
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @return solver NewtonSolver according to the specified linsolType
      */
@@ -52,7 +50,7 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
 
     /* DIRECT SOLVERS */
     case AMICI_DENSE:
-        return new NewtonSolverDense(model, rdata, udata, tdata);
+        return new NewtonSolverDense(model, rdata, udata);
 
     case AMICI_BAND:
         throw NewtonFailure("Solver currently not supported!");
@@ -71,14 +69,14 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
         throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
-        return new NewtonSolverIterative(model, rdata, udata, tdata);
+        return new NewtonSolverIterative(model, rdata, udata);
 
     case AMICI_SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
-        return new NewtonSolverSparse(model, rdata, udata, tdata);
+        return new NewtonSolverSparse(model, rdata, udata);
 
     default:
         throw NewtonFailure("Invalid Choice of Solver!");
@@ -331,9 +329,8 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 
 /* Derived class for iterative linear solver */
 NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata,
-                                             const UserData *udata,
-                                             TempData *tdata)
-    : NewtonSolver(model, rdata, udata, tdata) {
+                                             const UserData *udata)
+    : NewtonSolver(model, rdata, udata) {
     /**
      * default constructor, initializes all members with the provided objects
      * @param[in] model pointer to the AMICI model object @type Model
@@ -352,8 +349,6 @@ NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata,
         ns_Jv = N_VNew_Serial(model->nx);
         ns_tmp = N_VNew_Serial(model->nx);
         ns_Jdiag = N_VNew_Serial(model->nx);
-        
-        N_VScale(-1.0, tdata->xdot, tdata->xdot);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -510,7 +505,6 @@ NewtonSolverIterative::~NewtonSolverIterative(){
     N_VDestroy_Serial(ns_Jv);
     N_VDestroy_Serial(ns_tmp);
     N_VDestroy_Serial(ns_Jdiag);
-    N_VScale(-1.0, tdata->xdot, tdata->xdot);
 
 };
 

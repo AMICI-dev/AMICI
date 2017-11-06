@@ -68,7 +68,7 @@ void ForwardProblem::workForwardProblem() {
 
     /* if preequilibration is necessary, start Newton solver */
     if (udata->newton_preeq == 1) {
-        SteadystateProblem sstate = SteadystateProblem(model->nx);
+        SteadystateProblem sstate = SteadystateProblem(model->nx,udata->nplist());
         sstate.workSteadyStateProblem(udata, rdata,
                                        solver, model, -1);
     }
@@ -83,7 +83,7 @@ void ForwardProblem::workForwardProblem() {
             while (t < rdata->ts[it]) {
                 if (model->nx > 0) {
                     if (std::isinf(rdata->ts[it])) {
-                        SteadystateProblem sstate = SteadystateProblem(model->nx);
+                        SteadystateProblem sstate = SteadystateProblem(model->nx,udata->nplist());
                         sstate.workSteadyStateProblem(udata,
                                                       rdata, solver, model, it);
                     } else {

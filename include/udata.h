@@ -205,6 +205,18 @@ class UserData {
      * method. Only applies for Forward Sensitivities. */
     InternalSensitivityMethod ism = SIMULTANEOUS;
     
+    /** linear solver specification */
+    LinearSolver linsol = AMICI_KLU;
+    
+    /** absolute tolerances for integration */
+    double atol = 1e-16;
+    
+    /** relative tolerances for integration */
+    double rtol = 1e-8;
+    
+    /** maximum number of allowed integration steps */
+    int maxsteps = 0;
+    
 private:
     /** maximal number of events to track */
     int nmaxevent = 10;
@@ -242,21 +254,8 @@ private:
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
     
-    /** absolute tolerances for integration */
-    double atol = 1e-16;
-    
-    /** relative tolerances for integration */
-    double rtol = 1e-8;
-    
-    /** maximum number of allowed integration steps */
-    int maxsteps = 0;
-    
-    
     /** method for sensitivity computation */
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
-    
-    /** linear solver specification */
-    LinearSolver linsol = AMICI_KLU;
     
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
