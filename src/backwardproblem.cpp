@@ -4,132 +4,128 @@
 #include "include/amici_exception.h"
 #include "include/edata.h"
 #include "include/rdata.h"
-#include "include/tdata.h"
 #include "include/udata.h"
+#include "include/forwardproblem.h"
 #include <cstring>
 
 namespace amici {
 
-void BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
-                                         ReturnData *rdata, Model *model) {
+BackwardProblem::BackwardProblem(ForwardProblem fwd) :
+    xB(fwd.model->nx), xB_old(fwd.model->nx),
+    dxB(fwd.model->nx), xQB(fwd.model->nx), xQB_old(fwd.model->nx), sx(fwd.model->nx,fwd.udata->nplist())
+    {
+        t = rdata->ts[rdata->nt-1];
+        this->model = fwd.model;
+        this->solver = fwd.solver;
+        this->udata = fwd.udata;
+        this->rdata = fwd.rdata;
+        h = fwd.h;
+        nroots = fwd.nroots;
+        iroot = fwd.iroot;
+        discs = fwd.discs;
+        xdot_disc = fwd.xdot_disc;
+        xdot_old_disc = fwd.xdot_old_disc;
+        rootidx = fwd.rootidx;
+        dJydx = fwd.dJydx;
+        dJzdx = fwd.dJzdx;
+    };
+
+    
+void BackwardProblem::workBackwardProblem() {
     /**
      * workBackwardProblem solves the backward problem. if adjoint
      * sensitivities are enabled this will also compute sensitivies
      * workForwardProblem should be called before this is function is called
      *
-     * @param[in] udata pointer to the user data struct @type UserData
-     * @param[in] tdata pointer to the temporary data struct @type TempData
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[in] model pointer to model specification object @type Model
-     * @return int status flag
      */
-    int ix, it, ip;
     double tnext;
 
     if (model->nx <= 0 || rdata->sensi < AMICI_SENSI_ORDER_FIRST ||
         rdata->sensi_meth != AMICI_SENSI_ASA ) {
         return;
     }
+    
+    solver->setupAMIB(udata,model);
 
-    Solver *solver = tdata->solver;
-    solver->setupAMIB(udata, tdata, model);
-
-    it = rdata->nt - 2;
-    --tdata->iroot;
-    while (it >= 0 || tdata->iroot >= 0) {
+    int it = rdata->nt - 2;
+    --iroot;
+    while (it >= 0 || iroot >= 0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        tnext = getTnext(tdata->discs, tdata->iroot, rdata->ts, it, model);
+        tnext = getTnext(discs, iroot, it);
 
-        if (tnext < tdata->t) {
+        if (tnext < t) {
             solver->AMISolveB(tnext, AMICI_NORMAL);
 
-            solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
-                                     tdata->dxB);
-            solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
+            solver->AMIGetB(which, &t, xB,
+                                     dxB);
+            solver->AMIGetQuadB(which, &t, xQB);
         }
 
         /* handle discontinuity */
 
-        if (model->ne > 0 && rdata->nmaxevent > 0 && tdata->iroot >= 0) {
-            if (tnext == tdata->discs[tdata->iroot]) {
-                handleEventB(tdata->iroot, tdata, model);
-                --tdata->iroot;
+        if (model->ne > 0 && rdata->nmaxevent > 0 && iroot >= 0) {
+            if (tnext == discs[iroot]) {
+                handleEventB(iroot);
+                --iroot;
             }
         }
 
         /* handle data-point */
         if (tnext == rdata->ts[it]) {
-            handleDataPointB(it, rdata, tdata, solver, model);
+            handleDataPointB(it);
             it--;
         }
 
         /* reinit states */
-        solver->AMIReInitB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
+        solver->AMIReInitB(which, t, xB, dxB);
 
-        solver->AMIQuadReInitB(tdata->which, tdata->xQB);
+        solver->AMIQuadReInitB(which, xQB);
 
-        solver->AMICalcICB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
+        solver->AMICalcICB(which, t, xB, dxB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
-    if (tdata->t > udata->tstart) {
+    if (t > udata->tstart()) {
         if (model->nx > 0) {
             /* solve for backward problems */
-            solver->AMISolveB(udata->tstart, AMICI_NORMAL);
+            solver->AMISolveB(udata->tstart(), AMICI_NORMAL);
 
-            solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
+            solver->AMIGetQuadB(which, &(t), xQB);
 
-            solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
-                                     tdata->dxB);
+            solver->AMIGetB(which, &(t), xB, dxB);
         }
     }
     
-    realtype *sx_tmp;
-    realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    if (!xB_tmp)
-        throw NullPointerException("xB_tmp");
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
-            for (ip = 0; ip < rdata->nplist; ++ip) {
-                tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
-                sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                if (!sx_tmp)
-                    throw NullPointerException("sx_tmp");
-                for (ix = 0; ix < model->nxtrue; ++ix) {
-                    tdata->llhS0[ip] =
-                        tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
+            for (int ip = 0; ip < rdata->nplist; ++ip) {
+                llhS0[iJ * rdata->nplist + ip] = 0.0;
+                for (int ix = 0; ix < model->nxtrue; ++ix) {
+                    llhS0[ip] += xB[ix] * sx.at(ix,ip);
                 }
             }
         } else {
-            for (ip = 0; ip < rdata->nplist; ++ip) {
-                tdata->llhS0[ip + iJ * rdata->nplist] = 0.0;
-                sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                if (!sx_tmp)
-                    throw NullPointerException("sx_tmp");
-                for (ix = 0; ix < model->nxtrue; ++ix) {
-                    tdata->llhS0[ip + iJ * rdata->nplist] =
-                        tdata->llhS0[ip + iJ * rdata->nplist] +
-                        xB_tmp[ix + iJ * model->nxtrue] * sx_tmp[ix] +
-                        xB_tmp[ix] * sx_tmp[ix + iJ * model->nxtrue];
+            for (int ip = 0; ip < rdata->nplist; ++ip) {
+                llhS0[ip + iJ * rdata->nplist] = 0.0;
+                for (int ix = 0; ix < model->nxtrue; ++ix) {
+                    llhS0[ip + iJ * rdata->nplist] +=
+                        xB[ix + iJ * model->nxtrue] * sx.at(ix,ip)+
+                        xB[ix] * sx.at(ix + iJ * model->nxtrue,ip);
                 }
             }
         }
     }
 
-    realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
-    if (!xQB_tmp)
-        throw NullPointerException("xQB_tmp");
-
     for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (ip = 0; ip < rdata->nplist; ip++) {
+        for (int ip = 0; ip < rdata->nplist; ip++) {
             if (iJ == 0) {
-                rdata->sllh[ip] -= tdata->llhS0[ip] + xQB_tmp[ip];
+                rdata->sllh[ip] -= llhS0[ip] + xQB[ip];
             } else {
                 rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
-                    tdata->llhS0[ip + iJ * rdata->nplist] +
-                    xQB_tmp[ip + iJ * rdata->nplist];
+                    llhS0[ip + iJ * rdata->nplist] +
+                    xQB[ip + iJ * rdata->nplist];
             }
         }
     }
@@ -140,65 +136,51 @@ void BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
-void BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
+void BackwardProblem::handleEventB(int iroot) {
     /**
      * handleEventB executes everything necessary for the handling of events
      * for the backward problem
      *
      * @param[out] iroot index of event @type int
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[in] model pointer to model specification object @type Model
      */
 
     /* store current values */
-    N_VScale(1.0, tdata->xB, tdata->xB_old);
-    N_VScale(1.0, tdata->xQB, tdata->xQB_old);
-
-    realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    if (!xB_tmp)
-        throw NullPointerException("xB_tmp");
-    realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
-    if (!xQB_tmp)
-        throw NullPointerException("xQB_tmp");
+    xB_old = xB;
+    xQB_old = xQB;
 
     for (int ie = 0; ie < model->ne; ie++) {
 
-        if (tdata->rootidx[iroot * model->ne + ie] != 0) {
+        if (rootidx[iroot * model->ne + ie] != 0) {
 
-            model->fdeltaqB(tdata->t, ie, tdata->x_disc[iroot],
-                                     tdata->xB_old, tdata->xQB_old,
-                                     tdata->xdot_disc[iroot],
-                                     tdata->xdot_old_disc[iroot], tdata);
+            model->fdeltaqB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot], udata);
 
-            model->fdeltaxB(tdata->t, ie, tdata->x_disc[iroot],
-                                     tdata->xB_old, tdata->xdot_disc[iroot],
-                                     tdata->xdot_old_disc[iroot], tdata);
+            model->fdeltaxB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot], udata);
 
             for (int ix = 0; ix < model->nxtrue; ++ix) {
                 for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                    xB_tmp[ix + iJ * model->nxtrue] +=
-                        tdata->deltaxB[ix + iJ * model->nxtrue];
+                    xB[ix + iJ * model->nxtrue] +=
+                        model->deltaxB[ix + iJ * model->nxtrue];
                     if (model->nz > 0) {
-                        xB_tmp[ix + iJ * model->nxtrue] +=
-                            tdata->dJzdx[tdata->nroots[ie] +
+                        xB[ix + iJ * model->nxtrue] +=
+                            dJzdx[nroots[ie] +
                                          (iJ + ix * model->nJ) *
-                                             tdata->rdata->nmaxevent];
+                                             rdata->nmaxevent];
                     }
                 }
             }
 
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                for (int ip = 0; ip < tdata->rdata->nplist; ++ip) {
-                    xQB_tmp[ip + iJ * tdata->rdata->nplist] +=
-                        tdata->deltaqB[ip + iJ * tdata->rdata->nplist];
+                for (int ip = 0; ip < rdata->nplist; ++ip) {
+                    xQB[ip + iJ * rdata->nplist] +=
+                        model->deltaqB[ip + iJ * rdata->nplist];
                 }
             }
 
-            tdata->nroots[ie]--;
+            nroots[ie]--;
         }
     }
 
-    updateHeavisideB(iroot, tdata, model->ne);
+    updateHeavisideB(iroot);
 }
 
     /**
@@ -206,26 +188,17 @@ void BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
      * points for the backward problems
      *
      * @param[in] it index of data point @type int
-     * @param[out] rdata pointer to the return data struct @type ReturnData
-     * @param[out] tdata pointer to the temporary data struct @type TempData
-     * @param[in] solver pointer to solver object @type Solver
-     * @param[in] model pointer to model specification object @type Model
      */
-void BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
-                                      TempData *tdata, Solver *solver,
-                                      Model *model) {
+void BackwardProblem::handleDataPointB(int it) {
 
 
-    realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    if (!xB_tmp)
-        throw NullPointerException("xB_tmp");
     for (int ix = 0; ix < model->nxtrue; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
             // we only need the 1:nxtrue slice here!
-            xB_tmp[ix + iJ * model->nxtrue] +=
-                tdata->dJydx[it + (iJ + ix * model->nJ) * rdata->nt];
+            xB[ix + iJ * model->nxtrue] +=
+                dJydx[it + (iJ + ix * model->nJ) * rdata->nt];
     }
-    solver->getDiagnosisB(it, rdata, tdata);
+    solver->getDiagnosisB(it, rdata);
 }
 
     /**
@@ -233,37 +206,34 @@ void BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
      * for the backward problem
      *
      * @param[in] iroot discontinuity occurance index @type int
-     * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[in] ne number of events @type int
      * @return status flag indicating success of execution @type int
      */
-void BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
+void BackwardProblem::updateHeavisideB(int iroot) {
 
-    /* tdata->rootsfound provides the direction of the zero-crossing, so adding
+    /* rootsfound provides the direction of the zero-crossing, so adding
        it will give
          the right update to the heaviside variables */
 
-    for (int ie = 0; ie < ne; ie++) {
-        tdata->h[ie] -= tdata->rootidx[iroot * ne + ie];
+    for (int ie = 0; ie < model->ne; ie++) {
+        h[ie] -= rootidx[iroot * model->ne + ie];
     }
 }
     
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum
-     * of
-     * tdata and troot but also takes into account if it<0 or iroot<0 where
+     * of tdata and troot but also takes into account if it<0 or iroot<0 where
      * these expressions
      * do not necessarily make sense
      *
      * @param[in] troot timepoint of next event @type realtype
      * @param[in] iroot index of next event @type int
-     * @param[in] tdata timepoint of next data point @type realtype
      * @param[in] it index of next data point @type int
      * @param[in] model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
-realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
-                                   int it, Model *model) {
+realtype BackwardProblem::getTnext(realtype *troot, int iroot,
+                                   int it) {
 
     realtype tnext;
 
@@ -271,27 +241,21 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
         tnext = troot[iroot];
     } else {
         if (iroot < 0) {
-            tnext = tdata[it];
+            tnext = rdata->ts[it];
         } else {
             if (model->ne > 0) {
-                if (troot[iroot] > tdata[it]) {
+                if (troot[iroot] > rdata->ts[it]) {
                     tnext = troot[iroot];
                 } else {
-                    tnext = tdata[it];
+                    tnext = rdata->ts[it];
                 }
             } else {
-                tnext = tdata[it];
+                tnext = rdata->ts[it];
             }
         }
     }
 
     return (tnext);
-}
-
-BackwardProblem::BackwardProblem() {
-    /**
-     * this is a placeholder, nothing needs to be done at initialization.
-     */
 }
 
 } // namespace amici

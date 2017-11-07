@@ -562,11 +562,11 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      * @param udata object with user input
      */
     void Model::fdeltaqB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                          const AmiVector xdot, const AmiVector xdot_old, const AmiVector qBdot, const UserData *udata) {
+                          const AmiVector xdot, const AmiVector xdot_old, const UserData *udata) {
         std::fill(deltaqB.begin(),deltaqB.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++)
             model_deltaqB(deltaqB.data(),t,x.data(),udata->p(),udata->k(),
-                          udata->plist(ip),ie,xdot.data(),xdot_old.data(),xB.data(),qBdot.data());
+                          udata->plist(ip),ie,xdot.data(),xdot_old.data(),xB.data());
     }
     
     /** Standard deviation of measurements

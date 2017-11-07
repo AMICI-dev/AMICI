@@ -63,7 +63,7 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
     ForwardProblem fwd = ForwardProblem(udata,rdata,edata,model,solver.get());
     fwd.workForwardProblem();
 
-    BackwardProblem bwd = BackwardProblem(udata,rdata,edata,model,solver.get());
+    BackwardProblem bwd = BackwardProblem(fwd);
     bwd.workBackwardProblem();
 
     return;

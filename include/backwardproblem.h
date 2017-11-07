@@ -8,11 +8,11 @@
 namespace amici {
 
 class UserData;
-class TempData;
 class ReturnData;
 class ExpData;
 class Solver;
 class Model;
+class ForwardProblem;
 
 //!  class to solve backwards problems.
 /*!
@@ -22,32 +22,27 @@ class Model;
 
 class BackwardProblem {
   public:
-    static void workBackwardProblem();
+    void workBackwardProblem();
 
-    BackwardProblem(const UserData *udata,
-                    ReturnData *rdata, const ExpData *edata,
-                    Model *model, Solver *solver) :
-    xB(model->nx), xB_old(model->nx),
-    dxB(model->nx), xQB(model->nx), xQB_old(model->nx)
-    {
-      // TODO: TBD
-    };
+    BackwardProblem(ForwardProblem fwd);
 
   private:
     
     Model *model;
     ReturnData *rdata;
     Solver *solver;
+    const UserData *udata;
     
-    static void handleEventB(int iroot);
+    void handleEventB(int iroot);
     
-    static void handleDataPointB(int it);
+    void handleDataPointB(int it);
     
-    static void updateHeavisideB(int iroot, int ne);
+    void updateHeavisideB(int iroot);
     
-    static realtype getTnext(realtype *troot, int iroot, realtype *tdata,
-                             int it);
+    realtype getTnext(realtype *troot, int iroot, int it);
     
+    /** current time */
+    realtype t;
     /** parameter derivative of likelihood array */
     std::vector<double> llhS0;
     /** adjoint state vector */
@@ -66,8 +61,32 @@ class BackwardProblem {
     AmiVector *xdot_disc;
     /** array of old differential state vectors at discontinuities*/
     AmiVector *xdot_old_disc;
+    /** sensitivity state vector array */
+    AmiVectorArray sx;
     /** array of number of found roots for a certain event type */
     int *nroots = nullptr;
+    /** array containing the time-points of discontinuities*/
+    realtype *discs = nullptr;
+    /** array containing the index of discontinuities */
+    realtype *irdiscs = nullptr;
+    /** index of the backward problem */
+    int which = 0;
+    /** flag indicating whether a certain heaviside function should be active or
+     not */
+    realtype *h = nullptr;
+    /** current root index, will be increased during the forward solve and
+     * decreased during backward solve */
+    int iroot = 0;
+    /** array of index which root has been found */
+    int *rootidx = nullptr;
+    
+    /** state derivative of data likelihood */
+    std::vector<double> dJydx;
+    /** state derivative of event likelihood */
+    std::vector<double> dJzdx;
+
+    
+    
     
 };
 

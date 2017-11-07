@@ -31,13 +31,48 @@ class ForwardProblem {
     
     void workForwardProblem();
     
-  private:
-    
     Model *model;
     ReturnData *rdata;
     Solver *solver;
     const UserData *udata;
     const ExpData *edata;
+    
+    /** array of index which root has been found */
+    int *rootidx = nullptr;
+    /** array of number of found roots for a certain event type */
+    int *nroots = nullptr;
+    /** array of values of the root function */
+    realtype *rootvals = nullptr;
+    /** temporary rootval storage to check crossing in secondary event */
+    realtype *rvaltmp = nullptr;
+    
+    /** flag indicating whether a certain heaviside function should be active or
+     not */
+    realtype *h = nullptr;
+    
+    /** array containing the time-points of discontinuities*/
+    realtype *discs = nullptr;
+    /** array containing the index of discontinuities */
+    realtype *irdiscs = nullptr;
+    
+    /** current root index, will be increased during the forward solve and
+     * decreased during backward solve */
+    int iroot = 0;
+    
+    /** array of state vectors at discontinuities*/
+    AmiVector *x_disc;
+    /** array of differential state vectors at discontinuities*/
+    AmiVector *xdot_disc;
+    /** array of old differential state vectors at discontinuities*/
+    AmiVector *xdot_old_disc;
+    
+    /** state derivative of data likelihood */
+    std::vector<double> dJydx;
+    /** state derivative of event likelihood */
+    std::vector<double> dJzdx;
+    
+    
+  private:
 
     void handleEvent(realtype *tlastroot,const bool seflag);
 
@@ -68,14 +103,10 @@ class ForwardProblem {
     /** event likelihood */
     std::vector<double> Jz;
 
-    /** state derivative of data likelihood */
-    std::vector<double> dJydx;
     /** parameter derivative of data likelihood */
     std::vector<double> dJydp;
     /** parameter derivative of event likelihood */
     std::vector<double> dJzdp;
-    /** state derivative of event likelihood */
-    std::vector<double> dJzdx;
     
     /** current time */
     realtype t;
@@ -86,43 +117,13 @@ class ForwardProblem {
      *  root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
     int *rootsfound = nullptr;
-    /** array of index which root has been found */
-    int *rootidx = nullptr;
-    /** array of number of found roots for a certain event type */
-    int *nroots = nullptr;
-    /** array of values of the root function */
-    realtype *rootvals = nullptr;
-    /** temporary rootval storage to check crossing in secondary event */
-    realtype *rvaltmp = nullptr;
-    
-    /** flag indicating whether a certain heaviside function should be active or
-     not */
-    realtype *h = nullptr;
-    
-    /** integer for indexing of backwards problems */
-    int which = 0;
-    
-    /** array containing the time-points of discontinuities*/
-    realtype *discs = nullptr;
-    /** array containing the index of discontinuities */
-    realtype *irdiscs = nullptr;
-    
-    /** current root index, will be increased during the forward solve and
-     * decreased during backward solve */
-    int iroot = 0;
-    
+
     DlsMat Jtmp;
     
     /** state vector */
     AmiVector x;
     /** old state vector */
     AmiVector x_old;
-    /** array of state vectors at discontinuities*/
-    AmiVector *x_disc;
-    /** array of differential state vectors at discontinuities*/
-    AmiVector *xdot_disc;
-    /** array of old differential state vectors at discontinuities*/
-    AmiVector *xdot_old_disc;
     /** differential state vector */
     AmiVector dx;
     /** old differential state vector */

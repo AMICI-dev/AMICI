@@ -405,7 +405,7 @@ namespace amici {
         }
         
         void fdeltaqB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                              const AmiVector xdot, const AmiVector xdot_old, const AmiVector qBdot, const UserData *udata);
+                              const AmiVector xdot, const AmiVector xdot_old, const UserData *udata);
         
         /** model specific implementation of fdeltasx
          * param[out] deltasx sensitivity update
@@ -421,8 +421,7 @@ namespace amici {
          * param[in] qBdot right hand side of quadradature
          **/
         virtual void model_deltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k,
-                                   const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB,
-                                   const realtype *qBdot) {
+                                   const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
 
