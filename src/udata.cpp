@@ -7,38 +7,29 @@ namespace amici {
 
 UserData::UserData(int np, int nk, int nx) : sizex(nx) {
     // these fields must always be initialized, others are optional or can be set later
-    k.resize(nk);
-    p.resize(np);
+    konst.resize(nk);
+    par.resize(np);
     qpositivex.assign(nx,1);
 }
 
 UserData::UserData() : sizex(0) {
-    k.resize(0);
-    p.resize(0);
+    konst.resize(0);
+    par.resize(0);
     qpositivex.assign(0,1);
 }
 
 UserData::UserData(const UserData &other) : UserData(other.np(), other.nk(), other.nx())
 {
     nmaxevent = other.nmaxevent;
-
     qpositivex = other.qpositivex;
-    
-    plist = other.plist;
-    
-    p = other.p;
-
-    k = other.k;
-    
+    p_index = other.p_index;
+    par = other.par;
+    konst = other.konst;
     pscale = other.pscale;
-    tstart = other.tstart;
-
+    t0 = other.t0;
     ts = other.ts;
-
     pbar = other.pbar;
-
     xbar = other.xbar;
-
     sensi = other.sensi;
     atol = other.atol;
     rtol = other.rtol;
@@ -54,10 +45,8 @@ UserData::UserData(const UserData &other) : UserData(other.np(), other.nk(), oth
     lmm = other.lmm;
     iter = other.iter;
     stldet = other.stldet;
-
     x0data = other.x0data;
     sx0data = other.sx0data;
-
     ordering = other.ordering;
     newton_precon = other.newton_precon;
     ism = other.ism;
@@ -77,16 +66,16 @@ void UserData::unscaleParameters(double *bufferUnscaled) const {
     switch (pscale) {
     case AMICI_SCALING_LOG10:
         for (int ip = 0; ip < np(); ++ip) {
-            bufferUnscaled[ip] = pow(10, p[ip]);
+            bufferUnscaled[ip] = pow(10, par[ip]);
         }
         break;
     case AMICI_SCALING_LN:
         for (int ip = 0; ip < np(); ++ip)
-            bufferUnscaled[ip] = exp(p[ip]);
+            bufferUnscaled[ip] = exp(par[ip]);
         break;
     case AMICI_SCALING_NONE:
         for (int ip = 0; ip < np(); ++ip)
-            bufferUnscaled[ip] = p[ip];
+            bufferUnscaled[ip] = par[ip];
         break;
     }
 }
@@ -167,13 +156,13 @@ UserData::~UserData() {
 
 void UserData::print() const {
     printf("qpositivex: %p\n", qpositivex.data());
-    printf("plist: %p\n", plist.data());
+    printf("plist: %p\n", p_index.data());
     printf("nplist: %d\n", nplist());
     printf("nt: %d\n", nt());
     printf("nmaxevent: %d\n", nmaxevent);
     printf("p: %p\n", par.data());
     printf("k: %p\n", konst.data());
-    printf("tstart: %e\n", tstart);
+    printf("tstart: %e\n", tstart());
     printf("ts: %p\n", ts.data());
     printf("pbar: %p\n", pbar.data());
     printf("xbar: %p\n", xbar.data());
