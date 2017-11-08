@@ -247,7 +247,7 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     
     /* Newton solver did not work, so try a simulation: reinitialize solver */
     if (it<1)
-        tstart = udata->tstart();
+        tstart = udata->t0();
     else
         tstart = rdata->ts[it-1];
     t = tstart;

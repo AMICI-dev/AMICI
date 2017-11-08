@@ -36,7 +36,7 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     xdot(model->nx), xdot_old(model->nx),
     sx(model->nx,udata->nplist()), sdx(model->nx,udata->nplist())
     {
-        t = udata->tstart();
+        t = udata->t0();
         this->model = model;
         this->solver = solver;
         this->udata = udata;
@@ -79,7 +79,7 @@ void ForwardProblem::workForwardProblem() {
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             solver->AMISetStopTime(rdata->ts[it]);
         }
-        if (rdata->ts[it] > udata->tstart()) {
+        if (rdata->ts[it] > udata->t0()) {
             while (t < rdata->ts[it]) {
                 if (model->nx > 0) {
                     if (std::isinf(rdata->ts[it])) {
@@ -470,7 +470,7 @@ void ForwardProblem::handleDataPoint(int it) {
             rdata->x[it + rdata->nt * ix] = x[ix];
         }
 
-        if (rdata->ts[it] > udata->tstart()) {
+        if (rdata->ts[it] > udata->t0()) {
             solver->getDiagnosis(it, rdata);
         }
     }
@@ -558,7 +558,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     if (!(std::isinf(rdata->ts[it]))) {
         for (int ip = 0; ip < rdata->nplist; ip++) {
             if (model->nx > 0) {
-                if (rdata->ts[it] > udata->tstart()) {
+                if (rdata->ts[it] > udata->t0()) {
                     solver->AMIGetSens(&(t), sx);
                 }
                 for (int ix = 0; ix < model->nx; ix++) {

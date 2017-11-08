@@ -86,10 +86,10 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     /* we still need to integrate from first datapoint to tstart */
-    if (t > udata->tstart()) {
+    if (t > udata->t0()) {
         if (model->nx > 0) {
             /* solve for backward problems */
-            solver->AMISolveB(udata->tstart(), AMICI_NORMAL);
+            solver->AMISolveB(udata->t0(), AMICI_NORMAL);
 
             solver->AMIGetQuadB(which, &(t), xQB);
 

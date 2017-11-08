@@ -5,7 +5,7 @@
 
 namespace amici {
 
-UserData::UserData(int np, int nk, int nx) : sizex(nx) {
+UserData::UserData(const int np, const int nk, const int nx) : sizex(nx) {
     // these fields must always be initialized, others are optional or can be set later
     konst.resize(nk);
     par.resize(np);
@@ -26,7 +26,7 @@ UserData::UserData(const UserData &other) : UserData(other.np(), other.nk(), oth
     par = other.par;
     konst = other.konst;
     pscale = other.pscale;
-    t0 = other.t0;
+    tstart = other.tstart;
     ts = other.ts;
     pbar = other.pbar;
     xbar = other.xbar;
@@ -162,7 +162,7 @@ void UserData::print() const {
     printf("nmaxevent: %d\n", nmaxevent);
     printf("p: %p\n", par.data());
     printf("k: %p\n", konst.data());
-    printf("tstart: %e\n", tstart());
+    printf("tstart: %e\n", tstart);
     printf("ts: %p\n", ts.data());
     printf("pbar: %p\n", pbar.data());
     printf("xbar: %p\n", xbar.data());

@@ -351,7 +351,7 @@ void Model::initializeStates(AmiVector x, const UserData *udata) {
  */
 void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata) {
     std::vector<realtype> rootvals(ne,0.0);
-    frootwrap(udata->tstart(), x, dx, rootvals.data(), udata);
+    frootwrap(udata->t0(), x, dx, rootvals.data(), udata);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             h.at(ie) = 0.0;
@@ -371,7 +371,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
      **/
     void Model::fx0(AmiVector x, const UserData *udata) {
         x.reset();
-        model_x0(x.data(),udata->tstart(),udata->p(),udata->k());
+        model_x0(x.data(),udata->t0(),udata->p(),udata->k());
     };
 
     /** Initial value for initial state sensitivities
@@ -380,7 +380,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, co
     void Model::fsx0(AmiVectorArray sx, const AmiVector x, const UserData *udata) {
         sx.reset();
         for(int ip = 0; ip<udata->nplist(); ip++)
-            model_sx0(sx.data(ip),udata->tstart(),x.data(),udata->p(),udata->k(),udata->plist(ip));
+            model_sx0(sx.data(ip),udata->t0(),x.data(),udata->p(),udata->k(),udata->plist(ip));
     }
     
     /** Sensitivity of event timepoint, total derivative

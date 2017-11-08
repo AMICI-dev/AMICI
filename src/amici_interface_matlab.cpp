@@ -67,8 +67,7 @@ enum mexRhsArguments {
     if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
         mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION);             \
         int len = (int)mxGetM(a) * mxGetN(a);                                  \
-        udata->OPTION = new double[len];                                       \
-        memcpy(udata->OPTION, mxGetData(a), sizeof(double) * len);             \
+        udata->OPTION.assign(mxGetData(a),mxGetData(a)+ len);                  \
     } else {                                                                   \
         throw AmiException("Provided options do not have field " #OPTION "!"); \
     }
@@ -84,6 +83,7 @@ enum mexRhsArguments {
  * dimension checks @type Model
  * @return udata pointer to user data object @type UserData
  */
+template <class mxArray>
 UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                  Model *model) {
     if (nrhs < RHS_NUMARGS_REQUIRED) {
@@ -103,7 +103,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* parameters */
-    if (udata->np > 0) {
+    if (udata->np() > 0) {
         if (mxGetPr(prhs[RHS_PARAMETERS])) {
             if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
                 model->np) {
@@ -165,10 +165,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* pbar */
-    if (udata->nplist > 0) {
+    if (udata->nplist() > 0) {
         if (mxGetPr(prhs[RHS_PBAR])) {
             if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
-                udata->nplist) {
+                udata->nplist()) {
                 udata->setPbar(mxGetPr(prhs[RHS_PBAR]));
             } else {
                 throw AmiException("Provided parameter scales have incorrect length!");
@@ -216,7 +216,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
-            if (mxGetN(sx0) != udata->nplist) {
+            if (mxGetN(sx0) != udata->nplist()) {
                 throw AmiException("Number of rows in sx0 field "
                                    "does not agree with number of "
                                    "model parameters!");
@@ -360,7 +360,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
     int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
         nz_sigmaz = 0; /* integers with problem dimensionality */
     ExpData *edata = new ExpData(udata, model);
-    if (edata->my == nullptr) {
+    if (edata->my.empty()) {
         // if allocation fails we throw an exception
         // and do not simply return a null pointer
         delete(edata);
@@ -376,10 +376,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                ny_my, model->nytrue);
         }
         nt_my = (int)mxGetM(dataY);
-        if (nt_my != udata->nt) {
+        if (nt_my != udata->nt()) {
             throw AmiException("Number of time-points in data matrix does (%i) "
                                "not match provided time vector (%i)",
-                               nt_my, udata->nt);
+                               nt_my, udata->nt());
         }
         
         edata->setObservedData(mxGetPr(dataY));
@@ -397,10 +397,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                ny_sigmay, model->nytrue);
         }
         nt_sigmay = (int)mxGetM(dataSigmaY);
-        if (nt_sigmay != udata->nt) {
+        if (nt_sigmay != udata->nt()) {
             throw AmiException("Number of time-points in data-sigma matrix (%i) "
                                "does not match provided time vector (%i)",
-                               nt_sigmay, udata->nt);
+                               nt_sigmay, udata->nt());
         }
         
         edata->setObservedDataStdDev(mxGetPr(dataSigmaY));
@@ -417,10 +417,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                nz_mz, model->nztrue);
         }
         ne_mz = (int)mxGetM(dataZ);
-        if (ne_mz != udata->nmaxevent) {
+        if (ne_mz != udata->nme()) {
             throw AmiException("Number of time-points in event matrix (%i) does "
                                "not match provided nmaxevent (%i)",
-                               ne_mz, udata->nmaxevent);
+                               ne_mz, udata->nme());
         }
         edata->setObservedEvents(mxGetPr(dataZ));
     } else {
@@ -436,10 +436,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                nz_sigmaz, model->nztrue);
         }
         ne_sigmaz = (int)mxGetM(dataSigmaZ);
-        if (ne_sigmaz != udata->nmaxevent) {
+        if (ne_sigmaz != udata->nme()) {
             throw AmiException("Number of time-points in event-sigma matrix (%i) "
                                "does not match provided nmaxevent (%i)",
-                               ne_sigmaz, udata->nmaxevent);
+                               ne_sigmaz, udata->nme());
         }
         
         edata->setObservedEventsStdDev(mxGetPr(dataSigmaZ));
@@ -494,7 +494,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             if (!edata)
                 amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
         } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
-                   udata->sensi_meth == amici::AMICI_SENSI_ASA) {
+                   udata->sensmeth() == amici::AMICI_SENSI_ASA) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
         }
         

@@ -15,11 +15,19 @@ void serialize(Archive &ar, amici::UserData &u, const unsigned int version);
 }}
 
 namespace amici {
+    
+class Model;
+
+template <class mxArray>
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
+                                     Model *model);
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
  * (FORTRAN-style)
  */
+
+
 class UserData {
 
   public:
@@ -29,7 +37,7 @@ class UserData {
      * @param nk number of fixed parameters
      * @param nx number of states
      */
-    UserData(int np, int nk, int nx);
+    UserData(const int np, const int nk, const int nx);
 
     /**
      * @brief Default constructor for testing and serialization
@@ -127,8 +135,8 @@ class UserData {
         return p_index.size();
     };
     
-    const double tstart() const{
-        return t0;
+    const double t0() const{
+        return tstart;
     }
 
     /** number of timepoints */
@@ -217,6 +225,9 @@ class UserData {
     /** maximum number of allowed integration steps */
     int maxsteps = 0;
     
+    /** flag indicating whether sensitivities are supposed to be computed */
+    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
+    
 private:
     /** maximal number of events to track */
     int nmaxevent = 10;
@@ -236,7 +247,7 @@ private:
     std::vector<double>konst;
     
     /** starting time */
-    double t0 = 0.0;
+    double tstart = 0.0;
     
     /** parameter transformation of p */
     AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
@@ -250,9 +261,6 @@ private:
     /** scaling of states (size nx)
      * NOTE: currently not used */
     std::vector<double>xbar;
-    
-    /** flag indicating whether sensitivities are supposed to be computed */
-    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
     
     /** method for sensitivity computation */
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
@@ -284,6 +292,10 @@ private:
     StateOrdering ordering = AMD;
     
     friend class ReturnData;
+    
+    template <class mxArray>
+    friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
+                                            Model *model);
 };
 
 } // namespace amici
