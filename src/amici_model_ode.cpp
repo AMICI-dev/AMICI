@@ -25,10 +25,11 @@ namespace amici {
         return checkVals(N,J->data,"Jacobian");
     }
     
-    virtual void fJwrapfJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
+    virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
                           AmiVector xdot, DlsMat J, const UserData *user_data){
         UserData user_data(*udata); // make a copy to remove constness
-        fJ(t,x.getNVector(),root,user_data);
+        fJ(J->N*J->M, realtype t, x.getNVector(), xdot.getNVector(),
+           J, user_data, nullptr, nullptr, nullptr);
         
     }
 
@@ -80,6 +81,12 @@ namespace amici {
         model_JSparse(J->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),
                       w.data(),dwdx.data());
         return checkVals(J->nnz,J->data,"Jacobian");
+    }
+    
+    virtual void fJSparsewrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                        AmiVector xdot, SlsMat J, const UserData *user_data){
+        UserData user_data(*udata); // make a copy to remove constness
+        fJSparse(t,x,xdot,J,user_data,nullptr,nullptr,nullptr);
     }
 
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)

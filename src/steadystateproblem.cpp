@@ -35,7 +35,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(udata->linsol, model, rdata, udata));
+    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(&t, udata->linsol, model, rdata, udata));
                                                       
     int newton_status;
     try {
@@ -138,7 +138,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
             try{
-                newtonSolver->getStep(newton_try, i_newtonstep, delta.getNVector());
+                newtonSolver->getStep(newton_try, i_newtonstep, delta);
             } catch(...) {
                 rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
                 throw NewtonFailure("Newton method failed to compute new step!");

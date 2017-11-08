@@ -131,6 +131,18 @@ namespace amici {
         virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
                               AmiVector xdot, DlsMat J, const UserData *user_data) = 0;
         
+        virtual void fJSparsewrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                            AmiVector xdot, SlsMat J, const UserData *user_data) = 0;
+        
+        virtual void fJDiagwrap(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+                                AmiVector dx, const UserData *user_data) = 0;
+        
+        virtual void fdxdotdpwrap(realtype t, AmiVector x, AmiVector dx,
+                                  const UserData *user_data) = 0;
+        
+        virtual void fJvwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                             AmiVector v, AmiVector nJv, realtype cj, const UserData *user_data) = 0;
+        
 
         void fx0(AmiVector x, const UserData *udata);
         
@@ -705,6 +717,9 @@ namespace amici {
         /** change in qB */
         std::vector<realtype> deltaqB;
         
+        /** tempory storage of dxdotdp data across functions */
+        std::vector<realtype> dxdotdp;
+        
     protected:
         int checkVals(const int N,const realtype *array, const char* fun){
             for(int idx = 0; idx < N; idx++) {
@@ -833,8 +848,6 @@ namespace amici {
         std::vector<double> dydp;
         /** state derivative of observable */
         std::vector<double> dydx;
-        /** tempory storage of dxdotdp data across functions */
-        std::vector<realtype> dxdotdp;;
         /** tempory storage of w data across functions */
         std::vector<realtype> w;
         /** tempory storage of dwdx data across functions */

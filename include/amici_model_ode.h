@@ -96,6 +96,9 @@ namespace amici {
                      void *user_data, N_Vector tmp1, N_Vector tmp2,
                      N_Vector tmp3);
         
+        virtual void fJSparsewrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                                  AmiVector xdot, SlsMat J, const UserData *user_data);
+        
         /** model specific implementation for fJSparse
          * @param[out] J Matrix to which the Jacobian will be written
          * @param[in] t timepoint
@@ -147,8 +150,14 @@ namespace amici {
         
         static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
         
+        virtual void fJDiagwrap(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+                                AmiVector dx, const UserData *user_data);
+        
         static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
                        void *user_data, N_Vector tmp);
+        
+        virtual void fJvwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                             AmiVector v, AmiVector nJv, realtype cj, const UserData *user_data);
         
         /** model specific implementation for fJv
          * @param[out] Jv Matrix vector product of J with a vector v
@@ -271,6 +280,9 @@ namespace amici {
         }
         
         void fdxdotdp(const realtype t, const N_Vector x, const UserData *udata);
+        
+        virtual void fdxdotdpwrap(realtype t, AmiVector x, AmiVector dx,
+                                  const UserData *user_data);
         
         /** model specific implementation of fdxdotdp
          * @param[out] dxdotdp partial derivative xdot wrt p

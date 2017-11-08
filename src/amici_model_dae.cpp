@@ -81,6 +81,12 @@ namespace amici {
         return checkVals(J->nnz,J->data,"Jacobian");
     }
     
+    virtual void fJSparsewrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                              AmiVector xdot, SlsMat J, const UserData *user_data){
+        UserData user_data(*udata); // make a copy to remove constness
+        fJSparse(t,cj,x,dx,xdot,J,user_data,nullptr,nullptr,nullptr);
+    }
+    
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param[in] t timepoint
      * @param[in] cj scalar in Jacobian

@@ -52,6 +52,10 @@ namespace amici {
             std::fill(vec.begin(), vec.end(), 0.0);
         }
         
+        void set(realtype val) {
+            std::fill(vec.begin(), vec.end(), val);
+        }
+        
         realtype& operator[](int pos) {
             return vec.at(pos);
         }
