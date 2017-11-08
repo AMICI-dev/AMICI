@@ -31,7 +31,7 @@ ReturnData::ReturnData(const UserData *udata, const Model *model,
     : np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
-      nplist(udata->nplist()), nmaxevent(udata->nmaxevent), nt(udata->nt()),
+      nplist(udata->nplist()), nmaxevent(udata->nme()), nt(udata->nt()),
       newton_maxsteps(udata->newton_maxsteps), pscale(udata->pscale),
       o2mode(model->o2mode), sensi(udata->sensi),
       sensi_meth(udata->sensi_meth) {
@@ -132,7 +132,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
         case AMICI_SCALING_LOG10:
             coefficient = log(10.0);
             for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = unscaledParameters[udata->plist[ip]] * log(10);
+                pcoefficient[ip] = unscaledParameters[udata->plist(ip)] * log(10);
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for (int ip = 0; ip < np; ++ip)
@@ -141,7 +141,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
         case AMICI_SCALING_LN:
             coefficient = 1.0;
             for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
+                pcoefficient[ip] = unscaledParameters[udata->plist(ip)];
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for (int ip = 0; ip < np; ++ip)
@@ -216,7 +216,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     for (int iJ = 1; iJ < nJ; ++iJ) {
                         s2llh[ip * nplist + (iJ - 1)] *=
                             pcoefficient[ip] * augcoefficient[iJ - 1];
-                        if (udata->plist[ip] == iJ - 1)
+                        if (udata->plist(ip) == iJ - 1)
                             s2llh[ip * nplist + (iJ - 1)] +=
                                 sllh[ip] * coefficient;
                     }
@@ -232,7 +232,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     for (int IND2 = 0; IND2 < N2; ++IND2) {                    \
                         s##QUANT[(ip * N1 + iJ * N1T + IND1) * N2 + IND2] *=   \
                             pcoefficient[ip] * augcoefficient[iJ - 1];         \
-                        if (udata->plist[ip] == iJ - 1)                        \
+                        if (udata->plist(ip) == iJ - 1)                        \
                             s##QUANT[(ip * N1 + iJ * N1T + IND1) * N2 +        \
                                      IND2] +=                                  \
                                 s##QUANT[(ip * N1 + IND1) * N2 + IND2] *       \
@@ -252,8 +252,8 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
             if (sllh) {
                 for (int ip = 0; ip < nplist; ++ip) {
                     s2llh[ip] *= pcoefficient[ip];
-                    s2llh[ip] += udata->k[nk - nplist + ip] * sllh[ip] /
-                                 unscaledParameters[udata->plist[ip]];
+                    s2llh[ip] += udata->k()[nk - nplist + ip] * sllh[ip] /
+                                 unscaledParameters[udata->plist(ip)];
                 }
             }
         }
@@ -266,9 +266,9 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     s##QUANT[(ip * N1 + N1T + IND1) * N2 + IND2] *=            \
                         pcoefficient[ip];                                      \
                     s##QUANT[(ip * N1 + N1T + IND1) * N2 + IND2] +=            \
-                        udata->k[nk - nplist + ip] *                           \
+                        udata->k()[nk - nplist + ip] *                           \
                         s##QUANT[(ip * N1 + IND1) * N2 + IND2] /               \
-                        unscaledParameters[udata->plist[ip]];                  \
+                        unscaledParameters[udata->plist(ip)];                  \
                 }
 
         s2vecChainRule(x, ix, nxtrue, nx, it, nt);
@@ -367,7 +367,7 @@ void ReturnData::copyFromUserData(const UserData *udata) {
      * @brief copies measurement timepoints from UserData object
      * @param[in] udata pointer to the user data struct @type UserData
      */
-    memcpy(ts, udata->ts, nt * sizeof(realtype));
+    memcpy(ts, udata->ts.data(), nt * sizeof(realtype));
 }
 
 void ReturnData::initFields() {

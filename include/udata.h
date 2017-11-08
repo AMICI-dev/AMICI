@@ -282,6 +282,8 @@ private:
     
     /** state ordering */
     StateOrdering ordering = AMD;
+    
+    friend class ReturnData;
 };
 
 } // namespace amici
