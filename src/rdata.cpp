@@ -70,10 +70,12 @@ void ReturnData::invalidate(const int t) {
         for (int iy = 0; iy < ny; iy++)
             y[iy * nt + it] = amiGetNaN();
         for (int ip = 0; ip < np; ip++) {
-            for (int ix = 0; ix < nx; ix++)
-                sx[(ip*nx + ix) * nt + it] = amiGetNaN();
-            for (int iy = 0; iy < ny; iy++)
-                sy[(ip*ny + iy) * nt + it] = amiGetNaN();
+            if(sx)
+                for (int ix = 0; ix < nx; ix++)
+                    sx[(ip*nx + ix) * nt + it] = amiGetNaN();
+            if(sy)
+                for (int iy = 0; iy < ny; iy++)
+                    sy[(ip*ny + iy) * nt + it] = amiGetNaN();
         }
     }
 }
