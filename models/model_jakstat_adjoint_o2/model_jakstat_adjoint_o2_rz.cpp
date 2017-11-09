@@ -8,15 +8,16 @@
 #include <include/rdata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int rz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) {
-int status = 0;
+using namespace amici;
+
+void rz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
-return(status);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+return;
 
 }
 

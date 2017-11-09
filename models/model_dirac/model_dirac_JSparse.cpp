@@ -8,8 +8,9 @@
 #include "model_dirac_dwdx.h"
 #include "model_dirac_w.h"
 
-int JSparse_model_dirac(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+using namespace amici;
+
+void JSparse_model_dirac(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -30,8 +31,8 @@ J->indexvals[2] = 1;
 J->indexptrs[0] = 0;
 J->indexptrs[1] = 2;
 J->indexptrs[2] = 3;
-status = w_model_dirac(t,x,NULL,tdata);
-status = dwdx_model_dirac(t,x,NULL,user_data);
+w_model_dirac(t,x,NULL,tdata);
+dwdx_model_dirac(t,x,NULL,user_data);
   J->data[0] = -tdata->p[0];
   J->data[1] = tdata->p[2];
   J->data[2] = -tdata->p[3];
@@ -45,10 +46,10 @@ for(inz = 0; inz<3; inz++) {
    }
    if(amiIsInf(J->data[inz])) {
        warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

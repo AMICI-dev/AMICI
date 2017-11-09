@@ -2,30 +2,23 @@ project(model_jakstat_adjoint_o2)
 
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable")
+include(CheckCXXCompilerFlag)
+set(MY_CXX_FLAGS -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
+foreach(FLAG ${MY_CXX_FLAGS})
+    unset(CUR_FLAG_SUPPORTED CACHE)
+    CHECK_CXX_COMPILER_FLAG(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    endif()
+endforeach(FLAG)
 
-set(AMICI_DIR "${CMAKE_CURRENT_LIST_DIR}/../../")
-set(MODEL_DIR "${AMICI_DIR}/models/model_jakstat_adjoint_o2")
-set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
-set(SUITESPARSE_LIB_DIR "${AMICI_DIR}/SuiteSparse/lib")
-set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
+find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+get_property(AmiciConfigIncludes TARGET Upstream::amici PROPERTY INCLUDE_DIRECTORIES)
 
-find_package(HDF5 COMPONENTS C HL REQUIRED)
+set(MODEL_DIR "${Amici_DIR}/../models/model_jakstat_adjoint_o2")
 
-set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
-set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
-
-if(${BLAS} STREQUAL "MKL")
-    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
-else()
-    set(BLAS_LIBRARIES -lcblas CACHE STRING "")
-endif()
-
-include_directories("${AMICI_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${HDF5_INCLUDE_DIRS}")
-include_directories("${AMICI_DIR}/sundials/include")
-include_directories("${SUITESPARSE_DIR}/include")
+include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_o2_J.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_JB.cpp
@@ -81,34 +74,17 @@ ${MODEL_DIR}/wrapfunctions.cpp
 )
     
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
-
-if(APPLE)
-    set(SHARED_OBJECT_EXTENSION .dylib)
-else()
-    set(SHARED_OBJECT_EXTENSION .so)
-endif()
     
-target_link_libraries(${PROJECT_NAME}
-    ${AMICI_DIR}/build/libamici.a
-    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
-    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
-    ${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
-    ${HDF5_HL_LIBRARIES}
-    ${HDF5_C_LIBRARIES}
-    ${BLAS_LIBRARIES}
-    -ldl -lz -lm
+target_link_libraries(
+    ${PROJECT_NAME}
+    Upstream::amici
 )
 
 set(SRC_LIST_EXE main.cpp)
 
 add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
     
-target_link_libraries(simulate_${PROJECT_NAME} ${AMICI_DIR}/build/libamici.a ${PROJECT_NAME})
+target_link_libraries(simulate_${PROJECT_NAME} Upstream::amici ${PROJECT_NAME})
 
 if($ENV{ENABLE_GCOV_COVERAGE})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")

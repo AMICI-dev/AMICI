@@ -41,8 +41,16 @@ function createTestingData()
     options.sensi = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
+    
+    amiHDFprefix = '/model_steadystate/sensiforwardplist/';
+    options.sensi = 1;
+    options.sens_ind = [3,1,2,4];
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    
     amiHDFprefix = '/model_steadystate/sensiforwarddense/';
     options.sensi = 1;
+    options.sens_ind = 1:5;
     options.linsol = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
@@ -50,6 +58,18 @@ function createTestingData()
     options.sensi = 0;
     options.linsol = 7;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/sensiforwarderrorint/';
+    options.sensi = 1;
+    options.linsol = 9;
+    options.maxsteps = 100;
+    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_steadystate/sensiforwarderrornewt/';
+    options.sensi = 1;
+    options.linsol = 9;
+    options.newton_maxsteps = 2;
+    sol = simulate_model_steadystate_hdf([0,inf],log10(p),k,[],options);
 
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
@@ -192,8 +212,7 @@ function createTestingData()
     options.sensi = 2;
     options.sensi_meth = 'forward';
     simulate_model_neuron_hdf([],log10(p),[],D,options);
-    
-    
+     
     %% EXAMPLE EVENTS
     cd([amiciPath '/examples/example_events/']);
     
@@ -257,6 +276,35 @@ function createTestingData()
     options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_nested_events_hdf(t,log10(p),k,D,options);
+    
+    
+    %% EXAMPLE ROBERTSON
+    cd([amiciPath '/examples/example_robertson/']);
+    
+    [exdir,~,~]=fileparts(which('example_robertson.m'));
+    amiwrap('model_robertson', 'model_robertson_syms', exdir);
+    
+    !sed '$d' simulate_model_robertson.m > simulate_model_robertson_hdf.m
+    !tail -n +2 ../../tests/cpputest/writeSimulationData.template.m >> simulate_model_robertson_hdf.m
+    
+    t = [0 4*logspace(-6,6)];
+    p = [0.04;1e4;3e7];
+    k = [0.9];
+    
+
+    options = amioption('sensi',0,...
+        'maxsteps',1e4,...
+        'atol',1e-6,...
+        'rtol',1e-4);
+    
+    amiHDFprefix = '/model_robertson/nosensi/';
+    options.sensi = 0;
+    simulate_model_robertson_hdf(t,log10(p),k,[],options);
+    
+    amiHDFprefix = '/model_robertson/sensiforward/';
+    options.sensi = 1;
+    options.sensi_meth = 'forward';
+    simulate_model_robertson_hdf(t,log10(p),k,[],options);
 
     %%
     chdir(oldwd)

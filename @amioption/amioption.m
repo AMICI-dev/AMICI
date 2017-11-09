@@ -65,12 +65,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         pscale = '';
     end
     
-    properties (Hidden)
-
-        % flag for DAE variables
-        id = double.empty();
-    end
-    
     methods
         function obj = amioption(varargin)
             %amioptions Construct a new amioptions object

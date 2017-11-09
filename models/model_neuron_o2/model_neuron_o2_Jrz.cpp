@@ -9,14 +9,15 @@
 #include <include/edata.h>
 #include "model_neuron_o2_w.h"
 
-int Jrz_model_neuron_o2(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
-int status = 0;
+using namespace amici;
+
+void Jrz_model_neuron_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_neuron_o2(t,x,NULL,tdata);
+w_model_neuron_o2(t,x,NULL,tdata);
 int iz;
 if(!amiIsNaN(edata->mz[0*udata->nmaxevent+tdata->nroots[ie]])){
     iz = 0;
@@ -26,7 +27,7 @@ if(!amiIsNaN(edata->mz[0*udata->nmaxevent+tdata->nroots[ie]])){
   tdata->Jz[3] += rdata->rz[tdata->nroots[ie]+udata->nmaxevent*0]*rdata->rz[tdata->nroots[ie]+udata->nmaxevent*3]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
   tdata->Jz[4] += rdata->rz[tdata->nroots[ie]+udata->nmaxevent*0]*rdata->rz[tdata->nroots[ie]+udata->nmaxevent*4]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
 }
-return(status);
+return;
 
 }
 

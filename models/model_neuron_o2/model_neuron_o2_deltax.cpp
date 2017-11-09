@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_neuron_o2_w.h"
 
-int deltax_model_neuron_o2(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata) {
-int status = 0;
+using namespace amici;
+
+void deltax_model_neuron_o2(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
@@ -21,7 +22,7 @@ realtype *xdot_old_tmp = nullptr;
 if(xdot_old)
     xdot_old_tmp = N_VGetArrayPointer(xdot_old);
 memset(tdata->deltax,0,sizeof(realtype)*10);
-status = w_model_neuron_o2(t,x,NULL,tdata);
+w_model_neuron_o2(t,x,NULL,tdata);
               switch(ie) { 
               case 0: {
   tdata->deltax[0] = -tdata->p[2]-x_tmp[0];
@@ -38,7 +39,7 @@ status = w_model_neuron_o2(t,x,NULL,tdata);
               } break;
 
               } 
-return(status);
+return;
 
 }
 

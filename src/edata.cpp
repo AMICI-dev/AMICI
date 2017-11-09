@@ -5,6 +5,8 @@
 #include <cstring>
 #include <include/udata.h>
 
+namespace amici {
+
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
 ExpData::ExpData(const UserData *udata, Model *model)
@@ -20,7 +22,6 @@ ExpData::ExpData(const UserData *udata, Model *model)
         my = new double[udata->nt * model->nytrue]();
         sigmay = new double[udata->nt * model->nytrue]();
         mz = new double[udata->nmaxevent * model->nztrue]();
-        mrz = new double[udata->nmaxevent * model->nztrue]();
         sigmaz = new double[udata->nmaxevent * model->nztrue]();
     }
 }
@@ -52,15 +53,6 @@ void ExpData::setObservedEvents(const double *observedEvents) {
     memcpy(mz, observedEvents, nmaxevent * nztrue * sizeof(double));
 }
 
-void ExpData::setObservedRoots(const double *observedRoots) {
-    /**
-     * set function that copies data from input to ExpData::mrz
-     *
-     * @param[in] observedRoots observed roots of event data @type *double
-     */
-    memcpy(mrz, observedRoots, nmaxevent * nztrue * sizeof(double));
-}
-
 void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
     /**
      * set function that copies data from input to ExpData::sigmaz
@@ -77,8 +69,8 @@ ExpData::~ExpData() {
         delete[] sigmay;
     if (mz)
         delete[] mz;
-    if (mrz)
-        delete[] mrz;
     if (sigmaz)
         delete[] sigmaz;
 }
+
+} // namespace amici

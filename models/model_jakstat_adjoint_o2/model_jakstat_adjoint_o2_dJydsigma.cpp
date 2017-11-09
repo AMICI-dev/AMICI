@@ -9,15 +9,16 @@
 #include <include/edata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dJydsigma_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
-int status = 0;
+using namespace amici;
+
+void dJydsigma_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJydsigma,0,sizeof(realtype)*model->nytrue*model->ny*model->nJ);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
 int iy;
 if(!amiIsNaN(edata->my[0* udata->nt+it])){
     iy = 0;
@@ -82,7 +83,7 @@ if(!amiIsNaN(edata->my[2* udata->nt+it])){
   tdata->dJydsigma[iy+(16+2*18)*model->nytrue] = rdata->y[it + udata->nt*50]*1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*(edata->my[it+udata->nt*2]*2.0-rdata->y[it + udata->nt*2]*2.0)*1.0;
   tdata->dJydsigma[iy+(17+2*18)*model->nytrue] = 1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*pow(edata->my[it+udata->nt*2]-rdata->y[it + udata->nt*2],2.0)*3.0-1.0/(tdata->sigmay[2]*tdata->sigmay[2])*1.0+rdata->y[it + udata->nt*53]*1.0/(tdata->sigmay[2]*tdata->sigmay[2]*tdata->sigmay[2])*(edata->my[it+udata->nt*2]*2.0-rdata->y[it + udata->nt*2]*2.0)*1.0;
 }
-return(status);
+return;
 
 }
 

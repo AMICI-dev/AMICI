@@ -1,13 +1,16 @@
 #include "../include/backwardproblem.h"
 #include "include/amici_model.h"
 #include "include/amici_solver.h"
+#include "include/amici_exception.h"
 #include "include/edata.h"
 #include "include/rdata.h"
 #include "include/tdata.h"
 #include "include/udata.h"
 #include <cstring>
 
-int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
+namespace amici {
+
+void BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                                          ReturnData *rdata, Model *model) {
     /**
      * workBackwardProblem solves the backward problem. if adjoint
@@ -21,12 +24,11 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
      * @return int status flag
      */
     int ix, it, ip;
-    int status = (int)*rdata->status;
     double tnext;
 
     if (model->nx <= 0 || rdata->sensi < AMICI_SENSI_ORDER_FIRST ||
-        rdata->sensi_meth != AMICI_SENSI_ASA || status != AMICI_SUCCESS) {
-        return status;
+        rdata->sensi_meth != AMICI_SENSI_ASA ) {
+        return;
     }
 
     Solver *solver = tdata->solver;
@@ -40,17 +42,11 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         tnext = getTnext(tdata->discs, tdata->iroot, rdata->ts, it, model);
 
         if (tnext < tdata->t) {
-            status = solver->AMISolveB(tnext, AMICI_NORMAL);
-            if (status != AMICI_SUCCESS)
-                return status;
+            solver->AMISolveB(tnext, AMICI_NORMAL);
 
-            status = solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
+            solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
                                      tdata->dxB);
-            if (status != AMICI_SUCCESS)
-                return status;
-            status = solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
-            if (status != AMICI_SUCCESS)
-                return status;
+            solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
         }
 
         /* handle discontinuity */
@@ -69,46 +65,30 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         }
 
         /* reinit states */
-        status =
-            solver->AMIReInitB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
-        if (status != AMICI_SUCCESS)
-            return status;
+        solver->AMIReInitB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
 
-        status = solver->AMIQuadReInitB(tdata->which, tdata->xQB);
-        if (status != AMICI_SUCCESS)
-            return status;
+        solver->AMIQuadReInitB(tdata->which, tdata->xQB);
 
-        status =
-            solver->AMICalcICB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
-        if (status != AMICI_SUCCESS)
-            return status;
+        solver->AMICalcICB(tdata->which, tdata->t, tdata->xB, tdata->dxB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
     if (tdata->t > udata->tstart) {
-        if (status == AMICI_SUCCESS) {
-            if (model->nx > 0) {
-                /* solve for backward problems */
-                status = solver->AMISolveB(udata->tstart, AMICI_NORMAL);
-                if (status != AMICI_SUCCESS)
-                    return status;
+        if (model->nx > 0) {
+            /* solve for backward problems */
+            solver->AMISolveB(udata->tstart, AMICI_NORMAL);
 
-                status =
-                    solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
-                if (status != AMICI_SUCCESS)
-                    return status;
-                status = solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
-                                         tdata->dxB);
-                if (status != AMICI_SUCCESS)
-                    return status;
-            }
+            solver->AMIGetQuadB(tdata->which, &(tdata->t), tdata->xQB);
+
+            solver->AMIGetB(tdata->which, &(tdata->t), tdata->xB,
+                                     tdata->dxB);
         }
     }
     
     realtype *sx_tmp;
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
-        return AMICI_ERROR_ASA;
+        throw NullPointerException("xB_tmp");
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
@@ -116,7 +96,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                 tdata->llhS0[iJ * rdata->nplist + ip] = 0.0;
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
                 if (!sx_tmp)
-                    return AMICI_ERROR_ASA;
+                    throw NullPointerException("sx_tmp");
                 for (ix = 0; ix < model->nxtrue; ++ix) {
                     tdata->llhS0[ip] =
                         tdata->llhS0[ip] + xB_tmp[ix] * sx_tmp[ix];
@@ -127,7 +107,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
                 tdata->llhS0[ip + iJ * rdata->nplist] = 0.0;
                 sx_tmp = NV_DATA_S(tdata->sx[ip]);
                 if (!sx_tmp)
-                    return AMICI_ERROR_ASA;
+                    throw NullPointerException("sx_tmp");
                 for (ix = 0; ix < model->nxtrue; ++ix) {
                     tdata->llhS0[ip + iJ * rdata->nplist] =
                         tdata->llhS0[ip + iJ * rdata->nplist] +
@@ -140,7 +120,7 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
 
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if (!xQB_tmp)
-        return AMICI_ERROR_ASA;
+        throw NullPointerException("xQB_tmp");
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         for (ip = 0; ip < rdata->nplist; ip++) {
@@ -154,14 +134,13 @@ int BackwardProblem::workBackwardProblem(const UserData *udata, TempData *tdata,
         }
     }
 
-    return status;
 }
 
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
-int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
+void BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
     /**
      * handleEventB executes everything necessary for the handling of events
      * for the backward problem
@@ -169,10 +148,7 @@ int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
      * @param[out] iroot index of event @type int
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[in] model pointer to model specification object @type Model
-     * @return status flag indicating success of execution @type int
      */
-
-    int status = AMICI_SUCCESS;
 
     /* store current values */
     N_VScale(1.0, tdata->xB, tdata->xB_old);
@@ -180,27 +156,23 @@ int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
 
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
-        return AMICI_ERROR_EVENT;
+        throw NullPointerException("xB_tmp");
     realtype *xQB_tmp = NV_DATA_S(tdata->xQB);
     if (!xQB_tmp)
-        return AMICI_ERROR_DATA;
+        throw NullPointerException("xQB_tmp");
 
     for (int ie = 0; ie < model->ne; ie++) {
 
         if (tdata->rootidx[iroot * model->ne + ie] != 0) {
 
-            status = model->fdeltaqB(tdata->t, ie, tdata->x_disc[iroot],
+            model->fdeltaqB(tdata->t, ie, tdata->x_disc[iroot],
                                      tdata->xB_old, tdata->xQB_old,
                                      tdata->xdot_disc[iroot],
                                      tdata->xdot_old_disc[iroot], tdata);
-            if (status != AMICI_SUCCESS)
-                return status;
 
-            status = model->fdeltaxB(tdata->t, ie, tdata->x_disc[iroot],
+            model->fdeltaxB(tdata->t, ie, tdata->x_disc[iroot],
                                      tdata->xB_old, tdata->xdot_disc[iroot],
                                      tdata->xdot_old_disc[iroot], tdata);
-            if (status != AMICI_SUCCESS)
-                return status;
 
             for (int ix = 0; ix < model->nxtrue; ++ix) {
                 for (int iJ = 0; iJ < model->nJ; ++iJ) {
@@ -226,16 +198,9 @@ int BackwardProblem::handleEventB(int iroot, TempData *tdata, Model *model) {
         }
     }
 
-    return updateHeavisideB(iroot, tdata, model->ne);
+    updateHeavisideB(iroot, tdata, model->ne);
 }
 
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-
-int BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
-                                      TempData *tdata, Solver *solver,
-                                      Model *model) {
     /**
      * handleDataPoint executes everything necessary for the handling of data
      * points for the backward problems
@@ -245,29 +210,24 @@ int BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
      * @param[out] tdata pointer to the temporary data struct @type TempData
      * @param[in] solver pointer to solver object @type Solver
      * @param[in] model pointer to model specification object @type Model
-     * @return status flag indicating success of execution @type int
      */
+void BackwardProblem::handleDataPointB(int it, ReturnData *rdata,
+                                      TempData *tdata, Solver *solver,
+                                      Model *model) {
+
 
     realtype *xB_tmp = NV_DATA_S(tdata->xB);
     if (!xB_tmp)
-        return AMICI_ERROR_DATA;
+        throw NullPointerException("xB_tmp");
     for (int ix = 0; ix < model->nxtrue; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
             // we only need the 1:nxtrue slice here!
             xB_tmp[ix + iJ * model->nxtrue] +=
                 tdata->dJydx[it + (iJ + ix * model->nJ) * rdata->nt];
     }
-    return solver->getDiagnosisB(it, rdata, tdata);
+    solver->getDiagnosisB(it, rdata, tdata);
 }
 
-/* --------------------------------------------------------------------------------
- */
-/* --------------------------------------------------------------------------------
- */
-/* --------------------------------------------------------------------------------
- */
-
-int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
     /**
      * updateHeavisideB updates the heaviside variables h on event occurences
      * for the backward problem
@@ -277,6 +237,7 @@ int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
      * @param[in] ne number of events @type int
      * @return status flag indicating success of execution @type int
      */
+void BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
 
     /* tdata->rootsfound provides the direction of the zero-crossing, so adding
        it will give
@@ -285,15 +246,8 @@ int BackwardProblem::updateHeavisideB(int iroot, TempData *tdata, int ne) {
     for (int ie = 0; ie < ne; ie++) {
         tdata->h[ie] -= tdata->rootidx[iroot * ne + ie];
     }
-    return AMICI_SUCCESS;
 }
-
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-
-realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
-                                   int it, Model *model) {
+    
     /**
      * getTnext computes the next timepoint to integrate to. This is the maximum
      * of
@@ -308,6 +262,8 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
      * @param[in] model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
+realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
+                                   int it, Model *model) {
 
     realtype tnext;
 
@@ -332,12 +288,10 @@ realtype BackwardProblem::getTnext(realtype *troot, int iroot, realtype *tdata,
     return (tnext);
 }
 
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-
 BackwardProblem::BackwardProblem() {
     /**
      * this is a placeholder, nothing needs to be done at initialization.
      */
 }
+
+} // namespace amici

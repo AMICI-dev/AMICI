@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int x0_model_jakstat_adjoint(N_Vector x0, void *user_data);
+void x0_model_jakstat_adjoint(N_Vector x0, void *user_data);
 
 
 #endif /* _am_model_jakstat_adjoint_x0_h */

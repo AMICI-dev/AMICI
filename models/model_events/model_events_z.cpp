@@ -8,14 +8,15 @@
 #include <include/rdata.h>
 #include "model_events_w.h"
 
-int z_model_events(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata) {
-int status = 0;
+using namespace amici;
+
+void z_model_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
-status = w_model_events(t,x,NULL,tdata);
+w_model_events(t,x,NULL,tdata);
     switch(ie) { 
         case 0: {
   rdata->z[tdata->nroots[ie]+udata->nmaxevent*0] = t;
@@ -36,7 +37,7 @@ status = w_model_events(t,x,NULL,tdata);
         } break;
 
     } 
-return(status);
+return;
 
 }
 

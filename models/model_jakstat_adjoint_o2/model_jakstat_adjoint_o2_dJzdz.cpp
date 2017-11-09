@@ -9,16 +9,17 @@
 #include <include/edata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata) {
-int status = 0;
+using namespace amici;
+
+void dJzdz_model_jakstat_adjoint_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 realtype *x_tmp = nullptr;
 if(x)
     x_tmp = N_VGetArrayPointer(x);
 memset(tdata->dJzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
-return(status);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+return;
 
 }
 

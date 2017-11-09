@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_steadystate_w.h"
 
-int root_model_steadystate(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void root_model_steadystate(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -18,8 +19,8 @@ if(x)
 realtype *dx_tmp = nullptr;
 if(dx)
     dx_tmp = N_VGetArrayPointer(dx);
-status = w_model_steadystate(t,x,NULL,tdata);
-return(status);
+w_model_steadystate(t,x,NULL,tdata);
+return;
 
 }
 

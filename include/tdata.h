@@ -1,5 +1,5 @@
-#ifndef _MY_TDATA
-#define _MY_TDATA
+#ifndef AMICI_TDATA_H
+#define AMICI_TDATA_H
 
 #include <nvector/nvector_serial.h> /* defs. of serial NVECTOR fcts. and macros  */
 #include <sundials/sundials_config.h>
@@ -7,6 +7,8 @@
 #include <sundials/sundials_math.h>     /* definition of ABS */
 #include <sundials/sundials_sparse.h>   /* def. of type sparse stuff */
 #include <sundials/sundials_types.h>    /* def. of type realtype */
+
+namespace amici {
 
 class UserData;
 class ReturnData;
@@ -19,6 +21,12 @@ class TempData {
   public:
     TempData(const UserData *udata, Model *model, ReturnData *rdata);
     ~TempData();
+
+    /**
+     * @brief TempData is currently not copyable
+     * @param other object to copy from
+     */
+    TempData (const TempData &other) = delete;
 
     /** parameter array, unscaled */
     realtype *p = nullptr;
@@ -194,5 +202,7 @@ class TempData {
     /** attached Solver object */
     Solver *solver = nullptr;
 };
+
+} // namespace amici
 
 #endif /* _MY_TDATA */

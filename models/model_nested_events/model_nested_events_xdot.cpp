@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_nested_events_w.h"
 
-int xdot_model_nested_events(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void xdot_model_nested_events(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -23,7 +24,7 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(xdot_tmp,0,sizeof(realtype)*1);
-status = w_model_nested_events(t,x,NULL,tdata);
+w_model_nested_events(t,x,NULL,tdata);
   xdot_tmp[0] = -tdata->p[4]*x_tmp[0]+tdata->h[1]*tdata->p[3]*x_tmp[0];
 for(ix = 0; ix<1; ix++) {
    if(amiIsNaN(xdot_tmp[ix])) {
@@ -35,12 +36,12 @@ for(ix = 0; ix<1; ix++) {
    }
    if(amiIsInf(xdot_tmp[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");
-       return(-1);
+       return;
    }   if(udata->qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {
        xdot_tmp[ix] = -xdot_tmp[ix];
    }
 }
-return(status);
+return;
 
 }
 

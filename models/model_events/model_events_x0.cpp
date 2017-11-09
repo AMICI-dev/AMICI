@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_events_w.h"
 
-int x0_model_events(N_Vector x0, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void x0_model_events(N_Vector x0, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -20,7 +21,7 @@ realtype t = udata->tstart;
   x0_tmp[0] = udata->k[0];
   x0_tmp[1] = udata->k[1];
   x0_tmp[2] = udata->k[2];
-return(status);
+return;
 
 }
 

@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int sigma_z_model_jakstat_adjoint_o2(realtype t, int ie, TempData *tdata);
+void sigma_z_model_jakstat_adjoint_o2(realtype t, int ie, amici::TempData *tdata);
 
 
 #endif /* _am_model_jakstat_adjoint_o2_sigma_z_h */

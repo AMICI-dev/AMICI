@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_neuron_w.h"
 
-int x0_model_neuron(N_Vector x0, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void x0_model_neuron(N_Vector x0, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -19,7 +20,7 @@ memset(x0_tmp,0,sizeof(realtype)*2);
 realtype t = udata->tstart;
   x0_tmp[0] = udata->k[0];
   x0_tmp[1] = udata->k[0]*tdata->p[1];
-return(status);
+return;
 
 }
 

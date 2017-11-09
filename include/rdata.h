@@ -1,10 +1,21 @@
-#ifndef _MY_RDATA
-#define _MY_RDATA
+#ifndef AMICI_RDATA_H
+#define AMICI_RDATA_H
 #include <include/udata.h>
 
+namespace amici {
 class Model;
+class ReturnData;
+}
 
-/** @brief struct that stores all data which is later returned by the mex
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
+}}
+
+namespace amici {
+
+/** @brief class that stores all data which is later returned by the mex
  * function
  *
  * NOTE: multidimensional arrays are stored in column-major order
@@ -12,17 +23,19 @@ class Model;
  */
 class ReturnData {
   public:
+    ReturnData();
+
     ReturnData(const UserData *udata, const Model *model);
 
-    void invalidate();
+    void invalidate(const int t);
+    void invalidateLLH();
 
     void setLikelihoodSensitivityFirstOrderNaN();
 
     void setLikelihoodSensitivitySecondOrderNaN();
 
-    int
-    applyChainRuleFactorToSimulationResults(const UserData *udata,
-                                            const realtype *unscaledParameters);
+    void 
+    applyChainRuleFactorToSimulationResults(const UserData *udata);
 
     virtual ~ReturnData();
 
@@ -147,7 +160,6 @@ class ReturnData {
     double *status = nullptr;
 
   protected:
-    ReturnData();
 
     ReturnData(const UserData *udata, const Model *model,
                bool initializeFields);
@@ -210,6 +222,17 @@ class ReturnData {
     const AMICI_sensi_order sensi;
     /** sensitivity method */
     const AMICI_sensi_meth sensi_meth;
+
+    /**
+     * @brief Serialize ReturnData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, const unsigned int version);
 };
+
+} // namespace amici
 
 #endif /* _MY_RDATA */

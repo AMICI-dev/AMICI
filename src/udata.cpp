@@ -1,12 +1,92 @@
 #include "include/udata.h"
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
-UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {}
+namespace amici {
+
+UserData::UserData(int np, int nk, int nx) : np(np), nk(nk), nx(nx) {
+    // these fields must always be initialized, others are optional or can be set later
+    k = new double[nk]();
+    p = new double[np]();
+    qpositivex = new double[nx];
+    std::fill(qpositivex, qpositivex + nx, 1);
+}
 
 UserData::UserData() : np(0), nk(0), nx(0) {}
 
-int UserData::unscaleParameters(double *bufferUnscaled) const {
+UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.nx)
+{
+    nmaxevent = other.nmaxevent;
+
+    if(other.qpositivex) {
+        std::copy(other.qpositivex, other.qpositivex + other.nx, qpositivex);
+    }
+
+    if(other.plist) {
+        plist = new int[other.nplist];
+        std::copy(other.plist, other.plist + other.nplist, plist);
+    }
+
+    nplist = other.nplist;
+    nt = other.nt;
+
+    if(other.p) {
+        std::copy(other.p, other.p + other.np, p);
+    }
+    if(other.k) {
+        std::copy(other.k, other.k + other.nk, k);
+    }
+
+    pscale = other.pscale;
+    tstart = other.tstart;
+
+    if(other.ts) {
+        ts = new double[other.nt];
+        std::copy(other.ts, other.ts + other.nt, ts);
+    }
+    if(other.pbar) {
+        pbar = new double[other.nplist];
+        std::copy(other.pbar, other.pbar + other.nplist, pbar);
+    }
+    if(other.xbar) {
+        xbar = new double[other.nx];
+        std::copy(other.xbar, other.xbar + other.nx, xbar);
+    }
+
+    sensi = other.sensi;
+    atol = other.atol;
+    rtol = other.rtol;
+    maxsteps = other.maxsteps;
+    newton_maxsteps = other.newton_maxsteps;
+    newton_maxlinsteps = other.newton_maxlinsteps;
+    newton_preeq = other.newton_preeq;
+    newton_precon = other.newton_precon;
+    ism = other.ism;
+    sensi_meth = other.sensi_meth;
+    linsol = other.linsol;
+    interpType = other.interpType;
+    lmm = other.lmm;
+    iter = other.iter;
+    stldet = other.stldet;
+
+    if(other.x0data) {
+        x0data = new double[other.nx];
+        std::copy(other.x0data, other.x0data + other.nx, x0data);
+    }
+
+    if(other.sx0data) {
+        sx0data = new double[other.nx * other.nplist];
+        std::copy(other.sx0data, other.sx0data + other.nx * other.nplist, sx0data);
+    }
+
+    ordering = other.ordering;
+    newton_precon = other.newton_precon;
+    ism = other.ism;
+}
+
+
+void UserData::unscaleParameters(double *bufferUnscaled) const {
     /**
      * unscaleParameters removes parameter scaling according to the parameter
      * scaling in pscale
@@ -31,8 +111,6 @@ int UserData::unscaleParameters(double *bufferUnscaled) const {
             bufferUnscaled[ip] = p[ip];
         break;
     }
-
-    return AMICI_SUCCESS;
 }
 
 void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
@@ -46,21 +124,13 @@ void UserData::setTimepoints(const double *timepoints, int numTimepoints) {
 }
 
 void UserData::setParameters(const double *parameters) {
-    if (p) {
-        delete[] p;
-    }
-
-    p = new double[np];
-    memcpy(p, parameters, sizeof(double) * np);
+    if(parameters)
+        memcpy(p, parameters, sizeof(double) * np);
 }
 
 void UserData::setConstants(const double *constants) {
-    if (k) {
-        delete[] k;
-    }
-
-    k = new double[nk];
-    memcpy(k, constants, sizeof(double) * nk);
+    if(constants)
+        memcpy(k, constants, sizeof(double) * nk);
 }
 
 void UserData::setPlist(const double *plist, int nplist) {
@@ -68,11 +138,16 @@ void UserData::setPlist(const double *plist, int nplist) {
         delete[] this->plist;
     }
 
-    this->nplist = nplist;
-    this->plist = new int[nplist];
-
-    for (int ip = 0; ip < nplist; ip++) {
-        this->plist[ip] = (int)plist[ip];
+    if(plist){
+        this->nplist = nplist;
+        this->plist = new int[nplist];
+        
+        for (int ip = 0; ip < nplist; ip++) {
+            this->plist[ip] = (int)plist[ip];
+        }
+    } else {
+        this->plist = nullptr;
+        nplist = 0;
     }
 }
 
@@ -81,9 +156,14 @@ void UserData::setPlist(const int *plist, int nplist) {
         delete[] this->plist;
     }
 
-    this->nplist = nplist;
-    this->plist = new int[nplist];
-    memcpy(this->plist, plist, sizeof(int) * nplist);
+    if(plist){
+        this->nplist = nplist;
+        this->plist = new int[nplist];
+        memcpy(this->plist, plist, sizeof(int) * nplist);
+    } else {
+        this->plist = nullptr;
+        nplist = 0;
+    }
 }
 
 void UserData::requireSensitivitiesForAllParameters()
@@ -105,6 +185,19 @@ void UserData::setPbar(const double *parameterScaling) {
         memcpy(pbar, parameterScaling, sizeof(double) * nplist);
     } else {
         pbar = nullptr;
+    }
+}
+    
+void UserData::setXbar(const double *stateScaling) {
+    if (xbar) {
+        delete[] xbar;
+    }
+    
+    if(stateScaling) {
+        xbar = new double[nx];
+        memcpy(xbar, stateScaling, sizeof(double) * nx);
+    } else {
+        xbar = nullptr;
     }
 }
 
@@ -185,3 +278,5 @@ void UserData::print() const {
     printf("sx0data: %p\n", sx0data);
     printf("ordering: %d\n", ordering);
 }
+
+} // namespace amici

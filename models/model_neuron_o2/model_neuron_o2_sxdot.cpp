@@ -9,8 +9,9 @@
 #include "model_neuron_o2_dxdotdp.h"
 #include "model_neuron_o2_w.h"
 
-int sxdot_model_neuron_o2(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+using namespace amici;
+
+void sxdot_model_neuron_o2(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -34,8 +35,8 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*10);
 if(ip == 0) {
-    status = JSparse_model_neuron_o2(t,0.0,x,NULL,xdot,tdata->J,user_data,NULL,NULL,NULL);
-    status = dxdotdp_model_neuron_o2(t,x,NULL,user_data);
+    JSparse_model_neuron_o2(t,0.0,x,NULL,xdot,tdata->J,user_data,NULL,NULL,NULL);
+    dxdotdp_model_neuron_o2(t,x,NULL,user_data);
 }
   sxdot_tmp[0] = tdata->dxdotdp[0 + ip*model->nx]+tdata->J->data[0]*sx_tmp[0]+tdata->J->data[8]*sx_tmp[1];
   sxdot_tmp[1] = tdata->dxdotdp[1 + ip*model->nx]+tdata->J->data[1]*sx_tmp[0]+tdata->J->data[9]*sx_tmp[1];
@@ -47,7 +48,7 @@ if(ip == 0) {
   sxdot_tmp[7] = tdata->dxdotdp[7 + ip*model->nx]+tdata->J->data[20]*sx_tmp[6]+tdata->J->data[22]*sx_tmp[7];
   sxdot_tmp[8] = tdata->dxdotdp[8 + ip*model->nx]+tdata->J->data[7]*sx_tmp[0]+tdata->J->data[23]*sx_tmp[8]+tdata->J->data[25]*sx_tmp[9];
   sxdot_tmp[9] = tdata->dxdotdp[9 + ip*model->nx]+tdata->J->data[24]*sx_tmp[8]+tdata->J->data[26]*sx_tmp[9];
-return(status);
+return;
 
 }
 

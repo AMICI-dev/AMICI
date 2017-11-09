@@ -1,14 +1,13 @@
-#ifndef newton_solver
-#define newton_solver
+#ifndef amici_newton_solver_h
+#define amici_newton_solver_h
 
 #include <klu.h>
 #include <nvector/nvector_serial.h> // DlsMat
 #include <sundials/sundials_dense.h>
 #include <sundials/sundials_sparse.h> // SlsMat
 
-class NewtonSolverDense;
-class NewtonSolverSparse;
-class NewtonSolverIterative;
+namespace amici {
+
 class UserData;
 class ReturnData;
 class TempData;
@@ -27,11 +26,11 @@ class NewtonSolver {
 
     static NewtonSolver *getSolver(int linsolType, Model *model,
                                    ReturnData *rdata, const UserData *udata,
-                                   TempData *tdata, int *status);
+                                   TempData *tdata);
 
-    int getStep(int ntry, int nnewt, N_Vector delta);
+    void getStep(int ntry, int nnewt, N_Vector delta);
 
-    int getSensis(int it);
+    void getSensis(int it);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -42,7 +41,7 @@ class NewtonSolver {
      * @param[in] nnewt integer number of current Newton step
      * @return stats integer flag indicating success of the method
      */
-    virtual int prepareLinearSystem(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
 
     /**
      * Solves the linear system for the Newton step
@@ -51,9 +50,12 @@ class NewtonSolver {
      * overwritten by solution to the linear system @type N_Vector
      * @return stats integer flag indicating success of the method
      */
-    virtual int solveLinearSystem(N_Vector rhs) = 0;
+    virtual void solveLinearSystem(N_Vector rhs) = 0;
 
-    virtual ~NewtonSolver();
+    virtual ~NewtonSolver() {
+    if(sx_ip)
+        N_VDestroy_Serial(sx_ip);
+    };
 
   protected:
     /** pointer to the AMICI model object */
@@ -64,6 +66,8 @@ class NewtonSolver {
     const UserData *udata;
     /** pointer to the temporary data object */
     TempData *tdata;
+    /** sensitivity N_Vector */
+    N_Vector sx_ip = nullptr;
 };
 
 /**
@@ -76,19 +80,19 @@ class NewtonSolverDense : public NewtonSolver {
   public:
     NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
                       TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverDense();
 
   private:
     /** temporary storage of pivot array */
     long int *pivots;
     /** temporary N_Vector storage  */
-    N_Vector tmp1;
+    N_Vector tmp1 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp2;
+    N_Vector tmp2 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp3;
+    N_Vector tmp3 = nullptr;
 };
 
 /**
@@ -101,17 +105,17 @@ class NewtonSolverSparse : public NewtonSolver {
   public:
     NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
                        TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverSparse();
 
   private:
     /** temporary N_Vector storage  */
-    N_Vector tmp1;
+    N_Vector tmp1 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp2;
+    N_Vector tmp2 = nullptr;
     /** temporary N_Vector storage  */
-    N_Vector tmp3;
+    N_Vector tmp3 = nullptr;
     /** klu common storage? */
     klu_common common;
     /** klu symbolic storage? */
@@ -132,8 +136,9 @@ class NewtonSolverIterative : public NewtonSolver {
   public:
     NewtonSolverIterative(Model *model, ReturnData *rdata,
                           const UserData *udata, TempData *tdata);
-    int solveLinearSystem(N_Vector rhs);
-    int prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(N_Vector rhs);
+    void prepareLinearSystem(int ntry, int nnewt);
+    void linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta);
     ~NewtonSolverIterative();
 
   private:
@@ -141,6 +146,29 @@ class NewtonSolverIterative : public NewtonSolver {
     int newton_try;
     /** number of iterations  */
     int i_newton;
+    /** ???  */
+    N_Vector ns_p = nullptr;
+    /** ???  */
+    N_Vector ns_h = nullptr;
+    /** ???  */
+    N_Vector ns_t = nullptr;
+    /** ???  */
+    N_Vector ns_s = nullptr;
+    /** ???  */
+    N_Vector ns_r = nullptr;
+    /** ???  */
+    N_Vector ns_rt = nullptr;
+    /** ???  */
+    N_Vector ns_v = nullptr;
+    /** ???  */
+    N_Vector ns_Jv = nullptr;
+    /** ???  */
+    N_Vector ns_tmp = nullptr;
+    /** ???  */
+    N_Vector ns_Jdiag = nullptr;
 };
+
+
+} // namespace amici
 
 #endif // NEWTON_SOLVER

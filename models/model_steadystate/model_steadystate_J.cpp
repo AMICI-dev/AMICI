@@ -8,8 +8,9 @@
 #include "model_steadystate_dwdx.h"
 #include "model_steadystate_w.h"
 
-int J_model_steadystate(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+using namespace amici;
+
+void J_model_steadystate(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -24,8 +25,8 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(J->data,0,sizeof(realtype)*9);
-status = w_model_steadystate(t,x,NULL,tdata);
-status = dwdx_model_steadystate(t,x,NULL,user_data);
+w_model_steadystate(t,x,NULL,tdata);
+dwdx_model_steadystate(t,x,NULL,user_data);
   J->data[0+0*3] = -tdata->p[1]*x_tmp[1]-tdata->p[0]*tdata->dwdx[0]*2.0;
   J->data[0+1*3] = tdata->p[2]*2.0-tdata->p[1]*x_tmp[0];
   J->data[0+2*3] = tdata->dwdx[1];
@@ -45,10 +46,10 @@ for(ix = 0; ix<9; ix++) {
    }
    if(amiIsInf(J->data[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return(-1);
+       return;
    }
 }
-return(status);
+return;
 
 }
 

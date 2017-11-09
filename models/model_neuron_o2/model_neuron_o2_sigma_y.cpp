@@ -7,13 +7,14 @@
 #include <include/udata.h>
 #include "model_neuron_o2_w.h"
 
-int sigma_y_model_neuron_o2(realtype t, TempData *tdata) {
-int status = 0;
+using namespace amici;
+
+void sigma_y_model_neuron_o2(realtype t, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 memset(tdata->sigmay,0,sizeof(realtype)*5);
   tdata->sigmay[0] = 1.0;
-return(status);
+return;
 
 }
 

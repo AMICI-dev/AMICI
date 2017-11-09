@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_neuron_o2_w.h"
 
-int w_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void w_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -21,7 +22,7 @@ if(dx)
 memset(tdata->w,0,sizeof(realtype)*2);
   tdata->w[0] = x_tmp[0]*(2.0/2.5E1);
   tdata->w[1] = tdata->w[0]+5.0;
-return(status);
+return;
 
 }
 

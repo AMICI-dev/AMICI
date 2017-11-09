@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_w.h"
 
-int dsigma_zdp_model_jakstat_adjoint(realtype t, int ie, TempData *tdata) {
-int status = 0;
+using namespace amici;
+
+void dsigma_zdp_model_jakstat_adjoint(realtype t, int ie, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 int ip;
@@ -17,7 +18,7 @@ for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
 }
 }
-return(status);
+return;
 
 }
 

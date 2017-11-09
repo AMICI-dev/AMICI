@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int srz_model_nested_events(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata);
+void srz_model_nested_events(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
 
 
 #endif /* _am_model_nested_events_srz_h */

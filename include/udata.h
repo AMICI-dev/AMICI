@@ -1,8 +1,19 @@
-#ifndef _MY_UDATA
-#define _MY_UDATA
-#include "include/amici_defines.h"
+#ifndef AMICI_UDATA_H
+#define AMICI_UDATA_H
 
+#include "include/amici_defines.h"
 #include <cmath>
+
+namespace amici {
+class UserData;
+}
+
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::UserData &u, const unsigned int version);
+}}
+
+namespace amici {
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
@@ -24,7 +35,20 @@ class UserData {
      */
     UserData();
 
-    int unscaleParameters(double *bufferUnscaled) const;
+    /**
+     * @brief Copy constructor
+     * @param other object to copy from
+     */
+    UserData (const UserData &other);
+
+    /**
+     * @brief Copy assignment is disabled until const members are removed
+     * @param other object to copy from
+     * @return
+     */
+    UserData& operator=(UserData const &other)=delete;
+
+    void unscaleParameters(double *bufferUnscaled) const;
 
     /**
      * @brief setTimepoints
@@ -71,6 +95,12 @@ class UserData {
      * @param parameterScaling
      */
     void setPbar(const double *parameterScaling);
+    
+    /**
+     * @brief setXbar.
+     * @param stateScaling
+     */
+    void setXbar(const double *stateScaling);
 
     /**
      * @brief setStateInitialization
@@ -196,6 +226,18 @@ class UserData {
     const int nk;
     /** number of states */
     const int nx;
+
+    /**
+     * @brief Serialize UserData (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, UserData &r, const unsigned int version);
+
 };
+
+} // namespace amici
 
 #endif /* _MY_UDATA */

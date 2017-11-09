@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_nested_events_w.h"
 
-int x0_model_nested_events(N_Vector x0, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void x0_model_nested_events(N_Vector x0, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -18,7 +19,7 @@ if(x0)
 memset(x0_tmp,0,sizeof(realtype)*1);
 realtype t = udata->tstart;
   x0_tmp[0] = tdata->p[0];
-return(status);
+return;
 
 }
 

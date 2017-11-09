@@ -7,16 +7,22 @@
 #include "include/amici_interface_cpp.h"
 #include "include/amici.h"
 #include <include/amici_model.h>
+#include <include/amici_exception.h>
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
 #elif defined(AMICI_BLAS_MKL)
 #include <mkl.h>
 #else
-#include <cblas.h>
+extern "C"
+{
+   #include <cblas.h>
+}
 #endif
 
 #include <cstring>
+
+namespace amici {
 
 /*!
  * getSimulationResults is the core cpp interface function. It initializes the
@@ -33,9 +39,21 @@ ReturnData *getSimulationResults(Model *model, UserData *udata,
                                  const ExpData *edata) {
 
     ReturnData *rdata = new ReturnData(udata, model);
-
-    int status = runAmiciSimulation(udata, edata, rdata, model);
-    *rdata->status = status;
+    
+    try {
+        runAmiciSimulation(udata, edata, rdata, model);
+        *rdata->status = AMICI_SUCCESS;
+    } catch (amici::IntegrationFailure& ex) {
+        rdata->invalidate(ex.time);
+        *(rdata->status) = ex.error_code;
+    } catch (amici::SetupFailure& ex) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
+    } catch (amici::NullPointerException& ex) {
+        amici::errMsgIdAndTxt("AMICI:mex:null","AMICI internal memory was corrupted:\n(%s)",ex.what());
+    } catch (...) {
+        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+    }
+    rdata->applyChainRuleFactorToSimulationResults(udata);
 
     return rdata;
 }
@@ -98,3 +116,5 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
     cblas_dgemv((CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A,
                 lda, X, incX, beta, Y, incY);
 }
+
+} // namespace amici

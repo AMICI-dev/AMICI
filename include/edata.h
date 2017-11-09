@@ -1,5 +1,7 @@
-#ifndef _MY_EDATA
-#define _MY_EDATA
+#ifndef AMICI_EDATA_H
+#define AMICI_EDATA_H
+
+namespace amici {
 
 class UserData;
 class Model;
@@ -12,24 +14,28 @@ class ExpData {
     ExpData();
     ExpData(const UserData *udata, Model *model);
 
+    /**
+     * @brief ExpData is currently not copyable
+     * @param other object to copy from
+     */
+    ExpData (const ExpData &other) = delete;
+
     void setObservedData(const double *observedData);
     void setObservedDataStdDev(const double *observedDataStdDev);
     void setObservedEvents(const double *observedEvents);
-    void setObservedRoots(const double *observedRoots);
     void setObservedEventsStdDev(const double *observedEventsStdDev);
 
     ~ExpData();
 
-    /** observed data */
+    /** observed data (dimension: nt x nytrue, column-major) */
     double *my = nullptr;
-    /** standard deviation of observed data */
+    /** standard deviation of observed data (dimension: nt x nytrue, column-major) */
     double *sigmay = nullptr;
 
-    /** observed events */
+    /** observed events (dimension: nmaxevents x nztrue, column-major) */
     double *mz = nullptr;
-    /** observed roots */
-    double *mrz = nullptr;
-    /** standard deviation of observed events/roots */
+    /** standard deviation of observed events/roots
+     * (dimension: nmaxevents x nztrue, column-major)*/
     double *sigmaz = nullptr;
     
     /** number of observables */
@@ -41,5 +47,7 @@ class ExpData {
     /** maximal number of event occurences */
     const int nmaxevent;
 };
+
+} // namespace amici
 
 #endif /* _MY_EDATA */

@@ -69,67 +69,67 @@ function this = getArgs(this,model)
         case 'root'
             this.argstr = ['(realtype t, N_Vector x,' dxvec ' realtype *root, void *user_data)'];
         case 'y'
-            this.argstr = '(realtype t, int it, N_Vector x, void *user_data, ReturnData *rdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata)';
         case 'z'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata)';
         case 'rz'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata)';
         case 'sz'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata)';
         case 'srz'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata)';
         case 'dydp'
-            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, amici::TempData *tdata)';
         case 'dydx'
-            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, amici::TempData *tdata)';
         case 'dzdp'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata)';
         case 'dzdx'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata)';
         case 'drzdp'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata)';
         case 'drzdx'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata)';
         case 'deltax'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata)';
         case 'deltaxB'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata)';
         case 'deltaqB'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata)';
         case 'deltasx'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata)';
         case 'dxdotdp'
             this.argstr = ['(realtype t, N_Vector x, N_Vector dx, void *user_data)'];
         case 'sigma_y'
-            this.argstr = '(realtype t, TempData *tdata)';
+            this.argstr = '(realtype t, amici::TempData *tdata)';
         case 'dsigma_ydp'
-            this.argstr = '(realtype t, TempData *tdata)';
+            this.argstr = '(realtype t, amici::TempData *tdata)';
         case 'sigma_z'
-            this.argstr = '(realtype t, int ie, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, amici::TempData *tdata)';
         case 'dsigma_zdp'
-            this.argstr = '(realtype t, int ie, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, amici::TempData *tdata)';
         case 'stau'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata)';
         case 'sroot'
-            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, TempData *tdata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata)';
         case 'Jy'
-            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJydy'
-            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJydsigma'
-            this.argstr = '(realtype t, int it, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'Jz'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'Jrz'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJzdz'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJzdsigma'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJrzdz'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
         case 'dJrzdsigma'
-            this.argstr = '(realtype t, int ie, N_Vector x, TempData *tdata, const ExpData *edata, ReturnData *rdata)';
+            this.argstr = '(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata)';
 
         case 'w'
             this.argstr = ['(realtype t, N_Vector x, N_Vector dx, void *user_data)'];

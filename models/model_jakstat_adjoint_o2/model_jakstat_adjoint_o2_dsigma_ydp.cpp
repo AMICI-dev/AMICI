@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dsigma_ydp_model_jakstat_adjoint_o2(realtype t, TempData *tdata) {
-int status = 0;
+using namespace amici;
+
+void dsigma_ydp_model_jakstat_adjoint_o2(realtype t, amici::TempData *tdata) {
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
 int ip;
@@ -32,7 +33,7 @@ switch (udata->plist[ip]) {
 
 }
 }
-return(status);
+return;
 
 }
 

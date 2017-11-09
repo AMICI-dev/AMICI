@@ -79,5 +79,18 @@ function wrapTestModels()
 
     cd(fileparts(mfilename('fullpath')));
     
+    %% EXAMPLE ROBERTSON
+    cd([amiciPath '/examples/example_robertson/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_robertson.m'));
+        amiwrap('model_robertson', 'model_robertson_syms', exdir);
+    catch err
+        disp(err.message)
+        cd(fileparts(mfilename('fullpath')));
+    end
+
+    cd(fileparts(mfilename('fullpath')));
+    
 end
 

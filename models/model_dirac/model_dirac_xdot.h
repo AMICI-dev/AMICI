@@ -6,12 +6,16 @@
 #include <sundials/sundials_sparse.h>
 #include <sundials/sundials_direct.h>
 
+using namespace amici;
+
+namespace amici {
 class UserData;
 class ReturnData;
 class TempData;
 class ExpData;
+}
 
-int xdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
+void xdot_model_dirac(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
 
 
 #endif /* _am_model_dirac_xdot_h */

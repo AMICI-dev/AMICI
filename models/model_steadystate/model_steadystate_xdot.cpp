@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_steadystate_w.h"
 
-int xdot_model_steadystate(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void xdot_model_steadystate(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -23,7 +24,7 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 int ix;
 memset(xdot_tmp,0,sizeof(realtype)*3);
-status = w_model_steadystate(t,x,NULL,tdata);
+w_model_steadystate(t,x,NULL,tdata);
   xdot_tmp[0] = tdata->p[4]+tdata->w[0]-tdata->p[0]*tdata->w[1]*2.0+tdata->p[2]*x_tmp[1]*2.0-tdata->p[1]*x_tmp[0]*x_tmp[1];
   xdot_tmp[1] = tdata->w[0]+tdata->p[0]*tdata->w[1]-tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*x_tmp[1];
   xdot_tmp[2] = -tdata->w[0]-udata->k[3]*x_tmp[2]+tdata->p[1]*x_tmp[0]*x_tmp[1];
@@ -37,12 +38,12 @@ for(ix = 0; ix<3; ix++) {
    }
    if(amiIsInf(xdot_tmp[ix])) {
        warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");
-       return(-1);
+       return;
    }   if(udata->qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {
        xdot_tmp[ix] = -xdot_tmp[ix];
    }
 }
-return(status);
+return;
 
 }
 

@@ -5,6 +5,8 @@
 #include <include/symbolic_functions.h>
 #include <include/amici_defines.h>
 
+namespace amici {
+
 class UserData;
 class TempData;
 class ReturnData;
@@ -18,6 +20,11 @@ static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN,
               "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN,
               "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
+static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
+              "AMICI_ILL_INPUT != CV_ILL_INPUT");
+    
+    
+    
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 
@@ -39,7 +46,7 @@ extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 
-int runAmiciSimulation(const UserData *udata, const ExpData *edata,
+void runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
@@ -52,5 +59,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc);
+
+} // namespace amici
 
 #endif /* amici_h */

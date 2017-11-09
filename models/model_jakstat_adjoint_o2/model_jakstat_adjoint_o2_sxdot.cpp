@@ -9,8 +9,9 @@
 #include "model_jakstat_adjoint_o2_dxdotdp.h"
 #include "model_jakstat_adjoint_o2_w.h"
 
-int sxdot_model_jakstat_adjoint_o2(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-int status = 0;
+using namespace amici;
+
+void sxdot_model_jakstat_adjoint_o2(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -34,8 +35,8 @@ if(xdot)
     xdot_tmp = N_VGetArrayPointer(xdot);
 memset(sxdot_tmp,0,sizeof(realtype)*162);
 if(ip == 0) {
-    status = JSparse_model_jakstat_adjoint_o2(t,0.0,x,NULL,xdot,tdata->J,user_data,NULL,NULL,NULL);
-    status = dxdotdp_model_jakstat_adjoint_o2(t,x,NULL,user_data);
+    JSparse_model_jakstat_adjoint_o2(t,0.0,x,NULL,xdot,tdata->J,user_data,NULL,NULL,NULL);
+    dxdotdp_model_jakstat_adjoint_o2(t,x,NULL,user_data);
 }
   sxdot_tmp[0] = tdata->dxdotdp[0 + ip*model->nx]+tdata->J->data[0]*sx_tmp[0]+tdata->J->data[74]*sx_tmp[8];
   sxdot_tmp[1] = tdata->dxdotdp[1 + ip*model->nx]+tdata->J->data[1]*sx_tmp[0]+tdata->J->data[14]*sx_tmp[1];
@@ -199,7 +200,7 @@ if(ip == 0) {
   sxdot_tmp[159] = tdata->dxdotdp[159 + ip*model->nx]+tdata->J->data[377]*sx_tmp[158]+tdata->J->data[378]*sx_tmp[159];
   sxdot_tmp[160] = tdata->dxdotdp[160 + ip*model->nx]+tdata->J->data[379]*sx_tmp[159]+tdata->J->data[380]*sx_tmp[160];
   sxdot_tmp[161] = tdata->dxdotdp[161 + ip*model->nx]+tdata->J->data[381]*sx_tmp[160]+tdata->J->data[383]*sx_tmp[161];
-return(status);
+return;
 
 }
 

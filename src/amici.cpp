@@ -17,6 +17,7 @@
 
 #include "include/amici_model.h"
 #include "include/amici_solver.h"
+#include "include/amici_exception.h"
 #include "include/backwardproblem.h"
 #include "include/forwardproblem.h"
 #include "include/rdata.h"
@@ -24,12 +25,16 @@
 #include "include/udata.h"
 #include <include/amici.h> /* amici functions */
 #include <include/amici_misc.h>
+#include <include/amici_exception.h>
 #include <include/symbolic_functions.h>
+
+namespace amici {
 
 /** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 /** warnMsgIdAndTxt is a function pointer for printWarnMsgIdAndTxt  */
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
+    
 
 /*!
  * runAmiciSimulation is the core integration routine. It initializes the solver
@@ -40,38 +45,26 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  * @param[in] edata pointer to experimental data object @type ExpData
  * @param[in] rdata pointer to return data object @type ReturnData
  * @param[in] model pointer to model specification object @type Model
- * @return status status flag indicating (un)successful execution @type int
  */
-int runAmiciSimulation(const UserData *udata, const ExpData *edata,
+void runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model) {
     if (!udata || udata->nx != model->nx || udata->np != model->np ||
         udata->nk != model->nk)
-        return AMICI_ERROR_UDATA;
+        throw SetupFailure("udata was not allocated or does not agree with model!");
     if (!rdata)
-        return AMICI_ERROR_RDATA;
-
-    int status = AMICI_SUCCESS;
+        throw SetupFailure("rdata was not allocated!");
 
     if (model->nx <= 0) {
-        return AMICI_ERROR_NOTHINGTODO;
+        return;
     }
 
-    TempData tdata = TempData(udata, model, rdata);
+    TempData tdata(udata, model, rdata);
 
-    if (status == AMICI_SUCCESS)
-        status = ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata,
+    ForwardProblem::workForwardProblem(udata, &tdata, rdata, edata,
                                                     model);
-    if (status == AMICI_SUCCESS)
-        status =
-            BackwardProblem::workBackwardProblem(udata, &tdata, rdata, model);
+    BackwardProblem::workBackwardProblem(udata, &tdata, rdata, model);
 
-    if (status == AMICI_SUCCESS)
-        status = rdata->applyChainRuleFactorToSimulationResults(udata, tdata.p);
-
-    if (status < AMICI_SUCCESS)
-        rdata->invalidate();
-
-    return status;
+    return;
 }
 
 /*!
@@ -115,3 +108,5 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
     va_end(argptr);
     printf("\n");
 }
+
+} // namespace amici

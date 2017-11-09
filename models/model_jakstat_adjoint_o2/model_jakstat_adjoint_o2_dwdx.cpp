@@ -7,8 +7,9 @@
 #include <include/udata.h>
 #include "model_jakstat_adjoint_o2_w.h"
 
-int dwdx_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void dwdx_model_jakstat_adjoint_o2(realtype t, N_Vector x, N_Vector dx, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -19,10 +20,10 @@ realtype *dx_tmp = nullptr;
 if(dx)
     dx_tmp = N_VGetArrayPointer(dx);
 memset(tdata->dwdx,0,sizeof(realtype)*2);
-status = w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
+w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
   tdata->dwdx[0] = x_tmp[1]*2.0;
   tdata->dwdx[1] = 2.0;
-return(status);
+return;
 
 }
 

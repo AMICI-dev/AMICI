@@ -8,8 +8,9 @@
 #include "model_events_dwdp.h"
 #include "model_events_w.h"
 
-int qBdot_model_events(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) {
-int status = 0;
+using namespace amici;
+
+void qBdot_model_events(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) {
 TempData *tdata = (TempData*) user_data;
 Model *model = (Model*) tdata->model;
 UserData *udata = (UserData*) tdata->udata;
@@ -30,7 +31,7 @@ if(qBdot)
     qBdot_tmp = N_VGetArrayPointer(qBdot);
 int ip;
 memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*model->nJ);
-status = dwdp_model_events(t,x,NULL,user_data);
+dwdp_model_events(t,x,NULL,user_data);
 for(ip = 0; ip<udata->nplist; ip++) {
 switch (udata->plist[ip]) {
   case 0: {
@@ -58,9 +59,9 @@ for(ip = 0; ip<udata->nplist*model->nJ; ip++) {
        }
    }   if(amiIsInf(qBdot_tmp[ip])) {
        warnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");
-       return(-1);
+       return;
    }}
-return(status);
+return;
 
 }
 

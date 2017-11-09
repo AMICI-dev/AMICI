@@ -24,6 +24,7 @@ matrix:
             - doxygen
             - doxygen-latex
             - cppcheck
+            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
@@ -31,10 +32,16 @@ matrix:
         - ./scripts/run-coveralls.sh
     - os: osx
       compiler: clang
-      before_install: brew install hdf5 cppcheck
+      before_install: 
+        - brew update # without this homebrew can stumble over wrong ruby version
+        - brew install hdf5 cppcheck
         
 install:
-    - ./scripts/run-build.sh
+    - ./scripts/buildSuiteSparse.sh
+    - ./scripts/buildSundials.sh
+    - ./scripts/buildCpputest.sh
+    - ./scripts/buildAmici.sh
+    - ./scripts/buildTests.sh
 
 script:  
     - ./scripts/run-cpputest.sh
@@ -43,7 +50,7 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
 notifications:
-  slack: 
-    rooms:
-      - icb-dcm:PHyGJ38Zhp8HrwIxjZAwh9ZI#amici-dev
+  webhooks: 
+    urls:
+      - https://icb-mmost.helmholtz-muenchen.de/hooks/ux65x1zqbpr8xy7nr9sexidhgy
     on_success: change

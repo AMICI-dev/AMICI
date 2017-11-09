@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_link_libraries(${PROJECT_NAME}
     ${AMICI_DIR}/models/model_events/build/libmodel_events.a
     ${CPPUTEST_LIBRARY}
-    amici
+    Upstream::amici
     )
     
 if($ENV{ENABLE_GCOV_COVERAGE})

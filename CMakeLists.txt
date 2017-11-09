@@ -8,7 +8,21 @@ cmake_minimum_required(VERSION 2.8)
 
 set(AMICI_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG(-std=c++11 COMPILER_SUPPORTS_CXX11)
+if(!COMPILER_SUPPORTS_CXX11)
+    message(FATAL_ERROR "AMICI requires a C++11 compatible compiler")
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(MY_CXX_FLAGS -Wall)
+foreach(FLAG ${MY_CXX_FLAGS})
+    unset(CUR_FLAG_SUPPORTED CACHE)
+    CHECK_CXX_COMPILER_FLAG(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    endif()
+endforeach(FLAG)
 
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
@@ -22,14 +36,12 @@ find_package(HDF5 COMPONENTS C HL REQUIRED)
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
 set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
-set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL")
-
+set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
+add_definitions(-DAMICI_BLAS_${BLAS})
 if(${BLAS} STREQUAL "MKL")
-    add_definitions(-DAMICI_BLAS_MKL)
-    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
+    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
 else()
-    add_definitions(-DAMICI_BLAS_CBLAS)
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
@@ -69,21 +81,15 @@ set(AMICI_SRC_LIST
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
-if(APPLE)
-    set(SHARED_OBJECT_EXTENSION .dylib)
-else()
-    set(SHARED_OBJECT_EXTENSION .so)
-endif()
-
 target_link_libraries(${PROJECT_NAME}
-    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${SHARED_OBJECT_EXTENSION}
-    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${SHARED_OBJECT_EXTENSION}
-    ${SUNDIALS_LIB_DIR}/libsundials_idas${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libcolamd${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libklu${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libbtf${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libamd${SHARED_OBJECT_EXTENSION}
-    ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${SHARED_OBJECT_EXTENSION}
+    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_idas${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUITESPARSE_LIB_DIR}/libcolamd${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUITESPARSE_LIB_DIR}/libklu${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUITESPARSE_LIB_DIR}/libbtf${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUITESPARSE_LIB_DIR}/libamd${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${SUITESPARSE_LIB_DIR}/libsuitesparseconfig${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${HDF5_HL_LIBRARIES}
     ${HDF5_C_LIBRARIES}
     ${BLAS_LIBRARIES}
