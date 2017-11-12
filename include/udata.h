@@ -182,6 +182,10 @@ class UserData {
         return p_index.at(pos);
     };
     
+    const std::vector<int> plist() const{
+        return p_index;
+    };
+    
     const std::vector<double> getInitialStates() const {
         return x0data;
     }
@@ -292,6 +296,7 @@ private:
     StateOrdering ordering = AMD;
     
     friend class ReturnData;
+    friend class Solver;
     
     template <class mxArray>
     friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,

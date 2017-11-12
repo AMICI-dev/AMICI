@@ -19,7 +19,6 @@ BackwardProblem::BackwardProblem(ForwardProblem fwd) :
         this->solver = fwd.solver;
         this->udata = fwd.udata;
         this->rdata = fwd.rdata;
-        h = fwd.h;
         nroots = fwd.nroots;
         iroot = fwd.iroot;
         discs = fwd.discs;
@@ -45,7 +44,7 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
     
-    solver->setupAMIB(udata,model);
+    solver->setupAMIB(this,udata,model);
 
     int it = rdata->nt - 2;
     --iroot;
@@ -180,7 +179,7 @@ void BackwardProblem::handleEventB(int iroot) {
         }
     }
 
-    updateHeavisideB(iroot);
+    model->updateHeavisideB(&rootidx[iroot * model->ne]);
 }
 
     /**
@@ -198,26 +197,7 @@ void BackwardProblem::handleDataPointB(int it) {
             xB[ix + iJ * model->nxtrue] +=
                 dJydx[it + (iJ + ix * model->nJ) * rdata->nt];
     }
-    solver->getDiagnosisB(it, rdata);
-}
-
-    /**
-     * updateHeavisideB updates the heaviside variables h on event occurences
-     * for the backward problem
-     *
-     * @param[in] iroot discontinuity occurance index @type int
-     * @param[in] ne number of events @type int
-     * @return status flag indicating success of execution @type int
-     */
-void BackwardProblem::updateHeavisideB(int iroot) {
-
-    /* rootsfound provides the direction of the zero-crossing, so adding
-       it will give
-         the right update to the heaviside variables */
-
-    for (int ie = 0; ie < model->ne; ie++) {
-        h[ie] -= rootidx[iroot * model->ne + ie];
-    }
+    solver->getDiagnosisB(it, rdata, this);
 }
     
     /**

@@ -320,13 +320,13 @@ void Model::fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, cons
 /** initialization of model properties
  * @param udata pointer to user data object @type UserData
  */
-void Model::initialize(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata) {
+void Model::initialize(AmiVector x, AmiVector dx, const UserData *udata) {
 
     initializeStates(x, udata);
     
     fdx0(x, dx, udata);
     
-    initHeaviside(x,dx,h,udata);
+    initHeaviside(x,dx,udata);
     
 }
 
@@ -349,7 +349,7 @@ void Model::initializeStates(AmiVector x, const UserData *udata) {
  * heaviside variables activate/deactivate on event occurences
  *
  */
-void Model::initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata) {
+void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     std::vector<realtype> rootvals(ne,0.0);
     frootwrap(udata->t0(), x, dx, rootvals.data(), udata);
     for (int ie = 0; ie < ne; ie++) {

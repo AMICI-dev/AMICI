@@ -100,7 +100,8 @@ namespace amici {
         deltax(nx, 0.0),
         deltasx(nx*nplist, 0.0),
         deltaxB(nx, 0.0),
-        deltaqB(nJ*nplist, 0.0)
+        deltaqB(nJ*nplist, 0.0),
+        h(ne,0.0)
         {
             J = SparseNewMat(nx, nx, nnz, CSC_MAT);
         }
@@ -647,11 +648,11 @@ namespace amici {
         
         void fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void initialize(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata);
+        void initialize(AmiVector x, AmiVector dx, const UserData *udata);
         
         void initializeStates(AmiVector x, const UserData *udata);
         
-        void initHeaviside(AmiVector x, AmiVector dx, std::vector<realtype> h, const UserData *udata);
+        void initHeaviside(AmiVector x, AmiVector dx, const UserData *udata);
         
         // Model dimensions 
         int nplist;
@@ -719,6 +720,33 @@ namespace amici {
         
         /** tempory storage of dxdotdp data across functions */
         std::vector<realtype> dxdotdp;
+        
+        void updateHeaviside(const std::vector<int> rootsfound) {
+            /**
+             * updateHeaviside updates the heaviside variables h on event occurences
+             *
+             * @param rootsfound provides the direction of the zero-crossing, so adding
+             it will give the right update to the heaviside variables (zero if no root
+             was found)
+             */
+            for (int ie = 0; ie < ne; ie++) {
+                h[ie] += rootsfound.at(ie);
+            }
+        }
+        
+        void updateHeavisideB(const int *rootsfound) {
+            /**
+             * updateHeavisideB updates the heaviside variables h on event occurences
+             in the backward problem
+             *
+             * @param rootsfound provides the direction of the zero-crossing, so adding
+             it will give the right update to the heaviside variables (zero if no root
+             was found)
+             */
+            for (int ie = 0; ie < ne; ie++) {
+                h[ie] -= rootsfound[ie];
+            }
+        }
         
     protected:
         int checkVals(const int N,const realtype *array, const char* fun){
@@ -858,6 +886,10 @@ namespace amici {
         std::vector<realtype> M;
         /** tempory storage of stau data across functions */
         std::vector<realtype> stau;
+        
+        /** flag indicating whether a certain heaviside function should be active or
+         not */
+        std::vector<realtype> h;;
     };
     
 } // namespace amici

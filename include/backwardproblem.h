@@ -71,9 +71,6 @@ class BackwardProblem {
     realtype *irdiscs = nullptr;
     /** index of the backward problem */
     int which = 0;
-    /** flag indicating whether a certain heaviside function should be active or
-     not */
-    realtype *h = nullptr;
     /** current root index, will be increased during the forward solve and
      * decreased during backward solve */
     int iroot = 0;
@@ -85,9 +82,7 @@ class BackwardProblem {
     /** state derivative of event likelihood */
     std::vector<double> dJzdx;
 
-    
-    
-    
+    friend class Solver;
 };
 
 } // namespace amici

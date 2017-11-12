@@ -9,6 +9,8 @@ namespace amici {
 
 class ReturnData;
 class UserData;
+class ForwardProblem;
+class BackwardProblem;
 class Model;
 
 //!  Solver class.
@@ -22,9 +24,9 @@ class Solver {
 
     virtual ~Solver() = default;
 
-    void setupAMI(const UserData *udata, Model *model);
+    void setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model);
 
-    void setupAMIB(const UserData *udata, Model *model);
+    void setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model);
 
     /**
      * AMIGetSens extracts diagnosis information from solver memory block and
@@ -37,7 +39,7 @@ class Solver {
 
     void getDiagnosis(const int it, ReturnData *rdata);
 
-    void getDiagnosisB(const int it, ReturnData *rdata);
+    void getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd);
 
     /**
      * AMIGetRootInfo extracts information which event occured

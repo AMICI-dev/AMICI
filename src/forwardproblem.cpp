@@ -34,7 +34,8 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     dJydx(model->nJ * model->nx * udata->nt(), 0.0),
     x(model->nx), x_old(model->nx), dx(model->nx), dx_old(model->nx),
     xdot(model->nx), xdot_old(model->nx),
-    sx(model->nx,udata->nplist()), sdx(model->nx,udata->nplist())
+    sx(model->nx,udata->nplist()), sdx(model->nx,udata->nplist()),
+    rootsfound(model->ne, 0)
     {
         t = udata->t0();
         this->model = model;
@@ -57,7 +58,7 @@ void ForwardProblem::workForwardProblem() {
      */
 
     try {
-        solver->setupAMI(udata, model);
+        solver->setupAMI(this,udata, model);
     } catch (std::exception& ex) {
         throw AmiException("AMICI setup failed:\n(%s)",ex.what());
     } catch (...) {
@@ -144,13 +145,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     model->frootwrap(t, x, dx, rootvals, udata);
     
     if (!seflag) {
-        solver->AMIGetRootInfo(rootsfound);
+        solver->AMIGetRootInfo(rootsfound.data());
     }
 
     if (iroot < rdata->nmaxevent * model->ne) {
         for (ie = 0; ie < model->ne; ie++) {
             rootidx[iroot * model->ne + ie] =
-                rootsfound[ie];
+                rootsfound.at(ie);
         }
     }
     for (ie = 0; ie < model->ne; ie++) {
@@ -192,7 +193,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
              * last ie and hope for the best. */
             if (!seflag) {
                 for (ie = 0; ie < model->ne; ie++) {
-                    if (rootsfound[ie] ==
+                    if (rootsfound.at(ie) ==
                         1) { /* only consider transitions false -> true */
                         model->fstau(t, ie, x, sx, udata);
                     }
@@ -209,7 +210,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         }
     }
 
-    updateHeaviside();
+    model->updateHeaviside(rootsfound);
 
     applyEventBolus();
 
@@ -240,21 +241,21 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     model->frootwrap(t, x, dx, rootvals, udata);
     for (ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
-        if (rootsfound[ie] == 0) {
+        if (rootsfound.at(ie) == 0) {
             /* check whether there was a zero-crossing */
             if (0 > rvaltmp[ie] * rootvals[ie]) {
                 if (rvaltmp[ie] < rootvals[ie]) {
-                    rootsfound[ie] = 1;
+                    rootsfound.at(ie) = 1;
                 } else {
-                    rootsfound[ie] = -1;
+                    rootsfound.at(ie) = -1;
                 }
                 secondevent++;
             } else {
-                rootsfound[ie] = 0;
+                rootsfound.at(ie) = 0;
             }
         } else {
             /* don't fire the same event again */
-            rootsfound[ie] = 0;
+            rootsfound.at(ie) = 0;
         }
     }
     /* fire the secondary event */
@@ -313,7 +314,7 @@ void ForwardProblem::getEventOutput() {
         if (nroots[ie] >= rdata->nmaxevent)
             continue;
 
-        if (rootsfound[ie] == 1 || t == rdata->ts[rdata->nt - 1]) {
+        if (rootsfound.at(ie) == 1 || t == rdata->ts[rdata->nt - 1]) {
             /* only consider transitions false
              -> true  or event filling*/
 
@@ -602,7 +603,7 @@ void ForwardProblem::applyEventBolus() {
      */
 
     for (int ie = 0; ie < model->ne; ie++) {
-        if (rootsfound[ie] ==
+        if (rootsfound.at(ie) ==
             1) { /* only consider transitions false -> true */
             model->fdeltax(ie, t, x, xdot, xdot_old, udata);
 
@@ -620,7 +621,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
      *
      */
     for (int ie = 0; ie < model->ne; ie++) {
-        if (rootsfound[ie] ==
+        if (rootsfound.at(ie) ==
             1) { /* only consider transitions false -> true */
             model->fdeltasx(ie, t, x, sx, xdot, xdot_old, udata);
 
@@ -630,26 +631,6 @@ void ForwardProblem::applyEventSensiBolusFSA() {
                 }
             }
         }
-    }
-}
-
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-
-void ForwardProblem::updateHeaviside() {
-    /**
-     * updateHeaviside updates the heaviside variables h on event occurences
-     *
-     * @param[in] ne number of events
-     */
-
-    /* rootsfound provides the direction of the zero-crossing, so adding
-       it will give
-         the right update to the heaviside variables */
-
-    for (int ie = 0; ie < model->ne; ie++) {
-        h[ie] += rootsfound[ie];
     }
 }
 

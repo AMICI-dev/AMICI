@@ -46,10 +46,6 @@ class ForwardProblem {
     /** temporary rootval storage to check crossing in secondary event */
     realtype *rvaltmp = nullptr;
     
-    /** flag indicating whether a certain heaviside function should be active or
-     not */
-    realtype *h = nullptr;
-    
     /** array containing the time-points of discontinuities*/
     realtype *discs = nullptr;
     /** array containing the index of discontinuities */
@@ -95,8 +91,6 @@ class ForwardProblem {
     void applyEventBolus();
 
     void applyEventSensiBolusFSA();
-
-    void updateHeaviside();
     
     /** data likelihood */
     std::vector<double> Jy;
@@ -116,7 +110,7 @@ class ForwardProblem {
      * have a
      *  root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
-    int *rootsfound = nullptr;
+    std::vector<int> rootsfound;
 
     DlsMat Jtmp;
     
@@ -139,6 +133,8 @@ class ForwardProblem {
     AmiVectorArray sdx;
     
     ForwardProblem();
+    
+    friend class Solver;
 };
 
 

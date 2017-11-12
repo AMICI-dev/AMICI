@@ -1,11 +1,12 @@
 #include "include/amici_solver.h"
 #include "include/amici.h"
 #include "include/amici_exception.h"
+#include "include/forwardproblem.h"
+#include "include/backwardproblem.h"
 #include <cstdio>
 #include <cstring>
 #include <include/amici_model.h>
 #include <include/rdata.h>
-#include <include/tdata.h>
 #include <include/udata.h>
 #include <sundials/sundials_spgmr.h>
 // TODO: don't use cvodes includes here
@@ -19,10 +20,8 @@ namespace amici {
  * @param[in] udata pointer to the user data object @type UserData
  * @param[in] model pointer to the model object @type Model
  */
-void Solver::setupAMI(const UserData *udata, Model *model) {
-    tdata->t = udata->tstart;
-
-    model->initialize(udata, tdata);
+void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) {
+    model->initialize(fwd->x, fwd->dx, udata);
 
     /* Create solver memory object */
     if (udata->lmm != CV_ADAMS && udata->lmm != CV_BDF) {
@@ -36,13 +35,14 @@ void Solver::setupAMI(const UserData *udata, Model *model) {
         throw AmiException("Failed to allocated solver memory!");
     try {
     /* Initialize AMIS solver*/
-    init(tdata->x, tdata->dx, udata->tstart);
+    init(fwd->x, fwd->dx, udata->tstart);
     /* Specify integration tolerances */
     AMISStolerances(RCONST(udata->rtol), RCONST(udata->atol));
     /* Set optional inputs */
     AMISetErrHandlerFn();
     /* attaches userdata*/
-    AMISetUserData(tdata);
+    UserData user_data(*udata); // make a copy to remove constness
+    AMISetUserData(&user_data);
     /* specify maximal number of steps */
     AMISetMaxNumSteps(udata->maxsteps);
     /* activates stability limit detection */
@@ -55,33 +55,32 @@ void Solver::setupAMI(const UserData *udata, Model *model) {
     if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         
         if (model->nx > 0) {
-
             /* initialise sensitivities, this can either be user provided or
              * come from the model definition */
-            realtype *sx_tmp;
-
-            if (!udata->sx0data) {
-                model->fsx0(tdata->sx, tdata->x, tdata->dx, tdata);
+            if (udata->sx0data.empty()) {
+                model->fsx0(fwd->sx, fwd->x, udata);
             } else {
-                for (int ip = 0; ip < udata->nplist; ip++) {
-                    sx_tmp = NV_DATA_S(tdata->sx[ip]);
-                    if (!sx_tmp)
-                        throw NullPointerException("sx_tmp");
+                for (int ip = 0; ip < udata->nplist(); ip++) {
                     for (int ix = 0; ix < model->nx; ix++) {
-                        sx_tmp[ix] =
+                        fwd->sx.at(ix,ip) =
                             (realtype)udata->sx0data[ix + model->nx * ip];
                     }
                 }
             }
 
-            model->fsdx0(tdata->sdx, tdata->x, tdata->dx, tdata);
+            model->fsdx0(udata);
             
             if (udata->sensi_meth == AMICI_SENSI_FSA) {
                 
                 /* Activate sensitivity calculations */
-                sensInit1(tdata->sx, tdata->sdx, udata);
+                sensInit1(fwd->sx, fwd->sdx, udata);
                 /* Set sensitivity analysis optional inputs */
-                AMISetSensParams(tdata->p, udata->pbar, udata->plist);
+                std::vector<int> plist(udata->plist());
+                std::vector<double> par;
+                par.assign(udata->p(),udata->p()+udata->np());
+                std::vector<double> pbar;
+                pbar.assign(udata->pbar.data(),udata->pbar.data()+udata->np());
+                AMISetSensParams(par.data(), pbar.data(), plist.data());
                 AMISetSensErrCon(TRUE);
                 AMISensEEtolerances();
             }
@@ -98,8 +97,8 @@ void Solver::setupAMI(const UserData *udata, Model *model) {
     AMISetId(model);
     AMISetSuppressAlg(TRUE);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
-    if(udata->nt>1)
-        AMICalcIC(udata->ts[1],tdata);
+    if(udata->nt()>1)
+        AMICalcIC(udata->ts[1], fwd->x, fwd->dx);
     } catch (...) {
         AMIFree();
         throw AmiException("setupAMI routine failed!");
@@ -111,33 +110,17 @@ void Solver::setupAMI(const UserData *udata, Model *model) {
  * @param[in] udata pointer to the user data object @type UserData
  * @param[in] model pointer to the model object @type Model
  */
-void Solver::setupAMIB(const UserData *udata, Model *model) {
+void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model) {
 
     /* write initial conditions */
-    if (!tdata->xB)
-        throw NullPointerException("tdata->xB");
-    realtype *xB_tmp = NV_DATA_S(tdata->xB);
-    if (!xB_tmp)
-        throw NullPointerException("xB_tmp");
-    memset(xB_tmp, 0, sizeof(realtype) * model->nxtrue * model->nJ);
+    bwd->xB.reset();
     for (int ix = 0; ix < model->nxtrue; ++ix)
         for (int iJ = 0; iJ < model->nJ; ++iJ)
-            xB_tmp[ix + iJ * model->nxtrue] +=
-                tdata->dJydx[tdata->rdata->nt - 1 +
-                             (iJ + ix * model->nJ) * tdata->rdata->nt];
-
-    if (!tdata->dxB)
-        throw NullPointerException("tdata->dxB");
-    if (!NV_DATA_S(tdata->dxB))
-        throw NullPointerException("xdB_tmp");
-    memset(NV_DATA_S(tdata->dxB), 0, sizeof(realtype) * model->nx);
-
-    if (!tdata->xQB)
-        throw NullPointerException("tdata->xQB");
-    if (!NV_DATA_S(tdata->xQB))
-        throw NullPointerException("xQB_tmp");
-    memset(NV_DATA_S(tdata->xQB), 0,
-           sizeof(realtype) * model->nJ * tdata->rdata->nplist);
+            bwd->xB[ix + iJ * model->nxtrue] +=
+                bwd->dJydx.at(udata->nt() - 1 +
+                             (iJ + ix * model->nJ) * udata->nt());
+    bwd->dxB.reset();
+    bwd->xQB.reset();
 
     /* create backward problem */
     if (udata->lmm > 2 || udata->lmm < 1) {
@@ -148,33 +131,34 @@ void Solver::setupAMIB(const UserData *udata, Model *model) {
     }
 
     /* allocate memory for the backward problem */
-    AMICreateB(udata->lmm, udata->iter, &(tdata->which));
+    AMICreateB(udata->lmm, udata->iter, &(bwd->which));
 
     /* initialise states */
-    binit(tdata->which, tdata->xB, tdata->dxB, tdata->t);
+    binit(bwd->which, bwd->xB, bwd->dxB, bwd->t);
 
     /* specify integration tolerances for backward problem */
-    AMISStolerancesB(tdata->which, RCONST(udata->rtol),
+    AMISStolerancesB(bwd->which, RCONST(udata->rtol),
                               RCONST(udata->atol));
 
     /* Attach user data */
-    AMISetUserDataB(tdata->which, tdata);
+    UserData user_data(*udata); // make copy to remove constness
+    AMISetUserDataB(bwd->which, &user_data);
 
     /* Number of maximal internal steps */
-    AMISetMaxNumStepsB(tdata->which, 100 * udata->maxsteps);
+    AMISetMaxNumStepsB(bwd->which, 100 * udata->maxsteps);
     
-    setLinearSolverB(udata, model, tdata->which);
+    setLinearSolverB(udata, model, bwd->which);
     
     /* Initialise quadrature calculation */
-    qbinit(tdata->which, tdata->xQB);
+    qbinit(bwd->which, bwd->xQB);
 
     /* Enable Quadrature Error Control */
-    AMISetQuadErrConB(tdata->which, TRUE);
+    AMISetQuadErrConB(bwd->which, TRUE);
 
-    AMIQuadSStolerancesB(tdata->which, RCONST(udata->rtol),
+    AMIQuadSStolerancesB(bwd->which, RCONST(udata->rtol),
                                   RCONST(udata->atol));
 
-    AMISetStabLimDetB(tdata->which, udata->stldet);
+    AMISetStabLimDetB(bwd->which, udata->stldet);
 }
 
 /**
@@ -257,13 +241,11 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
  *
  * @param[in] it time-point index @type int
  * @param[out] rdata pointer to the return data object @type ReturnData
- * @param[out] tdata pointer to the temporary data object @type TempData
  */
-void Solver::getDiagnosisB(const int it, ReturnData *rdata,
-                          const TempData *tdata) {
+void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd) {
     long int number;
 
-    void *ami_memB = AMIGetAdjBmem(ami_mem, tdata->which);
+    void *ami_memB = AMIGetAdjBmem(ami_mem, bwd->which);
 
     AMIGetNumSteps(ami_memB, &number);
     rdata->numstepsB[it] = (double)number;
@@ -381,10 +363,10 @@ void Solver::setLinearSolverB(const UserData *udata, Model *model, const int whi
         case AMICI_LAPACKDENSE:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackDenseB(ami_mem, tdata->which, nx);
+             status = CVLapackDenseB(ami_mem, bwd->which, nx);
              if (status != AMICI_SUCCESS) return;
              
-             status = SetDenseJacFnB(ami_mem, tdata->which);
+             status = SetDenseJacFnB(ami_mem, bwd->which);
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");
@@ -394,10 +376,10 @@ void Solver::setLinearSolverB(const UserData *udata, Model *model, const int whi
         case AMICI_LAPACKBAND:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackBandB(ami_mem, tdata->which, nx, ubw, lbw);
+             status = CVLapackBandB(ami_mem, bwd->which, nx, ubw, lbw);
              if (status != AMICI_SUCCESS) return;
              
-             status = SetBandJacFnB(ami_mem, tdata->which);
+             status = SetBandJacFnB(ami_mem, bwd->which);
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");
