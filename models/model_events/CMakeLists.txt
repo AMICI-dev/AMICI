@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_events_J.cpp
 ${MODEL_DIR}/model_events_JB.cpp
-${MODEL_DIR}/model_events_JBand.cpp
-${MODEL_DIR}/model_events_JBandB.cpp
 ${MODEL_DIR}/model_events_JDiag.cpp
 ${MODEL_DIR}/model_events_JSparse.cpp
 ${MODEL_DIR}/model_events_JSparseB.cpp

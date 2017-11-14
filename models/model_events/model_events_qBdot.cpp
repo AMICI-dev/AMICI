@@ -1,23 +1,22 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void qBdot_model_events(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void *user_data) {
+void qBdot_model_events(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 0: {
-  qBdot_tmp[ip + udata->nplist*0] = tdata->h[3]*x_tmp[0]*xB_tmp[0];
+  qBdot[0] = h[3]*x[0]*xB[0];
 
   } break;
 
   case 1: {
-  qBdot_tmp[ip + udata->nplist*0] = -x_tmp[0]*xB_tmp[1]*exp(t*(-1.0/1.0E1));
+  qBdot[0] = -x[0]*xB[1]*exp(t*(-1.0/1.0E1));
 
   } break;
 
   case 2: {
-  qBdot_tmp[ip + udata->nplist*0] = x_tmp[1]*xB_tmp[1];
+  qBdot[0] = x[1]*xB[1];
 
   } break;
 

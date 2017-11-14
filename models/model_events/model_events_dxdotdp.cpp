@@ -1,23 +1,22 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void dxdotdp_model_events(realtype t, N_Vector x,, void *user_data) {
+void dxdotdp_model_events(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 0: {
-  tdata->dxdotdp[0 + ip*model->nx] = -tdata->h[3]*x_tmp[0];
+  dxdotdp[0] = -h[3]*x[0];
 
   } break;
 
   case 1: {
-  tdata->dxdotdp[1 + ip*model->nx] = x_tmp[0]*exp(t*(-1.0/1.0E1));
+  dxdotdp[1] = x[0]*exp(t*(-1.0/1.0E1));
 
   } break;
 
   case 2: {
-  tdata->dxdotdp[1 + ip*model->nx] = -x_tmp[1];
+  dxdotdp[1] = -x[1];
 
   } break;
 

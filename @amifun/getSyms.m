@@ -323,7 +323,7 @@ function [this,model] = getSyms(this,model)
             Js = sym(zeros(length(idx),1));
             % fill cells with strings
             for iJ = 1:length(idx)
-                Js(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
+                Js(iJ) = sym(sprintf('var_J_%i',iJ-1));
             end
             % create full symbolic matrix
             this.strsym = sym(zeros(nx,nx));
@@ -845,7 +845,7 @@ function this = makeStrSyms(this)
     idx = find(this.sym);
     idx = transpose(idx(:));
     for isym = idx
-        this.strsym(isym) = sym(sprintf([strrep(this.cvar,'tdata->','') '_%i'], isym-1));
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
 end
 

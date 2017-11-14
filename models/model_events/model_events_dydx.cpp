@@ -1,12 +1,11 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void dydx_model_events(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-  tdata->dydx[0+0*1] = tdata->p[3];
-  tdata->dydx[0+1*1] = tdata->p[3];
-  tdata->dydx[0+2*1] = tdata->p[3];
+void dydx_model_events(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+  dydx[0+0*1] = p[3];
+  dydx[0+1*1] = p[3];
+  dydx[0+2*1] = p[3];
 }
 

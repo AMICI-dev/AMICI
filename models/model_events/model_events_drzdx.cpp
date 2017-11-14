@@ -1,11 +1,10 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void drzdx_model_events(double *drzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
-  tdata->drzdx[0+0*1] = 1.0;
-  tdata->drzdx[0+2*1] = -1.0;
+void drzdx_model_events(double *drzdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+  drzdx[0+0*1] = 1.0;
+  drzdx[0+2*1] = -1.0;
 }
 

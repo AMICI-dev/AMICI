@@ -22,10 +22,9 @@ for ifun = this.funs
         fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
-        fprintf(fid,['#include "' this.modelname '_w.h"\n']);
+        fprintf(fid,'#include <sundials/sundials_types.h> //realtype definition\n');
+        fprintf(fid,'#include <cmath> \n');
         fprintf(fid,'\n');
-        
-        fprintf(fid,['using namespace ' this.modelname ';\n\n']);
         
         % function definition
         fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
@@ -63,12 +62,13 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
-fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
+    fprintf(fid,'#include <include/amici_model_ode.h>\n');
 else
     fprintf(fid,'#include <include/amici_solver_idas.h>\n');
+    fprintf(fid,'#include <include/amici_model_dae.h>\n');
 end
 fprintf(fid,'\n');
 fprintf(fid,'namespace amici {\nclass UserData;\nclass Solver;\n}\n');
@@ -124,8 +124,13 @@ fprintf(fid,['        idlist = new realtype[' num2str(this.nx) '] {' num2str(tra
 fprintf(fid,'    }\n\n');
 
 for ifun = this.funs
+    if(~isfield(this.fun,ifun{1}))
+        this.fun(1).(ifun{1}) = amifun(ifun{1},this); % don't use getfun here
+        % as we do not want symbolics to be generated, we only want to be able 
+        % access argstr
+    end
     fprintf(fid,['    void ' ifun{1} '_' this.modelname  this.fun.(ifun{1}).argstr ';\n']);
-    fprintf(fid,['    model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n']);
+    fprintf(fid,['    void model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n']);
 end
 
 

@@ -1,13 +1,12 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void root_model_events(realtype t, N_Vector x, realtype *root, void *user_data) {
-  root[0] = x_tmp[1]-x_tmp[2];
-  root[1] = x_tmp[0]-x_tmp[2];
+void root_model_events(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+  root[0] = x[1]-x[2];
+  root[1] = x[0]-x[2];
   root[2] = t-4.0;
-  root[3] = t-tdata->p[3];
+  root[3] = t-p[3];
 }
 

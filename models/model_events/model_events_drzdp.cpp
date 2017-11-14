@@ -1,10 +1,9 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void drzdp_model_events(double *drzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) {
+void drzdp_model_events(double *drzdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
 switch (ip) {
 }
 }

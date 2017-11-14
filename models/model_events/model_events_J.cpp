@@ -1,13 +1,12 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void J_model_events(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-  J->data[0+0*3] = -tdata->h[3]*tdata->p[0];
-  J->data[1+0*3] = tdata->p[1]*exp(t*(-1.0/1.0E1));
-  J->data[1+1*3] = -tdata->p[2];
-  J->data[2+2*3] = -1.0;
+void J_model_events(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) {
+  J[0+0*3] = -h[3]*p[0];
+  J[1+0*3] = p[1]*exp(t*(-1.0/1.0E1));
+  J[1+1*3] = -p[2];
+  J[2+2*3] = -1.0;
 }
 

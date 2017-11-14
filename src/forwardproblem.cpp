@@ -318,7 +318,7 @@ void ForwardProblem::getEventOutput() {
             /* only consider transitions false
              -> true  or event filling*/
 
-            model->fz(nroots[ie], t, x, rdata, udata);
+            model->fz(nroots[ie], ie, t, x, rdata, udata);
 
             if (edata) {
                 model->fsigma_z(t, ie, nroots, edata, rdata, udata);
@@ -329,7 +329,7 @@ void ForwardProblem::getEventOutput() {
                     // call from fillEvent at last
                     // timepoint, add regularization
                     // based on rz
-                    model->frz(nroots[ie], t, x, rdata, udata);
+                    model->frz(nroots[ie], ie, t, x, rdata, udata);
                     model->fJrz(nroots[ie], rdata, udata, edata);
                 }
             }
@@ -376,13 +376,13 @@ void ForwardProblem::prepEventSensis(int ie) {
             if (model->z2event[iz] - 1 == ie) {
                 if (!amiIsNaN(
                               edata->mz[iz * rdata->nmaxevent + nroots[ie]])) {
-                    model->fdzdp(t, x, udata);
+                    model->fdzdp(t, ie, x, udata);
                     
-                    model->fdzdx(t, x, udata);
+                    model->fdzdx(t, ie, x, udata);
                     
                     if (t == rdata->ts[rdata->nt - 1]) {
-                        model->fdrzdp(t, x, udata);
-                        model->fdrzdx(t, x, udata);
+                        model->fdrzdp(t, ie, x, udata);
+                        model->fdrzdx(t, ie, x, udata);
                     }
                     /* extract the value for the standard deviation, if the data
                      value is NaN, use
@@ -448,9 +448,9 @@ void ForwardProblem::getEventSensisFSA(int ie) {
     if (t ==
         rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
         model->fsz_tf(ie, rdata);
-        model->fsrz(nroots[ie],t,x,sx,rdata,udata);
+        model->fsrz(nroots[ie],ie,t,x,sx,rdata,udata);
     } else {
-        model->fsz(nroots[ie],t,x,sx,rdata,udata);
+        model->fsz(nroots[ie],ie,t,x,sx,rdata,udata);
     }
 
     if (edata) {

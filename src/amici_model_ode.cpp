@@ -20,7 +20,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(J->data,0.0,sizeof(realtype)*N)
-        model_J(J->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        model_J(J->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                 w.data(),dwdx.data());
         return checkVals(N,J->data,"Jacobian");
     }
@@ -52,7 +52,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(JB->data,0.0,sizeof(realtype)*NeqBdot)
-        if(!model_JB(JB->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_JB(JB->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                      N_VGetArrayPointer(xB),w.data(),dwdx.data()))
             return AMICI_ERROR;
         return checkVals(N,J->data,"Jacobian");
@@ -78,7 +78,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(J->data,0.0,sizeof(realtype)*J->nnz)
-        model_JSparse(J->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        model_JSparse(J->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                       w.data(),dwdx.data());
         return checkVals(J->nnz,J->data,"Jacobian");
     }
@@ -107,7 +107,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(JB->data,0.0,sizeof(realtype)*JB->nnz)
-        if(!model_JSparseB(JB->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_JSparseB(JB->data,t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                            N_VGetArrayPointer(xB),w.data(),dwdx.data()))
             return AMICI_ERROR;
         return checkVals(N,J->data,"Jacobian");
@@ -168,7 +168,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(N_VGetArrayPointer(JDiag),0.0,sizeof(realtype)*nx)
-        if(!model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                         cj,N_VGetArrayPointer(dx),w.data(),dwdx.data()))
             return AMICI_ERROR;
         return checkVals(nx,N_VGetArrayPointer(JDiag),"Jacobian");
@@ -190,7 +190,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(N_VGetArrayPointer(Jv),0.0,sizeof(realtype)*nx)
-        if(!model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                      N_VGetArrayPointer(v),w.data(),dwdx.data()))
             return AMICI_ERROR;
         return checkVals(nx,N_VGetArrayPointer(Jv),"Jacobian");
@@ -213,7 +213,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(N_VGetArrayPointer(JvB),0.0,sizeof(realtype)*nx)
-        if(!model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                       N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),w.data(),dwdx.data()))
             return AMICI_ERROR;
         return checkVals(nx,N_VGetArrayPointer(JvB),"Jacobian");
@@ -230,7 +230,7 @@ namespace amici {
                       void *user_data) {
         UserData udata = (UserData) user_data;
         memset(root,0.0,sizeof(realtype)*ne)
-        if(!model_root(root,t,N_VGetArrayPointer(x),udata->p(),udata->k())) {
+        if(!model_root(root,t,N_VGetArrayPointer(x),udata->p(),udata->k(),h)) {
             return AMICI_ERROR;
         }
         return checkVals(ne,root,"root function");
@@ -253,7 +253,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fw(t,x,udata);
         memset(N_VGetArrayPointer(xdot),0.0,sizeof(realtype)*nx)
-        model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                    w.data());
         return checkVals(nx,xdot,"residual function");
     }
@@ -277,7 +277,7 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdx(t,x,udata);
         memset(N_VGetArrayPointer(xBdot),0.0,sizeof(realtype)*nx)
-        model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                     N_VGetArrayPointer(xB),w.data(),dwdx.data());
         return checkVals(nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
@@ -300,8 +300,10 @@ namespace amici {
         UserData udata = (UserData) user_data;
         fdwdp(t,x,udata);
         memset(N_VGetArrayPointer(qBdot),0.0,sizeof(realtype)*nJ*udata->nplist)
-        model_qBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
-                    N_VGetArrayPointer(xB),w.data(),dwdp.data());
+        realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
+        for(int ip = 1; ip < nplist; ip++)
+            model_qBdot(&qBdot[ip*nJ],udata->plist[ip],t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
+                        N_VGetArrayPointer(xB),w.data(),dwdp.data());
         return checkVals(nx,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
@@ -316,7 +318,7 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x,udata);
         for(int ip = 1; ip < nplist; ip++)
-            model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+            model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                           udata->plist[ip],w.data(),dwdP.data());
     }
     
@@ -347,7 +349,7 @@ namespace amici {
                 return AMICI_ERROR;
         }
         memset(N_VGetArrayPointer(sxdot),0.0,sizeof(realtype)*nx)
-        if(!model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),
+        if(!model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),udata->p(),udata->k(),h,
                         udata->plist[ip],N_VGetArrayPointer(sx),
                         w.data(),dwdx.data(),J.data(),dxdotdp.data())) {
             return AMICI_ERROR;

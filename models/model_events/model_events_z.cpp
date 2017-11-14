@@ -1,18 +1,17 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void z_model_events(double *z, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
+void z_model_events(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
     switch(ie) { 
         case 0: {
-  rdata->z[tdata->nroots[ie]+udata->nmaxevent*0] = t;
+  z[0] = t;
 
         } break;
 
         case 1: {
-  rdata->z[tdata->nroots[ie]+udata->nmaxevent*1] = t;
+  z[1] = t;
 
         } break;
 

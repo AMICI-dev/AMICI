@@ -390,7 +390,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fstau(const int ie,const realtype t, const AmiVector x, const AmiVectorArray sx, const UserData *udata) {
         std::fill(stau.begin(),stau.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++){
-            model_stau(stau.data(),t,x.data(),udata->p(),udata->k(),sx.data(ip),udata->plist(ip),ie);
+            model_stau(stau.data(),t,x.data(),udata->p(),udata->k(),h.data(),sx.data(ip),udata->plist(ip),ie);
         }
     }
     
@@ -402,7 +402,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fy(int it, ReturnData *rdata, const UserData *udata) {
         getx(it,rdata);
         std::fill(y.begin(),y.end(),0.0);
-        model_y(y.data(),gett(it,rdata),x.data(),udata->p(),udata->k());
+        model_y(y.data(),gett(it,rdata),x.data(),udata->p(),udata->k(),h.data());
         for(int iy; iy < ny; iy++)
             rdata->y[it + udata->nt()*iy] = y.at(iy);
     }
@@ -414,7 +414,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         getx(it,rdata);
         std::fill(dydp.begin(),dydp.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++){
-            model_dydp(dydp.data(),gett(it,rdata),x.data(),udata->p(),udata->k(),udata->plist(ip));
+            model_dydp(dydp.data(),gett(it,rdata),x.data(),udata->p(),udata->k(),h.data(),udata->plist(ip));
         }
     }
     
@@ -425,7 +425,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         const realtype t = gett(it,rdata);
         getx(it,rdata);
         std::fill(dydx.begin(),dydx.end(),0.0);
-        model_dydx(dydx.data(),t,x.data(),udata->p(),udata->k());
+        model_dydx(dydx.data(),t,x.data(),udata->p(),udata->k(),h.data());
     }
     
     /** Event-resolved output
@@ -433,10 +433,10 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param rdata pointer to return data object
      * @param udata object with user input
      */
-    void Model::fz(const int nroots, const realtype t, const AmiVector x, ReturnData *rdata,
+    void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata,
                     const UserData *udata) {
         std::vector<double> zreturn(nz,0.0);
-        model_z(zreturn.data(),t,x.data(),udata->p(),udata->k());
+        model_z(zreturn.data(),ie,t,x.data(),udata->p(),udata->k(),h.data());
         for(int iz; iz < nz; iz++) {
             rdata->z[nroots+rdata->nmaxevent*iz] = zreturn.at(iz);
         }
@@ -447,11 +447,11 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param rdata pointer to return data object
      * @param udata object with user input
      */
-    void Model::fsz(const int nroots, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata,
+    void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata,
                      const UserData *udata) {
         for(int ip; ip < udata->nplist();  ip++ ){
             std::vector<double> szreturn(nz,0.0);
-            model_sz(szreturn.data(),t,x.data(),udata->p(),udata->k(),sx.data(ip),udata->plist(ip));
+            model_sz(szreturn.data(),ie,t,x.data(),udata->p(),udata->k(),h.data(),sx.data(ip),udata->plist(ip));
             for(int iz; iz < nz; iz++) {
                 rdata->sz[nroots+rdata->nmaxevent*(ip*nz + iz)] = szreturn.at(iz);
             }
@@ -464,10 +464,10 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param udata object with user input
      * @param rdata pointer to return data object
      */
-    void Model::frz(const int nroots, const realtype t, const AmiVector x, ReturnData *rdata,
+    void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata,
                      const UserData *udata) {
         std::vector<double> rzreturn(nz,0.0);
-        model_rz(rzreturn.data(),t,x.data(),udata->p(),udata->k());
+        model_rz(rzreturn.data(),ie,t,x.data(),udata->p(),udata->k(),h.data());
         for(int iz; iz < nz; iz++) {
             rdata->rz[nroots+rdata->nmaxevent*iz] = rzreturn.at(iz);
         }
@@ -478,11 +478,11 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param rdata pointer to return data object
      * @param udata object with user input
      */
-    void Model::fsrz(const int nroots, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata,
+    void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata,
                       const UserData *udata) {
         for(int ip; ip < udata->nplist();  ip++ ){
             std::vector<double> srzreturn(nz,0.0);
-            model_srz(srzreturn.data(),t,x.data(),udata->p(),udata->k(),sx.data(ip),udata->plist(ip));
+            model_srz(srzreturn.data(),ie,t,x.data(),udata->p(),udata->k(),h.data(),sx.data(ip),udata->plist(ip));
             for(int iz; iz < nz; iz++) {
                 rdata->srz[nroots+rdata->nmaxevent*(ip*nz + iz)] = srzreturn.at(iz);
             }
@@ -492,37 +492,37 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     /** partial derivative of event-resolved output z w.r.t. to model parameters p
      * @param udata object with user input
      */
-    void Model::fdzdp(const realtype t, const AmiVector x, const UserData *udata) {
+    void Model::fdzdp(const realtype t, const int ie, const AmiVector x, const UserData *udata) {
         std::fill(dzdp.begin(),dzdp.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++){
-            model_dzdp(dzdp.data(),t,x.data(),udata->p(),udata->k(),udata->plist(ip));
+            model_dzdp(dzdp.data(),ie,t,x.data(),udata->p(),udata->k(),h.data(),udata->plist(ip));
         }
     }
     
     /** partial derivative of event-resolved output z w.r.t. to model states x
      * @param udata object with user input
      */
-    void Model::fdzdx(const realtype t, const AmiVector x, const UserData *udata) {
+    void Model::fdzdx(const realtype t, const int ie, const AmiVector x, const UserData *udata) {
         std::fill(dzdx.begin(),dzdx.end(),0.0);
-        model_dzdx(dzdx.data(),t,x.data(),udata->p(),udata->k());
+        model_dzdx(dzdx.data(),ie,t,x.data(),udata->p(),udata->k(),h.data());
     }
     
     /** Sensitivity of event-resolved root output w.r.t. to model parameters p
      * @param udata object with user input
      */
-    void Model::fdrzdp(const realtype t, const AmiVector x, const UserData *udata) {
+    void Model::fdrzdp(const realtype t, const int ie, const AmiVector x, const UserData *udata) {
         std::fill(drzdp.begin(),drzdp.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++){
-            model_drzdp(drzdp.data(),t,x.data(),udata->p(),udata->k(),udata->plist(ip));
+            model_drzdp(drzdp.data(),ie,t,x.data(),udata->p(),udata->k(),h.data(),udata->plist(ip));
         }
     }
     
     /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
      * @param udata object with user input
      */
-    void Model::fdrzdx(const realtype t, const AmiVector x, const UserData *udata) {
+    void Model::fdrzdx(const realtype t, const int ie, const AmiVector x, const UserData *udata) {
         std::fill(drzdx.begin(),drzdx.end(),0.0);
-        model_drzdx(drzdx.data(),t,x.data(),udata->p(),udata->k());
+        model_drzdx(drzdx.data(),ie,t,x.data(),udata->p(),udata->k(),h.data());
     }
     
     /** State update functions for events
@@ -532,7 +532,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fdeltax(const int ie, const realtype t, const AmiVector x,
                          const AmiVector xdot, const AmiVector xdot_old, const UserData *udata) {
         std::fill(deltax.begin(),deltax.end(),0.0);
-        model_deltax(deltax.data(),t,x.data(),udata->p(),udata->k(),ie,xdot.data(),xdot_old.data());
+        model_deltax(deltax.data(),t,x.data(),udata->p(),udata->k(),h.data(),ie,xdot.data(),xdot_old.data());
     }
     
     /** Sensitivity update functions for events, total derivative
@@ -543,7 +543,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
                           const AmiVector xdot, const AmiVector xdot_old, const UserData *udata) {
         std::fill(deltasx.begin(),deltasx.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++)
-            model_deltasx(deltasx.data(),t,x.data(),udata->p(),udata->k(),
+            model_deltasx(&deltasx[nx*ip],t,x.data(),udata->p(),udata->k(),h.data(),
                           udata->plist(ip),ie,xdot.data(),xdot_old.data(),sx.data(ip),stau.data());
     }
     
@@ -554,7 +554,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fdeltaxB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
                           const AmiVector xdot, const AmiVector xdot_old, const UserData *udata) {
         std::fill(deltaxB.begin(),deltaxB.end(),0.0);
-        model_deltaxB(deltaxB.data(),t,x.data(),udata->p(),udata->k(),ie,xdot.data(),xdot_old.data(),xB.data());
+        model_deltaxB(deltaxB.data(),t,x.data(),udata->p(),udata->k(),h.data(),ie,xdot.data(),xdot_old.data(),xB.data());
     }
     
     /** Quadrature state update functions for events
@@ -565,7 +565,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
                           const AmiVector xdot, const AmiVector xdot_old, const UserData *udata) {
         std::fill(deltaqB.begin(),deltaqB.end(),0.0);
         for(int ip = 0; ip < udata->nplist(); ip++)
-            model_deltaqB(deltaqB.data(),t,x.data(),udata->p(),udata->k(),
+            model_deltaqB(deltaqB.data(),t,x.data(),udata->p(),udata->k(),h.data(),
                           udata->plist(ip),ie,xdot.data(),xdot_old.data(),xB.data());
     }
     
@@ -635,7 +635,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(edata->my[iytrue* udata->nt()+it])){
                 std::fill(nllh.begin(),nllh.end(),0.0);
-                model_Jy(nllh.data(),udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
+                model_Jy(nllh.data(),iytrue,udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
                     rdata->llh[iJ] -= nllh.at(iJ);
                 }
@@ -656,7 +656,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[nroots + rdata->nmaxevent*iztrue])){
                 std::fill(nllh.begin(),nllh.end(),0.0);
-                model_Jz(nllh.data(),udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
+                model_Jz(nllh.data(),iztrue,udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
                     rdata->llh[iJ] -= nllh.at(iJ);
                 }
@@ -677,7 +677,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[nroots + rdata->nmaxevent*iztrue])){
                 std::fill(nllh.begin(),nllh.end(),0.0);
-                model_Jrz(nllh.data(),udata->p(),udata->k(),rz.data(),sigmaz.data());
+                model_Jrz(nllh.data(),iztrue,udata->p(),udata->k(),rz.data(),sigmaz.data());
                 for(int iJ = 0; iJ < nJ; iJ++){
                     rdata->llh[iJ] -= nllh.at(iJ);
                 }
@@ -700,7 +700,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(edata->my[iytrue* udata->nt()+it])){
                 std::fill(dJydy_slice.begin(),dJydy_slice.end(),0.0);
-                model_dJydy(dJydy_slice.data(),udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
+                model_dJydy(dJydy_slice.data(),iytrue,udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJy
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iy = 0; iy < ny; iy++ )
@@ -726,7 +726,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(edata->my[iytrue* udata->nt()+it])){
                 std::fill(dJydsigma_slice.begin(),dJydsigma_slice.end(),0.0);
-                model_dJydsigma(dJydsigma_slice.data(),udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
+                model_dJydsigma(dJydsigma_slice.data(),iytrue,udata->p(),udata->k(),y.data(),sigmay.data(),my.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJy
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iy = 0; iy < ny; iy++ )
@@ -751,7 +751,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[iztrue*rdata->nmaxevent+nroots])){
                 std::fill(dJzdz_slice.begin(),dJzdz_slice.end(),0.0);
-                model_dJzdz(dJzdz_slice.data(),udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
+                model_dJzdz(dJzdz_slice.data(),iztrue,udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )
@@ -777,7 +777,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[iztrue*rdata->nmaxevent+nroots])){
                 std::fill(dJzdsigma_slice.begin(),dJzdsigma_slice.end(),0.0);
-                model_dJzdsigma(dJzdsigma_slice.data(),udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
+                model_dJzdsigma(dJzdsigma_slice.data(),iztrue,udata->p(),udata->k(),z.data(),sigmaz.data(),mz.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )
@@ -802,7 +802,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[iztrue*rdata->nmaxevent+nroots])){
                 std::fill(dJrzdz_slice.begin(),dJrzdz_slice.end(),0.0);
-                model_dJrzdz(dJrzdz_slice.data(),udata->p(),udata->k(),rz.data(),sigmaz.data());
+                model_dJrzdz(dJrzdz_slice.data(),iztrue,udata->p(),udata->k(),rz.data(),sigmaz.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++)
@@ -827,7 +827,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(edata->mz[iztrue*rdata->nmaxevent+nroots])){
                 std::fill(dJrzdsigma_slice.begin(),dJrzdsigma_slice.end(),0.0);
-                model_dJrzdsigma(dJrzdsigma_slice.data(),udata->p(),udata->k(),rz.data(),sigmaz.data());
+                model_dJrzdsigma(dJrzdsigma_slice.data(),iztrue,udata->p(),udata->k(),rz.data(),sigmaz.data());
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )

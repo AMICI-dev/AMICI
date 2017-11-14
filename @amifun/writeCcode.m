@@ -70,26 +70,26 @@ elseif(strcmp(this.funstr,'deltax') || strcmp(this.funstr,'deltasx') || strcmp(t
 elseif(any(strcmp(this.funstr,{'Jy','dJydsigma','dJydy'})))
     tmpfun = this;
     if(any(any(any(nonzero))))
-        fprintf(fid,['int iy;\n']);
+        fprintf(fid,['switch(iy){\n']);
         for iy = 1:model.nytrue
-            fprintf(fid,['if(!amiIsNaN(edata->my[' num2str(iy-1) '* udata->nt+it])){\n']);
-            fprintf(fid,['    iy = ' num2str(iy-1) ';\n']);
+            fprintf(fid,['    case ' num2str(iy-1) ':\n']);
             tmpfun.sym = permute(this.sym(iy,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
-            fprintf(fid,'}\n');
+            fprintf(fid,'    break;\n');
         end
+        fprintf(fid,['}\n']);
     end
 elseif(any(strcmp(this.funstr,{'Jz','dJzdsigma','dJzdz','Jrz','dJrzdsigma','dJrzdz'})))
     tmpfun = this;
     if(any(any(any(nonzero))))
-        fprintf(fid,['int iz;\n']);
+        fprintf(fid,['switch(iz){\n']);
         for iz = 1:model.nztrue
-            fprintf(fid,['if(!amiIsNaN(edata->mz[' num2str(iz-1) '*udata->nmaxevent+tdata->nroots[ie]])){\n']);
-            fprintf(fid,['    iz = ' num2str(iz-1) ';\n']);
+            fprintf(fid,['    case ' num2str(iz-1) ':\n']);
             tmpfun.sym = permute(this.sym(iz,:,:),[2,3,1]);
             tmpfun.gccode(model,fid);
-            fprintf(fid,'}\n');
+            fprintf(fid,'    break;\n');
         end
+        fprintf(fid,['}\n']);
     end
 else
     if(any(any(any(nonzero))))

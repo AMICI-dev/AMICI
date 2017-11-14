@@ -1,9 +1,8 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void w_model_events(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k) {
+void w_model_events(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
 }
 

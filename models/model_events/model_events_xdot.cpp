@@ -1,12 +1,11 @@
 
 #include <include/symbolic_functions.h>
-#include "model_events_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace model_events;
-
-void xdot_model_events(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-  xdot_tmp[0] = -tdata->h[3]*tdata->p[0]*x_tmp[0];
-  xdot_tmp[1] = -tdata->p[2]*x_tmp[1]+tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1));
-  xdot_tmp[2] = tdata->h[2]-x_tmp[2];
+void xdot_model_events(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
+  xdot[0] = -h[3]*p[0]*x[0];
+  xdot[1] = -p[2]*x[1]+p[1]*x[0]*exp(t*(-1.0/1.0E1));
+  xdot[2] = h[2]-x[2];
 }
 
