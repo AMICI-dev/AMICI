@@ -9,6 +9,7 @@
 #include <vector>
 
 namespace amici {
+    extern msgIdAndTxtFp warnMsgIdAndTxt;
     
     /**
      * @brief The Model class represents an AMICI ODE model.
@@ -43,18 +44,15 @@ namespace amici {
          * @param o2mode second order sensitivity mode
          */
         Model_ODE(const int np, const int nx, const int nxtrue, const int nk,
-              const int ny, const int nytrue, const int nz, const int nztrue,
-              const int ne, const int nJ, const int nw, const int ndwdx,
-              const int ndwdp, const int nnz, const int ubw, const int lbw,
-              const AMICI_o2mode o2mode)
-        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode){}
+                  const int ny, const int nytrue, const int nz, const int nztrue,
+                  const int ne, const int nJ, const int nw, const int ndwdx,
+                  const int ndwdp, const int nnz, const int ubw, const int lbw,
+                  const AMICI_o2mode o2mode, const std::vector<realtype> p,
+                  const std::vector<realtype> k, const std::vector<int> plist)
+        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist){}
         
-        static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-               DlsMat J, void *user_data, N_Vector tmp1,
-               N_Vector tmp2, N_Vector tmp3);
-        
-        virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, DlsMat J, const UserData *user_data);
+        virtual void fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                        AmiVector xdot, DlsMat J, CVodeSolver *solver);
         
         /** model specific implementation for fJ
          * @param[out] J Matrix to which the Jacobian will be written
@@ -67,10 +65,6 @@ namespace amici {
          **/
         virtual void model_J(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                              const realtype *w, const realtype *dwdx) = 0;
-        
-        static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                N_Vector tmp2B, N_Vector tmp3B);
         
         /** model specific implementation for fJB
          * @param[out] JB Matrix to which the Jacobian will be written
@@ -92,12 +86,8 @@ namespace amici {
             return(AMICI_ERROR);
         }
         
-        static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                     void *user_data, N_Vector tmp1, N_Vector tmp2,
-                     N_Vector tmp3);
-        
-        virtual void fJSparsewrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                                  AmiVector xdot, SlsMat J, const UserData *user_data);
+        virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                                  AmiVector xdot, SlsMat J, CVodeSolver *solver);
         
         /** model specific implementation for fJSparse
          * @param[out] J Matrix to which the Jacobian will be written
@@ -113,11 +103,6 @@ namespace amici {
          **/
         virtual int model_JSparse(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const realtype *w, const realtype *dwdx) = 0;
-        
-        
-        static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                              SlsMat JB, void *user_data, N_Vector tmp1B,
-                              N_Vector tmp2B, N_Vector tmp3B);
         
         /** model specific implementation for fJSparseB
          * @param[out] JB Matrix to which the Jacobian will be written
@@ -136,20 +121,6 @@ namespace amici {
             return AMICI_ERROR;
         }
         
-        static int fJBand(long int N, long int mupper, long int mlower, realtype t,
-                          N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                          N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-        
-        
-        
-        static int fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                           realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                           DlsMat JB, void *user_data, N_Vector tmp1B,
-                           N_Vector tmp2B, N_Vector tmp3B);
-        
-        
-        static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
-        
         /** model specific implementation for fJSparseB
          * @param[out] JB Matrix to which the Jacobian will be written
          * @param[in] t timepoint
@@ -166,14 +137,11 @@ namespace amici {
             return AMICI_ERROR;
         }
         
-        virtual void fJDiagwrap(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
-                                AmiVector dx, const UserData *user_data);
+        virtual void fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+                                AmiVector dx, CVodeSolver *solver);
         
-        static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
-                       void *user_data, N_Vector tmp);
-        
-        virtual void fJvwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                             AmiVector v, AmiVector nJv, realtype cj, const UserData *user_data);
+        virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                             AmiVector v, AmiVector nJv, realtype cj, CVodeSolver *solver);
         
         /** model specific implementation for fJv
          * @param[out] Jv Matrix vector product of J with a vector v
@@ -191,9 +159,6 @@ namespace amici {
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         }
-        
-        static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                 void *user_data, N_Vector tmpB);
         
         /** model specific implementation for fJvB
          * @param[out] JvB Matrix vector product of JB with a vector v
@@ -217,11 +182,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void frootwrap(realtype t, AmiVector x, AmiVector dx, realtype *root,
-                               const UserData *udata);
-        
-        static int froot(realtype t, N_Vector x, realtype *root,
-                  void *user_data);
+        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root, CVodeSolver *solver);
         
         /** model specific implementation for froot
          * @param[out] root values of the trigger function
@@ -236,10 +197,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void fxdotwrap(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                               const UserData *udata);
-        
-        static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot, CVodeSolver *solver);
         
         /** model specific implementation for fxdot
          * @param[out] xdot residual function
@@ -252,9 +210,6 @@ namespace amici {
          **/
         virtual void model_xdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const realtype *w) = 0;
-        
-        static int fxBdot(realtype t, N_Vector x, N_Vector xB,
-                   N_Vector xBdot, void *user_data);
         
         /** model specific implementation for fxBdot
          * @param[out] xBdot adjoint residual function
@@ -274,9 +229,6 @@ namespace amici {
             
         }
         
-        static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                           void *user_data);
-        
         /** model specific implementation for fqBdot
          * @param[out] qBdot adjoint quadrature equation
          * @param[in] t timepoint
@@ -295,10 +247,9 @@ namespace amici {
             
         }
         
-        void fdxdotdp(const realtype t, const N_Vector x, const UserData *udata);
+        void fdxdotdp(const realtype t, const N_Vector x);
         
-        virtual void fdxdotdpwrap(realtype t, AmiVector x, AmiVector dx,
-                                  const UserData *user_data);
+        virtual void fdxdotdp(realtype t, AmiVector x, AmiVector dx);
         
         /** model specific implementation of fdxdotdp
          * @param[out] dxdotdp partial derivative xdot wrt p
@@ -316,10 +267,6 @@ namespace amici {
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         };
-        
-        static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                           N_Vector sx, N_Vector sxdot, void *user_data,
-                           N_Vector tmp1, N_Vector tmp2);
         
         /** model specific implementation of fsxdot
          * @param[out] sxdot sensitivity rhs

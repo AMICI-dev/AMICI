@@ -142,7 +142,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     int secondevent = 0;
 
     /* store heaviside information at event occurence */
-    model->frootwrap(t, x, dx, rootvals, udata);
+    model->froot(t, x, dx, rootvals, udata);
     
     if (!seflag) {
         solver->AMIGetRootInfo(rootsfound.data());
@@ -183,7 +183,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         /* store x and xdot to compute jump in sensitivities */
         N_VScale(1.0, x.getNVector(), x_old.getNVector());
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-            model->fxdotwrap(t, x, dx, xdot, udata);
+            model->fxdot(t, x, dx, xdot, udata);
             N_VScale(1.0, xdot.getNVector(), xdot_old.getNVector());
             N_VScale(1.0, dx.getNVector(), dx_old.getNVector());
 
@@ -232,13 +232,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
 
             /* compute the new xdot  */
-            model->fxdotwrap(t, x, dx, xdot, udata);
+            model->fxdot(t, x, dx, xdot, udata);
             applyEventSensiBolusFSA();
         }
     }
 
     /* check whether we need to fire a secondary event */
-    model->frootwrap(t, x, dx, rootvals, udata);
+    model->froot(t, x, dx, rootvals, udata);
     for (ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound.at(ie) == 0) {
@@ -287,10 +287,10 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     /* entries in rdata are actually (double) while entries in tdata are
        (realtype)
        we should perform proper casting here. */
-    model->fxdotwrap(t, x, dx, xdot, udata);
+    model->fxdot(t, x, dx, xdot, udata);
     memcpy(rdata->xdot, xdot.data(), model->nx * sizeof(realtype));
 
-    model->fJwrap(t, 0.0, x, dx, xdot, Jtmp, udata);
+    model->fJ(t, 0.0, x, dx, xdot, Jtmp, udata);
     memcpy(rdata->J, Jtmp->data,
            model->nx * model->nx * sizeof(realtype));
 
@@ -304,7 +304,7 @@ void ForwardProblem::getEventOutput() {
 
     if (t == rdata->ts[rdata->nt - 1]) {
         // call from fillEvent at last timepoint
-        model->frootwrap(t, x, dx, rootvals, udata);
+        model->froot(t, x, dx, rootvals, udata);
     }
 
     /* EVENT OUTPUT */

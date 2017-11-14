@@ -2,6 +2,8 @@
 #define AMICI_SOLVER_H
 
 #include <include/amici_vector.h>
+#include <include/amici_defines.h>
+#include <include/symbolic_functions.h>
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
 
@@ -12,6 +14,7 @@ class UserData;
 class ForwardProblem;
 class BackwardProblem;
 class Model;
+extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 //!  Solver class.
 /*!
@@ -710,8 +713,24 @@ class Solver {
     void setLinearSolver(const UserData *udata, Model *model);
     void setLinearSolverB(const UserData *udata, Model *model, int which);
 
+protected:
+    
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
+    
+    int checkVals(const int N,const realtype *array, const char* fun){
+        for(int idx = 0; idx < N; idx++) {
+            if(amiIsNaN(array[idx])) {
+                warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value at index (%i) of (%i) in (%s)! Aborting simulation ... ",idx,N,fun);
+                return(AMICI_ERROR);
+            }
+            if(amiIsInf(array[idx])) {
+                warnMsgIdAndTxt("AMICI:mex:fJDiag:Inf","AMICI encountered an Inf value at index (%i) of (%i) in (%s)! Aborting simulation ... ",idx,N,fun);
+                return(AMICI_ERROR);
+            }
+        }
+        return(AMICI_SUCCESS);
+    }
 };
 
 } // namespace amici

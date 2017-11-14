@@ -11,6 +11,7 @@
 #include <vector>
 
 namespace amici {
+    extern msgIdAndTxtFp warnMsgIdAndTxt;
     
     class UserData;
     class ExpData;
@@ -48,11 +49,12 @@ namespace amici {
          * @param o2mode second order sensitivity mode
          */
         Model_DAE(const int np, const int nx, const int nxtrue, const int nk,
-              const int ny, const int nytrue, const int nz, const int nztrue,
-              const int ne, const int nJ, const int nw, const int ndwdx,
-              const int ndwdp, const int nnz, const int ubw, const int lbw,
-              const AMICI_o2mode o2mode)
-        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode){}
+                  const int ny, const int nytrue, const int nz, const int nztrue,
+                  const int ne, const int nJ, const int nw, const int ndwdx,
+                  const int ndwdp, const int nnz, const int ubw, const int lbw,
+                  const AMICI_o2mode o2mode, const std::vector<realtype> p,
+                  const std::vector<realtype> k, const std::vector<int> plist)
+        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist){}
        
 
         static int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx,
