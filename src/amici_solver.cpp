@@ -41,8 +41,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     /* Set optional inputs */
     AMISetErrHandlerFn();
     /* attaches userdata*/
-    UserData user_data(*udata); // make a copy to remove constness
-    AMISetUserData(&user_data);
+    AMISetUserData(model);
     /* specify maximal number of steps */
     AMISetMaxNumSteps(udata->maxsteps);
     /* activates stability limit detection */
@@ -141,8 +140,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
                               RCONST(udata->atol));
 
     /* Attach user data */
-    UserData user_data(*udata); // make copy to remove constness
-    AMISetUserDataB(bwd->which, &user_data);
+    AMISetUserDataB(bwd->which, model);
 
     /* Number of maximal internal steps */
     AMISetMaxNumStepsB(bwd->which, 100 * udata->maxsteps);

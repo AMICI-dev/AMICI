@@ -114,7 +114,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     N_VConst(0.0, delta.getNVector());
 
     /* Check, how fxdot is used exactly within AMICI... */
-    model->fxdotwrap(t, x, dx, xdot, udata);
+    model->fxdot(t, x, dx, xdot);
     double res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
 
     /* Check for relative error, but make sure not to divide by 0!
@@ -153,7 +153,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
                 x[ix] = udata->atol;
         
         /* Compute new xdot and residuals */
-        model->fxdotwrap(t, x, dx, xdot, udata);
+        model->fxdot(t, x, dx, xdot);
         N_VDiv(xdot.getNVector(), x.getNVector(), rel_x_newton.getNVector());
         res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
         res_tmp = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
@@ -265,7 +265,7 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
         /* One step of ODE integration */
         solver->AMISolve(1e12, x, dx, &t,
                                   AMICI_ONE_STEP);
-        model->fxdotwrap(t, x, dx, xdot, udata);
+        model->fxdot(t, x, dx, xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
         /* Ensure positivity and compute relative residual */

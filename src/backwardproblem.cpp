@@ -151,9 +151,9 @@ void BackwardProblem::handleEventB(int iroot) {
 
         if (rootidx[iroot * model->ne + ie] != 0) {
 
-            model->fdeltaqB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot], udata);
+            model->fdeltaqB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot]);
 
-            model->fdeltaxB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot], udata);
+            model->fdeltaxB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot]);
 
             for (int ix = 0; ix < model->nxtrue; ++ix) {
                 for (int iJ = 0; iJ < model->nJ; ++iJ) {
