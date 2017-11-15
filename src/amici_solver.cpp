@@ -67,7 +67,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
                 }
             }
 
-            model->fsdx0(udata);
+            model->fsdx0();
             
             if (udata->sensi_meth == AMICI_SENSI_FSA) {
                 

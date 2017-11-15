@@ -114,7 +114,7 @@ void NewtonSolver::getSensis(int it) {
      * @param[in] it integer index of current time step     */
     this->prepareLinearSystem(0, -1);
 
-    model->fdxdotdpwrap(*t, x, dx, udata);
+    model->fdxdotdp(*t, x, dx);
     for (int ip = 0; ip < udata->nplist(); ip++) {
         
         for (int ix = 0; ix < model->nx; ix++) {
@@ -175,7 +175,7 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      */
 
     /* Get Jacobian */
-    model->fJwrap(*t, 0.0, x, dx, xdot, Jtmp, udata);
+    model->fJ(*t, 0.0, x, dx, xdot, Jtmp);
     int status = DenseGETRF(Jtmp, pivots);
     if(status != 0)
         throw NewtonFailure("Dense factorization failed!");
@@ -248,7 +248,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         throw NewtonFailure("KLU was not initialized!");
 
     /* Get sparse Jacobian */
-    model->fJSparsewrap(*t, 0.0, x, dx, xdot, Jtmp, udata);
+    model->fJSparse(*t, 0.0, x, dx, xdot, Jtmp);
 
     /* Get factorization of sparse Jacobian */
     if(symbolic) /* if symbolic was already created free first to avoid memory leak */
@@ -376,7 +376,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector ns_delta
     double res;
     
     // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiagwrap(*t, ns_Jdiag, 0.0, x, dx, udata);
+    model->fJDiag(*t, ns_Jdiag, 0.0, x, dx);
     
     // Ensure positivity of entries in ns_Jdiag
     ns_p.set(1.0);
@@ -395,7 +395,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector ns_delta
     alpha = 1.0;
     
     // can be set to 0 at the moment
-    model->fJvwrap(*t, x, dx, xdot, ns_delta, ns_Jv, 0.0,  udata);
+    model->fJv(*t, x, dx, xdot, ns_delta, ns_Jv, 0.0);
     
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
@@ -415,7 +415,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector ns_delta
         N_VLinearSum(1.0, ns_r.getNVector(), beta, ns_p.getNVector(), ns_p.getNVector());
         
         // ns_v = J * ns_p
-        model->fJvwrap(*t, x, dx, xdot, ns_p, ns_v, 0.0,  udata);
+        model->fJv(*t, x, dx, xdot, ns_p, ns_v, 0.0);
         N_VDiv(ns_v.getNVector(), ns_Jdiag.getNVector(), ns_v.getNVector());
         
         // Compute factor
@@ -427,7 +427,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector ns_delta
         N_VLinearSum(1.0, ns_r.getNVector(), -alpha, ns_v.getNVector(), ns_s.getNVector());
         
         // ns_t = J * ns_s
-        model->fJvwrap(*t, x, dx, xdot, ns_s, ns_t, 0.0,  udata);
+        model->fJv(*t, x, dx, xdot, ns_s, ns_t, 0.0);
         N_VDiv(ns_t.getNVector(), ns_Jdiag.getNVector(), ns_t.getNVector());
         
         // Compute factor

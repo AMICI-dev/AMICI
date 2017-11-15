@@ -11,6 +11,8 @@
 namespace amici {
     extern msgIdAndTxtFp warnMsgIdAndTxt;
     
+    class CVodeSolver;
+    
     /**
      * @brief The Model class represents an AMICI ODE model.
      * The model does not contain any data, but represents the state
@@ -176,8 +178,7 @@ namespace amici {
          * @return status flag indicating successful execution
          **/
         virtual int model_JvB(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                              const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
-                              const realtype *vB, const realtype *w, const realtype *dwdx){
+                              const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx){
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR; // not implemented
         }
@@ -247,7 +248,7 @@ namespace amici {
             
         }
         
-        void fdxdotdp(const realtype t, const N_Vector x);
+        int fdxdotdp(const realtype t, const N_Vector x);
         
         virtual void fdxdotdp(realtype t, AmiVector x, AmiVector dx);
         

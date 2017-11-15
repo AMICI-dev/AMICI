@@ -32,12 +32,14 @@ namespace amici {
      * @param[in] dx Vector with the derivative states
      * @param[in] user_data pointer to temp data object
      */
-    void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+    int Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
         for(int ip = 1; ip < nplist; ip++)
-            model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-                          plist[ip],w.data(),dwdp.data());
+            if(!model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+                          plist[ip],w.data(),dwdp.data()))
+                return AMICI_ERROR;
+        return AMICI_SUCCESS;
     }
     
 }
