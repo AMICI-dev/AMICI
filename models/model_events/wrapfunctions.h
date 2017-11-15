@@ -1,7 +1,6 @@
 #ifndef _amici_wrapfunctions_h
 #define _amici_wrapfunctions_h
 #include <math.h>
-#include "model_events.h"
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_model_ode.h>
 

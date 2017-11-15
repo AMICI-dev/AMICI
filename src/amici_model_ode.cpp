@@ -16,6 +16,12 @@ namespace amici {
         solver->fJSparse(t,x.getNVector(),xdot.getNVector(),J,this,nullptr,nullptr,nullptr);
     }
     
+    void Model_ODE::fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                        AmiVector v, AmiVector Jv, realtype cj, CVodeSolver *solver){
+        solver->fJv(v.getNVector(),Jv.getNVector(),t,x.getNVector(),xdot.getNVector(),
+                    this,nullptr);
+    }
+    
     void Model_ODE::froot(realtype t, AmiVector x, AmiVector dx, realtype *root,
                           CVodeSolver *solver){
         solver->froot(t,x.getNVector(),root,this);
@@ -24,6 +30,24 @@ namespace amici {
     void Model_ODE::fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
                           CVodeSolver *solver){
         solver->fxdot(t,x.getNVector(),xdot.getNVector(),this);
+    }
+    
+    /** diagonalized Jacobian (for preconditioning)
+     * @param[in] t timepoint
+     * @param[out] JDiag Vector to which the Jacobian diagonal will be written
+     * @param[in] cj scaling factor, inverse of the step size
+     * @param[in] x Vector with the states
+     * @param[in] dx Vector with the derivative states
+     * @param[in] user_data object with user input @type UserData
+     **/
+    int Model_ODE::fJDiag(realtype t, AmiVector JDiag, realtype cj, AmiVector x,
+                          AmiVector dx, CVodeSolver *solver) {
+        fdwdx(t,x.getNVector());
+        memset(JDiag.data(),0.0,sizeof(realtype)*nx);
+        if(!model_JDiag(JDiag.data(),t,x.data(),p.data(),k.data(),
+                        dx.data(),w.data(),dwdx.data()))
+            return AMICI_ERROR;
+        return solver->checkVals(nx,JDiag.data(),"Jacobian");
     }
     
     /** Sensitivity of dx/dt wrt model parameters p

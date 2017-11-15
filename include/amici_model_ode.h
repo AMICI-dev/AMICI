@@ -139,7 +139,7 @@ namespace amici {
             return AMICI_ERROR;
         }
         
-        virtual void fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+        int fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
                                 AmiVector dx, CVodeSolver *solver);
         
         virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
@@ -249,8 +249,6 @@ namespace amici {
         }
         
         int fdxdotdp(const realtype t, const N_Vector x);
-        
-        virtual void fdxdotdp(realtype t, AmiVector x, AmiVector dx);
         
         /** model specific implementation of fdxdotdp
          * @param[out] dxdotdp partial derivative xdot wrt p

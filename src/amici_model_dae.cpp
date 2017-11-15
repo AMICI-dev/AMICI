@@ -8,6 +8,12 @@ namespace amici {
         solver->fJSparse(t,cj,x.getNVector(),dx.getNVector(),xdot.getNVector(),J,this,nullptr,nullptr,nullptr);
     }
     
+    void Model_DAE::fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
+                        AmiVector v, AmiVector Jv, realtype cj, IDASolver *solver){
+        solver->fJv(t,x.getNVector(),dx.getNVector(),xdot.getNVector(),v.getNVector(),
+                    Jv.getNVector(),cj,this,nullptr,nullptr);
+    }
+    
      void Model_DAE::froot(realtype t, AmiVector x, AmiVector dx, realtype *root,
                            IDASolver *solver){
         solver->froot(t,x.getNVector(),dx.getNVector(),root,this);
@@ -32,6 +38,7 @@ namespace amici {
         memset(JDiag.data(),0.0,sizeof(realtype)*nx);
         if(!model_JDiag(JDiag.data(),t,x.data(),p.data(),k.data(),
                                dx.data(),w.data(),dwdx.data()))
+            return AMICI_ERROR;
         return solver->checkVals(nx,JDiag.data(),"Jacobian");
     }
     

@@ -122,6 +122,14 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         objectsstr = strcat(objectsstr,...
             ' "',fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]),'"');
     end    
+    
+    % compile the wrapfunctions object
+    fprintf('wrapfunctions | '); 
+    eval(['mex ' DEBUG COPT ...
+        ' -c -outdir ' modelSourceFolder ' ' ...
+        fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
+        includesstr]);
+    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try

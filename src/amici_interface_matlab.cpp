@@ -67,7 +67,7 @@ enum mexRhsArguments {
     if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
         mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION);             \
         int len = (int)mxGetM(a) * mxGetN(a);                                  \
-        udata->OPTION.assign(mxGetData(a),mxGetData(a)+ len);                  \
+        udata->OPTION.assign((double *)mxGetData(a),(double *)mxGetData(a)+len);                  \
     } else {                                                                   \
         throw AmiException("Provided options do not have field " #OPTION "!"); \
     }

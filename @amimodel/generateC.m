@@ -62,7 +62,6 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
-fprintf(fid,['#include "' this.modelname '.h"\n']);
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
     fprintf(fid,'#include <include/amici_model_ode.h>\n');
@@ -90,7 +89,6 @@ if(strcmp(this.wtype,'iw'))
 else
     baseclass = 'Model_ODE';
 end
-
 
 fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']);
 fprintf(fid,'public:\n');
@@ -133,8 +131,6 @@ for ifun = this.funs
     fprintf(fid,['    void model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n']);
 end
 
-
-
 fprintf(fid,'    amici::Solver *getSolver() override {\n');
 if(strcmp(this.wtype,'iw'))
     fprintf(fid, '        return new amici::IDASolver();\n');
@@ -144,6 +140,15 @@ end
 fprintf(fid,'    }\n\n');
 
 fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
+fclose(fid);
+
+
+fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
+fprintf(fid,'#include <include/amici_model.h>\n');
+fprintf(fid,'#include "wrapfunctions.h"\n');
+fprintf(fid,'Model *getModel() {\n');
+    fprintf(fid, ['    return new Model_' this.modelname '();\n']);
+fprintf(fid,'}\n\n');
 fclose(fid);
 
 fprintf('CMakeLists | ');
