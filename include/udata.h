@@ -19,8 +19,7 @@ namespace amici {
 class Model;
 
 template <class mxArray>
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
-                                     Model *model);
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
@@ -299,8 +298,7 @@ private:
     friend class Solver;
     
     template <class mxArray>
-    friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
-                                            Model *model);
+    friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
 };
 
 } // namespace amici

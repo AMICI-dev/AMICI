@@ -59,7 +59,8 @@ namespace amici {
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
               const AMICI_o2mode o2mode, const std::vector<realtype> p,
-              const std::vector<realtype> k, const std::vector<int> plist)
+              const std::vector<realtype> k, const std::vector<int> plist,
+              const std::vector<realtype> idlist, const std::vector<int> z2event)
         : np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
         nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode), nplist(plist.size()),
@@ -137,10 +138,10 @@ namespace amici {
         virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
                             AmiVector xdot, SlsMat J) = 0;
         
-        virtual void fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+        virtual int fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
                                 AmiVector dx) = 0;
         
-        virtual void fdxdotdp(realtype t, AmiVector x, AmiVector dx) = 0;
+        virtual int fdxdotdp(realtype t, AmiVector x, AmiVector dx) = 0;
         
         virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
                              AmiVector v, AmiVector nJv, realtype cj) = 0;
@@ -166,7 +167,7 @@ namespace amici {
          *written (only DAE) @type N_Vector
          * @param[in] user_data object with model specifications @type TempData
          **/
-        virtual void fdx0(AmiVector x0, AmiVector dx0) = 0;
+        virtual void fdx0(AmiVector x0, AmiVector dx0) {};
         
         void fsx0(AmiVectorArray sx, const AmiVector x, const UserData *udata);
         
@@ -187,7 +188,7 @@ namespace amici {
          *necessary for DAEs)
          * @param[in] udata object with user input
          **/
-        virtual void fsdx0() = 0;
+        virtual void fsdx0() {};
         
         void fstau(const int ie,const realtype t, const AmiVector x, const AmiVectorArray sx);
         
@@ -748,7 +749,7 @@ namespace amici {
          * @param[in] k constants vector
          */
         virtual void model_w(realtype *w, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k) {};
+                                const realtype *k, const realtype *h) {};
         
         void fdwdp(const realtype t, const N_Vector x);
         
@@ -761,7 +762,7 @@ namespace amici {
          * @param[in] w vector with helper variables
          */
         virtual void model_dwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *w) {};
+                                const realtype *k, const realtype *h, const realtype *w) {};
         
         void fdwdx(const realtype t, const N_Vector x);
         
@@ -774,7 +775,7 @@ namespace amici {
          * @param[in] w vector with helper variables
          */
         virtual void model_dwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *w) {};
+                                const realtype *k, const realtype *h, const realtype *w) {};
         
     protected:
         

@@ -4,11 +4,16 @@
 #include "include/amici.h"
 #include <mex.h>
 
-amici::Model *getModel();
+class UserData;
+extern amici::Model *getModel(const amici::UserData *udata);
+extern void getModelDims(int *nx, int *nk, int *np);
 
 namespace amici {
+    
+    
 
 class ReturnDataMatlab;
+
 
 
 
@@ -19,7 +24,7 @@ class ReturnDataMatlab;
  * @return udata: struct containing all provided user data @type *UserData
  */
 template <class mxArray>
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model);
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
 
 /**
  * setupReturnData initialises the return data struct

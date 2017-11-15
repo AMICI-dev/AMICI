@@ -16,8 +16,7 @@ class Model_ODE;
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver(const Model_ODE *model){
-        this->model = model;
+    CVodeSolver(){
     }
 
     void *AMICreate(int lmm, int iter) override;
@@ -149,8 +148,6 @@ class CVodeSolver : public Solver {
 
   protected:
     
-    const Model_ODE *model;
-    
     void init(AmiVector x, AmiVector dx, realtype t) override;
 
     void binit(int which, AmiVector xB, AmiVector dxB, realtype t) override;
@@ -224,7 +221,7 @@ class CVodeSolver : public Solver {
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2);
-    
+
     friend class Model_ODE;
 };
 

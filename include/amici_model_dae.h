@@ -54,11 +54,12 @@ namespace amici {
                   const int ne, const int nJ, const int nw, const int ndwdx,
                   const int ndwdp, const int nnz, const int ubw, const int lbw,
                   const AMICI_o2mode o2mode, const std::vector<realtype> p,
-                  const std::vector<realtype> k, const std::vector<int> plist)
-        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist){}
+                  const std::vector<realtype> k, const std::vector<int> plist,
+                  const std::vector<realtype> idlist, const std::vector<int> z2event)
+        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
-        virtual void fJwrap(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, DlsMat J, const UserData *user_data) = 0;
+        virtual void fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
+                        AmiVector xdot, DlsMat J)  override;
         
         /** model specific implementation for fJ
          * @param[out] J Matrix to which the Jacobian will be written
@@ -96,7 +97,7 @@ namespace amici {
         }
 
         virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, SlsMat J, IDASolver *solver);
+                              AmiVector xdot, SlsMat J) override;
         
         /** model specific implementation for fJSparse
          * @param[out] J Matrix to which the Jacobian will be written
@@ -135,7 +136,7 @@ namespace amici {
         }
 
         virtual int fJDiag(realtype t, AmiVector JDiag, realtype cj, AmiVector x,
-                            AmiVector dx, IDASolver *solver);
+                            AmiVector dx) override;
         
         virtual int model_JDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                 const realtype *dx, const realtype *w, const realtype *dwdx){
@@ -144,7 +145,7 @@ namespace amici {
         }
         
         virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                             AmiVector v, AmiVector nJv, realtype cj, IDASolver *solver);
+                         AmiVector v, AmiVector nJv, realtype cj) override;
         
         /** model specific implementation for fJv
          * @param[out] Jv Matrix vector product of J with a vector v
@@ -188,8 +189,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root,
-                               IDASolver *solver);
+        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root) override;
         
         /** model specific implementation for froot
          * @param[out] root values of the trigger function
@@ -206,8 +206,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                               IDASolver *solver);
+        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot) override;
         
         /** model specific implementation for fxdot
          * @param[out] xdot residual function
@@ -264,7 +263,11 @@ namespace amici {
             
         }
         
-        void fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
+        int fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
+        
+        virtual int fdxdotdp(realtype t, AmiVector x, AmiVector dx) override {
+            return fdxdotdp(t,x.getNVector(),dx.getNVector());
+        };
         
         /** model specific implementation of fdxdotdp
          * @param[out] dxdotdp partial derivative xdot wrt p
@@ -315,6 +318,8 @@ namespace amici {
          */
         virtual void model_M(realtype *M, const realtype t, const realtype *x, const realtype *p,
                              const realtype *k) {};
+        
+        virtual Solver *getSolver() override;
         
         friend class IDASolver;
     };

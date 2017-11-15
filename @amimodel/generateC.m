@@ -62,6 +62,8 @@ fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
+fprintf(fid,'#include <include/amici_defines.h>\n');
+fprintf(fid,'#include <include/udata.h>\n');
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
     fprintf(fid,'#include <include/amici_model_ode.h>\n');
@@ -78,9 +80,16 @@ fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'amici::UserData getUserData();\n');
-fprintf(fid,'amici::Solver *getSolver();\n');
-fprintf(fid,'amici::Model *getModel();\n');
+fprintf(fid,'amici::Model *getModel(const amici::UserData *udata);\n');
+fprintf(fid,'void getModelDims(int *nx, int *nk, int *np);\n\n');
+for ifun = this.funs
+    if(~isfield(this.fun,ifun{1}))
+        this.fun(1).(ifun{1}) = amifun(ifun{1},this); % don't use getfun here
+        % as we do not want symbolics to be generated, we only want to be able 
+        % access argstr
+    end
+    fprintf(fid,['extern void ' ifun{1} '_' this.modelname this.fun.(ifun{1}).argstr ';\n']);
+end
 
 % Subclass Model
 fprintf(fid,'\n');
@@ -92,7 +101,7 @@ end
 
 fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.np) ',\n']);
+fprintf(fid,['    Model_' this.modelname '(const amici::UserData *udata) : amici::' baseclass '(' num2str(this.np) ',\n']);
 fprintf(fid,['                    ' num2str(this.nx) ',\n']);
 fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.nk) ',\n']);
@@ -110,34 +119,35 @@ fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
 switch(this.o2flag)
     case 1
-        fprintf(fid,'                    amici::AMICI_O2MODE_FULL)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_FULL,\n');
     case 2
-        fprintf(fid,'                    amici::AMICI_O2MODE_DIR)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_DIR,\n');
     otherwise
-        fprintf(fid,'                    amici::AMICI_O2MODE_NONE)\n');
+        fprintf(fid,'                    amici::AMICI_O2MODE_NONE,\n');
 end
-fprintf(fid,'    {\n');
-fprintf(fid,['        z2event = new int[' num2str(this.nz) '] {' num2str(transpose(this.z2event), '%d, ') '};\n']);
-fprintf(fid,['        idlist = new realtype[' num2str(this.nx) '] {' num2str(transpose(double(this.id)), '%d, ') '};\n']);
-fprintf(fid,'    }\n\n');
+fprintf(fid,['                    std::vector<realtype>(udata->p(),udata->p()+' num2str(this.np) '),\n']);
+fprintf(fid,['                    std::vector<realtype>(udata->k(),udata->k()+' num2str(this.nk) '),\n']);
+fprintf(fid,'                    udata->plist(),\n');
+initstr = num2str(transpose(double(this.id)), '%d, ');
+fprintf(fid,['                    std::vector<realtype>{' initstr(1:end-1) '},\n']);
+initstr = num2str(transpose(this.z2event), '%d, ');
+fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
+fprintf(fid,['                    {};\n\n']);
 
 for ifun = this.funs
-    if(~isfield(this.fun,ifun{1}))
-        this.fun(1).(ifun{1}) = amifun(ifun{1},this); % don't use getfun here
-        % as we do not want symbolics to be generated, we only want to be able 
-        % access argstr
+    if(ismember(ifun{1},{'JB','JSparse','JSparseB','JDiag','Jv','JvB','dxdotdp','qBdot','root','sxdot','xBdot'}))
+        ftype = 'int';
+        returnstr = '        return AMICI_SUCCESS;\n';
+    else
+        ftype = 'void';
+        returnstr = '';
     end
-    fprintf(fid,['    void ' ifun{1} '_' this.modelname  this.fun.(ifun{1}).argstr ';\n']);
-    fprintf(fid,['    void model_' ifun{1} ' = &' ifun{1} '_' this.modelname ';\n\n']);
+    fprintf(fid,['    virtual ' ftype ' model_' ifun{1} this.fun.(ifun{1}).argstr ' override {\n']);
+    fprintf(fid,['        ' ifun{1} '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
+    fprintf(fid,returnstr);
+    fprintf(fid,'    }\n\n');
 end
-
-fprintf(fid,'    amici::Solver *getSolver() override {\n');
-if(strcmp(this.wtype,'iw'))
-    fprintf(fid, '        return new amici::IDASolver();\n');
-else
-    fprintf(fid, '        return new amici::CVodeSolver();\n');
-end
-fprintf(fid,'    }\n\n');
+fprintf(fid,'};\n\n');
 
 fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
@@ -145,9 +155,14 @@ fclose(fid);
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 fprintf(fid,'#include <include/amici_model.h>\n');
-fprintf(fid,'#include "wrapfunctions.h"\n');
-fprintf(fid,'Model *getModel() {\n');
-    fprintf(fid, ['    return new Model_' this.modelname '();\n']);
+fprintf(fid,'#include "wrapfunctions.h"\n\n');
+fprintf(fid,'amici::Model *getModel(const amici::UserData *udata) {\n');
+fprintf(fid, ['    return new Model_' this.modelname '(udata);\n']);
+fprintf(fid,'}\n\n');
+fprintf(fid,'void getModelDims(int *nx, int *nk, int *np) {\n');
+fprintf(fid, ['    *nx = ' num2str(this.nx) ';\n']);
+fprintf(fid, ['    *nk = ' num2str(this.nk) ';\n']);
+fprintf(fid, ['    *np = ' num2str(this.np) ';\n']);
 fprintf(fid,'}\n\n');
 fclose(fid);
 
@@ -174,14 +189,8 @@ function argstr = removeTypes(argstr)
 
 argstr = strrep(argstr,'realtype','');
 argstr = strrep(argstr,'int','');
-argstr = strrep(argstr,'void','');
-argstr = strrep(argstr,'amici::TempData','');
-argstr = strrep(argstr,'amici::ReturnData','');
-argstr = strrep(argstr,'const amici::ExpData','');
-argstr = strrep(argstr,'N_Vector','');
-argstr = strrep(argstr,'long','');
-argstr = strrep(argstr,'DlsMat','');
-argstr = strrep(argstr,'SlsMat','');
+argstr = strrep(argstr,'const','');
+argstr = strrep(argstr,'double','');
 argstr = strrep(argstr,'*','');
 argstr = strrep(argstr,' ','');
 argstr = strrep(argstr,',',', ');

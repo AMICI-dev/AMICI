@@ -807,7 +807,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      */
     void Model::fw(const realtype t, const N_Vector x) {
         std::fill(w.begin(),w.end(),0.0);
-        model_w(w.data(),t,N_VGetArrayPointer(x),p.data(),k.data());
+        model_w(w.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data());
     }
     
     /**
@@ -818,7 +818,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fdwdp(const realtype t, const N_Vector x) {
         fw(t,x);
         std::fill(dwdp.begin(),dwdp.end(),0.0);
-        model_dwdp(dwdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),w.data());
+        model_dwdp(dwdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),w.data());
     }
     
     /**
@@ -829,7 +829,7 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     void Model::fdwdx(const realtype t, const N_Vector x) {
         fw(t,x);
         std::fill(dwdx.begin(),dwdx.end(),0.0);
-        model_dwdx(dwdx.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),w.data());
+        model_dwdx(dwdx.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),w.data());
     }
     
     /** create my slice at timepoint

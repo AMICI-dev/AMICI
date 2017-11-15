@@ -84,13 +84,14 @@ enum mexRhsArguments {
  * @return udata pointer to user data object @type UserData
  */
 template <class mxArray>
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
-                                 Model *model) {
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
     if (nrhs < RHS_NUMARGS_REQUIRED) {
         throw AmiException("Incorrect number of input arguments (must be at least 7)!");  \
     };
 
-    UserData *udata = new UserData(model->np, model->nk, model->nx);
+    int nx,nk,np;
+    getModelDims(&nx,&nk,&np);
+    UserData *udata = new UserData(np, nk, nx);
 
     /* time */
     if (prhs[RHS_TIMEPOINTS] &&
@@ -106,7 +107,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     if (udata->np() > 0) {
         if (mxGetPr(prhs[RHS_PARAMETERS])) {
             if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
-                model->np) {
+                np) {
                 udata->setParameters(mxGetPr(prhs[RHS_PARAMETERS]));
             } else {
                 throw AmiException("Provided parameter vector has incorrect length!");
@@ -117,10 +118,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* constants */
-    if (model->nk > 0) {
+    if (nk > 0) {
         if (mxGetPr(prhs[RHS_CONSTANTS])) {
             if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
-                model->nk) {
+                nk) {
                 udata->setConstants(mxGetPr(prhs[RHS_CONSTANTS]));
             } else {
                 throw AmiException("Provided constant vector has incorrect length!");
@@ -204,7 +205,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model->nx) {
+            if (mxGetM(x0) != nx) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -221,7 +222,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
                                    "does not agree with number of "
                                    "model parameters!");
             }
-            if (mxGetM(sx0) != model->nx) {
+            if (mxGetM(sx0) != nx) {
                 throw AmiException("Number of columns in sx0 "
                                    "field does not agree with "
                                    "number of model states!");
@@ -474,12 +475,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
     }
     
-    auto model = std::unique_ptr<amici::Model>(getModel());
-    if (!model)
-        amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to create model object!");
+
     
     try{
-        auto udata = std::unique_ptr<const amici::UserData>(userDataFromMatlabCall(prhs, nrhs, model.get()));
+        auto udata = std::unique_ptr<const amici::UserData>(amici::userDataFromMatlabCall(prhs, nrhs));
+        
+        auto model = std::unique_ptr<amici::Model>(getModel(udata.get()));
         
         
         auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));

@@ -10,8 +10,7 @@ namespace amici {
 
 class IDASolver : public Solver {
   public:
-    IDASolver(const Model_DAE *model){
-        this->model = model;
+    IDASolver(){
     };
 
     void *AMICreate(int lmm, int iter) override;
@@ -142,8 +141,6 @@ class IDASolver : public Solver {
 
   protected:
     
-    const Model_DAE *model;
-    
     void init(AmiVector x, AmiVector dx, realtype t) override;
 
     void binit(int which, AmiVector xB, AmiVector dxB, realtype t) override;
@@ -219,7 +216,7 @@ class IDASolver : public Solver {
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-    
+
     friend class Model_DAE;
 };
 

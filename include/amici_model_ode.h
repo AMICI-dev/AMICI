@@ -50,11 +50,12 @@ namespace amici {
                   const int ne, const int nJ, const int nw, const int ndwdx,
                   const int ndwdp, const int nnz, const int ubw, const int lbw,
                   const AMICI_o2mode o2mode, const std::vector<realtype> p,
-                  const std::vector<realtype> k, const std::vector<int> plist)
-        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist){}
+                  const std::vector<realtype> k, const std::vector<int> plist,
+                  const std::vector<realtype> idlist, const std::vector<int> z2event)
+        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
         virtual void fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                        AmiVector xdot, DlsMat J, CVodeSolver *solver);
+                        AmiVector xdot, DlsMat J) override;
         
         /** model specific implementation for fJ
          * @param[out] J Matrix to which the Jacobian will be written
@@ -89,7 +90,7 @@ namespace amici {
         }
         
         virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                                  AmiVector xdot, SlsMat J, CVodeSolver *solver);
+                                  AmiVector xdot, SlsMat J) override;
         
         /** model specific implementation for fJSparse
          * @param[out] J Matrix to which the Jacobian will be written
@@ -139,11 +140,11 @@ namespace amici {
             return AMICI_ERROR;
         }
         
-        int fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
-                                AmiVector dx, CVodeSolver *solver);
+        virtual int fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
+                                AmiVector dx) override;
         
         virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                             AmiVector v, AmiVector nJv, realtype cj, CVodeSolver *solver);
+                             AmiVector v, AmiVector nJv, realtype cj) override;
         
         /** model specific implementation for fJv
          * @param[out] Jv Matrix vector product of J with a vector v
@@ -183,7 +184,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root, CVodeSolver *solver);
+        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root) override;
         
         /** model specific implementation for froot
          * @param[out] root values of the trigger function
@@ -198,7 +199,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot, CVodeSolver *solver);
+        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot) override;
         
         /** model specific implementation for fxdot
          * @param[out] xdot residual function
@@ -250,6 +251,10 @@ namespace amici {
         
         int fdxdotdp(const realtype t, const N_Vector x);
         
+        virtual int fdxdotdp(realtype t, AmiVector x, AmiVector dx) override {
+            return fdxdotdp(t,x.getNVector());
+        };
+        
         /** model specific implementation of fdxdotdp
          * @param[out] dxdotdp partial derivative xdot wrt p
          * @param[in] t timepoint
@@ -284,6 +289,8 @@ namespace amici {
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         };
+        
+        virtual Solver *getSolver() override;
         
         friend class CVodeSolver;
     };
