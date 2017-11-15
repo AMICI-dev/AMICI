@@ -600,7 +600,6 @@ void CVodeSolver::turnOffRootFinding() {
         memset(N_VGetArrayPointer(JDiag),0.0,sizeof(realtype)*nx);
         if(!model->model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p,model->k,model->h,
                         cj,N_VGetArrayPointer(dx),w.data(),dwdx.data()))
-        return AMICI_ERROR;
         return checkVals(nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
     

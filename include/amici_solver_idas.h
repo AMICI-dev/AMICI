@@ -169,6 +169,58 @@ class IDASolver : public Solver {
     void setBandJacFnB(int which) override;
 
     void setJacTimesVecFnB(int which) override;
+    
+    static int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx,
+                  N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
+                  N_Vector tmp2, N_Vector tmp3);
+    
+    static int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
+                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
+                   N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
+    static int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                         SlsMat JB, void *user_data, N_Vector tmp1B,
+                         N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj,
+                      N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data,
+                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    
+    
+    static int fJBandB(long int NeqBdot, long int mupper, long int mlower,
+                       realtype t, realtype cj, N_Vector x, N_Vector dx,
+                       N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                       DlsMat JB, void *user_data, N_Vector tmp1B,
+                       N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
+                   realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
+    
+    static int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                    N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
+                    N_Vector tmpB1, N_Vector tmpB2);
+    
+    static int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
+                     void *user_data);
+    
+    static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
+                     void *user_data);
+    
+    static int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                      N_Vector dxB, N_Vector xBdot, void *user_data);
+    
+    static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                      void *user_data);
+    
+    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
+                      N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
+                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    
+    friend class Model_DAE;
 };
 
 } // namespace amici

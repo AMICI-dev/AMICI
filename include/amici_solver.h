@@ -718,7 +718,7 @@ protected:
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
     
-    int checkVals(const int N,const realtype *array, const char* fun){
+    static int checkVals(const int N,const realtype *array, const char* fun){
         for(int idx = 0; idx < N; idx++) {
             if(amiIsNaN(array[idx])) {
                 warnMsgIdAndTxt("AMICI:mex:fJDiag:NaN","AMICI replaced a NaN value at index (%i) of (%i) in (%s)! Aborting simulation ... ",idx,N,fun);

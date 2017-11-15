@@ -867,6 +867,9 @@ namespace amici {
         const std::vector<realtype> p;
         const std::vector<realtype> k;
         const std::vector<int> plist;
+        
+        friend class IDASolver;
+        friend class CVodeSolver;
     };
     
 } // namespace amici

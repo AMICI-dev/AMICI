@@ -285,6 +285,8 @@ namespace amici {
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
             return AMICI_ERROR;
         };
+        
+        friend class CVodeSolver;
     };
     
 } // namespace amici
