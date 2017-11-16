@@ -42,7 +42,7 @@ namespace amici {
                           AmiVector *dx) {
         fdwdx(t,x->getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        if(!model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),w.data(),dwdx.data()))
+        if(model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),w.data(),dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return CVodeSolver::checkVals(nx,JDiag->data(),"Jacobian");
     }
@@ -57,8 +57,8 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
         for(int ip = 1; ip < nplist; ip++)
-            if(!model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-                          plist[ip],w.data(),dwdp.data()))
+            if(model_dxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+                          plist[ip],w.data(),dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
         return AMICI_SUCCESS;
     }

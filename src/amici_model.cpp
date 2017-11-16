@@ -407,7 +407,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         getx(it,rdata);
         std::fill(dydp.begin(),dydp.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
-            model_dydp(dydp.data(),gett(it,rdata),x.data(),p.data(),k.data(),h.data(),plist.at(ip));
+            model_dydp(&dydp.at(ip*ny),gett(it,rdata),x.data(),p.data(),k.data(),h.data(),plist.at(ip));
         }
     }
     
@@ -522,7 +522,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                           const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltasx.begin(),deltasx.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++)
-            model_deltasx(&deltasx[nx*ip],t,x->data(),p.data(),k.data(),h.data(),
+            model_deltasx(&deltasx.at(nx*ip),t,x->data(),p.data(),k.data(),h.data(),
                           plist.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),stau.data());
     }
     
@@ -556,9 +556,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
              is NaN, use
              the parameter value. Store this value in the return struct */
             if (!amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
-                sigmay[iy] = edata->sigmay[iy * rdata->nt + it];
+                sigmay.at(iy) = edata->sigmay[iy * rdata->nt + it];
             }
-            rdata->sigmay[iy * rdata->nt + it] = sigmay[iy];
+            rdata->sigmay[iy * rdata->nt + it] = sigmay.at(iy);
         }
     }
     
@@ -577,7 +577,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         std::fill(sigmaz.begin(),sigmaz.end(),0.0);
         model_sigma_z(sigmaz.data(),t,p.data(),k.data());
         for (int iz = 0; iz < nztrue; iz++) {
-            if (z2event[iz] - 1 == ie) {
+            if (z2event.at(iz) - 1 == ie) {
                 if (!amiIsNaN(edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz])) {
                     sigmaz.at(iz) = edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz];
                 }

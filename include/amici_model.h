@@ -85,6 +85,7 @@ namespace amici {
         dJzdsigmaTmp(nJ * nz, 0.0),
         dJrzdsigmaTmp(nJ * nz, 0.0),
         x(nx, 0.0),
+        sx(np, std::vector<double>(nx, 0.0)),
         y(ny, 0.0),
         my(nytrue, 0.0),
         z(nz, 0.0),
@@ -154,34 +155,34 @@ namespace amici {
         void fx0(AmiVector *x, const UserData *udata);
         
         /** model specific implementation of fx0
-         * param[out] sx0 initial state sensitivities
-         * param[in] t initial time
-         * param[in] x0 initial state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip parameter index
+         * param sx0 initial state sensitivities
+         * param t initial time
+         * param x0 initial state
+         * param p parameter vector
+         * param k constant vector
+         * param ip parameter index
          **/
         virtual void model_x0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
         /** Initial value for time derivative of states (only necessary for DAEs)
-         * @param[in] x0 Vector with the initial states @type N_Vector
-         * @param[out] dx0 Vector to which the initial derivative states will be
+         * @param x0 Vector with the initial states @type N_Vector
+         * @param dx0 Vector to which the initial derivative states will be
          *written (only DAE) @type N_Vector
-         * @param[in] user_data object with model specifications @type TempData
+         * @param user_data object with model specifications @type TempData
          **/
         virtual void fdx0(AmiVector *x0, AmiVector *dx0) {};
         
         void fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata);
         
         /** model specific implementation of fsx0
-         * param[out] sx0 initial state sensitivities
-         * param[in] t initial time
-         * param[in] x0 initial state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip sensitivity index
+         * param sx0 initial state sensitivities
+         * param t initial time
+         * param x0 initial state
+         * param p parameter vector
+         * param k constant vector
+         * param ip sensitivity index
          **/
         virtual void model_sx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -190,21 +191,21 @@ namespace amici {
         
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *necessary for DAEs)
-         * @param[in] udata object with user input
+         * @param udata object with user input
          **/
         virtual void fsdx0() {};
         
         void fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx);
         
         /** model specific implementation of fstau
-         * param[out] stau total derivative of event timepoint
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] sx current state sensitivity
-         * param[in] ip sensitivity index
-         * param[in] ie event index
+         * param stau total derivative of event timepoint
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param sx current state sensitivity
+         * param ip sensitivity index
+         * param ie event index
          **/
         virtual void model_stau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -213,11 +214,11 @@ namespace amici {
         void fy(int it, ReturnData *rdata);
         
         /** model specific implementation of fy
-         * param[out] y model output at current timepoint
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param y model output at current timepoint
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_y(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -226,12 +227,12 @@ namespace amici {
         void fdydp(const int it, ReturnData *rdata);
         
         /** model specific implementation of fdydp
-         * param[out] dydp partial derivative of observables y w.r.t. model parameters p
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip parameter index w.r.t. which the derivative is requested
+         * param dydp partial derivative of observables y w.r.t. model parameters p
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_dydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -240,11 +241,11 @@ namespace amici {
         void fdydx(const int it, ReturnData *rdata);
         
         /** model specific implementation of fdydx
-         * param[out] dydx partial derivative of observables y w.r.t. model states x
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param dydx partial derivative of observables y w.r.t. model states x
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_dydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -253,11 +254,11 @@ namespace amici {
         void fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
         /** model specific implementation of fz
-         * param[out] z value of event output
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param z value of event output
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_z(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -266,13 +267,13 @@ namespace amici {
         void fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** model specific implementation of fsz
-         * param[out] sz Sensitivity of rz, total derivative
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] sx current state sensitivity
-         * param[in] ip sensitivity index
+         * param sz Sensitivity of rz, total derivative
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param sx current state sensitivity
+         * param ip sensitivity index
          **/
         virtual void model_sz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -281,11 +282,11 @@ namespace amici {
         void frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
         /** model specific implementation of frz
-         * param[out] rz value of root function at current timepoint (non-output events not included)
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param rz value of root function at current timepoint (non-output events not included)
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_rz(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -294,13 +295,13 @@ namespace amici {
         void fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** model specific implementation of fsrz
-         * param[out] srz Sensitivity of rz, total derivative
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] sx current state sensitivity
-         * param[in] ip sensitivity index
+         * param srz Sensitivity of rz, total derivative
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param sx current state sensitivity
+         * param ip sensitivity index
          **/
         virtual void model_srz(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -309,12 +310,12 @@ namespace amici {
         void fdzdp(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdp
-         * param[out] dzdp partial derivative of event-resolved output z w.r.t. model parameters p
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip parameter index w.r.t. which the derivative is requested
+         * param dzdp partial derivative of event-resolved output z w.r.t. model parameters p
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_dzdp(double *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -323,11 +324,11 @@ namespace amici {
         void fdzdx(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdx
-         * param[out] dzdx partial derivative of event-resolved output z w.r.t. model states x
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param dzdx partial derivative of event-resolved output z w.r.t. model states x
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_dzdx(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -336,12 +337,12 @@ namespace amici {
         void fdrzdp(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdp
-         * param[out] drzdp partial derivative of root output rz w.r.t. model parameters p
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip parameter index w.r.t. which the derivative is requested
+         * param drzdp partial derivative of root output rz w.r.t. model parameters p
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ip parameter index w.r.t. which the derivative is requested
          **/
         virtual void model_drzdp(double *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -350,11 +351,11 @@ namespace amici {
         void fdrzdx(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdrzdx
-         * param[out] drzdx partial derivative of root output rz w.r.t. model states x
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param drzdx partial derivative of root output rz w.r.t. model states x
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_drzdx(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -364,14 +365,14 @@ namespace amici {
                              const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltax
-         * param[out] deltax state update
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ie event index
-         * param[in] xdot new model right hand side
-         * param[in] xdot_old previous model right hand side
+         * param deltax state update
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ie event index
+         * param xdot new model right hand side
+         * param xdot_old previous model right hand side
          **/
         virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                  const int ie, const realtype *xdot, const realtype *xdot_old) {
@@ -382,17 +383,17 @@ namespace amici {
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltasx
-         * param[out] deltasx sensitivity update
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip sensitivity index
-         * param[in] ie event index
-         * param[in] xdot new model right hand side
-         * param[in] xdot_old previous model right hand side
-         * param[in] sx state sensitivity
-         * param[in] stau event-time sensitivity
+         * param deltasx sensitivity update
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ip sensitivity index
+         * param ie event index
+         * param xdot new model right hand side
+         * param xdot_old previous model right hand side
+         * param sx state sensitivity
+         * param stau event-time sensitivity
          **/
         virtual void model_deltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                    const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx,
@@ -404,15 +405,15 @@ namespace amici {
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltaxB
-         * param[out] deltaxB adjoint state update
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ie event index
-         * param[in] xdot new model right hand side
-         * param[in] xdot_old previous model right hand side
-         * param[in] xB current adjoint state
+         * param deltaxB adjoint state update
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ie event index
+         * param xdot new model right hand side
+         * param xdot_old previous model right hand side
+         * param xB current adjoint state
          **/
         virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
@@ -423,17 +424,17 @@ namespace amici {
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltasx
-         * param[out] deltasx sensitivity update
-         * param[in] t current time
-         * param[in] x current state
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] ip sensitivity index
-         * param[in] ie event index
-         * param[in] xdot new model right hand side
-         * param[in] xdot_old previous model right hand side
-         * param[in] xB adjoint state
-         * param[in] qBdot right hand side of quadradature
+         * param deltasx sensitivity update
+         * param t current time
+         * param x current state
+         * param p parameter vector
+         * param k constant vector
+         * param ip sensitivity index
+         * param ie event index
+         * param xdot new model right hand side
+         * param xdot_old previous model right hand side
+         * param xB adjoint state
+         * param qBdot right hand side of quadradature
          **/
         virtual void model_deltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                    const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
@@ -443,10 +444,10 @@ namespace amici {
         void fsigma_y(const int it, const ExpData *edata, ReturnData *rdata);
         
         /** model specific implementation of fsigmay
-         * param[out] sigmay standard deviation of measurements
-         * param[in] t current time
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param sigmay standard deviation of measurements
+         * param t current time
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_sigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -455,10 +456,10 @@ namespace amici {
         void fdsigma_ydp(const int it, const ReturnData *rdata);
         
         /** model specific implementation of fsigmay
-         * param[out] dsigmaydp partial derivative of standard deviation of measurements
-         * param[in] t current time
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param dsigmaydp partial derivative of standard deviation of measurements
+         * param t current time
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_dsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -468,10 +469,10 @@ namespace amici {
                       const ExpData *edata, ReturnData *rdata);
         
         /** model specific implementation of fsigmaz
-         * param[out] sigmaz standard deviation of event measurements
-         * param[in] t current time
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param sigmaz standard deviation of event measurements
+         * param t current time
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_sigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -480,10 +481,10 @@ namespace amici {
         void fdsigma_zdp(const realtype t);
         
         /** model specific implementation of fsigmaz
-         * param[out] dsigmazdp partial derivative of standard deviation of event measurements
-         * param[in] t current time
-         * param[in] p parameter vector
-         * param[in] k constant vector
+         * param dsigmazdp partial derivative of standard deviation of event measurements
+         * param t current time
+         * param p parameter vector
+         * param k constant vector
          **/
         virtual void model_dsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -492,12 +493,12 @@ namespace amici {
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fJy
-         * param[out] nllh negative log-likelihood for measurements y
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] y model output at timepoint
-         * param[in] sigmay measurement standard deviation at timepoint
-         * param[in] my measurements at timepoint
+         * param nllh negative log-likelihood for measurements y
+         * param p parameter vector
+         * param k constant vector
+         * param y model output at timepoint
+         * param sigmay measurement standard deviation at timepoint
+         * param my measurements at timepoint
          **/
         virtual void model_Jy(double *nllh,const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -506,12 +507,12 @@ namespace amici {
         void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fJz
-         * param[out] nllh negative log-likelihood for event measurements z
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] z model event output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
-         * param[in] mz event measurements at timepoint
+         * param nllh negative log-likelihood for event measurements z
+         * param p parameter vector
+         * param k constant vector
+         * param z model event output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
+         * param mz event measurements at timepoint
          **/
         virtual void model_Jz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -520,11 +521,11 @@ namespace amici {
         void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fJrz
-         * param[out] nllh regularization for event measurements z
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] z model event output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
+         * param nllh regularization for event measurements z
+         * param p parameter vector
+         * param k constant vector
+         * param z model event output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
          **/
         virtual void model_Jrz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -533,12 +534,12 @@ namespace amici {
         void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJydy
-         * param[out] dJydy partial derivative of time-resolved measurement negative log-likelihood Jy
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] y model output at timepoint
-         * param[in] sigmay measurement standard deviation at timepoint
-         * param[in] my measurement at timepoint
+         * param dJydy partial derivative of time-resolved measurement negative log-likelihood Jy
+         * param p parameter vector
+         * param k constant vector
+         * param y model output at timepoint
+         * param sigmay measurement standard deviation at timepoint
+         * param my measurement at timepoint
          **/
         virtual void model_dJydy(double *dJydy, const int iy, const realtype *p, const realtype *k,
                                  const double *y, const double *sigmay, const double *my) {
@@ -548,13 +549,13 @@ namespace amici {
         void fdJydsigma(const int it, const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJydsigma
-         * param[out] dJydsigma Sensitivity of time-resolved measurement 
+         * param dJydsigma Sensitivity of time-resolved measurement
          * negative log-likelihood Jy w.r.t. standard deviation sigmay
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] y model output at timepoint
-         * param[in] sigmaz measurement standard deviation at timepoint
-         * param[in] my measurement at timepoint
+         * param p parameter vector
+         * param k constant vector
+         * param y model output at timepoint
+         * param sigmaz measurement standard deviation at timepoint
+         * param my measurement at timepoint
          **/
         virtual void model_dJydsigma(double *dJydsigma, const int iy, const realtype *p, const realtype *k,
                                  const double *y, const double *sigmay, const double *my) {
@@ -564,12 +565,12 @@ namespace amici {
         void fdJzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJzdz
-         * param[out] dJzdz partial derivative of event measurement negative log-likelihood Jz
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] z model event output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
-         * param[in] mz event measurement at timepoint
+         * param dJzdz partial derivative of event measurement negative log-likelihood Jz
+         * param p parameter vector
+         * param k constant vector
+         * param z model event output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
+         * param mz event measurement at timepoint
          **/
         virtual void model_dJzdz(double *dJzdz, const int iz, const realtype *p, const realtype *k,
                                  const double *z, const double *sigmaz, const double *mz) {
@@ -579,13 +580,13 @@ namespace amici {
         void fdJzdsigma(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJzdsigma
-         * param[out] dJzdsigma Sensitivity of event measurement
+         * param dJzdsigma Sensitivity of event measurement
          * negative log-likelihood Jz w.r.t. standard deviation sigmaz
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] z model event output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
-         * param[in] mz event measurement at timepoint
+         * param p parameter vector
+         * param k constant vector
+         * param z model event output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
+         * param mz event measurement at timepoint
          **/
         virtual void model_dJzdsigma(double *dJzdsigma, const int iz, const realtype *p, const realtype *k,
                                      const double *z, const double *sigmaz, const double *mz) {
@@ -595,11 +596,11 @@ namespace amici {
         void fdJrzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJrzdz
-         * param[out] dJrzdz partial derivative of event penalization Jrz
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] rz model root output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
+         * param dJrzdz partial derivative of event penalization Jrz
+         * param p parameter vector
+         * param k constant vector
+         * param rz model root output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
          **/
         virtual void model_dJrzdz(double *dJrzdz, const int iz, const realtype *p, const realtype *k,
                                  const double *rz, const double *sigmaz) {
@@ -609,12 +610,12 @@ namespace amici {
         void fdJrzdsigma(const int nroots,const ReturnData *rdata, const ExpData *edata);
         
         /** model specific implementation of fdJrzdsigma
-         * param[out] dJzdsigma Sensitivity of event penalization Jz w.r.t.
+         * param dJzdsigma Sensitivity of event penalization Jz w.r.t.
          * standard deviation sigmaz
-         * param[in] p parameter vector
-         * param[in] k constant vector
-         * param[in] rz model root output at timepoint
-         * param[in] sigmaz event measurement standard deviation at timepoint
+         * param p parameter vector
+         * param k constant vector
+         * param rz model root output at timepoint
+         * param sigmaz event measurement standard deviation at timepoint
          **/
         virtual void model_dJrzdsigma(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k,
                                      const double *rz, const double *sigmaz) {
@@ -725,7 +726,7 @@ namespace amici {
              was found)
              */
             for (int ie = 0; ie < ne; ie++) {
-                h[ie] += rootsfound.at(ie);
+                h.at(ie) += rootsfound.at(ie);
             }
         }
         
@@ -739,18 +740,18 @@ namespace amici {
              was found)
              */
             for (int ie = 0; ie < ne; ie++) {
-                h[ie] -= rootsfound[ie];
+                h.at(ie) -= rootsfound[ie];
             }
         }
         
         void fw(const realtype t, const N_Vector x);
         
         /** model specific implementation of fw
-         * @param[out] w Recurring terms in xdot
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
+         * @param w Recurring terms in xdot
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
          */
         virtual void model_w(realtype *w, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h) {};
@@ -758,12 +759,12 @@ namespace amici {
         void fdwdp(const realtype t, const N_Vector x);
         
         /** model specific implementation of dwdp
-         * @param[out] dwdp Recurring terms in xdot, parameter derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] w vector with helper variables
+         * @param dwdp Recurring terms in xdot, parameter derivative
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param w vector with helper variables
          */
         virtual void model_dwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h, const realtype *w) {};
@@ -771,12 +772,12 @@ namespace amici {
         void fdwdx(const realtype t, const N_Vector x);
         
         /** model specific implementation of dwdx
-         * @param[out] dwdx Recurring terms in xdot, state derivative
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] w vector with helper variables
+         * @param dwdx Recurring terms in xdot, state derivative
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param w vector with helper variables
          */
         virtual void model_dwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h, const realtype *w) {};
