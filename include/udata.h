@@ -173,6 +173,10 @@ class UserData {
         return par.data();
     };
     
+    const double *unp() const{
+        return unpar.data();
+    };
+    
     const double *k() const{
         return konst.data();
     };
@@ -245,6 +249,9 @@ private:
     const int sizex;
     /** parameter array (size np) */
     std::vector<double>par;
+    
+    /** unscaled parameter array (size np) */
+    std::vector<double>unpar;
     
     /** constants array (size nk) */
     std::vector<double>konst;

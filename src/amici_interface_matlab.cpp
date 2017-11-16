@@ -102,6 +102,33 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
     } else {
         throw AmiException("No valid time vector provided!");
     }
+    
+    /* options */
+    if (mxGetPr(prhs[RHS_OPTIONS])) {
+        readOptionScalar(nmaxevent, int);
+        readOptionScalar(tstart, double);
+        readOptionScalar(atol, double);
+        readOptionScalar(rtol, double);
+        readOptionScalar(maxsteps, int);
+        readOptionScalar(lmm, LinearMultistepMethod);
+        readOptionScalar(iter, NonlinearSolverIteration);
+        readOptionScalar(interpType, InterpolationType);
+        readOptionScalar(linsol, LinearSolver);
+        readOptionScalar(stldet, booleantype);
+        readOptionData(qpositivex);
+        readOptionScalar(sensi, AMICI_sensi_order);
+        // this needs to be set before we set parameters to obtain properly unscaled parameters
+        readOptionScalar(pscale, AMICI_parameter_scaling);
+        readOptionScalar(ism, InternalSensitivityMethod);
+        readOptionScalar(sensi_meth, AMICI_sensi_meth);
+        readOptionScalar(ordering, StateOrdering);
+        readOptionScalar(newton_preeq, int);
+        readOptionScalar(newton_precon, int);
+        readOptionScalar(newton_maxsteps, int);
+        readOptionScalar(newton_maxlinsteps, int);
+    } else {
+        throw AmiException("No options provided!");
+    }
 
     /* parameters */
     if (udata->np() > 0) {
@@ -129,32 +156,6 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
         } else {
             throw AmiException("No constant vector provided!");
         }
-    }
-
-    /* options */
-    if (mxGetPr(prhs[RHS_OPTIONS])) {
-        readOptionScalar(nmaxevent, int);
-        readOptionScalar(tstart, double);
-        readOptionScalar(atol, double);
-        readOptionScalar(rtol, double);
-        readOptionScalar(maxsteps, int);
-        readOptionScalar(lmm, LinearMultistepMethod);
-        readOptionScalar(iter, NonlinearSolverIteration);
-        readOptionScalar(interpType, InterpolationType);
-        readOptionScalar(linsol, LinearSolver);
-        readOptionScalar(stldet, booleantype);
-        readOptionData(qpositivex);
-        readOptionScalar(sensi, AMICI_sensi_order);
-        readOptionScalar(pscale, AMICI_parameter_scaling);
-        readOptionScalar(ism, InternalSensitivityMethod);
-        readOptionScalar(sensi_meth, AMICI_sensi_meth);
-        readOptionScalar(ordering, StateOrdering);
-        readOptionScalar(newton_preeq, int);
-        readOptionScalar(newton_precon, int);
-        readOptionScalar(newton_maxsteps, int);
-        readOptionScalar(newton_maxlinsteps, int);
-    } else {
-        throw AmiException("No options provided!");
     }
 
     /* plist */
@@ -474,17 +475,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nlhs != 1) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
     }
-    
 
-    
     try{
         auto udata = std::unique_ptr<const amici::UserData>(amici::userDataFromMatlabCall(prhs, nrhs));
         
         auto model = std::unique_ptr<amici::Model>(getModel(udata.get()));
-        
-        
+    
         auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));
-        
         
         /* ensures that plhs[0] is available */
         plhs[0] = rdata->matlabSolutionStruct;

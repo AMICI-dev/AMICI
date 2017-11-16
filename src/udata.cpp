@@ -9,6 +9,7 @@ UserData::UserData(const int np, const int nk, const int nx) : sizex(nx) {
     // these fields must always be initialized, others are optional or can be set later
     konst.resize(nk);
     par.resize(np);
+    unpar.resize(np);
     qpositivex.assign(nx,1);
 }
 
@@ -24,6 +25,7 @@ UserData::UserData(const UserData &other) : UserData(other.np(), other.nk(), oth
     qpositivex = other.qpositivex;
     p_index = other.p_index;
     par = other.par;
+    unpar = other.unpar;
     konst = other.konst;
     pscale = other.pscale;
     tstart = other.tstart;
@@ -87,6 +89,7 @@ void UserData::setTimepoints(const double * timepoints, int numTimepoints) {
 
 void UserData::setParameters(const double * parameters) {
     memcpy(par.data(), parameters, sizeof(double) * np());
+    unscaleParameters(unpar.data());
 }
 
 void UserData::setConstants(const double *constants) {

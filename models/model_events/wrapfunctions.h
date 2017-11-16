@@ -90,7 +90,7 @@ public:
                     0,
                     1,
                     amici::AMICI_O2MODE_NONE,
-                    std::vector<realtype>(udata->p(),udata->p()+4),
+                    std::vector<realtype>(udata->unp(),udata->unp()+4),
                     std::vector<realtype>(udata->k(),udata->k()+4),
                     udata->plist(),
                     std::vector<realtype>{0, 0, 0},

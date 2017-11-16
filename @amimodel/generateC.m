@@ -125,7 +125,7 @@ switch(this.o2flag)
     otherwise
         fprintf(fid,'                    amici::AMICI_O2MODE_NONE,\n');
 end
-fprintf(fid,['                    std::vector<realtype>(udata->p(),udata->p()+' num2str(this.np) '),\n']);
+fprintf(fid,['                    std::vector<realtype>(udata->unp(),udata->unp()+' num2str(this.np) '),\n']);
 fprintf(fid,['                    std::vector<realtype>(udata->k(),udata->k()+' num2str(this.nk) '),\n']);
 fprintf(fid,'                    udata->plist(),\n');
 initstr = num2str(transpose(double(this.id)), '%d, ');
