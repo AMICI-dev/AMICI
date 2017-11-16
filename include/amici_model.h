@@ -64,11 +64,11 @@ namespace amici {
         : np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
         nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode), nplist(plist.size()),
-        dJydy(nJ*nytrue*ny, 0.0),
         dJydp(nJ*nplist, 0.0),
+        dJydy(nJ*nytrue*ny, 0.0),
         dJydsigma(nJ*nytrue*ny, 0.0),
-        dJzdz(nJ*nztrue*nz, 0.0),
         dJzdp(nJ*nplist, 0.0),
+        dJzdz(nJ*nztrue*nz, 0.0),
         dJzdsigma(nJ*nztrue*nz, 0.0),
         dJrzdz(nJ*nztrue*nz, 0.0),
         dJrzdsigma(nJ*nztrue*nz, 0.0),
@@ -98,11 +98,11 @@ namespace amici {
         dwdx(ndwdx, 0.0),
         dwdp(ndwdp, 0.0),
         M(nx*nx, 0.0),
-        stau(nplist, 0.0),
         deltax(nx, 0.0),
         deltasx(nx*nplist, 0.0),
         deltaxB(nx, 0.0),
         deltaqB(nJ*nplist, 0.0),
+        stau(nplist, 0.0),
         h(ne,0.0),
         p(p),
         k(k),
@@ -128,26 +128,26 @@ namespace amici {
          */
         virtual Solver *getSolver() = 0;
         
-        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root) = 0;
+        virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) = 0;
         
-        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot) = 0;
+        virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) = 0;
         
-        virtual void fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, DlsMat J) = 0;
+        virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                              AmiVector *xdot, DlsMat J) = 0;
         
-        virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                            AmiVector xdot, SlsMat J) = 0;
+        virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                            AmiVector *xdot, SlsMat J) = 0;
         
-        virtual int fJDiag(realtype t, AmiVector Jdiag, realtype cj, AmiVector x,
-                                AmiVector dx) = 0;
+        virtual int fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,
+                                AmiVector *dx) = 0;
         
-        virtual int fdxdotdp(realtype t, AmiVector x, AmiVector dx) = 0;
+        virtual int fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) = 0;
         
-        virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                             AmiVector v, AmiVector nJv, realtype cj) = 0;
+        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
+                             AmiVector *v, AmiVector *nJv, realtype cj) = 0;
         
 
-        void fx0(AmiVector x, const UserData *udata);
+        void fx0(AmiVector *x, const UserData *udata);
         
         /** model specific implementation of fx0
          * param[out] sx0 initial state sensitivities
@@ -167,9 +167,9 @@ namespace amici {
          *written (only DAE) @type N_Vector
          * @param[in] user_data object with model specifications @type TempData
          **/
-        virtual void fdx0(AmiVector x0, AmiVector dx0) {};
+        virtual void fdx0(AmiVector *x0, AmiVector *dx0) {};
         
-        void fsx0(AmiVectorArray sx, const AmiVector x, const UserData *udata);
+        void fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata);
         
         /** model specific implementation of fsx0
          * param[out] sx0 initial state sensitivities
@@ -190,7 +190,7 @@ namespace amici {
          **/
         virtual void fsdx0() {};
         
-        void fstau(const int ie,const realtype t, const AmiVector x, const AmiVectorArray sx);
+        void fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx);
         
         /** model specific implementation of fstau
          * param[out] stau total derivative of event timepoint
@@ -246,7 +246,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata);
+        void fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
         /** model specific implementation of fz
          * param[out] z value of event output
@@ -259,7 +259,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fsz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata);
+        void fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** model specific implementation of fsz
          * param[out] sz Sensitivity of rz, total derivative
@@ -274,7 +274,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void frz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata);
+        void frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
         /** model specific implementation of frz
          * param[out] rz value of root function at current timepoint (non-output events not included)
@@ -287,7 +287,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fsrz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata);
+        void fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** model specific implementation of fsrz
          * param[out] srz Sensitivity of rz, total derivative
@@ -302,7 +302,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdzdp(const realtype t, const int ie, const AmiVector x);
+        void fdzdp(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdp
          * param[out] dzdp partial derivative of event-resolved output z w.r.t. model parameters p
@@ -316,7 +316,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdzdx(const realtype t, const int ie, const AmiVector x);
+        void fdzdx(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdx
          * param[out] dzdx partial derivative of event-resolved output z w.r.t. model states x
@@ -329,7 +329,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdrzdp(const realtype t, const int ie, const AmiVector x);
+        void fdrzdp(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdzdp
          * param[out] drzdp partial derivative of root output rz w.r.t. model parameters p
@@ -343,7 +343,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdrzdx(const realtype t, const int ie, const AmiVector x);
+        void fdrzdx(const realtype t, const int ie, const AmiVector *x);
         
         /** model specific implementation of fdrzdx
          * param[out] drzdx partial derivative of root output rz w.r.t. model states x
@@ -356,8 +356,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdeltax(const int ie, const realtype t, const AmiVector x,
-                             const AmiVector xdot, const AmiVector xdot_old);
+        void fdeltax(const int ie, const realtype t, const AmiVector *x,
+                             const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltax
          * param[out] deltax state update
@@ -374,8 +374,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdeltasx(const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx,
-                              const AmiVector xdot, const AmiVector xdot_old);
+        void fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
+                              const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltasx
          * param[out] deltasx sensitivity update
@@ -396,8 +396,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdeltaxB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                              const AmiVector xdot, const AmiVector xdot_old);
+        void fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
+                              const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltaxB
          * param[out] deltaxB adjoint state update
@@ -415,8 +415,8 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        void fdeltaqB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                              const AmiVector xdot, const AmiVector xdot_old);
+        void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
+                              const AmiVector *xdot, const AmiVector *xdot_old);
         
         /** model specific implementation of fdeltasx
          * param[out] deltasx sensitivity update
@@ -633,17 +633,17 @@ namespace amici {
         
         void fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
-        void fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray sx, const ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray *sx, const ReturnData *rdata);
         
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
         void fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void initialize(AmiVector x, AmiVector dx, const UserData *udata);
+        void initialize(AmiVector *x, AmiVector *dx, const UserData *udata);
         
-        void initializeStates(AmiVector x, const UserData *udata);
+        void initializeStates(AmiVector *x, const UserData *udata);
         
-        void initHeaviside(AmiVector x, AmiVector dx, const UserData *udata);
+        void initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata);
         
         // Model dimensions 
         int nplist;

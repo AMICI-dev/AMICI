@@ -12,7 +12,8 @@ namespace amici {
 
 BackwardProblem::BackwardProblem(ForwardProblem fwd) :
     xB(fwd.model->nx), xB_old(fwd.model->nx),
-    dxB(fwd.model->nx), xQB(fwd.model->nx), xQB_old(fwd.model->nx), sx(fwd.model->nx,fwd.udata->nplist())
+    dxB(fwd.model->nx), xQB(fwd.model->nx), xQB_old(fwd.model->nx), sx(fwd.model->nx,fwd.udata->nplist()),
+    x_disc(fwd.x_disc), xdot_disc(fwd.xdot_disc), xdot_old_disc(fwd.xdot_old_disc)
     {
         t = rdata->ts[rdata->nt-1];
         this->model = fwd.model;
@@ -22,8 +23,6 @@ BackwardProblem::BackwardProblem(ForwardProblem fwd) :
         nroots = fwd.nroots;
         iroot = fwd.iroot;
         discs = fwd.discs;
-        xdot_disc = fwd.xdot_disc;
-        xdot_old_disc = fwd.xdot_old_disc;
         rootidx = fwd.rootidx;
         dJydx = fwd.dJydx;
         dJzdx = fwd.dJzdx;
@@ -56,9 +55,9 @@ void BackwardProblem::workBackwardProblem() {
         if (tnext < t) {
             solver->AMISolveB(tnext, AMICI_NORMAL);
 
-            solver->AMIGetB(which, &t, xB,
-                                     dxB);
-            solver->AMIGetQuadB(which, &t, xQB);
+            solver->AMIGetB(which, &t, &xB,
+                                     &dxB);
+            solver->AMIGetQuadB(which, &t, &xQB);
         }
 
         /* handle discontinuity */
@@ -77,11 +76,11 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* reinit states */
-        solver->AMIReInitB(which, t, xB, dxB);
+        solver->AMIReInitB(which, t, &xB, &dxB);
 
-        solver->AMIQuadReInitB(which, xQB);
+        solver->AMIQuadReInitB(which, &xQB);
 
-        solver->AMICalcICB(which, t, xB, dxB);
+        solver->AMICalcICB(which, t, &xB, &dxB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
@@ -90,9 +89,9 @@ void BackwardProblem::workBackwardProblem() {
             /* solve for backward problems */
             solver->AMISolveB(udata->t0(), AMICI_NORMAL);
 
-            solver->AMIGetQuadB(which, &(t), xQB);
+            solver->AMIGetQuadB(which, &(t), &xQB);
 
-            solver->AMIGetB(which, &(t), xB, dxB);
+            solver->AMIGetB(which, &(t), &xB, &dxB);
         }
     }
     
@@ -151,9 +150,9 @@ void BackwardProblem::handleEventB(int iroot) {
 
         if (rootidx[iroot * model->ne + ie] != 0) {
 
-            model->fdeltaqB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot]);
+            model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
 
-            model->fdeltaxB(ie, t, x_disc[iroot],xB,xdot_disc[iroot], xdot_old_disc[iroot]);
+            model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
 
             for (int ix = 0; ix < model->nxtrue; ++ix) {
                 for (int iJ = 0; iJ < model->nJ; ++iJ) {

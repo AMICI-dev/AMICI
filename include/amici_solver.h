@@ -38,7 +38,7 @@ class Solver {
      * @param[in] tret time at which the sensitivities should be computed
      * @param[out] yySout vector with sensitivities @type N_Vector
      */
-    virtual void AMIGetSens(realtype *tret, AmiVectorArray yySout) = 0;
+    virtual void AMIGetSens(realtype *tret, AmiVectorArray *yySout) = 0;
 
     void getDiagnosis(const int it, ReturnData *rdata);
 
@@ -59,7 +59,7 @@ class Solver {
      * @param[in] yy0 new state variables @type N_Vector
      * @param[in] yp0 new derivative state variables (DAE only) @type N_Vector
      */
-    virtual void AMIReInit(realtype t0, AmiVector yy0, AmiVector yp0) = 0;
+    virtual void AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) = 0;
 
     /**
      * AMISensReInit reinitializes the state sensitivites in the solver after an
@@ -70,7 +70,7 @@ class Solver {
      * @param[in] ypS0 new derivative state sensitivities (DAE only) @type
      * N_Vector
      */
-    virtual void AMISensReInit(int ism, AmiVectorArray yS0, AmiVectorArray ypS0) = 0;
+    virtual void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
 
     /**
       * AMICalcIC calculates consistent initial conditions, assumes initial
@@ -81,7 +81,7 @@ class Solver {
       * @param[in] tdata pointer to the temporary data object @type TempData
       * @return status flag indicating success of execution @type int
       */
-    virtual void AMICalcIC(realtype tout1, AmiVector x, AmiVector dx) = 0;
+    virtual void AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) = 0;
 
     /**
       * AMICalcIBC calculates consistent initial conditions for the backwards
@@ -95,8 +95,8 @@ class Solver {
       * @param[in] dxB derivative states of final solution of the forward
      * problem (DAE only) @type N_Vector
       */
-    virtual void AMICalcICB(int which, realtype tout1, AmiVector xB,
-                           AmiVector dxB) = 0;
+    virtual void AMICalcICB(int which, realtype tout1, AmiVector *xB,
+                           AmiVector *dxB) = 0;
 
     /**
       * AMISolve solves the forward problem until a predefined timepoint
@@ -110,7 +110,7 @@ class Solver {
      * realtype
      * @return status flag indicating success of execution @type int
       */
-    virtual int AMISolve(realtype tout, AmiVector yret, AmiVector ypret,
+    virtual int AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
                          realtype *tret, int itask) = 0;
 
     /**
@@ -128,7 +128,7 @@ class Solver {
      * checkpoints @type realtype
      * @return status flag indicating success of execution @type int
       */
-    virtual int AMISolveF(realtype tout, AmiVector yret, AmiVector ypret,
+    virtual int AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
                           realtype *tret, int itask, int *ncheckPtr) = 0;
 
     /**
@@ -161,8 +161,8 @@ class Solver {
       * @param[in] ypB0 new adjoint derivative state variables (DAE only) @type
      * N_Vector
       */
-    virtual void AMIReInitB(int which, realtype tB0, AmiVector yyB0,
-                           AmiVector ypB0) = 0;
+    virtual void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
+                           AmiVector *ypB0) = 0;
 
     /**
       * AMIGetB returns the current adjoint states
@@ -173,8 +173,8 @@ class Solver {
       * @param[in] yp adjoint derivative state variables (DAE only) @type
      * N_Vector
       */
-    virtual void AMIGetB(int which, realtype *tret, AmiVector yy,
-                        AmiVector yp) = 0;
+    virtual void AMIGetB(int which, realtype *tret, AmiVector *yy,
+                        AmiVector *yp) = 0;
 
     /**
       * AMIGetQuadB returns the current adjoint states
@@ -183,7 +183,7 @@ class Solver {
       * @param[in] tret time at which the adjoint states should be computed
       * @param[in] qB adjoint quadrature state variables @type N_Vector
       */
-    virtual void AMIGetQuadB(int which, realtype *tret, AmiVector qB) = 0;
+    virtual void AMIGetQuadB(int which, realtype *tret, AmiVector *qB) = 0;
 
     /**
       * AMIReInitB reinitializes the adjoint states after an event occurence
@@ -191,7 +191,7 @@ class Solver {
       * @param[in] which identifier of the backwards problem @type int
       * @param[in] yQB0 new adjoint quadrature state variables @type N_Vector
       */
-    virtual void AMIQuadReInitB(int which, AmiVector yQB0) = 0;
+    virtual void AMIQuadReInitB(int which, AmiVector *yQB0) = 0;
 
     /**
       * turnOffRootFinding disables rootfinding
@@ -208,7 +208,7 @@ class Solver {
      * N_Vector
      * @param[in] t initial timepoint @type realtype
      */
-    virtual void init(AmiVector x, AmiVector dx, realtype t) = 0;
+    virtual void init(AmiVector *x, AmiVector *dx, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
 
@@ -221,7 +221,7 @@ class Solver {
      * @type N_Vector
      * @param[in] t final timepoint @type realtype
      */
-    virtual void binit(int which, AmiVector xB, AmiVector dxB, realtype t) = 0;
+    virtual void binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) = 0;
 
     // TODO: check if model has adjoint sensitivities, else return -1
 
@@ -232,7 +232,7 @@ class Solver {
      * @param[in] qBdot initial adjoint quadrature state variables @type
      * N_Vector
      */
-    virtual void qbinit(int which, AmiVector qBdot) = 0;
+    virtual void qbinit(int which, AmiVector *qBdot) = 0;
 
     /**
      * RootInit initialises the rootfinding for events
@@ -252,7 +252,7 @@ class Solver {
      * @param[in] udata initial derivative state sensitivities (DAE only) @type
      * N_Vector
      */
-    virtual void sensInit1(AmiVectorArray sx, AmiVectorArray sdx,
+    virtual void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx,
                           const UserData *udata) = 0;
 
     /**
@@ -450,7 +450,7 @@ class Solver {
      * @param[in] k derivative order @type int
      * @param[out] dky interpolated solution @type N_Vector
      */
-    virtual void AMIGetDky(realtype t, int k, AmiVector dky) = 0;
+    virtual void AMIGetDky(realtype t, int k, AmiVector *dky) = 0;
 
     /**
      * AMIFree frees allocation solver memory

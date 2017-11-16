@@ -168,7 +168,7 @@ void Model::fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata
  * @param ie event index @type int
  * @param rdata pointer to return data object @type ReturnData
  */
-void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray sx, const ReturnData *rdata) {
+void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray *sx, const ReturnData *rdata) {
     // sJz           nJ x rdata->nplist
     // dJzdp         nJ x rdata->nplist
     // dJzdx         nmaxevent x nJ x nx
@@ -182,7 +182,7 @@ void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArr
     std::vector<double> sxTmp(rdata->nplist * nx, 0);
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         for (int ix = 0; ix < nx; ++ix)
-            sxTmp.at(ix + ip * nx) = sx.at(ix,ip);
+            sxTmp.at(ix + ip * nx) = sx->at(ix,ip);
     }
 
     for (int ix = 0; ix < nx; ++ix)
@@ -318,7 +318,7 @@ void Model::fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, cons
 
 /** initialization of model properties
  */
-void Model::initialize(AmiVector x, AmiVector dx, const UserData *udata) {
+void Model::initialize(AmiVector *x, AmiVector *dx, const UserData *udata) {
 
     initializeStates(x, udata);
     
@@ -331,7 +331,7 @@ void Model::initialize(AmiVector x, AmiVector dx, const UserData *udata) {
 /** initialization of initial states
  * @param x0data array with initial state values @type double
  */
-void Model::initializeStates(AmiVector x, const UserData *udata) {
+void Model::initializeStates(AmiVector *x, const UserData *udata) {
 
     if (udata->getInitialStates().empty()) {
         fx0(x, udata);
@@ -347,7 +347,7 @@ void Model::initializeStates(AmiVector x, const UserData *udata) {
  * heaviside variables activate/deactivate on event occurences
  *
  */
-void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
+void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     std::vector<realtype> rootvals(ne,0.0);
     froot(udata->t0(), x, dx, rootvals.data());
     for (int ie = 0; ie < ne; ie++) {
@@ -366,26 +366,26 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     
     /** Initial states
      **/
-    void Model::fx0(AmiVector x, const UserData *udata) {
-        x.reset();
-        model_x0(x.data(),udata->t0(),p.data(),k.data());
+    void Model::fx0(AmiVector *x, const UserData *udata) {
+        x->reset();
+        model_x0(x->data(),udata->t0(),p.data(),k.data());
     };
 
     /** Initial value for initial state sensitivities
      **/
-    void Model::fsx0(AmiVectorArray sx, const AmiVector x, const UserData *udata) {
-        sx.reset();
+    void Model::fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata) {
+        sx->reset();
         for(int ip = 0; ip<plist.size(); ip++)
-            model_sx0(sx.data(ip),udata->t0(),x.data(),p.data(),k.data(),plist.at(ip));
+            model_sx0(sx->data(ip),udata->t0(),x->data(),p.data(),k.data(),plist.at(ip));
     }
     
     /** Sensitivity of event timepoint, total derivative
      * @param ie event index
      */
-    void Model::fstau(const int ie,const realtype t, const AmiVector x, const AmiVectorArray sx) {
+    void Model::fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx) {
         std::fill(stau.begin(),stau.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
-            model_stau(stau.data(),t,x.data(),p.data(),k.data(),h.data(),sx.data(ip),plist.at(ip),ie);
+            model_stau(stau.data(),t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip),ie);
         }
     }
     
@@ -425,10 +425,10 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param nroots number of events for event index
      * @param rdata pointer to return data object
      */
-    void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata) {
+    void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
         std::vector<double> zreturn(nz,0.0);
-        model_z(zreturn.data(),ie,t,x.data(),p.data(),k.data(),h.data());
-        for(int iz; iz < nz; iz++) {
+        model_z(zreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data());
+        for(int iz = 0; iz < nz; iz++) {
             rdata->z[nroots+rdata->nmaxevent*iz] = zreturn.at(iz);
         }
     }
@@ -437,11 +437,11 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param nroots number of events for event index
      * @param rdata pointer to return data object
      */
-    void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata) {
-        for(int ip; ip < plist.size();  ip++ ){
+    void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+        for(int ip = 0; ip < plist.size();  ip++ ){
             std::vector<double> szreturn(nz,0.0);
-            model_sz(szreturn.data(),ie,t,x.data(),p.data(),k.data(),h.data(),sx.data(ip),plist.at(ip));
-            for(int iz; iz < nz; iz++) {
+            model_sz(szreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
+            for(int iz = 0; iz < nz; iz++) {
                 rdata->sz[nroots+rdata->nmaxevent*(ip*nz + iz)] = szreturn.at(iz);
             }
         }
@@ -452,10 +452,10 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param nroots number of events for event index
      * @param rdata pointer to return data object
      */
-    void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector x, ReturnData *rdata) {
+    void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
         std::vector<double> rzreturn(nz,0.0);
-        model_rz(rzreturn.data(),ie,t,x.data(),p.data(),k.data(),h.data());
-        for(int iz; iz < nz; iz++) {
+        model_rz(rzreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data());
+        for(int iz = 0; iz < nz; iz++) {
             rdata->rz[nroots+rdata->nmaxevent*iz] = rzreturn.at(iz);
         }
     }
@@ -464,11 +464,11 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
      * @param nroots number of events for event index
      * @param rdata pointer to return data object
      */
-    void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx, ReturnData *rdata) {
-        for(int ip; ip < plist.size();  ip++ ){
+    void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+        for(int ip = 0; ip < plist.size();  ip++ ){
             std::vector<double> srzreturn(nz,0.0);
-            model_srz(srzreturn.data(),ie,t,x.data(),p.data(),k.data(),h.data(),sx.data(ip),plist.at(ip));
-            for(int iz; iz < nz; iz++) {
+            model_srz(srzreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
+            for(int iz = 0; iz < nz; iz++) {
                 rdata->srz[nroots+rdata->nmaxevent*(ip*nz + iz)] = srzreturn.at(iz);
             }
         }
@@ -476,74 +476,74 @@ void Model::initHeaviside(AmiVector x, AmiVector dx, const UserData *udata) {
     
     /** partial derivative of event-resolved output z w.r.t. to model parameters p
      */
-    void Model::fdzdp(const realtype t, const int ie, const AmiVector x) {
+    void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(dzdp.begin(),dzdp.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
-            model_dzdp(dzdp.data(),ie,t,x.data(),p.data(),k.data(),h.data(),plist.at(ip));
+            model_dzdp(dzdp.data(),ie,t,x->data(),p.data(),k.data(),h.data(),plist.at(ip));
         }
     }
     
     /** partial derivative of event-resolved output z w.r.t. to model states x
      */
-    void Model::fdzdx(const realtype t, const int ie, const AmiVector x) {
+    void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
         std::fill(dzdx.begin(),dzdx.end(),0.0);
-        model_dzdx(dzdx.data(),ie,t,x.data(),p.data(),k.data(),h.data());
+        model_dzdx(dzdx.data(),ie,t,x->data(),p.data(),k.data(),h.data());
     }
     
     /** Sensitivity of event-resolved root output w.r.t. to model parameters p
      */
-    void Model::fdrzdp(const realtype t, const int ie, const AmiVector x) {
+    void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(drzdp.begin(),drzdp.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
-            model_drzdp(drzdp.data(),ie,t,x.data(),p.data(),k.data(),h.data(),plist.at(ip));
+            model_drzdp(drzdp.data(),ie,t,x->data(),p.data(),k.data(),h.data(),plist.at(ip));
         }
     }
     
     /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
      */
-    void Model::fdrzdx(const realtype t, const int ie, const AmiVector x) {
+    void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
         std::fill(drzdx.begin(),drzdx.end(),0.0);
-        model_drzdx(drzdx.data(),ie,t,x.data(),p.data(),k.data(),h.data());
+        model_drzdx(drzdx.data(),ie,t,x->data(),p.data(),k.data(),h.data());
     }
     
     /** State update functions for events
      * @param ie event index
      */
-    void Model::fdeltax(const int ie, const realtype t, const AmiVector x,
-                         const AmiVector xdot, const AmiVector xdot_old) {
+    void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
+                         const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltax.begin(),deltax.end(),0.0);
-        model_deltax(deltax.data(),t,x.data(),p.data(),k.data(),h.data(),ie,xdot.data(),xdot_old.data());
+        model_deltax(deltax.data(),t,x->data(),p.data(),k.data(),h.data(),ie,xdot->data(),xdot_old->data());
     }
     
     /** Sensitivity update functions for events, total derivative
      * @param ie event index
      */
-    void Model::fdeltasx(const int ie, const realtype t, const AmiVector x, const AmiVectorArray sx,
-                          const AmiVector xdot, const AmiVector xdot_old) {
+    void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
+                          const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltasx.begin(),deltasx.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++)
-            model_deltasx(&deltasx[nx*ip],t,x.data(),p.data(),k.data(),h.data(),
-                          plist.at(ip),ie,xdot.data(),xdot_old.data(),sx.data(ip),stau.data());
+            model_deltasx(&deltasx[nx*ip],t,x->data(),p.data(),k.data(),h.data(),
+                          plist.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),stau.data());
     }
     
     /** Adjoint state update functions for events
      * @param ie event index
      */
-    void Model::fdeltaxB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                          const AmiVector xdot, const AmiVector xdot_old) {
+    void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
+                          const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltaxB.begin(),deltaxB.end(),0.0);
-        model_deltaxB(deltaxB.data(),t,x.data(),p.data(),k.data(),h.data(),ie,xdot.data(),xdot_old.data(),xB.data());
+        model_deltaxB(deltaxB.data(),t,x->data(),p.data(),k.data(),h.data(),ie,xdot->data(),xdot_old->data(),xB->data());
     }
     
     /** Quadrature state update functions for events
      * @param ie event index
      */
-    void Model::fdeltaqB(const int ie, const realtype t, const AmiVector x, const AmiVector xB,
-                          const AmiVector xdot, const AmiVector xdot_old) {
+    void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
+                          const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltaqB.begin(),deltaqB.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++)
-            model_deltaqB(deltaqB.data(),t,x.data(),p.data(),k.data(),h.data(),
-                          plist.at(ip),ie,xdot.data(),xdot_old.data(),xB.data());
+            model_deltaqB(deltaqB.data(),t,x->data(),p.data(),k.data(),h.data(),
+                          plist.at(ip),ie,xdot->data(),xdot_old->data(),xB->data());
     }
     
     /** Standard deviation of measurements

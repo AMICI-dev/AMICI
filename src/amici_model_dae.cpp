@@ -3,23 +3,23 @@
 
 namespace amici {
 
-     void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, SlsMat J){
-        IDASolver::fJSparse(t,cj,x.getNVector(),dx.getNVector(),xdot.getNVector(),J,this,nullptr,nullptr,nullptr);
+     void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                              AmiVector *xdot, SlsMat J){
+        IDASolver::fJSparse(t,cj,x->getNVector(),dx->getNVector(),xdot->getNVector(),J,this,nullptr,nullptr,nullptr);
     }
     
-    void Model_DAE::fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                        AmiVector v, AmiVector Jv, realtype cj){
-        IDASolver::fJv(t,x.getNVector(),dx.getNVector(),xdot.getNVector(),v.getNVector(),
-                    Jv.getNVector(),cj,this,nullptr,nullptr);
+    void Model_DAE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
+                        AmiVector *v, AmiVector *Jv, realtype cj){
+        IDASolver::fJv(t,x->getNVector(),dx->getNVector(),xdot->getNVector(),v->getNVector(),
+                    Jv->getNVector(),cj,this,nullptr,nullptr);
     }
     
-     void Model_DAE::froot(realtype t, AmiVector x, AmiVector dx, realtype *root){
-        IDASolver::froot(t,x.getNVector(),dx.getNVector(),root,this);
+     void Model_DAE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
+        IDASolver::froot(t,x->getNVector(),dx->getNVector(),root,this);
     }
     
-     void Model_DAE::fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot){
-        IDASolver::fxdot(t,x.getNVector(),dx.getNVector(),xdot.getNVector(),this);
+     void Model_DAE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot){
+        IDASolver::fxdot(t,x->getNVector(),dx->getNVector(),xdot->getNVector(),this);
     }
     
     /** diagonalized Jacobian (for preconditioning)
@@ -30,14 +30,14 @@ namespace amici {
      * @param[in] dx Vector with the derivative states
      * @param[in] user_data object with user input @type UserData
      **/
-    int Model_DAE::fJDiag(realtype t, AmiVector JDiag, realtype cj, AmiVector x,
-                          AmiVector dx) {
-        fdwdx(t,x.getNVector());
-        memset(JDiag.data(),0.0,sizeof(realtype)*nx);
-        if(!model_JDiag(JDiag.data(),t,x.data(),p.data(),k.data(),
-                               dx.data(),w.data(),dwdx.data()))
+    int Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+                          AmiVector *dx) {
+        fdwdx(t,x->getNVector());
+        memset(JDiag->data(),0.0,sizeof(realtype)*nx);
+        if(!model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),
+                               dx->data(),w.data(),dwdx.data()))
             return AMICI_ERROR;
-        return IDASolver::checkVals(nx,JDiag.data(),"Jacobian");
+        return IDASolver::checkVals(nx,JDiag->data(),"Jacobian");
     }
     
     /** Sensitivity of dx/dt wrt model parameters p

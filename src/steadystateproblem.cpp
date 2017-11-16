@@ -72,10 +72,10 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
 
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
-        solver->AMIReInit(t, x, dx);
+        solver->AMIReInit(t, &x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                solver->AMISensReInit(udata->ism, sx, sdx);
+                solver->AMISensReInit(udata->ism, &sx, &sdx);
     }
 }
 
@@ -114,7 +114,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     N_VConst(0.0, delta.getNVector());
 
     /* Check, how fxdot is used exactly within AMICI... */
-    model->fxdot(t, x, dx, xdot);
+    model->fxdot(t, &x, &dx, &xdot);
     double res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
 
     /* Check for relative error, but make sure not to divide by 0!
@@ -138,7 +138,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
             try{
-                newtonSolver->getStep(newton_try, i_newtonstep, delta);
+                newtonSolver->getStep(newton_try, i_newtonstep, &delta);
             } catch(...) {
                 rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
                 throw NewtonFailure("Newton method failed to compute new step!");
@@ -153,7 +153,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
                 x[ix] = udata->atol;
         
         /* Compute new xdot and residuals */
-        model->fxdot(t, x, dx, xdot);
+        model->fxdot(t, &x, &dx, &xdot);
         N_VDiv(xdot.getNVector(), x.getNVector(), rel_x_newton.getNVector());
         res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
         res_tmp = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
@@ -252,8 +252,8 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
         tstart = rdata->ts[it-1];
     t = tstart;
     
-    model->fx0(x, udata);
-    solver->AMIReInit(t, x, dx);
+    model->fx0(&x, udata);
+    solver->AMIReInit(t, &x, &dx);
     
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
@@ -263,9 +263,9 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     int it_newton = 0;
     while(res_abs > udata->atol && res_rel > udata->rtol) {
         /* One step of ODE integration */
-        solver->AMISolve(1e12, x, dx, &t,
+        solver->AMISolve(1e12, &x, &dx, &t,
                                   AMICI_ONE_STEP);
-        model->fxdot(t, x, dx, xdot);
+        model->fxdot(t, &x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
         /* Ensure positivity and compute relative residual */

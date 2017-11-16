@@ -4,30 +4,30 @@
 
 namespace amici {
     
-    void Model_ODE::fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                          AmiVector xdot, DlsMat J) {
-        CVodeSolver::fJ(J->N*J->M,t, x.getNVector(), xdot.getNVector(),
+    void Model_ODE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                          AmiVector *xdot, DlsMat J) {
+        CVodeSolver::fJ(J->N*J->M,t, x->getNVector(), xdot->getNVector(),
            J, this, nullptr, nullptr, nullptr);
         
     }
     
-    void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                        AmiVector xdot, SlsMat J){
-        CVodeSolver::fJSparse(t,x.getNVector(),xdot.getNVector(),J,this,nullptr,nullptr,nullptr);
+    void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                        AmiVector *xdot, SlsMat J){
+        CVodeSolver::fJSparse(t,x->getNVector(),xdot->getNVector(),J,this,nullptr,nullptr,nullptr);
     }
     
-    void Model_ODE::fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                        AmiVector v, AmiVector Jv, realtype cj){
-        CVodeSolver::fJv(v.getNVector(),Jv.getNVector(),t,x.getNVector(),xdot.getNVector(),
+    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
+                        AmiVector *v, AmiVector *Jv, realtype cj){
+        CVodeSolver::fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector(),xdot->getNVector(),
                     this,nullptr);
     }
     
-    void Model_ODE::froot(realtype t, AmiVector x, AmiVector dx, realtype *root){
-        CVodeSolver::froot(t,x.getNVector(),root,this);
+    void Model_ODE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
+        CVodeSolver::froot(t,x->getNVector(),root,this);
     }
     
-    void Model_ODE::fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot){
-        CVodeSolver::fxdot(t,x.getNVector(),xdot.getNVector(),this);
+    void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot){
+        CVodeSolver::fxdot(t,x->getNVector(),xdot->getNVector(),this);
     }
     
     /** diagonalized Jacobian (for preconditioning)
@@ -38,14 +38,13 @@ namespace amici {
      * @param[in] dx Vector with the derivative states
      * @param[in] user_data object with user input @type UserData
      **/
-    int Model_ODE::fJDiag(realtype t, AmiVector JDiag, realtype cj, AmiVector x,
-                          AmiVector dx) {
-        fdwdx(t,x.getNVector());
-        memset(JDiag.data(),0.0,sizeof(realtype)*nx);
-        if(!model_JDiag(JDiag.data(),t,x.data(),p.data(),k.data(),
-                        dx.data(),w.data(),dwdx.data()))
+    int Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+                          AmiVector *dx) {
+        fdwdx(t,x->getNVector());
+        memset(JDiag->data(),0.0,sizeof(realtype)*nx);
+        if(!model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),w.data(),dwdx.data()))
             return AMICI_ERROR;
-        return CVodeSolver::checkVals(nx,JDiag.data(),"Jacobian");
+        return CVodeSolver::checkVals(nx,JDiag->data(),"Jacobian");
     }
     
     /** Sensitivity of dx/dt wrt model parameters p

@@ -56,11 +56,11 @@ class BackwardProblem {
     /** old quadrature state vector */
     AmiVector xQB_old;
     /** array of state vectors at discontinuities*/
-    AmiVector *x_disc;
+    AmiVectorArray x_disc;
     /** array of differential state vectors at discontinuities*/
-    AmiVector *xdot_disc;
+    AmiVectorArray xdot_disc;
     /** array of old differential state vectors at discontinuities*/
-    AmiVector *xdot_old_disc;
+    AmiVectorArray xdot_old_disc;
     /** sensitivity state vector array */
     AmiVectorArray sx;
     /** array of number of found roots for a certain event type */

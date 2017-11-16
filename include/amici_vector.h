@@ -32,6 +32,11 @@ namespace amici {
             nvec = N_VMake_Serial(rvec.size(),rvec.data());
         };
         
+        AmiVector(const AmiVector *vold) {
+            vec = vold->vec;
+            nvec = N_VMake_Serial(vold->vec.size(),vec.data());
+        };
+        
         realtype *data() {
             return vec.data();
         }
@@ -44,7 +49,7 @@ namespace amici {
             return nvec;
         }
         
-        int getLength() {
+        const int getLength() const {
             return vec.size();
         }
         
@@ -64,7 +69,7 @@ namespace amici {
          * creates an std::vector<realype> and attaches the
          * data pointer to a newly created N_Vector_Serial
          */
-        virtual ~AmiVector(){
+        ~AmiVector(){
             N_VDestroy_Serial(nvec);
         };
     private:
@@ -82,20 +87,27 @@ namespace amici {
          * when calling N_VDestroyVectorArray_Serial
          */
         AmiVectorArray(const long int length_inner, const long int length_outer)
-        : vec_array(length_outer,std::vector<realtype>(length_inner,0.0))
+        : vec_array(length_outer,AmiVector(length_inner))
         {
             N_Vector nvec = N_VMake_Serial(length_inner,vec_array.at(0).data());
             nvec_array = N_VCloneVectorArrayEmpty_Serial(length_outer,nvec);
             for (int idx = 0; idx < length_outer; idx++)
-                NV_DATA_S(nvec_array[idx]) = vec_array.at(idx).data();
+                nvec_array[idx] = vec_array[idx].getNVector();
         };
+        
+        AmiVectorArray(const AmiVectorArray *vaold) {
+            vec_array = vaold->vec_array;
+            for (int idx = 0; idx < vaold->getLength(); idx++)
+                nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
+            
+        }
         
         realtype *data(int idx) {
             return vec_array.at(idx).data();
         }
         
         realtype& at(int ipos, int jpos) {
-            return vec_array.at(jpos).at(ipos);
+            return vec_array.at(jpos)[ipos];
         }
         
         const realtype *data(int idx) const {
@@ -106,25 +118,31 @@ namespace amici {
             return nvec_array;
         }
         
-        int getLength() {
+        N_Vector getNVector(int idx) {
+            return nvec_array[idx];
+        }
+        
+        AmiVector& operator[](int pos) {
+            return vec_array.at(pos);
+        }
+        
+        const int getLength() const {
             return vec_array.size();
         }
         
         void reset() {
-            for(std::vector<std::vector<realtype>>::iterator it = vec_array.begin();
+            for(std::vector<AmiVector>::iterator it = vec_array.begin();
                 it != vec_array.end(); ++it)
-                std::fill(it->begin(), it->end(), 0.0);
+                it->reset();
         }
         
         /*! default destructor
-         * creates an std::vector<realype> and attaches the
-         * data pointer to a newly created N_Vector_Serial
          */
-        virtual ~AmiVectorArray(){
+        ~AmiVectorArray(){
             N_VDestroyVectorArray_Serial(nvec_array,vec_array.size());
         };
     private:
-        std::vector<std::vector<realtype>> vec_array;
+        std::vector<AmiVector> vec_array;
         N_Vector *nvec_array;
     };
     

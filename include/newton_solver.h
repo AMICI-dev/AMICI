@@ -26,7 +26,7 @@ class NewtonSolver {
     static NewtonSolver *getSolver(realtype *t, int linsolType, Model *model,
                                    ReturnData *rdata, const UserData *udata);
 
-    void getStep(int ntry, int nnewt, AmiVector delta);
+    void getStep(int ntry, int nnewt, AmiVector *delta);
 
     void getSensis(int it);
 
@@ -48,7 +48,7 @@ class NewtonSolver {
      * overwritten by solution to the linear system @type N_Vector
      * @return stats integer flag indicating success of the method
      */
-    virtual void solveLinearSystem(AmiVector rhs) = 0;
+    virtual void solveLinearSystem(AmiVector *rhs) = 0;
 
   protected:
     realtype *t;
@@ -78,7 +78,7 @@ class NewtonSolverDense : public NewtonSolver {
 
   public:
     NewtonSolverDense(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
-    void solveLinearSystem(AmiVector rhs) override;
+    void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverDense();
 
@@ -97,7 +97,7 @@ class NewtonSolverSparse : public NewtonSolver {
 
   public:
     NewtonSolverSparse(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
-    void solveLinearSystem(AmiVector rhs) override;
+    void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverSparse();
 
@@ -123,9 +123,9 @@ class NewtonSolverIterative : public NewtonSolver {
   public:
     NewtonSolverIterative(realtype *t, Model *model, ReturnData *rdata,
                           const UserData *udata);
-    void solveLinearSystem(AmiVector rhs);
+    void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
-    void linsolveSPBCG(int ntry,int nnewt, AmiVector ns_delta);
+    void linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delta);
     ~NewtonSolverIterative();
 
   private:

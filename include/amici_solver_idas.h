@@ -41,15 +41,15 @@ class IDASolver : public Solver {
 
     void AMISetSuppressAlg(bool flag) override;
 
-    void AMIReInit(realtype t0, AmiVector yy0, AmiVector yp0) override;
+    void AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
-    void AMISensReInit(int ism, AmiVectorArray yS0, AmiVectorArray ypS0) override;
+    void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
 
     void AMISetSensParams(realtype *p, realtype *pbar, int *plist) override;
 
-    void AMIGetDky(realtype t, int k, AmiVector dky) override;
+    void AMIGetDky(realtype t, int k, AmiVector *dky) override;
 
-    void AMIGetSens(realtype *tret, AmiVectorArray yySout) override;
+    void AMIGetSens(realtype *tret, AmiVectorArray *yySout) override;
 
     void AMIFree() override;
 
@@ -57,30 +57,30 @@ class IDASolver : public Solver {
 
     void AMICreateB(int lmm, int iter, int *which) override;
 
-    void AMIReInitB(int which, realtype tB0, AmiVector yyB0,
-                   AmiVector ypB0) override;
+    void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
+                   AmiVector *ypB0) override;
 
     void AMISStolerancesB(int which, realtype relTolB,
                          realtype absTolB) override;
 
-    void AMIQuadReInitB(int which, AmiVector yQB0) override;
+    void AMIQuadReInitB(int which, AmiVector *yQB0) override;
 
     void AMIQuadSStolerancesB(int which, realtype reltolQB,
                              realtype abstolQB) override;
 
-    int AMISolve(realtype tout, AmiVector yret, AmiVector ypret, realtype *tret,
+    int AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                  int itask) override;
 
-    int AMISolveF(realtype tout, AmiVector yret, AmiVector ypret, realtype *tret,
+    int AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                   int itask, int *ncheckPtr) override;
 
     void AMISolveB(realtype tBout, int itaskB) override;
 
     void AMISetMaxNumStepsB(int which, long int mxstepsB) override;
 
-    void AMIGetB(int which, realtype *tret, AmiVector yy, AmiVector yp) override;
+    void AMIGetB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) override;
 
-    void AMIGetQuadB(int which, realtype *tret, AmiVector qB) override;
+    void AMIGetQuadB(int which, realtype *tret, AmiVector *qB) override;
 
     void AMIDense(int nx) override;
 
@@ -128,10 +128,10 @@ class IDASolver : public Solver {
 
     void *AMIGetAdjBmem(void *ami_mem, int which) override;
 
-    void AMICalcIC(realtype tout1, AmiVector x, AmiVector dx) override;
+    void AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
 
-    void AMICalcICB(int which, realtype tout1, AmiVector xB,
-                   AmiVector dxB) override;
+    void AMICalcICB(int which, realtype tout1, AmiVector *xB,
+                   AmiVector *dxB) override;
 
     void AMISetStopTime(realtype tstop) override;
 
@@ -141,15 +141,15 @@ class IDASolver : public Solver {
 
   protected:
     
-    void init(AmiVector x, AmiVector dx, realtype t) override;
+    void init(AmiVector *x, AmiVector *dx, realtype t) override;
 
-    void binit(int which, AmiVector xB, AmiVector dxB, realtype t) override;
+    void binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) override;
 
-    void qbinit(int which, AmiVector qBdot) override;
+    void qbinit(int which, AmiVector *qBdot) override;
 
     void rootInit(int ne) override;
 
-    void sensInit1(AmiVectorArray sx, AmiVectorArray sdx, const UserData *udata) override;
+    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) override;
 
     void setDenseJacFn() override;
 

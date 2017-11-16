@@ -27,20 +27,20 @@
 
 namespace amici {
 
-void CVodeSolver::init(AmiVector x, AmiVector dx, realtype t) {
-    int status = CVodeInit(ami_mem, fxdot, RCONST(t), x.getNVector());
+void CVodeSolver::init(AmiVector *x, AmiVector *dx, realtype t) {
+    int status = CVodeInit(ami_mem, fxdot, RCONST(t), x->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInit");
 }
 
-void CVodeSolver::binit(int which, AmiVector xB, AmiVector dxB, realtype t) {
-    int status = CVodeInitB(ami_mem, which, fxBdot, RCONST(t), xB.getNVector());
+void CVodeSolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
+    int status = CVodeInitB(ami_mem, which, fxBdot, RCONST(t), xB->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInitB");
 }
 
-void CVodeSolver::qbinit(int which, AmiVector qBdot) {
-    int status = CVodeQuadInitB(ami_mem, which, fqBdot, qBdot.getNVector());
+void CVodeSolver::qbinit(int which, AmiVector *qBdot) {
+    int status = CVodeQuadInitB(ami_mem, which, fqBdot, qBdot->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeQuadInitB");
 }
@@ -51,9 +51,9 @@ void CVodeSolver::rootInit(int ne) {
          throw CvodeException(status,"CVodeRootInit");
 }
 
-void CVodeSolver::sensInit1(AmiVectorArray sx, AmiVectorArray sdx, const UserData *udata) {
+void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) {
     int status = CVodeSensInit1(ami_mem, udata->nplist(), udata->sensmeth(), fsxdot,
-                          sx.getNVectorArray());
+                          sx->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensInit1");
 }
@@ -180,14 +180,14 @@ void CVodeSolver::AMISetId(Model *model) { return; }
 
 void CVodeSolver::AMISetSuppressAlg(bool flag) { return; }
 
-void CVodeSolver::AMIReInit(realtype t0, AmiVector yy0, AmiVector yp0) {
-    int status = CVodeReInit(ami_mem, t0, yy0.getNVector());
+void CVodeSolver::AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
+    int status = CVodeReInit(ami_mem, t0, yy0->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeReInit");
 }
 
-void CVodeSolver::AMISensReInit(int ism, AmiVectorArray yS0, AmiVectorArray ypS0) {
-    int status = CVodeSensReInit(ami_mem, ism, yS0.getNVectorArray());
+void CVodeSolver::AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) {
+    int status = CVodeSensReInit(ami_mem, ism, yS0->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensReInit");
 }
@@ -198,14 +198,14 @@ void CVodeSolver::AMISetSensParams(realtype *p, realtype *pbar, int *plist) {
          throw CvodeException(status,"CVodeSetSensParams");
 }
 
-void CVodeSolver::AMIGetDky(realtype t, int k, AmiVector dky) {
-    int status = CVodeGetDky(ami_mem, t, k, dky.getNVector());
+void CVodeSolver::AMIGetDky(realtype t, int k, AmiVector *dky) {
+    int status = CVodeGetDky(ami_mem, t, k, dky->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetDky");
 }
 
-void CVodeSolver::AMIGetSens(realtype *tret, AmiVectorArray yySout) {
-    int status = CVodeGetSens(ami_mem, tret, yySout.getNVectorArray());
+void CVodeSolver::AMIGetSens(realtype *tret, AmiVectorArray *yySout) {
+    int status = CVodeGetSens(ami_mem, tret, yySout->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetSens");
 }
@@ -227,9 +227,9 @@ void CVodeSolver::AMICreateB(int lmm, int iter, int *which) {
          throw CvodeException(status,"CVodeCreateB");
 }
 
-void CVodeSolver::AMIReInitB(int which, realtype tB0, AmiVector yyB0,
-                            AmiVector ypB0) {
-    int status = CVodeReInitB(ami_mem, which, tB0, yyB0.getNVector());
+void CVodeSolver::AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
+                            AmiVector *ypB0) {
+    int status = CVodeReInitB(ami_mem, which, tB0, yyB0->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeReInitB");
 }
@@ -241,8 +241,8 @@ void CVodeSolver::AMISStolerancesB(int which, realtype relTolB,
          throw CvodeException(status,"CVodeSStolerancesB");
 }
 
-void CVodeSolver::AMIQuadReInitB(int which, AmiVector yQB0) {
-    int status = CVodeQuadReInitB(ami_mem, which, yQB0.getNVector());
+void CVodeSolver::AMIQuadReInitB(int which, AmiVector *yQB0) {
+    int status = CVodeQuadReInitB(ami_mem, which, yQB0->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeQuadReInitB");
 }
@@ -254,9 +254,9 @@ void CVodeSolver::AMIQuadSStolerancesB(int which, realtype reltolQB,
          throw CvodeException(status,"CVodeQuadSStolerancesB");
 }
 
-int CVodeSolver::AMISolve(realtype tout, AmiVector yret, AmiVector ypret,
+int CVodeSolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
                           realtype *tret, int itask) {
-    int status = CVode(ami_mem, tout, yret.getNVector(), tret, itask);
+    int status = CVode(ami_mem, tout, yret->getNVector(), tret, itask);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     } else{
@@ -264,9 +264,9 @@ int CVodeSolver::AMISolve(realtype tout, AmiVector yret, AmiVector ypret,
     }
 }
 
-int CVodeSolver::AMISolveF(realtype tout, AmiVector yret, AmiVector ypret,
+int CVodeSolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
                            realtype *tret, int itask, int *ncheckPtr) {
-    int status = CVodeF(ami_mem, tout, yret.getNVector(), tret, itask, ncheckPtr);
+    int status = CVodeF(ami_mem, tout, yret->getNVector(), tret, itask, ncheckPtr);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     } else{
@@ -286,14 +286,14 @@ void CVodeSolver::AMISetMaxNumStepsB(int which, long mxstepsB) {
          throw CvodeException(status,"CVodeSetMaxNumStepsB");
 }
 
-void CVodeSolver::AMIGetB(int which, realtype *tret, AmiVector yy, AmiVector yp) {
-    int status = CVodeGetB(ami_mem, which, tret, yy.getNVector());
+void CVodeSolver::AMIGetB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
+    int status = CVodeGetB(ami_mem, which, tret, yy->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetB");
 }
 
-void CVodeSolver::AMIGetQuadB(int which, realtype *tret, AmiVector qB) {
-    int status = CVodeGetQuadB(ami_mem, which, tret, qB.getNVector());
+void CVodeSolver::AMIGetQuadB(int which, realtype *tret, AmiVector *qB) {
+    int status = CVodeGetQuadB(ami_mem, which, tret, qB->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetQuadB");
 }
@@ -429,10 +429,10 @@ void *CVodeSolver::AMIGetAdjBmem(void *ami_mem, int which) {
     return CVodeGetAdjCVodeBmem(ami_mem, which);
 }
 
-void CVodeSolver::AMICalcIC(realtype tout1, AmiVector x, AmiVector dx) { };
+void CVodeSolver::AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) { };
 
-void CVodeSolver::AMICalcICB(int which, realtype tout1, AmiVector xB,
-                             AmiVector dxB) {};
+void CVodeSolver::AMICalcICB(int which, realtype tout1, AmiVector *xB,
+                             AmiVector *dxB) {};
 
 void CVodeSolver::AMISetStopTime(realtype tstop) {
     int status = CVodeSetStopTime(ami_mem, tstop);

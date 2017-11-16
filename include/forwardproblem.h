@@ -56,11 +56,11 @@ class ForwardProblem {
     int iroot = 0;
     
     /** array of state vectors at discontinuities*/
-    AmiVector *x_disc;
+    AmiVectorArray x_disc;
     /** array of differential state vectors at discontinuities*/
-    AmiVector *xdot_disc;
+    AmiVectorArray xdot_disc;
     /** array of old differential state vectors at discontinuities*/
-    AmiVector *xdot_old_disc;
+    AmiVectorArray xdot_old_disc;
     
     /** state derivative of data likelihood */
     std::vector<double> dJydx;

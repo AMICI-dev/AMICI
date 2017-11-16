@@ -58,8 +58,8 @@ namespace amici {
                   const std::vector<realtype> idlist, const std::vector<int> z2event)
         : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
-        virtual void fJ(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                        AmiVector xdot, DlsMat J)  override;
+        virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                        AmiVector *xdot, DlsMat J)  override;
         
         /** model specific implementation for fJ
          * @param[out] J Matrix to which the Jacobian will be written
@@ -96,8 +96,8 @@ namespace amici {
             return(AMICI_ERROR);
         }
 
-        virtual void fJSparse(realtype t, realtype cj, AmiVector x, AmiVector dx,
-                              AmiVector xdot, SlsMat J) override;
+        virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                              AmiVector *xdot, SlsMat J) override;
         
         /** model specific implementation for fJSparse
          * @param[out] J Matrix to which the Jacobian will be written
@@ -135,8 +135,8 @@ namespace amici {
             return AMICI_ERROR;
         }
 
-        virtual int fJDiag(realtype t, AmiVector JDiag, realtype cj, AmiVector x,
-                            AmiVector dx) override;
+        virtual int fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+                            AmiVector *dx) override;
         
         virtual int model_JDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k,
                                 const realtype *dx, const realtype *w, const realtype *dwdx){
@@ -144,8 +144,8 @@ namespace amici {
             return AMICI_ERROR;
         }
         
-        virtual void fJv(realtype t, AmiVector x, AmiVector dx, AmiVector xdot,
-                         AmiVector v, AmiVector nJv, realtype cj) override;
+        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
+                         AmiVector *v, AmiVector *nJv, realtype cj) override;
         
         /** model specific implementation for fJv
          * @param[out] Jv Matrix vector product of J with a vector v
@@ -189,7 +189,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void froot(realtype t, AmiVector x, AmiVector dx, realtype *root) override;
+        virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         
         /** model specific implementation for froot
          * @param[out] root values of the trigger function
@@ -206,7 +206,7 @@ namespace amici {
             return AMICI_ERROR; // not implemented
         }
         
-        virtual void fxdot(realtype t, AmiVector x, AmiVector dx, AmiVector xdot) override;
+        virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
         
         /** model specific implementation for fxdot
          * @param[out] xdot residual function
@@ -265,8 +265,8 @@ namespace amici {
         
         int fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
         
-        virtual int fdxdotdp(realtype t, AmiVector x, AmiVector dx) override {
-            return fdxdotdp(t,x.getNVector(),dx.getNVector());
+        virtual int fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
+            return fdxdotdp(t,x->getNVector(),dx->getNVector());
         };
         
         /** model specific implementation of fdxdotdp
