@@ -10,22 +10,29 @@
 
 namespace amici {
 
-BackwardProblem::BackwardProblem(ForwardProblem fwd) :
-    xB(fwd.model->nx), xB_old(fwd.model->nx),
-    dxB(fwd.model->nx), xQB(fwd.model->nx), xQB_old(fwd.model->nx), sx(fwd.model->nx,fwd.udata->nplist()),
-    x_disc(fwd.x_disc), xdot_disc(fwd.xdot_disc), xdot_old_disc(fwd.xdot_old_disc)
+BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
+    xB(fwd->model->nx),
+    xB_old(fwd->model->nx),
+    dxB(fwd->model->nx),
+    xQB(fwd->model->nx),
+    xQB_old(fwd->model->nx),
+    x_disc(fwd->x_disc),
+    xdot_disc(fwd->xdot_disc),
+    xdot_old_disc(fwd->xdot_old_disc),
+    sx(fwd->model->nx,fwd->udata->nplist()),
+    nroots(fwd->nroots),
+    discs(fwd->discs),
+    irdiscs(fwd->irdiscs),
+    rootidx(fwd->rootidx),
+    dJydx(fwd->dJydx),
+    dJzdx(fwd->dJzdx)
     {
-        t = rdata->ts[rdata->nt-1];
-        this->model = fwd.model;
-        this->solver = fwd.solver;
-        this->udata = fwd.udata;
-        this->rdata = fwd.rdata;
-        nroots = fwd.nroots;
-        iroot = fwd.iroot;
-        discs = fwd.discs;
-        rootidx = fwd.rootidx;
-        dJydx = fwd.dJydx;
-        dJzdx = fwd.dJzdx;
+        t = fwd->t;
+        model = fwd->model;
+        solver = fwd->solver;
+        udata = fwd->udata;
+        rdata = fwd->rdata;
+        iroot = fwd->iroot;
     };
 
     
@@ -50,7 +57,7 @@ void BackwardProblem::workBackwardProblem() {
     while (it >= 0 || iroot >= 0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        tnext = getTnext(discs, iroot, it);
+        tnext = getTnext(discs.data(), iroot, it);
 
         if (tnext < t) {
             solver->AMISolveB(tnext, AMICI_NORMAL);
@@ -63,7 +70,7 @@ void BackwardProblem::workBackwardProblem() {
         /* handle discontinuity */
 
         if (model->ne > 0 && rdata->nmaxevent > 0 && iroot >= 0) {
-            if (tnext == discs[iroot]) {
+            if (tnext == discs.at(iroot)) {
                 handleEventB(iroot);
                 --iroot;
             }
@@ -211,8 +218,8 @@ void BackwardProblem::handleDataPointB(int it) {
      * @param[in] model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
-realtype BackwardProblem::getTnext(realtype *troot, int iroot,
-                                   int it) {
+realtype BackwardProblem::getTnext(const realtype *troot, const int iroot,
+                                   const int it) {
 
     realtype tnext;
 

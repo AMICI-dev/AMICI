@@ -38,18 +38,18 @@ class ForwardProblem {
     const ExpData *edata;
     
     /** array of index which root has been found */
-    int *rootidx = nullptr;
+    std::vector<int> rootidx;
     /** array of number of found roots for a certain event type */
-    int *nroots = nullptr;
+    std::vector<int> nroots;
     /** array of values of the root function */
-    realtype *rootvals = nullptr;
+    std::vector<realtype> rootvals;
     /** temporary rootval storage to check crossing in secondary event */
-    realtype *rvaltmp = nullptr;
+    std::vector<realtype> rvaltmp;
     
     /** array containing the time-points of discontinuities*/
-    realtype *discs = nullptr;
+    std::vector<realtype> discs;
     /** array containing the index of discontinuities */
-    realtype *irdiscs = nullptr;
+    std::vector<realtype> irdiscs;
     
     /** current root index, will be increased during the forward solve and
      * decreased during backward solve */
@@ -135,6 +135,7 @@ class ForwardProblem {
     ForwardProblem();
     
     friend class Solver;
+    friend class BackwardProblem;
 };
 
 

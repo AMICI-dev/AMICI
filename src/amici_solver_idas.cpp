@@ -448,9 +448,9 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*NeqBdot);
-        if(!model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
                      cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                     model->w.data(),model->dwdx.data()))
+                     model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
         return AMICI_ERROR;
         return checkVals(NeqBdot,JB->data,"Jacobian");
     }
@@ -501,9 +501,9 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*JB->NNZ);
-        if(!model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
                            cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                           model->w.data(),model->dwdx.data()))
+                           model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(JB->NNZ,JB->data,"Jacobian");
     }
@@ -576,9 +576,9 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(Jv),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
-                     cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()))
-        return AMICI_ERROR;
+        if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+                     cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
+            return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
@@ -605,10 +605,10 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(JvB),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
                       cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                      N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()))
-        return AMICI_ERROR;
+                      N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
+            return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
@@ -624,10 +624,9 @@ void IDASolver::turnOffRootFinding() {
                      void *user_data) {
         Model_DAE *model = (Model_DAE*) user_data;
         memset(root,0.0,sizeof(realtype)*model->ne);
-        if(!model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
-                       N_VGetArrayPointer(dx))) {
+        if(model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+                       N_VGetArrayPointer(dx)) != AMICI_SUCCESS)
             return AMICI_ERROR;
-        }
         return checkVals(model->ne,root,"root function");
     }
     
@@ -719,11 +718,11 @@ void IDASolver::turnOffRootFinding() {
         fJSparse(t,0.0,x,dx,nullptr,model->J,model,tmp1,tmp2,tmp3);// also calls dwdx & dx
         for(int ip = 0; ip < model->plist.size(); ip++){
             memset(N_VGetArrayPointer(sxdot[ip]),0.0,sizeof(realtype)*model->nx);
-            if(!model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+            if(model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
                             model->plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx[ip]),N_VGetArrayPointer(sdx[ip]),
-                            model->w.data(),model->dwdx.data(),model->M.data(),model->J->data,model->dxdotdp.data()))
+                            model->w.data(),model->dwdx.data(),model->M.data(),model->J->data,model->dxdotdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
-            if(!checkVals(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs"))
+            if(checkVals(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
                 return AMICI_ERROR;
         }
         return AMICI_SUCCESS;

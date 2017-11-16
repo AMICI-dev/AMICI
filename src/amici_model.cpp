@@ -397,7 +397,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         getx(it,rdata);
         std::fill(y.begin(),y.end(),0.0);
         model_y(y.data(),gett(it,rdata),x.data(),p.data(),k.data(),h.data());
-        for(int iy; iy < ny; iy++)
+        for(int iy = 0; iy < ny; iy++)
             rdata->y[it + rdata->nt*iy] = y.at(iy);
     }
     

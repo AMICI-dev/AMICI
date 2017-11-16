@@ -24,7 +24,7 @@ class BackwardProblem {
   public:
     void workBackwardProblem();
 
-    BackwardProblem(ForwardProblem fwd);
+    BackwardProblem(ForwardProblem *fwd);
 
   private:
     
@@ -39,7 +39,7 @@ class BackwardProblem {
     
     void updateHeavisideB(int iroot);
     
-    realtype getTnext(realtype *troot, int iroot, int it);
+    realtype getTnext(const realtype *troot, const int iroot, const int it);
     
     /** current time */
     realtype t;
@@ -56,31 +56,31 @@ class BackwardProblem {
     /** old quadrature state vector */
     AmiVector xQB_old;
     /** array of state vectors at discontinuities*/
-    AmiVectorArray x_disc;
+    const AmiVectorArray x_disc;
     /** array of differential state vectors at discontinuities*/
-    AmiVectorArray xdot_disc;
+    const AmiVectorArray xdot_disc;
     /** array of old differential state vectors at discontinuities*/
-    AmiVectorArray xdot_old_disc;
+    const AmiVectorArray xdot_old_disc;
     /** sensitivity state vector array */
     AmiVectorArray sx;
     /** array of number of found roots for a certain event type */
-    int *nroots = nullptr;
+    std::vector<int> nroots;
     /** array containing the time-points of discontinuities*/
-    realtype *discs = nullptr;
+    const std::vector<realtype> discs;
     /** array containing the index of discontinuities */
-    realtype *irdiscs = nullptr;
+    const std::vector<realtype> irdiscs;
     /** index of the backward problem */
     int which = 0;
     /** current root index, will be increased during the forward solve and
      * decreased during backward solve */
     int iroot = 0;
     /** array of index which root has been found */
-    int *rootidx = nullptr;
+    const std::vector<int> rootidx;
     
     /** state derivative of data likelihood */
-    std::vector<double> dJydx;
+    const std::vector<double> dJydx;
     /** state derivative of event likelihood */
-    std::vector<double> dJzdx;
+    const std::vector<double> dJzdx;
 
     friend class Solver;
 };

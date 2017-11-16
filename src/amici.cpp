@@ -60,11 +60,11 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
     
     auto solver = std::unique_ptr<Solver>(model->getSolver());
     
-    ForwardProblem fwd = ForwardProblem(udata,rdata,edata,model,solver.get());
-    fwd.workForwardProblem();
+    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(udata,rdata,edata,model,solver.get()));
+    fwd.get()->workForwardProblem();
 
-    BackwardProblem bwd = BackwardProblem(fwd);
-    bwd.workBackwardProblem();
+    auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
+    bwd.get()->workBackwardProblem();
 
     return;
 }

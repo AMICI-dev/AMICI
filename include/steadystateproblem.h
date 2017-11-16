@@ -50,9 +50,17 @@ class SteadystateProblem {
      * @param[in] nx number of state variables
      */
     SteadystateProblem(const int nx, const int nplist) :
-    delta(nx), rel_x_newton(nx), x_newton(nx),
-    x(nx), dx(nx), xdot(nx),
-    x_old(nx), xdot_old(nx), sx(nx,nplist), sdx(nx,nplist){};
+    delta(nx),
+    rel_x_newton(nx),
+    x_newton(nx),
+    x(nx),
+    x_old(nx),
+    dx(nx),
+    xdot(nx),
+    xdot_old(nx),
+    sx(nx,nplist),
+    sdx(nx,nplist)
+    {};
     
     /** default destructor */
     ~SteadystateProblem(){};

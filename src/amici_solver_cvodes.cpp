@@ -488,8 +488,8 @@ void CVodeSolver::turnOffRootFinding() {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*NeqBdot);
-        if(!model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                     N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()))
+        if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                     N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(NeqBdot,JB->data,"Jacobian");
     }
@@ -537,8 +537,8 @@ void CVodeSolver::turnOffRootFinding() {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*JB->NNZ);
-        if(!model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                           N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()))
+        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                           N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(JB->NNZ,JB->data,"Jacobian");
     }
@@ -598,8 +598,8 @@ void CVodeSolver::turnOffRootFinding() {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(JDiag),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                        model->w.data(),model->dwdx.data()))
+        if(model->model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                        model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
@@ -620,8 +620,8 @@ void CVodeSolver::turnOffRootFinding() {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(Jv),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                     N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()))
+        if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                     N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
@@ -643,8 +643,8 @@ void CVodeSolver::turnOffRootFinding() {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(JvB),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                      N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()))
+        if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                      N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
         return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
@@ -660,9 +660,8 @@ void CVodeSolver::turnOffRootFinding() {
                      void *user_data) {
         Model_ODE *model = (Model_ODE*) user_data;
         memset(root,0.0,sizeof(realtype)*model->ne);
-        if(!model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data())) {
+        if(model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
-        }
         return checkVals(model->ne,root,"root function");
     }
     
@@ -720,8 +719,9 @@ void CVodeSolver::turnOffRootFinding() {
         memset(N_VGetArrayPointer(qBdot),0.0,sizeof(realtype)*model->nJ*model->plist.size());
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for(int ip = 1; ip < model->plist.size(); ip++)
-            model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                               N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data());
+            if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                               N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data()) != AMICI_SUCCESS)
+                return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
@@ -746,17 +746,16 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector tmp1, N_Vector tmp2) {
         Model_ODE *model = (Model_ODE*) user_data;
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            if(!model->fdxdotdp(t,x))
+            if(model->fdxdotdp(t,x) != AMICI_SUCCESS)
                 return AMICI_ERROR;
-            if(!fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr))// also calls dwdx & dx
+            if(fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr) != AMICI_SUCCESS)// also calls dwdx & dx
                 return AMICI_ERROR;
         }
         memset(N_VGetArrayPointer(sxdot),0.0,sizeof(realtype)*model->nx);
-        if(!model->model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        if(model->model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                         model->plist[ip],N_VGetArrayPointer(sx),
-                        model->w.data(),model->dwdx.data(),model->J->data,model->dxdotdp.data())) {
+                        model->w.data(),model->dwdx.data(),model->J->data,model->dxdotdp.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
-        }
         return checkVals(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 

@@ -32,9 +32,9 @@ namespace amici {
             nvec = N_VMake_Serial(rvec.size(),rvec.data());
         };
         
-        AmiVector(const AmiVector *vold) {
-            vec = vold->vec;
-            nvec = N_VMake_Serial(vold->vec.size(),vec.data());
+        AmiVector(const AmiVector& vold) {
+            vec = vold.vec;
+            nvec = N_VMake_Serial(vold.vec.size(),vec.data());
         };
         
         realtype *data() {
@@ -100,9 +100,12 @@ namespace amici {
             }
         };
         
-        AmiVectorArray(const AmiVectorArray *vaold) {
-            vec_array = vaold->vec_array;
-            for (int idx = 0; idx < vaold->getLength(); idx++) {
+        
+        AmiVectorArray(const AmiVectorArray& vaold) : vec_array(vaold.vec_array) {
+            N_Vector nvec = N_VMake_Serial(vec_array.at(0).getLength(),vec_array.at(0).data());
+            nvec_array = N_VCloneVectorArrayEmpty_Serial(vec_array.size(),nvec);
+            N_VDestroy_Serial(nvec);
+            for (int idx = 0; idx < vaold.getLength(); idx++) {
                 nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
                 vec_array.at(idx).nvec = nvec_array[idx];
             }
@@ -131,6 +134,11 @@ namespace amici {
         AmiVector& operator[](int pos) {
             return vec_array.at(pos);
         }
+        
+        const AmiVector& operator[](int pos) const {
+            return vec_array.at(pos);
+        }
+        
         
         const int getLength() const {
             return vec_array.size();

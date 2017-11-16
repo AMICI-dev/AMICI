@@ -30,13 +30,26 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     ForwardProblem::ForwardProblem(const UserData *udata,
                    ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver) :
-    dJzdx(model->nJ * model->nx * udata->nme(), 0.0),
+    rootidx(model->ne*model->ne*model->ne*rdata->nmaxevent, 0),
+    nroots(model->ne, 0),
+    rootvals(model->ne, 0.0),
+    rvaltmp(model->ne, 0.0),
+    discs(rdata->nmaxevent * model->ne, 0.0),
+    irdiscs(rdata->nmaxevent * model->ne, 0.0),
+    x_disc(model->nx,udata->nme()*model->ne),
+    xdot_disc(model->nx,udata->nme()*model->ne),
+    xdot_old_disc(model->nx,udata->nme()*model->ne),
     dJydx(model->nJ * model->nx * udata->nt(), 0.0),
-    x(model->nx), x_old(model->nx), dx(model->nx), dx_old(model->nx),
-    xdot(model->nx), xdot_old(model->nx),
-    sx(model->nx,udata->nplist()), sdx(model->nx,udata->nplist()),
-    rootsfound(model->ne, 0), x_disc(model->nx,udata->nme()*model->ne),
-    xdot_disc(model->nx,udata->nme()*model->ne), xdot_old_disc(model->nx,udata->nme()*model->ne)
+    dJzdx(model->nJ * model->nx * udata->nme(), 0.0),
+    rootsfound(model->ne, 0),
+    x(model->nx),
+    x_old(model->nx),
+    dx(model->nx),
+    dx_old(model->nx),
+    xdot(model->nx),
+    xdot_old(model->nx),
+    sx(model->nx,udata->nplist()),
+    sdx(model->nx,udata->nplist())
     {
         t = udata->t0();
         this->model = model;
@@ -143,7 +156,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     int secondevent = 0;
 
     /* store heaviside information at event occurence */
-    model->froot(t, &x, &dx, rootvals);
+    model->froot(t, &x, &dx, rootvals.data());
     
     if (!seflag) {
         solver->AMIGetRootInfo(rootsfound.data());
@@ -156,7 +169,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         }
     }
     for (ie = 0; ie < model->ne; ie++) {
-        rvaltmp[ie] = rootvals[ie];
+        rvaltmp.at(ie) = rootvals.at(ie);
     }
 
     if (!seflag) {
@@ -237,13 +250,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
 
     /* check whether we need to fire a secondary event */
-    model->froot(t, &x, &dx, rootvals);
+    model->froot(t, &x, &dx, rootvals.data());
     for (ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound.at(ie) == 0) {
             /* check whether there was a zero-crossing */
-            if (0 > rvaltmp[ie] * rootvals[ie]) {
-                if (rvaltmp[ie] < rootvals[ie]) {
+            if (0 > rvaltmp.at(ie) * rootvals.at(ie)) {
+                if (rvaltmp.at(ie) < rootvals.at(ie)) {
                     rootsfound.at(ie) = 1;
                 } else {
                     rootsfound.at(ie) = -1;
@@ -303,33 +316,33 @@ void ForwardProblem::getEventOutput() {
 
     if (t == rdata->ts[rdata->nt - 1]) {
         // call from fillEvent at last timepoint
-        model->froot(t, &x, &dx, rootvals);
+        model->froot(t, &x, &dx, rootvals.data());
     }
 
     /* EVENT OUTPUT */
     for (int ie = 0; ie < model->ne;
          ie++) { /* only look for roots of the rootfunction not discontinuities
                     */
-        if (nroots[ie] >= rdata->nmaxevent)
+        if (nroots.at(ie) >= rdata->nmaxevent)
             continue;
 
         if (rootsfound.at(ie) == 1 || t == rdata->ts[rdata->nt - 1]) {
             /* only consider transitions false
              -> true  or event filling*/
 
-            model->fz(nroots[ie], ie, t, &x, rdata);
+            model->fz(nroots.at(ie), ie, t, &x, rdata);
 
             if (edata) {
-                model->fsigma_z(t, ie, nroots, edata, rdata);
+                model->fsigma_z(t, ie, nroots.data(), edata, rdata);
 
-                model->fJz(nroots[ie], rdata, edata);
+                model->fJz(nroots.at(ie), rdata, edata);
 
                 if (t == rdata->ts[rdata->nt - 1]) {
                     // call from fillEvent at last
                     // timepoint, add regularization
                     // based on rz
-                    model->frz(nroots[ie], ie, t, &x, rdata);
-                    model->fJrz(nroots[ie], rdata, edata);
+                    model->frz(nroots.at(ie), ie, t, &x, rdata);
+                    model->fJrz(nroots.at(ie), rdata, edata);
                 }
             }
 
@@ -339,7 +352,7 @@ void ForwardProblem::getEventOutput() {
                     getEventSensisFSA(ie);
                 }
             }
-            nroots[ie]++;
+            nroots.at(ie)++;
         }
     }
     if (t == rdata->ts[rdata->nt - 1]) {
@@ -348,7 +361,7 @@ void ForwardProblem::getEventOutput() {
         bool continue_loop = false;
         for (int ie = 0; ie < model->ne;
              ie++) {
-            if (nroots[ie] < rdata->nmaxevent) {
+            if (nroots.at(ie) < rdata->nmaxevent) {
                 continue_loop = true;
                 break;
             }
@@ -374,7 +387,7 @@ void ForwardProblem::prepEventSensis(int ie) {
         for (int iz = 0; iz < model->nztrue; iz++) {
             if (model->z2event[iz] - 1 == ie) {
                 if (!amiIsNaN(
-                              edata->mz[iz * rdata->nmaxevent + nroots[ie]])) {
+                              edata->mz[iz * rdata->nmaxevent + nroots.at(ie)])) {
                     model->fdzdp(t, ie, &x);
                     
                     model->fdzdx(t, ie, &x);
@@ -387,7 +400,7 @@ void ForwardProblem::prepEventSensis(int ie) {
                      value is NaN, use
                      the parameter value. Store this value in the return
                      struct */
-                    if (amiIsNaN(edata->sigmaz[nroots[ie] +
+                    if (amiIsNaN(edata->sigmaz[nroots.at(ie) +
                                                rdata->nmaxevent * iz])) {
                         model->fdsigma_zdp(t);
                     } else {
@@ -395,13 +408,13 @@ void ForwardProblem::prepEventSensis(int ie) {
                             model->dsigmazdp[iz + model->nz * ip] = 0;
                         }
                         model->sigmaz[iz] =
-                        edata->sigmaz[nroots[ie] +
+                        edata->sigmaz[nroots.at(ie) +
                                       rdata->nmaxevent * iz];
                     }
-                    rdata->sigmaz[nroots[ie] + rdata->nmaxevent * iz] =
+                    rdata->sigmaz[nroots.at(ie) + rdata->nmaxevent * iz] =
                     model->sigmaz[iz];
                     for (int ip = 0; ip < rdata->nplist; ip++) {
-                        rdata->ssigmaz[nroots[ie] +
+                        rdata->ssigmaz[nroots.at(ie) +
                                        rdata->nmaxevent *
                                        (iz + model->nz * ip)] =
                         model->dsigmazdp[iz + model->nz * ip];
@@ -409,15 +422,15 @@ void ForwardProblem::prepEventSensis(int ie) {
                 }
             }
         }
-        model->fdJzdz(nroots[ie], rdata, edata);
-        model->fdJzdsigma(nroots[ie], rdata, edata);
+        model->fdJzdz(nroots.at(ie), rdata, edata);
+        model->fdJzdsigma(nroots.at(ie), rdata, edata);
 
         if (t == rdata->ts[rdata->nt - 1]) {
-            model->fdJrzdz(nroots[ie], rdata, edata);
-            model->fdJrzdsigma(nroots[ie], rdata, edata);
+            model->fdJrzdz(nroots.at(ie), rdata, edata);
+            model->fdJrzdsigma(nroots.at(ie), rdata, edata);
         }
-        model->fdJzdx(dJzdx, nroots[ie], t, edata, rdata);
-        model->fdJzdp(nroots[ie], t, edata, rdata);
+        model->fdJzdx(dJzdx, nroots.at(ie), t, edata, rdata);
+        model->fdJzdp(nroots.at(ie), t, edata, rdata);
         if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             for (int iJ = 0; iJ < model->nJ; iJ++) {
                 for (int ip = 0; ip < rdata->nplist; ip++) {
@@ -447,13 +460,13 @@ void ForwardProblem::getEventSensisFSA(int ie) {
     if (t ==
         rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
         model->fsz_tf(ie, rdata);
-        model->fsrz(nroots[ie],ie,t,&x,&sx,rdata);
+        model->fsrz(nroots.at(ie),ie,t,&x,&sx,rdata);
     } else {
-        model->fsz(nroots[ie],ie,t,&x,&sx,rdata);
+        model->fsz(nroots.at(ie),ie,t,&x,&sx,rdata);
     }
 
     if (edata) {
-        model->fsJz(nroots[ie],dJzdx,&sx,rdata);
+        model->fsJz(nroots.at(ie),dJzdx,&sx,rdata);
     }
 }
 
