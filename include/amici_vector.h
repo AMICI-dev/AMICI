@@ -75,6 +75,8 @@ namespace amici {
     private:
         std::vector<realtype> vec;
         N_Vector nvec;
+        
+        friend class AmiVectorArray;
     };
     
     class AmiVectorArray {
@@ -91,15 +93,19 @@ namespace amici {
         {
             N_Vector nvec = N_VMake_Serial(length_inner,vec_array.at(0).data());
             nvec_array = N_VCloneVectorArrayEmpty_Serial(length_outer,nvec);
-            for (int idx = 0; idx < length_outer; idx++)
-                nvec_array[idx] = vec_array[idx].getNVector();
+            N_VDestroy_Serial(nvec);
+            for (int idx = 0; idx < length_outer; idx++) {
+                nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
+                vec_array.at(idx).nvec = nvec_array[idx];
+            }
         };
         
         AmiVectorArray(const AmiVectorArray *vaold) {
             vec_array = vaold->vec_array;
-            for (int idx = 0; idx < vaold->getLength(); idx++)
+            for (int idx = 0; idx < vaold->getLength(); idx++) {
                 nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
-            
+                vec_array.at(idx).nvec = nvec_array[idx];
+            }
         }
         
         realtype *data(int idx) {
@@ -135,12 +141,6 @@ namespace amici {
                 it != vec_array.end(); ++it)
                 it->reset();
         }
-        
-        /*! default destructor
-         */
-        ~AmiVectorArray(){
-            N_VDestroyVectorArray_Serial(nvec_array,vec_array.size());
-        };
     private:
         std::vector<AmiVector> vec_array;
         N_Vector *nvec_array;

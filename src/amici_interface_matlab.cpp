@@ -505,16 +505,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         } catch (amici::IntegrationFailure& ex) {
             rdata->invalidate(ex.time);
             *(rdata->status) = ex.error_code;
-        } catch (amici::SetupFailure& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
-        } catch (amici::NullPointerException& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:null","AMICI internal memory was corrupted:\n(%s)",ex.what());
+        } catch (amici::AmiException& ex) {
+            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n(%s)\nError occured in:\n(%s)",ex.what(),ex.getBacktrace());
+        } catch (std::exception& ex) {
+            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n(%s)",ex.what());
         } catch (...) {
             amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
         }
         rdata->applyChainRuleFactorToSimulationResults(udata.get());
+    } catch(std::exception& ex) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI execution failed:\n(%s)",ex.what());
     } catch(...) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed!");
+        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }
     
     

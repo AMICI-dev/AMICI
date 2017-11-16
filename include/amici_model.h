@@ -29,7 +29,7 @@ namespace amici {
     public:
         /** default constructor */
         Model()
-        : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
+        : nplist(0), np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
         o2mode(AMICI_O2MODE_NONE) {}
         
@@ -61,17 +61,22 @@ namespace amici {
               const AMICI_o2mode o2mode, const std::vector<realtype> p,
               const std::vector<realtype> k, const std::vector<int> plist,
               const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
+        : nplist(plist.size()), np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-        nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode), nplist(plist.size()),
+        nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode),
+        z2event(z2event),
+        idlist(idlist),
+        sigmay(ny, 0.0),
+        dsigmaydp(ny*nplist, 0.0),
+        sigmaz(nz, 0.0),
+        dsigmazdp(nz*nplist, 0.0),
         dJydp(nJ*nplist, 0.0),
-        dJydy(nJ*nytrue*ny, 0.0),
-        dJydsigma(nJ*nytrue*ny, 0.0),
         dJzdp(nJ*nplist, 0.0),
-        dJzdz(nJ*nztrue*nz, 0.0),
-        dJzdsigma(nJ*nztrue*nz, 0.0),
-        dJrzdz(nJ*nztrue*nz, 0.0),
-        dJrzdsigma(nJ*nztrue*nz, 0.0),
+        deltax(nx, 0.0),
+        deltasx(nx*nplist, 0.0),
+        deltaxB(nx, 0.0),
+        deltaqB(nJ*nplist, 0.0),
+        dxdotdp(nx*nplist, 0.0),
         dJydyTmp(nJ * ny, 0.0),
         dJydxTmp(nJ * nx, 0.0),
         dJydsigmaTmp(nJ * ny, 0.0),
@@ -79,29 +84,28 @@ namespace amici {
         dJzdxTmp(nJ * nx, 0.0),
         dJzdsigmaTmp(nJ * nz, 0.0),
         dJrzdsigmaTmp(nJ * nz, 0.0),
-        y(ny, 0.0),
         x(nx, 0.0),
+        y(ny, 0.0),
+        my(nytrue, 0.0),
         z(nz, 0.0),
+        mz(nztrue, 0.0),
         rz(nz, 0.0),
+        dJydy(nJ*nytrue*ny, 0.0),
+        dJydsigma(nJ*nytrue*ny, 0.0),
+        dJzdz(nJ*nztrue*nz, 0.0),
+        dJzdsigma(nJ*nztrue*nz, 0.0),
+        dJrzdz(nJ*nztrue*nz, 0.0),
+        dJrzdsigma(nJ*nztrue*nz, 0.0),
         dzdx(nz*nx, 0.0),
         dzdp(nz*nplist, 0.0),
         drzdx(nz*nx, 0.0),
         drzdp(nz*nplist, 0.0),
         dydp(ny*nplist, 0.0),
         dydx(ny*nx,0.0),
-        sigmay(ny, 0.0),
-        dsigmaydp(ny*nplist, 0.0),
-        sigmaz(nz, 0.0),
-        dsigmazdp(nz*nplist, 0.0),
-        dxdotdp(nx*nplist, 0.0),
         w(nw, 0.0),
         dwdx(ndwdx, 0.0),
         dwdp(ndwdp, 0.0),
         M(nx*nx, 0.0),
-        deltax(nx, 0.0),
-        deltasx(nx*nplist, 0.0),
-        deltaxB(nx, 0.0),
-        deltaqB(nJ*nplist, 0.0),
         stau(nplist, 0.0),
         h(ne,0.0),
         p(p),
@@ -646,7 +650,7 @@ namespace amici {
         void initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata);
         
         // Model dimensions 
-        int nplist;
+        const int nplist;
         /** total number of model parameters */
         const int np;
         /** number of fixed parameters */
