@@ -314,7 +314,7 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
-            this = makeStrSyms(this);
+            this = makeStrSymsSparse(this);
             
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);
@@ -824,6 +824,14 @@ function this = unifySyms(this,model)
     this.sym = mysubs(this.sym,model.sym.x,model.fun.x.sym);
     this.sym = mysubs(this.sym,model.sym.p,model.fun.p.sym);
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
+end
+
+function this = makeStrSymsSparse(this)
+    this.strsym = sym(zeros(size(this.sym)));
+    idx = find(this.sym);
+    for isym = 1:length(idx)
+        this.strsym(idx(isym)) = sym(sprintf([this.cvar '_%i'], isym-1));
+    end
 end
 
 function this = makeStrSyms(this)
