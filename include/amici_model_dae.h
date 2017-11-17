@@ -111,7 +111,7 @@ namespace amici {
          * @param[in] dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
-        virtual int model_JSparse(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual int model_JSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
         
         /** model specific implementation for fJSparseB
@@ -128,7 +128,7 @@ namespace amici {
          * @param[in] dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
-        virtual int model_JSparseB(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual int model_JSparseB(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                    const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                                    const realtype *w, const realtype *dwdx){
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);

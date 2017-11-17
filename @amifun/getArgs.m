@@ -44,11 +44,11 @@ function this = getArgs(this,model)
         case 'JDiag'
             this.argstr = ['(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj dx ', const realtype *w, const realtype *dwdx)'];
         case 'JSparse'
-            this.argstr = ['(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj dx ', const realtype *w, const realtype *dwdx)'];
+            this.argstr = ['(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj dx ', const realtype *w, const realtype *dwdx)'];
         case 'JB'
             this.argstr = ['(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj ', const realtype *xB' dx dxB ', const realtype *w, const realtype *dwdx)'];
         case 'JSparseB'
-            this.argstr = ['(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj ', const realtype *xB' dx dxB ', const realtype *w, const realtype *dwdx)'];
+            this.argstr = ['(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' cj ', const realtype *xB' dx dxB ', const realtype *w, const realtype *dwdx)'];
         case 'sxdot'
             this.argstr = ['(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip' dx ', const realtype *sx' sdx ', const realtype *w, const realtype *dwdx, const realtype *J' M ', const realtype *dxdotdp)'];
         case 'sx0'

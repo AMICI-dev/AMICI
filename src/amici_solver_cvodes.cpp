@@ -513,8 +513,8 @@ void CVodeSolver::turnOffRootFinding() {
                         N_Vector tmp3) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(J->data,0.0,sizeof(realtype)*J->NNZ);
-        model->model_JSparse(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        SparseSetMatToZero(J);
+        model->model_JSparse(J,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                       model->w.data(),model->dwdx.data());
         return checkVals(J->NNZ,J->data,"Jacobian");
     }
@@ -536,8 +536,8 @@ void CVodeSolver::turnOffRootFinding() {
                          N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(JB->data,0.0,sizeof(realtype)*JB->NNZ);
-        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        SparseSetMatToZero(JB);
+        if(model->model_JSparseB(JB,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                            N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(JB->NNZ,JB->data,"Jacobian");

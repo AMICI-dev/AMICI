@@ -315,6 +315,8 @@ function [this,model] = getSyms(this,model)
             end
             
             this = makeStrSymsSparse(this);
+               
+        
             
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);

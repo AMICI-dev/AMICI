@@ -10,7 +10,7 @@ function [ this ] = getCVar(this)
         case 'J'
             this.cvar =  'J';
         case 'JSparse'
-            this.cvar =  'var_J';
+            this.cvar =  'var_JSparse';
         case 'Jv'
             this.cvar =  'var_Jv';
         case 'JvB'
@@ -18,7 +18,7 @@ function [ this ] = getCVar(this)
         case 'JB'
             this.cvar =  'JB';
         case 'JSparseB'
-            this.cvar =  'var_JB';
+            this.cvar =  'var_JSparseB';
         case 'M'
             this.cvar =  'M';
         case 'dfdx'

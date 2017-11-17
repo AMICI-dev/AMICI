@@ -475,7 +475,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(J->data,0.0,sizeof(realtype)*J->NNZ);
-        model->model_JSparse(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        model->model_JSparse(J,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                       cj,N_VGetArrayPointer(dx),model->w.data(),model->dwdx.data());
         return checkVals(J->NNZ,J->data,"Jacobian");
     }
@@ -501,7 +501,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*JB->NNZ);
-        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        if(model->model_JSparseB(JB,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                            cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                            model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;

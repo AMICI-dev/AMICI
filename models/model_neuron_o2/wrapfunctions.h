@@ -2,6 +2,7 @@
 #define _amici_wrapfunctions_h
 #include <math.h>
 #include <include/amici_defines.h>
+#include <sundials/sundials_sparse.h> //SlsMat definition
 #include <include/udata.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_model_ode.h>
@@ -26,8 +27,8 @@ void getModelDims(int *nx, int *nk, int *np);
 extern void J_model_neuron_o2(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void JB_model_neuron_o2(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_neuron_o2(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
-extern void JSparse_model_neuron_o2(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
-extern void JSparseB_model_neuron_o2(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
+extern void JSparse_model_neuron_o2(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void JSparseB_model_neuron_o2(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void Jrz_model_neuron_o2(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
 extern void Jv_model_neuron_o2(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx);
 extern void JvB_model_neuron_o2(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx);
@@ -111,13 +112,13 @@ public:
         return AMICI_SUCCESS;
     }
 
-    virtual int model_JSparse(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
-        JSparse_model_neuron_o2(J, t, x, p, k, h, w, dwdx);
+    virtual int model_JSparse(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+        JSparse_model_neuron_o2(JSparse, t, x, p, k, h, w, dwdx);
         return AMICI_SUCCESS;
     }
 
-    virtual int model_JSparseB(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
-        JSparseB_model_neuron_o2(JB, t, x, p, k, h, xB, w, dwdx);
+    virtual int model_JSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
+        JSparseB_model_neuron_o2(JSparseB, t, x, p, k, h, xB, w, dwdx);
         return AMICI_SUCCESS;
     }
 

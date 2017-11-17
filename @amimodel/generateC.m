@@ -23,11 +23,31 @@ for ifun = this.funs
         fprintf(fid,'\n');
         fprintf(fid,'#include <include/symbolic_functions.h>\n');
         fprintf(fid,'#include <sundials/sundials_types.h> //realtype definition\n');
+        if(ismember(ifun{1},{'JSparse','JSparseB'}))
+            fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
+        end
         fprintf(fid,'#include <cmath> \n');
         fprintf(fid,'\n');
         
         % function definition
         fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+        if(strcmp(ifun{1},'JSparse'))
+            for i = 1:length(this.rowvals)
+                fprintf(fid,['  JSparse->indexvals[' num2str(i-1) '] = ' num2str(this.rowvals(i)) ';\n']);
+            end
+            for i = 1:length(this.colptrs)
+                fprintf(fid,['  JSparse->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrs(i)) ';\n']);
+            end 
+        end
+        if(strcmp(ifun{1},'JSparseB'))
+            for i = 1:length(this.rowvalsB)
+                fprintf(fid,['  JSparseB->indexvals[' num2str(i-1) '] = ' num2str(this.rowvalsB(i)) ';\n']);
+            end
+            for i = 1:length(this.colptrsB)
+                fprintf(fid,['  JSparseB->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrsB(i)) ';\n']);
+            end
+        end
+        
         if(strcmp(ifun{1},'JBand'))
             fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
         elseif(strcmp(ifun{1},'JBandB'))
@@ -63,6 +83,7 @@ fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <math.h>\n');
 fprintf(fid,'#include <include/amici_defines.h>\n');
+fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
 fprintf(fid,'#include <include/udata.h>\n');
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
@@ -191,6 +212,7 @@ argstr = strrep(argstr,'realtype','');
 argstr = strrep(argstr,'int','');
 argstr = strrep(argstr,'const','');
 argstr = strrep(argstr,'double','');
+argstr = strrep(argstr,'SlsMat','');
 argstr = strrep(argstr,'*','');
 argstr = strrep(argstr,' ','');
 argstr = strrep(argstr,',',', ');

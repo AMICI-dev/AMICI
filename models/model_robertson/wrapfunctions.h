@@ -2,6 +2,7 @@
 #define _amici_wrapfunctions_h
 #include <math.h>
 #include <include/amici_defines.h>
+#include <sundials/sundials_sparse.h> //SlsMat definition
 #include <include/udata.h>
 #include <include/amici_solver_idas.h>
 #include <include/amici_model_dae.h>
@@ -26,8 +27,8 @@ void getModelDims(int *nx, int *nk, int *np);
 extern void J_model_robertson(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
 extern void JB_model_robertson(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_robertson(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
-extern void JSparse_model_robertson(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
-extern void JSparseB_model_robertson(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
+extern void JSparse_model_robertson(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
+extern void JSparseB_model_robertson(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
 extern void Jrz_model_robertson(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
 extern void Jv_model_robertson(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *v, const realtype *w, const realtype *dwdx);
 extern void JvB_model_robertson(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *vB, const realtype *w, const realtype *dwdx);
@@ -112,13 +113,13 @@ public:
         return AMICI_SUCCESS;
     }
 
-    virtual int model_JSparse(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
-        JSparse_model_robertson(J, t, x, p, k, h, cj, dx, w, dwdx);
+    virtual int model_JSparse(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
+        JSparse_model_robertson(JSparse, t, x, p, k, h, cj, dx, w, dwdx);
         return AMICI_SUCCESS;
     }
 
-    virtual int model_JSparseB(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx) override {
-        JSparseB_model_robertson(JB, t, x, p, k, h, cj, xB, dx, dxB, w, dwdx);
+    virtual int model_JSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx) override {
+        JSparseB_model_robertson(JSparseB, t, x, p, k, h, cj, xB, dx, dxB, w, dwdx);
         return AMICI_SUCCESS;
     }
 
