@@ -15,6 +15,8 @@ build-debug/*
 
 tests/cpputest/build/*
 
+tests/cpputest/build_xcode/*
+
 tests/cpputest/Testing/*
 
 ThirdParty/*
@@ -146,3 +148,4 @@ mtoc/config/latexextras.sty-e
 mtoc/config/latexextras.sty
 
 mtoc/config/Doxyfile-e
+tests/cpputest/build_xcode/unittests/Debug/en.lproj/unittests

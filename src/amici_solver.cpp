@@ -76,9 +76,9 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
                 /* Set sensitivity analysis optional inputs */
                 std::vector<int> plist(udata->plist());
                 std::vector<double> par;
-                par.assign(udata->p(),udata->p()+udata->np());
+                par.assign(udata->unp(),udata->unp()+udata->nplist());
                 std::vector<double> pbar;
-                pbar.assign(udata->pbar.data(),udata->pbar.data()+udata->np());
+                pbar.assign(udata->pbar.data(),udata->pbar.data()+udata->nplist());
                 AMISetSensParams(par.data(), pbar.data(), plist.data());
                 AMISetSensErrCon(TRUE);
                 AMISensEEtolerances();
