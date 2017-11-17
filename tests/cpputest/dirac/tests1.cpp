@@ -20,9 +20,13 @@ TEST_GROUP(groupDirac)
 
 
 amici::UserData *getTestUserData() {
-    amici::UserData *udata = new amici::UserData(2,1,3);
-    double par[2] = {1,3};
-    double konst[1] = {1};
+    int nx, nk, np;
+    getModelDims(&nx,&nk,&np);
+    amici::UserData *udata = new amici::UserData(np,nk,nx);
+    double par[np];
+    double konst[nk];
+    memset(par,0,np*sizeof(double));
+    memset(konst,0,nk*sizeof(double));
     udata->setParameters(par);
     udata->setConstants(konst);
     return udata;
