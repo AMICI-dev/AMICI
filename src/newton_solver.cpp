@@ -437,7 +437,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
     model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_delta, ns_Jv, 0.0,  tdata, ns_tmp, NULL);
     
     // ns_r = xdot - ns_Jv;
-    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
+    N_VLinearSum(-1.0, ns_Jv, -1.0, tdata->xdot, ns_r);
     N_VDiv(ns_r, ns_Jdiag, ns_r);
     res = sqrt(N_VDotProd(ns_r, ns_r));
     N_VScale(1.0, ns_r, ns_rt);
@@ -484,6 +484,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
         realtype *res_abs_tmp = N_VGetArrayPointer(ns_r);
         realtype *res_rel_tmp = N_VGetArrayPointer(ns_r_rel);
         converged = true;
+        res = sqrt(N_VDotProd(ns_r, ns_r));
         for (int ix = 0; ix < model->nx; ix++) {
             if (res_rel_tmp[ix] < udata->atol)
                 res_rel_tmp[ix] = udata->atol;
