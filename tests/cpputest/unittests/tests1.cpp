@@ -2,14 +2,26 @@
 #include <include/amici_hdf5.h>
 #include <include/amici_interface_cpp.h>
 
+#include <include/amici.h>
 #include <include/amici_solver_idas.h>
 #include <include/symbolic_functions.h>
-#include <include/amici_model.h>
+#include <include/amici_model_ode.h>
 #include <cstring>
 #include <cmath>
+#include <vector>
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
+
+void getModelDims(int *nx, int *nk, int *np) {
+    *nx = 0;
+    *nk = 0;
+    *np = 0;
+}
+
+amici::Model *getModel(const amici::UserData *udata) {
+    return new amici::Model_Test();
+}
 
 using namespace amici;
 
@@ -26,14 +38,18 @@ TEST_GROUP(amici)
 
 TEST(amici, testRunAmiciSimulationStateMismatch) {
     UserData udata(1, 2, 3);
-    Model model(4, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
+    Model_Test model(4, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST(amici, testRunAmiciSimulationRdataMissing) {
     UserData udata(1, 2, 3);
-    Model model(1, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
+    Model_Test model(1, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST_GROUP(userData)
@@ -119,7 +135,7 @@ TEST(userData, testScalingLin) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_NONE;
+    udata.setPScale(AMICI_SCALING_NONE);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
@@ -131,7 +147,7 @@ TEST(userData, testScalingLog) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_LN;
+    udata.setPScale(AMICI_SCALING_LN);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
@@ -143,7 +159,7 @@ TEST(userData, testScalingLog10) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_LOG10;
+    udata.setPScale(AMICI_SCALING_LOG10);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 

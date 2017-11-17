@@ -21,52 +21,38 @@ TEST_GROUP(groupSteadystate)
 
 
 TEST(groupSteadystate, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/nosensi/");
-    simulateAndWriteToFile(model, "/model_steadystate/nosensi/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/nosensi/");
+    amici::simulateAndWriteToFile("/model_steadystate/nosensi/");
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforward/");
-    simulateAndWriteToFile(model, "/model_steadystate/sensiforward/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforward/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardPlist) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwardplist/");
-    simulateAndWriteToFile(model, "/model_steadystate/sensiforwardplist/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwardplist/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardErrorInt) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwarderrorint/");
-    simulateAndWriteToFile(model, "/model_steadystate/sensiforwarderrorint/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrorint/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwarderrornewt/");
-    simulateAndWriteToFile(model, "/model_steadystate/sensiforwarderrornewt/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrornewt/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardDense) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/sensiforwarddense/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardSPBCG) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_steadystate/nosensiSPBCG/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_steadystate/nosensiSPBCG/");
 }
 
 

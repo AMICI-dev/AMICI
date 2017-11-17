@@ -6,10 +6,6 @@
 
 namespace amici {
 
-
-UserData Model::getUserData() const { return UserData(np, nk, nx); }
-
-UserData *Model::getNewUserData() const { return new UserData(np, nk, nx); }
 /** Sensitivity of measurements y, total derivative
  * @param it timepoint index @type int
  * @param[in,out] rdata pointer to return data object @type ReturnData

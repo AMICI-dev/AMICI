@@ -108,6 +108,10 @@ void UserData::setPlist(const int *plist, int length) {
     p_index.resize(length);
     memcpy(p_index.data(), plist, sizeof(int) * length);
 }
+    
+void UserData::setPScale(const AMICI_parameter_scaling pscale) {
+    this->pscale = pscale;
+}
 
 void UserData::requireSensitivitiesForAllParameters()
 {

@@ -101,6 +101,12 @@ class UserData {
      * in natural order.
      */
     void requireSensitivitiesForAllParameters();
+    
+    /**
+     * @brief setPScale.
+     * @param pscale
+     */
+    void setPScale(const AMICI_parameter_scaling pscale);
 
     /**
      * @brief setPbar. Must not be called before setPlist

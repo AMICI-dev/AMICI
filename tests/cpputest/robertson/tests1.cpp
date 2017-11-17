@@ -19,9 +19,7 @@ TEST_GROUP(groupRobertson)
 };
 
 TEST(groupRobertson, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_robertson/nosensi/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_robertson/nosensi/");
 }
 
 TEST(groupRobertson, testSimulationExpData) {
@@ -29,9 +27,7 @@ TEST(groupRobertson, testSimulationExpData) {
 }
 
 TEST(groupRobertson, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_robertson/sensiforward/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_robertson/sensiforward/");
 }
 
 TEST(groupRobertson, testSensitivityState) {

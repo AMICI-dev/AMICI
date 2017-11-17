@@ -21,9 +21,7 @@ TEST_GROUP(groupNeuronO2)
 
 
 TEST(groupNeuronO2, testSensitivity2) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_neuron/sensi2forward/", 10*TEST_ATOL, 10*TEST_RTOL);
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_neuron/sensi2forward/", 10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 
