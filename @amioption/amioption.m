@@ -55,7 +55,7 @@ classdef amioption < matlab.mixin.CustomDisplay
         % short simulation, newton_simInitGuess should be positive integer
         % which specifies the maximum number of simulation steps. If the
         % Newton solver should be called directly, set this option to -1.
-        newton_simInitGuess = -1;
+        newton_simInitGuess = 0;
         % newton solver: maximum newton steps
         newton_maxsteps = 40;
         % newton solver: maximum linear steps

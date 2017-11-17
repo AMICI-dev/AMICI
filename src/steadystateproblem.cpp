@@ -327,7 +327,7 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
         
         /* IF simulating to initial guess, stop at the given value */
         if (simInitGuess != 0)
-            if (it_newton >= udata->simInitGuess)
+            if (it_newton >= udata->newton_simInitGuess)
                 break;
     }
 }

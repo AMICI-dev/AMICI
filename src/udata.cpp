@@ -64,7 +64,6 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     newton_maxsteps = other.newton_maxsteps;
     newton_maxlinsteps = other.newton_maxlinsteps;
     newton_preeq = other.newton_preeq;
-    newton_precon = other.newton_precon;
     ism = other.ism;
     sensi_meth = other.sensi_meth;
     linsol = other.linsol;
@@ -84,7 +83,6 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     }
 
     ordering = other.ordering;
-    newton_precon = other.newton_precon;
     ism = other.ism;
 }
 
@@ -270,7 +268,7 @@ void UserData::print() const {
     printf("maxsteps: %d\n", maxsteps);
     printf("newton_atol: %e\n", newton_atol);
     printf("newton_rtol: %e\n", newton_rtol);
-    printf("newton_simInitGuess: %e\n", newton_simInitGuess);
+    printf("newton_simInitGuess: %d\n", newton_simInitGuess);
     printf("newton_maxsteps: %d\n", newton_maxsteps);
     printf("newton_maxlinsteps: %d\n", newton_maxlinsteps);
     printf("ism: %d\n", ism);

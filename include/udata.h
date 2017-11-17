@@ -168,13 +168,13 @@ class UserData {
     int maxsteps = 0;
 
     /** absolute tolerances for for steady state computation */
-    int newton_atol = 1e-16;
+    double newton_atol = 1e-16;
     
     /** relative tolerances for for steady state computation */
-    int newton_rtol = 1e-8;
+    double newton_rtol = 1e-8;
     
     /** relative tolerances for for steady state computation */
-    int newton_simInitGuess = -1;
+    int newton_simInitGuess = 0;
     
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps = 0;
