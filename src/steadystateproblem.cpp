@@ -107,8 +107,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     double res_tmp;
     double gamma = 1.0;
     bool compNewStep = TRUE;
-    
-    realtype *x_tmp;
 
     /* initialize output von linear solver for Newton step */
     N_VConst(0.0, delta.getNVector());
@@ -258,7 +256,6 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
     double res_rel = INFINITY;
-    realtype *x_tmp;
     
     int it_newton = 0;
     while(res_abs > udata->atol && res_rel > udata->rtol) {

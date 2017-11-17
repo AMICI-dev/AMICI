@@ -40,6 +40,7 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata,
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(
     const char *fileName, const char *datasetPath, Model *model);
 
+template <class hid_t>
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(
     hid_t fileId, const char *datasetPath, Model *model);
 
