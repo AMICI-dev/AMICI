@@ -41,53 +41,44 @@ void simulateAndVerifyFromFile(const std::string hdffile, std::string path, doub
 {
     // read simulation options
     std::string optionsPath = path + "/options";
-    const UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str());
+    auto udata = std::unique_ptr<const UserData>(AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str()));
 
-    Model *model = getModel(udata);
+    auto model = std::unique_ptr<Model>(getModel(udata.get()));
     
     std::string measurementPath = path + "/data";
-    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata, measurementPath.c_str(), model);
+    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
 
-    ReturnData *rdata = getSimulationResults(model, udata, edata);
+    ReturnData *rdata = getSimulationResults(model.get(), udata.get(), edata.get());
 
     std::string resultPath = path + "/results";
-    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata, udata, model, atol, rtol);
+    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata, udata.get(), model.get(), atol, rtol);
 
-    if(edata)
-        delete edata;
     delete rdata;
-    delete udata;
-    delete model;
 }
     
 void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)
 {
     // read simulation options
     std::string optionsPath = path + "/options";
-    const UserData *udata = AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str());
+    auto udata = std::unique_ptr<const UserData>(AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str()));
     
-    Model *model = getModel(udata);
+    auto model = std::unique_ptr<Model>(getModel(udata.get()));
     
     std::string measurementPath = path + "/data";
-    ExpData *edata = AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata, measurementPath.c_str(), model);
+    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
     
-    ReturnData *rdata = getSimulationResults(model, udata, edata);
+    ReturnData *rdata = getSimulationResults(model.get(), udata.get(), edata.get());
     
     std::string writePath = path + "/write";
-    AMI_HDF5_writeReturnData(rdata,udata,hdffilewrite.c_str(), writePath.c_str());
-    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata, udata, model, atol, rtol);
+    AMI_HDF5_writeReturnData(rdata,udata.get(),hdffilewrite.c_str(), writePath.c_str());
+    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata, udata.get(), model.get(), atol, rtol);
     
-    if(edata)
-        delete edata;
     delete rdata;
-    delete udata;
-    delete model;
 }
     
 
 ExpData *getTestExpData(const UserData *udata, Model *model) {
-    ExpData *edata = new ExpData(udata, model);
-    return edata;
+    return new ExpData(udata, model);
 }
 
 bool withinTolerance(double expected, double actual, double atol, double rtol, int index, const char *name) {
