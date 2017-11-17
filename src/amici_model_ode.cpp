@@ -56,7 +56,7 @@ namespace amici {
     int Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
-        for(int ip = 1; ip < nplist; ip++)
+        for(int ip = 0; ip < nplist; ip++)
             if(model_dxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
                           plist[ip],w.data(),dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;

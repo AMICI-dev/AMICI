@@ -55,7 +55,7 @@ namespace amici {
      int Model_DAE::fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
-        for(int ip = 1; ip < nplist; ip++)
+        for(int ip = 0; ip < nplist; ip++)
             if(model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
                           plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
