@@ -314,21 +314,7 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
-            %%
-            % build short strings for reuse of jacobian
-            
-            % find nonzero entries
-            idx = find(this.sym);
-            % create cell array of same size
-            Js = sym(zeros(length(idx),1));
-            % fill cells with strings
-            for iJ = 1:length(idx)
-                Js(iJ) = sym(sprintf('var_J_%i',iJ-1));
-            end
-            % create full symbolic matrix
-            this.strsym = sym(zeros(nx,nx));
-            % fill nonzero entries
-            this.strsym(idx) = Js;
+            this = makeStrSyms(this);
             
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);
@@ -375,7 +361,7 @@ function [this,model] = getSyms(this,model)
         case 'sxdot'
             if(np>0)
                 if(strcmp(model.wtype,'iw'))
-                    this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
+                    this.sym=model.fun.J.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
                 else
                     this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
                 end

@@ -1,56 +1,17 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_jakstat_adjoint_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void xdot_model_jakstat_adjoint(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-int ix;
-memset(xdot_tmp,0,sizeof(realtype)*9);
-w_model_jakstat_adjoint(t,x,NULL,tdata);
-  xdot_tmp[0] = (udata->k[1]*tdata->p[3]*x_tmp[8]-udata->k[0]*tdata->p[0]*tdata->w[0]*x_tmp[0])/udata->k[0];
-  xdot_tmp[1] = tdata->p[1]*tdata->w[1]*-2.0+tdata->p[0]*tdata->w[0]*x_tmp[0];
-  xdot_tmp[2] = tdata->p[1]*tdata->w[1]-tdata->p[2]*x_tmp[2];
-  xdot_tmp[3] = (udata->k[0]*tdata->p[2]*x_tmp[2]-udata->k[1]*tdata->p[3]*x_tmp[3])/udata->k[1];
-  xdot_tmp[4] = tdata->p[3]*(x_tmp[3]*2.0-x_tmp[4]);
-  xdot_tmp[5] = tdata->p[3]*(x_tmp[4]-x_tmp[5]);
-  xdot_tmp[6] = tdata->p[3]*(x_tmp[5]-x_tmp[6]);
-  xdot_tmp[7] = tdata->p[3]*(x_tmp[6]-x_tmp[7]);
-  xdot_tmp[8] = tdata->p[3]*(x_tmp[7]-x_tmp[8]);
-for(ix = 0; ix<9; ix++) {
-   if(amiIsNaN(xdot_tmp[ix])) {
-       xdot_tmp[ix] = 0;
-       if(!tdata->nan_xdot) {
-           warnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");
-           tdata->nan_xdot = TRUE;
-       }
-   }
-   if(amiIsInf(xdot_tmp[ix])) {
-       warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");
-       return;
-   }   if(udata->qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {
-       xdot_tmp[ix] = -xdot_tmp[ix];
-   }
+void xdot_model_jakstat_adjoint(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
+  xdot[0] = (k[1]*p[3]*x[8]-k[0]*p[0]*w[0]*x[0])/k[0];
+  xdot[1] = p[1]*w[1]*-2.0+p[0]*w[0]*x[0];
+  xdot[2] = p[1]*w[1]-p[2]*x[2];
+  xdot[3] = (k[0]*p[2]*x[2]-k[1]*p[3]*x[3])/k[1];
+  xdot[4] = p[3]*(x[3]*2.0-x[4]);
+  xdot[5] = p[3]*(x[4]-x[5]);
+  xdot[6] = p[3]*(x[5]-x[6]);
+  xdot[7] = p[3]*(x[6]-x[7]);
+  xdot[8] = p[3]*(x[7]-x[8]);
 }
-return;
-
-}
-
 

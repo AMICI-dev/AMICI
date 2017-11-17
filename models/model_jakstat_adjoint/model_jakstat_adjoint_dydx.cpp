@@ -1,28 +1,13 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_jakstat_adjoint_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void dydx_model_jakstat_adjoint(realtype t, int it, N_Vector x, amici::TempData *tdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-w_model_jakstat_adjoint(t,x,NULL,tdata);
-  tdata->dydx[0+1*3] = tdata->p[13]/tdata->p[4];
-  tdata->dydx[0+2*3] = (tdata->p[13]*2.0)/tdata->p[4];
-  tdata->dydx[1+0*3] = tdata->p[12]/tdata->p[4];
-  tdata->dydx[1+1*3] = tdata->p[12]/tdata->p[4];
-  tdata->dydx[1+2*3] = (tdata->p[12]*2.0)/tdata->p[4];
-return;
-
+void dydx_model_jakstat_adjoint(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+  dydx[0+1*3] = p[13]/p[4];
+  dydx[0+2*3] = (p[13]*2.0)/p[4];
+  dydx[1+0*3] = p[12]/p[4];
+  dydx[1+1*3] = p[12]/p[4];
+  dydx[1+2*3] = (p[12]*2.0)/p[4];
 }
-
 

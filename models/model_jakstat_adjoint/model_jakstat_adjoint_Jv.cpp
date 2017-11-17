@@ -1,46 +1,17 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_jakstat_adjoint_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void Jv_model_jakstat_adjoint(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-realtype *v_tmp = nullptr;
-if(v)
-    v_tmp = N_VGetArrayPointer(v);
-realtype *Jv_tmp = nullptr;
-if(Jv)
-    Jv_tmp = N_VGetArrayPointer(Jv);
-memset(Jv_tmp,0,sizeof(realtype)*9);
-w_model_jakstat_adjoint(t,x,NULL,tdata);
-  Jv_tmp[0] = -tdata->p[0]*v_tmp[0]*tdata->w[0]+(udata->k[1]*tdata->p[3]*v_tmp[8])/udata->k[0];
-  Jv_tmp[1] = tdata->p[0]*v_tmp[0]*tdata->w[0]-tdata->p[1]*v_tmp[1]*tdata->dwdx[0]*2.0;
-  Jv_tmp[2] = -tdata->p[2]*v_tmp[2]+tdata->p[1]*v_tmp[1]*tdata->dwdx[0];
-  Jv_tmp[3] = -tdata->p[3]*v_tmp[3]+(udata->k[0]*tdata->p[2]*v_tmp[2])/udata->k[1];
-  Jv_tmp[4] = tdata->p[3]*v_tmp[3]*2.0-tdata->p[3]*v_tmp[4];
-  Jv_tmp[5] = tdata->p[3]*v_tmp[4]-tdata->p[3]*v_tmp[5];
-  Jv_tmp[6] = tdata->p[3]*v_tmp[5]-tdata->p[3]*v_tmp[6];
-  Jv_tmp[7] = tdata->p[3]*v_tmp[6]-tdata->p[3]*v_tmp[7];
-  Jv_tmp[8] = tdata->p[3]*v_tmp[7]-tdata->p[3]*v_tmp[8];
-return;
-
+void Jv_model_jakstat_adjoint(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx) {
+  Jv[0] = -p[0]*v[0]*w[0]+(k[1]*p[3]*v[8])/k[0];
+  Jv[1] = p[0]*v[0]*w[0]-p[1]*v[1]*dwdx[0]*2.0;
+  Jv[2] = -p[2]*v[2]+p[1]*v[1]*dwdx[0];
+  Jv[3] = -p[3]*v[3]+(k[0]*p[2]*v[2])/k[1];
+  Jv[4] = p[3]*v[3]*2.0-p[3]*v[4];
+  Jv[5] = p[3]*v[4]-p[3]*v[5];
+  Jv[6] = p[3]*v[5]-p[3]*v[6];
+  Jv[7] = p[3]*v[6]-p[3]*v[7];
+  Jv[8] = p[3]*v[7]-p[3]*v[8];
 }
-
 

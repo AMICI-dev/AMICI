@@ -520,9 +520,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
      */
     void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                           const AmiVector *xdot, const AmiVector *xdot_old) {
+        fw(t,x->getNVector());
         std::fill(deltasx.begin(),deltasx.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++)
-            model_deltasx(&deltasx.at(nx*ip),t,x->data(),p.data(),k.data(),h.data(),
+            model_deltasx(&deltasx.at(nx*ip),t,x->data(),p.data(),k.data(),h.data(),w.data(),
                           plist.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),stau.data());
     }
     

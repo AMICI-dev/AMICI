@@ -1,31 +1,10 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include "model_jakstat_adjoint_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void sz_model_jakstat_adjoint(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *sx_tmp;
-int ip;
-w_model_jakstat_adjoint(t,x,NULL,tdata);
-for(ip = 0; ip<udata->nplist; ip++) {
-sx_tmp = N_VGetArrayPointer(sx[ip]);
-switch (udata->plist[ip]) {
+void sz_model_jakstat_adjoint(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+switch (ip) {
 }
 }
-return;
-
-}
-
 

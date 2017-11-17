@@ -1,31 +1,14 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include "model_neuron_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void srz_model_neuron(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *sx_tmp;
-int ip;
-w_model_neuron(t,x,NULL,tdata);
-for(ip = 0; ip<udata->nplist; ip++) {
-sx_tmp = N_VGetArrayPointer(sx[ip]);
-switch (udata->plist[ip]) {
+void srz_model_neuron(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  srz[0] = sx[0];
 
         } break;
 
@@ -36,7 +19,7 @@ switch (udata->plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  srz[0] = sx[0];
 
         } break;
 
@@ -47,7 +30,7 @@ switch (udata->plist[ip]) {
   case 2: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  srz[0] = sx[0];
 
         } break;
 
@@ -58,7 +41,7 @@ switch (udata->plist[ip]) {
   case 3: {
     switch(ie) { 
         case 0: {
-  rdata->srz[tdata->nroots[ie]+udata->nmaxevent*(ip*model->nz + 0)] = sx_tmp[0];
+  srz[0] = sx[0];
 
         } break;
 
@@ -68,8 +51,4 @@ switch (udata->plist[ip]) {
 
 }
 }
-return;
-
-}
-
 

@@ -17,16 +17,17 @@
 #endif
 #include <unistd.h>
 
+void getModelDims(int *nx, int *nk, int *np);
+
 namespace amici {
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char *fileName,
-                                                      const char *datasetPath,
-                                                      Model *model) {
+                                                      const char *datasetPath) {
 
     hid_t file_id = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     UserData *udata = AMI_HDF5_readSimulationUserDataFromFileObject(
-        file_id, datasetPath, model);
+        file_id, datasetPath);
 
     H5Fclose(file_id);
 
@@ -35,11 +36,13 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileName(const char *fileName,
 
 template <class hid_t>
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
-                                                        const char *datasetPath,
-                                                        Model *model) {
+                                                        const char *datasetPath) {
     assert(fileId > 0);
+    
+    int nx,nk,np;
+    getModelDims(&nx,&nk,&np);
 
-    UserData *udata = model->getNewUserData();
+    UserData *udata = new UserData(np, nk, nx);
 
     if (udata == NULL)
         return (NULL);
@@ -70,7 +73,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
 
     status += AMI_HDF5_getDoubleArrayAttribute(
         fileId, datasetPath, "qpositivex", &buffer, &length0);
-    if (length0 != (unsigned)model->nx)
+    if (length0 != (unsigned)nx)
         goto freturn;
     udata->qpositivex.assign(buffer, buffer + udata->nx());
     delete[] buffer;
@@ -79,7 +82,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "theta")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "theta",
                                                    &buffer, &length0);
-        if ((unsigned)model->np != length0)
+        if ((unsigned)np != length0)
             goto freturn;
         udata->setParameters(buffer);
         delete[] buffer;
@@ -89,7 +92,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "kappa")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "kappa",
                                                    &buffer, &length0);
-        if (length0 != (unsigned)model->nk)
+        if (length0 != (unsigned)nk)
             goto freturn;
         udata->setConstants(buffer);
         delete[] buffer;
@@ -124,7 +127,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "x0")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "x0",
                                                    &buffer, &length0);
-        if (length0 == 0 || length0 == (unsigned)model->nx) {
+        if (length0 == 0 || length0 == (unsigned)nx) {
             udata->setStateInitialization(buffer);
             delete[] buffer;
             buffer = NULL;
@@ -138,7 +141,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
         status += AMI_HDF5_getDoubleArrayAttribute2D(fileId, datasetPath, "sx0",
                                                    &buffer, &length0, &length1);
         if ((length0 * length1 != 0) &&
-                        (length0 != (unsigned)model->nx || length1 != (unsigned)udata->nplist()))
+                        (length0 != (unsigned)nx || length1 != (unsigned)udata->nplist()))
             goto freturn;
         udata->setSensitivityInitialization(buffer);
         delete[] buffer;
@@ -164,7 +167,7 @@ freturn:
     return NULL;
 }
 
-ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, UserData *udata,
+ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile, const UserData *udata,
                                         const char *dataObject, Model *model) {
 
     hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);

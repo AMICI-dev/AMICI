@@ -1,71 +1,28 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_neuron_o2_dwdp.h"
-#include "model_neuron_o2_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void qBdot_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xB_tmp = nullptr;
-if(xB)
-    xB_tmp = N_VGetArrayPointer(xB);
-realtype *dxB_tmp = nullptr;
-if(dxB)
-    dxB_tmp = N_VGetArrayPointer(dxB);
-realtype *qBdot_tmp = nullptr;
-if(qBdot)
-    qBdot_tmp = N_VGetArrayPointer(qBdot);
-int ip;
-memset(qBdot_tmp,0,sizeof(realtype)*udata->nplist*model->nJ);
-dwdp_model_neuron_o2(t,x,NULL,user_data);
-for(ip = 0; ip<udata->nplist; ip++) {
-switch (udata->plist[ip]) {
+void qBdot_model_neuron_o2(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp) {
+switch (ip) {
   case 0: {
-  qBdot_tmp[ip + udata->nplist*0] = xB_tmp[1]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
-  qBdot_tmp[ip + udata->nplist*1] = xB_tmp[3]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[3]-tdata->p[1]*x_tmp[2]);
-  qBdot_tmp[ip + udata->nplist*2] = -xB_tmp[1]*(x_tmp[0]-x_tmp[5]+tdata->p[1]*x_tmp[4])+xB_tmp[5]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
-  qBdot_tmp[ip + udata->nplist*3] = xB_tmp[7]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[7]-tdata->p[1]*x_tmp[6]);
-  qBdot_tmp[ip + udata->nplist*4] = xB_tmp[9]*(x_tmp[1]-tdata->p[1]*x_tmp[0])+xB_tmp[1]*(x_tmp[9]-tdata->p[1]*x_tmp[8]);
+  qBdot[0] = xB[1]*(x[1]-p[1]*x[0]);
+  qBdot[1] = xB[3]*(x[1]-p[1]*x[0])+xB[1]*(x[3]-p[1]*x[2]);
+  qBdot[2] = -xB[1]*(x[0]-x[5]+p[1]*x[4])+xB[5]*(x[1]-p[1]*x[0]);
+  qBdot[3] = xB[7]*(x[1]-p[1]*x[0])+xB[1]*(x[7]-p[1]*x[6]);
+  qBdot[4] = xB[9]*(x[1]-p[1]*x[0])+xB[1]*(x[9]-p[1]*x[8]);
 
   } break;
 
   case 1: {
-  qBdot_tmp[ip + udata->nplist*0] = -tdata->p[0]*x_tmp[0]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*1] = -xB_tmp[1]*(x_tmp[0]+tdata->p[0]*x_tmp[2])-tdata->p[0]*x_tmp[0]*xB_tmp[3];
-  qBdot_tmp[ip + udata->nplist*2] = -tdata->p[0]*x_tmp[0]*xB_tmp[5]-tdata->p[0]*x_tmp[4]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*3] = -tdata->p[0]*x_tmp[0]*xB_tmp[7]-tdata->p[0]*x_tmp[6]*xB_tmp[1];
-  qBdot_tmp[ip + udata->nplist*4] = -tdata->p[0]*x_tmp[0]*xB_tmp[9]-tdata->p[0]*x_tmp[8]*xB_tmp[1];
+  qBdot[0] = -p[0]*x[0]*xB[1];
+  qBdot[1] = -xB[1]*(x[0]+p[0]*x[2])-p[0]*x[0]*xB[3];
+  qBdot[2] = -p[0]*x[0]*xB[5]-p[0]*x[4]*xB[1];
+  qBdot[3] = -p[0]*x[0]*xB[7]-p[0]*x[6]*xB[1];
+  qBdot[4] = -p[0]*x[0]*xB[9]-p[0]*x[8]*xB[1];
 
   } break;
 
 }
 }
-for(ip = 0; ip<udata->nplist*model->nJ; ip++) {
-   if(amiIsNaN(qBdot_tmp[ip])) {
-       qBdot_tmp[ip] = 0;       if(!tdata->nan_qBdot) {
-           warnMsgIdAndTxt("AMICI:mex:fqBdot:NaN","AMICI replaced a NaN value in xBdot and replaced it by 0.0. This will not be reported again for this simulation run.");
-           tdata->nan_qBdot = TRUE;
-       }
-   }   if(amiIsInf(qBdot_tmp[ip])) {
-       warnMsgIdAndTxt("AMICI:mex:fqBdot:Inf","AMICI encountered an Inf value in xBdot! Aborting simulation ... ");
-       return;
-   }}
-return;
-
-}
-
 

@@ -2,6 +2,12 @@
 #include <include/amici_model_dae.h>
 
 namespace amici {
+    
+    void Model_DAE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+                       AmiVector *xdot, DlsMat J) {
+        IDASolver::fJ(J->N*J->M,t,cj, x->getNVector(), dx->getNVector(), xdot->getNVector(),
+                        J, this, nullptr, nullptr, nullptr);
+    }
 
      void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                               AmiVector *xdot, SlsMat J){
@@ -34,8 +40,8 @@ namespace amici {
                           AmiVector *dx) {
         fdwdx(t,x->getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        if(model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),
-                               dx->data(),w.data(),dwdx.data()) != AMICI_SUCCESS)
+        if(model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),
+                               0.0,dx->data(),w.data(),dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return IDASolver::checkVals(nx,JDiag->data(),"Jacobian");
     }
@@ -50,7 +56,7 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
         for(int ip = 1; ip < nplist; ip++)
-            if(model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),
+            if(model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
                           plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
         return AMICI_SUCCESS;

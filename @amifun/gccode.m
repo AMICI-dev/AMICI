@@ -73,9 +73,9 @@ function this = gccode(this,model,fid)
         if (model.splineflag)
             if (strfind(symstr, 'spline'))
                 % The floating numbers after 't' must be converted to integers
-                cstr = regexprep(cstr, '(spline|spline_pos)\(t\,\w+\.\w+\,', ['$1\(t\,', num2str(nNodes), '\,']);
-                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,t\,\w+\.\w+\,', ['$1\($2\,t\,', num2str(nNodes), '\,']);
-                cstr = regexprep(cstr, '(spline|spline_pos)\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\(t\,\w+\.\w+\,', ['amici::$1\(t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\((\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
             end
         end
         
@@ -99,7 +99,9 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_v_([0-9]+)', 'v[$1]');
             cstr = regexprep(cstr,'var_vB_([0-9]+)', 'vB[$1]');
             cstr = regexprep(cstr,'var_J_([0-9]+)', 'J[$1]');
+            cstr = regexprep(cstr,'J_([0-9]+)', 'J[$1]');
             cstr = regexprep(cstr,'var_JB_([0-9]+)', 'JB[$1]');
+            cstr = regexprep(cstr,'JB_([0-9]+)', 'JB[$1]');
             cstr = regexprep(cstr,'var_Jv_([0-9]+)', 'Jv[$1]');
             cstr = regexprep(cstr,'var_JvB_([0-9]+)', 'JvB[$1]');
             cstr = regexprep(cstr,'var_x0_([0-9]+)','x0[$1]');

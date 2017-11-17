@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_robertson_J.cpp
 ${MODEL_DIR}/model_robertson_JB.cpp
-${MODEL_DIR}/model_robertson_JBand.cpp
-${MODEL_DIR}/model_robertson_JBandB.cpp
 ${MODEL_DIR}/model_robertson_JDiag.cpp
 ${MODEL_DIR}/model_robertson_JSparse.cpp
 ${MODEL_DIR}/model_robertson_JSparseB.cpp
@@ -43,14 +41,12 @@ ${MODEL_DIR}/model_robertson_deltaqB.cpp
 ${MODEL_DIR}/model_robertson_deltasx.cpp
 ${MODEL_DIR}/model_robertson_deltax.cpp
 ${MODEL_DIR}/model_robertson_deltaxB.cpp
-${MODEL_DIR}/model_robertson_dfdx.cpp
 ${MODEL_DIR}/model_robertson_drzdp.cpp
 ${MODEL_DIR}/model_robertson_drzdx.cpp
 ${MODEL_DIR}/model_robertson_dsigma_ydp.cpp
 ${MODEL_DIR}/model_robertson_dsigma_zdp.cpp
 ${MODEL_DIR}/model_robertson_dwdp.cpp
 ${MODEL_DIR}/model_robertson_dwdx.cpp
-${MODEL_DIR}/model_robertson_dx0.cpp
 ${MODEL_DIR}/model_robertson_dxdotdp.cpp
 ${MODEL_DIR}/model_robertson_dydp.cpp
 ${MODEL_DIR}/model_robertson_dydx.cpp
@@ -59,7 +55,6 @@ ${MODEL_DIR}/model_robertson_dzdx.cpp
 ${MODEL_DIR}/model_robertson_qBdot.cpp
 ${MODEL_DIR}/model_robertson_root.cpp
 ${MODEL_DIR}/model_robertson_rz.cpp
-${MODEL_DIR}/model_robertson_sdx0.cpp
 ${MODEL_DIR}/model_robertson_sigma_y.cpp
 ${MODEL_DIR}/model_robertson_sigma_z.cpp
 ${MODEL_DIR}/model_robertson_srz.cpp

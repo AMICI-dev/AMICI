@@ -1,67 +1,50 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include "model_jakstat_adjoint_o2_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void y_model_jakstat_adjoint_o2(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-w_model_jakstat_adjoint_o2(t,x,NULL,tdata);
-  rdata->y[it + udata->nt*0] = tdata->p[11]+(tdata->p[13]*(x_tmp[1]+x_tmp[2]*2.0))/tdata->p[4];
-  rdata->y[it + udata->nt*1] = tdata->p[10]+(tdata->p[12]*(x_tmp[0]+x_tmp[1]+x_tmp[2]*2.0))/tdata->p[4];
-  rdata->y[it + udata->nt*2] = am_spline_pos(t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*3] = (tdata->p[13]*x_tmp[10])/tdata->p[4]+(tdata->p[13]*x_tmp[11]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*4] = (tdata->p[12]*x_tmp[9])/tdata->p[4]+(tdata->p[12]*x_tmp[10])/tdata->p[4]+(tdata->p[12]*x_tmp[11]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*6] = (tdata->p[13]*x_tmp[19])/tdata->p[4]+(tdata->p[13]*x_tmp[20]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*7] = (tdata->p[12]*x_tmp[18])/tdata->p[4]+(tdata->p[12]*x_tmp[19])/tdata->p[4]+(tdata->p[12]*x_tmp[20]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*9] = (tdata->p[13]*x_tmp[28])/tdata->p[4]+(tdata->p[13]*x_tmp[29]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*10] = (tdata->p[12]*x_tmp[27])/tdata->p[4]+(tdata->p[12]*x_tmp[28])/tdata->p[4]+(tdata->p[12]*x_tmp[29]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*12] = (tdata->p[13]*x_tmp[37])/tdata->p[4]+(tdata->p[13]*x_tmp[38]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*13] = (tdata->p[12]*x_tmp[36])/tdata->p[4]+(tdata->p[12]*x_tmp[37])/tdata->p[4]+(tdata->p[12]*x_tmp[38]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*15] = (tdata->p[13]*x_tmp[46])/tdata->p[4]+(tdata->p[13]*x_tmp[47]*2.0)/tdata->p[4]-1.0/(tdata->p[4]*tdata->p[4])*tdata->p[13]*(x_tmp[1]+x_tmp[2]*2.0);
-  rdata->y[it + udata->nt*16] = (tdata->p[12]*x_tmp[45])/tdata->p[4]+(tdata->p[12]*x_tmp[46])/tdata->p[4]+(tdata->p[12]*x_tmp[47]*2.0)/tdata->p[4]-1.0/(tdata->p[4]*tdata->p[4])*tdata->p[12]*(x_tmp[0]+x_tmp[1]+x_tmp[2]*2.0);
-  rdata->y[it + udata->nt*18] = (tdata->p[13]*x_tmp[55])/tdata->p[4]+(tdata->p[13]*x_tmp[56]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*19] = (tdata->p[12]*x_tmp[54])/tdata->p[4]+(tdata->p[12]*x_tmp[55])/tdata->p[4]+(tdata->p[12]*x_tmp[56]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*20] = am_Dspline_pos(4,t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*21] = (tdata->p[13]*x_tmp[64])/tdata->p[4]+(tdata->p[13]*x_tmp[65]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*22] = (tdata->p[12]*x_tmp[63])/tdata->p[4]+(tdata->p[12]*x_tmp[64])/tdata->p[4]+(tdata->p[12]*x_tmp[65]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*23] = am_Dspline_pos(6,t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*24] = (tdata->p[13]*x_tmp[73])/tdata->p[4]+(tdata->p[13]*x_tmp[74]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*25] = (tdata->p[12]*x_tmp[72])/tdata->p[4]+(tdata->p[12]*x_tmp[73])/tdata->p[4]+(tdata->p[12]*x_tmp[74]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*26] = am_Dspline_pos(8,t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*27] = (tdata->p[13]*x_tmp[82])/tdata->p[4]+(tdata->p[13]*x_tmp[83]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*28] = (tdata->p[12]*x_tmp[81])/tdata->p[4]+(tdata->p[12]*x_tmp[82])/tdata->p[4]+(tdata->p[12]*x_tmp[83]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*29] = am_Dspline_pos(10,t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*30] = (tdata->p[13]*x_tmp[91])/tdata->p[4]+(tdata->p[13]*x_tmp[92]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*31] = (tdata->p[12]*x_tmp[90])/tdata->p[4]+(tdata->p[12]*x_tmp[91])/tdata->p[4]+(tdata->p[12]*x_tmp[92]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*32] = am_Dspline_pos(12,t,5,0.0,tdata->p[5],5.0,tdata->p[6],1.0E1,tdata->p[7],2.0E1,tdata->p[8],6.0E1,tdata->p[9],0.0,0.0);
-  rdata->y[it + udata->nt*33] = (tdata->p[13]*x_tmp[100])/tdata->p[4]+(tdata->p[13]*x_tmp[101]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*34] = (tdata->p[12]*x_tmp[99])/tdata->p[4]+(tdata->p[12]*x_tmp[100])/tdata->p[4]+(tdata->p[12]*x_tmp[101]*2.0)/tdata->p[4]+1.0;
-  rdata->y[it + udata->nt*36] = (tdata->p[13]*x_tmp[109])/tdata->p[4]+(tdata->p[13]*x_tmp[110]*2.0)/tdata->p[4]+1.0;
-  rdata->y[it + udata->nt*37] = (tdata->p[12]*x_tmp[108])/tdata->p[4]+(tdata->p[12]*x_tmp[109])/tdata->p[4]+(tdata->p[12]*x_tmp[110]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*39] = (tdata->p[13]*x_tmp[118])/tdata->p[4]+(tdata->p[13]*x_tmp[119]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*40] = (x_tmp[0]+x_tmp[1]+x_tmp[2]*2.0)/tdata->p[4]+(tdata->p[12]*x_tmp[117])/tdata->p[4]+(tdata->p[12]*x_tmp[118])/tdata->p[4]+(tdata->p[12]*x_tmp[119]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*42] = (x_tmp[1]+x_tmp[2]*2.0)/tdata->p[4]+(tdata->p[13]*x_tmp[127])/tdata->p[4]+(tdata->p[13]*x_tmp[128]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*43] = (tdata->p[12]*x_tmp[126])/tdata->p[4]+(tdata->p[12]*x_tmp[127])/tdata->p[4]+(tdata->p[12]*x_tmp[128]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*45] = (tdata->p[13]*x_tmp[136])/tdata->p[4]+(tdata->p[13]*x_tmp[137]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*46] = (tdata->p[12]*x_tmp[135])/tdata->p[4]+(tdata->p[12]*x_tmp[136])/tdata->p[4]+(tdata->p[12]*x_tmp[137]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*48] = (tdata->p[13]*x_tmp[145])/tdata->p[4]+(tdata->p[13]*x_tmp[146]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*49] = (tdata->p[12]*x_tmp[144])/tdata->p[4]+(tdata->p[12]*x_tmp[145])/tdata->p[4]+(tdata->p[12]*x_tmp[146]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*51] = (tdata->p[13]*x_tmp[154])/tdata->p[4]+(tdata->p[13]*x_tmp[155]*2.0)/tdata->p[4];
-  rdata->y[it + udata->nt*52] = (tdata->p[12]*x_tmp[153])/tdata->p[4]+(tdata->p[12]*x_tmp[154])/tdata->p[4]+(tdata->p[12]*x_tmp[155]*2.0)/tdata->p[4];
-return;
-
+void y_model_jakstat_adjoint_o2(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+  y[0] = p[11]+(p[13]*(x[1]+x[2]*2.0))/p[4];
+  y[1] = p[10]+(p[12]*(x[0]+x[1]+x[2]*2.0))/p[4];
+  y[2] = amici::am_spline_pos(t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[3] = (p[13]*x[10])/p[4]+(p[13]*x[11]*2.0)/p[4];
+  y[4] = (p[12]*x[9])/p[4]+(p[12]*x[10])/p[4]+(p[12]*x[11]*2.0)/p[4];
+  y[6] = (p[13]*x[19])/p[4]+(p[13]*x[20]*2.0)/p[4];
+  y[7] = (p[12]*x[18])/p[4]+(p[12]*x[19])/p[4]+(p[12]*x[20]*2.0)/p[4];
+  y[9] = (p[13]*x[28])/p[4]+(p[13]*x[29]*2.0)/p[4];
+  y[10] = (p[12]*x[27])/p[4]+(p[12]*x[28])/p[4]+(p[12]*x[29]*2.0)/p[4];
+  y[12] = (p[13]*x[37])/p[4]+(p[13]*x[38]*2.0)/p[4];
+  y[13] = (p[12]*x[36])/p[4]+(p[12]*x[37])/p[4]+(p[12]*x[38]*2.0)/p[4];
+  y[15] = (p[13]*x[46])/p[4]+(p[13]*x[47]*2.0)/p[4]-1.0/(p[4]*p[4])*p[13]*(x[1]+x[2]*2.0);
+  y[16] = (p[12]*x[45])/p[4]+(p[12]*x[46])/p[4]+(p[12]*x[47]*2.0)/p[4]-1.0/(p[4]*p[4])*p[12]*(x[0]+x[1]+x[2]*2.0);
+  y[18] = (p[13]*x[55])/p[4]+(p[13]*x[56]*2.0)/p[4];
+  y[19] = (p[12]*x[54])/p[4]+(p[12]*x[55])/p[4]+(p[12]*x[56]*2.0)/p[4];
+  y[20] = amici::am_Dspline_pos(4,t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[21] = (p[13]*x[64])/p[4]+(p[13]*x[65]*2.0)/p[4];
+  y[22] = (p[12]*x[63])/p[4]+(p[12]*x[64])/p[4]+(p[12]*x[65]*2.0)/p[4];
+  y[23] = amici::am_Dspline_pos(6,t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[24] = (p[13]*x[73])/p[4]+(p[13]*x[74]*2.0)/p[4];
+  y[25] = (p[12]*x[72])/p[4]+(p[12]*x[73])/p[4]+(p[12]*x[74]*2.0)/p[4];
+  y[26] = amici::am_Dspline_pos(8,t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[27] = (p[13]*x[82])/p[4]+(p[13]*x[83]*2.0)/p[4];
+  y[28] = (p[12]*x[81])/p[4]+(p[12]*x[82])/p[4]+(p[12]*x[83]*2.0)/p[4];
+  y[29] = amici::am_Dspline_pos(10,t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[30] = (p[13]*x[91])/p[4]+(p[13]*x[92]*2.0)/p[4];
+  y[31] = (p[12]*x[90])/p[4]+(p[12]*x[91])/p[4]+(p[12]*x[92]*2.0)/p[4];
+  y[32] = amici::am_Dspline_pos(12,t,5,0.0,p[5],5.0,p[6],1.0E1,p[7],2.0E1,p[8],6.0E1,p[9],0.0,0.0);
+  y[33] = (p[13]*x[100])/p[4]+(p[13]*x[101]*2.0)/p[4];
+  y[34] = (p[12]*x[99])/p[4]+(p[12]*x[100])/p[4]+(p[12]*x[101]*2.0)/p[4]+1.0;
+  y[36] = (p[13]*x[109])/p[4]+(p[13]*x[110]*2.0)/p[4]+1.0;
+  y[37] = (p[12]*x[108])/p[4]+(p[12]*x[109])/p[4]+(p[12]*x[110]*2.0)/p[4];
+  y[39] = (p[13]*x[118])/p[4]+(p[13]*x[119]*2.0)/p[4];
+  y[40] = (x[0]+x[1]+x[2]*2.0)/p[4]+(p[12]*x[117])/p[4]+(p[12]*x[118])/p[4]+(p[12]*x[119]*2.0)/p[4];
+  y[42] = (x[1]+x[2]*2.0)/p[4]+(p[13]*x[127])/p[4]+(p[13]*x[128]*2.0)/p[4];
+  y[43] = (p[12]*x[126])/p[4]+(p[12]*x[127])/p[4]+(p[12]*x[128]*2.0)/p[4];
+  y[45] = (p[13]*x[136])/p[4]+(p[13]*x[137]*2.0)/p[4];
+  y[46] = (p[12]*x[135])/p[4]+(p[12]*x[136])/p[4]+(p[12]*x[137]*2.0)/p[4];
+  y[48] = (p[13]*x[145])/p[4]+(p[13]*x[146]*2.0)/p[4];
+  y[49] = (p[12]*x[144])/p[4]+(p[12]*x[145])/p[4]+(p[12]*x[146]*2.0)/p[4];
+  y[51] = (p[13]*x[154])/p[4]+(p[13]*x[155]*2.0)/p[4];
+  y[52] = (p[12]*x[153])/p[4]+(p[12]*x[154])/p[4]+(p[12]*x[155]*2.0)/p[4];
 }
-
 

@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_J.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JB.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JBand.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JBandB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JDiag.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JSparse.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_JSparseB.cpp

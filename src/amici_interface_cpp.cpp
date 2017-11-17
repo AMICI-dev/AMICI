@@ -35,7 +35,7 @@ namespace amici {
  * @param[in] edata pointer to experimental data object @type ExpData
  * @return rdata pointer to return data object @type ReturnData
  */
-ReturnData *getSimulationResults(Model *model, UserData *udata,
+ReturnData *getSimulationResults(Model *model, const UserData *udata,
                                  const ExpData *edata) {
 
     ReturnData *rdata = new ReturnData(udata, model);

@@ -421,7 +421,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(J->data,0.0,sizeof(realtype)*N);
-        model->model_J(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        model->model_J(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                 cj,N_VGetArrayPointer(dx),model->w.data(),model->dwdx.data());
         return checkVals(N,J->data,"Jacobian");
     }
@@ -448,7 +448,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*NeqBdot);
-        if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                      cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                      model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
         return AMICI_ERROR;
@@ -475,7 +475,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(J->data,0.0,sizeof(realtype)*J->NNZ);
-        model->model_JSparse(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        model->model_JSparse(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                       cj,N_VGetArrayPointer(dx),model->w.data(),model->dwdx.data());
         return checkVals(J->NNZ,J->data,"Jacobian");
     }
@@ -501,7 +501,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(JB->data,0.0,sizeof(realtype)*JB->NNZ);
-        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JSparseB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                            cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                            model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
@@ -576,7 +576,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(Jv),0.0,sizeof(realtype)*model->nx);
-        if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                      cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
@@ -605,7 +605,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(JvB),0.0,sizeof(realtype)*model->nx);
-        if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                       cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                       N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
@@ -624,7 +624,7 @@ void IDASolver::turnOffRootFinding() {
                      void *user_data) {
         Model_DAE *model = (Model_DAE*) user_data;
         memset(root,0.0,sizeof(realtype)*model->ne);
-        if(model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        if(model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                        N_VGetArrayPointer(dx)) != AMICI_SUCCESS)
             return AMICI_ERROR;
         return checkVals(model->ne,root,"root function");
@@ -643,7 +643,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fw(t,x);
         memset(N_VGetArrayPointer(xdot),0.0,sizeof(realtype)*model->nx);
-        model->model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        model->model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                    N_VGetArrayPointer(dx),model->w.data());
         return checkVals(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
@@ -663,7 +663,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdx(t,x);
         memset(N_VGetArrayPointer(xBdot),0.0,sizeof(realtype)*model->nx);
-        model->model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        model->model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                     N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                     model->w.data(),model->dwdx.data());
         return checkVals(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
@@ -687,9 +687,12 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = (Model_DAE*) user_data;
         model->fdwdp(t,x);
         memset(N_VGetArrayPointer(qBdot),0.0,sizeof(realtype)*model->nJ*model->plist.size());
-        model->model_qBdot(N_VGetArrayPointer(qBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+        realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
+        for(int ip = 1; ip < model->plist.size(); ip++)
+            if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                     N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                    model->w.data(),model->dwdp.data());
+                    model->w.data(),model->dwdp.data()) != AMICI_SUCCESS)
+                return AMICI_ERROR;
         return checkVals(model->nJ*model->plist.size(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
@@ -718,7 +721,7 @@ void IDASolver::turnOffRootFinding() {
         fJSparse(t,0.0,x,dx,nullptr,model->J,model,tmp1,tmp2,tmp3);// also calls dwdx & dx
         for(int ip = 0; ip < model->plist.size(); ip++){
             memset(N_VGetArrayPointer(sxdot[ip]),0.0,sizeof(realtype)*model->nx);
-            if(model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),
+            if(model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                             model->plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx[ip]),N_VGetArrayPointer(sdx[ip]),
                             model->w.data(),model->dwdx.data(),model->M.data(),model->J->data,model->dxdotdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;

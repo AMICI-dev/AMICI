@@ -49,6 +49,10 @@ namespace amici {
             return nvec;
         }
         
+        const N_Vector getNVector() const {
+            return nvec;
+        }
+        
         const int getLength() const {
             return vec.size();
         }

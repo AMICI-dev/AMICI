@@ -1,23 +1,11 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_jakstat_adjoint_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void sigma_y_model_jakstat_adjoint(realtype t, amici::TempData *tdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-memset(tdata->sigmay,0,sizeof(realtype)*3);
-  tdata->sigmay[0] = tdata->p[14];
-  tdata->sigmay[1] = tdata->p[15];
-  tdata->sigmay[2] = tdata->p[16];
-return;
-
+void sigma_y_model_jakstat_adjoint(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
+  sigmay[0] = p[14];
+  sigmay[1] = p[15];
+  sigmay[2] = p[16];
 }
-
 

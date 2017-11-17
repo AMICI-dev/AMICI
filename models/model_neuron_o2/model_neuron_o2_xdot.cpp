@@ -1,57 +1,18 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_neuron_o2_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void xdot_model_neuron_o2(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-int ix;
-memset(xdot_tmp,0,sizeof(realtype)*10);
-w_model_neuron_o2(t,x,NULL,tdata);
-  xdot_tmp[0] = udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2;
-  xdot_tmp[1] = -tdata->p[0]*(x_tmp[1]-tdata->p[1]*x_tmp[0]);
-  xdot_tmp[2] = -x_tmp[3]+tdata->w[1]*x_tmp[2];
-  xdot_tmp[3] = -x_tmp[1]+tdata->p[1]*x_tmp[0]-tdata->p[0]*x_tmp[3]+tdata->p[0]*tdata->p[1]*x_tmp[2];
-  xdot_tmp[4] = -x_tmp[5]+tdata->w[1]*x_tmp[4];
-  xdot_tmp[5] = tdata->p[0]*x_tmp[0]-tdata->p[0]*x_tmp[5]+tdata->p[0]*tdata->p[1]*x_tmp[4];
-  xdot_tmp[6] = -x_tmp[7]+tdata->w[1]*x_tmp[6];
-  xdot_tmp[7] = -tdata->p[0]*x_tmp[7]+tdata->p[0]*tdata->p[1]*x_tmp[6];
-  xdot_tmp[8] = -x_tmp[9]+tdata->w[1]*x_tmp[8];
-  xdot_tmp[9] = -tdata->p[0]*x_tmp[9]+tdata->p[0]*tdata->p[1]*x_tmp[8];
-for(ix = 0; ix<10; ix++) {
-   if(amiIsNaN(xdot_tmp[ix])) {
-       xdot_tmp[ix] = 0;
-       if(!tdata->nan_xdot) {
-           warnMsgIdAndTxt("AMICI:mex:fxdot:NaN","AMICI replaced a NaN value in xdot and replaced it by 0.0. This will not be reported again for this simulation run.");
-           tdata->nan_xdot = TRUE;
-       }
-   }
-   if(amiIsInf(xdot_tmp[ix])) {
-       warnMsgIdAndTxt("AMICI:mex:fxdot:Inf","AMICI encountered an Inf value in xdot! Aborting simulation ... ");
-       return;
-   }   if(udata->qpositivex[ix]>0.5 && x_tmp[ix]<0.0 && xdot_tmp[ix]<0.0) {
-       xdot_tmp[ix] = -xdot_tmp[ix];
-   }
+void xdot_model_neuron_o2(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
+  xdot[0] = k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2;
+  xdot[1] = -p[0]*(x[1]-p[1]*x[0]);
+  xdot[2] = -x[3]+w[1]*x[2];
+  xdot[3] = -x[1]+p[1]*x[0]-p[0]*x[3]+p[0]*p[1]*x[2];
+  xdot[4] = -x[5]+w[1]*x[4];
+  xdot[5] = p[0]*x[0]-p[0]*x[5]+p[0]*p[1]*x[4];
+  xdot[6] = -x[7]+w[1]*x[6];
+  xdot[7] = -p[0]*x[7]+p[0]*p[1]*x[6];
+  xdot[8] = -x[9]+w[1]*x[8];
+  xdot[9] = -p[0]*x[9]+p[0]*p[1]*x[8];
 }
-return;
-
-}
-
 

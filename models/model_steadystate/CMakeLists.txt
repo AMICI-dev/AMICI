@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_steadystate_J.cpp
 ${MODEL_DIR}/model_steadystate_JB.cpp
-${MODEL_DIR}/model_steadystate_JBand.cpp
-${MODEL_DIR}/model_steadystate_JBandB.cpp
 ${MODEL_DIR}/model_steadystate_JDiag.cpp
 ${MODEL_DIR}/model_steadystate_JSparse.cpp
 ${MODEL_DIR}/model_steadystate_JSparseB.cpp

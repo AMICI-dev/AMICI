@@ -23,8 +23,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
     
 template <class hid_t>
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
-                                                        const char *datasetPath,
-                                                        Model *model);
+                                                        const char *datasetPath);
 
 /** @brief struct that stores all user provided data
  * NOTE: multidimensional arrays are expected to be stored in column-major order
@@ -313,8 +312,7 @@ private:
     friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
     template <class hid_t>
     friend UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
-                                                                   const char *datasetPath,
-                                                                   Model *model);
+                                                                   const char *datasetPath);
 };
 
 } // namespace amici

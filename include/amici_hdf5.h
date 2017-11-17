@@ -38,11 +38,11 @@ void AMI_HDF5_writeReturnData(const ReturnData *rdata,
  */
 
 UserData *AMI_HDF5_readSimulationUserDataFromFileName(
-    const char *fileName, const char *datasetPath, Model *model);
+    const char *fileName, const char *datasetPath);
 
 template <class hid_t>
 UserData *AMI_HDF5_readSimulationUserDataFromFileObject(
-    hid_t fileId, const char *datasetPath, Model *model);
+    hid_t fileId, const char *datasetPath);
 
 /**
  * @brief AMI_HDF5_readSimulationExpData reads AMICI experimental data from
@@ -54,7 +54,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(
  */
 
 ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile,
-                                                UserData *udata,
+                                                const UserData *udata,
                                                 const char *dataObject,
                                                 Model *model);
 

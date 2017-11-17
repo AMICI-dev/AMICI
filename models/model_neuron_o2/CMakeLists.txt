@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_o2_J.cpp
 ${MODEL_DIR}/model_neuron_o2_JB.cpp
-${MODEL_DIR}/model_neuron_o2_JBand.cpp
-${MODEL_DIR}/model_neuron_o2_JBandB.cpp
 ${MODEL_DIR}/model_neuron_o2_JDiag.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparse.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparseB.cpp

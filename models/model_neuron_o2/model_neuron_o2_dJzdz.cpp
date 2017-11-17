@@ -1,39 +1,21 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include <include/edata.h>
-#include "model_neuron_o2_w.h"
+#include <sundials/sundials_types.h> //realtype definition
+#include <cmath> 
 
-using namespace amici;
-
-void dJzdz_model_neuron_o2(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-memset(tdata->dJzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);
-w_model_neuron_o2(t,x,NULL,tdata);
-int iz;
-if(!amiIsNaN(edata->mz[0*udata->nmaxevent+tdata->nroots[ie]])){
-    iz = 0;
-  tdata->dJzdz[iz+(0+0*5)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
-  tdata->dJzdz[iz+(1+0*5)*model->nztrue] = rdata->z[tdata->nroots[ie]+udata->nmaxevent*1]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
-  tdata->dJzdz[iz+(1+1*5)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
-  tdata->dJzdz[iz+(2+0*5)*model->nztrue] = rdata->z[tdata->nroots[ie]+udata->nmaxevent*2]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
-  tdata->dJzdz[iz+(2+2*5)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
-  tdata->dJzdz[iz+(3+0*5)*model->nztrue] = rdata->z[tdata->nroots[ie]+udata->nmaxevent*3]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
-  tdata->dJzdz[iz+(3+3*5)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
-  tdata->dJzdz[iz+(4+0*5)*model->nztrue] = rdata->z[tdata->nroots[ie]+udata->nmaxevent*4]*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*1.0;
-  tdata->dJzdz[iz+(4+4*5)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
+void dJzdz_model_neuron_o2(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) {
+switch(iz){
+    case 0:
+  dJzdz[0+0*5] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+  dJzdz[1+0*5] = z[1]*1.0/(sigmaz[0]*sigmaz[0])*1.0;
+  dJzdz[1+1*5] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+  dJzdz[2+0*5] = z[2]*1.0/(sigmaz[0]*sigmaz[0])*1.0;
+  dJzdz[2+2*5] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+  dJzdz[3+0*5] = z[3]*1.0/(sigmaz[0]*sigmaz[0])*1.0;
+  dJzdz[3+3*5] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+  dJzdz[4+0*5] = z[4]*1.0/(sigmaz[0]*sigmaz[0])*1.0;
+  dJzdz[4+4*5] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+    break;
 }
-return;
-
 }
-
 

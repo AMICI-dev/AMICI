@@ -1,9 +1,10 @@
 #ifndef _amici_wrapfunctions_h
 #define _amici_wrapfunctions_h
 #include <math.h>
-#include <include/amici_model.h>
-#include "model_robertson.h"
+#include <include/amici_defines.h>
+#include <include/udata.h>
 #include <include/amici_solver_idas.h>
+#include <include/amici_model_dae.h>
 
 namespace amici {
 class UserData;
@@ -19,61 +20,61 @@ class Solver;
 #define EXTERNC
 #endif
 
-amici::UserData getUserData();
-amici::Solver *getSolver();
-amici::Model *getModel();
-void fx0(N_Vector x0, void *user_data);
-void fdx0(N_Vector x0, N_Vector dx0, void *user_data);
-void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
-void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);
-void fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
-void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
-void froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
-void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
-void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata);
-void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
-void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
-void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
-void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
-void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fsigma_y(realtype t, amici::TempData *tdata);
-void fdsigma_ydp(realtype t, amici::TempData *tdata);
-void fsigma_z(realtype t, int ie, amici::TempData *tdata);
-void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata);
-void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
-void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+amici::Model *getModel(const amici::UserData *udata);
+void getModelDims(int *nx, int *nk, int *np);
 
-class Model_model_robertson : public amici::Model {
+extern void J_model_robertson(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
+extern void JB_model_robertson(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
+extern void JDiag_model_robertson(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
+extern void JSparse_model_robertson(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
+extern void JSparseB_model_robertson(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
+extern void Jrz_model_robertson(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void Jv_model_robertson(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *v, const realtype *w, const realtype *dwdx);
+extern void JvB_model_robertson(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *vB, const realtype *w, const realtype *dwdx);
+extern void Jy_model_robertson(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void Jz_model_robertson(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void M_model_robertson(realtype *M, const realtype t, const realtype *x, const realtype *p, const realtype *k);
+extern void dJrzdsigma_model_robertson(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void dJrzdz_model_robertson(double *dJrzdz, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void dJydsigma_model_robertson(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void dJydy_model_robertson(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void dJzdsigma_model_robertson(double *dJzdsigma, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void dJzdz_model_robertson(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void deltaqB_model_robertson(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
+extern void deltasx_model_robertson(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau);
+extern void deltax_model_robertson(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old);
+extern void deltaxB_model_robertson(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
+extern void drzdp_model_robertson(double *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
+extern void drzdx_model_robertson(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void dsigma_ydp_model_robertson(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip);
+extern void dsigma_zdp_model_robertson(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip);
+extern void dwdp_model_robertson(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dwdx_model_robertson(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dxdotdp_model_robertson(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *w, const realtype *dwdp);
+extern void dydp_model_robertson(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
+extern void dydx_model_robertson(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void dzdp_model_robertson(double *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
+extern void dzdx_model_robertson(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void qBdot_model_robertson(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdp);
+extern void root_model_robertson(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx);
+extern void rz_model_robertson(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void sigma_y_model_robertson(double *sigmay, const realtype t, const realtype *p, const realtype *k);
+extern void sigma_z_model_robertson(double *sigmaz, const realtype t, const realtype *p, const realtype *k);
+extern void srz_model_robertson(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
+extern void stau_model_robertson(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie);
+extern void sx0_model_robertson(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
+extern void sxdot_model_robertson(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *sx, const realtype *sdx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *M, const realtype *dxdotdp);
+extern void sz_model_robertson(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
+extern void w_model_robertson(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void x0_model_robertson(realtype *x0, const realtype t, const realtype *p, const realtype *k);
+extern void xBdot_model_robertson(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
+extern void xdot_model_robertson(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w);
+extern void y_model_robertson(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void z_model_robertson(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+
+class Model_model_robertson : public amici::Model_DAE {
 public:
-    Model_model_robertson() : amici::Model(3,
+    Model_model_robertson(const amici::UserData *udata) : amici::Model_DAE(3,
                     3,
                     3,
                     1,
@@ -89,279 +90,215 @@ public:
                     9,
                     2,
                     2,
-                    amici::AMICI_O2MODE_NONE)
-    {
-        z2event = new int[0] {};
-        idlist = new realtype[3] {1, 1, 0,};
+                    amici::AMICI_O2MODE_NONE,
+                    std::vector<realtype>(udata->unp(),udata->unp()+3),
+                    std::vector<realtype>(udata->k(),udata->k()+1),
+                    udata->plist(),
+                    std::vector<realtype>{1, 1, 0},
+                    std::vector<int>{})
+                    {};
+
+    virtual void model_J(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
+        J_model_robertson(J, t, x, p, k, h, cj, dx, w, dwdx);
     }
 
-    amici::Solver *getSolver() override {
-        return new amici::IDASolver();
+    virtual int model_JB(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx) override {
+        JB_model_robertson(JB, t, x, p, k, h, cj, xB, dx, dxB, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        J_model_robertson(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual int model_JDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
+        JDiag_model_robertson(JDiag, t, x, p, k, h, cj, dx, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JB_model_robertson(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual int model_JSparse(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
+        JSparse_model_robertson(J, t, x, p, k, h, cj, dx, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JBand_model_robertson(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual int model_JSparseB(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx) override {
+        JSparseB_model_robertson(JB, t, x, p, k, h, cj, xB, dx, dxB, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JBandB_model_robertson(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual void model_Jrz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        Jrz_model_robertson(nllh, iz, p, k, rz, sigmaz);
     }
 
-    void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) override {
-        JDiag_model_robertson(t, JDiag, cj, x, dx, user_data);
-        return;
+    virtual int model_Jv(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *v, const realtype *w, const realtype *dwdx) override {
+        Jv_model_robertson(Jv, t, x, p, k, h, cj, dx, v, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JSparse_model_robertson(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual int model_JvB(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *vB, const realtype *w, const realtype *dwdx) override {
+        JvB_model_robertson(JvB, t, x, p, k, h, cj, xB, dx, dxB, vB, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JSparseB_model_robertson(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual void model_Jy(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        Jy_model_robertson(nllh, iy, p, k, y, sigmay, my);
     }
 
-    void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jrz_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_Jz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        Jz_model_robertson(nllh, iz, p, k, z, sigmaz, mz);
     }
 
-    int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) override {
-        Jv_model_robertson(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
-        return(0);
+    virtual void model_M(realtype *M, const realtype t, const realtype *x, const realtype *p, const realtype *k) override {
+        M_model_robertson(M, t, x, p, k);
     }
 
-    int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) override {
-        JvB_model_robertson(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
-        return(0);
+    virtual void model_dJrzdsigma(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        dJrzdsigma_model_robertson(dJrzdsigma, iz, p, k, rz, sigmaz);
     }
 
-    void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jy_model_robertson(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void model_dJrzdz(double *dJrzdz, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        dJrzdz_model_robertson(dJrzdz, iz, p, k, rz, sigmaz);
     }
 
-    void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jz_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_dJydsigma(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        dJydsigma_model_robertson(dJydsigma, iy, p, k, y, sigmay, my);
     }
 
-    void fM(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        M_model_robertson(t, x, dx, user_data);
-        return;
+    virtual void model_dJydy(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        dJydy_model_robertson(dJydy, iy, p, k, y, sigmay, my);
     }
 
-    void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdsigma_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_dJzdsigma(double *dJzdsigma, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        dJzdsigma_model_robertson(dJzdsigma, iz, p, k, z, sigmaz, mz);
     }
 
-    void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdz_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_dJzdz(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        dJzdz_model_robertson(dJzdz, iz, p, k, z, sigmaz, mz);
     }
 
-    void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydsigma_model_robertson(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void model_deltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) override {
+        deltaqB_model_robertson(deltaqB, t, x, p, k, h, ip, ie, xdot, xdot_old, xB);
     }
 
-    void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydy_model_robertson(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void model_deltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau) override {
+        deltasx_model_robertson(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_old, sx, stau);
     }
 
-    void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdsigma_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old) override {
+        deltax_model_robertson(deltax, t, x, p, k, h, ie, xdot, xdot_old);
     }
 
-    void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdz_model_robertson(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) override {
+        deltaxB_model_robertson(deltaxB, t, x, p, k, h, ie, xdot, xdot_old, xB);
     }
 
-    void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaqB_model_robertson(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
-        return;
+    virtual void model_drzdp(double *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
+        drzdp_model_robertson(drzdp, ie, t, x, p, k, h, ip);
     }
 
-    void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) override {
-        deltasx_model_robertson(t, ie, x, xdot, xdot_old, sx, tdata);
-        return;
+    virtual void model_drzdx(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        drzdx_model_robertson(drzdx, ie, t, x, p, k, h);
     }
 
-    void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltax_model_robertson(t, ie, x, xdot, xdot_old, tdata);
-        return;
+    virtual void model_dsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
+        dsigma_ydp_model_robertson(dsigmaydp, t, p, k, ip);
     }
 
-    void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaxB_model_robertson(t, ie, x, xB, xdot, xdot_old, tdata);
-        return;
+    virtual void model_dsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
+        dsigma_zdp_model_robertson(dsigmazdp, t, p, k, ip);
     }
 
-    void fdfdx(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dfdx_model_robertson(t, x, dx, user_data);
-        return;
+    virtual void model_dwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dwdp_model_robertson(dwdp, t, x, p, k, h, w);
     }
 
-    void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdp_model_robertson(t, ie, x, tdata);
-        return;
+    virtual void model_dwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dwdx_model_robertson(dwdx, t, x, p, k, h, w);
     }
 
-    void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdx_model_robertson(t, ie, x, tdata);
-        return;
+    virtual int model_dxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) override {
+        dxdotdp_model_robertson(dxdotdp, t, x, p, k, h, ip, dx, w, dwdp);
+        return AMICI_SUCCESS;
     }
 
-    void fdsigma_ydp(realtype t, amici::TempData *tdata) override {
-        dsigma_ydp_model_robertson(t, tdata);
-        return;
+    virtual void model_dydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
+        dydp_model_robertson(dydp, t, x, p, k, h, ip);
     }
 
-    void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata) override {
-        dsigma_zdp_model_robertson(t, ie, tdata);
-        return;
+    virtual void model_dydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        dydx_model_robertson(dydx, t, x, p, k, h);
     }
 
-    void fdwdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdp_model_robertson(t, x, dx, user_data);
-        return;
+    virtual void model_dzdp(double *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
+        dzdp_model_robertson(dzdp, ie, t, x, p, k, h, ip);
     }
 
-    void fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdx_model_robertson(t, x, dx, user_data);
-        return;
+    virtual void model_dzdx(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        dzdx_model_robertson(dzdx, ie, t, x, p, k, h);
     }
 
-    void fdx0(N_Vector x0, N_Vector dx0, void *user_data) override {
-        dx0_model_robertson(x0, dx0, user_data);
-        return;
+    virtual int model_qBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdp) override {
+        qBdot_model_robertson(qBdot, ip, t, x, p, k, h, xB, dx, dxB, w, dwdp);
+        return AMICI_SUCCESS;
     }
 
-    void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dxdotdp_model_robertson(t, x, dx, user_data);
-        return;
+    virtual int model_root(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx) override {
+        root_model_robertson(root, t, x, p, k, h, dx);
+        return AMICI_SUCCESS;
     }
 
-    void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydp_model_robertson(t, it, x, tdata);
-        return;
+    virtual void model_rz(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        rz_model_robertson(rz, ie, t, x, p, k, h);
     }
 
-    void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydx_model_robertson(t, it, x, tdata);
-        return;
+    virtual void model_sigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) override {
+        sigma_y_model_robertson(sigmay, t, p, k);
     }
 
-    void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdp_model_robertson(t, ie, x, tdata);
-        return;
+    virtual void model_sigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) override {
+        sigma_z_model_robertson(sigmaz, t, p, k);
     }
 
-    void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdx_model_robertson(t, ie, x, tdata);
-        return;
+    virtual void model_srz(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
+        srz_model_robertson(srz, ie, t, x, p, k, h, sx, ip);
     }
 
-    int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) override {
-        qBdot_model_robertson(t, x, dx, xB, dxB, qBdot, user_data);
-        return(0);
+    virtual void model_stau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) override {
+        stau_model_robertson(stau, t, x, p, k, h, sx, ip, ie);
     }
 
-    int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) override {
-        root_model_robertson(t, x, dx, root, user_data);
-        return(0);
+    virtual void model_sx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {
+        sx0_model_robertson(sx0, t, x0, p, k, ip);
     }
 
-    void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        rz_model_robertson(t, ie, x, tdata, rdata);
-        return;
+    virtual int model_sxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *sx, const realtype *sdx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *M, const realtype *dxdotdp) override {
+        sxdot_model_robertson(sxdot, t, x, p, k, h, ip, dx, sx, sdx, w, dwdx, J, M, dxdotdp);
+        return AMICI_SUCCESS;
     }
 
-    void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data) override {
-        sdx0_model_robertson(sdx0, x, dx, user_data);
-        return;
+    virtual void model_sz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
+        sz_model_robertson(sz, ie, t, x, p, k, h, sx, ip);
     }
 
-    void fsigma_y(realtype t, amici::TempData *tdata) override {
-        sigma_y_model_robertson(t, tdata);
-        return;
+    virtual void model_w(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        w_model_robertson(w, t, x, p, k, h);
     }
 
-    void fsigma_z(realtype t, int ie, amici::TempData *tdata) override {
-        sigma_z_model_robertson(t, ie, tdata);
-        return;
+    virtual void model_x0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {
+        x0_model_robertson(x0, t, p, k);
     }
 
-    void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        srz_model_robertson(t, ie, x, sx, tdata, rdata);
-        return;
+    virtual int model_xBdot(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx) override {
+        xBdot_model_robertson(xBdot, t, x, p, k, h, xB, dx, dxB, w, dwdx);
+        return AMICI_SUCCESS;
     }
 
-    void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) override {
-        stau_model_robertson(t, ie, x, sx, tdata);
-        return;
+    virtual void model_xdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w) override {
+        xdot_model_robertson(xdot, t, x, p, k, h, dx, w);
     }
 
-    void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) override {
-        sx0_model_robertson(sx0, x, dx, user_data);
-        return;
+    virtual void model_y(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        y_model_robertson(y, t, x, p, k, h);
     }
 
-    int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        sxdot_model_robertson(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
-        return(0);
-    }
-
-    void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        sz_model_robertson(t, ie, x, sx, tdata, rdata);
-        return;
-    }
-
-    void fw(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        w_model_robertson(t, x, dx, user_data);
-        return;
-    }
-
-    void fx0(N_Vector x0, void *user_data) override {
-        x0_model_robertson(x0, user_data);
-        return;
-    }
-
-    int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) override {
-        xBdot_model_robertson(t, x, dx, xB, dxB, xBdot, user_data);
-        return(0);
-    }
-
-    int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) override {
-        xdot_model_robertson(t, x, dx, xdot, user_data);
-        return(0);
-    }
-
-    void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) override {
-        y_model_robertson(t, it, x, user_data, rdata);
-        return;
-    }
-
-    void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        z_model_robertson(t, ie, x, tdata, rdata);
-        return;
+    virtual void model_z(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        z_model_robertson(z, ie, t, x, p, k, h);
     }
 
 };
