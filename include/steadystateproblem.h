@@ -43,7 +43,7 @@ class SteadystateProblem {
 
     void getNewtonSimulation(const UserData *udata, TempData *tdata,
                                    ReturnData *rdata, Solver *solver,
-                                   Model *model, int it);
+                                   Model *model, int it, int simInitGuess);
     
     
     /** default constructor

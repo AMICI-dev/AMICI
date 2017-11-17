@@ -486,11 +486,12 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
         converged = true;
         res = sqrt(N_VDotProd(ns_r, ns_r));
         for (int ix = 0; ix < model->nx; ix++) {
-            if (res_rel_tmp[ix] < udata->atol)
-                res_rel_tmp[ix] = udata->atol;
+            if (res_rel_tmp[ix] < udata->newton_atol)
+                res_rel_tmp[ix] = udata->newton_atol;
             
             res_rel_tmp[ix] = res_abs_tmp[ix] / res_rel_tmp[ix];
-            if (res_abs_tmp[ix] > udata->atol && res_rel_tmp[ix] > udata->rtol) {
+            if (res_abs_tmp[ix] > udata->newton_atol &&
+                res_rel_tmp[ix] > udata->newton_rtol) {
                 converged = false;
                 break;
             }
