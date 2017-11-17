@@ -98,7 +98,8 @@ void UserData::setConstants(const double *constants) {
 
 void UserData::setPlist(const double *plist, int length) {
     p_index.resize(length);
-    
+    pbar.resize(nplist());
+    std::fill(pbar.begin(),pbar.end(),1.0);
     for (int ip = 0; ip < length; ip++) {
         p_index[ip] = (int)plist[ip];
     }
@@ -106,6 +107,8 @@ void UserData::setPlist(const double *plist, int length) {
 
 void UserData::setPlist(const int *plist, int length) {
     p_index.resize(length);
+    pbar.resize(nplist());
+    std::fill(pbar.begin(),pbar.end(),1.0);
     memcpy(p_index.data(), plist, sizeof(int) * length);
 }
     

@@ -113,12 +113,12 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     AMI_HDF5_getIntArrayAttribute(fileId, datasetPath, "sens_ind",
                                   &int_buffer, &length0);
     if (length0 > 0) {
-        udata->p_index.assign(int_buffer,int_buffer+length0);
         // currently base 1 indices are written
-        for (int i = 0; i < udata->nplist(); ++i) {
-            udata->p_index[i] -= 1;
-            assert(udata->p_index[i] >= 0 && udata->p_index[i] < udata->np() && "Indices in plist must be in [0..np]");
+        for (int i = 0; i < length0; ++i) {
+            int_buffer[i] -= 1;
+            assert(int_buffer[i] >= 0 && int_buffer[i] < udata->np() && "Indices in plist must be in [0..np]");
         }
+        udata->setPlist(int_buffer,length0);
     } else {
         udata->requireSensitivitiesForAllParameters();
     }
@@ -151,9 +151,10 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "pbar")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "pbar",
                                                    &buffer, &length0);
-        if (length0 != 0 && length0 != (unsigned)udata->nplist())
+        if (length0 != 0 && length0 == (unsigned)udata->nplist())
             goto freturn;
-        udata->setPbar(buffer);
+        if(length0 == (unsigned)udata->nplist())
+            udata->setPbar(buffer);//otherwise use default
         delete[] buffer;
         buffer = NULL;
     }
