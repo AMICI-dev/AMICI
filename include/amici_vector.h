@@ -95,23 +95,17 @@ namespace amici {
         AmiVectorArray(const long int length_inner, const long int length_outer)
         : vec_array(length_outer,AmiVector(length_inner))
         {
-            N_Vector nvec = N_VMake_Serial(length_inner,vec_array.at(0).data());
-            nvec_array = N_VCloneVectorArrayEmpty_Serial(length_outer,nvec);
-            N_VDestroy_Serial(nvec);
+            nvec_array = new N_Vector[length_outer];
             for (int idx = 0; idx < length_outer; idx++) {
-                nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
-                vec_array.at(idx).nvec = nvec_array[idx];
+                nvec_array[idx] = vec_array.at(idx).nvec;
             }
         };
         
         
         AmiVectorArray(const AmiVectorArray& vaold) : vec_array(vaold.vec_array) {
-            N_Vector nvec = N_VMake_Serial(vec_array.at(0).getLength(),vec_array.at(0).data());
-            nvec_array = N_VCloneVectorArrayEmpty_Serial(vec_array.size(),nvec);
-            N_VDestroy_Serial(nvec);
+            nvec_array = new N_Vector[vaold.getLength()];
             for (int idx = 0; idx < vaold.getLength(); idx++) {
-                nvec_array[idx] = N_VMake_Serial(vec_array[idx].getLength(),vec_array[idx].data());
-                vec_array.at(idx).nvec = nvec_array[idx];
+                nvec_array[idx] = vec_array.at(idx).nvec;
             }
         }
         
@@ -152,6 +146,9 @@ namespace amici {
             for(std::vector<AmiVector>::iterator it = vec_array.begin();
                 it != vec_array.end(); ++it)
                 it->reset();
+        }
+        ~AmiVectorArray(){
+            delete[] nvec_array;
         }
     private:
         std::vector<AmiVector> vec_array;
