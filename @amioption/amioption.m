@@ -47,9 +47,15 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
-        % newton solver: preconditioning method
-        % (0 = none, 1 = diagonal, 2 = incomplete LU)
-        newton_precon = 1;
+        % newton solver: absolute error tolerance
+        newton_atol = 1e-16;
+        % newton solver: relative error tolerance
+        newton_rtol = 1e-8;
+        % newton solver: If the Newton solver should be launched after a
+        % short simulation, newton_simInitGuess should be positive integer
+        % which specifies the maximum number of simulation steps. If the
+        % Newton solver should be called directly, set this option to -1.
+        newton_simInitGuess = -1;
         % newton solver: maximum newton steps
         newton_maxsteps = 40;
         % newton solver: maximum linear steps
@@ -233,11 +239,19 @@ classdef amioption < matlab.mixin.CustomDisplay
             this.pscale = value;
         end
         
-        function this = set.newton_precon(this,value)
-            assert(isnumeric(value),'The option newton_precon must have a numeric value!')
-            assert(floor(value)==value,'The option newton_precon must be an integer!')
-            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_precon!')
-            this.newton_precon = value;
+        function this = set.newton_atol(this,value)
+            assert(isnumeric(value),'The option newton_atol must have a numeric value!')
+            this.newton_atol = value;
+        end
+        
+        function this = set.newton_rtol(this,value)
+            assert(isnumeric(value),'The option newton_rtol must have a numeric value!')
+            this.newton_rtol = value;
+        end
+        
+        function this = set.newton_simInitGuess(this,value)
+            assert(isnumeric(value),'The option newton_simInitGuess must have a numeric value!')
+            this.newton_simInitGuess = value;
         end
         
         function this = set.newton_maxsteps(this,value)

@@ -167,6 +167,15 @@ class UserData {
     /** maximum number of allowed integration steps */
     int maxsteps = 0;
 
+    /** absolute tolerances for for steady state computation */
+    int newton_atol = 1e-16;
+    
+    /** relative tolerances for for steady state computation */
+    int newton_rtol = 1e-8;
+    
+    /** relative tolerances for for steady state computation */
+    int newton_simInitGuess = -1;
+    
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps = 0;
 
@@ -176,10 +185,6 @@ class UserData {
 
     /** Preequilibration of model via Newton solver? */
     int newton_preeq = false;
-
-    /** Which preconditioner is to be used in the case of iterative linear
-     * Newton solvers */
-    int newton_precon = 1;
 
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
