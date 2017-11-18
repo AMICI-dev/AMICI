@@ -63,6 +63,8 @@ void ForwardProblem::workForwardProblem(const UserData *udata, TempData *tdata,
         SteadystateProblem sstate = SteadystateProblem(model->nx);
         sstate.workSteadyStateProblem(udata, tdata, rdata,
                                        solver, model, -1);
+        if (udata->sensi > 0)
+            solver->AMISensReInit(udata->ism, tdata->sx, tdata->sdx);
     }
 
     /* loop over timepoints */

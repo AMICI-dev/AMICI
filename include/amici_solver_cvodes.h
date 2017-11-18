@@ -138,6 +138,8 @@ class CVodeSolver : public Solver {
     void AMISetStopTime(realtype tstop) override;
 
     void turnOffRootFinding() override;
+    
+    void turnOffForwardSensis() override;
 
     // Static wrapper functions because cannot pass member functions to solver
     // (CVODES-specific signatures)

@@ -134,6 +134,8 @@ class IDASolver : public Solver {
     void AMISetStopTime(realtype tstop) override;
 
     void turnOffRootFinding() override;
+    
+    void turnOffForwardSensis() override;
 
     static int residualFunction(realtype tt, N_Vector yy, N_Vector yp,
                               N_Vector rr, void *user_data);

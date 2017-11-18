@@ -20,7 +20,7 @@ void ReturnDataMatlab::initFields() {
     /**
      * @brief initialises sol object with the corresponding fields
      */
-    const int numFields = 36;
+    const int numFields = 37;
     const char *field_names_sol[numFields] = {"status",
                                               "llh",
                                               "sllh",
@@ -56,7 +56,8 @@ void ReturnDataMatlab::initFields() {
                                               "newton_status",
                                               "newton_numsteps",
                                               "newton_numlinsteps",
-                                              "newton_time"};
+                                              "newton_time",
+                                              "newton_ssTime"};
 
     matlabSolutionStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);

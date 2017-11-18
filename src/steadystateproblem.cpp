@@ -34,6 +34,10 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
      */
     double run_time;
     clock_t starttime;
+    
+    /* If simulation is needed, FSA should be disabled */
+    if (udata->sensi > 0)
+        solver->turnOffForwardSensis();
 
     /* First, try to do Newton steps */
     starttime = clock();
@@ -41,13 +45,17 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(udata->linsol, model, rdata, udata, tdata));
                                                       
     int newton_status;
+    /* Take some simulation steps have a better initial guess? */
+    if (udata->newton_simInitGuess > 0)
+        getNewtonSimulation(udata, tdata, rdata, solver, model, it, 1);
+    
     try {
         applyNewtonsMethod(udata, rdata, tdata, model, newtonSolver.get(), 1);
         newton_status = 1;
     } catch(NewtonFailure& ex) {
         try {
             /* Newton solver did not find a steady state, so try integration */
-            getNewtonSimulation(udata, tdata, rdata, solver, model, it);
+            getNewtonSimulation(udata, tdata, rdata, solver, model, it, 0);
             newton_status = 2;
         } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
             try {
@@ -113,6 +121,9 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     bool compNewStep = TRUE;
     
     realtype *x_tmp;
+    realtype *delta_tmp;
+    realtype *res_abs_tmp;
+    realtype *res_rel_tmp;
 
     /* initialize output von linear solver for Newton step */
     N_VConst(0.0, delta);
@@ -125,43 +136,36 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         Ensure positivity of the state */
     N_VScale(1.0, tdata->x, x_newton);
     N_VAbs(x_newton, x_newton);
-    x_tmp = N_VGetArrayPointer(x_newton);
+    N_VDiv(tdata->xdot, x_newton, rel_x_newton);
+    res_abs_tmp = N_VGetArrayPointer(tdata->xdot);
+    res_rel_tmp = N_VGetArrayPointer(rel_x_newton);
+    bool converged = true;
     for (ix = 0; ix < model->nx; ix++) {
-        if (x_tmp[ix] < udata->atol) {
-            x_tmp[ix] = udata->atol;
+        if(res_abs_tmp[ix] > udata->newton_atol && res_rel_tmp[ix] > udata->newton_rtol) {
+            converged = false;
+            break;
         }
     }
-    N_VDiv(tdata->xdot, x_newton, rel_x_newton);
-    double res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+    
     N_VScale(1.0, tdata->x, tdata->x_old);
     N_VScale(1.0, tdata->xdot, tdata->xdot_old);
-    
-    //rdata->newton_numsteps[newton_try - 1] = 0.0;
-    bool converged = (res_abs < udata->atol || res_rel < udata->rtol);
     while (!converged && i_newtonstep < udata->newton_maxsteps) {
 
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
             try{
+                model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
                 newtonSolver->getStep(newton_try, i_newtonstep, delta);
             } catch(...) {
                 rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
                 throw NewtonFailure("Newton method failed to compute new step!");
             }
         }
-        
         /* Try a full, undamped Newton step */
         N_VLinearSum(1.0, tdata->x_old, gamma, delta, tdata->x);
-        /* Ensure positivity of the state */
-        x_tmp = N_VGetArrayPointer(tdata->x);
-        for (ix = 0; ix < model->nx; ix++)
-            if (x_tmp[ix] < udata->atol)
-                x_tmp[ix] = udata->atol;
         
         /* Compute new xdot and residuals */
         model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-        N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
-        res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
         res_tmp = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
         
         if (res_tmp < res_abs) {
@@ -171,13 +175,35 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
             N_VScale(1.0, tdata->xdot, tdata->xdot_old);
             /* New linear solve due to new state */
             compNewStep = TRUE;
-            /* Check residuals vs tolerances */
-            converged = (res_abs < udata->atol) || (res_rel < udata->rtol);
-            /* increase dampening factor (superfluous, if converged) */
-            gamma = fmin(1.0, 2.0 * gamma);
+            
+            /* Check for convergence */
+            res_abs_tmp = N_VGetArrayPointer(tdata->xdot);
+            N_VDiv(tdata->xdot, tdata->x, rel_x_newton);
+            res_rel_tmp = N_VGetArrayPointer(rel_x_newton);
+            converged = true;
+            for (ix = 0; ix < model->nx; ix++) {
+                if(fabs(res_abs_tmp[ix]) > udata->newton_atol &&
+                   fabs(res_rel_tmp[ix]) > udata->newton_rtol) {
+                    converged = false;
+                    break;
+                }
+            }
+            if (converged) {
+                x_tmp = N_VGetArrayPointer(tdata->x);
+                for (ix = 0; ix < model->nx; ix++) {
+                    if (x_tmp[ix] < 0) {
+                        if (x_tmp[ix] < -udata->newton_atol)
+                            converged = false;
+                        x_tmp[ix] = 0.0;
+                    }
+                }
+            } else {
+                /* increase dampening factor */
+                gamma = fmin(1.0, 3.0 * gamma);
+            }
         } else {
             /* Reduce dampening factor */
-            gamma = gamma / 4.0;
+            gamma = gamma / 7.0;
             /* No new linear solve, only try new dampening */
             compNewStep = FALSE;
         }
@@ -228,6 +254,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
         }
     } else {
         tdata->t = INFINITY;
+        rdata->newton_ssTime[0] = tdata->t;
     }
 }
 
@@ -240,7 +267,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
 
 void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *tdata,
                                             ReturnData *rdata, Solver *solver,
-                                            Model *model, int it) {
+                                            Model *model, int it, int simInitGuess) {
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
@@ -260,9 +287,10 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
     else
         tstart = udata->ts[it-1];
     tdata->t = tstart;
-    
-    model->fx0(tdata->x, tdata);
-    solver->AMIReInit(udata->tstart, tdata->x, tdata->dx);
+    if (simInitGuess == 0) {
+        model->fx0(tdata->x, tdata);
+        solver->AMIReInit(udata->tstart, tdata->x, tdata->dx);
+    }
     
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
@@ -270,34 +298,42 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata, TempData *td
     realtype *x_tmp;
     
     int it_newton = 0;
-    while(res_abs > udata->atol && res_rel > udata->rtol) {
+    while(res_abs > udata->newton_atol && res_rel > udata->newton_rtol) {
         /* One step of ODE integration */
         solver->AMISolve(1e12, tdata->x, tdata->dx, &(tdata->t),
                                   AMICI_ONE_STEP);
-        model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
-        res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
         
-        /* Ensure positivity and compute relative residual */
-        N_VScale(1.0, tdata->x, x_newton);
-        N_VAbs(x_newton, x_newton);
-        x_tmp = N_VGetArrayPointer(x_newton);
-        for (int ix = 0; ix < model->nx; ix++) {
-            if (x_tmp[ix] < udata->atol) {
-                x_tmp[ix] = udata->atol;
+        /* Check residual if not simulating ti initial guess */
+        if (simInitGuess == 0) {
+            model->fxdot(tdata->t, tdata->x, tdata->dx, tdata->xdot, tdata);
+            res_abs = sqrt(N_VDotProd(tdata->xdot, tdata->xdot));
+        
+            /* Ensure positivity and compute relative residual */
+            N_VScale(1.0, tdata->x, x_newton);
+            N_VAbs(x_newton, x_newton);
+            x_tmp = N_VGetArrayPointer(x_newton);
+            for (int ix = 0; ix < model->nx; ix++) {
+                if (x_tmp[ix] < udata->newton_atol) {
+                    x_tmp[ix] = udata->newton_atol;
+                }
             }
-        }
-        N_VDiv(tdata->xdot, x_newton, rel_x_newton);
-        res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
+            N_VDiv(tdata->xdot, x_newton, rel_x_newton);
+            res_rel = sqrt(N_VDotProd(rel_x_newton, rel_x_newton));
         
-        /* Check for convergence */
-        if (res_abs < udata->atol || res_rel < udata->rtol) 
-            break;
+            /* Check for convergence */
+            if (res_abs < udata->newton_atol || res_rel < udata->newton_rtol)
+                break;
+        }
+        
         /* increase counter, check for maxsteps */
         it_newton++;
         if (it_newton >= udata->maxsteps)
             throw NewtonFailure("Simulation based steady state failed to converge");
-            
         
+        /* IF simulating to initial guess, stop at the given value */
+        if (simInitGuess != 0)
+            if (it_newton >= udata->newton_simInitGuess)
+                break;
     }
 }
 

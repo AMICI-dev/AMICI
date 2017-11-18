@@ -446,7 +446,13 @@ void CVodeSolver::AMISetStopTime(realtype tstop) {
 void CVodeSolver::turnOffRootFinding() {
     int status = CVodeRootInit(ami_mem, 0, NULL);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeRootInit");
+        throw CvodeException(status,"CVodeRootInit");
+}
+    
+void CVodeSolver::turnOffForwardSensis() {
+    int status = CVodeSensToggleOff(ami_mem);
+    if(status != CV_SUCCESS)
+         throw CvodeException(status,"CVodeSensToggleOff");
 }
 
 int CVodeSolver::residualFunction(realtype t, N_Vector y, N_Vector ydot,

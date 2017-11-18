@@ -130,6 +130,9 @@ class ReturnData {
 
     /** computation time of the Newton solver [s] */
     double *newton_time = nullptr;
+    
+    /** time when Newton simulation reaches the steady state */
+    double *newton_ssTime = nullptr;
 
     /** number of Newton steps for steady state problem */
     double *newton_numsteps = nullptr;

@@ -352,6 +352,8 @@ ReturnData::~ReturnData() {
         delete[] newton_numlinsteps;
     if (newton_time)
         delete[] newton_time;
+    if (newton_ssTime)
+        delete[] newton_ssTime;
     if (llh)
         delete[] llh;
     if (sllh)
@@ -403,6 +405,7 @@ void ReturnData::initFields() {
         initField2(&newton_numlinsteps, "newton_numlinsteps", newton_maxsteps,
                    2);
         initField2(&newton_time, "newton_time", 1, 1);
+        initField2(&newton_ssTime, "newton_ssTime", 1, 1);
     }
     if (ny > 0) {
         initField2(&y, "y", nt, ny);

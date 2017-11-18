@@ -408,6 +408,12 @@ void IDASolver::turnOffRootFinding() {
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDARootInit");
 }
+    
+void IDASolver::turnOffForwardSensis() {
+    int status = IDASensToggleOff(ami_mem);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status,"IDASensToggleOff");
+}
 
 int IDASolver::residualFunction(realtype tt, N_Vector yy, N_Vector yp,
                               N_Vector rr, void *user_data) {
