@@ -254,6 +254,7 @@ void SteadystateProblem::getNewtonOutput(TempData *tdata, ReturnData *rdata,
         }
     } else {
         tdata->t = INFINITY;
+        rdata->newton_ssTime[0] = tdata->t;
     }
 }
 
