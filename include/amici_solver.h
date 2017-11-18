@@ -193,6 +193,12 @@ class Solver {
       *
       */
     virtual void turnOffRootFinding() = 0;
+    
+    /**
+     * turnOffForwardSensis disables forward sensitivities
+     *
+     */
+    virtual void turnOffForwardSensis() = 0;
 
   protected:
     /**

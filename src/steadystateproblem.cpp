@@ -34,6 +34,10 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
      */
     double run_time;
     clock_t starttime;
+    
+    /* If simulation is needed, FSA should be disabled */
+    if (udata->sensi > 0)
+        solver->turnOffForwardSensis();
 
     /* First, try to do Newton steps */
     starttime = clock();
