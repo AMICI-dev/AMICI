@@ -8,14 +8,14 @@ switch (ip) {
   case 0: {
               switch(ie) { 
               case 0: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
               case 1: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -26,14 +26,14 @@ switch (ip) {
   case 1: {
               switch(ie) { 
               case 0: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
               case 1: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -44,14 +44,14 @@ switch (ip) {
   case 2: {
               switch(ie) { 
               case 0: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
               case 1: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -62,14 +62,14 @@ switch (ip) {
   case 3: {
               switch(ie) { 
               case 0: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
               case 1: {
-  deltasx[0] = -stau[ip]*(xdot[0]-xdot_old[0]);
-  deltasx[1] = -stau[ip]*(xdot[1]-xdot_old[1]);
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 

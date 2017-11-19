@@ -12,14 +12,12 @@ namespace amici {
  */
 void Model::fsy(const int it, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
-
+    getsx(it,rdata);
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         for (int iy = 0; iy < ny; ++iy)
             // copy dydp to sy
             rdata->sy[ip * rdata->nt * ny + iy * rdata->nt + it] =
                 dydp.at(iy + ip * ny);
-
-        getsx(it,rdata);
 
         // compute sy = 1.0*dydx*sx + 1.0*sy
         amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, ny, nx, 1.0,
@@ -382,7 +380,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     void Model::fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx) {
         std::fill(stau.begin(),stau.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
-            model_stau(stau.data(),t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip),ie);
+            model_stau(&stau.at(ip),t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip),ie);
         }
     }
     
@@ -521,7 +519,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         std::fill(deltasx.begin(),deltasx.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++)
             model_deltasx(&deltasx.at(nx*ip),t,x->data(),p.data(),k.data(),h.data(),w.data(),
-                          plist.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),stau.data());
+                          plist.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
     }
     
     /** Adjoint state update functions for events

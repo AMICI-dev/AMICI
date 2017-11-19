@@ -8,12 +8,12 @@ switch (ip) {
   case 1: {
     switch(ie) { 
         case 0: {
-  stau[ip] = 1.0;
+  stau[0] = 1.0;
 
         } break;
 
         case 1: {
-  stau[ip] = 1.0;
+  stau[0] = 1.0;
 
         } break;
 

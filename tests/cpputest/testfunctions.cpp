@@ -48,12 +48,10 @@ void simulateAndVerifyFromFile(const std::string hdffile, std::string path, doub
     std::string measurementPath = path + "/data";
     auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
 
-    ReturnData *rdata = getSimulationResults(model.get(), udata.get(), edata.get());
+    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(model.get(), udata.get(), edata.get()));
 
     std::string resultPath = path + "/results";
-    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata, udata.get(), model.get(), atol, rtol);
-
-    delete rdata;
+    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata.get(), udata.get(), model.get(), atol, rtol);
 }
     
 void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)
@@ -67,13 +65,11 @@ void simulateAndWriteToFile(const std::string hdffile, const std::string hdffile
     std::string measurementPath = path + "/data";
     auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
     
-    ReturnData *rdata = getSimulationResults(model.get(), udata.get(), edata.get());
+    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(model.get(), udata.get(), edata.get()));
     
     std::string writePath = path + "/write";
-    AMI_HDF5_writeReturnData(rdata,udata.get(),hdffilewrite.c_str(), writePath.c_str());
-    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata, udata.get(), model.get(), atol, rtol);
-    
-    delete rdata;
+    AMI_HDF5_writeReturnData(rdata.get(),udata.get(),hdffilewrite.c_str(), writePath.c_str());
+    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata.get(), udata.get(), model.get(), atol, rtol);
 }
     
 

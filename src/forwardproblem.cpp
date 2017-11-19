@@ -569,11 +569,11 @@ void ForwardProblem::getDataSensisFSA(int it) {
      */
 
     if (!(std::isinf(rdata->ts[it]))) {
+        if (rdata->ts[it] > udata->t0()) {
+            solver->AMIGetSens(&(t), &sx);
+        }
         for (int ip = 0; ip < rdata->nplist; ip++) {
             if (model->nx > 0) {
-                if (rdata->ts[it] > udata->t0()) {
-                    solver->AMIGetSens(&(t), &sx);
-                }
                 for (int ix = 0; ix < model->nx; ix++) {
                     rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
                         sx.at(ix,ip);
