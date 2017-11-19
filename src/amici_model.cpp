@@ -377,7 +377,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** Sensitivity of event timepoint, total derivative
      * @param ie event index
      */
-    void Model::fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx) {
+    void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
         std::fill(stau.begin(),stau.end(),0.0);
         for(int ip = 0; ip < plist.size(); ip++){
             model_stau(&stau.at(ip),t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip),ie);

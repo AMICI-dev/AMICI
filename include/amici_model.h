@@ -195,7 +195,7 @@ namespace amici {
          **/
         virtual void fsdx0() {};
         
-        void fstau(const int ie,const realtype t, const AmiVector *x, const AmiVectorArray *sx);
+        void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
         
         /** model specific implementation of fstau
          * param stau total derivative of event timepoint
