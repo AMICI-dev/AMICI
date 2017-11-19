@@ -875,7 +875,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     void Model::getsx(const int it, const ReturnData *rdata) {
         for(int ip = 0; ip < rdata->nplist; ip++) {
             for(int ix = 0; ix < nx; ix++){
-                sx.at(ip).at(ix) = rdata->sx[it + rdata->nt*(ip+rdata->nplist*ix) ];
+                sx.at(ip).at(ix) = rdata->sx[(ip * nx + ix) * rdata->nt + it];
             }
         }
     }
