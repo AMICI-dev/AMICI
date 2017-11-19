@@ -424,7 +424,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         std::vector<double> zreturn(nz,0.0);
         model_z(zreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data());
         for(int iz = 0; iz < nz; iz++) {
-            rdata->z[nroots+rdata->nmaxevent*iz] = zreturn.at(iz);
+            if (z2event[iz] - 1 == ie)
+                rdata->z[nroots+rdata->nmaxevent*iz] = zreturn.at(iz);
         }
     }
     
@@ -437,7 +438,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
             std::vector<double> szreturn(nz,0.0);
             model_sz(szreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
             for(int iz = 0; iz < nz; iz++) {
-                rdata->sz[nroots+rdata->nmaxevent*(ip*nz + iz)] = szreturn.at(iz);
+                if (z2event[iz] - 1 == ie)
+                    rdata->sz[nroots+rdata->nmaxevent*(ip*nz + iz)] = szreturn.at(iz);
             }
         }
     }
@@ -451,7 +453,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         std::vector<double> rzreturn(nz,0.0);
         model_rz(rzreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data());
         for(int iz = 0; iz < nz; iz++) {
-            rdata->rz[nroots+rdata->nmaxevent*iz] = rzreturn.at(iz);
+            if (z2event[iz] - 1 == ie)
+                rdata->rz[nroots+rdata->nmaxevent*iz] = rzreturn.at(iz);
         }
     }
     
@@ -464,7 +467,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
             std::vector<double> srzreturn(nz,0.0);
             model_srz(srzreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
             for(int iz = 0; iz < nz; iz++) {
-                rdata->srz[nroots+rdata->nmaxevent*(ip*nz + iz)] = srzreturn.at(iz);
+                if (z2event[iz] - 1 == ie)
+                    rdata->srz[nroots+rdata->nmaxevent*(ip*nz + iz)] = srzreturn.at(iz);
             }
         }
     }
