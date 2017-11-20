@@ -434,8 +434,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
      * @param rdata pointer to return data object
      */
     void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+        std::vector<double> szreturn(nz,0.0);
         for(int ip = 0; ip < plist.size();  ip++ ){
-            std::vector<double> szreturn(nz,0.0);
+            std::fill(szreturn.begin(), szreturn.end(), 0.0);
             model_sz(szreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
             for(int iz = 0; iz < nz; iz++) {
                 if (z2event[iz] - 1 == ie)
@@ -463,8 +464,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
      * @param rdata pointer to return data object
      */
     void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+        std::vector<double> srzreturn(nz,0.0);
         for(int ip = 0; ip < plist.size();  ip++ ){
-            std::vector<double> srzreturn(nz,0.0);
+            std::fill(srzreturn.begin(), srzreturn.end(), 0.0);
             model_srz(srzreturn.data(),ie,t,x->data(),p.data(),k.data(),h.data(),sx->data(ip),plist.at(ip));
             for(int iz = 0; iz < nz; iz++) {
                 if (z2event[iz] - 1 == ie)

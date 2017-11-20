@@ -457,9 +457,9 @@ void ForwardProblem::getEventSensisFSA(int ie) {
      *
      * @param[in] ie index of event type @type int
      */
-    if (t ==
-        rdata->ts[rdata->nt - 1]) { // call from fillEvent at last timepoint
-        model->fsz_tf(ie, rdata);
+    if (t == rdata->ts[rdata->nt - 1]) {
+        // call from fillEvent at last timepoint
+        model->fsz_tf(nroots.at(ie), rdata);
         model->fsrz(nroots.at(ie),ie,t,&x,&sx,rdata);
     } else {
         model->fsz(nroots.at(ie),ie,t,&x,&sx,rdata);
