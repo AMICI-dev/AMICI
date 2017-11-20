@@ -95,9 +95,9 @@ TEST(userData, setPlist) {
     std::vector<double> plistint = {1};
     udata.setPlist(plistdouble.data(),plistdouble.size());
     double* doubleptr = nullptr;
-    udata.setPlist(doubleptr,plistdouble.size());
+    CHECK_THROWS(amici::AmiException,udata.setPlist(doubleptr,plistdouble.size()));
     int* intptr = nullptr;
-    udata.setPlist(intptr,plistdouble.size());
+    CHECK_THROWS(amici::AmiException,udata.setPlist(intptr,plistdouble.size()));
     udata.setPlist(plistint.data(),plistint.size());
     udata.setPlist(plistdouble.data(),plistdouble.size());
 }
@@ -106,7 +106,6 @@ TEST(userData, testCopy) {
     int np = 1;
     int nk = 2;
     int nx = 3;
-    int nt = 4;
     UserData udata1(np, nk, nx);
     std::vector<double> ts = {1.0, 2.0, 3.0, 4.0};
     udata1.setTimepoints(ts.data(),ts.size());

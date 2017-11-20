@@ -1,4 +1,5 @@
 #include "include/udata.h"
+#include "include/amici_exception.h"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -97,6 +98,8 @@ void UserData::setConstants(const double *constants) {
 }
 
 void UserData::setPlist(const double *plist, int length) {
+    if(!plist)
+        throw AmiException("Provided plist was a nullptr, please provide a valid pointer.");
     p_index.resize(length);
     pbar.resize(nplist());
     std::fill(pbar.begin(),pbar.end(),1.0);
@@ -106,6 +109,8 @@ void UserData::setPlist(const double *plist, int length) {
 }
 
 void UserData::setPlist(const int *plist, int length) {
+    if(!plist)
+        throw AmiException("Provided plist was a nullptr, please provide a valid pointer.");
     p_index.resize(length);
     pbar.resize(nplist());
     std::fill(pbar.begin(),pbar.end(),1.0);

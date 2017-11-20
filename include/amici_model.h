@@ -623,7 +623,8 @@ namespace amici {
         }
         
         virtual ~Model() {
-            SparseDestroyMat(J);
+            if(J)
+                SparseDestroyMat(J);
         };
         
         // Generic implementations
@@ -816,7 +817,7 @@ namespace amici {
         std::vector<double> dJrzdsigmaTmp;
         
         /** Jacobian */
-        SlsMat J;
+        SlsMat J = nullptr;
         
         /** current state */
         std::vector<double> x;
