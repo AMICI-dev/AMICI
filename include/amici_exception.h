@@ -30,6 +30,18 @@ namespace amici {
             va_end(ap);
             storeBacktrace(12);
         }
+        
+        AmiException(const AmiException& old) {
+            /** constructor with printf style interface
+             * @param[in] fmt error message with printf format
+             * @param[in] ... printf formating variables
+             */
+            snprintf(msg, sizeof(msg), "(%s)", old.msg);
+            snprintf(trace, sizeof(trace), "(%s)", old.trace);
+        }
+        
+        
+        
         /** override of default error message function
          * @return msg error message
          */
@@ -37,8 +49,8 @@ namespace amici {
             return msg;
         }
         
-        const char *getBacktrace() {
-            return(trace_buf.str().c_str());
+        const char *getBacktrace() const {
+            return trace;
         }
         
         void storeBacktrace(const int nMaxFrames) {
@@ -46,7 +58,8 @@ namespace amici {
             char buf[1024];
             int nFrames = backtrace(callstack, nMaxFrames);
             char **symbols = backtrace_symbols(callstack, nFrames);
-
+            
+            std::ostringstream trace_buf;
             for (int i = 0; i < nFrames; i++) {
                 Dl_info info;
                 if (dladdr(callstack[i], &info) && info.dli_sname) {
@@ -69,11 +82,12 @@ namespace amici {
             free(symbols);
             if (nFrames == nMaxFrames)
             trace_buf << "[truncated]\n";
+            snprintf(trace, sizeof(trace), "(%s)", trace_buf.str().c_str());
         }
         
     private:
-        char msg[1000];
-        std::ostringstream trace_buf;
+        char msg[500];
+        char trace[500];
     };
     
     /** @brief cvode exception handler class
