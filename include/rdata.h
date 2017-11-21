@@ -27,7 +27,7 @@ class ReturnData {
 
     ReturnData(const UserData *udata, const Model *model);
 
-    void invalidate(const int t);
+    void invalidate(const realtype t);
     void invalidateLLH();
 
     void setLikelihoodSensitivityFirstOrderNaN();
