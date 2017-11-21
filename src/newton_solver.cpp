@@ -13,10 +13,10 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(realtype *t, Model *model, ReturnData *rdata,
+NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                            const UserData *udata)
     : model(model), rdata(rdata), udata(udata),
-    sx_ip(model->nx), xdot(model->nx), x(model->nx), dx(model->nx)
+    sx_ip(x->getLength()), xdot(x->getLength()), dx(x->getLength())
     {
     /**
      * default constructor, initializes all members with the provided objects
@@ -27,12 +27,13 @@ NewtonSolver::NewtonSolver(realtype *t, Model *model, ReturnData *rdata,
      * @param udata pointer to the user data object
      */
     this->t = t;
+    this->x = x;
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-NewtonSolver *NewtonSolver::getSolver(realtype *t, int linsolType, Model *model,
+NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
                                       ReturnData *rdata, const UserData *udata) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
@@ -51,7 +52,7 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, int linsolType, Model *model,
 
     /* DIRECT SOLVERS */
     case AMICI_DENSE:
-        return new NewtonSolverDense(t, model, rdata, udata);
+        return new NewtonSolverDense(t, x, model, rdata, udata);
 
     case AMICI_BAND:
         throw NewtonFailure("Solver currently not supported!");
@@ -70,14 +71,14 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, int linsolType, Model *model,
         throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
-        return new NewtonSolverIterative(t, model, rdata, udata);
+        return new NewtonSolverIterative(t, x, model, rdata, udata);
 
     case AMICI_SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
-        return new NewtonSolverSparse(t, model, rdata, udata);
+        return new NewtonSolverSparse(t, x, model, rdata, udata);
 
     default:
         throw NewtonFailure("Invalid Choice of Solver!");
@@ -100,7 +101,7 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
 
     this->prepareLinearSystem(ntry, nnewt);
 
-    *delta = xdot;
+    xdot = *delta;
     this->solveLinearSystem(delta);
 }
 
@@ -114,8 +115,8 @@ void NewtonSolver::getSensis(int it) {
      * @param[in] it integer index of current time step     */
     this->prepareLinearSystem(0, -1);
 
-    model->fdxdotdp(*t, &x, &dx);
-    for (int ip = 0; ip < udata->nplist(); ip++) {
+    model->fdxdotdp(*t, x, &dx);
+    for (int ip = 0; ip < model->nplist; ip++) {
         
         for (int ix = 0; ix < model->nx; ix++) {
             sx_ip[ix] = -model->dxdotdp[model->nx * ip + ix];
@@ -145,9 +146,9 @@ void NewtonSolver::getSensis(int it) {
  */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(realtype *t, Model *model, ReturnData *rdata,
+NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                                      const UserData *udata)
-    : NewtonSolver(t, model, rdata, udata) {
+    : NewtonSolver(t, x, model, rdata, udata) {
     /**
      * default constructor, initializes all members with the provided objects
      * and
@@ -175,7 +176,7 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      */
 
     /* Get Jacobian */
-    model->fJ(*t, 0.0, &x, &dx, &xdot, Jtmp);
+    model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp);
     int status = DenseGETRF(Jtmp, pivots);
     if(status != 0)
         throw NewtonFailure("Dense factorization failed!");
@@ -214,9 +215,9 @@ NewtonSolverDense::~NewtonSolverDense() {
  */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(realtype *t, Model *model, ReturnData *rdata,
+NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                                        const UserData *udata)
-    : NewtonSolver(t, model, rdata, udata) {
+    : NewtonSolver(t, x, model, rdata, udata) {
     /**
      * default constructor, initializes all members with the provided objects,
      * initializes temporary storage objects and the klu solver
@@ -250,7 +251,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         throw NewtonFailure("KLU was not initialized!");
 
     /* Get sparse Jacobian */
-    model->fJSparse(*t, 0.0, &x, &dx, &xdot, Jtmp);
+    model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp);
 
     /* Get factorization of sparse Jacobian */
     if(symbolic) /* if symbolic was already created free first to avoid memory leak */
@@ -308,9 +309,9 @@ NewtonSolverSparse::~NewtonSolverSparse() {
  */
 
 /* Derived class for iterative linear solver */
-NewtonSolverIterative::NewtonSolverIterative(realtype *t, Model *model, ReturnData *rdata,
+NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                                              const UserData *udata)
-    : NewtonSolver(t, model, rdata, udata), ns_p(model->nx), ns_h(model->nx),
+    : NewtonSolver(t, x, model, rdata, udata), ns_p(model->nx), ns_h(model->nx),
     ns_t(model->nx), ns_s(model->nx), ns_r(model->nx), ns_rt(model->nx), ns_v(model->nx),
     ns_Jv(model->nx), ns_tmp(model->nx), ns_Jdiag(model->nx)
     {
@@ -379,7 +380,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     double res;
     
     // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiag(*t, &ns_Jdiag, 0.0, &x, &dx);
+    model->fJDiag(*t, &ns_Jdiag, 0.0, x, &dx);
     
     // Ensure positivity of entries in ns_Jdiag
     ns_p.set(1.0);
@@ -398,7 +399,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     alpha = 1.0;
     
     // can be set to 0 at the moment
-    model->fJv(*t, &x, &dx, &xdot, ns_delta, &ns_Jv, 0.0);
+    model->fJv(*t, x, &dx, &xdot, ns_delta, &ns_Jv, 0.0);
     
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
@@ -418,7 +419,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
         N_VLinearSum(1.0, ns_r.getNVector(), beta, ns_p.getNVector(), ns_p.getNVector());
         
         // ns_v = J * ns_p
-        model->fJv(*t, &x, &dx, &xdot, &ns_p, &ns_v, 0.0);
+        model->fJv(*t, x, &dx, &xdot, &ns_p, &ns_v, 0.0);
         N_VDiv(ns_v.getNVector(), ns_Jdiag.getNVector(), ns_v.getNVector());
         
         // Compute factor
@@ -430,7 +431,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
         N_VLinearSum(1.0, ns_r.getNVector(), -alpha, ns_v.getNVector(), ns_s.getNVector());
         
         // ns_t = J * ns_s
-        model->fJv(*t, &x, &dx, &xdot, &ns_s, &ns_t, 0.0);
+        model->fJv(*t, x, &dx, &xdot, &ns_s, &ns_t, 0.0);
         N_VDiv(ns_t.getNVector(), ns_Jdiag.getNVector(), ns_t.getNVector());
         
         // Compute factor

@@ -21,9 +21,9 @@ class AmiVector;
 class NewtonSolver {
 
   public:
-    NewtonSolver(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
 
-    static NewtonSolver *getSolver(realtype *t, int linsolType, Model *model,
+    static NewtonSolver *getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
                                    ReturnData *rdata, const UserData *udata);
 
     void getStep(int ntry, int nnewt, AmiVector *delta);
@@ -63,7 +63,7 @@ class NewtonSolver {
     /** right hand side AmiVector */
     AmiVector xdot;
     /** current state*/
-    AmiVector x;
+    AmiVector *x;
     /** current state time derivative (DAE) */
     AmiVector dx;
 };
@@ -76,7 +76,7 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
-    NewtonSolverDense(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverDense();
@@ -95,7 +95,7 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
-    NewtonSolverSparse(realtype *t, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     ~NewtonSolverSparse();
@@ -120,11 +120,11 @@ class NewtonSolverSparse : public NewtonSolver {
 class NewtonSolverIterative : public NewtonSolver {
 
   public:
-    NewtonSolverIterative(realtype *t, Model *model, ReturnData *rdata,
+    NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                           const UserData *udata);
     void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
-    void linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delta);
+    void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
     ~NewtonSolverIterative();
 
   private:

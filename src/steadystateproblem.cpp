@@ -35,7 +35,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(&t, udata->linsol, model, rdata, udata));
+    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(t, x, udata->linsol, model, rdata, udata));
                                                       
     int newton_status;
     try {
@@ -52,7 +52,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
                 // TODO: more informative NewtonFailure to give more informative error code
-                throw amici::IntegrationFailure(AMICI_CONV_FAILURE,t);
+                throw amici::IntegrationFailure(AMICI_CONV_FAILURE,*t);
             } catch(...) {
                 throw AmiException("Internal error in steady state problem");
             }
@@ -72,10 +72,10 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
 
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
-        solver->AMIReInit(t, &x, &dx);
+        solver->AMIReInit(*t, x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                solver->AMISensReInit(udata->ism, &sx, &sdx);
+                solver->AMISensReInit(udata->ism, sx, &sdx);
     }
 }
 
@@ -109,15 +109,15 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     bool compNewStep = TRUE;
 
     /* initialize output von linear solver for Newton step */
-    N_VConst(0.0, delta.getNVector());
+    delta.reset();
 
     /* Check, how fxdot is used exactly within AMICI... */
-    model->fxdot(t, &x, &dx, &xdot);
+    model->fxdot(*t, x, &dx, &xdot);
     double res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
-    x = x_newton;
+    x_newton = *x;
     N_VAbs(x_newton.getNVector(), x_newton.getNVector());
     for (ix = 0; ix < model->nx; ix++) {
         if (x_newton[ix] < udata->atol) {
@@ -126,7 +126,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     }
     N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
     double res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
-    x_old = x;
+    x_old = *x;
     xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
@@ -136,6 +136,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
             try{
+                delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
             } catch(...) {
                 rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
@@ -144,22 +145,22 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         }
         
         /* Try a full, undamped Newton step */
-        N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x.getNVector());
+        N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x->getNVector());
         /* Ensure positivity of the state */
         for (ix = 0; ix < model->nx; ix++)
-            if (x[ix] < udata->atol)
-                x[ix] = udata->atol;
+            if ((*x)[ix] < udata->atol)
+                (*x)[ix] = udata->atol;
         
         /* Compute new xdot and residuals */
-        model->fxdot(t, &x, &dx, &xdot);
-        N_VDiv(xdot.getNVector(), x.getNVector(), rel_x_newton.getNVector());
+        model->fxdot(*t, x, &dx, &xdot);
+        N_VDiv(xdot.getNVector(), x->getNVector(), rel_x_newton.getNVector());
         res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
         res_tmp = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
         if (res_tmp < res_abs) {
             /* If new residuals are smaller than old ones, update state */
             res_abs = res_tmp;
-            x_old = x;
+            x_old = *x;
             xdot_old = xdot;
             /* New linear solve due to new state */
             compNewStep = TRUE;
@@ -210,14 +211,14 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
-        t = rdata->ts[0];
+        *t = rdata->ts[0];
 
         /* Write steady state to output */
         for (int ix = 0; ix < model->nx; ix++) {
-            rdata->x0[ix] = x[ix];
+            rdata->x0[ix] = (*x)[ix];
         }
     } else {
-        t = INFINITY;
+        *t = INFINITY;
     }
 }
 
@@ -248,10 +249,10 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
         tstart = udata->t0();
     else
         tstart = rdata->ts[it-1];
-    t = tstart;
+    *t = tstart;
     
-    model->fx0(&x, udata);
-    solver->AMIReInit(t, &x, &dx);
+    model->fx0(x, udata);
+    solver->AMIReInit(*t, x, &dx);
     
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
@@ -260,13 +261,13 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     int it_newton = 0;
     while(res_abs > udata->atol && res_rel > udata->rtol) {
         /* One step of ODE integration */
-        solver->AMISolve(1e12, &x, &dx, &t,
+        solver->AMISolve(1e12, x, &dx, t,
                                   AMICI_ONE_STEP);
-        model->fxdot(t, &x, &dx, &xdot);
+        model->fxdot(*t, x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
         /* Ensure positivity and compute relative residual */
-        x_newton = x;
+        x_newton = *x;
         N_VAbs(x_newton.getNVector(), x_newton.getNVector());
         for (int ix = 0; ix < model->nx; ix++) {
             if (x_newton[ix] < udata->atol) {

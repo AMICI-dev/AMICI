@@ -49,23 +49,25 @@ class SteadystateProblem {
     /** default constructor
      * @param[in] nx number of state variables
      */
-    SteadystateProblem(const int nx, const int nplist) :
-    delta(nx),
-    rel_x_newton(nx),
-    x_newton(nx),
-    x(nx),
-    x_old(nx),
-    dx(nx),
-    xdot(nx),
-    xdot_old(nx),
-    sx(nx,nplist),
-    sdx(nx,nplist)
-    {};
+    SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
+    delta(x->getLength()),
+    rel_x_newton(x->getLength()),
+    x_newton(x->getLength()),
+    x_old(x->getLength()),
+    dx(x->getLength()),
+    xdot(x->getLength()),
+    xdot_old(x->getLength()),
+    sdx(x->getLength(),sx->getLength())
+    {
+        this->t = t;
+        this->x = x;
+        this->sx = sx;
+    };
     
     /** default destructor */
     ~SteadystateProblem(){};
   private:
-    realtype t;
+    realtype *t;
     /** newton step? */
     AmiVector delta;
     /** container for relative error calcuation? */
@@ -73,7 +75,7 @@ class SteadystateProblem {
     /** container for absolute error calcuation? */
     AmiVector x_newton;
     /** state vector */
-    AmiVector x;
+    AmiVector *x;
     /** old state vector */
     AmiVector x_old;
     /** differential state vector */
@@ -83,7 +85,7 @@ class SteadystateProblem {
     /** old time derivative state vector */
     AmiVector xdot_old;
     /** state sensitivities */
-    AmiVectorArray sx;
+    AmiVectorArray *sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
     
