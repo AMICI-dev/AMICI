@@ -200,8 +200,10 @@ void NewtonSolverDense::solveLinearSystem(AmiVector *rhs) {
  */
 
 NewtonSolverDense::~NewtonSolverDense() {
-    DestroyMat(Jtmp);
-    DestroyArray(pivots);
+    if(Jtmp)
+        DestroyMat(Jtmp);
+    if(pivots)
+        DestroyArray(pivots);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -290,7 +292,8 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
  */
 
 NewtonSolverSparse::~NewtonSolverSparse() {
-    SparseDestroyMat(Jtmp);
+    if(Jtmp)
+        SparseDestroyMat(Jtmp);
     if(symbolic)
         klu_free_symbolic(&symbolic, &common);
     if(numeric)

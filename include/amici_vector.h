@@ -37,6 +37,13 @@ namespace amici {
             nvec = N_VMake_Serial(vold.vec.size(),vec.data());
         };
         
+        AmiVector& operator=(const AmiVector vold) {
+            vec = vold.vec;
+            nvec = N_VMake_Serial(vold.vec.size(),vec.data());
+            return *this;
+        };
+        
+        
         realtype *data() {
             return vec.data();
         }

@@ -11,6 +11,8 @@ CMakeFiles/*
 
 build/*
 
+build_xcode/*
+
 build-debug/*
 
 tests/cpputest/build/*

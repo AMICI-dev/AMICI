@@ -66,7 +66,6 @@ class NewtonSolver {
     AmiVector x;
     /** current state time derivative (DAE) */
     AmiVector dx;
-    
 };
 
 /**
@@ -84,8 +83,8 @@ class NewtonSolverDense : public NewtonSolver {
 
   private:
     /** temporary storage of pivot array */
-    long int *pivots;
-    DlsMat Jtmp;
+    long int *pivots = nullptr;
+    DlsMat Jtmp = nullptr;
 };
 
 /**
@@ -105,12 +104,12 @@ class NewtonSolverSparse : public NewtonSolver {
     /** klu common storage? */
     klu_common common;
     /** klu symbolic storage? */
-    klu_symbolic *symbolic;
+    klu_symbolic *symbolic = nullptr;
     /** klu numeric stoarge? */
-    klu_numeric *numeric;
+    klu_numeric *numeric = nullptr;
     /** klu status flag  */
     int klu_status = 0;
-    SlsMat Jtmp;
+    SlsMat Jtmp = nullptr;
 };
 
 /**
