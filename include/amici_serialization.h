@@ -37,6 +37,7 @@ template <class Archive>
 void serialize(Archive &ar, amici::UserData &u, const unsigned int version) {
     ar &u.pscale;
     ar &u.nmaxevent;
+    ar &const_cast<int &>(u.sizex);
     ar &u.tstart;
     ar &u.sensi;
     ar &u.atol;
@@ -54,6 +55,7 @@ void serialize(Archive &ar, amici::UserData &u, const unsigned int version) {
     ar &u.qpositivex;
     ar &u.p_index;
     ar &u.par;
+    ar &u.unpar;
     ar &u.konst;
     ar &u.ts;
     ar &u.pbar;
