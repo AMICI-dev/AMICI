@@ -126,8 +126,8 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     }
     N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
     double res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
-    x = x_old;
-    xdot = xdot_old;
+    x_old = x;
+    xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
     bool converged = (res_abs < udata->atol || res_rel < udata->rtol);
@@ -159,8 +159,8 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         if (res_tmp < res_abs) {
             /* If new residuals are smaller than old ones, update state */
             res_abs = res_tmp;
-            x = x_old;
-            xdot = xdot_old;
+            x_old = x;
+            xdot_old = xdot;
             /* New linear solve due to new state */
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
@@ -266,7 +266,7 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
         /* Ensure positivity and compute relative residual */
-        x=x_newton;
+        x_newton = x;
         N_VAbs(x_newton.getNVector(), x_newton.getNVector());
         for (int ix = 0; ix < model->nx; ix++) {
             if (x_newton[ix] < udata->atol) {
