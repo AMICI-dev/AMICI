@@ -47,17 +47,31 @@ enum mexRhsArguments {
 };
 
 /**
- * @ brief extract information from a property of a matlab class (scalar)
+ * @ brief extract information from a property of a matlab class (scalar,double)
  * @ param OPTION name of the property
  * @ param TYPE class to which the information should be cast
  */
-#define readOptionScalar(OPTION, TYPE)                                         \
+#define readOptionScalarDouble(OPTION)                                         \
     if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
         udata->OPTION =                                                        \
-            (TYPE)mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION));   \
+            mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION));         \
     } else {                                                                   \
         throw AmiException("Provided options do not have field " #OPTION "!"); \
     }
+    
+/**
+ * @ brief extract information from a property of a matlab class (scalar,int)
+ * @ param OPTION name of the property
+ * @ param TYPE class to which the information should be cast
+ */
+#define readOptionScalarInt(OPTION, TYPE)                                      \
+    if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
+        udata->OPTION =                                                        \
+(TYPE)round(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)));   \
+    } else {                                                                   \
+        throw AmiException("Provided options do not have field " #OPTION "!"); \
+    }
+
 
 /**
  * @ brief extract information from a property of a matlab class (matrix)
@@ -132,26 +146,26 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
 
     /* options */
     if (mxGetPr(prhs[RHS_OPTIONS])) {
-        readOptionScalar(nmaxevent, int);
-        readOptionScalar(tstart, double);
-        readOptionScalar(atol, double);
-        readOptionScalar(rtol, double);
-        readOptionScalar(maxsteps, int);
-        readOptionScalar(lmm, LinearMultistepMethod);
-        readOptionScalar(iter, NonlinearSolverIteration);
-        readOptionScalar(interpType, InterpolationType);
-        readOptionScalar(linsol, LinearSolver);
-        readOptionScalar(stldet, booleantype);
+        readOptionScalarInt(nmaxevent, int);
+        readOptionScalarDouble(tstart);
+        readOptionScalarDouble(atol);
+        readOptionScalarDouble(rtol);
+        readOptionScalarInt(maxsteps, int);
+        readOptionScalarInt(lmm, LinearMultistepMethod);
+        readOptionScalarInt(iter, NonlinearSolverIteration);
+        readOptionScalarInt(interpType, InterpolationType);
+        readOptionScalarInt(linsol, LinearSolver);
+        readOptionScalarInt(stldet, booleantype);
         readOptionData(qpositivex);
-        readOptionScalar(sensi, AMICI_sensi_order);
-        readOptionScalar(pscale, AMICI_parameter_scaling);
-        readOptionScalar(ism, InternalSensitivityMethod);
-        readOptionScalar(sensi_meth, AMICI_sensi_meth);
-        readOptionScalar(ordering, StateOrdering);
-        readOptionScalar(newton_preeq, int);
-        readOptionScalar(newton_precon, int);
-        readOptionScalar(newton_maxsteps, int);
-        readOptionScalar(newton_maxlinsteps, int);
+        readOptionScalarInt(sensi, AMICI_sensi_order);
+        readOptionScalarInt(pscale, AMICI_parameter_scaling);
+        readOptionScalarInt(ism, InternalSensitivityMethod);
+        readOptionScalarInt(sensi_meth, AMICI_sensi_meth);
+        readOptionScalarInt(ordering, StateOrdering);
+        readOptionScalarInt(newton_preeq, int);
+        readOptionScalarInt(newton_precon, int);
+        readOptionScalarInt(newton_maxsteps, int);
+        readOptionScalarInt(newton_maxlinsteps, int);
     } else {
         throw AmiException("No options provided!");
     }
@@ -517,4 +531,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
     
     
+}
+
+int round(double x){
+    return(int(std::round(x)));
 }
