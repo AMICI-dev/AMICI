@@ -14,7 +14,7 @@ function amiwrap( varargin )
     
     %% 
     % check for MSVS
-    if(strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Windows') || strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Visual'))
+    if(~isempty(strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Windows')) || ~isempty(strfind(mex.getCompilerConfigurations('c++').Name,'Microsoft Visual')))
         warning('AMICI does not officially support Microsoft Visual Studio Compilers. If the compilation fails, we recommend using MinGW.')
     end
     

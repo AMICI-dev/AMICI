@@ -27,6 +27,8 @@
 #endif
 
 namespace amici {
+    
+    int round(const double x);
 
 /**
  * @brief The mexFunctionArguments enum takes care of the ordering of mex file
@@ -463,6 +465,16 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
     }
     return edata;
 }
+    
+    /** conversion from double to int with rounding,
+     * we know that values should be close to integer values so rounding can be performed by adding 0.5
+     * and performing a static cast subsequently
+     *  @param x input
+     *  @return int_x rounded and casted value
+     */
+    int round(const double x){
+        return(static_cast<int>(x+0.5));
+    }
 
 } // namespace amici
 
@@ -530,9 +542,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed!");
     }
     
-    
 }
 
-int round(double x){
-    return(int(std::round(x)));
-}
+
