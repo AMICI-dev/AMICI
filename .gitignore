@@ -13,7 +13,11 @@ build/*
 
 build-debug/*
 
+build_xcode/*
+
 tests/cpputest/build/*
+
+tests/cpputest/build_xcode/*
 
 tests/cpputest/Testing/*
 
@@ -146,3 +150,4 @@ mtoc/config/latexextras.sty-e
 mtoc/config/latexextras.sty
 
 mtoc/config/Doxyfile-e
+
