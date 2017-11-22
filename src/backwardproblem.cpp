@@ -11,11 +11,12 @@
 namespace amici {
 
 BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
+    llhS0(fwd->model->nJ*fwd->udata->nplist(),0.0),
     xB(fwd->model->nx),
     xB_old(fwd->model->nx),
     dxB(fwd->model->nx),
-    xQB(fwd->model->nx),
-    xQB_old(fwd->model->nx),
+    xQB(fwd->udata->nplist()),
+    xQB_old(fwd->udata->nplist()),
     x_disc(fwd->x_disc),
     xdot_disc(fwd->xdot_disc),
     xdot_old_disc(fwd->xdot_old_disc),
