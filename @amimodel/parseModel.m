@@ -103,8 +103,10 @@ end
 if(not(this.recompile))
     this.recompile = not(strcmp(this.HTable(1).k,HTable.k));
 end
-if(not(this.recompile))
-    this.recompile = not(strcmp(this.HTable(1).root,HTable.root));
+if(nevent>0)
+    if(not(this.recompile))
+        this.recompile = not(strcmp(this.HTable(1).root,HTable.root));
+    end
 end
 
 

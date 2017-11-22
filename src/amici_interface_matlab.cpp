@@ -28,7 +28,7 @@
 
 namespace amici {
     
-    int round(const double x);
+    int dbl2int(const double x);
 
 /**
  * @brief The mexFunctionArguments enum takes care of the ordering of mex file
@@ -69,7 +69,7 @@ enum mexRhsArguments {
 #define readOptionScalarInt(OPTION, TYPE)                                      \
     if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
         udata->OPTION =                                                        \
-(TYPE)round(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)));   \
+(TYPE)dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)));      \
     } else {                                                                   \
         throw AmiException("Provided options do not have field " #OPTION "!"); \
     }
@@ -466,14 +466,14 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
     return edata;
 }
     
-    /** conversion from double to int with rounding,
-     * we know that values should be close to integer values so rounding can be performed by adding 0.5
-     * and performing a static cast subsequently
+    /** conversion from double to int with checking for loss of data
      *  @param x input
-     *  @return int_x rounded and casted value
+     *  @return int_x casted value
      */
-    int round(const double x){
-        return(static_cast<int>(x+0.5));
+    int dbl2int(const double x){
+        if((std::round(x)-x) != 0.0)
+            throw AmiException("Invalid non-integer value for option in udata");
+        return(static_cast<int>(x));
     }
 
 } // namespace amici
