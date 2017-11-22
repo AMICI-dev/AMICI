@@ -463,7 +463,7 @@ void CVodeSolver::turnOffRootFinding() {
            N_Vector tmp2, N_Vector tmp3) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(J->data,0.0,sizeof(realtype)*N);
+        SetToZero(J);
         model->model_J(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                        model->w.data(),model->dwdx.data());
         return checkVals(N,J->data,"Jacobian");
@@ -487,7 +487,7 @@ void CVodeSolver::turnOffRootFinding() {
                    N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(JB->data,0.0,sizeof(realtype)*NeqBdot);
+        SetToZero(JB);
         if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                      N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
@@ -597,7 +597,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(N_VGetArrayPointer(JDiag),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,JDiag);
         if(model->model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                         model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
@@ -619,7 +619,7 @@ void CVodeSolver::turnOffRootFinding() {
                    void *user_data, N_Vector tmp) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(N_VGetArrayPointer(Jv),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,Jv);
         if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                      N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
             return AMICI_ERROR;
@@ -642,7 +642,7 @@ void CVodeSolver::turnOffRootFinding() {
                     void *user_data, N_Vector tmpB) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(N_VGetArrayPointer(JvB),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,JvB);
         if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                       N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
         return AMICI_ERROR;
@@ -675,7 +675,7 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fw(t,x);
-        memset(N_VGetArrayPointer(xdot),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,xdot);
         model->model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                    model->w.data());
         return checkVals(model->nx,N_VGetArrayPointer(xdot),"residual function");
@@ -693,7 +693,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector xBdot, void *user_data) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdx(t,x);
-        memset(N_VGetArrayPointer(xBdot),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,xBdot);
         model->model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                     N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
         return checkVals(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
@@ -716,7 +716,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = (Model_ODE*) user_data;
         model->fdwdp(t,x);
-        memset(N_VGetArrayPointer(qBdot),0.0,sizeof(realtype)*model->nJ*model->plist.size());
+        N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for(int ip = 1; ip < model->plist.size(); ip++)
             if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
@@ -751,7 +751,7 @@ void CVodeSolver::turnOffRootFinding() {
             if(fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr) != AMICI_SUCCESS)
                 return AMICI_ERROR;
         }
-        memset(N_VGetArrayPointer(sxdot),0.0,sizeof(realtype)*model->nx);
+        N_VConst(0.0,sxdot);
         if(model->model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                         model->plist[ip],N_VGetArrayPointer(sx),
                         model->w.data(),model->dwdx.data(),model->J->data,&model->dxdotdp.at(ip*model->nx)) != AMICI_SUCCESS)
