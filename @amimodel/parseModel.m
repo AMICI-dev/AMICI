@@ -94,6 +94,19 @@ end
 if(not(this.recompile))
     this.recompile = not(strcmp(this.HTable(1).tdata,HTable.tdata));
 end
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).x,HTable.x));
+end
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).p,HTable.p));
+end
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).k,HTable.k));
+end
+if(not(this.recompile))
+    this.recompile = not(strcmp(this.HTable(1).root,HTable.root));
+end
+
 
 ifile = 1;
 while(not(this.recompile) & ifile<=length(codegen_amifun))
