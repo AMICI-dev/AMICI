@@ -107,7 +107,7 @@ void BackwardProblem::workBackwardProblem() {
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < rdata->nplist; ++ip) {
-                llhS0[iJ * rdata->nplist + ip] = 0.0;
+                llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model->nxtrue; ++ix) {
                     llhS0[ip] += xB[ix] * sx.at(ix,ip);
                 }
@@ -127,11 +127,11 @@ void BackwardProblem::workBackwardProblem() {
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         for (int ip = 0; ip < rdata->nplist; ip++) {
             if (iJ == 0) {
-                rdata->sllh[ip] -= llhS0[ip] + xQB[ip];
+                rdata->sllh[ip] -= llhS0[ip] + xQB[ip*model->nJ];
             } else {
                 rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
                     llhS0[ip + iJ * rdata->nplist] +
-                    xQB[ip + iJ * rdata->nplist];
+                    xQB[iJ + ip*model->nJ];
             }
         }
     }
