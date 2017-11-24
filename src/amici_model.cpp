@@ -628,7 +628,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         getz(nroots,rdata);
         getmz(nroots,edata);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            if(!amiIsNaN(mz.at(nroots))){
+            if(!amiIsNaN(mz.at(iztrue))){
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jz(nllh.data(),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
                 rdata->llh[0] -= nllh.at(0);
@@ -646,7 +646,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         std::vector<double> nllh(nJ,0.0);
         getrz(nroots,rdata);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            if(!amiIsNaN(mz.at(nroots))){
+            if(!amiIsNaN(mz.at(iztrue))){
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jrz(nllh.data(),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
                 rdata->llh[0] -= nllh.at(0);
