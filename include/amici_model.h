@@ -637,13 +637,13 @@ namespace amici {
         void fdJydp(const int it, const ExpData *edata,
                    const ReturnData *rdata);
         
-        void fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
+        void fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
         void fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray *sx, const ReturnData *rdata);
         
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
+        void fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
         void initialize(AmiVector *x, AmiVector *dx, const UserData *udata);
         

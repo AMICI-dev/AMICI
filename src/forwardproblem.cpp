@@ -429,7 +429,7 @@ void ForwardProblem::prepEventSensis(int ie) {
             model->fdJrzdz(nroots.at(ie), rdata, edata);
             model->fdJrzdsigma(nroots.at(ie), rdata, edata);
         }
-        model->fdJzdx(dJzdx, nroots.at(ie), t, edata, rdata);
+        model->fdJzdx(&dJzdx, nroots.at(ie), t, edata, rdata);
         model->fdJzdp(nroots.at(ie), t, edata, rdata);
         if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             for (int iJ = 0; iJ < model->nJ; iJ++) {
@@ -538,7 +538,7 @@ void ForwardProblem::prepDataSensis(int it) {
     }
     model->fdJydy(it, rdata, edata);
     model->fdJydsigma(it, rdata, edata);
-    model->fdJydx(dJydx, it, edata, rdata);
+    model->fdJydx(&dJydx, it, edata, rdata);
     model->fdJydp(it, edata, rdata);
 
     if (rdata->sensi_meth != AMICI_SENSI_ASA)

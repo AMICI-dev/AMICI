@@ -130,7 +130,7 @@ void Model::fdJydp(const int it, const ExpData *edata,
  * @param it timepoint index @type int
  * @param edata pointer to experimental data object @type ExpData
  */
-void Model::fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
+void Model::fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
 
     // dJydy         nytrue x nJ x ny
     // dydx          ny x nx
@@ -154,7 +154,7 @@ void Model::fdJydx(std::vector<double> dJydx, const int it, const ExpData *edata
     }
     for (int iJ = 0; iJ < nJ; ++iJ)
         for (int ix = 0; ix < nx; ++ix)
-            dJydx.at(it + (iJ + ix * nJ) * rdata->nt)=
+            dJydx->at(it + (iJ + ix * nJ) * rdata->nt)=
                 multResult.at(iJ + ix * nJ);
 }
 
@@ -270,7 +270,7 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
  * @param ie event index @type int
  * @param edata pointer to experimental data object @type ExpData
  */
-void Model::fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
+void Model::fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
     // dJzdz         nztrue x nJ x nz
     // dzdx          nz x nx
     // dJzdx         nmaxevent x nJ x nx
@@ -306,7 +306,7 @@ void Model::fdJzdx(std::vector<double> dJzdx, const int nroots, realtype t, cons
     }
     for (int iJ = 0; iJ < nJ; ++iJ)
         for (int ix = 0; ix < nx; ++ix)
-            dJzdx.at(nroots +
+            dJzdx->at(nroots +
                          (iJ + ix * nJ) * edata->nmaxevent) =
                 multResult.at(iJ + ix * nJ);
 }
@@ -669,7 +669,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                         const ExpData *edata) {
         gety(it,rdata);
         getmy(it,edata);
-        std::vector<double> dJydy_slice(nJ*nytrue, 0.0);
+        std::vector<double> dJydy_slice(nJ*ny, 0.0);
         std::fill(dJydy.begin(),dJydy.end(),0.0);
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(my.at(iytrue))){

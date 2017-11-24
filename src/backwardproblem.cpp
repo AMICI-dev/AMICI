@@ -20,7 +20,7 @@ BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
     x_disc(fwd->x_disc),
     xdot_disc(fwd->xdot_disc),
     xdot_old_disc(fwd->xdot_old_disc),
-    sx(fwd->model->nx,fwd->udata->nplist()),
+    sx(fwd->sx),
     nroots(fwd->nroots),
     discs(fwd->discs),
     irdiscs(fwd->irdiscs),

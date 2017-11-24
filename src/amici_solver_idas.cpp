@@ -688,7 +688,7 @@ void IDASolver::turnOffRootFinding() {
         model->fdwdp(t,x);
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 1; ip < model->plist.size(); ip++)
+        for(int ip = 0; ip < model->plist.size(); ip++)
             if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                     N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                     model->w.data(),model->dwdp.data()) != AMICI_SUCCESS)
