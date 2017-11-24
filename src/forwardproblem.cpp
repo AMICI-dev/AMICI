@@ -195,11 +195,11 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
      * x and the old xdot */
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         /* store x and xdot to compute jump in sensitivities */
-        N_VScale(1.0, x.getNVector(), x_old.getNVector());
+        x_old = x;
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
             model->fxdot(t, &x, &dx, &xdot);
-            N_VScale(1.0, xdot.getNVector(), xdot_old.getNVector());
-            N_VScale(1.0, dx.getNVector(), dx_old.getNVector());
+            xdot_old = xdot;
+            dx_old = dx;
 
             /* compute event-time derivative only for primary events, we get
              * into trouble with multiple simultaneously firing events here (but
@@ -216,10 +216,9 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         } else if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             /* store x to compute jump in discontinuity */
             if (iroot < rdata->nmaxevent * model->ne) {
-                N_VScale(1.0, x.getNVector(), x_disc.getNVector(iroot));
-                N_VScale(1.0, xdot.getNVector(), xdot_disc.getNVector(iroot));
-                N_VScale(1.0, xdot_old.getNVector(),
-                         xdot_old_disc.getNVector(iroot));
+                x_disc[iroot] = x;
+                xdot_disc[iroot] = xdot;
+                xdot_old_disc[iroot] = xdot_old;
             }
         }
     }
@@ -635,7 +634,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
     for (int ie = 0; ie < model->ne; ie++) {
         if (rootsfound.at(ie) ==
             1) { /* only consider transitions false -> true */
-            model->fdeltasx(ie, t, &x, &sx, &xdot, &xdot_old);
+            model->fdeltasx(ie, t, &x_old, &sx, &xdot, &xdot_old);
 
             for (int ip = 0; ip < udata->nplist(); ip++) {
                 for (int ix = 0; ix < model->nx; ix++) {
