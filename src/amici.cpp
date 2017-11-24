@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <memory>
 /** MS definition of PI and other constants */
 #define _USE_MATH_DEFINES
 #include <cmath>
