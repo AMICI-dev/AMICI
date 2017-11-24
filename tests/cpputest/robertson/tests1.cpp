@@ -22,20 +22,10 @@ TEST(groupRobertson, testSimulation) {
     amici::simulateAndVerifyFromFile("/model_robertson/nosensi/");
 }
 
-TEST(groupRobertson, testSimulationExpData) {
-
-}
-
 TEST(groupRobertson, testSensitivityForward) {
     amici::simulateAndVerifyFromFile("/model_robertson/sensiforward/");
 }
 
-TEST(groupRobertson, testSensitivityState) {
 
-}
-
-TEST(groupRobertson, testSensitivityAdjoint) {
-
-}
 
 

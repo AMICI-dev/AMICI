@@ -150,12 +150,13 @@ void IDASolver::AMISetStabLimDetB(int which, int stldet) {
 
 void IDASolver::AMISetId(Model *model) {
 
-    AmiVector id(model->idlist);
+    N_Vector id = N_VMake_Serial(model->nx,const_cast<realtype*>(model->idlist.data()));
     
-    int status = IDASetId(ami_mem, id.getNVector());
+    int status = IDASetId(ami_mem, id);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASetMaxNumSteps");
-
+    
+    N_VDestroy_Serial(id);
 }
 
 void IDASolver::AMISetSuppressAlg(bool flag) {
@@ -723,7 +724,7 @@ void IDASolver::turnOffRootFinding() {
             N_VConst(0.0,sxdot[ip]);
             if(model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                             model->plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx[ip]),N_VGetArrayPointer(sdx[ip]),
-                            model->w.data(),model->dwdx.data(),model->M.data(),model->J->data,model->dxdotdp.data()) != AMICI_SUCCESS)
+                            model->w.data(),model->dwdx.data(),model->J->data,model->M.data(),model->dxdotdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
             if(checkVals(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
                 return AMICI_ERROR;

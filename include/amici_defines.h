@@ -8,6 +8,7 @@ namespace amici {
 #define AMICI_ONEOUTPUT   5
 
 /* Return codes */
+#define AMICI_RECOVERABLE_ERROR          1
 #define AMICI_TOO_MUCH_WORK             -1
 #define AMICI_TOO_MUCH_ACC              -2
 #define AMICI_ERR_FAILURE               -3
