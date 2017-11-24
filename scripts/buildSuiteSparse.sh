@@ -12,7 +12,3 @@ SUITESPARSE_ROOT="${AMICI_PATH}/SuiteSparse"
 for subdir in SuiteSparse_config BTF AMD CAMD COLAMD KLU
   do cd ${SUITESPARSE_ROOT}/${subdir} && make library
 done
-
-# Set DYLD_LIBRARY_PATH for osx
-ENV_FILE=${AMICI_PATH}/scripts/env.sh
-touch ${ENV_FILE} && echo export DYLD_LIBRARY_PATH=\"\${DYLD_LIBRARY_PATH}:${SUITESPARSE_ROOT}/lib\" >> ${ENV_FILE}

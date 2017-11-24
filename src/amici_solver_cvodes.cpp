@@ -722,7 +722,7 @@ void CVodeSolver::turnOffRootFinding() {
             if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                                N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
-        return checkVals(model->nx,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return checkVals(model->plist.size()*model->nJ,qBdot_tmp,"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx

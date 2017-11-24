@@ -613,9 +613,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
             if(!amiIsNaN(my.at(iytrue))){
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jy(nllh.data(),iytrue,p.data(),k.data(),y.data(),sigmay.data(),my.data());
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    rdata->llh[iJ] -= nllh.at(iJ);
-                }
+                rdata->llh[0] -= nllh.at(0);
             }
         }
     }
@@ -633,9 +631,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
             if(!amiIsNaN(mz.at(nroots))){
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jz(nllh.data(),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    rdata->llh[iJ] -= nllh.at(iJ);
-                }
+                rdata->llh[0] -= nllh.at(0);
             }
         }
     }
@@ -653,9 +649,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
             if(!amiIsNaN(mz.at(nroots))){
                 std::fill(nllh.begin(),nllh.end(),0.0);
                 model_Jrz(nllh.data(),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    rdata->llh[iJ] -= nllh.at(iJ);
-                }
+                rdata->llh[0] -= nllh.at(0);
             }
         }
     }
@@ -694,7 +688,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                             const ExpData *edata) {
         gety(it,rdata);
         getmy(it,edata);
-        std::vector<double> dJydsigma_slice(nJ*nytrue, 0.0);
+        std::vector<double> dJydsigma_slice(nJ*ny, 0.0);
         std::fill(dJydsigma.begin(),dJydsigma.end(),0.0);
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(my.at(iytrue))){
@@ -718,7 +712,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                         const ExpData *edata) {
         getz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJzdz_slice(nJ*nztrue, 0.0);
+        std::vector<double> dJzdz_slice(nJ*nz, 0.0);
         std::fill(dJzdz.begin(),dJzdz.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
@@ -743,7 +737,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                             const ExpData *edata) {
         getz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJzdsigma_slice(nJ*nztrue, 0.0);
+        std::vector<double> dJzdsigma_slice(nJ*nz, 0.0);
         std::fill(dJzdsigma.begin(),dJzdsigma.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
@@ -767,7 +761,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                          const ExpData *edata) {
         getrz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJrzdz_slice(nJ*nztrue, 0.0);
+        std::vector<double> dJrzdz_slice(nJ*nz, 0.0);
         std::fill(dJrzdz.begin(),dJrzdz.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
@@ -791,7 +785,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
                              const ExpData *edata) {
         getrz(nroots,rdata);
-        std::vector<double> dJrzdsigma_slice(nJ*nztrue, 0.0);
+        std::vector<double> dJrzdsigma_slice(nJ*nz, 0.0);
         std::fill(dJrzdsigma.begin(),dJrzdsigma.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
