@@ -150,7 +150,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         if(strcmp(mex.getCompilerConfigurations('c++').Name,'MinGW64 Compiler (C++)'))
             CLIBS = 'LD="g++"';
         else
-            CLIBS = [];
+            CLIBS = '-lmwblas';
         end
     end
     

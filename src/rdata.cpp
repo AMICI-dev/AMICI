@@ -50,7 +50,7 @@ ReturnData::ReturnData(const UserData *udata, const Model *model,
     }
 }
 
-void ReturnData::invalidate(const int t) {
+void ReturnData::invalidate(const realtype t) {
     /**
      * @brief routine to set likelihood, state variables, outputs and respective sensitivities to NaN
      * (typically after integration failure)
