@@ -724,7 +724,7 @@ void IDASolver::turnOffRootFinding() {
             N_VConst(0.0,sxdot[ip]);
             if(model->model_sxdot(N_VGetArrayPointer(sxdot[ip]),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                             model->plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx[ip]),N_VGetArrayPointer(sdx[ip]),
-                            model->w.data(),model->dwdx.data(),model->J->data,model->M.data(),model->dxdotdp.data()) != AMICI_SUCCESS)
+                            model->w.data(),model->dwdx.data(),model->J->data,model->M.data(),&model->dxdotdp.at(ip*model->nx)) != AMICI_SUCCESS)
                 return AMICI_ERROR;
             if(checkVals(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
                 return AMICI_ERROR;

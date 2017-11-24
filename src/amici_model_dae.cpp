@@ -56,7 +56,7 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
         for(int ip = 0; ip < nplist; ip++)
-            if(model_dxdotdp(dxdotdp.data(),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+            if(model_dxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
                           plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data()) != AMICI_SUCCESS)
                 return AMICI_ERROR;
         return AMICI_SUCCESS;
