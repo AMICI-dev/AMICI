@@ -672,7 +672,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJy
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iy = 0; iy < ny; iy++ )
-                        dJydy.at(iytrue+(iJ+iy*nJ)) = dJydy_slice.at(iJ+iy*nJ);
+                        dJydy.at(iytrue+(iJ+iy*nJ)*nytrue) = dJydy_slice.at(iJ+iy*nJ);
                 }
             }
         }
@@ -697,7 +697,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJy
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iy = 0; iy < ny; iy++ )
-                        dJydsigma.at(iytrue+(iJ+iy*nJ)) = dJydsigma_slice.at(iJ+iy*nJ);
+                        dJydsigma.at(iytrue+(iJ+iy*nJ)*nytrue) = dJydsigma_slice.at(iJ+iy*nJ);
                 }
             }
         }
@@ -721,7 +721,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )
-                        dJzdz.at(iztrue+(iJ+iz*nJ)) = dJzdz_slice.at(iJ+iz*nJ);
+                        dJzdz.at(iztrue+(iJ+iz*nJ*nztrue)) = dJzdz_slice.at(iJ+iz*nJ);
                 }
             }
         }
@@ -746,7 +746,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )
-                        dJzdsigma.at(iztrue+(iJ+iz*nJ)) = dJzdsigma_slice.at(iJ+iz*nJ);
+                        dJzdsigma.at(iztrue+(iJ+iz*nJ)*nztrue) = dJzdsigma_slice.at(iJ+iz*nJ);
                 }
             }
         }
@@ -770,7 +770,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++)
-                        dJrzdz.at(iztrue+(iJ+iz*nJ)) = dJrzdz_slice.at(iJ+iz*nJ);
+                        dJrzdz.at(iztrue+(iJ+iz*nJ)*nztrue) = dJrzdz_slice.at(iJ+iz*nJ);
                 }
             }
         }
@@ -794,7 +794,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                 // TODO: fix slicing here such that slicing is no longer necessary in sJz
                 for(int iJ = 0; iJ < nJ; iJ++){
                     for(int iz = 0; iz < nz; iz++ )
-                        dJrzdsigma.at(iztrue+(iJ+iz*nJ)) = dJrzdsigma_slice.at(iJ+iz*nJ);
+                        dJrzdsigma.at(iztrue+(iJ+iz*nJ)*nztrue) = dJrzdsigma_slice.at(iJ+iz*nJ);
                 }
             }
         }
