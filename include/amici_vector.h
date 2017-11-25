@@ -32,14 +32,25 @@ namespace amici {
             nvec = N_VMake_Serial(rvec.size(),rvec.data());
         };
         
+        friend void swap( AmiVector& first, AmiVector& second ) {
+            std::swap(first.vec,second.vec);
+            if(first.nvec)
+                N_VDestroy_Serial(first.nvec);
+            first.nvec = N_VMake_Serial(first.vec.size(),first.vec.data());
+            if(second.nvec)
+                N_VDestroy_Serial(second.nvec);
+            second.nvec = N_VMake_Serial(second.vec.size(),second.vec.data());
+        };
+        
+        
         AmiVector(const AmiVector& vold) {
             vec = vold.vec;
             nvec = N_VMake_Serial(vold.vec.size(),vec.data());
         };
         
-        AmiVector& operator=(const AmiVector vold) {
-            vec = vold.vec;
-            nvec = N_VMake_Serial(vold.vec.size(),vec.data());
+        
+        AmiVector& operator=(AmiVector& other) {
+            swap(*this,other);
             return *this;
         };
         
@@ -92,7 +103,7 @@ namespace amici {
         };
     private:
         std::vector<realtype> vec;
-        N_Vector nvec;
+        N_Vector nvec = nullptr;
         
         friend class AmiVectorArray;
     };
@@ -166,7 +177,7 @@ namespace amici {
         }
     private:
         std::vector<AmiVector> vec_array;
-        N_Vector *nvec_array;
+        N_Vector *nvec_array = nullptr;
     };
     
 }

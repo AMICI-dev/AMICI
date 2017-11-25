@@ -260,7 +260,7 @@ void Model::initializeStates(AmiVector *x, const UserData *udata) {
         fx0(x, udata);
     } else {
         for (int ix = 0; ix < nx; ix++) {
-            x[ix] = (realtype) udata->getInitialStates().at(ix);
+            (*x)[ix] = (realtype) udata->getInitialStates().at(ix);
         }
     }
 }
