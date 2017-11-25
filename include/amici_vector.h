@@ -65,7 +65,10 @@ namespace amici {
          * @return left hand side
          */
         AmiVector& operator=(AmiVector& other) {
-            swap(*this,other);
+            vec = other.vec;
+            if(nvec)
+                N_VDestroy_Serial(nvec);
+            nvec = N_VMake_Serial(vec.size(),vec.data());
             return *this;
         };
         
