@@ -51,7 +51,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    
     %% Recompile AMICI base files if necessary
-    [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT);
+    [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT);
     objectsstr = [objectsstr, objectStrAmici];
 
     %% Model-specific files
@@ -159,7 +159,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         ' -output ' mexFilename ' ' objectsstr])
 end        
     
-function [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT)
+function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT)
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
@@ -170,7 +170,7 @@ function [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, object
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
-    recompile = recompile || headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
+    recompile = headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
     objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
     objectStrAmici = strjoin(objectArray, ' ');
     sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
