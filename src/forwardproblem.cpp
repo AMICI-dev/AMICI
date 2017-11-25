@@ -26,7 +26,15 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 static_assert(NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
 static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     
-    
+    /**
+     * default constructor
+     * @param udata pointer to UserData instance
+     * @param rdata pointer to ReturnData instance
+     * @param edata pointer to ExpData instance
+     * @param model pointer to Model instance
+     * @param solver pointer to Solver instance
+     *
+     */
     ForwardProblem::ForwardProblem(const UserData *udata,
                    ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver) :

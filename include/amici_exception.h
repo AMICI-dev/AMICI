@@ -32,15 +32,12 @@ namespace amici {
         }
         
         AmiException(const AmiException& old) {
-            /** constructor with printf style interface
-             * @param[in] fmt error message with printf format
-             * @param[in] ... printf formating variables
+            /** copy constructor
+             * @param old object to copy from
              */
             snprintf(msg, sizeof(msg), "%s", old.msg);
             snprintf(trace, sizeof(trace), "%s", old.trace);
         }
-        
-        
         
         /** override of default error message function
          * @return msg error message
@@ -49,10 +46,16 @@ namespace amici {
             return msg;
         }
         
+        /** returns the stored backtrace
+         * @return trace backtrace
+         */
         const char *getBacktrace() const {
             return trace;
         }
         
+        /** stores the current backtrace
+         * @param nMaxFrames number of frams to go back in stacktrace
+         */
         void storeBacktrace(const int nMaxFrames) {
             void *callstack[nMaxFrames];
             char buf[1024];

@@ -50,8 +50,6 @@ classdef amifun
             AF = AF.getCVar();
             AF = AF.getSensiFlag();
         end
-
-        printLocalVars(this,model,fid)
         
         writeCcode_sensi(this,model,fid)
         
@@ -64,8 +62,6 @@ classdef amifun
         [ this ] = getDeps(this,model)
         
         [ this ] = getArgs(this,model)
-        
-        [ this ] = getFArgs(this)
         
         [ this ] = getNVecs(this)
         

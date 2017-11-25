@@ -47,7 +47,9 @@ class SteadystateProblem {
     
     
     /** default constructor
-     * @param[in] nx number of state variables
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param sx pointer to state sensitivity variables
      */
     SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
     delta(x->getLength()),

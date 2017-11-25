@@ -47,14 +47,12 @@ class UserData {
      */
     UserData();
 
-    /**
-     * @brief Copy constructor
+    /** Copy constructor
      * @param other object to copy from
      */
     UserData (const UserData &other);
 
-    /**
-     * @brief Copy assignment is disabled until const members are removed
+    /** Copy assignment is disabled until const members are removed
      * @param other object to copy from
      * @return
      */
@@ -144,11 +142,16 @@ class UserData {
         return p_index.size();
     };
     
+    /** initial timepoint
+     *  @return timepoint
+     */
     const double t0() const{
         return tstart;
     }
 
-    /** number of timepoints */
+    /** number of timepoints
+     *  @return nt
+     */
     const int nt() const{
         return ts.size();
     }
@@ -156,49 +159,79 @@ class UserData {
     /** function to print the contents of the UserData object */
     void print() const;
 
-    /** total number of model parameters */
+    /** total number of model parameters
+     * @return np
+     */
     const int np() const{
         return par.size();
     };
-    /** number of fixed parameters */
+    
+    /** number of fixed parameters
+     * @return nk
+     */
     const int nk() const{
         return konst.size();
     };
-    /** number of states */
+    /** number of states
+     * @return nx
+     */
     const int nx() const{
         return sizex;
     };
     
-    /** max number of events */
+    /** max number of events
+     * @return nmaxevent
+     */
     const int nme() const{
         return nmaxevent;
     };
     
-    /** max number of events */
+    /** sensitivity method
+     * @return method enum
+     */
     const int sensmeth() const{
         return sensi_meth;
     };
     
+    /** parameters
+     * @return pointer to parameter array
+     */
     const double *p() const{
         return par.data();
     };
     
+    /** unscaled parameters
+     * @return pointer to array of unscaled parameters
+     */
     const double *unp() const{
         return unpar.data();
     };
     
+    /** constants
+     * @return pointer to constants array
+     */
     const double *k() const{
         return konst.data();
     };
     
+    /** entry in parameter list
+     * @param pos index
+     * @return entry
+     */
     const int plist(int pos) const{
         return p_index.at(pos);
     };
     
+    /** parameter list as int vector
+     * @return int vector
+     */
     const std::vector<int> plist() const{
         return p_index;
     };
     
+    /** user provided initial values for state variables
+     * @return vector with values
+     */
     const std::vector<double> getInitialStates() const {
         return x0data;
     }
@@ -311,11 +344,30 @@ private:
     /** state ordering */
     StateOrdering ordering = AMD;
     
+    /**
+     * @brief ReturnData addition.
+     * @relates ReturnData
+     */
     friend class ReturnData;
+    /**
+     * @brief Solver addition.
+     * @relates Solver
+     */
     friend class Solver;
     
+    /**
+     * @brief userDataFromMatlabCall addition.
+     * @relates userDataFromMatlabCall
+     */
     template <class mxArray>
     friend UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
+    
+    /**
+     * @brief AMI_HDF5_readSimulationUserDataFromFileObject addition.
+     * @relates AMI_HDF5_readSimulationUserDataFromFileObject
+     * @param fileId HDF5 file ID
+     * @param datasetPath path to data within HDF5 file
+     */
     template <class hid_t>
     friend UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
                                                                    const char *datasetPath);

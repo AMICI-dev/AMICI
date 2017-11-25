@@ -24,6 +24,7 @@ class ForwardProblem {
     ForwardProblem(const UserData *udata,
                    ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
+    /** default destructor */
     ~ForwardProblem() {
         DestroyMat(Jtmp);
     };
@@ -31,10 +32,15 @@ class ForwardProblem {
     
     void workForwardProblem();
     
+    /** pointer to model instance */
     Model *model;
+    /** pointer to return data instance */
     ReturnData *rdata;
+    /** pointer to solver instance */
     Solver *solver;
+    /** pointer to user data instance */
     const UserData *udata;
+    /** pointer to experimental data instance */
     const ExpData *edata;
     
     /** array of index which root has been found */
@@ -134,7 +140,15 @@ class ForwardProblem {
     
     ForwardProblem();
     
+    /**
+     * @brief Solver addition.
+     * @relates Solver
+     */
     friend class Solver;
+    /**
+     * @brief BackwardProblem addition.
+     * @relates BackwardProblem
+     */
     friend class BackwardProblem;
 };
 

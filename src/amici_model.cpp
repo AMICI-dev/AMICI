@@ -7,8 +7,8 @@
 namespace amici {
 
 /** Sensitivity of measurements y, total derivative
- * @param it timepoint index @type int
- * @param rdata pointer to return data object @type ReturnData
+ * @param it timepoint index
+ * @param rdata pointer to return data instance
  */
 void Model::fsy(const int it, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
@@ -28,8 +28,8 @@ void Model::fsy(const int it, ReturnData *rdata) {
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
  * total derivative
- * @param ie event index @type int
- * @param rdata pointer to return data object @type ReturnData
+ * @param nroots event index
+ * @param rdata pointer to return data instance
  */
 void Model::fsz_tf(const int nroots, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
@@ -44,8 +44,9 @@ void Model::fsz_tf(const int nroots, ReturnData *rdata) {
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
  * derivative
- * @param it timepoint index @type int
- * @param rdata pointer to return data object @type ReturnData
+ * @param it timepoint index
+ * @param dJydx vector with values of state derivative of Jy
+ * @param rdata pointer to return data instance
  */
     void Model::fsJy(const int it, const std::vector<double> dJydx, ReturnData *rdata) {
 
@@ -84,9 +85,9 @@ void Model::fsz_tf(const int nroots, ReturnData *rdata) {
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
  * parameters
- * @param it timepoint index @type int
- * @param edata pointer to experimental data object @type ExpData
- * @param rdata pointer to return data object @type ReturnData
+ * @param it timepoint index
+ * @param edata pointer to experimental data instance
+ * @param rdata pointer to return data instance
  */
 void Model::fdJydp(const int it, const ExpData *edata,
                   const ReturnData *rdata) {
@@ -112,8 +113,10 @@ void Model::fdJydp(const int it, const ExpData *edata,
 
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
  * state variables
- * @param it timepoint index @type int
- * @param edata pointer to experimental data object @type ExpData
+ * @param dJydx pointer to vector with values of state derivative of Jy
+ * @param it timepoint index
+ * @param edata pointer to experimental data instance
+ * @param rdata pointer to return data instance
  */
 void Model::fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
 
@@ -132,8 +135,10 @@ void Model::fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edat
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
  * derivative
- * @param ie event index @type int
- * @param rdata pointer to return data object @type ReturnData
+ * @param nroots event index
+ * @param dJzdx vector with values of state derivative of Jz
+ * @param sx pointer to state sensitivities
+ * @param rdata pointer to return data instance
  */
 void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray *sx, const ReturnData *rdata) {
     // sJz           nJ x rdata->nplist
@@ -171,9 +176,10 @@ void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArr
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
  * parameters
- * @param ie event index @type int
- * @param edata pointer to experimental data object @type ExpData
- * @param rdata pointer to return data object @type ReturnData
+ * @param nroots event index
+ * @param t current timepoint
+ * @param edata pointer to experimental data instance
+ * @param rdata pointer to return data instance
  */
 void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
                   const ReturnData *rdata) {
@@ -213,8 +219,11 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
  * state variables
- * @param ie event index @type int
- * @param edata pointer to experimental data object @type ExpData
+ * @param dJzdx pointer to vector with values of state derivative of Jz
+ * @param nroots event index
+ * @param t current timepoint
+ * @param edata pointer to experimental data instance
+ * @param rdata pointer to return data instance
  */
 void Model::fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
     // dJzdz         nJ x nz x nztrue
@@ -240,6 +249,9 @@ void Model::fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, con
 }
 
 /** initialization of model properties
+ * @param x pointer to state variables
+ * @param dx pointer to time derivative of states (DAE only)
+ * @param udata pointer to UserData instance
  */
 void Model::initialize(AmiVector *x, AmiVector *dx, const UserData *udata) {
 
@@ -252,7 +264,8 @@ void Model::initialize(AmiVector *x, AmiVector *dx, const UserData *udata) {
 }
 
 /** initialization of initial states
- * @param x0data array with initial state values @type double
+ * @param x pointer to state variables
+ * @param udata pointer to UserData instance
  */
 void Model::initializeStates(AmiVector *x, const UserData *udata) {
 
@@ -268,7 +281,9 @@ void Model::initializeStates(AmiVector *x, const UserData *udata) {
 /**
  * initHeaviside initialises the heaviside variables h at the intial time t0
  * heaviside variables activate/deactivate on event occurences
- *
+ * @param x pointer to state variables
+ * @param dx pointer to time derivative of states (DAE only)
+ * @param udata pointer to UserData instance
  */
 void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     std::vector<realtype> rootvals(ne,0.0);
@@ -288,13 +303,18 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
 }
     
     /** Initial states
-     **/
+     * @param x pointer to state variables
+     * @param udata pointer to UserData instance
+     */
     void Model::fx0(AmiVector *x, const UserData *udata) {
         x->reset();
         model_x0(x->data(),udata->t0(),p.data(),k.data());
     };
 
     /** Initial value for initial state sensitivities
+     * @param sx pointer to state sensitivity variables
+     * @param x pointer to state variables
+     * @param udata pointer to UserData instance
      **/
     void Model::fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata) {
         sx->reset();
@@ -303,7 +323,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Sensitivity of event timepoint, total derivative
+     * @param t current timepoint
      * @param ie event index
+     * @param x pointer to state variables
+     * @param sx pointer to state sensitivity variables
      */
     void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
         std::fill(stau.begin(),stau.end(),0.0);
@@ -314,7 +337,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Observables / measurements
      * @param it timepoint index
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::fy(int it, ReturnData *rdata) {
         getx(it,rdata);
@@ -325,6 +348,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** partial derivative of observables y w.r.t. model parameters p
+     * @param it timepoint index
+     * @param rdata pointer to return data instance
      */
     void Model::fdydp(const int it, ReturnData *rdata) {
         getx(it,rdata);
@@ -336,6 +361,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** partial derivative of observables y w.r.t. state variables x
      const UserData *udata
+     * @param it timepoint index
+     * @param rdata pointer to return data instance
      */
     void Model::fdydx(const int it, ReturnData *rdata) {
         const realtype t = gett(it,rdata);
@@ -346,7 +373,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Event-resolved output
      * @param nroots number of events for event index
-     * @param rdata pointer to return data object
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param rdata pointer to return data instance
      */
     void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
         std::vector<double> zreturn(nz,0.0);
@@ -359,7 +389,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Sensitivity of z, total derivative
      * @param nroots number of events for event index
-     * @param rdata pointer to return data object
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param sx current state sensitivities
+     * @param rdata pointer to return data instance
      */
     void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
         std::vector<double> szreturn(nz,0.0);
@@ -376,7 +410,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** Event root function of events (equal to froot but does not include
      * non-output events)
      * @param nroots number of events for event index
-     * @param rdata pointer to return data object
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param rdata pointer to return data instance
      */
     void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
         std::vector<double> rzreturn(nz,0.0);
@@ -389,7 +426,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Sensitivity of rz, total derivative
      * @param nroots number of events for event index
-     * @param rdata pointer to return data object
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param sx current state sensitivities
+     * @param rdata pointer to return data instance
      */
     void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
         std::vector<double> srzreturn(nz,0.0);
@@ -404,6 +445,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** partial derivative of event-resolved output z w.r.t. to model parameters p
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
      */
     void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(dzdp.begin(),dzdp.end(),0.0);
@@ -413,6 +457,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** partial derivative of event-resolved output z w.r.t. to model states x
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
      */
     void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
         std::fill(dzdx.begin(),dzdx.end(),0.0);
@@ -420,6 +467,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Sensitivity of event-resolved root output w.r.t. to model parameters p
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
      */
     void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(drzdp.begin(),drzdp.end(),0.0);
@@ -429,6 +479,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
+     * @param ie event index
+     * @param t current timepoint
+     * @param x current state
      */
     void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
         std::fill(drzdx.begin(),drzdx.end(),0.0);
@@ -437,6 +490,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** State update functions for events
      * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param xdot current residual function values
+     * @param xdot_old value of residual function before event
      */
     void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
                          const AmiVector *xdot, const AmiVector *xdot_old) {
@@ -446,6 +503,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Sensitivity update functions for events, total derivative
      * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param sx current state sensitivity
+     * @param xdot current residual function values
+     * @param xdot_old value of residual function before event
      */
     void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                           const AmiVector *xdot, const AmiVector *xdot_old) {
@@ -458,6 +520,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Adjoint state update functions for events
      * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param xB current adjoint state
+     * @param xdot current residual function values
+     * @param xdot_old value of residual function before event
      */
     void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                           const AmiVector *xdot, const AmiVector *xdot_old) {
@@ -467,6 +534,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** Quadrature state update functions for events
      * @param ie event index
+     * @param t current timepoint
+     * @param x current state
+     * @param xB current adjoint state
+     * @param xdot current residual function values
+     * @param xdot_old value of residual function before event
      */
     void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                           const AmiVector *xdot, const AmiVector *xdot_old) {
@@ -477,6 +549,9 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Standard deviation of measurements
+     * @param it timepoint index
+     * @param edata pointer to experimental data instance
+     * @param rdata pointer to return data instance
      */
     void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
         std::fill(sigmay.begin(),sigmay.end(),0.0);
@@ -495,6 +570,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** partial derivative of standard deviation of measurements w.r.t. model
+     * @param it timepoint index
+     * @param rdata pointer to return data instance
      */
     void Model::fdsigma_ydp(const int it, const ReturnData *rdata) {
         std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
@@ -503,6 +580,11 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Standard deviation of events
+     * @param t current timepoint
+     * @param ie event index
+     * @param nroots array with event numbers
+     * @param edata pointer to experimental data instance
+     * @param rdata pointer to return data instance
      */
     void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
                          const ExpData *edata, ReturnData *rdata) {
@@ -521,6 +603,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     }
     
     /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
+     * @param t current timepoint
      */
     void Model::fdsigma_zdp(const realtype t) {
         std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
@@ -530,8 +613,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** negative log-likelihood of measurements y
      * @param it timepoint index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
@@ -548,8 +631,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** negative log-likelihood of event-resolved measurements z
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fJz(const int nroots, ReturnData *rdata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
@@ -567,8 +650,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** regularization of negative log-likelihood with roots of event-resolved
      * measurements rz
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
         std::vector<double> nllh(nJ,0.0);
@@ -584,8 +667,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** partial derivative of time-resolved measurement negative log-likelihood Jy
      * @param it timepoint index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJydy(const int it, const ReturnData *rdata,
                         const ExpData *edata) {
@@ -602,8 +685,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** Sensitivity of time-resolved measurement negative log-likelihood Jy
      * w.r.t. standard deviation sigma
      * @param it timepoint index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJydsigma(const int it, const ReturnData *rdata,
                             const ExpData *edata) {
@@ -619,8 +702,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** partial derivative of event measurement negative log-likelihood Jz
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJzdz(const int nroots, const ReturnData *rdata,
                         const ExpData *edata) {
@@ -637,8 +720,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** Sensitivity of event measurement negative log-likelihood Jz
      * w.r.t. standard deviation sigmaz
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
                             const ExpData *edata) {
@@ -654,8 +737,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** partial derivative of event measurement negative log-likelihood Jz
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
                          const ExpData *edata) {
@@ -672,8 +755,8 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /** Sensitivity of event measurement negative log-likelihood Jz
      * w.r.t. standard deviation sigmaz
      * @param nroots event index
-     * @param rdata pointer to return data object
-     * @param edata pointer to experimental data object
+     * @param rdata pointer to return data instance
+     * @param edata pointer to experimental data instance
      */
     void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
                              const ExpData *edata) {
@@ -710,7 +793,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     /**
      * @brief Recurring terms in xdot, state derivative
      * @param t timepoint
-     * @param x Vector with the states @type N_Vector
+     * @param x Vector with the states
      */
     void Model::fdwdx(const realtype t, const N_Vector x) {
         fw(t,x);
@@ -720,7 +803,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create my slice at timepoint
      * @param it timepoint index
-     * @param edata pointer to experimental data object
+     * @param edata pointer to experimental data instance
      */
     void Model::getmy(const int it, const ExpData *edata) {
         if(edata) {
@@ -736,7 +819,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create y slice at timepoint
      * @param it timepoint index
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::gety(const int it, const ReturnData *rdata) {
         for(int iy = 0; iy < ny; iy++){
@@ -746,7 +829,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create x slice at timepoint
      * @param it timepoint index
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::getx(const int it, const ReturnData *rdata) {
         for(int ix = 0; ix < nx; ix++){
@@ -756,7 +839,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create sx slice at timepoint
      * @param it timepoint index
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::getsx(const int it, const ReturnData *rdata) {
         for(int ip = 0; ip < rdata->nplist; ip++) {
@@ -766,9 +849,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
         }
     }
     
-    /** create t  at timepoint
+    /** get current timepoint from index
      * @param it timepoint index
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
+     * @return current timepoint
      */
     const realtype Model::gett(const int it, const ReturnData *rdata) const {
         return rdata->ts[it];
@@ -776,7 +860,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create mz slice at event
      * @param nroots event occurence
-     * @param edata pointer to experimental data object
+     * @param edata pointer to experimental data instance
      */
     void Model::getmz(const int nroots, const ExpData *edata) {
         if(edata){
@@ -792,7 +876,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create z slice at event
      * @param nroots event occurence
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::getz(const int nroots, const ReturnData *rdata) {
         for(int iz = 0; iz < nz; iz++){
@@ -802,7 +886,7 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     
     /** create rz slice at event
      * @param nroots event occurence
-     * @param rdata pointer to return data object
+     * @param rdata pointer to return data instance
      */
     void Model::getrz(const int nroots, const ReturnData *rdata) {
         for(int iz = 0; iz < nz; iz++){

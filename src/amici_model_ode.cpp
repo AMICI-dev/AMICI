@@ -31,12 +31,12 @@ namespace amici {
     }
     
     /** diagonalized Jacobian (for preconditioning)
-     * @param[in] t timepoint
-     * @param[out] JDiag Vector to which the Jacobian diagonal will be written
-     * @param[in] cj scaling factor, inverse of the step size
-     * @param[in] x Vector with the states
-     * @param[in] dx Vector with the derivative states
-     * @param[in] user_data object with user input @type UserData
+     * @param t timepoint
+     * @param JDiag Vector to which the Jacobian diagonal will be written
+     * @param cj scaling factor, inverse of the step size
+     * @param x Vector with the states
+     * @param dx Vector with the derivative states
+     * @return status flag indicating successful execution
      **/
     int Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
@@ -48,10 +48,9 @@ namespace amici {
     }
     
     /** Sensitivity of dx/dt wrt model parameters p
-     * @param[in] t timepoint @type realtype
-     * @param[in] x Vector with the states @type N_Vector
-     * @param[in] dx Vector with the derivative states
-     * @param[in] user_data pointer to temp data object
+     * @param t timepoint
+     * @param x Vector with the states
+     * @return status flag indicating successful execution
      */
     int Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);

@@ -26,8 +26,40 @@ class ExpData;
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
 
+    
+    /**
+     * @brief The Model_Test class is a model-unspecific implementation
+     of model designed for unit testing.
+     */
 class Model_Test : public Model {
 public:
+    
+    /** constructor with model dimensions
+     * @param np number of parameters
+     * @param nx number of state variables
+     * @param nxtrue number of state variables of the non-augmented model
+     * @param nk number of constants
+     * @param ny number of observables
+     * @param nytrue number of observables of the non-augmented model
+     * @param nz number of event observables
+     * @param nztrue number of event observables of the non-augmented model
+     * @param ne number of events
+     * @param nJ number of objective functions
+     * @param nw number of repeating elements
+     * @param ndwdx number of nonzero elements in the x derivative of the
+     * repeating elements
+     * @param ndwdp number of nonzero elements in the p derivative of the
+     * repeating elements
+     * @param nnz number of nonzero elements in Jacobian
+     * @param ubw upper matrix bandwidth in the Jacobian
+     * @param lbw lower matrix bandwidth in the Jacobian
+     * @param o2mode second order sensitivity mode
+     * @param p parameters
+     * @param k constants
+     * @param plist indexes wrt to which sensitivities are to be computed
+     * @param idlist indexes indicating algebraic components (DAE only)
+     * @param z2event mapping of event outputs to events
+     */
 	Model_Test(const int np, const int nx, const int nxtrue, const int nk,
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
@@ -36,7 +68,8 @@ public:
               const std::vector<realtype> k, const std::vector<int> plist,
               const std::vector<realtype> idlist, const std::vector<int> z2event)
 	: Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event) {};
-
+    
+    /** default constructor */
 	Model_Test()
 	: Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,AMICI_O2MODE_NONE,std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {};
 

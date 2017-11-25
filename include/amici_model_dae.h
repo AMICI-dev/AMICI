@@ -48,6 +48,11 @@ namespace amici {
          * @param ubw upper matrix bandwidth in the Jacobian
          * @param lbw lower matrix bandwidth in the Jacobian
          * @param o2mode second order sensitivity mode
+         * @param p parameters
+         * @param k constants
+         * @param plist indexes wrt to which sensitivities are to be computed
+         * @param idlist indexes indicating algebraic components (DAE only)
+         * @param z2event mapping of event outputs to events
          */
         Model_DAE(const int np, const int nx, const int nxtrue, const int nk,
                   const int ny, const int nytrue, const int nz, const int nztrue,
@@ -62,34 +67,36 @@ namespace amici {
                         AmiVector *xdot, DlsMat J) override;
         
         /** model specific implementation for fJ
-         * @param[out] J Matrix to which the Jacobian will be written
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] dx Vector with the derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param J Matrix to which the Jacobian will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param dx Vector with the derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          **/
         virtual void model_J(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
         
         /** model specific implementation for fJB
-         * @param[out] JB Matrix to which the Jacobian will be written
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] xB Vector with the adjoint states
-         * @param[in] dx Vector with the derivative states
-         * @param[in] dxB Vector with the adjoint derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param JB Matrix to which the Jacobian will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param xB Vector with the adjoint states
+         * @param dx Vector with the derivative states
+         * @param dxB Vector with the adjoint derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
-        virtual int model_JB(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual int model_JB(realtype *JB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                              const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                              const realtype *w, const realtype *dwdx){
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -100,35 +107,37 @@ namespace amici {
                               AmiVector *xdot, SlsMat J) override;
         
         /** model specific implementation for fJSparse
-         * @param[out] J Matrix to which the Jacobian will be written
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] dx Vector with the derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param JSparse Matrix to which the Jacobian will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param dx Vector with the derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
         virtual int model_JSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
         
         /** model specific implementation for fJSparseB
-         * @param[out] JB Matrix to which the Jacobian will be written
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] xB Vector with the adjoint states
-         * @param[in] dx Vector with the derivative states
-         * @param[in] dxB Vector with the adjoint derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param JSparseB Matrix to which the Jacobian will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param xB Vector with the adjoint states
+         * @param dx Vector with the derivative states
+         * @param dxB Vector with the adjoint derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
-        virtual int model_JSparseB(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual int model_JSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                    const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                                    const realtype *w, const realtype *dwdx){
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -138,6 +147,19 @@ namespace amici {
         virtual int fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                             AmiVector *dx) override;
         
+        /** model specific implementation for fJDiag
+         * @param JDiag array to which the Jacobian diagonal will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param dx Vector with the derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
+         * @return status flag indicating successful execution
+         **/
         virtual int model_JDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx){
             warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -148,16 +170,17 @@ namespace amici {
                          AmiVector *v, AmiVector *nJv, realtype cj) override;
         
         /** model specific implementation for fJv
-         * @param[out] Jv Matrix vector product of J with a vector v
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] dx Vector with the derivative states
-         * @param[in] v Vector with which the Jacobian is multiplied
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param Jv Matrix vector product of J with a vector v
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param dx Vector with the derivative states
+         * @param v Vector with which the Jacobian is multiplied
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
         virtual int model_Jv(realtype *Jv, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
@@ -168,18 +191,19 @@ namespace amici {
         }
         
         /** model specific implementation for fJvB
-         * @param[out] JvB Matrix vector product of JB with a vector v
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] cj scaling factor, inverse of the step size
-         * @param[in] xB Vector with the adjoint states
-         * @param[in] dx Vector with the derivative states
-         * @param[in] dxB Vector with the adjoint derivative states
-         * @param[in] vB Vector with which the Jacobian is multiplied
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param JvB Matrix vector product of JB with a vector v
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param cj scaling factor, inverse of the step size
+         * @param xB Vector with the adjoint states
+         * @param dx Vector with the derivative states
+         * @param dxB Vector with the adjoint derivative states
+         * @param vB Vector with which the Jacobian is multiplied
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
         virtual int model_JvB(realtype *JvB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
@@ -192,12 +216,13 @@ namespace amici {
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         
         /** model specific implementation for froot
-         * @param[out] root values of the trigger function
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] dx Vector with the derivative states
+         * @param root values of the trigger function
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param dx Vector with the derivative states
          * @return status flag indicating successful execution
          **/
         virtual int model_root(realtype *root, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
@@ -209,29 +234,31 @@ namespace amici {
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
         
         /** model specific implementation for fxdot
-         * @param[out] xdot residual function
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] w vector with helper variables
-         * @param[in] dx Vector with the derivative states
+         * @param xdot residual function
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param w vector with helper variables
+         * @param dx Vector with the derivative states
          * @return status flag indicating successful execution
          **/
         virtual void model_xdot(realtype *xdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                 const realtype *dx, const realtype *w) = 0;
         
         /** model specific implementation for fxBdot
-         * @param[out] xBdot adjoint residual function
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] xB Vector with the adjoint states
-         * @param[in] dx Vector with the derivative states
-         * @param[in] dxB Vector with the adjoint derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param xBdot adjoint residual function
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param xB Vector with the adjoint states
+         * @param dx Vector with the derivative states
+         * @param dxB Vector with the adjoint derivative states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
          * @return status flag indicating successful execution
          **/
         virtual int model_xBdot(realtype *xBdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
@@ -243,16 +270,18 @@ namespace amici {
         }
         
         /** model specific implementation for fqBdot
-         * @param[out] qBdot adjoint quadrature equation
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] xB Vector with the adjoint states
-         * @param[in] dx Vector with the derivative states
-         * @param[in] dxB Vector with the adjoint derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param qBdot adjoint quadrature equation
+         * @param ip sensitivity index
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param xB Vector with the adjoint states
+         * @param dx Vector with the derivative states
+         * @param dxB Vector with the adjoint derivative states
+         * @param w vector with helper variables
+         * @param dwdp derivative of w wrt p
          * @return status flag indicating successful execution
          **/
         virtual int model_qBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
@@ -270,15 +299,17 @@ namespace amici {
         };
         
         /** model specific implementation of fdxdotdp
-         * @param[out] dxdotdp partial derivative xdot wrt p
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] ip parameter index
-         * @param[in] dx Vector with the derivative states
-         * @param[in] w vector with helper variables
-         * @param[in] dwdp derivative of w wrt p
+         * @param dxdotdp partial derivative xdot wrt p
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param ip parameter index
+         * @param dx Vector with the derivative states
+         * @param w vector with helper variables
+         * @param dwdp derivative of w wrt p
+         * @return status flag indicating successful execution
          */
         virtual int model_dxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
@@ -287,17 +318,22 @@ namespace amici {
         };
         
         /** model specific implementation of fsxdot
-         * @param[out] sxdot sensitivity rhs
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
-         * @param[in] ip parameter index
-         * @param[in] dx Vector with the derivative states
-         * @param[in] sx Vector with the state sensitivities
-         * @param[in] sdx Vector with the derivative state sensitivities
-         * @param[in] w vector with helper variables
-         * @param[in] dwdx derivative of w wrt x
+         * @param sxdot sensitivity rhs
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param ip parameter index
+         * @param dx Vector with the derivative states
+         * @param sx Vector with the state sensitivities
+         * @param sdx Vector with the derivative state sensitivities
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
+         * @param M mass matrix
+         * @param J jacobian
+         * @param dxdotdp parameter derivative of residual function
+         * @return status flag indicating successful execution
          */
         virtual int model_sxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const int ip, const realtype *dx, const realtype *sx, const realtype *sdx,
@@ -310,17 +346,21 @@ namespace amici {
         void fM(realtype t, const N_Vector x);
         
         /** model specific implementation of fM
-         * @param[out] M mass matrix
-         * @param[in] t timepoint
-         * @param[in] x Vector with the states
-         * @param[in] p parameter vector
-         * @param[in] k constants vector
+         * @param M mass matrix
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
          */
         virtual void model_M(realtype *M, const realtype t, const realtype *x, const realtype *p,
                              const realtype *k) {};
         
         virtual Solver *getSolver() override;
         
+        /**
+         * @brief IDASolver addition.
+         * @relates IDASolver
+         */
         friend class IDASolver;
     };
 } // namespace amici

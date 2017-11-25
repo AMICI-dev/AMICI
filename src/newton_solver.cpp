@@ -20,7 +20,8 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
     /**
      * default constructor, initializes all members with the provided objects
      *
-     * @param t current timepoint
+     * @param t pointer to time variable
+     * @param x pointer to state variables
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
      * @param udata pointer to the user data object
@@ -40,10 +41,12 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
      * restarts Newton solver, if integration fails.
      * Computes steady state sensitivities
      *
-     * @param[in] linsolType integer indicating which linear solver to use
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param linsolType integer indicating which linear solver to use
+     * @param model pointer to the AMICI model object
+     * @param udata pointer to the user data object
+     * @param rdata pointer to the return data object
      * @return solver NewtonSolver according to the specified linsolType
      */
 
@@ -91,11 +94,11 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
     /**
      * Computes the solution of one Newton iteration
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @param[in,out] delta containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param nnewt integer number of current Newton step
+     * @param delta containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     this->prepareLinearSystem(ntry, nnewt);
@@ -111,7 +114,9 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
-     * @param it integer index of current time step     */
+     * @param it integer index of current time step
+     * @param sx pointer to state variable sensitivities
+     */
     prepareLinearSystem(0, -1);
 
     model->fdxdotdp(*t, x, &dx);
@@ -147,9 +152,11 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, Re
      * and
      * initializes temporary storage objects
      *
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
      pivots = NewLintArray(model->nx);
      Jtmp = NewDenseMat(model->nx,model->nx);
@@ -163,9 +170,9 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     /* Get Jacobian */
@@ -215,10 +222,11 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
      * default constructor, initializes all members with the provided objects,
      * initializes temporary storage objects and the klu solver
      *
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
 
     /* Initialize the KLU solver */
@@ -234,9 +242,9 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     /* Check if KLU was initialized successfully */
@@ -273,8 +281,9 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in] rhs containing the RHS of the linear system,will be
-     * overwritten by solution to the linear system     */
+     * @param rhs containing the RHS of the linear system,will be
+     * overwritten by solution to the linear system
+     */
 
     /* Pass pointer to the linear solver */
     klu_status = klu_solve(symbolic, numeric, model->nx, 1, rhs->data(), &common);
@@ -310,9 +319,11 @@ NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *m
     {
     /**
      * default constructor, initializes all members with the provided objects
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
 }
 
@@ -325,9 +336,9 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
      * solver.
      * Also wraps around getSensis for iterative linear solver.
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     newton_try = ntry;
@@ -345,8 +356,8 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector *rhs) {
      * Solves the linear system for the Newton step by passing it to
      * linsolveSPBCG
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     linsolveSPBCG(newton_try, i_newton, rhs);
@@ -359,10 +370,10 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
      * Solves the linear system within each Newton step if iterative solver is
      * chosen.
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @param[in] ns_delta ???
+     * @param nnewt integer number of current Newton step
+     * @param ns_delta Newton step
      */
     
     double rho;

@@ -82,6 +82,10 @@ class BackwardProblem {
     /** state derivative of event likelihood */
     const std::vector<double> dJzdx;
 
+    /**
+     * @brief Solver addition.
+     * @relates Solver
+     */
     friend class Solver;
 };
 

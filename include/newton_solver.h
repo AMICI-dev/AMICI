@@ -34,23 +34,22 @@ class NewtonSolver {
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @return stats integer flag indicating success of the method
+     * @param nnewt integer number of current Newton step
      */
     virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
 
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system 
      */
     virtual void solveLinearSystem(AmiVector *rhs) = 0;
 
   protected:
+    /** time variable */
     realtype *t;
     /** pointer to the AMICI model object */
     Model *model;
@@ -82,6 +81,7 @@ class NewtonSolverDense : public NewtonSolver {
   private:
     /** temporary storage of pivot array */
     long int *pivots = nullptr;
+    /** temporary storage of Jacobian */
     DlsMat Jtmp = nullptr;
 };
 
@@ -107,6 +107,7 @@ class NewtonSolverSparse : public NewtonSolver {
     klu_numeric *numeric = nullptr;
     /** klu status flag  */
     int klu_status = 0;
+    /** temporary storage of Jacobian */
     SlsMat Jtmp = nullptr;
 };
 

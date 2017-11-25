@@ -26,6 +26,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+/** writes model dimensions to the provided pointers, currently must implemented in wrapfunctions.cpp
+ * @param nx number of state variables
+ * @param nk number of constants
+ * @param np number of parameters
+ */
 extern void getModelDims(int *nx, int *nk, int *np);
 
 namespace amici {
@@ -95,11 +100,9 @@ enum mexRhsArguments {
  * userDataFromMatlabCall parses the input from the matlab call and writes it to
  * an UserData class object
  *
- * @param[in] nrhs number of input arguments of the matlab call @type int
- * @param[in] prhs pointer to the array of input arguments @type mxArray
- * @param[in] model pointer to the model object, this is necessary to perform
- * dimension checks @type Model
- * @return udata pointer to user data object @type UserData
+ * @param nrhs number of input arguments of the matlab call
+ * @param prhs pointer to the array of input arguments
+ * @return udata pointer to user data object
  */
 template <class mxArray>
 UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
@@ -256,10 +259,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
  * amici_blasCBlasTransToBlasTrans translates AMICI_BLAS_TRANSPOSE values to
  * CBlas readable strings
  *
- * @param[in] trans       flag indicating transposition and complex conjugation
- * @type AMICI_BLAS_TRANSPOSE
+ * @param trans       flag indicating transposition and complex conjugation
+ *
  * @return cblastrans CBlas readable CHAR indicating transposition and complex
- * conjugation @type char
+ * conjugation
  */
 char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
     switch (trans) {
@@ -277,22 +280,22 @@ char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
  * routine dgemm. This routines computes
  * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]
  *
- * @param[in] layout    always needs to be AMICI_BLAS_ColMajor.
- * @param[in] TransA    flag indicating whether A should be transposed before
+ * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param TransA    flag indicating whether A should be transposed before
  * multiplication
- * @param[in] TransB    flag indicating whether B should be transposed before
+ * @param TransB    flag indicating whether B should be transposed before
  * multiplication
- * @param[in] M         number of rows in A/C
- * @param[in] N         number of columns in B/C
- * @param[in] K         number of rows in B, number of columns in A
- * @param[in] alpha     coefficient alpha
- * @param[in] A         matrix A
- * @param[in] lda       leading dimension of A (m or k)
- * @param[in] B         matrix B
- * @param[in] ldb       leading dimension of B (k or n)
- * @param[in] beta      coefficient beta
+ * @param M         number of rows in A/C
+ * @param N         number of columns in B/C
+ * @param K         number of rows in B, number of columns in A
+ * @param alpha     coefficient alpha
+ * @param A         matrix A
+ * @param lda       leading dimension of A (m or k)
+ * @param B         matrix B
+ * @param ldb       leading dimension of B (k or n)
+ * @param beta      coefficient beta
  * @param[in,out] C     matrix C
- * @param[in] ldc       leading dimension of C (m or n)
+ * @param ldc       leading dimension of C (m or n)
  * @return void
  */
 void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
@@ -325,19 +328,19 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * routine dgemv. This routines computes
  * y = alpha*A*x + beta*y with A: [MxN] x:[Nx1] y:[Mx1]
  *
- * @param[in] layout    always needs to be AMICI_BLAS_ColMajor.
- * @param[in] TransA    flag indicating whether A should be transposed before
+ * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param TransA    flag indicating whether A should be transposed before
  * multiplication
- * @param[in] M         number of rows in A
- * @param[in] N         number of columns in A
- * @param[in] alpha     coefficient alpha
- * @param[in] A         matrix A
- * @param[in] lda       leading dimension of A (m or n)
- * @param[in] X         vector X
- * @param[in] incX      increment for entries of X
- * @param[in] beta      coefficient beta
+ * @param M         number of rows in A
+ * @param N         number of columns in A
+ * @param alpha     coefficient alpha
+ * @param A         matrix A
+ * @param lda       leading dimension of A (m or n)
+ * @param X         vector X
+ * @param incX      increment for entries of X
+ * @param beta      coefficient beta
  * @param[in,out] Y     vector Y
- * @param[in] incY      increment for entries of Y
+ * @param incY      increment for entries of Y
  * @return void
  */
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
@@ -364,11 +367,11 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * expDataFromMatlabCall parses the experimental data from the matlab call and
  * writes it to an ExpData class object
  *
- * @param[in] prhs pointer to the array of input arguments @type mxArray
- * @param[in] udata pointer to user data object @type UserData
- * @param[in] model pointer to the model object, this is necessary to perform
- * dimension checks @type Model
- * @return edata pointer to experimental data object @type ExpData
+ * @param prhs pointer to the array of input arguments
+ * @param udata pointer to user data object
+ * @param model pointer to the model object, this is necessary to perform
+ * dimension checks
+ * @return edata pointer to experimental data object
  */
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                Model *model) {
@@ -489,10 +492,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
  * creates output data compound (rdata) and then calls the AMICI simulation
  * routine to carry out numerical integration.
  *
- * @param[in] nlhs number of output arguments of the matlab call @type int
- * @param[out] plhs pointer to the array of output arguments @type mxArray
- * @param[in] nrhs number of input arguments of the matlab call @type int
- * @param[in] prhs pointer to the array of input arguments @type mxArray
+ * @param nlhs number of output arguments of the matlab call
+ * @param plhs pointer to the array of output arguments
+ * @param nrhs number of input arguments of the matlab call
+ * @param prhs pointer to the array of input arguments
  * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {

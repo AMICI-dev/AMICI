@@ -17,8 +17,9 @@ namespace amici {
 
 /**
  * @brief setupAMIs initialises the ami memory object
- * @param[in] udata pointer to the user data object @type UserData
- * @param[in] model pointer to the model object @type Model
+ * @param fwd pointer to forward problem
+ * @param udata pointer to the user data object
+ * @param model pointer to the model object
  */
 void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) {
     model->initialize(&(fwd->x), &(fwd->dx), udata);
@@ -106,8 +107,9 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
 
 /**
  * setupAMIB initialises the AMI memory object for the backwards problem
- * @param[in] udata pointer to the user data object @type UserData
- * @param[in] model pointer to the model object @type Model
+ * @param bwd pointer to backward problem
+ * @param udata pointer to the user data object
+ * @param model pointer to the model object
  */
 void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model) {
 
@@ -162,12 +164,12 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
  * ErrHandlerFn extracts diagnosis information from solver memory block and
  * writes them into the return data object for the backward problem
  *
- * @param[in] error_code error identifier @type int
- * @param[in] module name of the module in which the error occured @type char
- * @param[in] function name of the function in which the error occured @type
+ * @param error_code error identifier
+ * @param module name of the module in which the error occured
+ * @param function name of the function in which the error occured @type
  * char
- * @param[in] msg error message @type char
- * @param[in] eh_data unused input
+ * @param msg error message
+ * @param eh_data unused input
  */
 void Solver::wrapErrHandlerFn(int error_code, const char *module,
                               const char *function, char *msg, void *eh_data) {
@@ -208,8 +210,8 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
  * getDiagnosis extracts diagnosis information from solver memory block and
  * writes them into the return data object
  *
- * @param[in] it time-point index @type int
- * @param[out] rdata pointer to the return data object @type ReturnData
+ * @param it time-point index
+ * @param rdata pointer to the return data object
  */
 void Solver::getDiagnosis(const int it, ReturnData *rdata) {
     long int number;
@@ -236,8 +238,9 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
  * getDiagnosisB extracts diagnosis information from solver memory block and
  * writes them into the return data object for the backward problem
  *
- * @param[in] it time-point index @type int
- * @param[out] rdata pointer to the return data object @type ReturnData
+ * @param it time-point index
+ * @param rdata pointer to the return data object
+ * @param bwd pointer to backward problem
  */
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd) {
     long int number;
@@ -261,8 +264,8 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProble
 /**
  * setLinearSolver sets the linear solver for the forward problem
  *
- * @param[out] udata pointer to the user data object @type UserData
- * @param[in] model pointer to the model object @type Model
+ * @param udata pointer to the user data object
+ * @param model pointer to the model object
  */
 void Solver::setLinearSolver(const UserData *udata, Model *model) {
     /* Attach linear solver module */
@@ -338,9 +341,9 @@ void Solver::setLinearSolver(const UserData *udata, Model *model) {
     /**
      * setLinearSolverB sets the linear solver for the backward problem
      *
-     * @param[out] udata pointer to the user data object @type UserData
-     * @param[in] model pointer to the model object @type Model
-     * @param[in] which index of the backward problem @type int
+     * @param udata pointer to the user data object
+     * @param model pointer to the model object
+     * @param which index of the backward problem
      */
 void Solver::setLinearSolverB(const UserData *udata, Model *model, const int which) {
     switch (udata->linsol) {

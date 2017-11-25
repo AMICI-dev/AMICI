@@ -9,7 +9,11 @@
 #include <cstring>
 
 namespace amici {
-
+    
+    /** default constructor
+     * @param fwd pointer to corresponding forward problem
+     * @return new BackwardProblem instance
+     */
 BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
     llhS0(fwd->model->nJ*fwd->udata->nplist(),0.0),
     xB(fwd->model->nx),
