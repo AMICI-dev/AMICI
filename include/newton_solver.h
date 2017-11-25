@@ -47,6 +47,7 @@ class NewtonSolver {
      * overwritten by solution to the linear system 
      */
     virtual void solveLinearSystem(AmiVector *rhs) = 0;
+    virtual ~NewtonSolver() {};
 
   protected:
     /** time variable */
@@ -76,7 +77,7 @@ class NewtonSolverDense : public NewtonSolver {
     NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    ~NewtonSolverDense();
+    virtual ~NewtonSolverDense();
 
   private:
     /** temporary storage of pivot array */
@@ -96,7 +97,7 @@ class NewtonSolverSparse : public NewtonSolver {
     NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    ~NewtonSolverSparse();
+    virtual ~NewtonSolverSparse();
 
   private:
     /** klu common storage? */
@@ -124,7 +125,7 @@ class NewtonSolverIterative : public NewtonSolver {
     void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
     void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
-    ~NewtonSolverIterative();
+    virtual ~NewtonSolverIterative();
 
   private:
     /** number of tries  */
