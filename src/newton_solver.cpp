@@ -15,8 +15,7 @@ namespace amici {
 
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
                            const UserData *udata)
-    : model(model), rdata(rdata), udata(udata),
-    sx_ip(x->getLength()), xdot(x->getLength()), dx(x->getLength())
+    : model(model), rdata(rdata), udata(udata), xdot(x->getLength()), dx(x->getLength())
     {
     /**
      * default constructor, initializes all members with the provided objects
@@ -101,38 +100,32 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
 
     this->prepareLinearSystem(ntry, nnewt);
 
-    xdot = *delta;
+    delta->minus();
     this->solveLinearSystem(delta);
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolver::getSensis(int it) {
+void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
-     * @param[in] it integer index of current time step     */
-    this->prepareLinearSystem(0, -1);
+     * @param it integer index of current time step     */
+    prepareLinearSystem(0, -1);
 
     model->fdxdotdp(*t, x, &dx);
     for (int ip = 0; ip < model->nplist; ip++) {
         
         for (int ix = 0; ix < model->nx; ix++) {
-            sx_ip[ix] = -model->dxdotdp[model->nx * ip + ix];
+            sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];
         }
-        this->solveLinearSystem(&sx_ip);
+        solveLinearSystem(&((*sx)[ip]));
         
         /* Copy result to return data */
         if (it == AMICI_PREEQUILIBRATE) {
             for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx_ip[ix];
-            }
-        } else {
-            /* Classical steady state computation */
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
-                sx_ip[ix];
+                rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
             }
         }
     }
@@ -178,7 +171,7 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
     /* Get Jacobian */
     model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp);
     int status = DenseGETRF(Jtmp, pivots);
-    if(status != 0)
+    if(status != AMICI_SUCCESS)
         throw NewtonFailure("Dense factorization failed!");
 }
 
@@ -189,8 +182,8 @@ void NewtonSolverDense::solveLinearSystem(AmiVector *rhs) {
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     /* Pass pointer to the linear solver */
@@ -378,6 +371,9 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     double beta;
     double omega;
     double res;
+    
+    xdot = *ns_delta;
+    xdot.minus();
     
     // Get the diagonal of the Jacobian for preconditioning
     model->fJDiag(*t, &ns_Jdiag, 0.0, x, &dx);

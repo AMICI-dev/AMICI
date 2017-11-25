@@ -8,7 +8,7 @@ namespace amici {
 
 /** Sensitivity of measurements y, total derivative
  * @param it timepoint index @type int
- * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @param rdata pointer to return data object @type ReturnData
  */
 void Model::fsy(const int it, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
@@ -29,7 +29,7 @@ void Model::fsy(const int it, ReturnData *rdata) {
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
  * total derivative
  * @param ie event index @type int
- * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @param rdata pointer to return data object @type ReturnData
  */
 void Model::fsz_tf(const int nroots, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
@@ -45,7 +45,7 @@ void Model::fsz_tf(const int nroots, ReturnData *rdata) {
 /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
  * derivative
  * @param it timepoint index @type int
- * @param[in,out] rdata pointer to return data object @type ReturnData
+ * @param rdata pointer to return data object @type ReturnData
  */
     void Model::fsJy(const int it, const std::vector<double> dJydx, ReturnData *rdata) {
 

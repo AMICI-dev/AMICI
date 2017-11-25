@@ -721,11 +721,11 @@ protected:
     static int checkVals(const int N,const realtype *array, const char* fun){
         for(int idx = 0; idx < N; idx++) {
             if(amiIsNaN(array[idx])) {
-                warnMsgIdAndTxt("AMICI:mex:NaN","AMICI replaced a NaN value at index (%i) of (%i) in (%s)! Trying to recover ... ",idx,N,fun);
+                warnMsgIdAndTxt("AMICI:mex:NaN","AMICI encountered a NaN value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
                 return(AMICI_RECOVERABLE_ERROR);
             }
             if(amiIsInf(array[idx])) {
-                warnMsgIdAndTxt("AMICI:mex:Inf","AMICI encountered an Inf value at index (%i) of (%i) in (%s)! Trying to recover ... ",idx,N,fun);
+                warnMsgIdAndTxt("AMICI:mex:Inf","AMICI encountered an Inf value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
                 return(AMICI_RECOVERABLE_ERROR);
             }
         }

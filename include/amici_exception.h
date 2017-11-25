@@ -36,8 +36,8 @@ namespace amici {
              * @param[in] fmt error message with printf format
              * @param[in] ... printf formating variables
              */
-            snprintf(msg, sizeof(msg), "(%s)", old.msg);
-            snprintf(trace, sizeof(trace), "(%s)", old.trace);
+            snprintf(msg, sizeof(msg), "%s", old.msg);
+            snprintf(trace, sizeof(trace), "%s", old.trace);
         }
         
         

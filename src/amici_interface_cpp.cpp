@@ -47,7 +47,7 @@ ReturnData *getSimulationResults(Model *model, const UserData *udata,
         rdata->invalidate(ex.time);
         *(rdata->status) = ex.error_code;
     } catch (amici::SetupFailure& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
+        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n%s",ex.what());
     } catch (...) {
         amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }

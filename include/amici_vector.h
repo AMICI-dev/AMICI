@@ -68,6 +68,13 @@ namespace amici {
             std::fill(vec.begin(), vec.end(), 0.0);
         }
         
+        void minus() {
+            for(std::vector<realtype>::iterator it = vec.begin();
+                it != vec.end(); ++it)
+                *it = -*it;
+        }
+        
+        
         void set(realtype val) {
             std::fill(vec.begin(), vec.end(), val);
         }

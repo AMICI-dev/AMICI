@@ -68,7 +68,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     /* Compute steady state sensitvities */
     if (rdata->sensi_meth == AMICI_SENSI_FSA &&
         rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
-        newtonSolver->getSensis(it);
+        newtonSolver.get()->getSensis(it, sx);
 
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
@@ -108,7 +108,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     double gamma = 1.0;
     bool compNewStep = TRUE;
 
-    /* initialize output von linear solver for Newton step */
+    /* initialize output of linear solver for Newton step */
     delta.reset();
 
     /* Check, how fxdot is used exactly within AMICI... */

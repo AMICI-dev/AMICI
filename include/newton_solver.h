@@ -28,7 +28,7 @@ class NewtonSolver {
 
     void getStep(int ntry, int nnewt, AmiVector *delta);
 
-    void getSensis(int it);
+    void getSensis(const int it, AmiVectorArray *sx);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -58,8 +58,6 @@ class NewtonSolver {
     ReturnData *rdata;
     /** pointer to the user data object */
     const UserData *udata;
-    /** sensitivity AmiVector */
-    AmiVector sx_ip;
     /** right hand side AmiVector */
     AmiVector xdot;
     /** current state*/
