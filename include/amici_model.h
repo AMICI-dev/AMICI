@@ -77,13 +77,6 @@ namespace amici {
         deltaxB(nx, 0.0),
         deltaqB(nJ*nplist, 0.0),
         dxdotdp(nx*nplist, 0.0),
-        dJydyTmp(nJ * ny, 0.0),
-        dJydxTmp(nJ * nx, 0.0),
-        dJydsigmaTmp(nJ * ny, 0.0),
-        dJzdzTmp(nJ * nz, 0.0),
-        dJzdxTmp(nJ * nx, 0.0),
-        dJzdsigmaTmp(nJ * nz, 0.0),
-        dJrzdsigmaTmp(nJ * nz, 0.0),
         x(nx, 0.0),
         sx(np, std::vector<double>(nx, 0.0)),
         y(ny, 0.0),
@@ -800,21 +793,6 @@ namespace amici {
         void getz(const int nroots, const ReturnData *rdata);
         
         void getrz(const int nroots, const ReturnData *rdata);
-
-        /** storage for dJydy slice */
-        std::vector<double> dJydyTmp;
-        /** storage for dJydx slice */
-        std::vector<double> dJydxTmp;
-        /** storage for dJydsigma slice */
-        std::vector<double> dJydsigmaTmp;
-        /** storage for dJzdz slice */
-        std::vector<double> dJzdzTmp;
-        /** storage for dJzdx slice */
-        std::vector<double> dJzdxTmp;
-        /** storage for dJzdsigma slice */
-        std::vector<double> dJzdsigmaTmp;
-        /** storage for dJrzdsigma slice */
-        std::vector<double> dJrzdsigmaTmp;
         
         /** Jacobian */
         SlsMat J = nullptr;

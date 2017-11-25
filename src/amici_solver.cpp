@@ -116,8 +116,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     for (int ix = 0; ix < model->nxtrue; ++ix)
         for (int iJ = 0; iJ < model->nJ; ++iJ)
             bwd->xB[ix + iJ * model->nxtrue] +=
-                bwd->dJydx.at(udata->nt() - 1 +
-                             (iJ + ix * model->nJ) * udata->nt());
+                bwd->dJydx[iJ + ( ix + (udata->nt() - 1)  * model->nx ) * model->nJ];
     bwd->dxB.reset();
     bwd->xQB.reset();
 

@@ -168,9 +168,7 @@ void BackwardProblem::handleEventB(int iroot) {
                         model->deltaxB[ix + iJ * model->nxtrue];
                     if (model->nz > 0) {
                         xB[ix + iJ * model->nxtrue] +=
-                            dJzdx[nroots[ie] +
-                                         (iJ + ix * model->nJ) *
-                                             rdata->nmaxevent];
+                            dJzdx[iJ + ( ix + nroots[ie] * model->nx ) * model->nJ];
                     }
                 }
             }
@@ -202,7 +200,7 @@ void BackwardProblem::handleDataPointB(int it) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
             // we only need the 1:nxtrue slice here!
             xB[ix + iJ * model->nxtrue] +=
-                dJydx[it + (iJ + ix * model->nJ) * rdata->nt];
+                dJydx[iJ + ( ix + it * model->nx ) * model->nJ];
     }
     solver->getDiagnosisB(it, rdata, this);
 }

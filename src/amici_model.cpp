@@ -58,14 +58,11 @@ void Model::fsz_tf(const int nroots, ReturnData *rdata) {
     for (int ix = 0; ix < nx; ++ix) {
         for (int ip = 0; ip < rdata->nplist; ++ip)
             sxTmp.at(ix + ip * nx) = rdata->sx[it + (ix + ip * nx) * rdata->nt];
-        for (int iJ = 0; iJ < nJ; ++iJ)
-            dJydxTmp.at(iJ + ix * nJ) =
-                dJydx.at(it + (iJ + ix * nJ) * rdata->nt);
     }
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
-                rdata->nplist, nx, 1.0, dJydxTmp.data(), nJ, sxTmp.data(), nx, 0.0,
+                rdata->nplist, nx, 1.0, &dJydx.at(it*nJ*nx), nJ, sxTmp.data(), nx, 0.0,
                 multResult.data(), nJ);
 
     // multResult    nJ x rdata->nplist
@@ -103,24 +100,12 @@ void Model::fdJydp(const int it, const ExpData *edata,
         if (amiIsNaN(my.at(iyt)))
             continue;
 
-        // copy current (iyt) dJydy and dJydsigma slices
-        // dJydyTmp     nJ x ny
-        // dJydsigmaTmp nJ x ny
-        for (int iJ = 0; iJ < nJ; ++iJ) {
-            for (int iy = 0; iy < ny; ++iy) {
-                dJydyTmp.at(iJ + iy * nJ) =
-                    dJydy.at(iyt + (iJ + iy * nJ) * nytrue);
-                dJydsigmaTmp.at(iJ + iy * nJ) =
-                    dJydsigma.at(iyt + (iJ + iy * nJ) * nytrue);
-            }
-        }
-
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, dJydyTmp.data(), nJ, dydp.data(), ny,
+                    nJ, rdata->nplist, ny, 1.0, &dJydy.at(iyt*nJ*ny), nJ, dydp.data(), ny,
                     1.0, dJydp.data(), nJ);
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, dJydsigmaTmp.data(), nJ,
+                    nJ, rdata->nplist, ny, 1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
                     dsigmaydp.data(), ny, 1.0, dJydp.data(), nJ);
     }
 }
@@ -132,30 +117,17 @@ void Model::fdJydp(const int it, const ExpData *edata,
  */
 void Model::fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
 
-    // dJydy         nytrue x nJ x ny
+    // dJydy         nJ x ny x nytrue
     // dydx          ny x nx
-    // dJydx         rdata->nt x nJ x nx
+    // dJydx         nJ x nx x nt
     getmy(it,edata);
-    std::vector<double> multResult(nJ * nx, 0);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (amiIsNaN(my.at(iyt)))
             continue;
-
-        // copy current (iyt) dJydy slice
-        // dJydyTmp     nJ x ny
-        for (int iJ = 0; iJ < nJ; ++iJ)
-            for (int iy = 0; iy < ny; ++iy)
-                dJydyTmp.at(iJ + iy * nJ) =
-                    dJydy.at(iyt + (iJ + iy * nJ) * nytrue);
-
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, nx, ny, 1.0, dJydyTmp.data(), nJ, dydx.data(), ny, 1.0,
-                    multResult.data(), nJ);
+                    nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
+                    &dJydx->at(it*nx*nJ), nJ);
     }
-    for (int iJ = 0; iJ < nJ; ++iJ)
-        for (int ix = 0; ix < nx; ++ix)
-            dJydx->at(it + (iJ + ix * nJ) * rdata->nt)=
-                multResult.at(iJ + ix * nJ);
 }
 
 /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
@@ -180,15 +152,9 @@ void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArr
             sxTmp.at(ix + ip * nx) = sx->at(ix,ip);
     }
 
-    for (int ix = 0; ix < nx; ++ix)
-        for (int iJ = 0; iJ < nJ; ++iJ)
-            dJzdxTmp.at(iJ + ix * nJ) =
-                dJzdx.at(nroots +
-                             (iJ + ix * nJ) * rdata->nmaxevent);
-
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
-                rdata->nplist, nx, 1.0, dJzdxTmp.data(), nJ, sxTmp.data(), nx, 1.0,
+                rdata->nplist, nx, 1.0, &dJzdx.at(nroots*nx*nJ), nJ, sxTmp.data(), nx, 1.0,
                 multResult.data(), nJ);
 
     // sJy += multResult + dJydp
@@ -211,8 +177,8 @@ void Model::fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArr
  */
 void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
                   const ReturnData *rdata) {
-    // dJzdz         nztrue x nJ x nz
-    // dJzdsigma     nztrue x nJ x nz
+    // dJzdz         nJ x nz x nztrue
+    // dJzdsigma     nJ x nz x nztrue
     // dzdp          nz x rdata->nplist
     // dJzdp         nJ x rdata->nplist
 
@@ -222,45 +188,25 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
         if (amiIsNaN(mz.at(izt)))
             continue;
 
-        // copy current (izt) dJzdz and dJzdsigma slices
-        // dJzdzTmp     nJ x nz
-        // dJzdsigmaTmp nJ x nz
-
         if (t < rdata->ts[rdata->nt - 1]) {
-            for (int iJ = 0; iJ < nJ; ++iJ) {
-                for (int iz = 0; iz < nz; ++iz) {
-                    dJzdzTmp.at(iJ + iz * nJ) =
-                        dJzdz.at(izt + (iJ + iz * nJ) * nztrue);
-                }
-            }
+            // with z
+            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                        nJ, rdata->nplist, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
+                        1.0, dJzdp.data(), nJ);
         } else {
-            for (int iJ = 0; iJ < nJ; ++iJ) {
-                for (int iz = 0; iz < nz; ++iz) {
-                    dJzdzTmp.at(iJ + iz * nJ) =
-                        dJrzdz.at(izt + (iJ + iz * nJ) * nztrue);
-                    dJrzdsigmaTmp.at(iJ + iz * nJ) =
-                        dJrzdsigma.at(izt + (iJ + iz * nJ) * nztrue);
-                }
-            }
+            // with rz
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
                         AMICI_BLAS_NoTrans, nJ, rdata->nplist, nz, 1.0,
-                        dJrzdsigmaTmp.data(), nJ, dsigmazdp.data(), nz, 1.0,
+                        &dJrzdsigma.at(izt*nz*nJ), nJ, dsigmazdp.data(), nz, 1.0,
                         dJzdp.data(), nJ);
+            
+            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+                        nJ, rdata->nplist, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
+                        1.0, dJzdp.data(), nJ);
         }
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, nz, 1.0, dJzdzTmp.data(), nJ, dzdp.data(), nz,
-                    1.0, dJzdp.data(), nJ);
-
-        for (int iJ = 0; iJ < nJ; ++iJ) {
-            for (int iz = 0; iz < nz; ++iz) {
-                dJzdsigmaTmp.at(iJ + iz * nJ) =
-                    dJzdsigma.at(izt + (iJ + iz * nJ) * nztrue);
-            }
-        }
-
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, nz, 1.0, dJzdsigmaTmp.data(), nJ,
+                    nJ, rdata->nplist, nz, 1.0, &dJzdsigma.at(izt*nz*nJ), nJ,
                     dsigmazdp.data(), nz, 1.0, dJzdp.data(), nJ);
     }
 }
@@ -271,44 +217,26 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
  * @param edata pointer to experimental data object @type ExpData
  */
 void Model::fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
-    // dJzdz         nztrue x nJ x nz
+    // dJzdz         nJ x nz x nztrue
     // dzdx          nz x nx
-    // dJzdx         nmaxevent x nJ x nx
+    // dJzdx         nJ x nx x nmaxevent
     getmz(nroots,edata);
-    std::vector<double> multResult(nJ * nx, 0);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (amiIsNaN(mz.at(izt)))
             continue;
-
-        // copy current (izt) dJzdz slice
-        // dJzdzTmp     nJ x nz
+        
         if (t < rdata->ts[rdata->nt - 1]) {
-            for (int iJ = 0; iJ < nJ; ++iJ)
-                for (int iz = 0; iz < nz; ++iz)
-                    dJzdzTmp.at(iJ + iz * nJ) =
-                        dJzdz.at(izt + (iJ + iz * nJ) * nztrue);
-
+            // z
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, dJzdzTmp.data(), nJ,
-                        dzdx.data(), nz, 1.0, multResult.data(), nJ);
+                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
+                        dzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
         } else {
-            for (int iJ = 0; iJ < nJ; ++iJ) {
-                for (int iz = 0; iz < nz; ++iz) {
-                    dJzdzTmp.at(iJ + iz * nJ) =
-                        dJrzdz.at(izt + (iJ + iz * nJ) * nztrue);
-                }
-            }
-
+            // rz
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, dJzdzTmp.data(), nJ,
-                        drzdx.data(), nz, 1.0, multResult.data(), nJ);
+                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ,
+                        drzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
         }
     }
-    for (int iJ = 0; iJ < nJ; ++iJ)
-        for (int ix = 0; ix < nx; ++ix)
-            dJzdx->at(nroots +
-                         (iJ + ix * nJ) * edata->nmaxevent) =
-                multResult.at(iJ + ix * nJ);
 }
 
 /** initialization of model properties
@@ -663,17 +591,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                         const ExpData *edata) {
         gety(it,rdata);
         getmy(it,edata);
-        std::vector<double> dJydy_slice(nJ*ny, 0.0);
         std::fill(dJydy.begin(),dJydy.end(),0.0);
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(my.at(iytrue))){
-                std::fill(dJydy_slice.begin(),dJydy_slice.end(),0.0);
-                model_dJydy(dJydy_slice.data(),iytrue,p.data(),k.data(),y.data(),sigmay.data(),my.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJy
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iy = 0; iy < ny; iy++ )
-                        dJydy.at(iytrue+(iJ+iy*nJ)*nytrue) = dJydy_slice.at(iJ+iy*nJ);
-                }
+                model_dJydy(&dJydy.at(iytrue*ny*nJ),iytrue,p.data(),k.data(),y.data(),sigmay.data(),my.data());
             }
         }
     }
@@ -688,17 +609,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                             const ExpData *edata) {
         gety(it,rdata);
         getmy(it,edata);
-        std::vector<double> dJydsigma_slice(nJ*ny, 0.0);
         std::fill(dJydsigma.begin(),dJydsigma.end(),0.0);
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
             if(!amiIsNaN(my.at(iytrue))){
-                std::fill(dJydsigma_slice.begin(),dJydsigma_slice.end(),0.0);
-                model_dJydsigma(dJydsigma_slice.data(),iytrue,p.data(),k.data(),y.data(),sigmay.data(),my.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJy
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iy = 0; iy < ny; iy++ )
-                        dJydsigma.at(iytrue+(iJ+iy*nJ)*nytrue) = dJydsigma_slice.at(iJ+iy*nJ);
-                }
+                model_dJydsigma(&dJydsigma.at(iytrue*ny*nJ),iytrue,p.data(),k.data(),y.data(),sigmay.data(),my.data());
             }
         }
     }
@@ -712,17 +626,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                         const ExpData *edata) {
         getz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJzdz_slice(nJ*nz, 0.0);
         std::fill(dJzdz.begin(),dJzdz.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
-                std::fill(dJzdz_slice.begin(),dJzdz_slice.end(),0.0);
-                model_dJzdz(dJzdz_slice.data(),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJz
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iz = 0; iz < nz; iz++ )
-                        dJzdz.at(iztrue+(iJ+iz*nJ*nztrue)) = dJzdz_slice.at(iJ+iz*nJ);
-                }
+                model_dJzdz(&dJzdz.at(iztrue*nz*nJ),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
             }
         }
     }
@@ -737,17 +644,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                             const ExpData *edata) {
         getz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJzdsigma_slice(nJ*nz, 0.0);
         std::fill(dJzdsigma.begin(),dJzdsigma.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
-                std::fill(dJzdsigma_slice.begin(),dJzdsigma_slice.end(),0.0);
-                model_dJzdsigma(dJzdsigma_slice.data(),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJz
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iz = 0; iz < nz; iz++ )
-                        dJzdsigma.at(iztrue+(iJ+iz*nJ)*nztrue) = dJzdsigma_slice.at(iJ+iz*nJ);
-                }
+                model_dJzdsigma(&dJzdsigma.at(iztrue*nz*nJ),iztrue,p.data(),k.data(),z.data(),sigmaz.data(),mz.data());
             }
         }
     }
@@ -761,17 +661,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
                          const ExpData *edata) {
         getrz(nroots,rdata);
         getmz(nroots,edata);
-        std::vector<double> dJrzdz_slice(nJ*nz, 0.0);
         std::fill(dJrzdz.begin(),dJrzdz.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
-                std::fill(dJrzdz_slice.begin(),dJrzdz_slice.end(),0.0);
-                model_dJrzdz(dJrzdz_slice.data(),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJz
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iz = 0; iz < nz; iz++)
-                        dJrzdz.at(iztrue+(iJ+iz*nJ)*nztrue) = dJrzdz_slice.at(iJ+iz*nJ);
-                }
+                model_dJrzdz(&dJrzdz.at(iztrue*nz*nJ),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
             }
         }
     }
@@ -785,17 +678,10 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata) {
     void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
                              const ExpData *edata) {
         getrz(nroots,rdata);
-        std::vector<double> dJrzdsigma_slice(nJ*nz, 0.0);
         std::fill(dJrzdsigma.begin(),dJrzdsigma.end(),0.0);
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
             if(!amiIsNaN(mz.at(iztrue))){
-                std::fill(dJrzdsigma_slice.begin(),dJrzdsigma_slice.end(),0.0);
-                model_dJrzdsigma(dJrzdsigma_slice.data(),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
-                // TODO: fix slicing here such that slicing is no longer necessary in sJz
-                for(int iJ = 0; iJ < nJ; iJ++){
-                    for(int iz = 0; iz < nz; iz++ )
-                        dJrzdsigma.at(iztrue+(iJ+iz*nJ)*nztrue) = dJrzdsigma_slice.at(iJ+iz*nJ);
-                }
+                model_dJrzdsigma(&dJrzdsigma.at(iztrue*nz*nJ),iztrue,p.data(),k.data(),rz.data(),sigmaz.data());
             }
         }
     }
