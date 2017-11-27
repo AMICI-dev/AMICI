@@ -114,6 +114,7 @@ end
 if(this.recompile)
     if(~strcmp(HTable.generateC,''))
         disp('Code generation routines changed! Recompiling model!')
+        cleanUpModelFolder(this);
     end
 end
 % compute functions
@@ -245,4 +246,15 @@ else
     ubw = max(max(j-i),0);
     lbw = max(max(i-j),0);
 end
+end
+
+function cleanUpModelFolder(this)
+     fileList = dir(fullfile(this.wrap_path,'models',this.modelname));
+     for ifile = 1:length(fileList)
+         file = fileList(ifile);
+         if(any([regexp(file.name,'[\w]*\_[\w]*\.mat')==1,
+                 regexp(file.name,['[' this.modelname '|main|wrapfunctions]+[\w_]*\.[h|cpp|md5|o|obj]'])==1]));
+             delete(fullfile(this.wrap_path,'models',this.modelname,file.name));
+         end
+     end
 end

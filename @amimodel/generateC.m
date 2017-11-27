@@ -18,56 +18,66 @@ end
 
 for ifun = this.funs
     if(isfield(this.fun,ifun{1}))
-        fprintf([ifun{1} ' | ']);
-        fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
-        fprintf(fid,'\n');
-        fprintf(fid,'#include <include/symbolic_functions.h>\n');
-        fprintf(fid,'#include <sundials/sundials_types.h> //realtype definition\n');
-        if(ismember(ifun{1},{'JSparse','JSparseB'}))
-            fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
-        end
-        fprintf(fid,'#include <cmath> \n');
-        fprintf(fid,'\n');
-        
-        % function definition
-        fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+        bodyNotEmpty = any(this.fun.(ifun{1}).sym~=0);
         if(strcmp(ifun{1},'JSparse'))
-            for i = 1:length(this.rowvals)
-                fprintf(fid,['  JSparse->indexvals[' num2str(i-1) '] = ' num2str(this.rowvals(i)) ';\n']);
-            end
-            for i = 1:length(this.colptrs)
-                fprintf(fid,['  JSparse->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrs(i)) ';\n']);
-            end 
+            bodyNotEmpty = any(this.fun.J.sym~=0);
         end
         if(strcmp(ifun{1},'JSparseB'))
-            for i = 1:length(this.rowvalsB)
-                fprintf(fid,['  JSparseB->indexvals[' num2str(i-1) '] = ' num2str(this.rowvalsB(i)) ';\n']);
-            end
-            for i = 1:length(this.colptrsB)
-                fprintf(fid,['  JSparseB->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrsB(i)) ';\n']);
-            end
+            bodyNotEmpty = any(this.fun.JB.sym~=0);
         end
         
-        if(strcmp(ifun{1},'JBand'))
-            fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
-        elseif(strcmp(ifun{1},'JBandB'))
-            fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
-        else
-            if( strcmp(ifun{1},'qBdot') )
-                fprintf(fid,'switch (ip) {\n');
-                this.fun.(ifun{1}).writeCcode_sensi(this,fid);
-                fprintf(fid,'}\n');
-            elseif(this.fun.(ifun{1}).sensiflag)
-                fprintf(fid,'switch (ip) {\n');
-                this.fun.(ifun{1}).writeCcode_sensi(this,fid);
-                fprintf(fid,'}\n');
-            else
-                this.fun.(ifun{1}).writeCcode(this,fid);
+        if(bodyNotEmpty)
+            fprintf([ifun{1} ' | ']);
+            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
+            fprintf(fid,'\n');
+            fprintf(fid,'#include <include/symbolic_functions.h>\n');
+            fprintf(fid,'#include <sundials/sundials_types.h> //realtype definition\n');
+            if(ismember(ifun{1},{'JSparse','JSparseB'}))
+                fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
             end
+            fprintf(fid,'#include <cmath> \n');
+            fprintf(fid,'\n');
+            
+            % function definition
+            fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+            if(strcmp(ifun{1},'JSparse'))
+                for i = 1:length(this.rowvals)
+                    fprintf(fid,['  JSparse->indexvals[' num2str(i-1) '] = ' num2str(this.rowvals(i)) ';\n']);
+                end
+                for i = 1:length(this.colptrs)
+                    fprintf(fid,['  JSparse->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrs(i)) ';\n']);
+                end
+            end
+            if(strcmp(ifun{1},'JSparseB'))
+                for i = 1:length(this.rowvalsB)
+                    fprintf(fid,['  JSparseB->indexvals[' num2str(i-1) '] = ' num2str(this.rowvalsB(i)) ';\n']);
+                end
+                for i = 1:length(this.colptrsB)
+                    fprintf(fid,['  JSparseB->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrsB(i)) ';\n']);
+                end
+            end
+            
+            if(strcmp(ifun{1},'JBand'))
+                fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
+            elseif(strcmp(ifun{1},'JBandB'))
+                fprintf(fid,['return(JB_' this.modelname removeTypes(this.fun.JB.argstr) ');']);
+            else
+                if( strcmp(ifun{1},'qBdot') )
+                    fprintf(fid,'switch (ip) {\n');
+                    this.fun.(ifun{1}).writeCcode_sensi(this,fid);
+                    fprintf(fid,'}\n');
+                elseif(this.fun.(ifun{1}).sensiflag)
+                    fprintf(fid,'switch (ip) {\n');
+                    this.fun.(ifun{1}).writeCcode_sensi(this,fid);
+                    fprintf(fid,'}\n');
+                else
+                    this.fun.(ifun{1}).writeCcode(this,fid);
+                end
+            end
+            fprintf(fid,'}\n');
+            fprintf(fid,'\n');
+            fclose(fid);
         end
-        fprintf(fid,'}\n');
-        fprintf(fid,'\n');
-        fclose(fid);
     end
 end
 
@@ -105,11 +115,14 @@ fprintf(fid,'amici::Model *getModel(const amici::UserData *udata);\n');
 fprintf(fid,'void getModelDims(int *nx, int *nk, int *np);\n\n');
 for ifun = this.funs
     if(~isfield(this.fun,ifun{1}))
+        
         this.fun(1).(ifun{1}) = amifun(ifun{1},this); % don't use getfun here
-        % as we do not want symbolics to be generated, we only want to be able 
+        % as we do not want symbolics to be generated, we only want to be able
         % access argstr
     end
-    fprintf(fid,['extern void ' ifun{1} '_' this.modelname this.fun.(ifun{1}).argstr ';\n']);
+    if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
+        fprintf(fid,['extern void ' ifun{1} '_' this.modelname this.fun.(ifun{1}).argstr ';\n']);
+    end
 end
 
 % Subclass Model
@@ -164,7 +177,9 @@ for ifun = this.funs
         returnstr = '';
     end
     fprintf(fid,['    virtual ' ftype ' model_' ifun{1} this.fun.(ifun{1}).argstr ' override {\n']);
-    fprintf(fid,['        ' ifun{1} '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
+    if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
+        fprintf(fid,['        ' ifun{1} '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
+    end
     fprintf(fid,returnstr);
     fprintf(fid,'    }\n\n');
 end
@@ -239,4 +254,10 @@ function generateMainC(this)
     mainFileSource = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/main.template.cpp');
     mainFileDestination = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
     copyfile(mainFileSource, mainFileDestination);
+end
+
+function nonempty = checkIfFunctionBodyIsNonEmpty(this,ifun)
+    % if we don't have symbolic variables, it might have been generated before and symbolic expressions were simply not
+    % regenerated. any() for empty (no generated) variables is always false.
+    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun '.cpp']),'file'),any(this.fun.(ifun).sym~=0));
 end

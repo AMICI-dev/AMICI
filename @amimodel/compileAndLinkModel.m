@@ -57,8 +57,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     %% Model-specific files
     for j=1:length(funs)
         baseFilename = fullfile(modelSourceFolder,[modelname '_' funs{j}]);
-        recompile = recompile || sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
-        cfun(1).(funs{j}) = recompile;
+        cfun(1).(funs{j}) = sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
     end
     
     funsForRecompile = {};
@@ -119,8 +118,11 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     
     % append model object files
     for j=1:length(funs)
-        objectsstr = strcat(objectsstr,...
-            ' "',fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]),'"');
+        filename = fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]);
+        if(exist(filename,'file'))
+            objectsstr = strcat(objectsstr,...
+                ' "',filename,'"');
+        end
     end    
     
     % compile the wrapfunctions object
@@ -264,7 +266,10 @@ function recompile = sourceNeedsRecompilation(filestr, o_suffix,DEBUG)
     % Return values:
     %  recompile: flag indicating whether we need to recompile filestr.cpp
     
-    if(~exist([filestr o_suffix],'file'))
+    if(~exist([filestr '.cpp'],'file'))
+        % cpp does not exist, we don't need to compile :)
+        recompile = 0;
+    elseif(~exist([filestr o_suffix],'file'))
         % object file does not exist, we need to recompile
         recompile = 1;
     else

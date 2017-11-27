@@ -26,7 +26,7 @@ namespace amici {
              */
             va_list ap;
             va_start(ap, fmt);
-            vsnprintf(msg, sizeof msg, fmt, ap);
+            vsnprintf(msg, sizeof(msg), fmt, ap);
             va_end(ap);
             storeBacktrace(12);
         }
@@ -85,7 +85,7 @@ namespace amici {
             free(symbols);
             if (nFrames == nMaxFrames)
             trace_buf << "[truncated]\n";
-            snprintf(trace, sizeof(trace), "(%s)", trace_buf.str().c_str());
+            snprintf(trace, sizeof(trace), "%s", trace_buf.str().c_str());
         }
         
     private:
