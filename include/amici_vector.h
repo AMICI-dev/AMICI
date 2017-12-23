@@ -151,12 +151,6 @@ namespace amici {
          * data in vec
          */
         N_Vector nvec = nullptr;
-        
-        /**
-         * @brief AmiVectorArray addition.
-         * @relates AmiVectorArray
-         */
-        friend class AmiVectorArray;
     };
     
     /** AmiVectorArray class.
@@ -179,7 +173,7 @@ namespace amici {
         {
             nvec_array = new N_Vector[length_outer];
             for (int idx = 0; idx < length_outer; idx++) {
-                nvec_array[idx] = vec_array.at(idx).nvec;
+                nvec_array[idx] = vec_array.at(idx).getNVector();
             }
         };
         
@@ -190,7 +184,7 @@ namespace amici {
         AmiVectorArray(const AmiVectorArray& vaold) : vec_array(vaold.vec_array) {
             nvec_array = new N_Vector[vaold.getLength()];
             for (int idx = 0; idx < vaold.getLength(); idx++) {
-                nvec_array[idx] = vec_array.at(idx).nvec;
+                nvec_array[idx] = vec_array.at(idx).getNVector();
             }
         }
         

@@ -3,6 +3,7 @@
 
 #include <include/amici_vector.h>
 #include <include/amici_defines.h>
+#include <include/amici_misc.h>
 #include <include/symbolic_functions.h>
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
@@ -32,7 +33,7 @@ class Solver {
 
     /**
      * AMIGetSens extracts diagnosis information from solver memory block and
-     * writes them into the return data object
+     * writes them into the return data instance
      *
      * @param tret time at which the sensitivities should be computed
      * @param yySout vector with sensitivities
@@ -349,21 +350,21 @@ class Solver {
     virtual void AMISetErrHandlerFn() = 0;
 
     /**
-     * AMISetUserData attaches the user data object (here this is a TempData and
-     * not UserData object) to the forward problem
+     * AMISetUserData attaches the user data instance (here this is a TempData and
+     * not UserData instance) to the forward problem
      *
-     * @param user_data TempData object,
+     * @param model Model instance,
      */
-    virtual void AMISetUserData(void *user_data) = 0;
+    virtual void AMISetUserData(Model *model) = 0;
 
     /**
-     * AMISetUserDataB attaches the user data object (here this is a TempData
-     * and not UserData object) to the backward problem
+     * AMISetUserDataB attaches the user data instance (here this is a TempData
+     * and not UserData instance) to the backward problem
      *
      * @param which identifier of the backwards problem
-     * @param user_data TempData object,
+     * @param model Model instance,
      */
-    virtual void AMISetUserDataB(int which, void *user_data) = 0;
+    virtual void AMISetUserDataB(int which, Model *model) = 0;
 
     /**
      * AMISetMaxNumSteps specifies the maximum number of steps for the forward
@@ -634,7 +635,7 @@ class Solver {
     /**
      * AMIGetNumSteps reports the number of solver steps
      *
-     * @param ami_mem pointer to the solver memory object (can be from
+     * @param ami_mem pointer to the solver memory instance (can be from
      * forward or backward problem)
      * @param numsteps output array
      */
@@ -643,7 +644,7 @@ class Solver {
     /**
      * AMIGetNumRhsEvals reports the number of right hand evaluations
      *
-     * @param ami_mem pointer to the solver memory object (can be from
+     * @param ami_mem pointer to the solver memory instance (can be from
      * forward or backward problem)
      * @param numrhsevals output array
      */
@@ -652,7 +653,7 @@ class Solver {
     /**
      * AMIGetNumErrTestFails reports the number of local error test failures
      *
-     * @param ami_mem pointer to the solver memory object (can be from
+     * @param ami_mem pointer to the solver memory instance (can be from
      * forward or backward problem)
      * @param numerrtestfails output array
      */
@@ -663,7 +664,7 @@ class Solver {
      * AMIGetNumNonlinSolvConvFails reports the number of nonlinear convergence
      * failures
      *
-     * @param ami_mem pointer to the solver memory object (can be from
+     * @param ami_mem pointer to the solver memory instance (can be from
      * forward or backward problem)
      * @param numnonlinsolvconvfails output array
      */
@@ -675,18 +676,18 @@ class Solver {
      * AMIGetLastOrder reports the order of the integration method during the
      * last internal step
      *
-     * @param ami_mem pointer to the solver memory object (can be from
+     * @param ami_mem pointer to the solver memory instance (can be from
      * forward or backward problem)
      * @param order output array
      */
     virtual void AMIGetLastOrder(void *ami_mem, int *order) = 0;
 
     /**
-     * AMIGetAdjBmem retrieves the solver memory object for the backward problem
+     * AMIGetAdjBmem retrieves the solver memory instance for the backward problem
      *
      * @param which identifier of the backwards problem
-     * @param ami_mem pointer to the forward solver memory object
-     * @return ami_memB pointer to the backward solver memory object
+     * @param ami_mem pointer to the forward solver memory instance
+     * @return ami_memB pointer to the backward solver memory instance
      */
     virtual void *AMIGetAdjBmem(void *ami_mem, int which) = 0;
 
@@ -698,26 +699,7 @@ protected:
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
     
-    /** Checks the values in an array for NaNs and Infs
-     *
-     * @param N number of elements in array
-     * @param array array
-     * @param fun name of calling function
-     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
-     */
-    static int checkVals(const int N,const realtype *array, const char* fun){
-        for(int idx = 0; idx < N; idx++) {
-            if(amiIsNaN(array[idx])) {
-                warnMsgIdAndTxt("AMICI:mex:NaN","AMICI encountered a NaN value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
-                return(AMICI_RECOVERABLE_ERROR);
-            }
-            if(amiIsInf(array[idx])) {
-                warnMsgIdAndTxt("AMICI:mex:Inf","AMICI encountered an Inf value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
-                return(AMICI_RECOVERABLE_ERROR);
-            }
-        }
-        return(AMICI_SUCCESS);
-    }
+    bool solverWasCalled = false;
 };
 
 } // namespace amici

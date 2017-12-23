@@ -38,13 +38,13 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    int Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+    void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
         fdwdx(t,x->getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        if(model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),w.data(),dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return CVodeSolver::checkVals(nx,JDiag->data(),"Jacobian");
+        fJDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),w.data(),dwdx.data());
+        if(!isFinite(nx,JDiag->data(),"Jacobian"))
+            throw AmiException("Evaluation of fJDiag failed!");
     }
     
     /** Sensitivity of dx/dt wrt model parameters p
@@ -52,18 +52,16 @@ namespace amici {
      * @param x Vector with the states
      * @return status flag indicating successful execution
      */
-    int Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+    void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
-        for(int ip = 0; ip < nplist; ip++)
-            if(model_dxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-                          plist[ip],w.data(),dwdp.data()) != AMICI_SUCCESS)
-                return AMICI_ERROR;
-        return AMICI_SUCCESS;
+        for(int ip = 0; ip < nplist(); ip++)
+            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+                     plist[ip],w.data(),dwdp.data());
     }
     
-    Solver *Model_ODE::getSolver() {
-        return new amici::CVodeSolver();
+    std::unique_ptr<Solver> Model_ODE::getSolver() {
+        return std::unique_ptr<Solver>(new amici::CVodeSolver());
     }
     
 }

@@ -1,11 +1,13 @@
-#include "include/forwardproblem.h"
 #include "include/amici_model.h"
+#include "include/forwardproblem.h"
 #include "include/amici_solver.h"
 #include "include/amici_exception.h"
 #include "include/edata.h"
 #include "include/rdata.h"
 #include "include/steadystateproblem.h"
 #include "include/udata.h"
+#include <cvodes/cvodes.h> // return/option codes
+
 #include <cstring>
 
 namespace amici {
@@ -393,7 +395,7 @@ void ForwardProblem::prepEventSensis(int ie) {
     if (edata) {
         for (int iz = 0; iz < model->nztrue; iz++) {
             if (model->z2event[iz] - 1 == ie) {
-                if (!amiIsNaN(
+                if (!isNaN(
                               edata->mz[iz * rdata->nmaxevent + nroots.at(ie)])) {
                     model->fdzdp(t, ie, &x);
                     
@@ -407,7 +409,7 @@ void ForwardProblem::prepEventSensis(int ie) {
                      value is NaN, use
                      the parameter value. Store this value in the return
                      struct */
-                    if (amiIsNaN(edata->sigmaz[nroots.at(ie) +
+                    if (isNaN(edata->sigmaz[nroots.at(ie) +
                                                rdata->nmaxevent * iz])) {
                         model->fdsigma_zdp(t);
                     } else {
@@ -485,15 +487,14 @@ void ForwardProblem::handleDataPoint(int it) {
      * @param[in] it index of data point @type int
      */
 
-    if (model->nx > 0) {
-        for (int ix = 0; ix < model->nx; ix++) {
-            rdata->x[it + rdata->nt * ix] = x[ix];
-        }
-
-        if (rdata->ts[it] > udata->t0()) {
-            solver->getDiagnosis(it, rdata);
-        }
+    for (int ix = 0; ix < model->nx; ix++) {
+        rdata->x[it + rdata->nt * ix] = x[ix];
     }
+    
+    if (rdata->ts[it] > udata->t0()) {
+        solver->getDiagnosis(it, rdata);
+    }
+    
     getDataOutput(it);
 }
 
@@ -533,7 +534,7 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdsigma_ydp(it, rdata);
 
     for (int iy = 0; iy < model->nytrue; iy++) {
-        if (!amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
+        if (!isNaN(edata->sigmay[iy * rdata->nt + it])) {
             for (int ip = 0; ip < rdata->nplist; ip++) {
                 model->dsigmaydp[ip * model->ny + iy] = 0;
             }
@@ -592,7 +593,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
 
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (edata) {
-            if (amiIsNaN(edata->sigmay[iy * rdata->nt + it])) {
+            if (isNaN(edata->sigmay[iy * rdata->nt + it])) {
                 model->fdsigma_ydp(it, rdata);
             } else {
                 for (int ip = 0; ip < rdata->nplist; ip++) {

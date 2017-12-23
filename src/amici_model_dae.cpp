@@ -36,14 +36,14 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    int Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+    void Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
         fdwdx(t,x->getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        if(model_JDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),
-                               0.0,dx->data(),w.data(),dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return IDASolver::checkVals(nx,JDiag->data(),"Jacobian");
+        fJDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),
+               0.0,dx->data(),w.data(),dwdx.data());
+        if(!isFinite(nx,JDiag->data(),"Jacobian"))
+            throw AmiException("Evaluation of fJDiag failed!");
     }
     
     /** Sensitivity of dx/dt wrt model parameters p
@@ -52,14 +52,12 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      */
-     int Model_DAE::fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx) {
+     void Model_DAE::fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx) {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
-        for(int ip = 0; ip < nplist; ip++)
-            if(model_dxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-                          plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data()) != AMICI_SUCCESS)
-                return AMICI_ERROR;
-        return AMICI_SUCCESS;
+        for(int ip = 0; ip < nplist(); ip++)
+            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+                     plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
     }
     
     /**
@@ -69,10 +67,10 @@ namespace amici {
      */
      void Model_DAE::fM(realtype t, const N_Vector x) {
         std::fill(M.begin(),M.end(),0.0);
-        model_M(M.data(),t,N_VGetArrayPointer(x),p.data(),k.data());
+        fM(M.data(),t,N_VGetArrayPointer(x),p.data(),k.data());
     }
     
-    Solver *Model_DAE::getSolver() {
-        return new amici::IDASolver();
+    std::unique_ptr<Solver> Model_DAE::getSolver() {
+        return std::unique_ptr<Solver>(new amici::IDASolver());
     }
 }

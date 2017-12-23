@@ -2,8 +2,6 @@
 #define AMICI_MODEL_DAE_H
 
 #include <include/amici_model.h>
-#include <include/amici_defines.h>
-#include <include/amici_exception.h>
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
@@ -54,14 +52,14 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model_DAE(const int np, const int nx, const int nxtrue, const int nk,
+        Model_DAE(const int nx, const int nxtrue,
                   const int ny, const int nytrue, const int nz, const int nztrue,
                   const int ne, const int nJ, const int nw, const int ndwdx,
                   const int ndwdp, const int nnz, const int ubw, const int lbw,
                   const AMICI_o2mode o2mode, const std::vector<realtype> p,
                   const std::vector<realtype> k, const std::vector<int> plist,
                   const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : Model(np,nx,nxtrue,nk,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
+        : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                         AmiVector *xdot, DlsMat J) override;
@@ -78,7 +76,7 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void model_J(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
         
         /** model specific implementation for fJB
@@ -94,13 +92,11 @@ namespace amici {
          * @param dxB Vector with the adjoint derivative states
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_JB(realtype *JB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJB(realtype *JB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                              const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                              const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return(AMICI_ERROR);
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
 
         virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
@@ -117,9 +113,8 @@ namespace amici {
          * @param dx Vector with the derivative states
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_JSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
         
         /** model specific implementation for fJSparseB
@@ -135,16 +130,14 @@ namespace amici {
          * @param dxB Vector with the adjoint derivative states
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_JSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                    const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                                    const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR;
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
 
-        virtual int fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+        virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                             AmiVector *dx) override;
         
         /** model specific implementation for fJDiag
@@ -158,12 +151,10 @@ namespace amici {
          * @param dx Vector with the derivative states
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_JDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fJDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR;
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
         
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
@@ -181,13 +172,11 @@ namespace amici {
          * @param v Vector with which the Jacobian is multiplied
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_Jv(realtype *Jv, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJv(realtype *Jv, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                              const realtype cj, const realtype *dx,const realtype *v,
                              const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR;
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
         
         /** model specific implementation for fJvB
@@ -204,13 +193,11 @@ namespace amici {
          * @param vB Vector with which the Jacobian is multiplied
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_JvB(realtype *JvB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fJvB(realtype *JvB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                               const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
                               const realtype *vB, const realtype *w, const realtype *dwdx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR; // not implemented
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
         
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
@@ -223,12 +210,10 @@ namespace amici {
          * @param k constants vector
          * @param h heavyside vector
          * @param dx Vector with the derivative states
-         * @return status flag indicating successful execution
          **/
-        virtual int model_root(realtype *root, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void froot(realtype *root, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                               const realtype *dx){
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR; // not implemented
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
         
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
@@ -242,9 +227,8 @@ namespace amici {
          * @param h heavyside vector
          * @param w vector with helper variables
          * @param dx Vector with the derivative states
-         * @return status flag indicating successful execution
          **/
-        virtual void model_xdot(realtype *xdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                 const realtype *dx, const realtype *w) = 0;
         
         /** model specific implementation for fxBdot
@@ -259,13 +243,11 @@ namespace amici {
          * @param dxB Vector with the adjoint derivative states
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
-         * @return status flag indicating successful execution
          **/
-        virtual int model_xBdot(realtype *xBdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fxBdot(realtype *xBdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                const realtype *xB, const realtype *dx, const realtype *dxB,
                                const realtype *w, const realtype *dwdx) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR; // not implemented
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
             
         }
         
@@ -282,20 +264,18 @@ namespace amici {
          * @param dxB Vector with the adjoint derivative states
          * @param w vector with helper variables
          * @param dwdp derivative of w wrt p
-         * @return status flag indicating successful execution
          **/
-        virtual int model_qBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+        virtual void fqBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                                 const realtype *xB, const realtype *dx, const realtype *dxB,
                                 const realtype *w, const realtype *dwdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR; // not implemented
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
             
         }
         
-        int fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
+        void fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
         
-        virtual int fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
-            return fdxdotdp(t,x->getNVector(),dx->getNVector());
+        virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
+            fdxdotdp(t,x->getNVector(),dx->getNVector());
         };
         
         /** model specific implementation of fdxdotdp
@@ -309,12 +289,10 @@ namespace amici {
          * @param dx Vector with the derivative states
          * @param w vector with helper variables
          * @param dwdp derivative of w wrt p
-         * @return status flag indicating successful execution
          */
-        virtual int model_dxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR;
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
         
         /** model specific implementation of fsxdot
@@ -333,14 +311,12 @@ namespace amici {
          * @param M mass matrix
          * @param J jacobian
          * @param dxdotdp parameter derivative of residual function
-         * @return status flag indicating successful execution
          */
-        virtual int model_sxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fsxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const int ip, const realtype *dx, const realtype *sx, const realtype *sdx,
                                 const realtype *w, const realtype *dwdx, const realtype *M, const realtype *J,
                                 const realtype *dxdotdp) {
-            warnMsgIdAndTxt("AMICI:mex","Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-            return AMICI_ERROR;
+            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
         
         void fM(realtype t, const N_Vector x);
@@ -352,10 +328,10 @@ namespace amici {
          * @param p parameter vector
          * @param k constants vector
          */
-        virtual void model_M(realtype *M, const realtype t, const realtype *x, const realtype *p,
+        virtual void fM(realtype *M, const realtype t, const realtype *x, const realtype *p,
                              const realtype *k) {};
         
-        virtual Solver *getSolver() override;
+        virtual std::unique_ptr<Solver> getSolver() override;
         
         /**
          * @brief IDASolver addition.

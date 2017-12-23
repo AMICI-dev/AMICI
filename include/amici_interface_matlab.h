@@ -3,9 +3,11 @@
 
 #include "include/amici.h"
 #include <mex.h>
+#include <memory>
 
 class UserData;
-extern amici::Model *getModel(const amici::UserData *udata);
+class Model;
+extern std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
 extern void getModelDims(int *nx, int *nk, int *np);
 
 namespace amici {

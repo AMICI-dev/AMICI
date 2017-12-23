@@ -29,6 +29,23 @@
 #include <include/amici_exception.h>
 #include <include/symbolic_functions.h>
 
+#include <sundials/sundials_types.h> //realtype
+#include <cvodes/cvodes.h> //return codes
+
+#include <type_traits>
+
+// ensure definitions are in sync
+static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
+static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN,
+              "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
+static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN,
+              "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
+static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
+              "AMICI_ILL_INPUT != CV_ILL_INPUT");
+static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
+static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
+static_assert(std::is_same<amici::realtype, realtype>::value, "Definition of realtype does not match");
+
 namespace amici {
 
 /** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
@@ -49,8 +66,8 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  */
 void runAmiciSimulation(const UserData *udata, const ExpData *edata,
                        ReturnData *rdata, Model *model) {
-    if (!udata || udata->nx() != model->nx || udata->np() != model->np ||
-        udata->nk() != model->nk)
+    if (!udata || udata->nx() != model->nx || udata->np() != model->np() ||
+        udata->nk() != model->nk())
         throw SetupFailure("udata was not allocated or does not agree with model!");
     if (!rdata)
         throw SetupFailure("rdata was not allocated!");
@@ -59,7 +76,7 @@ void runAmiciSimulation(const UserData *udata, const ExpData *edata,
         return;
     }
     
-    auto solver = std::unique_ptr<Solver>(model->getSolver());
+    auto solver = model->getSolver();
     
     auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(udata,rdata,edata,model,solver.get()));
     fwd.get()->workForwardProblem();

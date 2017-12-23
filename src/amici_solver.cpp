@@ -25,10 +25,10 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     model->initialize(&(fwd->x), &(fwd->dx), udata);
 
     /* Create solver memory object */
-    if (udata->lmm != CV_ADAMS && udata->lmm != CV_BDF) {
+    if (udata->lmm != ADAMS && udata->lmm != BDF) {
         throw AmiException("Illegal value for lmm!");
     }
-    if (udata->iter != CV_NEWTON && udata->iter != CV_FUNCTIONAL) {
+    if (udata->iter != NEWTON && udata->iter != FUNCTIONAL) {
         throw AmiException("Illegal value for iter!");
     }
     ami_mem = AMICreate(udata->lmm, udata->iter);
@@ -179,27 +179,27 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
             function, msg);
     switch (error_code) {
     case 99:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_WARNING", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:WARNING", module, function);
         break;
 
     case -1:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_TOO_MUCH_WORK", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
     case -2:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_TOO_MUCH_ACC", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
     case -3:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_ERR_FAILURE", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:ERR_FAILURE", module, function);
         break;
 
     case -4:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_CONV_FAILURE", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:CONV_FAILURE", module, function);
         break;
 
     default:
-        sprintf(buffid, "AMICI:mex:%s:%s:CV_OTHER", module, function);
+        sprintf(buffid, "AMICI:mex:%s:%s:OTHER", module, function);
         break;
     }
 
@@ -217,21 +217,22 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
     long int number;
     int order;
 
-    AMIGetNumSteps(ami_mem, &number);
-    rdata->numsteps[it] = (double)number;
-
-    AMIGetNumRhsEvals(ami_mem, &number);
-    rdata->numrhsevals[it] = (double)number;
-
-    AMIGetNumErrTestFails(ami_mem, &number);
-    rdata->numerrtestfails[it] = (double)number;
-
-    AMIGetNumNonlinSolvConvFails(ami_mem, &number);
-    rdata->numnonlinsolvconvfails[it] = (double)number;
-
-    AMIGetLastOrder(ami_mem, &order);
-    rdata->order[it] = (double)order;
-    
+    if(solverWasCalled) {
+        AMIGetNumSteps(ami_mem, &number);
+        rdata->numsteps[it] = (double)number;
+        
+        AMIGetNumRhsEvals(ami_mem, &number);
+        rdata->numrhsevals[it] = (double)number;
+        
+        AMIGetNumErrTestFails(ami_mem, &number);
+        rdata->numerrtestfails[it] = (double)number;
+        
+        AMIGetNumNonlinSolvConvFails(ami_mem, &number);
+        rdata->numnonlinsolvconvfails[it] = (double)number;
+        
+        AMIGetLastOrder(ami_mem, &order);
+        rdata->order[it] = (double)order;
+    }
 }
 
 /**
@@ -246,19 +247,20 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProble
     long int number;
 
     void *ami_memB = AMIGetAdjBmem(ami_mem, bwd->which);
-
-    AMIGetNumSteps(ami_memB, &number);
-    rdata->numstepsB[it] = (double)number;
-
-    AMIGetNumRhsEvals(ami_memB, &number);
-    rdata->numrhsevalsB[it] = (double)number;
-
-    AMIGetNumErrTestFails(ami_memB, &number);
-    rdata->numerrtestfailsB[it] = (double)number;
-
-    AMIGetNumNonlinSolvConvFails(ami_memB, &number);
-    rdata->numnonlinsolvconvfailsB[it] = (double)number;
-
+    
+    if(solverWasCalled && ami_memB) {
+        AMIGetNumSteps(ami_memB, &number);
+        rdata->numstepsB[it] = (double)number;
+        
+        AMIGetNumRhsEvals(ami_memB, &number);
+        rdata->numrhsevalsB[it] = (double)number;
+        
+        AMIGetNumErrTestFails(ami_memB, &number);
+        rdata->numerrtestfailsB[it] = (double)number;
+        
+        AMIGetNumNonlinSolvConvFails(ami_memB, &number);
+        rdata->numnonlinsolvconvfailsB[it] = (double)number;
+    }
 }
 
 /**

@@ -33,9 +33,9 @@ class CVodeSolver : public Solver {
 
     void AMISetErrHandlerFn() override;
 
-    void AMISetUserData(void *user_data) override;
+    void AMISetUserData(Model *model) override;
 
-    void AMISetUserDataB(int which, void *user_data) override;
+    void AMISetUserDataB(int which, Model *model) override;
 
     void AMISetMaxNumSteps(long int mxsteps) override;
 

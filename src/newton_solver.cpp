@@ -120,7 +120,7 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
     prepareLinearSystem(0, -1);
 
     model->fdxdotdp(*t, x, &dx);
-    for (int ip = 0; ip < model->nplist; ip++) {
+    for (int ip = 0; ip < model->nplist(); ip++) {
         
         for (int ix = 0; ix < model->nx; ix++) {
             sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];

@@ -31,7 +31,7 @@ namespace amici {
  * @return isnan(what)
  *
  */
-int amiIsNaN(double what) { return std::isnan(what); }
+int isNaN(double what) { return std::isnan(what); }
 
 /**
  * c++ interface to the isinf function
@@ -40,7 +40,7 @@ int amiIsNaN(double what) { return std::isnan(what); }
  * @return isnan(what)
  *
  */
-int amiIsInf(double what) { return std::isinf(what); }
+int isInf(double what) { return std::isinf(what); }
 
 /**
  * function returning nan
@@ -48,7 +48,7 @@ int amiIsInf(double what) { return std::isinf(what); }
  * @return NaN
  *
  */
-double amiGetNaN() { return NAN; }
+double getNaN() { return NAN; }
 
 /**
  * c implementation of log function, this prevents returning NaN values for
@@ -58,11 +58,11 @@ double amiGetNaN() { return NAN; }
  * @return if(x>0) then log(x) else -Inf
  *
  */
-double amilog(double x) {
+double log(double x) {
     if (x <= 0) {
-        return (-log(DBL_MAX));
+        return (-std::log(DBL_MAX));
     } else {
-        return (log(x));
+        return (std::log(x));
     }
 }
 
@@ -116,54 +116,6 @@ double sign(double x) {
 }
 
 /**
- * c implementation of matlab function min
- *
- * @param a value1 @type double
- * @param b value2 @type double
- * @param c bogus parameter to ensure correct parsing as a function @type double
- * @return if(a < b) then a else b @type double
- *
- */
-double am_min(double a, double b, double c) {
-    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
-    if (anan || bnan) {
-        if (anan && !bnan)
-            return b;
-        if (!anan && bnan)
-            return a;
-        return a;
-    }
-    return (std::min(a, b));
-}
-
-/**
- * parameter derivative of c implementation of matlab function min
- *
- * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @param c bogus parameter to ensure correct parsing as a function @type double
- * @return id == 1:  if(a < b) then 1 else 0 @type double
- * @return id == 2:  if(a < b) then 0 else 1 @type double
- *
- */
-double Dam_min(int id, double a, double b, double c) {
-    if (id == 1) {
-        if (a < b) {
-            return (1);
-        } else {
-            return (0);
-        }
-    } else {
-        if (a < b) {
-            return (0);
-        } else {
-            return (1);
-        }
-    }
-}
-
-/**
  * c implementation of matlab function max
  *
  * @param a value1 @type double
@@ -172,8 +124,8 @@ double Dam_min(int id, double a, double b, double c) {
  * @return if(a > b) then a else b @type double
  *
  */
-double am_max(double a, double b, double c) {
-    int anan = amiIsNaN(a), bnan = amiIsNaN(b);
+double max(double a, double b, double c) {
+    int anan = isNaN(a), bnan = isNaN(b);
     if (anan || bnan) {
         if (anan && !bnan)
             return b;
@@ -195,7 +147,7 @@ double am_max(double a, double b, double c) {
  * @return id == 2:  if(a > b) then 0 else 1 @type double
  *
  */
-double Dam_max(int id, double a, double b, double c) {
+double Dmax(int id, double a, double b, double c) {
     if (id == 1) {
         if (a > b) {
             return (1);
@@ -225,7 +177,7 @@ double Dam_max(int id, double a, double b, double c) {
  * @return spline(t)
  *
  */
-double am_spline(double t, int num, ...) {
+double spline(double t, int num, ...) {
 
     va_list valist;
 
@@ -279,7 +231,7 @@ double am_spline(double t, int num, ...) {
  * @return spline(t)
  *
  */
-double am_spline_pos(double t, int num, ...) {
+double spline_pos(double t, int num, ...) {
 
     va_list valist;
 
@@ -335,7 +287,7 @@ double am_spline_pos(double t, int num, ...) {
  * @return dsplinedp(t)
  *
  */
-double am_Dspline(int id, double t, int num, ...) {
+double Dspline(int id, double t, int num, ...) {
 
     va_list valist;
 
@@ -395,7 +347,7 @@ double am_Dspline(int id, double t, int num, ...) {
  * @return dsplinedp(t)
  *
  */
-double am_Dspline_pos(int id, double t, int num, ...) {
+double Dspline_pos(int id, double t, int num, ...) {
 
     va_list valist;
 
@@ -465,7 +417,7 @@ double am_Dspline_pos(int id, double t, int num, ...) {
  * @return ddspline(t)
  *
  */
-double am_DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
+double DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
 
 /**
  * derivation of an exponentiated spline function, takes variable argument pairs
@@ -485,7 +437,7 @@ double am_DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
  * @return ddspline(t)
  *
  */
-double am_DDspline_pos(int id1, int id2, double t, int num, ...) {
+double DDspline_pos(int id1, int id2, double t, int num, ...) {
 
     va_list valist;
 

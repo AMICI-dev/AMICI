@@ -28,10 +28,10 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
 
 ReturnData::ReturnData(const UserData *udata, const Model *model,
                        bool initializeFields)
-    : np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue),
+    : np(model->np()), nk(model->nk()), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
-      nplist(udata->nplist()), nmaxevent(udata->nme()), nt(udata->nt()),
+      nplist(model->nplist()), nmaxevent(udata->nme()), nt(udata->nt()),
       newton_maxsteps(udata->newton_maxsteps), pscale(udata->pscale),
       o2mode(model->o2mode), sensi(udata->sensi),
       sensi_meth(udata->sensi_meth) {
@@ -66,16 +66,16 @@ void ReturnData::invalidate(const realtype t) {
     
     for (int it = it_start; it < nt; it++){
         for (int ix = 0; ix < nx; ix++)
-            x[ix * nt + it] = amiGetNaN();
+            x[ix * nt + it] = getNaN();
         for (int iy = 0; iy < ny; iy++)
-            y[iy * nt + it] = amiGetNaN();
+            y[iy * nt + it] = getNaN();
         for (int ip = 0; ip < np; ip++) {
             if(sx)
                 for (int ix = 0; ix < nx; ix++)
-                    sx[(ip*nx + ix) * nt + it] = amiGetNaN();
+                    sx[(ip*nx + ix) * nt + it] = getNaN();
             if(sy)
                 for (int iy = 0; iy < ny; iy++)
-                    sy[(ip*ny + iy) * nt + it] = amiGetNaN();
+                    sy[(ip*ny + iy) * nt + it] = getNaN();
         }
     }
 }
@@ -86,7 +86,7 @@ void ReturnData::invalidateLLH() {
      * (typically after integration failure)
      */
     if (llh)
-        *llh = amiGetNaN();
+        *llh = getNaN();
     
     if (sllh)
         setLikelihoodSensitivityFirstOrderNaN();
@@ -100,7 +100,7 @@ void ReturnData::setLikelihoodSensitivityFirstOrderNaN() {
      * @brief routine to set first order sensitivities to NaN (typically after
      * integration failure)
      */
-    fillArray(sllh, nplist, amiGetNaN());
+    fillArray(sllh, nplist, getNaN());
 }
 
 void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
@@ -108,7 +108,7 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
      * @brief routine to set second order sensitivities to NaN (typically after
      * integration failure)
      */
-    fillArray(s2llh, nplist * (nJ - 1), amiGetNaN());
+    fillArray(s2llh, nplist * (nJ - 1), getNaN());
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(

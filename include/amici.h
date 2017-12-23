@@ -1,7 +1,6 @@
 #ifndef amici_h
 #define amici_h
 
-#include <cvodes/cvodes.h>
 #include <include/symbolic_functions.h>
 #include <include/amici_defines.h>
 
@@ -11,21 +10,6 @@ class UserData;
 class ReturnData;
 class ExpData;
 class Model;
-
-// ensure definitions are in sync
-static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
-static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN,
-              "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
-static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN,
-              "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
-static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
-              "AMICI_ILL_INPUT != CV_ILL_INPUT");
-    
-    
-    
-static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
-static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
-
 
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
 

@@ -1,5 +1,5 @@
-#ifndef AMICI_MODEL_H
-#define AMICI_MODEL_H
+#ifndef AMICI_fH
+#define AMICI_fH
 
 #include <include/amici_exception.h>
 #include <include/amici_defines.h>
@@ -29,15 +29,13 @@ namespace amici {
     public:
         /** default constructor */
         Model()
-        : nplist(0), np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
+        : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
         o2mode(AMICI_O2MODE_NONE) {}
         
         /** constructor with model dimensions
-         * @param np number of parameters
          * @param nx number of state variables
          * @param nxtrue number of state variables of the non-augmented model
-         * @param nk number of constants
          * @param ny number of observables
          * @param nytrue number of observables of the non-augmented model
          * @param nz number of event observables
@@ -59,31 +57,31 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model(const int np, const int nx, const int nxtrue, const int nk,
+        Model(const int nx, const int nxtrue,
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
               const AMICI_o2mode o2mode, const std::vector<realtype> p,
               const std::vector<realtype> k, const std::vector<int> plist,
               const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : nplist(plist.size()), np(np), nk(nk), nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
+        : nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
         nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
         nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode),
         z2event(z2event),
         idlist(idlist),
         sigmay(ny, 0.0),
-        dsigmaydp(ny*nplist, 0.0),
+        dsigmaydp(ny*plist.size(), 0.0),
         sigmaz(nz, 0.0),
-        dsigmazdp(nz*nplist, 0.0),
-        dJydp(nJ*nplist, 0.0),
-        dJzdp(nJ*nplist, 0.0),
+        dsigmazdp(nz*plist.size(), 0.0),
+        dJydp(nJ*plist.size(), 0.0),
+        dJzdp(nJ*plist.size(), 0.0),
         deltax(nx, 0.0),
-        deltasx(nx*nplist, 0.0),
+        deltasx(nx*plist.size(), 0.0),
         deltaxB(nx, 0.0),
-        deltaqB(nJ*nplist, 0.0),
-        dxdotdp(nx*nplist, 0.0),
+        deltaqB(nJ*plist.size(), 0.0),
+        dxdotdp(nx*plist.size(), 0.0),
         x(nx, 0.0),
-        sx(np, std::vector<double>(nx, 0.0)),
+        sx(plist.size(), std::vector<realtype>(nx, 0.0)),
         y(ny, 0.0),
         my(nytrue, 0.0),
         z(nz, 0.0),
@@ -96,16 +94,16 @@ namespace amici {
         dJrzdz(nJ*nztrue*nz, 0.0),
         dJrzdsigma(nJ*nztrue*nz, 0.0),
         dzdx(nz*nx, 0.0),
-        dzdp(nz*nplist, 0.0),
+        dzdp(nz*plist.size(), 0.0),
         drzdx(nz*nx, 0.0),
-        drzdp(nz*nplist, 0.0),
-        dydp(ny*nplist, 0.0),
+        drzdp(nz*plist.size(), 0.0),
+        dydp(ny*plist.size(), 0.0),
         dydx(ny*nx,0.0),
         w(nw, 0.0),
         dwdx(ndwdx, 0.0),
         dwdp(ndwdp, 0.0),
         M(nx*nx, 0.0),
-        stau(nplist, 0.0),
+        stau(plist.size(), 0.0),
         h(ne,0.0),
         p(p),
         k(k),
@@ -129,7 +127,7 @@ namespace amici {
         /** Retrieves the solver object
          * @return The Solver instance
          */
-        virtual Solver *getSolver() = 0;
+        virtual std::unique_ptr<Solver> getSolver() = 0;
         
         /** Root function
          * @param t time
@@ -177,7 +175,7 @@ namespace amici {
          * @param dx time derivative of state (DAE only)
          * @return flag indicating successful evaluation
          */
-        virtual int fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,
+        virtual void fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,
                                 AmiVector *dx) = 0;
         
         /** parameter derivative of residual function
@@ -186,7 +184,7 @@ namespace amici {
          * @param dx time derivative of state (DAE only)
          * @return flag indicating successful evaluation
          */
-        virtual int fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) = 0;
+        virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) = 0;
         
         /** Jacobian multiply function
          * @param t time
@@ -208,7 +206,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void model_x0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
+        virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -229,7 +227,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void model_sx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
+        virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -252,7 +250,7 @@ namespace amici {
          * @param ip sensitivity index
          * @param ie event index
          **/
-        virtual void model_stau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
+        virtual void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -266,7 +264,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_y(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
 
@@ -281,7 +279,7 @@ namespace amici {
          * @param h heavyside vector
          * @param ip parameter index w.r.t. which the derivative is requested
          **/
-        virtual void model_dydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+        virtual void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -295,7 +293,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_dydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -310,7 +308,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_z(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -327,7 +325,7 @@ namespace amici {
          * @param sx current state sensitivity
          * @param ip sensitivity index
          **/
-        virtual void model_sz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+        virtual void fsz(realtype *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -342,7 +340,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_rz(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -359,7 +357,7 @@ namespace amici {
          * @param h heavyside vector
          * @param ip sensitivity index
          **/
-        virtual void model_srz(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+        virtual void fsrz(realtype *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -375,7 +373,7 @@ namespace amici {
          * @param h heavyside vector
          * @param ip parameter index w.r.t. which the derivative is requested
          **/
-        virtual void model_dzdp(double *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+        virtual void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -390,7 +388,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_dzdx(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -406,7 +404,7 @@ namespace amici {
          * @param h heavyside vector
          * @param ip parameter index w.r.t. which the derivative is requested
          **/
-        virtual void model_drzdp(double *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+        virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -421,7 +419,7 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          **/
-        virtual void model_drzdx(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+        virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -439,7 +437,7 @@ namespace amici {
          * @param xdot new model right hand side
          * @param xdot_old previous model right hand side
          **/
-        virtual void model_deltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fdeltax(realtype *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                  const int ie, const realtype *xdot, const realtype *xdot_old) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
@@ -462,7 +460,7 @@ namespace amici {
          * @param sx state sensitivity
          * @param stau event-time sensitivity
          **/
-        virtual void model_deltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                    const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx,
                                    const realtype *stau) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -483,7 +481,7 @@ namespace amici {
          * @param xdot_old previous model right hand side
          * @param xB current adjoint state
          **/
-        virtual void model_deltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
@@ -504,7 +502,7 @@ namespace amici {
          * @param xdot_old previous model right hand side
          * @param xB adjoint state
          **/
-        virtual void model_deltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+        virtual void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                    const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
@@ -517,7 +515,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void model_sigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
+        virtual void fsigma_y(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -530,7 +528,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void model_dsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+        virtual void fdsigma_ydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -543,7 +541,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void model_sigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) {
+        virtual void fsigma_z(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -556,7 +554,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void model_dsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+        virtual void fdsigma_zdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -571,7 +569,7 @@ namespace amici {
          * @param sigmay measurement standard deviation at timepoint
          * @param my measurements at timepoint
          **/
-        virtual void model_Jy(double *nllh,const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) {
+        virtual void fJy(realtype *nllh,const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -586,7 +584,7 @@ namespace amici {
          * @param sigmaz event measurement standard deviation at timepoint
          * @param mz event measurements at timepoint
          **/
-        virtual void model_Jz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) {
+        virtual void fJz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -600,7 +598,7 @@ namespace amici {
          * @param z model event output at timepoint
          * @param sigmaz event measurement standard deviation at timepoint
          **/
-        virtual void model_Jrz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz) {
+        virtual void fJrz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -615,8 +613,8 @@ namespace amici {
          * @param sigmay measurement standard deviation at timepoint
          * @param my measurement at timepoint
          **/
-        virtual void model_dJydy(double *dJydy, const int iy, const realtype *p, const realtype *k,
-                                 const double *y, const double *sigmay, const double *my) {
+        virtual void fdJydy(realtype *dJydy, const int iy, const realtype *p, const realtype *k,
+                                 const realtype *y, const realtype *sigmay, const realtype *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -632,8 +630,8 @@ namespace amici {
          * @param sigmay measurement standard deviation at timepoint
          * @param my measurement at timepoint
          **/
-        virtual void model_dJydsigma(double *dJydsigma, const int iy, const realtype *p, const realtype *k,
-                                 const double *y, const double *sigmay, const double *my) {
+        virtual void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k,
+                                 const realtype *y, const realtype *sigmay, const realtype *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -648,8 +646,8 @@ namespace amici {
          * @param sigmaz event measurement standard deviation at timepoint
          * @param mz event measurement at timepoint
          **/
-        virtual void model_dJzdz(double *dJzdz, const int iz, const realtype *p, const realtype *k,
-                                 const double *z, const double *sigmaz, const double *mz) {
+        virtual void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k,
+                                 const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -665,8 +663,8 @@ namespace amici {
          * @param sigmaz event measurement standard deviation at timepoint
          * @param mz event measurement at timepoint
          **/
-        virtual void model_dJzdsigma(double *dJzdsigma, const int iz, const realtype *p, const realtype *k,
-                                     const double *z, const double *sigmaz, const double *mz) {
+        virtual void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k,
+                                     const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -680,8 +678,8 @@ namespace amici {
          * @param rz model root output at timepoint
          * @param sigmaz event measurement standard deviation at timepoint
          **/
-        virtual void model_dJrzdz(double *dJrzdz, const int iz, const realtype *p, const realtype *k,
-                                 const double *rz, const double *sigmaz) {
+        virtual void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k,
+                                 const realtype *rz, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -696,8 +694,8 @@ namespace amici {
          * @param rz model root output at timepoint
          * @param sigmaz event measurement standard deviation at timepoint
          **/
-        virtual void model_dJrzdsigma(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k,
-                                     const double *rz, const double *sigmaz) {
+        virtual void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k,
+                                     const realtype *rz, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -712,18 +710,18 @@ namespace amici {
         
         void fsz_tf(const int ie, ReturnData *rdata);
         
-        void fsJy(const int it, const std::vector<double> dJydx, ReturnData *rdata);
+        void fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rdata);
         
         void fdJydp(const int it, const ExpData *edata,
                    const ReturnData *rdata);
         
-        void fdJydx(std::vector<double> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
+        void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
-        void fsJz(const int nroots, const std::vector<double> dJzdx, AmiVectorArray *sx, const ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, const ReturnData *rdata);
         
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void fdJzdx(std::vector<double> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
+        void fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
         void initialize(AmiVector *x, AmiVector *dx, const UserData *udata);
         
@@ -731,12 +729,24 @@ namespace amici {
         
         void initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata);
         
-        /** number of paramaeters wrt to which sensitivities are computed */
-        const int nplist;
-        /** total number of model parameters */
-        const int np;
-        /** number of fixed parameters */
-        const int nk;
+        /** number of paramaeters wrt to which sensitivities are computed
+         * @return length of sensitivity index vector
+         */
+        const int nplist() const {
+            return plist.size();
+        };
+        /** total number of model parameters
+         * @return length of parameter vector
+         */
+        const int np() const {
+            return p.size();
+        };
+        /** number of constants
+         * @return length of constant vector
+         */
+        const int nk() const {
+            return k.size();
+        };
         /** number of states */
         const int nx;
         /** number of states in the unaugmented system */
@@ -774,17 +784,17 @@ namespace amici {
         const std::vector<realtype> idlist;
         
         /** data standard deviation */
-        std::vector<double> sigmay;
+        std::vector<realtype> sigmay;
         /** parameter derivative of data standard deviation */
-        std::vector<double> dsigmaydp;
+        std::vector<realtype> dsigmaydp;
         /** event standard deviation */
-        std::vector<double> sigmaz;
+        std::vector<realtype> sigmaz;
         /** parameter derivative of event standard deviation */
-        std::vector<double> dsigmazdp;
+        std::vector<realtype> dsigmazdp;
         /** parameter derivative of data likelihood */
-        std::vector<double> dJydp;
+        std::vector<realtype> dJydp;
         /** parameter derivative of event likelihood */
-        std::vector<double> dJzdp;
+        std::vector<realtype> dJzdp;
         
         /** change in x */
         std::vector<realtype> deltax;
@@ -835,7 +845,7 @@ namespace amici {
          * @param k constants vector
          * @param h heavyside vector
          */
-        virtual void model_w(realtype *w, const realtype t, const realtype *x, const realtype *p,
+        virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h) {};
         
         void fdwdp(const realtype t, const N_Vector x);
@@ -849,7 +859,7 @@ namespace amici {
          * @param h heavyside vector
          * @param w vector with helper variables
          */
-        virtual void model_dwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
+        virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h, const realtype *w) {};
         
         void fdwdx(const realtype t, const N_Vector x);
@@ -863,7 +873,7 @@ namespace amici {
          * @param h heavyside vector
          * @param w vector with helper variables
          */
-        virtual void model_dwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
+        virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h, const realtype *w) {};
         
     protected:
@@ -888,43 +898,43 @@ namespace amici {
         SlsMat J = nullptr;
         
         /** current state */
-        std::vector<double> x;
+        std::vector<realtype> x;
         /** current state */
-        std::vector<std::vector<double>> sx;
+        std::vector<std::vector<realtype>> sx;
         /** current observable */
-        std::vector<double> y;
+        std::vector<realtype> y;
         /** current observable measurement */
-        std::vector<double> my;
+        std::vector<realtype> my;
         /** current event output */
-        std::vector<double> z;
+        std::vector<realtype> z;
         /** current event measurement */
-        std::vector<double> mz;
+        std::vector<realtype> mz;
         /** current root output */
-        std::vector<double> rz;
+        std::vector<realtype> rz;
         /** observable derivative of data likelihood */
-        std::vector<double> dJydy;
+        std::vector<realtype> dJydy;
         /** observable sigma derivative of data likelihood */
-        std::vector<double> dJydsigma;
+        std::vector<realtype> dJydsigma;
         /** event ouput derivative of event likelihood */
-        std::vector<double> dJzdz;
+        std::vector<realtype> dJzdz;
         /** event sigma derivative of event likelihood */
-        std::vector<double> dJzdsigma;
+        std::vector<realtype> dJzdsigma;
         /** event ouput derivative of event likelihood at final timepoint */
-        std::vector<double> dJrzdz;
+        std::vector<realtype> dJrzdz;
         /** event sigma derivative of event likelihood at final timepoint */
-        std::vector<double> dJrzdsigma;
+        std::vector<realtype> dJrzdsigma;
         /** state derivative of event output */
-        std::vector<double> dzdx;
+        std::vector<realtype> dzdx;
         /** parameter derivative of event output */
-        std::vector<double> dzdp;
+        std::vector<realtype> dzdp;
         /** state derivative of event timepoint */
-        std::vector<double> drzdx;
+        std::vector<realtype> drzdx;
         /** parameter derivative of event timepoint */
-        std::vector<double> drzdp;
+        std::vector<realtype> drzdp;
         /** parameter derivative of observable */
-        std::vector<double> dydp;
+        std::vector<realtype> dydp;
         /** state derivative of observable */
-        std::vector<double> dydx;
+        std::vector<realtype> dydx;
         /** tempory storage of w data across functions */
         std::vector<realtype> w;
         /** tempory storage of dwdx data across functions */
@@ -960,4 +970,4 @@ namespace amici {
     
 } // namespace amici
 
-#endif // MODEL_H
+#endif // fH

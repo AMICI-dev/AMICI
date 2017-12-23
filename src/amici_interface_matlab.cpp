@@ -26,13 +26,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-/** writes model dimensions to the provided pointers, currently must implemented in wrapfunctions.cpp
- * @param nx number of state variables
- * @param nk number of constants
- * @param np number of parameters
- */
-extern void getModelDims(int *nx, int *nk, int *np);
-
 namespace amici {
     
     int dbl2int(const double x);
@@ -510,7 +503,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     try{
         auto udata = std::unique_ptr<const amici::UserData>(amici::userDataFromMatlabCall(prhs, nrhs));
         
-        auto model = std::unique_ptr<amici::Model>(getModel(udata.get()));
+        auto model = getModel(udata.get());
     
         auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));
         

@@ -139,7 +139,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
             } catch(...) {
-                rdata->newton_numsteps[newton_try - 1] = amiGetNaN();
+                rdata->newton_numsteps[newton_try - 1] = getNaN();
                 throw NewtonFailure("Newton method failed to compute new step!");
             }
         }

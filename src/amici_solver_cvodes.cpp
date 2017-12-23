@@ -14,8 +14,9 @@
 #include <colamd.h>
 #include <klu.h>
 
-#include <include/amici_model_ode.h>
 #include <include/amici.h>
+#include <include/amici_misc.h>
+#include <include/amici_model_ode.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_exception.h>
 #include <include/udata.h>
@@ -146,14 +147,14 @@ void CVodeSolver::AMISetErrHandlerFn() {
          throw CvodeException(status,"CVodeSetErrHandlerFn");
 }
 
-void CVodeSolver::AMISetUserData(void *user_data) {
-    int status = CVodeSetUserData(ami_mem, user_data);
+void CVodeSolver::AMISetUserData(Model *model) {
+    int status = CVodeSetUserData(ami_mem, model);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSetUserData");
 }
 
-void CVodeSolver::AMISetUserDataB(int which, void *user_data) {
-    int status = CVodeSetUserDataB(ami_mem, which, user_data);
+void CVodeSolver::AMISetUserDataB(int which, Model *model) {
+    int status = CVodeSetUserDataB(ami_mem, which, model);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSetUserDataB");
 }
@@ -260,6 +261,7 @@ int CVodeSolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     } else{
+        solverWasCalled = true;
         return status;
     }
 }
@@ -270,6 +272,7 @@ int CVodeSolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     } else{
+        solverWasCalled = true;
         return status;
     }
 }
@@ -461,12 +464,12 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
            DlsMat J, void *user_data, N_Vector tmp1,
            N_Vector tmp2, N_Vector tmp3) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         SetToZero(J);
-        model->model_J(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        model->fJ(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                        model->w.data(),model->dwdx.data());
-        return checkVals(N,J->data,"Jacobian");
+        return isFinite(N,J->data,"Jacobian");
     }
     
     /** Jacobian of xBdot with respect to adjoint state xB
@@ -485,13 +488,12 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         SetToZero(JB);
-        if(model->model_JB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                     N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(NeqBdot,JB->data,"Jacobian");
+        model->fJB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                   N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
+        return isFinite(NeqBdot,JB->data,"Jacobian");
     }
     
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -511,12 +513,12 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         SparseSetMatToZero(J);
-        model->model_JSparse(J,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                      model->w.data(),model->dwdx.data());
-        return checkVals(J->NNZ,J->data,"Jacobian");
+        model->fJSparse(J,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                        model->w.data(),model->dwdx.data());
+        return isFinite(J->NNZ,J->data,"Jacobian");
     }
     
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -534,13 +536,12 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         SparseSetMatToZero(JB);
-        if(model->model_JSparseB(JB,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                           N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(JB->NNZ,JB->data,"Jacobian");
+        model->fJSparseB(JB,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                         N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
+        return isFinite(JB->NNZ,JB->data,"Jacobian");
     }
     
     /** J in banded form (for banded solvers)
@@ -595,13 +596,12 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
                       void *user_data) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         N_VConst(0.0,JDiag);
-        if(model->model_JDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                        model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
+        model->fJDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                      model->w.data(),model->dwdx.data());
+        return isFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
     
     /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -617,13 +617,12 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
                    void *user_data, N_Vector tmp) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         N_VConst(0.0,Jv);
-        if(model->model_Jv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                     N_VGetArrayPointer(v),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
+        model->fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                   N_VGetArrayPointer(v),model->w.data(),model->dwdx.data());
+        return isFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
     /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -640,13 +639,12 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                     void *user_data, N_Vector tmpB) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         N_VConst(0.0,JvB);
-        if(model->model_JvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                      N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data()) != AMICI_SUCCESS)
-        return AMICI_ERROR;
-        return checkVals(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
+        model->fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                    N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data());
+        return isFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
     /** Event trigger function for events
@@ -658,11 +656,10 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
                      void *user_data) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         memset(root,0.0,sizeof(realtype)*model->ne);
-        if(model->model_root(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data()) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(model->ne,root,"root function");
+        model->froot(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data());
+        return isFinite(model->ne,root,"root function");
     }
     
     /** residual function of the DAE
@@ -673,12 +670,12 @@ void CVodeSolver::turnOffRootFinding() {
      * @return status flag indicating successful execution
      */
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fw(t,x);
         N_VConst(0.0,xdot);
-        model->model_xdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        model->fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                    model->w.data());
-        return checkVals(model->nx,N_VGetArrayPointer(xdot),"residual function");
+        return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     
     /** Right hand side of differential equation for adjoint state xB
@@ -691,12 +688,12 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB,
                       N_Vector xBdot, void *user_data) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdx(t,x);
         N_VConst(0.0,xBdot);
-        model->model_xBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+        model->fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
                     N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
-        return checkVals(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
+        return isFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
     
     /** Right hand side of integral equation for quadrature states qB
@@ -714,15 +711,14 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                       void *user_data) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fdwdp(t,x);
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for(int ip = 0; ip < model->plist.size(); ip++)
-            if(model->model_qBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                               N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data()) != AMICI_SUCCESS)
-                return AMICI_ERROR;
-        return checkVals(model->plist.size()*model->nJ,qBdot_tmp,"adjoint quadrature function");
+            model->fqBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                          N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data());
+        return isFinite(model->plist.size()*model->nJ,qBdot_tmp,"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
@@ -744,19 +740,16 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2) {
-        Model_ODE *model = (Model_ODE*) user_data;
+        Model_ODE *model = static_cast<Model_ODE*>(user_data);
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            if(model->fdxdotdp(t,x) != AMICI_SUCCESS)
-                return AMICI_ERROR;
-            if(fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr) != AMICI_SUCCESS)
-                return AMICI_ERROR;
+            model->fdxdotdp(t,x);
+            fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr);
         }
         N_VConst(0.0,sxdot);
-        if(model->model_sxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                        model->plist[ip],N_VGetArrayPointer(sx),
-                        model->w.data(),model->dwdx.data(),model->J->data,&model->dxdotdp.at(ip*model->nx)) != AMICI_SUCCESS)
-            return AMICI_ERROR;
-        return checkVals(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
+        model->fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
+                      model->plist[ip],N_VGetArrayPointer(sx),
+                      model->w.data(),model->dwdx.data(),model->J->data,&model->dxdotdp.at(ip*model->nx));
+        return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 
 CVodeSolver::~CVodeSolver() { AMIFree(); }

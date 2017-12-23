@@ -69,9 +69,9 @@ class ForwardProblem {
     AmiVectorArray xdot_old_disc;
     
     /** state derivative of data likelihood */
-    std::vector<double> dJydx;
+    std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
-    std::vector<double> dJzdx;
+    std::vector<realtype> dJzdx;
     
     
   private:
@@ -99,14 +99,14 @@ class ForwardProblem {
     void applyEventSensiBolusFSA();
     
     /** data likelihood */
-    std::vector<double> Jy;
+    std::vector<realtype> Jy;
     /** event likelihood */
-    std::vector<double> Jz;
+    std::vector<realtype> Jz;
 
     /** parameter derivative of data likelihood */
-    std::vector<double> dJydp;
+    std::vector<realtype> dJydp;
     /** parameter derivative of event likelihood */
-    std::vector<double> dJzdp;
+    std::vector<realtype> dJzdp;
     
     /** current time */
     realtype t;

@@ -14,12 +14,8 @@ function this = gccode(this,model,fid)
         
         % replace unknown partial derivatives
         if(model.maxflag)
-            this.sym = subs(this.sym,sym('D([1], am_max)'),sym('D1am_max'));
-            this.sym = subs(this.sym,sym('D([2], am_max)'),sym('D2am_max'));
-        end
-        if(model.minflag)
-            this.sym = subs(this.sym,sym('D([1], am_min)'),sym('D1am_min'));
-            this.sym = subs(this.sym,sym('D([2], am_min)'),sym('D2am_min'));
+            this.sym = subs(this.sym,sym('D([1], max)'),sym('D1max'));
+            this.sym = subs(this.sym,sym('D([2], max)'),sym('D2max'));
         end
         
         % If we have spline, we need to parse them to get derivatives
@@ -29,7 +25,7 @@ function this = gccode(this,model,fid)
                 tokens = regexp(symstr, 't\,\s(\w+\.\w+)\,', 'tokens');
                 nNodes = round(str2double(tokens{1}));
             end
-            if (regexp(symstr, 'D\(\[(\w+|\w+\,\w+)\]\,.am_spline'))
+            if (regexp(symstr, 'D\(\[(\w+|\w+\,\w+)\]\,.spline'))
                 isDSpline = true;
             else
                 isDSpline = false;
@@ -41,12 +37,12 @@ function this = gccode(this,model,fid)
                     for iNode = 1 : nNodes
                         if (model.o2flag)
                             for jNode = 1:nNodes
-                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline_pos']));
-                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'am_spline']));
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], spline_pos)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'spline_pos']));
+                                this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) ', ' num2str(jNode*2+2) '], spline)']),sym(['D' num2str(iNode*2+2) 'D' num2str(jNode*2+2) 'spline']));
                             end
                         end
-                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline_pos)']),sym(['D' num2str(iNode*2+2) 'am_spline_pos']));
-                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], am_spline)']),sym(['D' num2str(iNode*2+2) 'am_spline']));
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], spline_pos)']),sym(['D' num2str(iNode*2+2) 'spline_pos']));
+                        this.sym(:,iCol) = subs(this.sym(:,iCol),sym(['D([' num2str(iNode*2+2) '], spline)']),sym(['D' num2str(iNode*2+2) 'spline']));
                     end
                 end
             end
@@ -64,18 +60,18 @@ function this = gccode(this,model,fid)
             cstr = strrep(cstr,'t0',[this.cvar '_0']);
         end
         
-        cstr = strrep(cstr,'log','amici::amilog');
+        cstr = strrep(cstr,'log','amici::log');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
         cstr = regexprep(regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,'),'DD([0-9]*)([\w]*)\(','DD$2\($1,');
-        cstr = strrep(strrep(cstr, 'DDam_spline', 'am_DDspline'), 'Dam_spline', 'am_Dspline');
+        cstr = strrep(strrep(cstr, 'DDspline', 'DDspline'), 'Dspline', 'Dspline');
         
         if (model.splineflag)
             if (strfind(symstr, 'spline'))
                 % The floating numbers after 't' must be converted to integers
-                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\(t\,\w+\.\w+\,', ['amici::$1\(t\,', num2str(nNodes), '\,']);
-                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\((\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,t\,', num2str(nNodes), '\,']);
-                cstr = regexprep(cstr, '(am_[D]*(spline|spline_pos))\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '([D]*(spline|spline_pos))\(t\,\w+\.\w+\,', ['amici::$1\(t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '([D]*(spline|spline_pos))\((\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,t\,', num2str(nNodes), '\,']);
+                cstr = regexprep(cstr, '([D]*(spline|spline_pos))\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
             end
         end
         

@@ -3,7 +3,7 @@
 
 #include "include/amici_solver.h"
 #include "include/amici_model_dae.h"
-#include <cvodes/cvodes_dense.h>
+#include <idas/idas_dense.h>
 #include <sundials/sundials_sparse.h>
 
 namespace amici {
@@ -27,9 +27,9 @@ class IDASolver : public Solver {
 
     void AMISetErrHandlerFn() override;
 
-    void AMISetUserData(void *user_data) override;
+    void AMISetUserData(Model *model) override;
 
-    void AMISetUserDataB(int which, void *user_data) override;
+    void AMISetUserDataB(int which, Model *model) override;
 
     void AMISetMaxNumSteps(long int mxsteps) override;
 

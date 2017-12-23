@@ -44,7 +44,7 @@ class BackwardProblem {
     /** current time */
     realtype t;
     /** parameter derivative of likelihood array */
-    std::vector<double> llhS0;
+    std::vector<realtype> llhS0;
     /** adjoint state vector */
     AmiVector xB;
     /** old adjoint state vector */
@@ -78,10 +78,9 @@ class BackwardProblem {
     const std::vector<int> rootidx;
     
     /** state derivative of data likelihood */
-    const std::vector<double> dJydx;
+    const std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
-    const std::vector<double> dJzdx;
-
+    const std::vector<realtype> dJzdx;
     /**
      * @brief Solver addition.
      * @relates Solver
