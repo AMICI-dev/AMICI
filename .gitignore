@@ -11,8 +11,6 @@ CMakeFiles/*
 
 build/*
 
-build_xcode/*
-
 build-debug/*
 
 build_xcode/*
