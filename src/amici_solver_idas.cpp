@@ -423,7 +423,7 @@ void IDASolver::turnOffRootFinding() {
                   N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
                   N_Vector tmp2, N_Vector tmp3) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
-        fJ(t,cj, x, dx, xdot, J);
+        model->fJ(t,cj, x, dx, xdot, J);
         return isFinite(N,J->data,"Jacobian");
     }
     
@@ -599,6 +599,7 @@ void IDASolver::turnOffRootFinding() {
      */
     int IDASolver::froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                      void *user_data) {
+        Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->froot(t,x,dx,root);
         return isFinite(model->ne,root,"root function");
     }
@@ -614,7 +615,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
-        model->fxdot(t,x->getNVector(),dx->getNVector(),xdot->getNVector());
+        model->fxdot(t,x,dx,xdot);
         return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     

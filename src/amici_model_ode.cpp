@@ -46,7 +46,7 @@ namespace amici {
     
     void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                         AmiVector *v, AmiVector *Jv, realtype cj){
-        fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector(),xdot->getNVector());
+        fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector());
     }
     
     /** implementation of fJv at the N_Vector level, this function provides an interface
@@ -56,7 +56,7 @@ namespace amici {
      * @param x Vector with the states
      * @param v Vector with which the Jacobian is multiplied
      * @param Jv Vector to which the Jacobian vector product will be
-     *written
+     * written
      **/
     void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
         fdwdx(t,x);
@@ -109,7 +109,7 @@ namespace amici {
      **/
     void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
-        fJDiag(t, JDiag, x)
+        fJDiag(t, JDiag->getNVector(), x->getNVector());
         if(!isFinite(nx,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
     }

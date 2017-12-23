@@ -78,7 +78,7 @@ namespace amici {
         virtual void fJ(realtype *J, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                              const realtype *w, const realtype *dwdx) = 0;
         
-        void Model_ODE::fJB( realtype t, N_Vector x, N_Vector xB,
+        void fJB( realtype t, N_Vector x, N_Vector xB,
                             N_Vector xBdot, DlsMat JB);
         
         /** model specific implementation for fJB
@@ -115,7 +115,7 @@ namespace amici {
         virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                   const realtype *w, const realtype *dwdx) = 0;
         
-        void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB);
+        void fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB);
         
         /** model specific implementation for fJSparseB
          * @param JSparseB Matrix to which the Jacobian will be written
@@ -133,7 +133,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
         
-        void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x);
+        void fJDiag(realtype t, N_Vector JDiag, N_Vector x);
         
         /** model specific implementation for fJDiag
          * @param JDiag Matrix to which the Jacobian will be written
@@ -156,7 +156,7 @@ namespace amici {
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) override;
         
-        void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x)
+        void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x);
         
         /** model specific implementation for fJv
          * @param Jv Matrix vector product of J with a vector v
@@ -174,7 +174,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
         
-        void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB);
+        void fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB);
         
         /** model specific implementation for fJvB
          * @param JvB Matrix vector product of JB with a vector v
@@ -195,7 +195,7 @@ namespace amici {
         
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         
-        void Model_ODE::froot(realtype t, N_Vector x, realtype *root);
+        void froot(realtype t, N_Vector x, realtype *root);
         
         /** model specific implementation for froot
          * @param root values of the trigger function
@@ -211,7 +211,7 @@ namespace amici {
         
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
         
-        void fxdot(realtype t, N_Vector x, N_Vector xdot)
+        void fxdot(realtype t, N_Vector x, N_Vector xdot);
         
         /** model specific implementation for fxdot
          * @param xdot residual function
@@ -225,7 +225,7 @@ namespace amici {
         virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                                 const realtype *w) = 0;
         
-        void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
+        void fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
         
         /** model specific implementation for fxBdot
          * @param xBdot adjoint residual function
@@ -244,7 +244,7 @@ namespace amici {
             
         }
         
-        void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
+        void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
         
         /** model specific implementation for fqBdot
          * @param qBdot adjoint quadrature equation
@@ -286,8 +286,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
         
-        void Model_ODE::fsxdot(realtype t, N_Vector x, int ip,
-                               N_Vector sx, N_Vector sxdot)
+        void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
         
         /** model specific implementation of fsxdot
          * @param sxdot sensitivity rhs

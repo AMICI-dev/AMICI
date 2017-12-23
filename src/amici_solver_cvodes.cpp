@@ -644,7 +644,7 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fxdot(t,x->getNVector(),xdot->getNVector());
+        model->fxdot(t, x, xdot);
         return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     
@@ -675,7 +675,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fqBdot(t, x, xB, qBdot);
-        return isFinite(model->plist.size()*model->nJ,qBdot_tmp,"adjoint quadrature function");
+        return isFinite(model->plist.size()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx

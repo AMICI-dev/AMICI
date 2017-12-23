@@ -46,7 +46,7 @@ namespace amici {
     
     void Model_DAE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                         AmiVector *v, AmiVector *Jv, realtype cj){
-        fJv(t,x->getNVector(),dx->getNVector(),xdot->getNVector(),v->getNVector(),
+        fJv(t,x->getNVector(),dx->getNVector(),v->getNVector(),
                     Jv->getNVector(),cj);
     }
     
@@ -245,17 +245,16 @@ namespace amici {
      * @param sdx Vector with the derivative state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip
+    void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip,
                           N_Vector sx, N_Vector sdx, N_Vector sxdot) {
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
             fM(t,x);
             fdxdotdp(t,x,dx);
-            fJSparse(t,0.0,x,dx,J,model);// also calls dwdx & dx
+            fJSparse(t,0.0,x,dx,J);// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
         fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
                plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
                w.data(),dwdx.data(),J->data,M.data(),&dxdotdp.at(ip*nx));
-        }
     }
 }
