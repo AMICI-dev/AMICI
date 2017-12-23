@@ -54,12 +54,11 @@ namespace amici {
      * level implementation
      * @param t timepoint
      * @param x Vector with the states
-     * @param xdot Vector with the right hand side
      * @param v Vector with which the Jacobian is multiplied
      * @param Jv Vector to which the Jacobian vector product will be
      *written
      **/
-    void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot) {
+    void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
         fdwdx(t,x);
         N_VConst(0.0,Jv);
         fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
@@ -186,7 +185,7 @@ namespace amici {
      * @param JvB Vector to which the Jacobian vector product will be
      *written
      **/
-    void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
+    void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB) {
         fdwdx(t,x);
         N_VConst(0.0,JvB);
         fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
@@ -228,12 +227,11 @@ namespace amici {
      * @param Ns number of parameters
      * @param t timepoint
      * @param x Vector with the states
-     * @param xdot Vector with the right hand side
      * @param ip parameter index
      * @param sx Vector with the state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void Model_ODE::fsxdot(realtype t, N_Vector x, N_Vector xdot, int ip,
+    void Model_ODE::fsxdot(realtype t, N_Vector x, int ip,
                             N_Vector sx, N_Vector sxdot) {
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
             fdxdotdp(t, x);

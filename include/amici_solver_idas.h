@@ -216,8 +216,6 @@ class IDASolver : public Solver {
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    friend class Model_DAE;
 };
 
 } // namespace amici

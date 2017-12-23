@@ -598,7 +598,7 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
                    void *user_data, N_Vector tmp) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fJv(v,Jv,t,x,xdot);
+        model->fJv(v,Jv,t,x);
         return isFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
@@ -617,7 +617,7 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                     void *user_data, N_Vector tmpB) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fJvB(vB, JvB, t, x, xB, xBdot);
+        model->fJvB(vB, JvB, t, x, xB);
         return isFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
@@ -696,7 +696,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fsxdot(t, x, xdot, ip, sx, sxdot);
+        model->fsxdot(t, x, ip, sx, sxdot);
         return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 

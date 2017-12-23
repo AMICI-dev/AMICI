@@ -156,7 +156,7 @@ namespace amici {
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) override;
         
-        void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot)
+        void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x)
         
         /** model specific implementation for fJv
          * @param Jv Matrix vector product of J with a vector v
@@ -174,7 +174,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
         
-        void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
+        void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB);
         
         /** model specific implementation for fJvB
          * @param JvB Matrix vector product of JB with a vector v
@@ -286,7 +286,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
         
-        void Model_ODE::fsxdot(realtype t, N_Vector x, N_Vector xdot, int ip,
+        void Model_ODE::fsxdot(realtype t, N_Vector x, int ip,
                                N_Vector sx, N_Vector sxdot)
         
         /** model specific implementation of fsxdot

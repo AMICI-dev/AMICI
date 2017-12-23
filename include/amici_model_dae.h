@@ -332,12 +332,6 @@ namespace amici {
                              const realtype *k) {};
         
         virtual std::unique_ptr<Solver> getSolver() override;
-        
-        /**
-         * @brief IDASolver addition.
-         * @relates IDASolver
-         */
-        friend class IDASolver;
     };
 } // namespace amici
 

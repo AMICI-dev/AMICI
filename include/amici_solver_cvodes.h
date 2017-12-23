@@ -221,8 +221,6 @@ class CVodeSolver : public Solver {
     static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2);
-
-    friend class Model_ODE;
 };
 
 } // namespace amici
