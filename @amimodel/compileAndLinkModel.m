@@ -144,7 +144,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
 
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS="-lrt -lmwblas"';
+            CLIBS = 'CLIBS="-lrt -lmwblas -ldl"';
         else
             CLIBS = 'CLIBS="-lmwblas"';
         end
