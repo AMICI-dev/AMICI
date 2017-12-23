@@ -455,7 +455,7 @@ void CVodeSolver::turnOffRootFinding() {
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1 temporary storage vector
      * @param tmp2 temporary storage vector
      * @param tmp3 temporary storage vector
@@ -465,10 +465,7 @@ void CVodeSolver::turnOffRootFinding() {
            DlsMat J, void *user_data, N_Vector tmp1,
            N_Vector tmp2, N_Vector tmp3) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        SetToZero(J);
-        model->fJ(J->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                       model->w.data(),model->dwdx.data());
+        model->fJ(t, x, xdot, J);
         return isFinite(N,J->data,"Jacobian");
     }
     
@@ -479,7 +476,7 @@ void CVodeSolver::turnOffRootFinding() {
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1B temporary storage vector
      * @param tmp2B temporary storage vector
      * @param tmp3B temporary storage vector
@@ -489,22 +486,16 @@ void CVodeSolver::turnOffRootFinding() {
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        SetToZero(JB);
-        model->fJB(JB->data,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                   N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
+        model->fJB(t, x, xB, xBdot, JB);
         return isFinite(NeqBdot,JB->data,"Jacobian");
     }
     
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param t timepoint
-     * @param cj scalar in Jacobian (inverse stepsize)
      * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     *N_Vector
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1 temporary storage vector
      * @param tmp2 temporary storage vector
      * @param tmp3 temporary storage vector
@@ -514,10 +505,7 @@ void CVodeSolver::turnOffRootFinding() {
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        SparseSetMatToZero(J);
-        model->fJSparse(J,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                        model->w.data(),model->dwdx.data());
+        model->fJSparse(t, x, J);
         return isFinite(J->NNZ,J->data,"Jacobian");
     }
     
@@ -527,7 +515,7 @@ void CVodeSolver::turnOffRootFinding() {
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1B temporary storage vector
      * @param tmp2B temporary storage vector
      * @param tmp3B temporary storage vector
@@ -537,10 +525,7 @@ void CVodeSolver::turnOffRootFinding() {
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        SparseSetMatToZero(JB);
-        model->fJSparseB(JB,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                         N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
+        model->fJSparseB(t, x, xB, xBdot, JB);
         return isFinite(JB->NNZ,JB->data,"Jacobian");
     }
     
@@ -552,7 +537,7 @@ void CVodeSolver::turnOffRootFinding() {
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1 temporary storage vector
      * @param tmp2 temporary storage vector
      * @param tmp3 temporary storage vector
@@ -573,7 +558,7 @@ void CVodeSolver::turnOffRootFinding() {
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1B temporary storage vector
      * @param tmp2B temporary storage vector
      * @param tmp3B temporary storage vector
@@ -589,39 +574,31 @@ void CVodeSolver::turnOffRootFinding() {
     /** diagonalized Jacobian (for preconditioning)
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
-     * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      **/
     int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        N_VConst(0.0,JDiag);
-        model->fJDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                      model->w.data(),model->dwdx.data());
+        model->fJDiag(t, JDiag, x);
         return isFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
     
     /** Matrix vector product of J with a vector v (for iterative solvers)
-     * @param t timepoint @type realtype
+     * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
      * @param v Vector with which the Jacobian is multiplied
      * @param Jv Vector to which the Jacobian vector product will be
      *written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp temporary storage vector
      * @return status flag indicating successful execution
      **/
     int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
                    void *user_data, N_Vector tmp) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        N_VConst(0.0,Jv);
-        model->fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                   N_VGetArrayPointer(v),model->w.data(),model->dwdx.data());
+        model->fJv(v,Jv,t,x,xdot);
         return isFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
@@ -633,17 +610,14 @@ void CVodeSolver::turnOffRootFinding() {
      * @param vB Vector with which the Jacobian is multiplied
      * @param JvB Vector to which the Jacobian vector product will be
      *written
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmpB temporary storage vector
      * @return status flag indicating successful execution
      **/
     int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                     void *user_data, N_Vector tmpB) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        N_VConst(0.0,JvB);
-        model->fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                    N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),model->w.data(),model->dwdx.data());
+        model->fJvB(vB, JvB, t, x, xB, xBdot);
         return isFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
@@ -651,30 +625,26 @@ void CVodeSolver::turnOffRootFinding() {
      * @param t timepoint
      * @param x Vector with the states
      * @param root array with root function values
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @return status flag indicating successful execution
      */
     int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
                      void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        memset(root,0.0,sizeof(realtype)*model->ne);
-        model->froot(root,t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data());
+        model->froot(t, x, root);
         return isFinite(model->ne,root,"root function");
     }
     
-    /** residual function of the DAE
+    /** residual function of the ODE
      * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @return status flag indicating successful execution
      */
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fw(t,x);
-        N_VConst(0.0,xdot);
-        model->fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                   model->w.data());
+        model->fxdot(t,x->getNVector(),xdot->getNVector());
         return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     
@@ -683,41 +653,28 @@ void CVodeSolver::turnOffRootFinding() {
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @return status flag indicating successful execution
      */
     int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB,
                       N_Vector xBdot, void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdx(t,x);
-        N_VConst(0.0,xBdot);
-        model->fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                    N_VGetArrayPointer(xB),model->w.data(),model->dwdx.data());
+        model->fxBdot(t, x, xB, xBdot);
         return isFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
     
     /** Right hand side of integral equation for quadrature states qB
-     * @param t timepoint @type realtype
-     * @param x Vector with the states @type N_Vector
-     * @param dx Vector with the derivative states (only DAE) @type
-     *N_Vector
-     * @param xB Vector with the adjoint states @type N_Vector
-     * @param dxB Vector with the adjoint derivative states (only DAE)
-     * @type N_Vector
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param xB Vector with the adjoint states
      * @param qBdot Vector with the adjoint quadrature right hand side
-     * @type N_Vector
-     * @param user_data pointer to temp data object @type TempDat
-     * @return status flag indicating successful execution @type int
+     * @param user_data pointer to temp data object
+     * @return status flag indicating successful execution
      */
     int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        model->fdwdp(t,x);
-        N_VConst(0.0,qBdot);
-        realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 0; ip < model->plist.size(); ip++)
-            model->fqBdot(&qBdot_tmp[ip*model->nJ],model->plist[ip],t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                          N_VGetArrayPointer(xB),model->w.data(),model->dwdp.data());
+        model->fqBdot(t, x, xB, qBdot);
         return isFinite(model->plist.size()*model->nJ,qBdot_tmp,"adjoint quadrature function");
     }
     
@@ -725,13 +682,11 @@ void CVodeSolver::turnOffRootFinding() {
      * @param Ns number of parameters
      * @param t timepoint
      * @param x Vector with the states
-     * @param dx Vector with the derivative states
      * @param xdot Vector with the right hand side
      * @param ip parameter index
      * @param sx Vector with the state sensitivities
-     * @param sdx Vector with the derivative state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
-     * @param user_data object with user input @type UserData
+     * @param user_data object with user input @type Model_ODE
      * @param tmp1 temporary storage vector
      * @param tmp2 temporary storage vector
      * @param tmp3 temporary storage vector
@@ -741,14 +696,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
-        if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            model->fdxdotdp(t,x);
-            fJSparse(t,x,nullptr,model->J,model,tmp1,tmp2,nullptr);
-        }
-        N_VConst(0.0,sxdot);
-        model->fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),model->p.data(),model->k.data(),model->h.data(),
-                      model->plist[ip],N_VGetArrayPointer(sx),
-                      model->w.data(),model->dwdx.data(),model->J->data,&model->dxdotdp.at(ip*model->nx));
+        model->fsxdot(t, x, xdot, ip, sx, sxdot);
         return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 
