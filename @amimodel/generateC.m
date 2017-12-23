@@ -18,12 +18,12 @@ end
 
 for ifun = this.funs
     if(isfield(this.fun,ifun{1}))
-        bodyNotEmpty = any(this.fun.(ifun{1}).sym~=0);
+        bodyNotEmpty = any(this.fun.(ifun{1}).sym(:)~=0);
         if(strcmp(ifun{1},'JSparse'))
-            bodyNotEmpty = any(this.fun.J.sym~=0);
+            bodyNotEmpty = any(this.fun.J.sym(:)~=0);
         end
         if(strcmp(ifun{1},'JSparseB'))
-            bodyNotEmpty = any(this.fun.JB.sym~=0);
+            bodyNotEmpty = any(this.fun.JB.sym(:)~=0);
         end
         
         if(bodyNotEmpty)
@@ -253,5 +253,5 @@ end
 function nonempty = checkIfFunctionBodyIsNonEmpty(this,ifun)
     % if we don't have symbolic variables, it might have been generated before and symbolic expressions were simply not
     % regenerated. any() for empty (no generated) variables is always false.
-    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun '.cpp']),'file'),any(this.fun.(ifun).sym~=0));
+    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun '.cpp']),'file'),any(this.fun.(ifun).sym(:)~=0));
 end
