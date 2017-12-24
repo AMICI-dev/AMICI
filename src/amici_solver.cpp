@@ -171,7 +171,11 @@ void Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     qbinit(tdata->which, tdata->xQB);
 
     /* Enable Quadrature Error Control */
-    AMISetQuadErrConB(tdata->which, TRUE);
+    if (std::isinf(udata->quad_atol)) {
+        AMISetQuadErrConB(tdata->which, FALSE);
+    } else {
+        AMISetQuadErrConB(tdata->which, TRUE);
+    }
 
     AMIQuadSStolerancesB(tdata->which, RCONST(udata->quad_rtol),
                                   RCONST(udata->quad_atol));
