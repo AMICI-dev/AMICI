@@ -333,6 +333,16 @@ fprintf(fid,'    end\n');
 fprintf(fid,'    init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor(:),[2,1]));\n');
 fprintf(fid,'end\n');
 
+fprintf(fid,'if(isempty(options_ami.quad_atol))\n');
+fprintf(fid,'    options_ami.quad_atol = options_ami.atol;\n');
+fprintf(fid,'end\n');
+fprintf(fid,'if(isempty(options_ami.quad_rtol))\n');
+fprintf(fid,'    options_ami.quad_rtol = options_ami.rtol;\n');
+fprintf(fid,'end\n');
+fprintf(fid,'if(isempty(options_ami.maxstepsB))\n');
+fprintf(fid,'    options_ami.maxstepsB = 100*options_ami.maxsteps;\n');
+fprintf(fid,'end\n');
+
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
     fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
