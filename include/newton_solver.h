@@ -157,8 +157,6 @@ class NewtonSolverIterative : public NewtonSolver {
     /** ???  */
     N_Vector ns_r = nullptr;
     /** ???  */
-    N_Vector ns_r_rel = nullptr;
-    /** ???  */
     N_Vector ns_rt = nullptr;
     /** ???  */
     N_Vector ns_v = nullptr;

@@ -347,7 +347,6 @@ NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata,
         ns_t = N_VNew_Serial(model->nx);
         ns_s = N_VNew_Serial(model->nx);
         ns_r = N_VNew_Serial(model->nx);
-        ns_r_rel = N_VNew_Serial(model->nx);
         ns_rt = N_VNew_Serial(model->nx);
         ns_v = N_VNew_Serial(model->nx);
         ns_Jv = N_VNew_Serial(model->nx);
@@ -412,7 +411,6 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
     double beta;
     double omega;
     double res;
-    bool converged;
     
     // Get the diagonal of the Jacobian for preconditioning
     model->fJDiag(tdata->t, ns_Jdiag, 0.0, tdata->x, tdata->dx, tdata);
@@ -479,23 +477,10 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
         
         // Compute the (unscaled) residual
         N_VProd(ns_r, ns_Jdiag, ns_r);
-        // Compute the relative residual and check for convergence
-        N_VAbs(tdata->xdot, ns_r_rel);
-        realtype *res_abs_tmp = N_VGetArrayPointer(ns_r);
-        realtype *res_rel_tmp = N_VGetArrayPointer(ns_r_rel);
-        converged = true;
-        for (int ix = 0; ix < model->nx; ix++) {
-            if (res_rel_tmp[ix] < udata->atol)
-                res_rel_tmp[ix] = udata->atol;
-            
-            res_rel_tmp[ix] = res_abs_tmp[ix] / res_rel_tmp[ix];
-            if (res_abs_tmp[ix] > udata->atol && res_rel_tmp[ix] > udata->rtol) {
-                converged = false;
-                break;
-            }
-        }
+        res = sqrt(N_VDotProd(ns_r, ns_r));
+        
         // Test convergence
-        if (converged) {
+        if (res < udata->atol) {
             // Write number of steps needed
             rdata->newton_numlinsteps[(ntry - 1) * udata->newton_maxsteps +
                                       nnewt] = i_linstep + 1;
@@ -520,7 +505,6 @@ NewtonSolverIterative::~NewtonSolverIterative(){
     N_VDestroy_Serial(ns_t);
     N_VDestroy_Serial(ns_s);
     N_VDestroy_Serial(ns_r);
-    N_VDestroy_Serial(ns_r_rel);
     N_VDestroy_Serial(ns_rt);
     N_VDestroy_Serial(ns_v);
     N_VDestroy_Serial(ns_Jv);
