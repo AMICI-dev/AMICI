@@ -10,8 +10,7 @@
 #include <cmath>
 #include <unistd.h>
 
-
-extern amici::Model *getModel(const amici::UserData *udata);
+extern std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
 
 namespace amici {
 
@@ -43,7 +42,7 @@ void simulateAndVerifyFromFile(const std::string hdffile, std::string path, doub
     std::string optionsPath = path + "/options";
     auto udata = std::unique_ptr<const UserData>(AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str()));
 
-    auto model = std::unique_ptr<Model>(getModel(udata.get()));
+    auto model = getModel(udata.get());
     
     std::string measurementPath = path + "/data";
     auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));

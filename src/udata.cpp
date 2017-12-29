@@ -17,6 +17,7 @@ UserData::UserData(const int np, const int nk, const int nx) : sizex(nx) {
 UserData::UserData() : sizex(0) {
     konst.resize(0);
     par.resize(0);
+    unpar.resize(0);
     qpositivex.assign(0,1);
 }
 

@@ -49,11 +49,10 @@ TEST(groupDirac, testCreateAndFreeUserData) {
 TEST(groupDirac, testCreateAndFreeExpData) {
     amici::UserData *udata = getTestUserData();
     
-    amici:: Model *model = getModel(udata);
+    auto model = getModel(udata);
 
-    amici::ExpData *edata = getTestExpData(udata, model);
+    amici::ExpData *edata = getTestExpData(udata, model.get());
     
-    delete model;
     delete edata;
     delete udata;
 }
@@ -64,9 +63,8 @@ TEST(groupDirac, testCreateAndFreeExpData) {
 
 TEST(groupDirac, testCreateAndFreeReturnData) {
     amici::UserData *udata = getTestUserData();
-    amici::Model *model = getModel(udata);
-    amici::ReturnData *rdata = new amici::ReturnData(udata, model);
-    delete model;
+    auto model = getModel(udata);
+    amici::ReturnData *rdata = new amici::ReturnData(udata, model.get());
     delete udata;
     delete rdata;
 }

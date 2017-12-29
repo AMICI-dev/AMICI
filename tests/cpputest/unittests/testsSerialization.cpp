@@ -62,11 +62,10 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.z, s.z, r.nmaxevent * r.nz, 1e-16, 1e-16, "z");
     checkEqualArray(r.sigmaz, s.sigmaz, r.nmaxevent * r.nz, 1e-16, 1e-16, "sigmaz");
     checkEqualArray(r.sz, s.sz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "sz");
-    checkEqualArray(r.ssigmaz, s.sigmaz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "ssigmaz");
+    checkEqualArray(r.ssigmaz, s.ssigmaz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "ssigmaz");
     checkEqualArray(r.rz, s.rz, r.nmaxevent * r.nz, 1e-16, 1e-16, "rz");
     checkEqualArray(r.srz, s.srz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "srz");
     checkEqualArray(r.s2rz, s.s2rz, r.nmaxevent * r.nz * r.nplist * r.nplist, 1e-16, 1e-16, "s2rz");
-    checkEqualArray(r.ssigmaz, s.sigmaz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "ssigmaz");
     checkEqualArray(r.x, s.x, r.nt * r.nx, 1e-16, 1e-16, "x");
     checkEqualArray(r.sx, s.sx, r.nt * r.nx * r.nplist, 1e-16, 1e-16, "sx");
 
@@ -164,10 +163,14 @@ TEST_GROUP(returnDataSerialization){void setup(){}
                           void teardown(){}};
 
 TEST(returnDataSerialization, testString) {
-    amici::UserData u(1, 2, 3);
-    amici::Model_Test m(1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
-                   std::vector<realtype>(1,0.0),std::vector<realtype>(2,0.0),std::vector<int>(3,0),
-                   std::vector<realtype>(4,0.0),std::vector<int>(5,0));
+    int np = 1;
+    int nk = 2;
+    int nx = 3;
+    int nz = 4;
+    amici::UserData u(np, nx, nk);
+    amici::Model_Test m( nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+                   std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
+                   std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
 
     amici::ReturnData r(&u, &m);
 

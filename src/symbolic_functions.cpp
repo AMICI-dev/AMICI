@@ -100,7 +100,7 @@ double heaviside(double x) {
  *  c implementation of matlab function sign
  *
  * @param x argument
- * @return 0 @type double
+ * @return 0
  *
  */
 double sign(double x) {
@@ -118,10 +118,10 @@ double sign(double x) {
 /**
  * c implementation of matlab function max
  *
- * @param a value1 @type double
- * @param b value2 @type double
- * @param c bogus parameter to ensure correct parsing as a function @type double
- * @return if(a > b) then a else b @type double
+ * @param a value1
+ * @param b value2
+ * @param c bogus parameter to ensure correct parsing as a function
+ * @return if(a > b) then a else b
  *
  */
 double max(double a, double b, double c) {
@@ -135,16 +135,29 @@ double max(double a, double b, double c) {
     }
     return (std::max(a, b));
 }
+    
+/**
+ * c implementation of matlab function min
+ *
+ * @param a value1
+ * @param b value2
+ * @param c bogus parameter to ensure correct parsing as a function
+ * @return if(a < b) then a else b
+ *
+ */
+double min(double a, double b, double c) {
+    return (-max(-a,-b,c));
+}
 
 /**
  * parameter derivative of c implementation of matlab function max
  *
  * @param id argument index for differentiation
- * @param a value1 @type double
- * @param b value2 @type double
- * @param c bogus parameter to ensure correct parsing as a function @type double
- * @return id == 1:  if(a > b) then 1 else 0 @type double
- * @return id == 2:  if(a > b) then 0 else 1 @type double
+ * @param a value1
+ * @param b value2
+ * @param c bogus parameter to ensure correct parsing as a function
+ * @return id == 1:  if(a > b) then 1 else 0
+ * @return id == 2:  if(a > b) then 0 else 1
  *
  */
 double Dmax(int id, double a, double b, double c) {
@@ -161,6 +174,21 @@ double Dmax(int id, double a, double b, double c) {
             return (1);
         }
     }
+}
+    
+/**
+ * parameter derivative of c implementation of matlab function max
+ *
+ * @param id argument index for differentiation
+ * @param a value1
+ * @param b value2
+ * @param c bogus parameter to ensure correct parsing as a function
+ * @return id == 1:  if(a > b) then 1 else 0
+ * @return id == 2:  if(a > b) then 0 else 1
+ *
+ */
+double Dmin(int id, double a, double b, double c) {
+    return(Dmax(id,-a,-b,c));
 }
 
 /**
