@@ -22,7 +22,7 @@ namespace amici {
  * @param model pointer to the model object
  */
 void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) {
-    model->initialize(&(fwd->x), &(fwd->dx), udata);
+    model->initialize(fwd->getxptr(), fwd->getdxptr(), udata);
 
     /* Create solver memory object */
     if (udata->lmm != ADAMS && udata->lmm != BDF) {
@@ -36,7 +36,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
         throw AmiException("Failed to allocated solver memory!");
     try {
     /* Initialize AMIS solver*/
-    init(&(fwd->x), &(fwd->dx), udata->tstart);
+    init(fwd->getxptr(), fwd->getdxptr(), udata->tstart);
     /* Specify integration tolerances */
     AMISStolerances(RCONST(udata->rtol), RCONST(udata->atol));
     /* Set optional inputs */
@@ -58,11 +58,12 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
             /* initialise sensitivities, this can either be user provided or
              * come from the model definition */
             if (udata->sx0data.empty()) {
-                model->fsx0(&(fwd->sx), &(fwd->x), udata);
+                model->fsx0(fwd->getsxptr(), fwd->getxptr(), udata);
             } else {
+                AmiVectorArray *sx = fwd->getsxptr();
                 for (int ip = 0; ip < udata->nplist(); ip++) {
                     for (int ix = 0; ix < model->nx; ix++) {
-                        fwd->sx.at(ix,ip) =
+                        sx->at(ix,ip) =
                             (realtype)udata->sx0data[ix + model->nx * ip];
                     }
                 }
@@ -73,7 +74,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
             if (udata->sensi_meth == AMICI_SENSI_FSA) {
                 
                 /* Activate sensitivity calculations */
-                sensInit1(&(fwd->sx), &(fwd->sdx), udata);
+                sensInit1(fwd->getsxptr(), fwd->getsdxptr(), udata);
                 /* Set sensitivity analysis optional inputs */
                 std::vector<int> plist(udata->plist());
                 std::vector<double> par;
@@ -98,7 +99,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     AMISetSuppressAlg(TRUE);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if(udata->nt()>1)
-        AMICalcIC(udata->ts[1], &(fwd->x), &(fwd->dx));
+        AMICalcIC(udata->ts[1], fwd->getxptr(), fwd->getdxptr());
     } catch (...) {
         AMIFree();
         throw AmiException("setupAMI routine failed!");

@@ -29,7 +29,6 @@ class ForwardProblem {
         DestroyMat(Jtmp);
     };
     
-    
     void workForwardProblem();
     
     /** pointer to model instance */
@@ -42,6 +41,135 @@ class ForwardProblem {
     const UserData *udata;
     /** pointer to experimental data instance */
     const ExpData *edata;
+    
+    /** accessor for t
+     * @return t
+     */
+    realtype gett() const {
+        return t;
+    }
+    
+    /** accessor for sx
+     * @return sx
+     */
+    AmiVectorArray getsx() const {
+        return sx;
+    }
+    
+    /** accessor for x_disc
+     * @return x_disc
+     */
+    AmiVectorArray getx_disc() const {
+        return x_disc;
+    }
+    
+    /** accessor for xdot_disc
+     * @return xdot_disc
+     */
+    AmiVectorArray getxdot_disc() const {
+        return xdot_disc;
+    }
+    
+    /** accessor for xdot_old_disc
+     * @return xdot_old_disc
+     */
+    AmiVectorArray getxdot_old_disc() const {
+        return xdot_old_disc;
+    }
+    
+    /** accessor for nroots
+     * @return nroots
+     */
+    std::vector<int> getnroots() const {
+        return nroots;
+    }
+    
+    /** accessor for discs
+     * @return discs
+     */
+    std::vector<realtype> getdiscs() const {
+        return discs;
+    }
+    
+    /** accessor for rootidx
+     * @return rootidx
+     */
+    std::vector<int> getrootidx() const {
+        return rootidx;
+    }
+    
+    /** accessor for dJydx
+     * @return dJydx
+     */
+   std::vector<realtype> getdJydx() const {
+        return dJydx;
+    }
+    
+    /** accessor for dJzdx
+     * @return dJzdx
+     */
+    std::vector<realtype> getdJzdx() const {
+        return dJzdx;
+    }
+    
+    /** accessor for iroot
+     * @return iroot
+     */
+    int getiroot() const {
+        return iroot;
+    }
+    
+    /** accessor for pointer to x
+     * @return &x
+     */
+    AmiVector *getxptr() {
+        return &x;
+    }
+    
+    /** accessor for pointer to dx
+     * @return &dx
+     */
+    AmiVector *getdxptr() {
+        return &dx;
+    }
+    
+    /** accessor for pointer to sx
+     * @return &sx
+     */
+    AmiVectorArray *getsxptr() {
+        return &sx;
+    }
+    
+    /** accessor for pointer to sdx
+     * @return &sdx
+     */
+    AmiVectorArray *getsdxptr() {
+        return &sdx;
+    }
+    
+  private:
+
+    void handleEvent(realtype *tlastroot,const bool seflag);
+
+    void storeJacobianAndDerivativeInReturnData();
+
+    void getEventOutput();
+
+    void prepEventSensis(int ie);
+
+    void getEventSensisFSA(int ie);
+
+    void handleDataPoint(int it);
+
+    void getDataOutput(int it);
+
+    void prepDataSensis(int it);
+
+    void getDataSensisFSA(int it);
+
+    void applyEventBolus();
+
+    void applyEventSensiBolusFSA();
     
     /** array of index which root has been found */
     std::vector<int> rootidx;
@@ -72,31 +200,6 @@ class ForwardProblem {
     std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
     std::vector<realtype> dJzdx;
-    
-    
-  private:
-
-    void handleEvent(realtype *tlastroot,const bool seflag);
-
-    void storeJacobianAndDerivativeInReturnData();
-
-    void getEventOutput();
-
-    void prepEventSensis(int ie);
-
-    void getEventSensisFSA(int ie);
-
-    void handleDataPoint(int it);
-
-    void getDataOutput(int it);
-
-    void prepDataSensis(int it);
-
-    void getDataSensisFSA(int it);
-
-    void applyEventBolus();
-
-    void applyEventSensiBolusFSA();
     
     /** data likelihood */
     std::vector<realtype> Jy;
@@ -139,17 +242,6 @@ class ForwardProblem {
     AmiVectorArray sdx;
     
     ForwardProblem();
-    
-    /**
-     * @brief Solver addition.
-     * @relates Solver
-     */
-    friend class Solver;
-    /**
-     * @brief BackwardProblem addition.
-     * @relates BackwardProblem
-     */
-    friend class BackwardProblem;
 };
 
 
