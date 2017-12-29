@@ -699,6 +699,7 @@ protected:
     /** pointer to ami memory block */
     void *ami_mem = nullptr;
     
+    /** flag indicating whether the solver was called */
     bool solverWasCalled = false;
 };
 

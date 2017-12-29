@@ -180,7 +180,6 @@ namespace amici {
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
-     * @param xBdot Vector with the adjoint right hand side
      * @param vB Vector with which the Jacobian is multiplied
      * @param JvB Vector to which the Jacobian vector product will be
      *written
@@ -224,7 +223,6 @@ namespace amici {
     
     /** implementation of fsxdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
-     * @param Ns number of parameters
      * @param t timepoint
      * @param x Vector with the states
      * @param ip parameter index

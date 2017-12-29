@@ -35,10 +35,8 @@ class Model_Test : public Model {
 public:
     
     /** constructor with model dimensions
-     * @param np number of parameters
      * @param nx number of state variables
      * @param nxtrue number of state variables of the non-augmented model
-     * @param nk number of constants
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables

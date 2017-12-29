@@ -170,7 +170,6 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @param xB Vector with the adjoint states
      * @param dxB Vector with the adjoint derivative states
-     * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB) {
@@ -237,10 +236,10 @@ namespace amici {
     }
     
     /** Right hand side of differential equation for state sensitivities sx
-     * @param Ns number of parameters
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
+     * @param ip parameter index
      * @param sx Vector with the state sensitivities
      * @param sdx Vector with the derivative state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
