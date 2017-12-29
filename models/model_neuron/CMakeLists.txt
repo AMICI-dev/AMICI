@@ -40,16 +40,9 @@ ${MODEL_DIR}/model_neuron_deltaqB.cpp
 ${MODEL_DIR}/model_neuron_deltasx.cpp
 ${MODEL_DIR}/model_neuron_deltax.cpp
 ${MODEL_DIR}/model_neuron_deltaxB.cpp
-${MODEL_DIR}/model_neuron_drzdp.cpp
 ${MODEL_DIR}/model_neuron_drzdx.cpp
-${MODEL_DIR}/model_neuron_dsigma_ydp.cpp
-${MODEL_DIR}/model_neuron_dsigma_zdp.cpp
-${MODEL_DIR}/model_neuron_dwdp.cpp
-${MODEL_DIR}/model_neuron_dwdx.cpp
 ${MODEL_DIR}/model_neuron_dxdotdp.cpp
-${MODEL_DIR}/model_neuron_dydp.cpp
 ${MODEL_DIR}/model_neuron_dydx.cpp
-${MODEL_DIR}/model_neuron_dzdp.cpp
 ${MODEL_DIR}/model_neuron_dzdx.cpp
 ${MODEL_DIR}/model_neuron_qBdot.cpp
 ${MODEL_DIR}/model_neuron_root.cpp
@@ -61,7 +54,6 @@ ${MODEL_DIR}/model_neuron_stau.cpp
 ${MODEL_DIR}/model_neuron_sx0.cpp
 ${MODEL_DIR}/model_neuron_sxdot.cpp
 ${MODEL_DIR}/model_neuron_sz.cpp
-${MODEL_DIR}/model_neuron_w.cpp
 ${MODEL_DIR}/model_neuron_x0.cpp
 ${MODEL_DIR}/model_neuron_xBdot.cpp
 ${MODEL_DIR}/model_neuron_xdot.cpp
