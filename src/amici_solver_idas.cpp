@@ -650,7 +650,7 @@ void IDASolver::turnOffRootFinding() {
                       void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fqBdot(t, x, dx, xB, dxB, qBdot);
-        return isFinite(model->nJ*model->plist.size(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return isFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
@@ -672,7 +672,7 @@ void IDASolver::turnOffRootFinding() {
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
-        for(int ip = 0; ip < model->plist.size(); ip++){
+        for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
             if(isFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
                 return AMICI_RECOVERABLE_ERROR;

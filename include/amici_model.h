@@ -18,8 +18,6 @@ namespace amici {
     class ExpData;
     class Solver;
 
-    
-    
     /**
      * @brief The Model class represents an AMICI ODE model.
      * The model can compute various model related quantities based
@@ -200,16 +198,6 @@ namespace amici {
         
         void fx0(AmiVector *x, const UserData *udata);
         
-        /** model specific implementation of fx0
-         * @param x0 initial state
-         * @param t initial time
-         * @param p parameter vector
-         * @param k constant vector
-         **/
-        virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         /** Initial value for time derivative of states (only necessary for DAEs)
          * @param x0 Vector with the initial states
          * @param dx0 Vector to which the initial derivative states will be
@@ -219,19 +207,6 @@ namespace amici {
 
         void fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata);
         
-        /** model specific implementation of fsx0
-         * @param sx0 initial state sensitivities
-         * @param t initial time
-         * @param x0 initial state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param ip sensitivity index
-         **/
-        virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
-        
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *necessary for DAEs)
          **/
@@ -239,465 +214,66 @@ namespace amici {
         
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
         
-        /** model specific implementation of fstau
-         * @param stau total derivative of event timepoint
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param sx current state sensitivity
-         * @param ip sensitivity index
-         * @param ie event index
-         **/
-        virtual void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fy(int it, ReturnData *rdata);
         
-        /** model specific implementation of fy
-         * @param y model output at current timepoint
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-
         void fdydp(const int it, ReturnData *rdata);
-        
-        /** model specific implementation of fdydp
-         * @param dydp partial derivative of observables y w.r.t. model parameters p
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ip parameter index w.r.t. which the derivative is requested
-         **/
-        virtual void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdydx(const int it, ReturnData *rdata);
         
-        /** model specific implementation of fdydx
-         * @param dydx partial derivative of observables y w.r.t. model states x
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
-        
-        /** model specific implementation of fz
-         * @param z value of event output
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
-        /** model specific implementation of fsz
-         * @param sz Sensitivity of rz, total derivative
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param sx current state sensitivity
-         * @param ip sensitivity index
-         **/
-        virtual void fsz(realtype *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
-        
-        /** model specific implementation of frz
-         * @param rz value of root function at current timepoint (non-output events not included)
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
-        /** model specific implementation of fsrz
-         * @param srz Sensitivity of rz, total derivative
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param sx current state sensitivity
-         * @param h heavyside vector
-         * @param ip sensitivity index
-         **/
-        virtual void fsrz(realtype *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdzdp(const realtype t, const int ie, const AmiVector *x);
-        
-        /** model specific implementation of fdzdp
-         * @param dzdp partial derivative of event-resolved output z w.r.t. model parameters p
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ip parameter index w.r.t. which the derivative is requested
-         **/
-        virtual void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdzdx(const realtype t, const int ie, const AmiVector *x);
         
-        /** model specific implementation of fdzdx
-         * @param dzdx partial derivative of event-resolved output z w.r.t. model states x
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdrzdp(const realtype t, const int ie, const AmiVector *x);
         
-        /** model specific implementation of fdzdp
-         * @param drzdp partial derivative of root output rz w.r.t. model parameters p
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ip parameter index w.r.t. which the derivative is requested
-         **/
-        virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdrzdx(const realtype t, const int ie, const AmiVector *x);
-        
-        /** model specific implementation of fdrzdx
-         * @param drzdx partial derivative of root output rz w.r.t. model states x
-         * @param ie event index
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         **/
-        virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdeltax(const int ie, const realtype t, const AmiVector *x,
                              const AmiVector *xdot, const AmiVector *xdot_old);
         
-        /** model specific implementation of fdeltax
-         * @param deltax state update
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ie event index
-         * @param xdot new model right hand side
-         * @param xdot_old previous model right hand side
-         **/
-        virtual void fdeltax(realtype *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                                 const int ie, const realtype *xdot, const realtype *xdot_old) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                               const AmiVector *xdot, const AmiVector *xdot_old);
-        
-        /** model specific implementation of fdeltasx
-         * @param deltasx sensitivity update
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param w repeating elements vector
-         * @param ip sensitivity index
-         * @param ie event index
-         * @param xdot new model right hand side
-         * @param xdot_old previous model right hand side
-         * @param sx state sensitivity
-         * @param stau event-time sensitivity
-         **/
-        virtual void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                                   const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx,
-                                   const realtype *stau) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
-        /** model specific implementation of fdeltaxB
-         * @param deltaxB adjoint state update
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ie event index
-         * @param xdot new model right hand side
-         * @param xdot_old previous model right hand side
-         * @param xB current adjoint state
-         **/
-        virtual void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                                  const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
-        /** model specific implementation of fdeltasx
-         * @param deltaqB sensitivity update
-         * @param t current time
-         * @param x current state
-         * @param p parameter vector
-         * @param k constant vector
-         * @param h heavyside vector
-         * @param ip sensitivity index
-         * @param ie event index
-         * @param xdot new model right hand side
-         * @param xdot_old previous model right hand side
-         * @param xB adjoint state
-         **/
-        virtual void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                                   const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-
         void fsigma_y(const int it, const ExpData *edata, ReturnData *rdata);
         
-        /** model specific implementation of fsigmay
-         * @param sigmay standard deviation of measurements
-         * @param t current time
-         * @param p parameter vector
-         * @param k constant vector
-         **/
-        virtual void fsigma_y(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdsigma_ydp(const int it, const ReturnData *rdata);
-        
-        /** model specific implementation of fsigmay
-         * @param dsigmaydp partial derivative of standard deviation of measurements
-         * @param t current time
-         * @param p parameter vector
-         * @param k constant vector
-         * @param ip sensitivity index
-         **/
-        virtual void fdsigma_ydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fsigma_z(const realtype t, const int ie, const int *nroots,
                       const ExpData *edata, ReturnData *rdata);
         
-        /** model specific implementation of fsigmaz
-         * @param sigmaz standard deviation of event measurements
-         * @param t current time
-         * @param p parameter vector
-         * @param k constant vector
-         **/
-        virtual void fsigma_z(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdsigma_zdp(const realtype t);
-        
-        /** model specific implementation of fsigmaz
-         * @param dsigmazdp partial derivative of standard deviation of event measurements
-         * @param t current time
-         * @param p parameter vector
-         * @param k constant vector
-         * @param ip sensitivity index
-         **/
-        virtual void fdsigma_zdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
         
-        /** model specific implementation of fJy
-         * @param nllh negative log-likelihood for measurements y
-         * @param iy output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param y model output at timepoint
-         * @param sigmay measurement standard deviation at timepoint
-         * @param my measurements at timepoint
-         **/
-        virtual void fJy(realtype *nllh,const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
-        
-        /** model specific implementation of fJz
-         * @param nllh negative log-likelihood for event measurements z
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param z model event output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         * @param mz event measurements at timepoint
-         **/
-        virtual void fJz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
         
-        /** model specific implementation of fJrz
-         * @param nllh regularization for event measurements z
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param z model event output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         **/
-        virtual void fJrz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
-        
-        /** model specific implementation of fdJydy
-         * @param dJydy partial derivative of time-resolved measurement negative log-likelihood Jy
-         * @param iy output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param y model output at timepoint
-         * @param sigmay measurement standard deviation at timepoint
-         * @param my measurement at timepoint
-         **/
-        virtual void fdJydy(realtype *dJydy, const int iy, const realtype *p, const realtype *k,
-                                 const realtype *y, const realtype *sigmay, const realtype *my) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdJydsigma(const int it, const ReturnData *rdata, const ExpData *edata);
         
-        /** model specific implementation of fdJydsigma
-         * @param dJydsigma Sensitivity of time-resolved measurement
-         * negative log-likelihood Jy w.r.t. standard deviation sigmay
-         * @param iy output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param y model output at timepoint
-         * @param sigmay measurement standard deviation at timepoint
-         * @param my measurement at timepoint
-         **/
-        virtual void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k,
-                                 const realtype *y, const realtype *sigmay, const realtype *my) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdJzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
-        
-        /** model specific implementation of fdJzdz
-         * @param dJzdz partial derivative of event measurement negative log-likelihood Jz
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param z model event output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         * @param mz event measurement at timepoint
-         **/
-        virtual void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k,
-                                 const realtype *z, const realtype *sigmaz, const realtype *mz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         void fdJzdsigma(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
-        /** model specific implementation of fdJzdsigma
-         * @param dJzdsigma Sensitivity of event measurement
-         * negative log-likelihood Jz w.r.t. standard deviation sigmaz
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param z model event output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         * @param mz event measurement at timepoint
-         **/
-        virtual void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k,
-                                     const realtype *z, const realtype *sigmaz, const realtype *mz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdJrzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
-        /** model specific implementation of fdJrzdz
-         * @param dJrzdz partial derivative of event penalization Jrz
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param rz model root output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         **/
-        virtual void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k,
-                                 const realtype *rz, const realtype *sigmaz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
-        
         void fdJrzdsigma(const int nroots,const ReturnData *rdata, const ExpData *edata);
-        
-        /** model specific implementation of fdJrzdsigma
-         * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t.
-         * standard deviation sigmaz
-         * @param iz event output index
-         * @param p parameter vector
-         * @param k constant vector
-         * @param rz model root output at timepoint
-         * @param sigmaz event measurement standard deviation at timepoint
-         **/
-        virtual void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k,
-                                     const realtype *rz, const realtype *sigmaz) {
-            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
-        }
         
         /** default destructor */
         virtual ~Model() {
@@ -808,6 +384,12 @@ namespace amici {
         /** tempory storage of dxdotdp data across functions */
         std::vector<realtype> dxdotdp;
         
+        void fw(const realtype t, const N_Vector x);
+
+        void fdwdp(const realtype t, const N_Vector x);
+        
+        void fdwdx(const realtype t, const N_Vector x);
+        
         /**
          * updateHeaviside updates the heaviside variables h on event occurences
          *
@@ -835,7 +417,427 @@ namespace amici {
             }
         }
         
-        void fw(const realtype t, const N_Vector x);
+    protected:
+        
+        /** model specific implementation of fx0
+         * @param x0 initial state
+         * @param t initial time
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsx0
+         * @param sx0 initial state sensitivities
+         * @param t initial time
+         * @param x0 initial state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param ip sensitivity index
+         **/
+        virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fstau
+         * @param stau total derivative of event timepoint
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param sx current state sensitivity
+         * @param ip sensitivity index
+         * @param ie event index
+         **/
+        virtual void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fy
+         * @param y model output at current timepoint
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdydp
+         * @param dydp partial derivative of observables y w.r.t. model parameters p
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ip parameter index w.r.t. which the derivative is requested
+         **/
+        virtual void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdydx
+         * @param dydx partial derivative of observables y w.r.t. model states x
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fz
+         * @param z value of event output
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsz
+         * @param sz Sensitivity of rz, total derivative
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param sx current state sensitivity
+         * @param ip sensitivity index
+         **/
+        virtual void fsz(realtype *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of frz
+         * @param rz value of root function at current timepoint (non-output events not included)
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsrz
+         * @param srz Sensitivity of rz, total derivative
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param sx current state sensitivity
+         * @param h heavyside vector
+         * @param ip sensitivity index
+         **/
+        virtual void fsrz(realtype *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdzdp
+         * @param dzdp partial derivative of event-resolved output z w.r.t. model parameters p
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ip parameter index w.r.t. which the derivative is requested
+         **/
+        virtual void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdzdx
+         * @param dzdx partial derivative of event-resolved output z w.r.t. model states x
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdzdp
+         * @param drzdp partial derivative of root output rz w.r.t. model parameters p
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ip parameter index w.r.t. which the derivative is requested
+         **/
+        virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdrzdx
+         * @param drzdx partial derivative of root output rz w.r.t. model states x
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         **/
+        virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdeltax
+         * @param deltax state update
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ie event index
+         * @param xdot new model right hand side
+         * @param xdot_old previous model right hand side
+         **/
+        virtual void fdeltax(realtype *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+                             const int ie, const realtype *xdot, const realtype *xdot_old) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdeltasx
+         * @param deltasx sensitivity update
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param w repeating elements vector
+         * @param ip sensitivity index
+         * @param ie event index
+         * @param xdot new model right hand side
+         * @param xdot_old previous model right hand side
+         * @param sx state sensitivity
+         * @param stau event-time sensitivity
+         **/
+        virtual void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+                              const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx,
+                              const realtype *stau) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdeltaxB
+         * @param deltaxB adjoint state update
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ie event index
+         * @param xdot new model right hand side
+         * @param xdot_old previous model right hand side
+         * @param xB current adjoint state
+         **/
+        virtual void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+                              const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdeltasx
+         * @param deltaqB sensitivity update
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h heavyside vector
+         * @param ip sensitivity index
+         * @param ie event index
+         * @param xdot new model right hand side
+         * @param xdot_old previous model right hand side
+         * @param xB adjoint state
+         **/
+        virtual void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+                              const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsigmay
+         * @param sigmay standard deviation of measurements
+         * @param t current time
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fsigma_y(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsigmay
+         * @param dsigmaydp partial derivative of standard deviation of measurements
+         * @param t current time
+         * @param p parameter vector
+         * @param k constant vector
+         * @param ip sensitivity index
+         **/
+        virtual void fdsigma_ydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsigmaz
+         * @param sigmaz standard deviation of event measurements
+         * @param t current time
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fsigma_z(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fsigmaz
+         * @param dsigmazdp partial derivative of standard deviation of event measurements
+         * @param t current time
+         * @param p parameter vector
+         * @param k constant vector
+         * @param ip sensitivity index
+         **/
+        virtual void fdsigma_zdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fJy
+         * @param nllh negative log-likelihood for measurements y
+         * @param iy output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param y model output at timepoint
+         * @param sigmay measurement standard deviation at timepoint
+         * @param my measurements at timepoint
+         **/
+        virtual void fJy(realtype *nllh,const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        /** model specific implementation of fJz
+         * @param nllh negative log-likelihood for event measurements z
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param z model event output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         * @param mz event measurements at timepoint
+         **/
+        virtual void fJz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fJrz
+         * @param nllh regularization for event measurements z
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param z model event output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         **/
+        virtual void fJrz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJydy
+         * @param dJydy partial derivative of time-resolved measurement negative log-likelihood Jy
+         * @param iy output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param y model output at timepoint
+         * @param sigmay measurement standard deviation at timepoint
+         * @param my measurement at timepoint
+         **/
+        virtual void fdJydy(realtype *dJydy, const int iy, const realtype *p, const realtype *k,
+                            const realtype *y, const realtype *sigmay, const realtype *my) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJydsigma
+         * @param dJydsigma Sensitivity of time-resolved measurement
+         * negative log-likelihood Jy w.r.t. standard deviation sigmay
+         * @param iy output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param y model output at timepoint
+         * @param sigmay measurement standard deviation at timepoint
+         * @param my measurement at timepoint
+         **/
+        virtual void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k,
+                                const realtype *y, const realtype *sigmay, const realtype *my) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJzdz
+         * @param dJzdz partial derivative of event measurement negative log-likelihood Jz
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param z model event output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         * @param mz event measurement at timepoint
+         **/
+        virtual void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k,
+                            const realtype *z, const realtype *sigmaz, const realtype *mz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJzdsigma
+         * @param dJzdsigma Sensitivity of event measurement
+         * negative log-likelihood Jz w.r.t. standard deviation sigmaz
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param z model event output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         * @param mz event measurement at timepoint
+         **/
+        virtual void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k,
+                                const realtype *z, const realtype *sigmaz, const realtype *mz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJrzdz
+         * @param dJrzdz partial derivative of event penalization Jrz
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param rz model root output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         **/
+        virtual void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k,
+                             const realtype *rz, const realtype *sigmaz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fdJrzdsigma
+         * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t.
+         * standard deviation sigmaz
+         * @param iz event output index
+         * @param p parameter vector
+         * @param k constant vector
+         * @param rz model root output at timepoint
+         * @param sigmaz event measurement standard deviation at timepoint
+         **/
+        virtual void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k,
+                                 const realtype *rz, const realtype *sigmaz) {
+            throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
         
         /** model specific implementation of fw
          * @param w Recurring terms in xdot
@@ -846,9 +848,7 @@ namespace amici {
          * @param h heavyside vector
          */
         virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h) {};
-        
-        void fdwdp(const realtype t, const N_Vector x);
+                        const realtype *k, const realtype *h) {};
         
         /** model specific implementation of dwdp
          * @param dwdp Recurring terms in xdot, parameter derivative
@@ -860,9 +860,7 @@ namespace amici {
          * @param w vector with helper variables
          */
         virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h, const realtype *w) {};
-        
-        void fdwdx(const realtype t, const N_Vector x);
+                           const realtype *k, const realtype *h, const realtype *w) {};
         
         /** model specific implementation of dwdx
          * @param dwdx Recurring terms in xdot, state derivative
@@ -874,9 +872,7 @@ namespace amici {
          * @param w vector with helper variables
          */
         virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h, const realtype *w) {};
-        
-    protected:
+                           const realtype *k, const realtype *h, const realtype *w) {};
         
         void getmy(const int it, const ExpData *edata);
         
@@ -955,17 +951,6 @@ namespace amici {
         const std::vector<realtype> k;
         /** indexes of parameters wrt to which sensitivities are computed */
         const std::vector<int> plist;
-        
-        /**
-         * @brief IDASolver addition.
-         * @relates IDASolver
-         */
-        friend class IDASolver;
-        /**
-         * @brief CVodeSolver addition.
-         * @relates CVodeSolver
-         */
-        friend class CVodeSolver;
     };
     
 } // namespace amici

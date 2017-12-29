@@ -675,7 +675,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fqBdot(t, x, xB, qBdot);
-        return isFinite(model->plist.size()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return isFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
