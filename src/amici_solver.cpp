@@ -115,13 +115,15 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
 void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model) {
 
     /* write initial conditions */
-    bwd->xB.reset();
+    std::vector<realtype> dJydx = bwd->getdJydx();
+    AmiVector *xB = bwd->getxBptr();
+    xB->reset();
     for (int ix = 0; ix < model->nxtrue; ++ix)
         for (int iJ = 0; iJ < model->nJ; ++iJ)
-            bwd->xB[ix + iJ * model->nxtrue] +=
-                bwd->dJydx[iJ + ( ix + (udata->nt() - 1)  * model->nx ) * model->nJ];
-    bwd->dxB.reset();
-    bwd->xQB.reset();
+            xB->at(ix + iJ * model->nxtrue) +=
+                dJydx.at(iJ + ( ix + (udata->nt() - 1)  * model->nx ) * model->nJ);
+    bwd->getdxBptr()->reset();
+    bwd->getxQBptr()->reset();
 
     /* create backward problem */
     if (udata->lmm > 2 || udata->lmm < 1) {
@@ -132,33 +134,33 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     }
 
     /* allocate memory for the backward problem */
-    AMICreateB(udata->lmm, udata->iter, &(bwd->which));
+    AMICreateB(udata->lmm, udata->iter, bwd->getwhichptr());
 
     /* initialise states */
-    binit(bwd->which, &(bwd->xB), &(bwd->dxB), bwd->t);
+    binit(bwd->getwhich(), bwd->getxBptr(), bwd->getdxBptr(), bwd->gett());
 
     /* specify integration tolerances for backward problem */
-    AMISStolerancesB(bwd->which, RCONST(udata->rtol),
+    AMISStolerancesB(bwd->getwhich(), RCONST(udata->rtol),
                               RCONST(udata->atol));
 
     /* Attach user data */
-    AMISetUserDataB(bwd->which, model);
+    AMISetUserDataB(bwd->getwhich(), model);
 
     /* Number of maximal internal steps */
-    AMISetMaxNumStepsB(bwd->which, 100 * udata->maxsteps);
+    AMISetMaxNumStepsB(bwd->getwhich(), 100 * udata->maxsteps);
     
-    setLinearSolverB(udata, model, bwd->which);
+    setLinearSolverB(udata, model, bwd->getwhich());
     
     /* Initialise quadrature calculation */
-    qbinit(bwd->which, &(bwd->xQB));
+    qbinit(bwd->getwhich(), bwd->getxQBptr());
 
     /* Enable Quadrature Error Control */
-    AMISetQuadErrConB(bwd->which, TRUE);
+    AMISetQuadErrConB(bwd->getwhich(), TRUE);
 
-    AMIQuadSStolerancesB(bwd->which, RCONST(udata->rtol),
+    AMIQuadSStolerancesB(bwd->getwhich(), RCONST(udata->rtol),
                                   RCONST(udata->atol));
 
-    AMISetStabLimDetB(bwd->which, udata->stldet);
+    AMISetStabLimDetB(bwd->getwhich(), udata->stldet);
 }
 
 /**
@@ -247,7 +249,7 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd) {
     long int number;
 
-    void *ami_memB = AMIGetAdjBmem(ami_mem, bwd->which);
+    void *ami_memB = AMIGetAdjBmem(ami_mem, bwd->getwhich());
     
     if(solverWasCalled && ami_memB) {
         AMIGetNumSteps(ami_memB, &number);
@@ -366,10 +368,10 @@ void Solver::setLinearSolverB(const UserData *udata, Model *model, const int whi
         case AMICI_LAPACKDENSE:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackDenseB(ami_mem, bwd->which, nx);
+             status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx);
              if (status != AMICI_SUCCESS) return;
              
-             status = SetDenseJacFnB(ami_mem, bwd->which);
+             status = SetDenseJacFnB(ami_mem, bwd->getwhich());
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");
@@ -379,10 +381,10 @@ void Solver::setLinearSolverB(const UserData *udata, Model *model, const int whi
         case AMICI_LAPACKBAND:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackBandB(ami_mem, bwd->which, nx, ubw, lbw);
+             status = CVLapackBandB(ami_mem, bwd->getwhich(), nx, ubw, lbw);
              if (status != AMICI_SUCCESS) return;
              
-             status = SetBandJacFnB(ami_mem, bwd->which);
+             status = SetBandJacFnB(ami_mem, bwd->getwhich());
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");

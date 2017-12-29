@@ -136,6 +136,14 @@ namespace amici {
             return vec.at(pos);
         }
         
+        /** accessor to data elements of the vector
+         * @param pos index of element
+         * @return element
+         */
+        realtype& at(int pos) {
+            return vec.at(pos);
+        }
+        
         /** default destructor
          * creates an std::vector<realype> and attaches the
          * data pointer to a newly created N_Vector_Serial

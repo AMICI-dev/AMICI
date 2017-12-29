@@ -25,6 +25,55 @@ class BackwardProblem {
     void workBackwardProblem();
 
     BackwardProblem(ForwardProblem *fwd);
+    
+    /** accessor for t
+     * @return t
+     */
+    realtype gett() const {
+        return t;
+    }
+    
+    /** accessor for which
+     * @return which
+     */
+    int getwhich() const {
+        return which;
+    }
+    
+    /** accessor for pointer to which
+     * @return which
+     */
+    int *getwhichptr() {
+        return &which;
+    }
+    
+    /** accessor for pointer to xB
+     * @return &xB
+     */
+    AmiVector *getxBptr() {
+        return &xB;
+    }
+    
+    /** accessor for pointer to xQB
+     * @return &xQB
+     */
+    AmiVector *getxQBptr() {
+        return &xQB;
+    }
+    
+    /** accessor for pointer to dxB
+     * @return &dxB
+     */
+    AmiVector *getdxBptr() {
+        return &dxB;
+    }
+    
+    /** accessor for dJydx
+     * @return dJydx
+     */
+    std::vector<realtype> getdJydx() const {
+        return dJydx;
+    }
 
   private:
     
@@ -81,11 +130,6 @@ class BackwardProblem {
     const std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
     const std::vector<realtype> dJzdx;
-    /**
-     * @brief Solver addition.
-     * @relates Solver
-     */
-    friend class Solver;
 };
 
 } // namespace amici
