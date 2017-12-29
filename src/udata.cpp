@@ -121,6 +121,11 @@ void UserData::setPlist(const int *plist, int length) {
 void UserData::setPScale(const AMICI_parameter_scaling pscale) {
     this->pscale = pscale;
 }
+    
+const AMICI_parameter_scaling UserData::getPScale() const {
+    return pscale;
+}
+
 
 void UserData::requireSensitivitiesForAllParameters()
 {
@@ -137,6 +142,10 @@ void UserData::setPbar(const double *parameterScaling) {
     } else {
         pbar.clear();
     }
+}
+    
+const double *UserData::getPbar() const {
+    return pbar.data();
 }
     
 void UserData::setXbar(const double *stateScaling) {
@@ -166,6 +175,47 @@ void UserData::setSensitivityInitialization(
         sx0data.clear();
     }
 }
+    
+/**
+ * @brief getLinearMultistepMethod
+ * @return lmm
+ */
+const LinearMultistepMethod UserData::getLinearMultistepMethod() const{
+    return lmm;
+}
+    
+/**
+ * @brief getNonlinearSolverIteration
+ * @return iter
+ */
+const NonlinearSolverIteration UserData::getNonlinearSolverIteration() const{
+    return iter;
+}
+    
+/**
+ * @brief getInterpolationType
+ * @return interType
+ */
+const InterpolationType UserData::getInterpolationType() const{
+    return interpType;
+}
+    
+/**
+ * @brief getStateOrdering
+ * @return ordering
+ */
+const StateOrdering UserData::getStateOrdering() const{
+    return ordering;
+}
+ 
+/**
+ * @brief getStabilityLimitFlag
+ * @return stldet
+ */
+const int UserData::getStabilityLimitFlag() const{
+    return stldet;
+}
+
 
 UserData::~UserData() {
 }

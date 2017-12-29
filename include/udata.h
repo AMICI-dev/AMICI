@@ -105,12 +105,24 @@ class UserData {
      * @param pscale
      */
     void setPScale(const AMICI_parameter_scaling pscale);
+    
+    /**
+     * @brief getPScale.
+     * @return pscale
+     */
+    const AMICI_parameter_scaling getPScale() const;
 
     /**
      * @brief setPbar. Must not be called before setPlist
      * @param parameterScaling
      */
     void setPbar(const double *parameterScaling);
+    
+    /**
+     * @brief getPbar
+     * @return parameterScaling
+     */
+    const double *getPbar() const;
     
     /**
      * @brief setXbar.
@@ -129,6 +141,16 @@ class UserData {
      * @param sensitivityInitialization
      */
     void setSensitivityInitialization(const double *sensitivityInitialization);
+    
+    const LinearMultistepMethod getLinearMultistepMethod() const;
+    
+    const NonlinearSolverIteration getNonlinearSolverIteration() const;
+    
+    const InterpolationType getInterpolationType() const;
+    
+    const StateOrdering getStateOrdering() const;
+    
+    const int getStabilityLimitFlag() const;
 
     ~UserData();
 
@@ -193,6 +215,21 @@ class UserData {
         return sensi_meth;
     };
     
+    /** timepoints
+     * @return pointer to timepoints array
+     */
+    const double *t() const{
+        return ts.data();
+    };
+    
+    /** timepoint in timepoints array
+     * @param pos index
+     * @return timepoints
+     */
+    const double t(int pos) const{
+        return ts.at(pos);
+    };
+    
     /** parameters
      * @return pointer to parameter array
      */
@@ -232,8 +269,15 @@ class UserData {
     /** user provided initial values for state variables
      * @return vector with values
      */
-    const std::vector<double> getInitialStates() const {
+    std::vector<double> getInitialStates() const {
         return x0data;
+    }
+    
+    /** user provided initial values for state variables
+     * @return vector with values
+     */
+    std::vector<double> getInitialSensitivityStates() const {
+        return sx0data;
     }
 
     /**
@@ -343,17 +387,6 @@ private:
     
     /** state ordering */
     StateOrdering ordering = AMD;
-    
-    /**
-     * @brief ReturnData addition.
-     * @relates ReturnData
-     */
-    friend class ReturnData;
-    /**
-     * @brief Solver addition.
-     * @relates Solver
-     */
-    friend class Solver;
     
     /**
      * @brief userDataFromMatlabCall addition.

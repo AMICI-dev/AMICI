@@ -32,9 +32,9 @@ ReturnData::ReturnData(const UserData *udata, const Model *model,
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
       nplist(model->nplist()), nmaxevent(udata->nme()), nt(udata->nt()),
-      newton_maxsteps(udata->newton_maxsteps), pscale(udata->pscale),
+      newton_maxsteps(udata->newton_maxsteps), pscale(udata->getPScale()),
       o2mode(model->o2mode), sensi(udata->sensi),
-      sensi_meth(udata->sensi_meth) {
+      sensi_meth(static_cast<AMICI_sensi_meth>(udata->sensmeth())) {
     /**
      * @brief constructor that uses information from model and userdata to
      * appropriately initialize fields
@@ -155,11 +155,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
     }
     
 
-    if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity
         // analysis
-        if (udata->sensi == AMICI_SENSI_ORDER_SECOND) {
-            if (udata->sensi_meth == AMICI_SENSI_ASA) {
+        if (sensi == AMICI_SENSI_ORDER_SECOND) {
+            if (sensi_meth == AMICI_SENSI_ASA) {
                 if (x)
                     if (sx)
                         for (int ip = 0; ip < nplist; ++ip)
@@ -369,7 +369,7 @@ void ReturnData::copyFromUserData(const UserData *udata) {
      * @brief copies measurement timepoints from UserData object
      * @param[in] udata pointer to the user data struct @type UserData
      */
-    memcpy(ts, udata->ts.data(), nt * sizeof(realtype));
+    memcpy(ts, udata->t(), nt * sizeof(realtype));
 }
 
 void ReturnData::initFields() {

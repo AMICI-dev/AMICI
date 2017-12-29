@@ -25,18 +25,18 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     model->initialize(fwd->getxptr(), fwd->getdxptr(), udata);
 
     /* Create solver memory object */
-    if (udata->lmm != ADAMS && udata->lmm != BDF) {
+    if (udata->getLinearMultistepMethod() != ADAMS && udata->getLinearMultistepMethod() != BDF) {
         throw AmiException("Illegal value for lmm!");
     }
-    if (udata->iter != NEWTON && udata->iter != FUNCTIONAL) {
+    if (udata->getNonlinearSolverIteration() != NEWTON && udata->getNonlinearSolverIteration() != FUNCTIONAL) {
         throw AmiException("Illegal value for iter!");
     }
-    ami_mem = AMICreate(udata->lmm, udata->iter);
+    ami_mem = AMICreate(udata->getLinearMultistepMethod(), udata->getNonlinearSolverIteration());
     if (ami_mem == NULL)
         throw AmiException("Failed to allocated solver memory!");
     try {
     /* Initialize AMIS solver*/
-    init(fwd->getxptr(), fwd->getdxptr(), udata->tstart);
+    init(fwd->getxptr(), fwd->getdxptr(), udata->t0());
     /* Specify integration tolerances */
     AMISStolerances(RCONST(udata->rtol), RCONST(udata->atol));
     /* Set optional inputs */
@@ -46,7 +46,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     /* specify maximal number of steps */
     AMISetMaxNumSteps(udata->maxsteps);
     /* activates stability limit detection */
-    AMISetStabLimDet(udata->stldet);
+    AMISetStabLimDet(udata->getStabilityLimitFlag());
     
     rootInit(model->ne);
     
@@ -57,21 +57,22 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
         if (model->nx > 0) {
             /* initialise sensitivities, this can either be user provided or
              * come from the model definition */
-            if (udata->sx0data.empty()) {
+            std::vector<double> sx0 = udata->getInitialSensitivityStates();
+            if (sx0.empty()) {
                 model->fsx0(fwd->getsxptr(), fwd->getxptr(), udata);
             } else {
                 AmiVectorArray *sx = fwd->getsxptr();
                 for (int ip = 0; ip < udata->nplist(); ip++) {
                     for (int ix = 0; ix < model->nx; ix++) {
                         sx->at(ix,ip) =
-                            (realtype)udata->sx0data[ix + model->nx * ip];
+                            (realtype)sx0.at(ix + model->nx * ip);
                     }
                 }
             }
 
             model->fsdx0();
             
-            if (udata->sensi_meth == AMICI_SENSI_FSA) {
+            if (udata->sensmeth() == AMICI_SENSI_FSA) {
                 
                 /* Activate sensitivity calculations */
                 sensInit1(fwd->getsxptr(), fwd->getsdxptr(), udata);
@@ -80,17 +81,17 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
                 std::vector<double> par;
                 par.assign(udata->unp(),udata->unp()+udata->nplist());
                 std::vector<double> pbar;
-                pbar.assign(udata->pbar.data(),udata->pbar.data()+udata->nplist());
+                pbar.assign(udata->getPbar(),udata->getPbar()+udata->nplist());
                 AMISetSensParams(par.data(), pbar.data(), plist.data());
                 AMISetSensErrCon(TRUE);
                 AMISensEEtolerances();
             }
         }
 
-        if (udata->sensi_meth == AMICI_SENSI_ASA) {
+        if (udata->sensmeth() == AMICI_SENSI_ASA) {
             if (model->nx > 0) {
                 /* Allocate space for the adjoint computation */
-                AMIAdjInit(udata->maxsteps, udata->interpType);
+                AMIAdjInit(udata->maxsteps, udata->getInterpolationType());
             }
         }
     }
@@ -99,7 +100,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     AMISetSuppressAlg(TRUE);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if(udata->nt()>1)
-        AMICalcIC(udata->ts[1], fwd->getxptr(), fwd->getdxptr());
+        AMICalcIC(udata->t(1), fwd->getxptr(), fwd->getdxptr());
     } catch (...) {
         AMIFree();
         throw AmiException("setupAMI routine failed!");
@@ -126,15 +127,15 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     bwd->getxQBptr()->reset();
 
     /* create backward problem */
-    if (udata->lmm > 2 || udata->lmm < 1) {
+    if (udata->getLinearMultistepMethod() > 2 || udata->getLinearMultistepMethod() < 1) {
         throw AmiException("Illegal value for lmm!");
     }
-    if (udata->iter > 2 || udata->iter < 1) {
+    if (udata->getNonlinearSolverIteration() > 2 || udata->getNonlinearSolverIteration() < 1) {
         throw AmiException("Illegal value for iter!");
     }
 
     /* allocate memory for the backward problem */
-    AMICreateB(udata->lmm, udata->iter, bwd->getwhichptr());
+    AMICreateB(udata->getLinearMultistepMethod(), udata->getNonlinearSolverIteration(), bwd->getwhichptr());
 
     /* initialise states */
     binit(bwd->getwhich(), bwd->getxBptr(), bwd->getdxBptr(), bwd->gett());
@@ -160,7 +161,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     AMIQuadSStolerancesB(bwd->getwhich(), RCONST(udata->rtol),
                                   RCONST(udata->atol));
 
-    AMISetStabLimDetB(bwd->getwhich(), udata->stldet);
+    AMISetStabLimDetB(bwd->getwhich(), udata->getStabilityLimitFlag());
 }
 
 /**
@@ -334,7 +335,7 @@ void Solver::setLinearSolver(const UserData *udata, Model *model) {
         case AMICI_KLU:
             AMIKLU(model->nx, model->nnz, CSC_MAT);
             setSparseJacFn();
-            AMIKLUSetOrdering(udata->ordering);
+            AMIKLUSetOrdering(udata->getStateOrdering());
             break;
             
         default:
@@ -418,7 +419,7 @@ void Solver::setLinearSolverB(const UserData *udata, Model *model, const int whi
         case AMICI_KLU:
             AMIKLUB(which, model->nx, model->nnz, CSC_MAT);
             setSparseJacFnB(which);
-            AMIKLUSetOrderingB(which, udata->ordering);
+            AMIKLUSetOrderingB(which, udata->getStateOrdering());
             break;
             
         default:
