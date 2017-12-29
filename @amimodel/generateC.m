@@ -233,7 +233,9 @@ function generateCMakeFile(this)
     sourceStr = '';
     for j=1:length(this.funs)
         funcName = this.funs{j};
-        sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName) ];
+        if(checkIfFunctionBodyIsNonEmpty(this,funcName))
+            sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName) ];
+        end
     end
     
     t = template();
