@@ -376,9 +376,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
     int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
         nz_sigmaz = 0; /* integers with problem dimensionality */
     ExpData *edata = new ExpData(udata, model);
-    if (edata->my.empty()) {
-        // if allocation fails we throw an exception
-        // and do not simply return a null pointer
+    if (edata->my.empty() && edata->mz.empty()) {
+        // if my and mz are both empty, no (or empty) data was provided
+        // in that case we simply return a nullptr for easier checking.
         delete(edata);
         return nullptr;
     }
