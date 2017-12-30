@@ -89,14 +89,7 @@ namespace amici {
         /** N_Vector accessor
          * @return N_Vector
          */
-        N_Vector getNVector() {
-            return nvec;
-        }
-        
-        /** const N_Vector accessor
-         * @return const N_Vector
-         */
-        const N_Vector getNVector() const {
+        N_Vector getNVector() const {
             return nvec;
         }
         
