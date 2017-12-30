@@ -260,8 +260,13 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     
     int it_newton = 0;
     while(res_abs > udata->atol && res_rel > udata->rtol) {
-        /* One step of ODE integration */
-        solver->AMISolve(1e12, x, &dx, t,
+        /* One step of ODE integration
+         reason for tout specification:
+         max with 1 ensures correct direction (any positive value would do)
+         multiplication with 10 ensures nonzero difference and should ensure stable computation
+         value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
+         */
+        solver->AMISolve(std::max(*t,1.0) * 10, x, &dx, t,
                                   AMICI_ONE_STEP);
         model->fxdot(*t, x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));

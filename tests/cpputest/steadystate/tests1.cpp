@@ -52,7 +52,7 @@ TEST(groupSteadystate, testSensitivityForwardDense) {
 }
 
 TEST(groupSteadystate, testSensitivityForwardSPBCG) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/nosensiSPBCG/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 
