@@ -31,36 +31,44 @@ void ExpData::setObservedData(const double *observedData) {
     /**
      * set function that copies data from input to ExpData::my
      *
-     * @param[in] observedData observed data @type *double
+     * @param[in] observedData observed data
      */
-    memcpy(my.data(), observedData, nytrue * nt * sizeof(double));
+    for (int imy = 0; imy < nytrue * nt; ++imy) {
+        my.at(imy) = static_cast<const realtype>(observedData[imy]);
+    }
 }
 
 void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
     /**
      * set function that copies data from input to ExpData::sigmay
      *
-     * @param[in] observedDataStdDev standard deviation of observed data @type *double
+     * @param[in] observedDataStdDev standard deviation of observed data
      */
-    memcpy(sigmay.data(), observedDataStdDev, nytrue * nt * sizeof(double));
+    for (int imy = 0; imy < nytrue * nt; ++imy) {
+        sigmay.at(imy) = static_cast<const realtype>(observedDataStdDev[imy]);
+    }
 }
 
 void ExpData::setObservedEvents(const double *observedEvents) {
     /**
      * set function that copies data from input to ExpData::mz
      *
-     * @param[in] observedEvents observed event data @type *double
+     * @param[in] observedEvents observed event data
      */
-    memcpy(mz.data(), observedEvents, nmaxevent * nztrue * sizeof(double));
+    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
+        mz.at(imz) = static_cast<const realtype>(observedEvents[imz]);
+    }
 }
 
 void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
     /**
      * set function that copies data from input to ExpData::sigmaz
      *
-     * @param[in] observedEventsStdDev standard deviation of observed event data @type *double
+     * @param[in] observedEventsStdDev standard deviation of observed event data
      */
-    memcpy(sigmaz.data(), observedEventsStdDev, nmaxevent * nztrue * sizeof(double));
+    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
+        sigmaz.at(imz) = static_cast<const realtype>(observedEventsStdDev[imz]);
+    }
 }
 
 ExpData::~ExpData() {

@@ -2,6 +2,7 @@
 #define AMICI_EDATA_H
 
 #include <vector>
+#include <include/amici_defines.h>
 
 namespace amici {
 
@@ -30,15 +31,15 @@ class ExpData {
     ~ExpData();
 
     /** observed data (dimension: nt x nytrue, column-major) */
-    std::vector<double> my;
+    std::vector<realtype> my;
     /** standard deviation of observed data (dimension: nt x nytrue, column-major) */
-    std::vector<double> sigmay;
+    std::vector<realtype> sigmay;
 
     /** observed events (dimension: nmaxevents x nztrue, column-major) */
-    std::vector<double> mz;
+    std::vector<realtype> mz;
     /** standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, column-major)*/
-    std::vector<double> sigmaz;
+    std::vector<realtype> sigmaz;
     
     /** number of observables */
     const int nytrue;
