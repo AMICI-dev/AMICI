@@ -10,6 +10,7 @@
 #include <sundials/sundials_sparse.h>
 
 #include <vector>
+#include <memory>
 
 namespace amici {
     
