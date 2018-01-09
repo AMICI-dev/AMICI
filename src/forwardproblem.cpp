@@ -708,9 +708,11 @@ void ForwardProblem::getDataSensisFSA(int it, const UserData *udata,
             }
         }
     }
-    model->fsy(it, tdata, rdata);
-    if (edata) {
-        model->fsJy(it, tdata, rdata);
+    if (model->ny > 0) {
+        model->fsy(it, tdata, rdata);
+        if (edata) {
+            model->fsJy(it, tdata, rdata);
+        }
     }
 }
 
