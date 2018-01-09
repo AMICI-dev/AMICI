@@ -166,6 +166,15 @@ class UserData {
 
     /** maximum number of allowed integration steps */
     int maxsteps = 0;
+    
+    /** absolute tolerances for backward quadratures */
+    double quad_atol = 1e-16;
+    
+    /** relative tolerances for backward quadratures */
+    double quad_rtol = 1e-8;
+    
+    /** maximum number of allowed integration steps for backward problem */
+    int maxstepsB = 0;
 
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps = 0;

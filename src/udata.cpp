@@ -58,6 +58,9 @@ UserData::UserData(const UserData &other) : UserData(other.np, other.nk, other.n
     atol = other.atol;
     rtol = other.rtol;
     maxsteps = other.maxsteps;
+    quad_atol = other.quad_atol;
+    quad_rtol = other.quad_rtol;
+    maxstepsB = other.maxstepsB;
     newton_maxsteps = other.newton_maxsteps;
     newton_maxlinsteps = other.newton_maxlinsteps;
     newton_preeq = other.newton_preeq;
@@ -265,6 +268,9 @@ void UserData::print() const {
     printf("atol: %e\n", atol);
     printf("rtol: %e\n", rtol);
     printf("maxsteps: %d\n", maxsteps);
+    printf("quad_atol: %e\n", quad_atol);
+    printf("quad_rtol: %e\n", quad_rtol);
+    printf("maxstepsB: %d\n", maxstepsB);
     printf("newton_maxsteps: %d\n", newton_maxsteps);
     printf("newton_maxlinsteps: %d\n", newton_maxlinsteps);
     printf("ism: %d\n", ism);

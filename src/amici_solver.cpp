@@ -163,7 +163,7 @@ void Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     AMISetUserDataB(tdata->which, tdata);
 
     /* Number of maximal internal steps */
-    AMISetMaxNumStepsB(tdata->which, 100 * udata->maxsteps);
+    AMISetMaxNumStepsB(tdata->which, udata->maxstepsB);
     
     setLinearSolverB(udata, model, tdata->which);
     
@@ -171,10 +171,14 @@ void Solver::setupAMIB(const UserData *udata, TempData *tdata, Model *model) {
     qbinit(tdata->which, tdata->xQB);
 
     /* Enable Quadrature Error Control */
-    AMISetQuadErrConB(tdata->which, TRUE);
+    if (std::isinf(udata->quad_atol)) {
+        AMISetQuadErrConB(tdata->which, FALSE);
+    } else {
+        AMISetQuadErrConB(tdata->which, TRUE);
+    }
 
-    AMIQuadSStolerancesB(tdata->which, RCONST(udata->rtol),
-                                  RCONST(udata->atol));
+    AMIQuadSStolerancesB(tdata->which, RCONST(udata->quad_rtol),
+                                  RCONST(udata->quad_atol));
 
     AMISetStabLimDetB(tdata->which, udata->stldet);
 }
