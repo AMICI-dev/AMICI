@@ -20,28 +20,20 @@ TEST_GROUP(groupJakstatAdjoint)
 };
 
 TEST(groupJakstatAdjoint, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/nosensi/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/nosensi/");
 }
 
 TEST(groupJakstatAdjoint, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensiforward/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensiforward/");
 }
 
 TEST(groupJakstatAdjoint, testSensitivityForwardLogParam) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensiforwardlogparam/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensiforwardlogparam/");
 }
 
 TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensiadjoint/");
-    simulateAndWriteToFile(model, "/model_jakstat_adjoint/sensiadjoint/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensiadjoint/");
+    amici::simulateAndWriteToFile("/model_jakstat_adjoint/sensiadjoint/");
 }
 
 

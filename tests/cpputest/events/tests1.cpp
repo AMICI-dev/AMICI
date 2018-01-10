@@ -20,15 +20,11 @@ TEST_GROUP(groupEvents)
 };
 
 TEST(groupEvents, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_events/nosensi/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_events/nosensi/");
 }
 
 TEST(groupEvents, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_events/sensiforward/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_events/sensiforward/");
 }
 
 

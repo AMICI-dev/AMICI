@@ -29,5 +29,5 @@ function splinefun = am_spline_pos(varargin)
     str = strcat('(',strcat(strcat(str, char(varargin{n})), ')'));
     str = strrep(str, ' ', '');
     
-    splinefun = sym(strcat('am_spline_pos', str));
+    splinefun = sym(strcat('spline_pos', str));
 end

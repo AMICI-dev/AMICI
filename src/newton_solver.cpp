@@ -1,50 +1,52 @@
-#include "include/newton_solver.h"
 #include "include/amici_defines.h"
 #include "include/amici_model.h"
 #include "include/amici_solver.h"
-#include "include/edata.h"
-#include "include/forwardproblem.h"
-#include "include/newton_solver.h"
-#include "include/rdata.h"
+#include "include/amici_vector.h"
 #include "include/steadystateproblem.h"
-#include "include/tdata.h"
+#include "include/forwardproblem.h"
+#include "include/rdata.h"
 #include "include/udata.h"
+#include "include/edata.h"
+#include "include/newton_solver.h"
 #include <cstring>
 #include <ctime>
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model *model, ReturnData *rdata,
-                           const UserData *udata, TempData *tdata)
-    : model(model), rdata(rdata), udata(udata), tdata(tdata) {
+NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
+                           const UserData *udata)
+    : model(model), rdata(rdata), udata(udata), xdot(x->getLength()), dx(x->getLength())
+    {
     /**
      * default constructor, initializes all members with the provided objects
      *
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
-    sx_ip = N_VNew_Serial(model->nx);
+    this->t = t;
+    this->x = x;
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
-                                      ReturnData *rdata, const UserData *udata,
-                                      TempData *tdata) {
+NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+                                      ReturnData *rdata, const UserData *udata) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
      * restarts Newton solver, if integration fails.
      * Computes steady state sensitivities
      *
-     * @param[in] linsolType integer indicating which linear solver to use
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in,out] tdata pointer to the temporary data object @type TempData
-     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param linsolType integer indicating which linear solver to use
+     * @param model pointer to the AMICI model object
+     * @param udata pointer to the user data object
+     * @param rdata pointer to the return data object
      * @return solver NewtonSolver according to the specified linsolType
      */
 
@@ -52,7 +54,7 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
 
     /* DIRECT SOLVERS */
     case AMICI_DENSE:
-        return new NewtonSolverDense(model, rdata, udata, tdata);
+        return new NewtonSolverDense(t, x, model, rdata, udata);
 
     case AMICI_BAND:
         throw NewtonFailure("Solver currently not supported!");
@@ -71,14 +73,14 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
         throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
-        return new NewtonSolverIterative(model, rdata, udata, tdata);
+        return new NewtonSolverIterative(t, x, model, rdata, udata);
 
     case AMICI_SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
-        return new NewtonSolverSparse(model, rdata, udata, tdata);
+        return new NewtonSolverSparse(t, x, model, rdata, udata);
 
     default:
         throw NewtonFailure("Invalid Choice of Solver!");
@@ -88,60 +90,47 @@ NewtonSolver *NewtonSolver::getSolver(int linsolType, Model *model,
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolver::getStep(int ntry, int nnewt, N_Vector delta) {
+void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
     /**
      * Computes the solution of one Newton iteration
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @param[in,out] delta containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param nnewt integer number of current Newton step
+     * @param delta containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     this->prepareLinearSystem(ntry, nnewt);
 
-    N_VScale(-1.0, tdata->xdot, delta);
+    delta->minus();
     this->solveLinearSystem(delta);
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolver::getSensis(int it) {
+void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
-     * @param[in] it integer index of current time step
-     * @return stats integer flag indicating success of the method
+     * @param it integer index of current time step
+     * @param sx pointer to state variable sensitivities
      */
-    realtype *sx_tmp;
-    realtype *sx0_tmp;
-    this->prepareLinearSystem(0, -1);
+    prepareLinearSystem(0, -1);
 
-    model->fdxdotdp(tdata->t, tdata->x, tdata->dx, tdata);
-    for (int ip = 0; ip < udata->nplist; ip++) {
+    model->fdxdotdp(*t, x, &dx);
+    for (int ip = 0; ip < model->nplist(); ip++) {
         
-        /* Copy the content of dxdotdp to sx_ip */
-        sx_tmp = N_VGetArrayPointer(sx_ip);
         for (int ix = 0; ix < model->nx; ix++) {
-            sx_tmp[ix] = -tdata->dxdotdp[model->nx * ip + ix];
+            sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];
         }
-        this->solveLinearSystem(sx_ip);
+        solveLinearSystem(&((*sx)[ip]));
         
         /* Copy result to return data */
         if (it == AMICI_PREEQUILIBRATE) {
-            /* Case of preequlibration */
-            sx0_tmp = N_VGetArrayPointer(tdata->sx[ip]);
             for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx_tmp[ix];
-                sx0_tmp[ix] = sx_tmp[ix];
-            }
-        } else {
-            /* Classical steady state computation */
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
-                sx_tmp[ix];
+                rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
             }
         }
     }
@@ -155,23 +144,22 @@ void NewtonSolver::getSensis(int it) {
  */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(Model *model, ReturnData *rdata,
-                                     const UserData *udata, TempData *tdata)
-    : NewtonSolver(model, rdata, udata, tdata) {
+NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
+                                     const UserData *udata)
+    : NewtonSolver(t, x, model, rdata, udata) {
     /**
      * default constructor, initializes all members with the provided objects
      * and
      * initializes temporary storage objects
      *
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
-    pivots = NewLintArray(model->nx);
-    tmp1 = N_VNew_Serial(model->nx);
-    tmp2 = N_VNew_Serial(model->nx);
-    tmp3 = N_VNew_Serial(model->nx);
+     pivots = NewLintArray(model->nx);
+     Jtmp = NewDenseMat(model->nx,model->nx);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -182,43 +170,41 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     /* Get Jacobian */
-    model->fJ(model->nx, tdata->t, 0, tdata->x, tdata->dx,
-                           tdata->xdot, tdata->Jtmp, tdata, tmp1, tmp2, tmp3);
-    int status = DenseGETRF(tdata->Jtmp, pivots);
-    if(status != 0)
+    model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp);
+    int status = DenseGETRF(Jtmp, pivots);
+    if(status != AMICI_SUCCESS)
         throw NewtonFailure("Dense factorization failed!");
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolverDense::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverDense::solveLinearSystem(AmiVector *rhs) {
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     /* Pass pointer to the linear solver */
-    realtype *x_tmp = N_VGetArrayPointer(rhs);
-    DenseGETRS(tdata->Jtmp, pivots, x_tmp);
+    DenseGETRS(Jtmp, pivots, rhs->data());
 }
 
 /* ----------------------------------------------------------------------------------
  */
 
 NewtonSolverDense::~NewtonSolverDense() {
-    N_VDestroy_Serial(tmp1);
-    N_VDestroy_Serial(tmp2);
-    N_VDestroy_Serial(tmp3);
-    DestroyArray(pivots);
+    if(Jtmp)
+        DestroyMat(Jtmp);
+    if(pivots)
+        DestroyArray(pivots);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -229,24 +215,23 @@ NewtonSolverDense::~NewtonSolverDense() {
  */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(Model *model, ReturnData *rdata,
-                                       const UserData *udata, TempData *tdata)
-    : NewtonSolver(model, rdata, udata, tdata) {
+NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
+                                       const UserData *udata)
+    : NewtonSolver(t, x, model, rdata, udata) {
     /**
      * default constructor, initializes all members with the provided objects,
      * initializes temporary storage objects and the klu solver
      *
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
 
     /* Initialize the KLU solver */
     klu_status = klu_defaults(&common);
-    tmp1 = N_VNew_Serial(model->nx);
-    tmp2 = N_VNew_Serial(model->nx);
-    tmp3 = N_VNew_Serial(model->nx);
+    Jtmp = SparseNewMat(model->nx, model->nx, model->nnz, CSC_MAT);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -257,9 +242,9 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     /* Check if KLU was initialized successfully */
@@ -267,19 +252,18 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         throw NewtonFailure("KLU was not initialized!");
 
     /* Get sparse Jacobian */
-    model->fJSparse(tdata->t, 0.0, tdata->x, tdata->dx, tdata->xdot, tdata->J,
-                                 tdata, tmp1, tmp2, tmp3);
+    model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp);
 
     /* Get factorization of sparse Jacobian */
     if(symbolic) /* if symbolic was already created free first to avoid memory leak */
         klu_free_symbolic(&symbolic, &common);
-    symbolic = klu_analyze(model->nx, (tdata->J)->indexptrs,
-                           (tdata->J)->indexvals, &common);
+    symbolic = klu_analyze(model->nx, Jtmp->indexptrs,
+                           Jtmp->indexvals, &common);
     if (symbolic) {
         if(numeric) /* if numeric was already created free first to avoid memory leak */
             klu_free_numeric(&numeric, &common);
-        numeric = klu_factor((tdata->J)->indexptrs, (tdata->J)->indexvals,
-                             (tdata->J)->data, symbolic, &common);
+        numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
+                             Jtmp->data, symbolic, &common);
         if (numeric) {
             return;
         } else {
@@ -293,18 +277,16 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in] rhs containing the RHS of the linear system,will be
-     * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
+     * @param rhs containing the RHS of the linear system,will be
+     * overwritten by solution to the linear system
      */
-    realtype *x_tmp = N_VGetArrayPointer(rhs);
 
     /* Pass pointer to the linear solver */
-    klu_status = klu_solve(symbolic, numeric, model->nx, 1, x_tmp, &common);
+    klu_status = klu_solve(symbolic, numeric, model->nx, 1, rhs->data(), &common);
     if (klu_status != 1)
         throw NewtonFailure("KLU solver failed");
 }
@@ -313,9 +295,8 @@ void NewtonSolverSparse::solveLinearSystem(N_Vector rhs) {
  */
 
 NewtonSolverSparse::~NewtonSolverSparse() {
-    N_VDestroy_Serial(tmp1);
-    N_VDestroy_Serial(tmp2);
-    N_VDestroy_Serial(tmp3);
+    if(Jtmp)
+        SparseDestroyMat(Jtmp);
     if(symbolic)
         klu_free_symbolic(&symbolic, &common);
     if(numeric)
@@ -330,30 +311,20 @@ NewtonSolverSparse::~NewtonSolverSparse() {
  */
 
 /* Derived class for iterative linear solver */
-NewtonSolverIterative::NewtonSolverIterative(Model *model, ReturnData *rdata,
-                                             const UserData *udata,
-                                             TempData *tdata)
-    : NewtonSolver(model, rdata, udata, tdata) {
+NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
+                                             const UserData *udata)
+    : NewtonSolver(t, x, model, rdata, udata), ns_p(model->nx), ns_h(model->nx),
+    ns_t(model->nx), ns_s(model->nx), ns_r(model->nx), ns_rt(model->nx), ns_v(model->nx),
+    ns_Jv(model->nx), ns_tmp(model->nx), ns_Jdiag(model->nx)
+    {
     /**
      * default constructor, initializes all members with the provided objects
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] rdata pointer to the return data object @type ReturnData
-     * @param[in] udata pointer to the user data object @type UserData
-     * @param[in] tdata pointer to the temporary data object @type TempData
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param udata pointer to the user data object
      */
-        
-        ns_p = N_VNew_Serial(model->nx);
-        ns_h = N_VNew_Serial(model->nx);
-        ns_t = N_VNew_Serial(model->nx);
-        ns_s = N_VNew_Serial(model->nx);
-        ns_r = N_VNew_Serial(model->nx);
-        ns_rt = N_VNew_Serial(model->nx);
-        ns_v = N_VNew_Serial(model->nx);
-        ns_Jv = N_VNew_Serial(model->nx);
-        ns_tmp = N_VNew_Serial(model->nx);
-        ns_Jdiag = N_VNew_Serial(model->nx);
-        
-        N_VScale(-1.0, tdata->xdot, tdata->xdot);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -365,9 +336,9 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
      * solver.
      * Also wraps around getSensis for iterative linear solver.
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
+     * @param nnewt integer number of current Newton step
      */
 
     newton_try = ntry;
@@ -380,29 +351,29 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolverIterative::solveLinearSystem(N_Vector rhs) {
+void NewtonSolverIterative::solveLinearSystem(AmiVector *rhs) {
     /**
      * Solves the linear system for the Newton step by passing it to
      * linsolveSPBCG
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system
      */
 
     linsolveSPBCG(newton_try, i_newton, rhs);
 }
     
     
-void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta) {
+void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delta) {
     /**
      * Iterative linear solver created from SPILS BiCG-Stab.
      * Solves the linear system within each Newton step if iterative solver is
      * chosen.
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @param[in] ns_delta ???
+     * @param nnewt integer number of current Newton step
+     * @param ns_delta Newton step
      */
     
     double rho;
@@ -412,72 +383,75 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
     double omega;
     double res;
     
+    xdot = *ns_delta;
+    xdot.minus();
+    
     // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiag(tdata->t, ns_Jdiag, 0.0, tdata->x, tdata->dx, tdata);
+    model->fJDiag(*t, &ns_Jdiag, 0.0, x, &dx);
     
     // Ensure positivity of entries in ns_Jdiag
-    N_VConst(1.0, ns_p);
-    N_VAbs(ns_Jdiag, ns_tmp);
-    N_VCompare(1e-15, ns_tmp, ns_tmp);
-    N_VLinearSum(-1.0, ns_tmp, 1.0, ns_p, ns_tmp);
-    N_VLinearSum(1.0, ns_Jdiag, 1.0, ns_tmp, ns_Jdiag);
+    ns_p.set(1.0);
+    N_VAbs(ns_Jdiag.getNVector(), ns_tmp.getNVector());
+    N_VCompare(1e-15, ns_tmp.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
     
     // Initialize for linear solve
-    N_VConst(0.0, ns_p);
-    N_VConst(0.0, ns_v);
-    N_VConst(0.0, ns_delta);
-    N_VConst(0.0, ns_tmp);
+    ns_p.reset();
+    ns_v.reset();
+    ns_delta->reset();
+    ns_tmp.reset();
     rho = 1.0;
     omega = 1.0;
     alpha = 1.0;
     
     // can be set to 0 at the moment
-    model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_delta, ns_Jv, 0.0,  tdata, ns_tmp, NULL);
+    model->fJv(*t, x, &dx, &xdot, ns_delta, &ns_Jv, 0.0);
     
     // ns_r = xdot - ns_Jv;
-    N_VLinearSum(-1.0, ns_Jv, 1.0, tdata->xdot, ns_r);
-    N_VDiv(ns_r, ns_Jdiag, ns_r);
-    res = sqrt(N_VDotProd(ns_r, ns_r));
-    N_VScale(1.0, ns_r, ns_rt);
+    N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
+    N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
+    res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
+    ns_rt = ns_r;
     
     for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps;
          i_linstep++) {
         // Compute factors
         rho1 = rho;
-        rho = N_VDotProd(ns_rt, ns_r);
+        rho = N_VDotProd(ns_rt.getNVector(), ns_r.getNVector());
         beta = rho * alpha / (rho1 * omega);
         
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
-        N_VLinearSum(1.0, ns_p, -omega, ns_v, ns_p);
-        N_VLinearSum(1.0, ns_r, beta, ns_p, ns_p);
+        N_VLinearSum(1.0, ns_p.getNVector(), -omega, ns_v.getNVector(), ns_p.getNVector());
+        N_VLinearSum(1.0, ns_r.getNVector(), beta, ns_p.getNVector(), ns_p.getNVector());
         
         // ns_v = J * ns_p
-        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_p, ns_v, 0.0,  tdata, ns_tmp, NULL);
-        N_VDiv(ns_v, ns_Jdiag, ns_v);
+        model->fJv(*t, x, &dx, &xdot, &ns_p, &ns_v, 0.0);
+        N_VDiv(ns_v.getNVector(), ns_Jdiag.getNVector(), ns_v.getNVector());
         
         // Compute factor
-        alpha = rho / N_VDotProd(ns_rt, ns_v);
+        alpha = rho / N_VDotProd(ns_rt.getNVector(), ns_v.getNVector());
         
         // ns_h = ns_delta + alpha * ns_p;
-        N_VLinearSum(1.0, ns_delta, alpha, ns_p, ns_h);
+        N_VLinearSum(1.0, ns_delta->getNVector(), alpha, ns_p.getNVector(), ns_h.getNVector());
         // ns_s = ns_r - alpha * ns_v;
-        N_VLinearSum(1.0, ns_r, -alpha, ns_v, ns_s);
+        N_VLinearSum(1.0, ns_r.getNVector(), -alpha, ns_v.getNVector(), ns_s.getNVector());
         
         // ns_t = J * ns_s
-        model->fJv(tdata->t, tdata->x, tdata->dx, tdata->xdot, ns_s, ns_t, 0.0,  tdata, ns_tmp, NULL);
-        N_VDiv(ns_t, ns_Jdiag, ns_t);
+        model->fJv(*t, x, &dx, &xdot, &ns_s, &ns_t, 0.0);
+        N_VDiv(ns_t.getNVector(), ns_Jdiag.getNVector(), ns_t.getNVector());
         
         // Compute factor
-        omega = N_VDotProd(ns_t, ns_s) / N_VDotProd(ns_t, ns_t);
+        omega = N_VDotProd(ns_t.getNVector(), ns_s.getNVector()) / N_VDotProd(ns_t.getNVector(), ns_t.getNVector());
         
         // ns_delta = ns_h + omega * ns_s;
-        N_VLinearSum(1.0, ns_h, omega, ns_s, ns_delta);
+        N_VLinearSum(1.0, ns_h.getNVector(), omega, ns_s.getNVector(), ns_delta->getNVector());
         // ns_r = ns_s - omega * ns_t;
-        N_VLinearSum(1.0, ns_s, -omega, ns_t, ns_r);
+        N_VLinearSum(1.0, ns_s.getNVector(), -omega, ns_t.getNVector(), ns_r.getNVector());
         
         // Compute the (unscaled) residual
-        N_VProd(ns_r, ns_Jdiag, ns_r);
-        res = sqrt(N_VDotProd(ns_r, ns_r));
+        N_VProd(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
+        res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
         
         // Test convergence
         if (res < udata->atol) {
@@ -490,7 +464,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
         }
         
         // Scale back
-        N_VDiv(ns_r, ns_Jdiag, ns_r);
+        N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
     }
     throw NewtonFailure("SPBCG solver failed to converge");
 }
@@ -500,18 +474,6 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta)
  */
 
 NewtonSolverIterative::~NewtonSolverIterative(){
-    N_VDestroy_Serial(ns_p);
-    N_VDestroy_Serial(ns_h);
-    N_VDestroy_Serial(ns_t);
-    N_VDestroy_Serial(ns_s);
-    N_VDestroy_Serial(ns_r);
-    N_VDestroy_Serial(ns_rt);
-    N_VDestroy_Serial(ns_v);
-    N_VDestroy_Serial(ns_Jv);
-    N_VDestroy_Serial(ns_tmp);
-    N_VDestroy_Serial(ns_Jdiag);
-    N_VScale(-1.0, tdata->xdot, tdata->xdot);
-
 };
 
 } // namespace amici

@@ -1,9 +1,15 @@
 #ifndef amici_exception_h
 #define amici_exception_h
 
+#include <amici_defines.h> // necessary for realtype
 #include <exception>
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
+#include <sstream>
+#include <execinfo.h>
+#include <dlfcn.h>    // for dladdr
+#include <cxxabi.h>   // for __cxa_demangle
 
 namespace amici {
 
@@ -20,17 +26,71 @@ namespace amici {
              */
             va_list ap;
             va_start(ap, fmt);
-            vsnprintf(msg, sizeof msg, fmt, ap);
+            vsnprintf(msg, sizeof(msg), fmt, ap);
             va_end(ap);
+            storeBacktrace(12);
         }
+        
+        AmiException(const AmiException& old) {
+            /** copy constructor
+             * @param old object to copy from
+             */
+            snprintf(msg, sizeof(msg), "%s", old.msg);
+            snprintf(trace, sizeof(trace), "%s", old.trace);
+        }
+        
         /** override of default error message function
          * @return msg error message
          */
         const char* what() const throw() {
             return msg;
         }
+        
+        /** returns the stored backtrace
+         * @return trace backtrace
+         */
+        const char *getBacktrace() const {
+            return trace;
+        }
+        
+        /** stores the current backtrace
+         * @param nMaxFrames number of frams to go back in stacktrace
+         */
+        void storeBacktrace(const int nMaxFrames) {
+            void *callstack[nMaxFrames];
+            char buf[1024];
+            int nFrames = backtrace(callstack, nMaxFrames);
+            char **symbols = backtrace_symbols(callstack, nFrames);
+            
+            std::ostringstream trace_buf;
+            for (int i = 0; i < nFrames; i++) {
+                Dl_info info;
+                if (dladdr(callstack[i], &info) && info.dli_sname) {
+                    char *demangled = NULL;
+                    int status = -1;
+                    if (info.dli_sname[0] == '_')
+                    demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+                    snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
+                             i, int(2 + sizeof(void*) * 2), callstack[i],
+                             status == 0 ? demangled :
+                             info.dli_sname == 0 ? symbols[i] : info.dli_sname,
+                             (char *)callstack[i] - (char *)info.dli_saddr);
+                    free(demangled);
+                } else {
+                    snprintf(buf, sizeof(buf), "%-3d %*p %s\n",
+                             i, int(2 + sizeof(void*) * 2), callstack[i], symbols[i]);
+                }
+                trace_buf << buf;
+            }
+            free(symbols);
+            if (nFrames == nMaxFrames)
+            trace_buf << "[truncated]\n";
+            snprintf(trace, sizeof(trace), "%s", trace_buf.str().c_str());
+        }
+        
     private:
-        char msg[1000];
+        char msg[500];
+        char trace[500];
     };
     
     /** @brief cvode exception handler class
@@ -55,17 +115,6 @@ namespace amici {
          */
         IDAException(const int error_code, const char *function) :
         AmiException("IDA routine %s failed with error code (%i)",function,error_code){}
-    };
-    
-    /** @brief null pointer exception handler class
-     */
-    class NullPointerException : public AmiException  {
-    public:
-        /** constructor
-         * @param[in] variable name of variable that was supposed to be accesssed
-         */
-        NullPointerException(const char *variable) :
-        AmiException("AMICI encountered a null pointer for variable (%s)",variable){}
     };
     
     /** @brief integration failure exception

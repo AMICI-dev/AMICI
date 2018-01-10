@@ -2,16 +2,17 @@
 
 #include "include/amici_defines.h"
 #include "include/amici_model.h"
-#include <cstring>
 #include <include/udata.h>
+
+#include <cstring>
 
 namespace amici {
 
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
 ExpData::ExpData(const UserData *udata, Model *model)
-    : nytrue(model->nytrue), nztrue(model->nztrue), nt(udata->nt),
-      nmaxevent(udata->nmaxevent) {
+    : nytrue(model->nytrue), nztrue(model->nztrue), nt(udata->nt()),
+      nmaxevent(udata->nme()) {
     /**
      * constructor that initializes with UserData and model
      *
@@ -19,10 +20,10 @@ ExpData::ExpData(const UserData *udata, Model *model)
      * @param[in] model pointer to model specification object @type Model
      */
     if (udata) {
-        my = new double[udata->nt * model->nytrue]();
-        sigmay = new double[udata->nt * model->nytrue]();
-        mz = new double[udata->nmaxevent * model->nztrue]();
-        sigmaz = new double[udata->nmaxevent * model->nztrue]();
+        my.resize(udata->nt() * model->nytrue);
+        sigmay.resize(udata->nt() * model->nytrue);
+        mz.resize(udata->nme() * model->nztrue);
+        sigmaz.resize(udata->nme() * model->nztrue);
     }
 }
 
@@ -30,47 +31,47 @@ void ExpData::setObservedData(const double *observedData) {
     /**
      * set function that copies data from input to ExpData::my
      *
-     * @param[in] observedData observed data @type *double
+     * @param[in] observedData observed data
      */
-    memcpy(my, observedData, nytrue * nt * sizeof(double));
+    for (int imy = 0; imy < nytrue * nt; ++imy) {
+        my.at(imy) = static_cast<const realtype>(observedData[imy]);
+    }
 }
 
 void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
     /**
      * set function that copies data from input to ExpData::sigmay
      *
-     * @param[in] observedDataStdDev standard deviation of observed data @type *double
+     * @param[in] observedDataStdDev standard deviation of observed data
      */
-    memcpy(sigmay, observedDataStdDev, nytrue * nt * sizeof(double));
+    for (int imy = 0; imy < nytrue * nt; ++imy) {
+        sigmay.at(imy) = static_cast<const realtype>(observedDataStdDev[imy]);
+    }
 }
 
 void ExpData::setObservedEvents(const double *observedEvents) {
     /**
      * set function that copies data from input to ExpData::mz
      *
-     * @param[in] observedEvents observed event data @type *double
+     * @param[in] observedEvents observed event data
      */
-    memcpy(mz, observedEvents, nmaxevent * nztrue * sizeof(double));
+    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
+        mz.at(imz) = static_cast<const realtype>(observedEvents[imz]);
+    }
 }
 
 void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
     /**
      * set function that copies data from input to ExpData::sigmaz
      *
-     * @param[in] observedEventsStdDev standard deviation of observed event data @type *double
+     * @param[in] observedEventsStdDev standard deviation of observed event data
      */
-    memcpy(sigmaz, observedEventsStdDev, nmaxevent * nztrue * sizeof(double));
+    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
+        sigmaz.at(imz) = static_cast<const realtype>(observedEventsStdDev[imz]);
+    }
 }
 
 ExpData::~ExpData() {
-    if (my)
-        delete[] my;
-    if (sigmay)
-        delete[] sigmay;
-    if (mz)
-        delete[] mz;
-    if (sigmaz)
-        delete[] sigmaz;
 }
 
 } // namespace amici

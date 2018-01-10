@@ -1,36 +1,20 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_events_w.h"
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void stau_model_events(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *sx_tmp;
-int ip;
-memset(tdata->stau,0,sizeof(realtype)*udata->nplist);
-w_model_events(t,x,NULL,tdata);
-for(ip = 0; ip<udata->nplist; ip++) {
-sx_tmp = N_VGetArrayPointer(sx[ip]);
-switch (udata->plist[ip]) {
+void stau_model_events(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
+switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {
-  tdata->stau[ip] = (sx_tmp[1]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
 
         } break;
 
         case 1: {
-  tdata->stau[ip] = (sx_tmp[0]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->h[3]*tdata->p[0]*x_tmp[0]);
+  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
 
         } break;
 
@@ -49,12 +33,12 @@ switch (udata->plist[ip]) {
   case 1: {
     switch(ie) { 
         case 0: {
-  tdata->stau[ip] = (sx_tmp[1]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
 
         } break;
 
         case 1: {
-  tdata->stau[ip] = (sx_tmp[0]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->h[3]*tdata->p[0]*x_tmp[0]);
+  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
 
         } break;
 
@@ -73,12 +57,12 @@ switch (udata->plist[ip]) {
   case 2: {
     switch(ie) { 
         case 0: {
-  tdata->stau[ip] = (sx_tmp[1]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
 
         } break;
 
         case 1: {
-  tdata->stau[ip] = (sx_tmp[0]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->h[3]*tdata->p[0]*x_tmp[0]);
+  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
 
         } break;
 
@@ -97,12 +81,12 @@ switch (udata->plist[ip]) {
   case 3: {
     switch(ie) { 
         case 0: {
-  tdata->stau[ip] = (sx_tmp[1]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->p[2]*x_tmp[1]-tdata->p[1]*x_tmp[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
 
         } break;
 
         case 1: {
-  tdata->stau[ip] = (sx_tmp[0]-sx_tmp[2])/(tdata->h[2]-x_tmp[2]+tdata->h[3]*tdata->p[0]*x_tmp[0]);
+  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
 
         } break;
 
@@ -111,7 +95,7 @@ switch (udata->plist[ip]) {
         } break;
 
         case 3: {
-  tdata->stau[ip] = 1.0;
+  stau[0] = 1.0;
 
         } break;
 
@@ -121,8 +105,4 @@ switch (udata->plist[ip]) {
 
 }
 }
-return;
-
-}
-
 

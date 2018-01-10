@@ -21,8 +21,6 @@ classdef amifun
         cvar = char.empty();
         % argument string (solver specific) @type char
         argstr = char.empty();
-        % argument string (solver unspecific) @type char
-        fargstr = char.empty();
         % dependencies on other functions @type cell
         deps = cell.empty();
         % nvec dependencies
@@ -48,13 +46,10 @@ classdef amifun
             AF.funstr = funstr;
             AF = AF.getDeps(model);
             AF = AF.getArgs(model);
-            AF = AF.getFArgs();
             AF = AF.getNVecs();
             AF = AF.getCVar();
             AF = AF.getSensiFlag();
         end
-
-        printLocalVars(this,model,fid)
         
         writeCcode_sensi(this,model,fid)
         
@@ -67,8 +62,6 @@ classdef amifun
         [ this ] = getDeps(this,model)
         
         [ this ] = getArgs(this,model)
-        
-        [ this ] = getFArgs(this)
         
         [ this ] = getNVecs(this)
         

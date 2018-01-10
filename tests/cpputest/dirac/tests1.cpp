@@ -19,15 +19,16 @@ TEST_GROUP(groupDirac)
 };
 
 
-UserData *getTestUserData() {
-    Model *model = getModel();
-    UserData *udata = new UserData();
-
-    udata->qpositivex = new double[model->nx];
-    udata->p = new double[model->np];
-    udata->k = new double[model->nk];
-
-    delete model;
+amici::UserData *getTestUserData() {
+    int nx, nk, np;
+    getModelDims(&nx,&nk,&np);
+    amici::UserData *udata = new amici::UserData(np,nk,nx);
+    double par[np];
+    double konst[nk];
+    memset(par,0,np*sizeof(double));
+    memset(konst,0,nk*sizeof(double));
+    udata->setParameters(par);
+    udata->setConstants(konst);
     return udata;
 }
 
@@ -36,7 +37,7 @@ UserData *getTestUserData() {
  * Test for mem leaks in UserData initalization / destruction
  */
 TEST(groupDirac, testCreateAndFreeUserData) {
-    UserData *udata = getTestUserData();
+    amici::UserData *udata = getTestUserData();
 
     delete udata;
 }
@@ -46,14 +47,14 @@ TEST(groupDirac, testCreateAndFreeUserData) {
  */
 
 TEST(groupDirac, testCreateAndFreeExpData) {
-    UserData udata;
+    amici::UserData *udata = getTestUserData();
     
-    Model *model = getModel();
+    auto model = getModel(udata);
 
-    ExpData *edata = getTestExpData(&udata, model);
+    amici::ExpData *edata = getTestExpData(udata, model.get());
     
-    delete model;
     delete edata;
+    delete udata;
 }
 
 /*
@@ -61,20 +62,16 @@ TEST(groupDirac, testCreateAndFreeExpData) {
  */
 
 TEST(groupDirac, testCreateAndFreeReturnData) {
-    Model *model = getModel();
-
-    UserData udata;
-    ReturnData *rdata = new ReturnData(&udata, model);
-    delete model;
-
+    amici::UserData *udata = getTestUserData();
+    auto model = getModel(udata);
+    amici::ReturnData *rdata = new amici::ReturnData(udata, model.get());
+    delete udata;
     delete rdata;
 }
 
 
 TEST(groupDirac, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_dirac/nosensi/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_dirac/nosensi/");
 }
 
 TEST(groupDirac, testSimulationExpData) {
@@ -82,9 +79,7 @@ TEST(groupDirac, testSimulationExpData) {
 }
 
 TEST(groupDirac, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_dirac/sensiforward/");
-    delete model;
+   amici::simulateAndVerifyFromFile("/model_dirac/sensiforward/");
 }
 
 TEST(groupDirac, testSensitivityState) {

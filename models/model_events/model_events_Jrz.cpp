@@ -1,34 +1,17 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include <include/edata.h>
-#include "model_events_w.h"
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void Jrz_model_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-w_model_events(t,x,NULL,tdata);
-int iz;
-if(!amiIsNaN(edata->mz[0*udata->nmaxevent+tdata->nroots[ie]])){
-    iz = 0;
-  tdata->Jz[0] += amilog((tdata->sigmaz[0]*tdata->sigmaz[0])*3.141592653589793*2.0)*5.0E-1+(rdata->rz[tdata->nroots[ie]+udata->nmaxevent*0]*rdata->rz[tdata->nroots[ie]+udata->nmaxevent*0])*1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*5.0E-1;
+void Jrz_model_events(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) {
+switch(iz){
+    case 0:
+  nllh[0] = amici::log((sigmaz[0]*sigmaz[0])*3.141592653589793*2.0)*5.0E-1+(rz[0]*rz[0])*1.0/(sigmaz[0]*sigmaz[0])*5.0E-1;
+    break;
+    case 1:
+  nllh[0] = amici::log((sigmaz[1]*sigmaz[1])*3.141592653589793*2.0)*5.0E-1+(rz[1]*rz[1])*1.0/(sigmaz[1]*sigmaz[1])*5.0E-1;
+    break;
 }
-if(!amiIsNaN(edata->mz[1*udata->nmaxevent+tdata->nroots[ie]])){
-    iz = 1;
-  tdata->Jz[0] += amilog((tdata->sigmaz[1]*tdata->sigmaz[1])*3.141592653589793*2.0)*5.0E-1+(rdata->rz[tdata->nroots[ie]+udata->nmaxevent*1]*rdata->rz[tdata->nroots[ie]+udata->nmaxevent*1])*1.0/(tdata->sigmaz[1]*tdata->sigmaz[1])*5.0E-1;
 }
-return;
-
-}
-
 
