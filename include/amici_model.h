@@ -1,5 +1,5 @@
-#ifndef AMICI_fH
-#define AMICI_fH
+#ifndef AMICI_MODEL_H
+#define AMICI_MODEL_H
 
 #include <include/amici_exception.h>
 #include <include/amici_defines.h>
@@ -956,4 +956,4 @@ namespace amici {
     
 } // namespace amici
 
-#endif // fH
+#endif // AMICI_MODEL_H

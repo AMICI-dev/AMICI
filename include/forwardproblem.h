@@ -45,77 +45,77 @@ class ForwardProblem {
     /** accessor for t
      * @return t
      */
-    realtype gett() const {
+    realtype getTime() const {
         return t;
     }
     
     /** accessor for sx
      * @return sx
      */
-    AmiVectorArray getsx() const {
+    AmiVectorArray getStateSensitivity() const {
         return sx;
     }
     
     /** accessor for x_disc
      * @return x_disc
      */
-    AmiVectorArray getx_disc() const {
+    AmiVectorArray getStatesAtDiscontinuities() const {
         return x_disc;
     }
     
     /** accessor for xdot_disc
      * @return xdot_disc
      */
-    AmiVectorArray getxdot_disc() const {
+    AmiVectorArray getRHSAtDiscontinuities() const {
         return xdot_disc;
     }
     
     /** accessor for xdot_old_disc
      * @return xdot_old_disc
      */
-    AmiVectorArray getxdot_old_disc() const {
+    AmiVectorArray getRHSBeforeDiscontinuities() const {
         return xdot_old_disc;
     }
     
     /** accessor for nroots
      * @return nroots
      */
-    std::vector<int> getnroots() const {
+    std::vector<int> getNumberOfRoots() const {
         return nroots;
     }
     
     /** accessor for discs
      * @return discs
      */
-    std::vector<realtype> getdiscs() const {
+    std::vector<realtype> getDiscontinuities() const {
         return discs;
     }
     
     /** accessor for rootidx
      * @return rootidx
      */
-    std::vector<int> getrootidx() const {
+    std::vector<int> getRootIndexes() const {
         return rootidx;
     }
     
     /** accessor for dJydx
      * @return dJydx
      */
-   std::vector<realtype> getdJydx() const {
+   std::vector<realtype> getDJydx() const {
         return dJydx;
     }
     
     /** accessor for dJzdx
      * @return dJzdx
      */
-    std::vector<realtype> getdJzdx() const {
+    std::vector<realtype> getDJzdx() const {
         return dJzdx;
     }
     
     /** accessor for iroot
      * @return iroot
      */
-    int getiroot() const {
+    int getRootCounter() const {
         return iroot;
     }
     

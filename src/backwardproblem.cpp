@@ -21,23 +21,23 @@ BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
     dxB(fwd->model->nx),
     xQB(fwd->model->nJ*fwd->udata->nplist()),
     xQB_old(fwd->model->nJ*fwd->udata->nplist()),
-    x_disc(fwd->getx_disc()),
-    xdot_disc(fwd->getxdot_disc()),
-    xdot_old_disc(fwd->getxdot_old_disc()),
-    sx(fwd->getsx()),
-    nroots(fwd->getnroots()),
-    discs(fwd->getdiscs()),
-    irdiscs(fwd->getdiscs()),
-    rootidx(fwd->getrootidx()),
-    dJydx(fwd->getdJydx()),
-    dJzdx(fwd->getdJzdx())
+    x_disc(fwd->getStatesAtDiscontinuities()),
+    xdot_disc(fwd->getRHSAtDiscontinuities()),
+    xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
+    sx(fwd->getStateSensitivity()),
+    nroots(fwd->getNumberOfRoots()),
+    discs(fwd->getDiscontinuities()),
+    irdiscs(fwd->getDiscontinuities()),
+    rootidx(fwd->getRootIndexes()),
+    dJydx(fwd->getDJydx()),
+    dJzdx(fwd->getDJzdx())
     {
-        t = fwd->gett();
+        t = fwd->getTime();
         model = fwd->model;
         solver = fwd->solver;
         udata = fwd->udata;
         rdata = fwd->rdata;
-        iroot = fwd->getiroot();
+        iroot = fwd->getRootCounter();
     };
 
     
