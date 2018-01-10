@@ -120,6 +120,7 @@ void UserData::setPlist(const int *plist, int length) {
     
 void UserData::setPScale(const AMICI_parameter_scaling pscale) {
     this->pscale = pscale;
+    unscaleParameters(unpar.data());
 }
     
 const AMICI_parameter_scaling UserData::getPScale() const {

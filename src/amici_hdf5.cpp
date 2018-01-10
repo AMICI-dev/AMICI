@@ -151,7 +151,7 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(hid_t fileId,
     if (AMI_HDF5_attributeExists(fileId, datasetPath, "pbar")) {
         status += AMI_HDF5_getDoubleArrayAttribute(fileId, datasetPath, "pbar",
                                                    &buffer, &length0);
-        if (length0 != 0 && length0 == (unsigned)udata->nplist())
+        if (length0 != 0 && length0 != (unsigned)udata->nplist())
             goto freturn;
         if(length0 == (unsigned)udata->nplist())
             udata->setPbar(buffer);//otherwise use default
