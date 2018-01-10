@@ -22,7 +22,7 @@ namespace amici {
  * @param model pointer to the model object
  */
 void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) {
-    model->initialize(fwd->getxptr(), fwd->getdxptr(), udata);
+    model->initialize(fwd->getStatePointer(), fwd->getStateDerivativePointer(), udata);
 
     /* Create solver memory object */
     if (udata->getLinearMultistepMethod() != ADAMS && udata->getLinearMultistepMethod() != BDF) {
@@ -36,7 +36,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
         throw AmiException("Failed to allocated solver memory!");
     try {
     /* Initialize AMIS solver*/
-    init(fwd->getxptr(), fwd->getdxptr(), udata->t0());
+    init(fwd->getStatePointer(), fwd->getStateDerivativePointer(), udata->t0());
     /* Specify integration tolerances */
     AMISStolerances(RCONST(udata->rtol), RCONST(udata->atol));
     /* Set optional inputs */
@@ -59,9 +59,9 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
              * come from the model definition */
             std::vector<double> sx0 = udata->getInitialSensitivityStates();
             if (sx0.empty()) {
-                model->fsx0(fwd->getsxptr(), fwd->getxptr(), udata);
+                model->fsx0(fwd->getStateSensitivityPointer(), fwd->getStatePointer(), udata);
             } else {
-                AmiVectorArray *sx = fwd->getsxptr();
+                AmiVectorArray *sx = fwd->getStateSensitivityPointer();
                 for (int ip = 0; ip < udata->nplist(); ip++) {
                     for (int ix = 0; ix < model->nx; ix++) {
                         sx->at(ix,ip) =
@@ -75,7 +75,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
             if (udata->sensmeth() == AMICI_SENSI_FSA) {
                 
                 /* Activate sensitivity calculations */
-                sensInit1(fwd->getsxptr(), fwd->getsdxptr(), udata);
+                sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), udata);
                 /* Set sensitivity analysis optional inputs */
                 std::vector<int> plist(udata->plist());
                 std::vector<double> par;
@@ -100,7 +100,7 @@ void Solver::setupAMI(ForwardProblem *fwd, const UserData *udata, Model *model) 
     AMISetSuppressAlg(TRUE);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if(udata->nt()>1)
-        AMICalcIC(udata->t(1), fwd->getxptr(), fwd->getdxptr());
+        AMICalcIC(udata->t(1), fwd->getStatePointer(), fwd->getStateDerivativePointer());
     } catch (...) {
         AMIFree();
         throw AmiException("setupAMI routine failed!");

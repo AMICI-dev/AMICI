@@ -122,28 +122,28 @@ class ForwardProblem {
     /** accessor for pointer to x
      * @return &x
      */
-    AmiVector *getxptr() {
+    AmiVector *getStatePointer() {
         return &x;
     }
     
     /** accessor for pointer to dx
      * @return &dx
      */
-    AmiVector *getdxptr() {
+    AmiVector *getStateDerivativePointer() {
         return &dx;
     }
     
     /** accessor for pointer to sx
      * @return &sx
      */
-    AmiVectorArray *getsxptr() {
+    AmiVectorArray *getStateSensitivityPointer() {
         return &sx;
     }
     
     /** accessor for pointer to sdx
      * @return &sdx
      */
-    AmiVectorArray *getsdxptr() {
+    AmiVectorArray *getStateDerivativeSensitivityPointer() {
         return &sdx;
     }
     
