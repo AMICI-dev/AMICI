@@ -37,21 +37,6 @@ namespace amici {
             nvec = N_VMake_Serial(rvec.size(),rvec.data());
         };
         
-        /** swap functions for copy-and-swap idiom, swaps data between two AmiVectors
-         * see https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
-         * @param first will be switched with second
-         * @param second will be switched with first
-         */
-        friend void swap( AmiVector& first, AmiVector& second ) {
-            std::swap(first.vec,second.vec);
-            if(first.nvec)
-                N_VDestroy_Serial(first.nvec);
-            first.nvec = N_VMake_Serial(first.vec.size(),first.vec.data());
-            if(second.nvec)
-                N_VDestroy_Serial(second.nvec);
-            second.nvec = N_VMake_Serial(second.vec.size(),second.vec.data());
-        };
-        
         /** copy constructor
          * @param vold vector from which the data will be copied
          */
