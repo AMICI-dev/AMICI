@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
-#include <sundials/sundials_types.h> //realtype definition
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
 #include <cmath> 
 
 void M_model_robertson(realtype *M, const realtype t, const realtype *x, const realtype *p, const realtype *k) {

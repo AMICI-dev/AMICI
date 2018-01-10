@@ -31,10 +31,13 @@ for ifun = this.funs
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
             fprintf(fid,'\n');
             fprintf(fid,'#include <include/symbolic_functions.h>\n');
-            fprintf(fid,'#include <sundials/sundials_types.h> //realtype definition\n');
+            fprintf(fid,'#include <include/amici_defines.h> //realtype definition\n');
+            
             if(ismember(ifun{1},{'JSparse','JSparseB'}))
                 fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
             end
+            
+            fprintf(fid,'typedef amici::realtype realtype;\n');
             fprintf(fid,'#include <cmath> \n');
             fprintf(fid,'\n');
             

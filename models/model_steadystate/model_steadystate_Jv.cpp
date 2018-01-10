@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
-#include <sundials/sundials_types.h> //realtype definition
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
 #include <cmath> 
 
 void Jv_model_steadystate(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx) {

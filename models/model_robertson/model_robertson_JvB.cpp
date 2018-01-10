@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
-#include <sundials/sundials_types.h> //realtype definition
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
 #include <cmath> 
 
 void JvB_model_robertson(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *vB, const realtype *w, const realtype *dwdx) {

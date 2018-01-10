@@ -1,6 +1,7 @@
 
 #include <include/symbolic_functions.h>
-#include <sundials/sundials_types.h> //realtype definition
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
 #include <cmath> 
 
 void dsigma_ydp_model_jakstat_adjoint(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {

@@ -1,7 +1,8 @@
 
 #include <include/symbolic_functions.h>
-#include <sundials/sundials_types.h> //realtype definition
+#include <include/amici_defines.h> //realtype definition
 #include <sundials/sundials_sparse.h> //SlsMat definition
+typedef amici::realtype realtype;
 #include <cmath> 
 
 void JSparse_model_dirac(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
