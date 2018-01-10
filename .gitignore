@@ -101,6 +101,8 @@ CMakeLists.txt.user
 
 *.o
 
+*.obj
+
 *.eps
 
 *.mexmaci64
