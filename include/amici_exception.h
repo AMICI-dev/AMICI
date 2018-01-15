@@ -7,9 +7,17 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
-#include <execinfo.h>
-#include <dlfcn.h>    // for dladdr
-#include <cxxabi.h>   // for __cxa_demangle
+#if defined(_WIN32)
+    #define PLATFORM_WINDOWS // Windows
+#elif defined(_WIN64)
+    #define PLATFORM_WINDOWS // Windows
+#elif defined(__CYGWIN__) && !defined(_WIN32)
+    #define PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
+#else
+    #include <execinfo.h>
+    #include <dlfcn.h>    // for dladdr
+    #include <cxxabi.h>   // for __cxa_demangle
+#endif
 
 namespace amici {
 
@@ -57,19 +65,26 @@ namespace amici {
          * @param nMaxFrames number of frams to go back in stacktrace
          */
         void storeBacktrace(const int nMaxFrames) {
+            std::ostringstream trace_buf;
+            
+            #ifdef PLATFORM_WINDOWS
+            
+            trace_buf << "stacktrace not available on windows platforms\n";
+            
+            #else
+            
             void *callstack[nMaxFrames];
             char buf[1024];
             int nFrames = backtrace(callstack, nMaxFrames);
             char **symbols = backtrace_symbols(callstack, nFrames);
             
-            std::ostringstream trace_buf;
             for (int i = 0; i < nFrames; i++) {
                 Dl_info info;
                 if (dladdr(callstack[i], &info) && info.dli_sname) {
                     char *demangled = NULL;
                     int status = -1;
                     if (info.dli_sname[0] == '_')
-                    demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+                        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
                     snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
                              i, int(2 + sizeof(void*) * 2), callstack[i],
                              status == 0 ? demangled :
@@ -84,7 +99,10 @@ namespace amici {
             }
             free(symbols);
             if (nFrames == nMaxFrames)
-            trace_buf << "[truncated]\n";
+                trace_buf << "[truncated]\n";
+            
+            #endif
+            
             snprintf(trace, sizeof(trace), "%s", trace_buf.str().c_str());
         }
         
