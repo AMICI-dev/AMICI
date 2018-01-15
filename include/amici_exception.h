@@ -70,7 +70,7 @@ namespace amici {
         void storeBacktrace(const int nMaxFrames) {
             std::ostringstream trace_buf;
             
-            #if PLATFORM_NAME == PLATFORM_WINDOWS
+            #if PLATFORM == PLATFORM_WINDOWS
             
             trace_buf << "stacktrace not available on windows platforms\n";
             
