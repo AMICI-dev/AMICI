@@ -7,16 +7,13 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
-#define PLATFORM_WINDOWS 1
-#define PLATFORM_UNIX 2
 #if defined(_WIN32)
-    #define PLATFORM PLATFORM_WINDOWS // Windows
+    #define PLATFORM_WINDOWS // Windows
 #elif defined(_WIN64)
-    #define PLATFORM PLATFORM_WINDOWS // Windows
+    #define PLATFORM_WINDOWS // Windows
 #elif defined(__CYGWIN__) && !defined(_WIN32)
-    #define PLATFORM PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
+    #define PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
 #else
-    #define PLATFORM PLATFORM_UNIX
     #include <execinfo.h>
     #include <dlfcn.h>    // for dladdr
     #include <cxxabi.h>   // for __cxa_demangle
@@ -70,7 +67,7 @@ namespace amici {
         void storeBacktrace(const int nMaxFrames) {
             std::ostringstream trace_buf;
             
-            #if PLATFORM == PLATFORM_WINDOWS
+            #ifdef PLATFORM_WINDOWS
             
             trace_buf << "stacktrace not available on windows platforms\n";
             
