@@ -51,14 +51,13 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    
     %% Recompile AMICI base files if necessary
-    [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT);
+    [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT);
     objectsstr = [objectsstr, objectStrAmici];
 
     %% Model-specific files
     for j=1:length(funs)
         baseFilename = fullfile(modelSourceFolder,[modelname '_' funs{j}]);
-        recompile = recompile || sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
-        cfun(1).(funs{j}) = recompile;
+        cfun(1).(funs{j}) = sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
     end
     
     funsForRecompile = {};
@@ -119,8 +118,11 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     
     % append model object files
     for j=1:length(funs)
-        objectsstr = strcat(objectsstr,...
-            ' "',fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]),'"');
+        filename = fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]);
+        if(exist(filename,'file'))
+            objectsstr = strcat(objectsstr,...
+                ' "',filename,'"');
+        end
     end    
     
     % compile the wrapfunctions object
@@ -142,7 +144,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
 
     if(isunix)
         if(~ismac)
-            CLIBS = 'CLIBS="-lrt -lmwblas"';
+            CLIBS = 'CLIBS="-lrt -lmwblas -ldl"';
         else
             CLIBS = 'CLIBS="-lmwblas"';
         end
@@ -159,18 +161,18 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         ' -output ' mexFilename ' ' objectsstr])
 end        
     
-function [objectStrAmici, recompile ] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, recompile, DEBUG, COPT)
+function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT)
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
-        'edata','rdata','udata','tdata', ...
+        'edata','rdata','udata', ...
         'amici_interface_matlab', 'amici_misc', ...
         'amici_solver', 'amici_solver_cvodes', 'amici_solver_idas', ...
-        'amici_model', 'returndata_matlab', ...
+        'amici_model', 'amici_model_ode', 'amici_model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
-    recompile = recompile || headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
+    recompile = headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
     objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
     objectStrAmici = strjoin(objectArray, ' ');
     sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
@@ -264,7 +266,10 @@ function recompile = sourceNeedsRecompilation(filestr, o_suffix,DEBUG)
     % Return values:
     %  recompile: flag indicating whether we need to recompile filestr.cpp
     
-    if(~exist([filestr o_suffix],'file'))
+    if(~exist([filestr '.cpp'],'file'))
+        % cpp does not exist, we don't need to compile :)
+        recompile = 0;
+    elseif(~exist([filestr o_suffix],'file'))
         % object file does not exist, we need to recompile
         recompile = 1;
     else

@@ -2,6 +2,7 @@
 #define AMICI_STEADYSTATEPROBLEM_H
 
 #include "include/amici_defines.h"
+#include "include/amici_vector.h"
 #include <nvector/nvector_serial.h>
 #include <include/newton_solver.h>
 
@@ -25,7 +26,7 @@ class NewtonSolverIterative;
 
 class SteadystateProblem {
   public:
-    void workSteadyStateProblem(const UserData *udata, TempData *tdata,
+    void workSteadyStateProblem(const UserData *udata,
                                       ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
 
@@ -33,40 +34,63 @@ class SteadystateProblem {
      * applyNewtonsMethod applies Newtons method to the current state x to
      * find the steady state
      */
-    void applyNewtonsMethod(const UserData *udata, ReturnData *rdata,
-                                  TempData *tdata, Model *model,
+    void applyNewtonsMethod(const UserData *udata, ReturnData *rdata, Model *model,
                                   NewtonSolver *newtonSolver, int newton_try);
 
-    void getNewtonOutput(TempData *tdata, ReturnData *rdata,
+    void getNewtonOutput(ReturnData *rdata,
                                 Model *model, int newton_status,
                                 double run_time, int it);
 
-    void getNewtonSimulation(const UserData *udata, TempData *tdata,
+    void getNewtonSimulation(const UserData *udata,
                                    ReturnData *rdata, Solver *solver,
                                    Model *model, int it);
     
     
     /** default constructor
-     * @param[in] nx number of state variables
+     * @param t pointer to time variable
+     * @param x pointer to state variables
+     * @param sx pointer to state sensitivity variables
      */
-    SteadystateProblem(const int nx) {
-        delta = N_VNew_Serial(nx);
-        rel_x_newton = N_VNew_Serial(nx);
-        x_newton = N_VNew_Serial(nx);
-    }
-    /** default destructor */
-    ~SteadystateProblem(){
-        N_VDestroy_Serial(delta);
-        N_VDestroy_Serial(rel_x_newton);
-        N_VDestroy_Serial(x_newton);
+    SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
+    delta(x->getLength()),
+    rel_x_newton(x->getLength()),
+    x_newton(x->getLength()),
+    x_old(x->getLength()),
+    dx(x->getLength()),
+    xdot(x->getLength()),
+    xdot_old(x->getLength()),
+    sdx(x->getLength(),sx->getLength())
+    {
+        this->t = t;
+        this->x = x;
+        this->sx = sx;
     };
+    
+    /** default destructor */
+    ~SteadystateProblem(){};
   private:
+    realtype *t;
     /** newton step? */
-    N_Vector delta = nullptr;
+    AmiVector delta;
     /** container for relative error calcuation? */
-    N_Vector rel_x_newton = nullptr;
+    AmiVector rel_x_newton;
     /** container for absolute error calcuation? */
-    N_Vector x_newton = nullptr;
+    AmiVector x_newton;
+    /** state vector */
+    AmiVector *x;
+    /** old state vector */
+    AmiVector x_old;
+    /** differential state vector */
+    AmiVector dx;
+    /** time derivative state vector */
+    AmiVector xdot;
+    /** old time derivative state vector */
+    AmiVector xdot_old;
+    /** state sensitivities */
+    AmiVectorArray *sx;
+    /** state differential sensitivities */
+    AmiVectorArray sdx;
+    
 };
 
 } // namespace amici

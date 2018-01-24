@@ -2,14 +2,26 @@
 #include <include/amici_hdf5.h>
 #include <include/amici_interface_cpp.h>
 
+#include <include/amici.h>
 #include <include/amici_solver_idas.h>
 #include <include/symbolic_functions.h>
-#include <include/amici_model.h>
+#include <include/amici_model_ode.h>
 #include <cstring>
 #include <cmath>
+#include <vector>
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
+
+void getModelDims(int *nx, int *nk, int *np) {
+    *nx = 0;
+    *nk = 0;
+    *np = 0;
+}
+
+std::unique_ptr<amici::Model> getModel(const amici::UserData *udata) {
+    return std::unique_ptr<amici::Model>(new amici::Model_Test());
+}
 
 using namespace amici;
 
@@ -26,14 +38,18 @@ TEST_GROUP(amici)
 
 TEST(amici, testRunAmiciSimulationStateMismatch) {
     UserData udata(1, 2, 3);
-    Model model(4, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
+    Model_Test model(0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST(amici, testRunAmiciSimulationRdataMissing) {
     UserData udata(1, 2, 3);
-    Model model(1, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE);
-    CHECK_THROWS(amici::AmiException, runAmiciSimulation(&udata, nullptr, nullptr, &model))
+    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(&udata, nullptr, nullptr, &model))
 }
 
 TEST_GROUP(userData)
@@ -79,9 +95,9 @@ TEST(userData, setPlist) {
     std::vector<double> plistint = {1};
     udata.setPlist(plistdouble.data(),plistdouble.size());
     double* doubleptr = nullptr;
-    udata.setPlist(doubleptr,plistdouble.size());
+    CHECK_THROWS(amici::AmiException,udata.setPlist(doubleptr,plistdouble.size()));
     int* intptr = nullptr;
-    udata.setPlist(intptr,plistdouble.size());
+    CHECK_THROWS(amici::AmiException,udata.setPlist(intptr,plistdouble.size()));
     udata.setPlist(plistint.data(),plistint.size());
     udata.setPlist(plistdouble.data(),plistdouble.size());
 }
@@ -90,7 +106,6 @@ TEST(userData, testCopy) {
     int np = 1;
     int nk = 2;
     int nx = 3;
-    int nt = 4;
     UserData udata1(np, nk, nx);
     std::vector<double> ts = {1.0, 2.0, 3.0, 4.0};
     udata1.setTimepoints(ts.data(),ts.size());
@@ -119,7 +134,7 @@ TEST(userData, testScalingLin) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_NONE;
+    udata.setPScale(AMICI_SCALING_NONE);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
@@ -131,7 +146,7 @@ TEST(userData, testScalingLog) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_LN;
+    udata.setPScale(AMICI_SCALING_LN);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
@@ -143,7 +158,7 @@ TEST(userData, testScalingLog10) {
     const double p[1] = {1};
     udata.setParameters(p);
 
-    udata.pscale = AMICI_SCALING_LOG10;
+    udata.setPScale(AMICI_SCALING_LOG10);
     double unscaled[1];
     udata.unscaleParameters(unscaled);
 
@@ -177,34 +192,34 @@ TEST(symbolicFunctions, testHeaviside) {
 
 
 TEST(symbolicFunctions, testMin) {
-    CHECK_EQUAL(-1, am_min(-1, 2, 0));
-    CHECK_EQUAL(-2, am_min(1, -2, 0));
-    CHECK_TRUE(amiIsNaN(am_min(amiGetNaN(), amiGetNaN(), 0)));
-    CHECK_EQUAL(-1, am_min(-1, amiGetNaN(), 0));
-    CHECK_EQUAL(-1, am_min(amiGetNaN(), -1, 0));
+    CHECK_EQUAL(-1, amici::min(-1, 2, 0));
+    CHECK_EQUAL(-2, amici::min(1, -2, 0));
+    CHECK_TRUE(amici::isNaN(amici::min(amici::getNaN(), amici::getNaN(), 0)));
+    CHECK_EQUAL(-1, amici::min(-1, amici::getNaN(), 0));
+    CHECK_EQUAL(-1, amici::min(amici::getNaN(), -1, 0));
 }
 
 TEST(symbolicFunctions, testMax) {
-    CHECK_EQUAL(2, am_max(-1, 2, 0));
-    CHECK_EQUAL(1, am_max(1, -2, 0));
-    CHECK_TRUE(amiIsNaN(am_max(amiGetNaN(), amiGetNaN(), 0)));
-    CHECK_EQUAL(-1, am_max(-1, amiGetNaN(), 0));
-    CHECK_EQUAL(-1, am_max(amiGetNaN(), -1, 0));
+    CHECK_EQUAL(2, amici::max(-1, 2, 0));
+    CHECK_EQUAL(1, amici::max(1, -2, 0));
+    CHECK_TRUE(amici::isNaN(amici::max(amici::getNaN(), amici::getNaN(), 0)));
+    CHECK_EQUAL(-1, amici::max(-1, amici::getNaN(), 0));
+    CHECK_EQUAL(-1, amici::max(amici::getNaN(), -1, 0));
 }
 
 
 TEST(symbolicFunctions, testDMin) {
-    CHECK_EQUAL(0, Dam_min(1, -1, -2, 0));
-    CHECK_EQUAL(1, Dam_min(1, -1, 2, 0));
-    CHECK_EQUAL(1, Dam_min(2, -1, -2, 0));
-    CHECK_EQUAL(0, Dam_min(2, -1, 2, 0));
+    CHECK_EQUAL(0, amici::Dmin(1, -1, -2, 0));
+    CHECK_EQUAL(1, amici::Dmin(1, -1, 2, 0));
+    CHECK_EQUAL(1, amici::Dmin(2, -1, -2, 0));
+    CHECK_EQUAL(0, amici::Dmin(2, -1, 2, 0));
 }
 
 TEST(symbolicFunctions, testDMax) {
-    CHECK_EQUAL(1, Dam_max(1, -1, -2, 0));
-    CHECK_EQUAL(0, Dam_max(1, -1, 2, 0));
-    CHECK_EQUAL(0, Dam_max(2, -1, -2, 0));
-    CHECK_EQUAL(1, Dam_max(2, -1, 2, 0));
+    CHECK_EQUAL(1, amici::Dmax(1, -1, -2, 0));
+    CHECK_EQUAL(0, amici::Dmax(1, -1, 2, 0));
+    CHECK_EQUAL(0, amici::Dmax(2, -1, -2, 0));
+    CHECK_EQUAL(1, amici::Dmax(2, -1, 2, 0));
 }
 
 TEST_GROUP(amiciSolverIdas)

@@ -10,5 +10,5 @@ function splinefun = am_spline(varargin)
     str = strcat('(',strcat(strcat(str, char(varargin{n})), ')'));
     str = strrep(str, ' ', '');
     str = regexprep(str,'\,([0-9]*)\,','\,$1\.0\,'); % Black magic of sym
-    splinefun = sym(strcat('am_spline', str));
+    splinefun = sym(strcat('spline', str));
 end

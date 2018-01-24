@@ -21,13 +21,9 @@ TEST_GROUP(groupNeuron)
 
 
 TEST(groupNeuron, testSimulation) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_neuron/nosensi/", 10*TEST_ATOL, 10*TEST_RTOL);
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_neuron/nosensi/", 10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 TEST(groupNeuron, testSensitivityForward) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_neuron/sensiforward/", 10*TEST_ATOL, 10*TEST_RTOL);
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_neuron/sensiforward/", 10*TEST_ATOL, 10*TEST_RTOL);
 }

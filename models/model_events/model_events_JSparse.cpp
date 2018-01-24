@@ -1,59 +1,22 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_events_dwdx.h"
-#include "model_events_w.h"
+#include <include/amici_defines.h> //realtype definition
+#include <sundials/sundials_sparse.h> //SlsMat definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void JSparse_model_events(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-int inz;
-SparseSetMatToZero(J);
-J->indexvals[0] = 0;
-J->indexvals[1] = 1;
-J->indexvals[2] = 1;
-J->indexvals[3] = 2;
-J->indexptrs[0] = 0;
-J->indexptrs[1] = 2;
-J->indexptrs[2] = 3;
-J->indexptrs[3] = 4;
-w_model_events(t,x,NULL,tdata);
-dwdx_model_events(t,x,NULL,user_data);
-  J->data[0] = -tdata->h[3]*tdata->p[0];
-  J->data[1] = tdata->p[1]*exp(t*(-1.0/1.0E1));
-  J->data[2] = -tdata->p[2];
-  J->data[3] = -1.0;
-for(inz = 0; inz<4; inz++) {
-   if(amiIsNaN(J->data[inz])) {
-       J->data[inz] = 0;
-       if(!tdata->nan_JSparse) {
-           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           tdata->nan_JSparse = TRUE;
-       }
-   }
-   if(amiIsInf(J->data[inz])) {
-       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return;
-   }
+void JSparse_model_events(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
+  JSparse->indexvals[0] = 0;
+  JSparse->indexvals[1] = 1;
+  JSparse->indexvals[2] = 1;
+  JSparse->indexvals[3] = 2;
+  JSparse->indexptrs[0] = 0;
+  JSparse->indexptrs[1] = 2;
+  JSparse->indexptrs[2] = 3;
+  JSparse->indexptrs[3] = 4;
+  JSparse->data[0] = -h[3]*p[0];
+  JSparse->data[1] = p[1]*exp(t*(-1.0/1.0E1));
+  JSparse->data[2] = -p[2];
+  JSparse->data[3] = -1.0;
 }
-return;
-
-}
-
 

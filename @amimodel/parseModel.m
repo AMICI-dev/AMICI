@@ -75,8 +75,8 @@ this.HTable(1).Jz = CalcMD5(char(this.sym.Jz));
 this.HTable(1).Jrz = CalcMD5(char(this.sym.Jrz));
 
 % check if code generation changed
-codegen_amifun = {'gccode','getArgs','getCVar','getFArgs',...
-    'getSensiFlag','getSyms','printLocalVars','writeCcode',...
+codegen_amifun = {'gccode','getArgs','getCVar',...
+    'getSensiFlag','getSyms','writeCcode',...
     'writeCcode_sensi'};
 for ifile = 1:length(codegen_amifun)
     this.HTable(1).(codegen_amifun{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen_amifun{ifile} '.m']),'File');
@@ -84,15 +84,6 @@ end
 codegen_amimodel = {'generateC','makeSyms','makeEvents'};
 for ifile = 1:length(codegen_amimodel)
     this.HTable(1).(codegen_amimodel{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amimodel',[codegen_amimodel{ifile} '.m']),'File');
-end
-this.HTable(1).udata = CalcMD5(fullfile(this.wrap_path,'include','udata.h'),'File');
-this.HTable(1).tdata = CalcMD5(fullfile(this.wrap_path,'include','tdata.h'),'File');
-
-if(not(this.recompile))
-    this.recompile = not(strcmp(this.HTable(1).udata,HTable.udata));
-end
-if(not(this.recompile))
-    this.recompile = not(strcmp(this.HTable(1).tdata,HTable.tdata));
 end
 if(not(this.recompile))
     this.recompile = not(strcmp(this.HTable(1).x,HTable.x));
@@ -123,21 +114,22 @@ end
 if(this.recompile)
     if(~strcmp(HTable.generateC,''))
         disp('Code generation routines changed! Recompiling model!')
+        cleanUpModelFolder(this);
     end
 end
 % compute functions
 
-funs = {'xdot','w','dwdx','J','x0','Jv','JBand','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
+funs = {'xdot','w','dwdx','J','x0','Jv','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
 
 if(this.forward)
     funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
 end
 if(this.adjoint)
-    funs = {funs{:},'xBdot','qBdot','JB','JvB','JBandB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
+    funs = {funs{:},'xBdot','qBdot','JB','JvB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
 end
 
 if(strcmp(this.wtype,'iw'))
-    funs = {funs{:},'dx0','sdx0','dfdx','M'};
+    funs = {funs{:},'M'};
 end
 
 funs = unique(funs);
@@ -254,4 +246,15 @@ else
     ubw = max(max(j-i),0);
     lbw = max(max(i-j),0);
 end
+end
+
+function cleanUpModelFolder(this)
+     fileList = dir(fullfile(this.wrap_path,'models',this.modelname));
+     for ifile = 1:length(fileList)
+         file = fileList(ifile);
+         if(any([regexp(file.name,'[\w]*\_[\w]*\.mat')==1,
+                 regexp(file.name,['[' this.modelname '|main|wrapfunctions]+[\w_]*\.[h|cpp|md5|o|obj]'])==1]));
+             delete(fullfile(this.wrap_path,'models',this.modelname,file.name));
+         end
+     end
 end

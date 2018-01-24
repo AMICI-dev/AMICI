@@ -1,112 +1,75 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_neuron_o2_dwdx.h"
-#include "model_neuron_o2_w.h"
+#include <include/amici_defines.h> //realtype definition
+#include <sundials/sundials_sparse.h> //SlsMat definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void JSparse_model_neuron_o2(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-TempData *tdata = (TempData*) user_data;
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *dx_tmp = nullptr;
-if(dx)
-    dx_tmp = N_VGetArrayPointer(dx);
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-int inz;
-SparseSetMatToZero(J);
-J->indexvals[0] = 0;
-J->indexvals[1] = 1;
-J->indexvals[2] = 2;
-J->indexvals[3] = 3;
-J->indexvals[4] = 4;
-J->indexvals[5] = 5;
-J->indexvals[6] = 6;
-J->indexvals[7] = 8;
-J->indexvals[8] = 0;
-J->indexvals[9] = 1;
-J->indexvals[10] = 3;
-J->indexvals[11] = 2;
-J->indexvals[12] = 3;
-J->indexvals[13] = 2;
-J->indexvals[14] = 3;
-J->indexvals[15] = 4;
-J->indexvals[16] = 5;
-J->indexvals[17] = 4;
-J->indexvals[18] = 5;
-J->indexvals[19] = 6;
-J->indexvals[20] = 7;
-J->indexvals[21] = 6;
-J->indexvals[22] = 7;
-J->indexvals[23] = 8;
-J->indexvals[24] = 9;
-J->indexvals[25] = 8;
-J->indexvals[26] = 9;
-J->indexptrs[0] = 0;
-J->indexptrs[1] = 8;
-J->indexptrs[2] = 11;
-J->indexptrs[3] = 13;
-J->indexptrs[4] = 15;
-J->indexptrs[5] = 17;
-J->indexptrs[6] = 19;
-J->indexptrs[7] = 21;
-J->indexptrs[8] = 23;
-J->indexptrs[9] = 25;
-J->indexptrs[10] = 27;
-w_model_neuron_o2(t,x,NULL,tdata);
-dwdx_model_neuron_o2(t,x,NULL,user_data);
-  J->data[0] = x_tmp[0]*(2.0/2.5E1)+5.0;
-  J->data[1] = tdata->p[0]*tdata->p[1];
-  J->data[2] = x_tmp[2]*tdata->dwdx[1];
-  J->data[3] = tdata->p[1];
-  J->data[4] = x_tmp[4]*tdata->dwdx[1];
-  J->data[5] = tdata->p[0];
-  J->data[6] = x_tmp[6]*tdata->dwdx[1];
-  J->data[7] = x_tmp[8]*tdata->dwdx[1];
-  J->data[8] = -1.0;
-  J->data[9] = -tdata->p[0];
-  J->data[10] = -1.0;
-  J->data[11] = tdata->w[1];
-  J->data[12] = tdata->p[0]*tdata->p[1];
-  J->data[13] = -1.0;
-  J->data[14] = -tdata->p[0];
-  J->data[15] = tdata->w[1];
-  J->data[16] = tdata->p[0]*tdata->p[1];
-  J->data[17] = -1.0;
-  J->data[18] = -tdata->p[0];
-  J->data[19] = tdata->w[1];
-  J->data[20] = tdata->p[0]*tdata->p[1];
-  J->data[21] = -1.0;
-  J->data[22] = -tdata->p[0];
-  J->data[23] = tdata->w[1];
-  J->data[24] = tdata->p[0]*tdata->p[1];
-  J->data[25] = -1.0;
-  J->data[26] = -tdata->p[0];
-for(inz = 0; inz<27; inz++) {
-   if(amiIsNaN(J->data[inz])) {
-       J->data[inz] = 0;
-       if(!tdata->nan_JSparse) {
-           warnMsgIdAndTxt("AMICI:mex:fJ:NaN","AMICI replaced a NaN value in Jacobian and replaced it by 0.0. This will not be reported again for this simulation run.");
-           tdata->nan_JSparse = TRUE;
-       }
-   }
-   if(amiIsInf(J->data[inz])) {
-       warnMsgIdAndTxt("AMICI:mex:fJ:Inf","AMICI encountered an Inf value in Jacobian! Aborting simulation ... ");
-       return;
-   }
+void JSparse_model_neuron_o2(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
+  JSparse->indexvals[0] = 0;
+  JSparse->indexvals[1] = 1;
+  JSparse->indexvals[2] = 2;
+  JSparse->indexvals[3] = 3;
+  JSparse->indexvals[4] = 4;
+  JSparse->indexvals[5] = 5;
+  JSparse->indexvals[6] = 6;
+  JSparse->indexvals[7] = 8;
+  JSparse->indexvals[8] = 0;
+  JSparse->indexvals[9] = 1;
+  JSparse->indexvals[10] = 3;
+  JSparse->indexvals[11] = 2;
+  JSparse->indexvals[12] = 3;
+  JSparse->indexvals[13] = 2;
+  JSparse->indexvals[14] = 3;
+  JSparse->indexvals[15] = 4;
+  JSparse->indexvals[16] = 5;
+  JSparse->indexvals[17] = 4;
+  JSparse->indexvals[18] = 5;
+  JSparse->indexvals[19] = 6;
+  JSparse->indexvals[20] = 7;
+  JSparse->indexvals[21] = 6;
+  JSparse->indexvals[22] = 7;
+  JSparse->indexvals[23] = 8;
+  JSparse->indexvals[24] = 9;
+  JSparse->indexvals[25] = 8;
+  JSparse->indexvals[26] = 9;
+  JSparse->indexptrs[0] = 0;
+  JSparse->indexptrs[1] = 8;
+  JSparse->indexptrs[2] = 11;
+  JSparse->indexptrs[3] = 13;
+  JSparse->indexptrs[4] = 15;
+  JSparse->indexptrs[5] = 17;
+  JSparse->indexptrs[6] = 19;
+  JSparse->indexptrs[7] = 21;
+  JSparse->indexptrs[8] = 23;
+  JSparse->indexptrs[9] = 25;
+  JSparse->indexptrs[10] = 27;
+  JSparse->data[0] = x[0]*(2.0/2.5E1)+5.0;
+  JSparse->data[1] = p[0]*p[1];
+  JSparse->data[2] = x[2]*dwdx[1];
+  JSparse->data[3] = p[1];
+  JSparse->data[4] = x[4]*dwdx[1];
+  JSparse->data[5] = p[0];
+  JSparse->data[6] = x[6]*dwdx[1];
+  JSparse->data[7] = x[8]*dwdx[1];
+  JSparse->data[8] = -1.0;
+  JSparse->data[9] = -p[0];
+  JSparse->data[10] = -1.0;
+  JSparse->data[11] = w[1];
+  JSparse->data[12] = p[0]*p[1];
+  JSparse->data[13] = -1.0;
+  JSparse->data[14] = -p[0];
+  JSparse->data[15] = w[1];
+  JSparse->data[16] = p[0]*p[1];
+  JSparse->data[17] = -1.0;
+  JSparse->data[18] = -p[0];
+  JSparse->data[19] = w[1];
+  JSparse->data[20] = p[0]*p[1];
+  JSparse->data[21] = -1.0;
+  JSparse->data[22] = -p[0];
+  JSparse->data[23] = w[1];
+  JSparse->data[24] = p[0]*p[1];
+  JSparse->data[25] = -1.0;
+  JSparse->data[26] = -p[0];
 }
-return;
-
-}
-
 

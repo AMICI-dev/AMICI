@@ -314,21 +314,9 @@ function [this,model] = getSyms(this,model)
                 end
             end
             
-            %%
-            % build short strings for reuse of jacobian
-            
-            % find nonzero entries
-            idx = find(this.sym);
-            % create cell array of same size
-            Js = sym(zeros(length(idx),1));
-            % fill cells with strings
-            for iJ = 1:length(idx)
-                Js(iJ) = sym(sprintf('tmp_J_%i',iJ-1));
-            end
-            % create full symbolic matrix
-            this.strsym = sym(zeros(nx,nx));
-            % fill nonzero entries
-            this.strsym(idx) = Js;
+            this = makeStrSymsSparse(this);
+               
+        
             
         case 'JDiag'
             this.sym = diag(model.fun.J.sym);
@@ -375,7 +363,7 @@ function [this,model] = getSyms(this,model)
         case 'sxdot'
             if(np>0)
                 if(strcmp(model.wtype,'iw'))
-                    this.sym=model.fun.dfdx.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
+                    this.sym=model.fun.J.strsym*sx(:,1)-model.fun.M.strsym*model.fun.sdx.sym(:,1)+model.fun.dxdotdp.strsym;
                 else
                     this.sym=model.fun.J.strsym*sx(:,1)+model.fun.dxdotdp.strsym;
                 end
@@ -840,12 +828,20 @@ function this = unifySyms(this,model)
     this.sym = mysubs(this.sym,model.sym.k,model.fun.k.sym);
 end
 
+function this = makeStrSymsSparse(this)
+    this.strsym = sym(zeros(size(this.sym)));
+    idx = find(this.sym);
+    for isym = 1:length(idx)
+        this.strsym(idx(isym)) = sym(sprintf([this.cvar '_%i'], isym-1));
+    end
+end
+
 function this = makeStrSyms(this)
     this.strsym = sym(zeros(size(this.sym)));
     idx = find(this.sym);
     idx = transpose(idx(:));
     for isym = idx
-        this.strsym(isym) = sym(sprintf([strrep(this.cvar,'tdata->','') '_%i'], isym-1));
+        this.strsym(isym) = sym(sprintf([this.cvar '_%i'], isym-1));
     end
 end
 
