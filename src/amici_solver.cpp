@@ -148,22 +148,22 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     AMISetUserDataB(bwd->getwhich(), model);
 
     /* Number of maximal internal steps */
-    AMISetMaxNumStepsB(tdata->which, udata->maxstepsB);
+    AMISetMaxNumStepsB(bwd->getwhich(), udata->maxstepsB);
     
     setLinearSolverB(udata, model, bwd->getwhich());
     
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
-
+    
     /* Enable Quadrature Error Control */
     if (std::isinf(udata->quad_atol) || std::isinf(udata->quad_rtol)) {
-        AMISetQuadErrConB(tdata->which, FALSE);
+        AMISetQuadErrConB(bwd->getwhich(), FALSE);
     } else {
-        AMISetQuadErrConB(tdata->which, TRUE);
+        AMISetQuadErrConB(bwd->getwhich(), TRUE);
     }
-
-    AMIQuadSStolerancesB(tdata->which, RCONST(udata->quad_rtol),
-                                  RCONST(udata->quad_atol));
+    
+    AMIQuadSStolerancesB(bwd->getwhich(), RCONST(udata->quad_rtol),
+                         RCONST(udata->quad_atol));
 
     AMISetStabLimDetB(bwd->getwhich(), udata->getStabilityLimitFlag());
 }
