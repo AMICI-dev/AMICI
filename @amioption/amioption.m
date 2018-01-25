@@ -198,6 +198,8 @@ classdef amioption < matlab.mixin.CustomDisplay
                         this.sensi_meth = 1;
                     case 'adjoint' 
                         this.sensi_meth = 2;
+                    case 'ss'
+                        this.sensi_meth = 3;
                     otherwise
                         error('Unknown sensitivity method. Must be either ''forward'' or ''adjoint''!');
                 end

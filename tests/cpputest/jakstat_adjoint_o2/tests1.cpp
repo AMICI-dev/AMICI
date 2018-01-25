@@ -21,21 +21,15 @@ TEST_GROUP(groupJakstatAdjointO2)
 
 
 TEST(groupJakstatAdjointO2, testSensitivityForward2) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2forward/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensi2forward/");
 }
 
 TEST(groupJakstatAdjointO2, testSensitivityForward2LogParam) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2forwardlogparam/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensi2forwardlogparam/");
 }
 
 TEST(groupJakstatAdjointO2, testSensitivityAdjoint2) {
-    Model *model = getModel();
-    simulateAndVerifyFromFile(model, "/model_jakstat_adjoint/sensi2adjoint/");
-    delete model;
+    amici::simulateAndVerifyFromFile("/model_jakstat_adjoint/sensi2adjoint/");
 }
 
 

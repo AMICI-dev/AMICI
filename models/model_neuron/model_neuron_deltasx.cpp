@@ -1,38 +1,16 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include "model_neuron_w.h"
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void deltasx_model_neuron(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-realtype *sx_tmp;
-realtype *xdot_tmp = nullptr;
-if(xdot)
-    xdot_tmp = N_VGetArrayPointer(xdot);
-realtype *xdot_old_tmp = nullptr;
-if(xdot_old)
-    xdot_old_tmp = N_VGetArrayPointer(xdot_old);
-int ip;
-memset(tdata->deltasx,0,sizeof(realtype)*2*udata->nplist);
-w_model_neuron(t,x,NULL,tdata);
-for(ip = 0; ip<udata->nplist; ip++) {
-sx_tmp = N_VGetArrayPointer(sx[ip]);
-switch (udata->plist[ip]) {
+void deltasx_model_neuron(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau) {
+switch (ip) {
   case 0: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*model->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*model->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  deltasx[0] = -sx[0]-stau[0]*(xdot[0]-xdot_old[0])-stau[0]*(k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -43,8 +21,8 @@ switch (udata->plist[ip]) {
   case 1: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*model->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*model->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  deltasx[0] = -sx[0]-stau[0]*(xdot[0]-xdot_old[0])-stau[0]*(k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -55,8 +33,8 @@ switch (udata->plist[ip]) {
   case 2: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*model->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2)-1.0;
-  tdata->deltasx[ip*model->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1]);
+  deltasx[0] = -sx[0]-stau[0]*(xdot[0]-xdot_old[0])-stau[0]*(k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2)-1.0;
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1]);
 
               } break;
 
@@ -67,8 +45,8 @@ switch (udata->plist[ip]) {
   case 3: {
               switch(ie) { 
               case 0: {
-  tdata->deltasx[ip*model->nx + 0] = -sx_tmp[0]-tdata->stau[ip]*(xdot_tmp[0]-xdot_old_tmp[0])-tdata->stau[ip]*(udata->k[1]+x_tmp[0]*5.0-x_tmp[1]+(x_tmp[0]*x_tmp[0])*(1.0/2.5E1)+1.4E2);
-  tdata->deltasx[ip*model->nx + 1] = -tdata->stau[ip]*(xdot_tmp[1]-xdot_old_tmp[1])+1.0;
+  deltasx[0] = -sx[0]-stau[0]*(xdot[0]-xdot_old[0])-stau[0]*(k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2);
+  deltasx[1] = -stau[0]*(xdot[1]-xdot_old[1])+1.0;
 
               } break;
 
@@ -78,8 +56,4 @@ switch (udata->plist[ip]) {
 
 }
 }
-return;
-
-}
-
 

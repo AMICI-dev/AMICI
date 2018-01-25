@@ -3,12 +3,19 @@
 
 #include "include/amici.h"
 #include <mex.h>
+#include <memory>
 
-amici::Model *getModel();
+class UserData;
+class Model;
+extern std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
+extern void getModelDims(int *nx, int *nk, int *np);
 
 namespace amici {
+    
+    
 
 class ReturnDataMatlab;
+
 
 
 
@@ -18,7 +25,8 @@ class ReturnDataMatlab;
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
  * @return udata: struct containing all provided user data @type *UserData
  */
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs, Model *model);
+template <class mxArray>
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
 
 /**
  * setupReturnData initialises the return data struct

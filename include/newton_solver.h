@@ -10,8 +10,8 @@ namespace amici {
 
 class UserData;
 class ReturnData;
-class TempData;
 class Model;
+class AmiVector;
 
 /**
  * @brief The NewtonSolver class sets up the linear solver for the Newton
@@ -21,53 +21,49 @@ class Model;
 class NewtonSolver {
 
   public:
-    NewtonSolver(Model *model, ReturnData *rdata, const UserData *udata,
-                 TempData *tdata);
+    NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
 
-    static NewtonSolver *getSolver(int linsolType, Model *model,
-                                   ReturnData *rdata, const UserData *udata,
-                                   TempData *tdata);
+    static NewtonSolver *getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+                                   ReturnData *rdata, const UserData *udata);
 
-    void getStep(int ntry, int nnewt, N_Vector delta);
+    void getStep(int ntry, int nnewt, AmiVector *delta);
 
-    void getSensis(int it);
+    void getSensis(const int it, AmiVectorArray *sx);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
      *
-     * @param[in] ntry integer newton_try integer start number of Newton solver
+     * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
-     * @param[in] nnewt integer number of current Newton step
-     * @return stats integer flag indicating success of the method
+     * @param nnewt integer number of current Newton step
      */
     virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
 
     /**
      * Solves the linear system for the Newton step
      *
-     * @param[in,out] rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system @type N_Vector
-     * @return stats integer flag indicating success of the method
+     * @param rhs containing the RHS of the linear system, will be
+     * overwritten by solution to the linear system 
      */
-    virtual void solveLinearSystem(N_Vector rhs) = 0;
-
-    virtual ~NewtonSolver() {
-    if(sx_ip)
-        N_VDestroy_Serial(sx_ip);
-    };
+    virtual void solveLinearSystem(AmiVector *rhs) = 0;
+    virtual ~NewtonSolver() {};
 
   protected:
+    /** time variable */
+    realtype *t;
     /** pointer to the AMICI model object */
     Model *model;
     /** pointer to the return data object */
     ReturnData *rdata;
     /** pointer to the user data object */
     const UserData *udata;
-    /** pointer to the temporary data object */
-    TempData *tdata;
-    /** sensitivity N_Vector */
-    N_Vector sx_ip = nullptr;
+    /** right hand side AmiVector */
+    AmiVector xdot;
+    /** current state*/
+    AmiVector *x;
+    /** current state time derivative (DAE) */
+    AmiVector dx;
 };
 
 /**
@@ -78,21 +74,16 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
-    NewtonSolverDense(Model *model, ReturnData *rdata, const UserData *udata,
-                      TempData *tdata);
-    void solveLinearSystem(N_Vector rhs) override;
+    NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
+    void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    ~NewtonSolverDense();
+    virtual ~NewtonSolverDense();
 
   private:
     /** temporary storage of pivot array */
-    long int *pivots;
-    /** temporary N_Vector storage  */
-    N_Vector tmp1 = nullptr;
-    /** temporary N_Vector storage  */
-    N_Vector tmp2 = nullptr;
-    /** temporary N_Vector storage  */
-    N_Vector tmp3 = nullptr;
+    long int *pivots = nullptr;
+    /** temporary storage of Jacobian */
+    DlsMat Jtmp = nullptr;
 };
 
 /**
@@ -103,19 +94,12 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
-    NewtonSolverSparse(Model *model, ReturnData *rdata, const UserData *udata,
-                       TempData *tdata);
-    void solveLinearSystem(N_Vector rhs) override;
+    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
+    void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    ~NewtonSolverSparse();
+    virtual ~NewtonSolverSparse();
 
   private:
-    /** temporary N_Vector storage  */
-    N_Vector tmp1 = nullptr;
-    /** temporary N_Vector storage  */
-    N_Vector tmp2 = nullptr;
-    /** temporary N_Vector storage  */
-    N_Vector tmp3 = nullptr;
     /** klu common storage? */
     klu_common common;
     /** klu symbolic storage? */
@@ -124,6 +108,8 @@ class NewtonSolverSparse : public NewtonSolver {
     klu_numeric *numeric = nullptr;
     /** klu status flag  */
     int klu_status = 0;
+    /** temporary storage of Jacobian */
+    SlsMat Jtmp = nullptr;
 };
 
 /**
@@ -134,12 +120,12 @@ class NewtonSolverSparse : public NewtonSolver {
 class NewtonSolverIterative : public NewtonSolver {
 
   public:
-    NewtonSolverIterative(Model *model, ReturnData *rdata,
-                          const UserData *udata, TempData *tdata);
-    void solveLinearSystem(N_Vector rhs);
+    NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
+                          const UserData *udata);
+    void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
-    void linsolveSPBCG(int ntry,int nnewt, N_Vector ns_delta);
-    ~NewtonSolverIterative();
+    void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
+    virtual ~NewtonSolverIterative();
 
   private:
     /** number of tries  */
@@ -147,25 +133,25 @@ class NewtonSolverIterative : public NewtonSolver {
     /** number of iterations  */
     int i_newton;
     /** ???  */
-    N_Vector ns_p = nullptr;
+    AmiVector ns_p;
     /** ???  */
-    N_Vector ns_h = nullptr;
+    AmiVector ns_h;
     /** ???  */
-    N_Vector ns_t = nullptr;
+    AmiVector ns_t;
     /** ???  */
-    N_Vector ns_s = nullptr;
+    AmiVector ns_s;
     /** ???  */
-    N_Vector ns_r = nullptr;
+    AmiVector ns_r;
     /** ???  */
-    N_Vector ns_rt = nullptr;
+    AmiVector ns_rt;
     /** ???  */
-    N_Vector ns_v = nullptr;
+    AmiVector ns_v;
     /** ???  */
-    N_Vector ns_Jv = nullptr;
+    AmiVector ns_Jv;
     /** ???  */
-    N_Vector ns_tmp = nullptr;
+    AmiVector ns_tmp;
     /** ???  */
-    N_Vector ns_Jdiag = nullptr;
+    AmiVector ns_Jdiag;
 };
 
 

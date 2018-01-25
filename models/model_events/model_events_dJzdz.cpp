@@ -1,35 +1,17 @@
 
 #include <include/symbolic_functions.h>
-#include <include/amici.h>
-#include <include/amici_model.h>
-#include <string.h>
-#include <include/tdata.h>
-#include <include/udata.h>
-#include <include/rdata.h>
-#include <include/edata.h>
-#include "model_events_w.h"
+#include <include/amici_defines.h> //realtype definition
+typedef amici::realtype realtype;
+#include <cmath> 
 
-using namespace amici;
-
-void dJzdz_model_events(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) {
-Model *model = (Model*) tdata->model;
-UserData *udata = (UserData*) tdata->udata;
-realtype *x_tmp = nullptr;
-if(x)
-    x_tmp = N_VGetArrayPointer(x);
-memset(tdata->dJzdz,0,sizeof(realtype)*model->nz*model->nztrue*model->nJ);
-w_model_events(t,x,NULL,tdata);
-int iz;
-if(!amiIsNaN(edata->mz[0*udata->nmaxevent+tdata->nroots[ie]])){
-    iz = 0;
-  tdata->dJzdz[iz+(0+0*1)*model->nztrue] = 1.0/(tdata->sigmaz[0]*tdata->sigmaz[0])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*0]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*0]*2.0)*-5.0E-1;
+void dJzdz_model_events(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) {
+switch(iz){
+    case 0:
+  dJzdz[0+0*1] = 1.0/(sigmaz[0]*sigmaz[0])*(mz[0]*2.0-z[0]*2.0)*-5.0E-1;
+    break;
+    case 1:
+  dJzdz[0+1*1] = 1.0/(sigmaz[1]*sigmaz[1])*(mz[1]*2.0-z[1]*2.0)*-5.0E-1;
+    break;
 }
-if(!amiIsNaN(edata->mz[1*udata->nmaxevent+tdata->nroots[ie]])){
-    iz = 1;
-  tdata->dJzdz[iz+(0+1*1)*model->nztrue] = 1.0/(tdata->sigmaz[1]*tdata->sigmaz[1])*(edata->mz[tdata->nroots[ie]+udata->nmaxevent*1]*2.0-rdata->z[tdata->nroots[ie]+udata->nmaxevent*1]*2.0)*-5.0E-1;
 }
-return;
-
-}
-
 

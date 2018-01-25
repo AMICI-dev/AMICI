@@ -83,8 +83,7 @@ enum mexRhsArguments {
     if (mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION)) {                        \
         mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, #OPTION);             \
         int len = (int)mxGetM(a) * mxGetN(a);                                  \
-        udata->OPTION = new double[len];                                       \
-        memcpy(udata->OPTION, mxGetData(a), sizeof(double) * len);             \
+        udata->OPTION.assign((double *)mxGetData(a),(double *)mxGetData(a)+len);                  \
     } else {                                                                   \
         throw AmiException("Provided options do not have field " #OPTION "!"); \
     }
@@ -94,19 +93,19 @@ enum mexRhsArguments {
  * userDataFromMatlabCall parses the input from the matlab call and writes it to
  * an UserData class object
  *
- * @param[in] nrhs number of input arguments of the matlab call @type int
- * @param[in] prhs pointer to the array of input arguments @type mxArray
- * @param[in] model pointer to the model object, this is necessary to perform
- * dimension checks @type Model
- * @return udata pointer to user data object @type UserData
+ * @param nrhs number of input arguments of the matlab call
+ * @param prhs pointer to the array of input arguments
+ * @return udata pointer to user data object
  */
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
-                                 Model *model) {
+template <class mxArray>
+UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
     if (nrhs < RHS_NUMARGS_REQUIRED) {
         throw AmiException("Incorrect number of input arguments (must be at least 7)!");  \
     };
 
-    UserData *udata = new UserData(model->np, model->nk, model->nx);
+    int nx,nk,np;
+    getModelDims(&nx,&nk,&np);
+    UserData *udata = new UserData(np, nk, nx);
 
     /* time */
     if (prhs[RHS_TIMEPOINTS] &&
@@ -117,35 +116,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     } else {
         throw AmiException("No valid time vector provided!");
     }
-
-    /* parameters */
-    if (udata->np > 0) {
-        if (mxGetPr(prhs[RHS_PARAMETERS])) {
-            if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
-                model->np) {
-                udata->setParameters(mxGetPr(prhs[RHS_PARAMETERS]));
-            } else {
-                throw AmiException("Provided parameter vector has incorrect length!");
-            }
-        } else {
-            throw AmiException("No parameter vector provided!");
-        }
-    }
-
-    /* constants */
-    if (model->nk > 0) {
-        if (mxGetPr(prhs[RHS_CONSTANTS])) {
-            if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
-                model->nk) {
-                udata->setConstants(mxGetPr(prhs[RHS_CONSTANTS]));
-            } else {
-                throw AmiException("Provided constant vector has incorrect length!");
-            }
-        } else {
-            throw AmiException("No constant vector provided!");
-        }
-    }
-
+    
     /* options */
     if (mxGetPr(prhs[RHS_OPTIONS])) {
         readOptionScalarInt(nmaxevent, int);
@@ -163,6 +134,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         readOptionScalarInt(stldet, booleantype);
         readOptionData(qpositivex);
         readOptionScalarInt(sensi, AMICI_sensi_order);
+        // this needs to be set before we set parameters to obtain properly unscaled parameters
         readOptionScalarInt(pscale, AMICI_parameter_scaling);
         readOptionScalarInt(ism, InternalSensitivityMethod);
         readOptionScalarInt(sensi_meth, AMICI_sensi_meth);
@@ -175,6 +147,34 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         throw AmiException("No options provided!");
     }
 
+    /* parameters */
+    if (udata->np() > 0) {
+        if (mxGetPr(prhs[RHS_PARAMETERS])) {
+            if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
+                np) {
+                udata->setParameters(mxGetPr(prhs[RHS_PARAMETERS]));
+            } else {
+                throw AmiException("Provided parameter vector has incorrect length!");
+            }
+        } else {
+            throw AmiException("No parameter vector provided!");
+        }
+    }
+
+    /* constants */
+    if (nk > 0) {
+        if (mxGetPr(prhs[RHS_CONSTANTS])) {
+            if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
+                nk) {
+                udata->setConstants(mxGetPr(prhs[RHS_CONSTANTS]));
+            } else {
+                throw AmiException("Provided constant vector has incorrect length!");
+            }
+        } else {
+            throw AmiException("No constant vector provided!");
+        }
+    }
+
     /* plist */
     if (mxGetPr(prhs[RHS_PLIST])) {
         udata->setPlist(mxGetPr(prhs[RHS_PLIST]),
@@ -184,10 +184,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
     }
 
     /* pbar */
-    if (udata->nplist > 0) {
+    if (udata->nplist() > 0) {
         if (mxGetPr(prhs[RHS_PBAR])) {
             if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
-                udata->nplist) {
+                udata->nplist()) {
                 udata->setPbar(mxGetPr(prhs[RHS_PBAR]));
             } else {
                 throw AmiException("Provided parameter scales have incorrect length!");
@@ -223,7 +223,7 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model->nx) {
+            if (mxGetM(x0) != nx) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -235,12 +235,12 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
         mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
-            if (mxGetN(sx0) != udata->nplist) {
+            if (mxGetN(sx0) != udata->nplist()) {
                 throw AmiException("Number of rows in sx0 field "
                                    "does not agree with number of "
                                    "model parameters!");
             }
-            if (mxGetM(sx0) != model->nx) {
+            if (mxGetM(sx0) != nx) {
                 throw AmiException("Number of columns in sx0 "
                                    "field does not agree with "
                                    "number of model states!");
@@ -255,10 +255,10 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs,
  * amici_blasCBlasTransToBlasTrans translates AMICI_BLAS_TRANSPOSE values to
  * CBlas readable strings
  *
- * @param[in] trans       flag indicating transposition and complex conjugation
- * @type AMICI_BLAS_TRANSPOSE
+ * @param trans       flag indicating transposition and complex conjugation
+ *
  * @return cblastrans CBlas readable CHAR indicating transposition and complex
- * conjugation @type char
+ * conjugation
  */
 char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
     switch (trans) {
@@ -276,22 +276,22 @@ char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
  * routine dgemm. This routines computes
  * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]
  *
- * @param[in] layout    always needs to be AMICI_BLAS_ColMajor.
- * @param[in] TransA    flag indicating whether A should be transposed before
+ * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param TransA    flag indicating whether A should be transposed before
  * multiplication
- * @param[in] TransB    flag indicating whether B should be transposed before
+ * @param TransB    flag indicating whether B should be transposed before
  * multiplication
- * @param[in] M         number of rows in A/C
- * @param[in] N         number of columns in B/C
- * @param[in] K         number of rows in B, number of columns in A
- * @param[in] alpha     coefficient alpha
- * @param[in] A         matrix A
- * @param[in] lda       leading dimension of A (m or k)
- * @param[in] B         matrix B
- * @param[in] ldb       leading dimension of B (k or n)
- * @param[in] beta      coefficient beta
+ * @param M         number of rows in A/C
+ * @param N         number of columns in B/C
+ * @param K         number of rows in B, number of columns in A
+ * @param alpha     coefficient alpha
+ * @param A         matrix A
+ * @param lda       leading dimension of A (m or k)
+ * @param B         matrix B
+ * @param ldb       leading dimension of B (k or n)
+ * @param beta      coefficient beta
  * @param[in,out] C     matrix C
- * @param[in] ldc       leading dimension of C (m or n)
+ * @param ldc       leading dimension of C (m or n)
  * @return void
  */
 void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
@@ -324,19 +324,19 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * routine dgemv. This routines computes
  * y = alpha*A*x + beta*y with A: [MxN] x:[Nx1] y:[Mx1]
  *
- * @param[in] layout    always needs to be AMICI_BLAS_ColMajor.
- * @param[in] TransA    flag indicating whether A should be transposed before
+ * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param TransA    flag indicating whether A should be transposed before
  * multiplication
- * @param[in] M         number of rows in A
- * @param[in] N         number of columns in A
- * @param[in] alpha     coefficient alpha
- * @param[in] A         matrix A
- * @param[in] lda       leading dimension of A (m or n)
- * @param[in] X         vector X
- * @param[in] incX      increment for entries of X
- * @param[in] beta      coefficient beta
+ * @param M         number of rows in A
+ * @param N         number of columns in A
+ * @param alpha     coefficient alpha
+ * @param A         matrix A
+ * @param lda       leading dimension of A (m or n)
+ * @param X         vector X
+ * @param incX      increment for entries of X
+ * @param beta      coefficient beta
  * @param[in,out] Y     vector Y
- * @param[in] incY      increment for entries of Y
+ * @param incY      increment for entries of Y
  * @return void
  */
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
@@ -363,11 +363,11 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * expDataFromMatlabCall parses the experimental data from the matlab call and
  * writes it to an ExpData class object
  *
- * @param[in] prhs pointer to the array of input arguments @type mxArray
- * @param[in] udata pointer to user data object @type UserData
- * @param[in] model pointer to the model object, this is necessary to perform
- * dimension checks @type Model
- * @return edata pointer to experimental data object @type ExpData
+ * @param prhs pointer to the array of input arguments
+ * @param udata pointer to user data object
+ * @param model pointer to the model object, this is necessary to perform
+ * dimension checks
+ * @return edata pointer to experimental data object
  */
 ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                Model *model) {
@@ -379,9 +379,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
     int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
         nz_sigmaz = 0; /* integers with problem dimensionality */
     ExpData *edata = new ExpData(udata, model);
-    if (edata->my == nullptr) {
-        // if allocation fails we throw an exception
-        // and do not simply return a null pointer
+    if (edata->my.empty() && edata->mz.empty()) {
+        // if my and mz are both empty, no (or empty) data was provided
+        // in that case we simply return a nullptr for easier checking.
         delete(edata);
         return nullptr;
     }
@@ -395,10 +395,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                ny_my, model->nytrue);
         }
         nt_my = (int)mxGetM(dataY);
-        if (nt_my != udata->nt) {
+        if (nt_my != udata->nt()) {
             throw AmiException("Number of time-points in data matrix does (%i) "
                                "not match provided time vector (%i)",
-                               nt_my, udata->nt);
+                               nt_my, udata->nt());
         }
         
         edata->setObservedData(mxGetPr(dataY));
@@ -416,10 +416,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                ny_sigmay, model->nytrue);
         }
         nt_sigmay = (int)mxGetM(dataSigmaY);
-        if (nt_sigmay != udata->nt) {
+        if (nt_sigmay != udata->nt()) {
             throw AmiException("Number of time-points in data-sigma matrix (%i) "
                                "does not match provided time vector (%i)",
-                               nt_sigmay, udata->nt);
+                               nt_sigmay, udata->nt());
         }
         
         edata->setObservedDataStdDev(mxGetPr(dataSigmaY));
@@ -436,10 +436,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                nz_mz, model->nztrue);
         }
         ne_mz = (int)mxGetM(dataZ);
-        if (ne_mz != udata->nmaxevent) {
+        if (ne_mz != udata->nme()) {
             throw AmiException("Number of time-points in event matrix (%i) does "
                                "not match provided nmaxevent (%i)",
-                               ne_mz, udata->nmaxevent);
+                               ne_mz, udata->nme());
         }
         edata->setObservedEvents(mxGetPr(dataZ));
     } else {
@@ -455,10 +455,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
                                nz_sigmaz, model->nztrue);
         }
         ne_sigmaz = (int)mxGetM(dataSigmaZ);
-        if (ne_sigmaz != udata->nmaxevent) {
+        if (ne_sigmaz != udata->nme()) {
             throw AmiException("Number of time-points in event-sigma matrix (%i) "
                                "does not match provided nmaxevent (%i)",
-                               ne_sigmaz, udata->nmaxevent);
+                               ne_sigmaz, udata->nme());
         }
         
         edata->setObservedEventsStdDev(mxGetPr(dataSigmaZ));
@@ -488,10 +488,10 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
  * creates output data compound (rdata) and then calls the AMICI simulation
  * routine to carry out numerical integration.
  *
- * @param[in] nlhs number of output arguments of the matlab call @type int
- * @param[out] plhs pointer to the array of output arguments @type mxArray
- * @param[in] nrhs number of input arguments of the matlab call @type int
- * @param[in] prhs pointer to the array of input arguments @type mxArray
+ * @param nlhs number of output arguments of the matlab call
+ * @param plhs pointer to the array of output arguments
+ * @param nrhs number of input arguments of the matlab call
+ * @param prhs pointer to the array of input arguments
  * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -502,17 +502,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nlhs != 1) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
     }
-    
-    auto model = std::unique_ptr<amici::Model>(getModel());
-    if (!model)
-        amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to create model object!");
-    
+
     try{
-        auto udata = std::unique_ptr<const amici::UserData>(userDataFromMatlabCall(prhs, nrhs, model.get()));
+        auto udata = std::unique_ptr<const amici::UserData>(amici::userDataFromMatlabCall(prhs, nrhs));
         
-        
+        auto model = getModel(udata.get());
+    
         auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(udata.get(), model.get()));
-        
         
         /* ensures that plhs[0] is available */
         plhs[0] = rdata->matlabSolutionStruct;
@@ -523,7 +519,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             if (!edata)
                 amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
         } else if (udata->sensi >= amici::AMICI_SENSI_ORDER_FIRST &&
-                   udata->sensi_meth == amici::AMICI_SENSI_ASA) {
+                   udata->sensmeth() == amici::AMICI_SENSI_ASA) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
         }
         
@@ -533,16 +529,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         } catch (amici::IntegrationFailure& ex) {
             rdata->invalidate(ex.time);
             *(rdata->status) = ex.error_code;
-        } catch (amici::SetupFailure& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
-        } catch (amici::NullPointerException& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:null","AMICI internal memory was corrupted:\n(%s)",ex.what());
+        } catch (amici::AmiException& ex) {
+            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
+        } catch (std::exception& ex) {
+            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());
         } catch (...) {
             amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
         }
         rdata->applyChainRuleFactorToSimulationResults(udata.get());
+    } catch(std::exception& ex) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI execution failed:\n%s",ex.what());
     } catch(...) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed!");
+        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }
     
 }

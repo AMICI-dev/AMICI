@@ -28,13 +28,13 @@ ReturnData::ReturnData(const UserData *udata, const Model *model)
 
 ReturnData::ReturnData(const UserData *udata, const Model *model,
                        bool initializeFields)
-    : np(model->np), nk(model->nk), nx(model->nx), nxtrue(model->nxtrue),
+    : np(model->np()), nk(model->nk()), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
-      nplist(udata->nplist), nmaxevent(udata->nmaxevent), nt(udata->nt),
-      newton_maxsteps(udata->newton_maxsteps), pscale(udata->pscale),
+      nplist(model->nplist()), nmaxevent(udata->nme()), nt(udata->nt()),
+      newton_maxsteps(udata->newton_maxsteps), pscale(udata->getPScale()),
       o2mode(model->o2mode), sensi(udata->sensi),
-      sensi_meth(udata->sensi_meth) {
+      sensi_meth(static_cast<AMICI_sensi_meth>(udata->sensmeth())) {
     /**
      * @brief constructor that uses information from model and userdata to
      * appropriately initialize fields
@@ -66,16 +66,16 @@ void ReturnData::invalidate(const realtype t) {
     
     for (int it = it_start; it < nt; it++){
         for (int ix = 0; ix < nx; ix++)
-            x[ix * nt + it] = amiGetNaN();
+            x[ix * nt + it] = getNaN();
         for (int iy = 0; iy < ny; iy++)
-            y[iy * nt + it] = amiGetNaN();
+            y[iy * nt + it] = getNaN();
         for (int ip = 0; ip < np; ip++) {
             if(sx)
                 for (int ix = 0; ix < nx; ix++)
-                    sx[(ip*nx + ix) * nt + it] = amiGetNaN();
+                    sx[(ip*nx + ix) * nt + it] = getNaN();
             if(sy)
                 for (int iy = 0; iy < ny; iy++)
-                    sy[(ip*ny + iy) * nt + it] = amiGetNaN();
+                    sy[(ip*ny + iy) * nt + it] = getNaN();
         }
     }
 }
@@ -86,7 +86,7 @@ void ReturnData::invalidateLLH() {
      * (typically after integration failure)
      */
     if (llh)
-        *llh = amiGetNaN();
+        *llh = getNaN();
     
     if (sllh)
         setLikelihoodSensitivityFirstOrderNaN();
@@ -100,7 +100,7 @@ void ReturnData::setLikelihoodSensitivityFirstOrderNaN() {
      * @brief routine to set first order sensitivities to NaN (typically after
      * integration failure)
      */
-    fillArray(sllh, nplist, amiGetNaN());
+    fillArray(sllh, nplist, getNaN());
 }
 
 void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
@@ -108,7 +108,7 @@ void ReturnData::setLikelihoodSensitivitySecondOrderNaN() {
      * @brief routine to set second order sensitivities to NaN (typically after
      * integration failure)
      */
-    fillArray(s2llh, nplist * (nJ - 1), amiGetNaN());
+    fillArray(s2llh, nplist * (nJ - 1), getNaN());
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(
@@ -134,7 +134,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
         case AMICI_SCALING_LOG10:
             coefficient = log(10.0);
             for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = unscaledParameters[udata->plist[ip]] * log(10);
+                pcoefficient[ip] = unscaledParameters[udata->plist(ip)] * log(10);
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for (int ip = 0; ip < np; ++ip)
@@ -143,7 +143,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
         case AMICI_SCALING_LN:
             coefficient = 1.0;
             for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient[ip] = unscaledParameters[udata->plist[ip]];
+                pcoefficient[ip] = unscaledParameters[udata->plist(ip)];
             if (udata->sensi == 2)
                 if (o2mode == AMICI_O2MODE_FULL)
                     for (int ip = 0; ip < np; ++ip)
@@ -155,11 +155,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
     }
     
 
-    if (udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity
         // analysis
-        if (udata->sensi == AMICI_SENSI_ORDER_SECOND) {
-            if (udata->sensi_meth == AMICI_SENSI_ASA) {
+        if (sensi == AMICI_SENSI_ORDER_SECOND) {
+            if (sensi_meth == AMICI_SENSI_ASA) {
                 if (x)
                     if (sx)
                         for (int ip = 0; ip < nplist; ++ip)
@@ -218,7 +218,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     for (int iJ = 1; iJ < nJ; ++iJ) {
                         s2llh[ip * nplist + (iJ - 1)] *=
                             pcoefficient[ip] * augcoefficient[iJ - 1];
-                        if (udata->plist[ip] == iJ - 1)
+                        if (udata->plist(ip) == iJ - 1)
                             s2llh[ip * nplist + (iJ - 1)] +=
                                 sllh[ip] * coefficient;
                     }
@@ -234,7 +234,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     for (int IND2 = 0; IND2 < N2; ++IND2) {                    \
                         s##QUANT[(ip * N1 + iJ * N1T + IND1) * N2 + IND2] *=   \
                             pcoefficient[ip] * augcoefficient[iJ - 1];         \
-                        if (udata->plist[ip] == iJ - 1)                        \
+                        if (udata->plist(ip) == iJ - 1)                        \
                             s##QUANT[(ip * N1 + iJ * N1T + IND1) * N2 +        \
                                      IND2] +=                                  \
                                 s##QUANT[(ip * N1 + IND1) * N2 + IND2] *       \
@@ -254,8 +254,8 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
             if (sllh) {
                 for (int ip = 0; ip < nplist; ++ip) {
                     s2llh[ip] *= pcoefficient[ip];
-                    s2llh[ip] += udata->k[nk - nplist + ip] * sllh[ip] /
-                                 unscaledParameters[udata->plist[ip]];
+                    s2llh[ip] += udata->k()[nk - nplist + ip] * sllh[ip] /
+                                 unscaledParameters[udata->plist(ip)];
                 }
             }
         }
@@ -268,9 +268,9 @@ void ReturnData::applyChainRuleFactorToSimulationResults(
                     s##QUANT[(ip * N1 + N1T + IND1) * N2 + IND2] *=            \
                         pcoefficient[ip];                                      \
                     s##QUANT[(ip * N1 + N1T + IND1) * N2 + IND2] +=            \
-                        udata->k[nk - nplist + ip] *                           \
+                        udata->k()[nk - nplist + ip] *                           \
                         s##QUANT[(ip * N1 + IND1) * N2 + IND2] /               \
-                        unscaledParameters[udata->plist[ip]];                  \
+                        unscaledParameters[udata->plist(ip)];                  \
                 }
 
         s2vecChainRule(x, ix, nxtrue, nx, it, nt);
@@ -369,7 +369,7 @@ void ReturnData::copyFromUserData(const UserData *udata) {
      * @brief copies measurement timepoints from UserData object
      * @param[in] udata pointer to the user data struct @type UserData
      */
-    memcpy(ts, udata->ts, nt * sizeof(realtype));
+    memcpy(ts, udata->t(), nt * sizeof(realtype));
 }
 
 void ReturnData::initFields() {

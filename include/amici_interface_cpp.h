@@ -18,7 +18,7 @@ namespace amici {
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-ReturnData *getSimulationResults(Model *model, UserData *udata,
+ReturnData *getSimulationResults(Model *model, const UserData *udata,
                                          const ExpData *edata);
 
 } // namespace amici

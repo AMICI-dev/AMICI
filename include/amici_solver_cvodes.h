@@ -3,16 +3,21 @@
 
 #include "include/amici_solver.h"
 #include "include/amici_exception.h"
+#include "include/amici_defines.h"
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 
 namespace amici {
 
 class UserData;
+class ExpData;
+class ReturnData;
+class Model_ODE;
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver() = default;
+    CVodeSolver(){
+    }
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -28,9 +33,9 @@ class CVodeSolver : public Solver {
 
     void AMISetErrHandlerFn() override;
 
-    void AMISetUserData(void *user_data) override;
+    void AMISetUserData(Model *model) override;
 
-    void AMISetUserDataB(int which, void *user_data) override;
+    void AMISetUserDataB(int which, Model *model) override;
 
     void AMISetMaxNumSteps(long int mxsteps) override;
 
@@ -42,15 +47,15 @@ class CVodeSolver : public Solver {
 
     void AMISetSuppressAlg(bool flag) override;
 
-    void AMIReInit(realtype t0, N_Vector yy0, N_Vector yp0) override;
+    void AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
-    void AMISensReInit(int ism, N_Vector *yS0, N_Vector *ypS0) override;
+    void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
 
     void AMISetSensParams(realtype *p, realtype *pbar, int *plist) override;
 
-    void AMIGetDky(realtype t, int k, N_Vector dky) override;
+    void AMIGetDky(realtype t, int k, AmiVector *dky) override;
 
-    void AMIGetSens(realtype *tret, N_Vector *yySout) override;
+    void AMIGetSens(realtype *tret, AmiVectorArray *yySout) override;
 
     void AMIFree() override;
 
@@ -58,30 +63,30 @@ class CVodeSolver : public Solver {
 
     void AMICreateB(int lmm, int iter, int *which) override;
 
-    void AMIReInitB(int which, realtype tB0, N_Vector yyB0,
-                   N_Vector ypB0) override;
+    void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
+                   AmiVector *ypB0) override;
 
     void AMISStolerancesB(int which, realtype relTolB,
                          realtype absTolB) override;
 
-    void AMIQuadReInitB(int which, N_Vector yQB0) override;
+    void AMIQuadReInitB(int which, AmiVector *yQB0) override;
 
     void AMIQuadSStolerancesB(int which, realtype reltolQB,
                              realtype abstolQB) override;
 
-    int AMISolve(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret,
+    int AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                  int itask) override;
 
-    int AMISolveF(realtype tout, N_Vector yret, N_Vector ypret, realtype *tret,
+    int AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                   int itask, int *ncheckPtr) override;
 
     void AMISolveB(realtype tBout, int itaskB) override;
 
     void AMISetMaxNumStepsB(int which, long int mxstepsB) override;
 
-    void AMIGetB(int which, realtype *tret, N_Vector yy, N_Vector yp) override;
+    void AMIGetB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) override;
 
-    void AMIGetQuadB(int which, realtype *tret, N_Vector qB) override;
+    void AMIGetQuadB(int which, realtype *tret, AmiVector *qB) override;
 
     void AMIDense(int nx) override;
 
@@ -130,76 +135,28 @@ class CVodeSolver : public Solver {
     void *AMIGetAdjBmem(void *ami_mem, int which) override;
 
 
-    void AMICalcIC(realtype tout1, TempData *tdata) override;
+    void AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
 
-    void AMICalcICB(int which, realtype tout1, N_Vector xB,
-                   N_Vector dxB) override;
+    void AMICalcICB(int which, realtype tout1, AmiVector *xB,
+                   AmiVector *dxB) override;
 
     void AMISetStopTime(realtype tstop) override;
 
     void turnOffRootFinding() override;
 
-    // Static wrapper functions because cannot pass member functions to solver
-    // (CVODES-specific signatures)
-    static int residualFunction(realtype t, N_Vector y, N_Vector ydot,
-                              void *user_data);
-
-    static int residualFunctionB(realtype t, N_Vector y, N_Vector yB,
-                               N_Vector yBdot, void *user_dataB);
-
-    static int rootFunction(realtype t, N_Vector x, realtype *root,
-                            void *user_data);
-
-    static int J(long int N, realtype t, N_Vector x, N_Vector xdot, DlsMat J,
-                 void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                      void *user_data);
-
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                      N_Vector sx, N_Vector sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2);
-
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
-
-    static int fJBand(long int N, long int mupper, long int mlower, realtype t,
-                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                   N_Vector xdot, void *user_data, N_Vector tmp);
-
-    static int fJB(long NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SlsMat JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJBandB(long NeqBdot, long mupper, long mlower, realtype t,
-                       N_Vector x, N_Vector xB, N_Vector xBdot, DlsMat JB,
-                       void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                       N_Vector tmp3B);
-
-    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                    N_Vector xB, N_Vector xBdot, void *user_data,
-                    N_Vector tmpB);
-
     ~CVodeSolver();
 
   protected:
-    void init(N_Vector x, N_Vector dx, realtype t) override;
+    
+    void init(AmiVector *x, AmiVector *dx, realtype t) override;
 
-    void binit(int which, N_Vector xB, N_Vector dxB, realtype t) override;
+    void binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) override;
 
-    void qbinit(int which, N_Vector qBdot) override;
+    void qbinit(int which, AmiVector *qBdot) override;
 
     void rootInit(int ne) override;
 
-    void sensInit1(N_Vector *sx, N_Vector *sdx, const UserData *udata) override;
+    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) override;
 
     void setDenseJacFn() override;
 
@@ -216,6 +173,54 @@ class CVodeSolver : public Solver {
     void setBandJacFnB(int which) override;
 
     void setJacTimesVecFnB(int which) override;
+    
+    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
+                    DlsMat J, void *user_data, N_Vector tmp1,
+                    N_Vector tmp2, N_Vector tmp3);
+    
+    static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
+                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
+                   N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
+    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                         SlsMat JB, void *user_data, N_Vector tmp1B,
+                         N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJBand(long int N, long int mupper, long int mlower, realtype t,
+                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
+                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    
+    static int fJBandB(long int NeqBdot, long int mupper, long int mlower,
+                       realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                       DlsMat JB, void *user_data, N_Vector tmp1B,
+                       N_Vector tmp2B, N_Vector tmp3B);
+    
+    static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
+    
+    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
+                   void *user_data, N_Vector tmp);
+    
+    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                    void *user_data, N_Vector tmpB);
+    
+    static int froot(realtype t, N_Vector x, realtype *root,
+                     void *user_data);
+    
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    
+    static int fxBdot(realtype t, N_Vector x, N_Vector xB,
+                      N_Vector xBdot, void *user_data);
+    
+    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+                      void *user_data);
+    
+    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
+                      N_Vector sx, N_Vector sxdot, void *user_data,
+                      N_Vector tmp1, N_Vector tmp2);
 };
 
 } // namespace amici

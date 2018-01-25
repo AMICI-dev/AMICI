@@ -22,8 +22,6 @@ include_directories(${AmiciConfigIncludes})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_o2_J.cpp
 ${MODEL_DIR}/model_neuron_o2_JB.cpp
-${MODEL_DIR}/model_neuron_o2_JBand.cpp
-${MODEL_DIR}/model_neuron_o2_JBandB.cpp
 ${MODEL_DIR}/model_neuron_o2_JDiag.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparse.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparseB.cpp
@@ -42,16 +40,10 @@ ${MODEL_DIR}/model_neuron_o2_deltaqB.cpp
 ${MODEL_DIR}/model_neuron_o2_deltasx.cpp
 ${MODEL_DIR}/model_neuron_o2_deltax.cpp
 ${MODEL_DIR}/model_neuron_o2_deltaxB.cpp
-${MODEL_DIR}/model_neuron_o2_drzdp.cpp
 ${MODEL_DIR}/model_neuron_o2_drzdx.cpp
-${MODEL_DIR}/model_neuron_o2_dsigma_ydp.cpp
-${MODEL_DIR}/model_neuron_o2_dsigma_zdp.cpp
-${MODEL_DIR}/model_neuron_o2_dwdp.cpp
 ${MODEL_DIR}/model_neuron_o2_dwdx.cpp
 ${MODEL_DIR}/model_neuron_o2_dxdotdp.cpp
-${MODEL_DIR}/model_neuron_o2_dydp.cpp
 ${MODEL_DIR}/model_neuron_o2_dydx.cpp
-${MODEL_DIR}/model_neuron_o2_dzdp.cpp
 ${MODEL_DIR}/model_neuron_o2_dzdx.cpp
 ${MODEL_DIR}/model_neuron_o2_qBdot.cpp
 ${MODEL_DIR}/model_neuron_o2_root.cpp

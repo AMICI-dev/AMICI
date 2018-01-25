@@ -1,9 +1,12 @@
 #ifndef _amici_wrapfunctions_h
 #define _amici_wrapfunctions_h
-#include <math.h>
-#include <include/amici_model.h>
-#include "model_neuron_o2.h"
+#include <cmath>
+#include <memory>
+#include <include/amici_defines.h>
+#include <sundials/sundials_sparse.h> //SlsMat definition
+#include <include/udata.h>
 #include <include/amici_solver_cvodes.h>
+#include <include/amici_model_ode.h>
 
 namespace amici {
 class UserData;
@@ -19,63 +22,54 @@ class Solver;
 #define EXTERNC
 #endif
 
-amici::UserData getUserData();
-amici::Solver *getSolver();
-amici::Model *getModel();
-void fx0(N_Vector x0, void *user_data);
-void fdx0(N_Vector x0, N_Vector dx0, void *user_data);
-void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data);
-void fsdx0(N_Vector *sdx0, N_Vector x, N_Vector dx, void *user_data);
-void fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data);
-void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
-void froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data);
-void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata);
-void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata);
-void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata);
-void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata);
-void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata);
-void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata);
-void fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data);
-void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data);
-void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data);
-void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data);
-void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata);
-void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata);
-void fsigma_y(realtype t, amici::TempData *tdata);
-void fdsigma_ydp(realtype t, amici::TempData *tdata);
-void fsigma_z(realtype t, int ie, amici::TempData *tdata);
-void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata);
-void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
-void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2);
-void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
-void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata);
+std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
+void getModelDims(int *nx, int *nk, int *np);
 
-class Model_model_neuron_o2 : public amici::Model {
+extern void J_model_neuron_o2(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void JB_model_neuron_o2(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
+extern void JDiag_model_neuron_o2(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void JSparse_model_neuron_o2(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void JSparseB_model_neuron_o2(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
+extern void Jrz_model_neuron_o2(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void Jv_model_neuron_o2(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx);
+extern void JvB_model_neuron_o2(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx);
+extern void Jy_model_neuron_o2(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void Jz_model_neuron_o2(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void dJrzdsigma_model_neuron_o2(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void dJrzdz_model_neuron_o2(double *dJrzdz, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz);
+extern void dJydsigma_model_neuron_o2(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void dJydy_model_neuron_o2(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void dJzdsigma_model_neuron_o2(double *dJzdsigma, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void dJzdz_model_neuron_o2(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
+extern void deltaqB_model_neuron_o2(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
+extern void deltasx_model_neuron_o2(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau);
+extern void deltax_model_neuron_o2(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old);
+extern void deltaxB_model_neuron_o2(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
+extern void drzdx_model_neuron_o2(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void dwdx_model_neuron_o2(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void dxdotdp_model_neuron_o2(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
+extern void dydx_model_neuron_o2(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void dzdx_model_neuron_o2(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void qBdot_model_neuron_o2(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp);
+extern void root_model_neuron_o2(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void rz_model_neuron_o2(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void sigma_y_model_neuron_o2(double *sigmay, const realtype t, const realtype *p, const realtype *k);
+extern void sigma_z_model_neuron_o2(double *sigmaz, const realtype t, const realtype *p, const realtype *k);
+extern void srz_model_neuron_o2(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
+extern void stau_model_neuron_o2(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie);
+extern void sx0_model_neuron_o2(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
+extern void sxdot_model_neuron_o2(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp);
+extern void sz_model_neuron_o2(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
+extern void w_model_neuron_o2(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void x0_model_neuron_o2(realtype *x0, const realtype t, const realtype *p, const realtype *k);
+extern void xBdot_model_neuron_o2(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
+extern void xdot_model_neuron_o2(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+extern void y_model_neuron_o2(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void z_model_neuron_o2(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+
+class Model_model_neuron_o2 : public amici::Model_ODE {
 public:
-    Model_model_neuron_o2() : amici::Model(4,
-                    10,
-                    2,
+    Model_model_neuron_o2(const amici::UserData *udata) : amici::Model_ODE(10,
                     2,
                     5,
                     1,
@@ -89,259 +83,194 @@ public:
                     27,
                     1,
                     8,
-                    amici::AMICI_O2MODE_FULL)
-    {
-        z2event = new int[5] {1, 1, 1, 1, 1,};
-        idlist = new realtype[10] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
+                    amici::AMICI_O2MODE_FULL,
+                    std::vector<realtype>(udata->unp(),udata->unp()+4),
+                    std::vector<realtype>(udata->k(),udata->k()+2),
+                    udata->plist(),
+                    std::vector<realtype>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    std::vector<int>{1, 1, 1, 1, 1})
+                    {};
+
+    virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+        J_model_neuron_o2(J, t, x, p, k, h, w, dwdx);
     }
 
-    amici::Solver *getSolver() override {
-        return new amici::CVodeSolver();
+    virtual void fJB(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
+        JB_model_neuron_o2(JB, t, x, p, k, h, xB, w, dwdx);
     }
 
-    int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        J_model_neuron_o2(N, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual void fJDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+        JDiag_model_neuron_o2(JDiag, t, x, p, k, h, w, dwdx);
     }
 
-    int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JB_model_neuron_o2(NeqBdot, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+        JSparse_model_neuron_o2(JSparse, t, x, p, k, h, w, dwdx);
     }
 
-    int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JBand_model_neuron_o2(N, mupper, mlower, t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual void fJSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
+        JSparseB_model_neuron_o2(JSparseB, t, x, p, k, h, xB, w, dwdx);
     }
 
-    int fJBandB(long int NeqBdot, long int mupper, long int mlower, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JBandB_model_neuron_o2(NeqBdot, mupper, mlower, t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual void fJrz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        Jrz_model_neuron_o2(nllh, iz, p, k, rz, sigmaz);
     }
 
-    void fJDiag(realtype t, N_Vector JDiag, realtype cj, N_Vector x, N_Vector dx, void *user_data) override {
-        JDiag_model_neuron_o2(t, JDiag, cj, x, dx, user_data);
-        return;
+    virtual void fJv(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx) override {
+        Jv_model_neuron_o2(Jv, t, x, p, k, h, v, w, dwdx);
     }
 
-    int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        JSparse_model_neuron_o2(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual void fJvB(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx) override {
+        JvB_model_neuron_o2(JvB, t, x, p, k, h, xB, vB, w, dwdx);
     }
 
-    int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, SlsMat JB, void *user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B) override {
-        JSparseB_model_neuron_o2(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-        return(0);
+    virtual void fJy(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        Jy_model_neuron_o2(nllh, iy, p, k, y, sigmay, my);
     }
 
-    void fJrz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jrz_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fJz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        Jz_model_neuron_o2(nllh, iz, p, k, z, sigmaz, mz);
     }
 
-    int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) override {
-        Jv_model_neuron_o2(t, x, dx, xdot, v, Jv, cj, user_data, tmp1, tmp2);
-        return(0);
+    virtual void fdJrzdsigma(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        dJrzdsigma_model_neuron_o2(dJrzdsigma, iz, p, k, rz, sigmaz);
     }
 
-    int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, N_Vector vB, N_Vector JvB, realtype cj, void *user_data, N_Vector tmpB1, N_Vector tmpB2) override {
-        JvB_model_neuron_o2(t, x, dx, xB, dxB, xBdot, vB, JvB, cj, user_data, tmpB1, tmpB2);
-        return(0);
+    virtual void fdJrzdz(double *dJrzdz, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
+        dJrzdz_model_neuron_o2(dJrzdz, iz, p, k, rz, sigmaz);
     }
 
-    void fJy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jy_model_neuron_o2(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void fdJydsigma(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        dJydsigma_model_neuron_o2(dJydsigma, iy, p, k, y, sigmay, my);
     }
 
-    void fJz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        Jz_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fdJydy(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) override {
+        dJydy_model_neuron_o2(dJydy, iy, p, k, y, sigmay, my);
     }
 
-    void fdJrzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdsigma_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fdJzdsigma(double *dJzdsigma, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        dJzdsigma_model_neuron_o2(dJzdsigma, iz, p, k, z, sigmaz, mz);
     }
 
-    void fdJrzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJrzdz_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fdJzdz(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz) override {
+        dJzdz_model_neuron_o2(dJzdz, iz, p, k, z, sigmaz, mz);
     }
 
-    void fdJydsigma(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydsigma_model_neuron_o2(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void fdeltaqB(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) override {
+        deltaqB_model_neuron_o2(deltaqB, t, x, p, k, h, ip, ie, xdot, xdot_old, xB);
     }
 
-    void fdJydy(realtype t, int it, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJydy_model_neuron_o2(t, it, x, tdata, edata, rdata);
-        return;
+    virtual void fdeltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau) override {
+        deltasx_model_neuron_o2(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_old, sx, stau);
     }
 
-    void fdJzdsigma(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdsigma_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old) override {
+        deltax_model_neuron_o2(deltax, t, x, p, k, h, ie, xdot, xdot_old);
     }
 
-    void fdJzdz(realtype t, int ie, N_Vector x, amici::TempData *tdata, const amici::ExpData *edata, amici::ReturnData *rdata) override {
-        dJzdz_model_neuron_o2(t, ie, x, tdata, edata, rdata);
-        return;
+    virtual void fdeltaxB(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) override {
+        deltaxB_model_neuron_o2(deltaxB, t, x, p, k, h, ie, xdot, xdot_old, xB);
     }
 
-    void fdeltaqB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector qBdot, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaqB_model_neuron_o2(t, ie, x, xB, qBdot, xdot, xdot_old, tdata);
-        return;
+    virtual void fdrzdp(double *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
     }
 
-    void fdeltasx(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, N_Vector *sx, amici::TempData *tdata) override {
-        deltasx_model_neuron_o2(t, ie, x, xdot, xdot_old, sx, tdata);
-        return;
+    virtual void fdrzdx(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        drzdx_model_neuron_o2(drzdx, ie, t, x, p, k, h);
     }
 
-    void fdeltax(realtype t, int ie, N_Vector x, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltax_model_neuron_o2(t, ie, x, xdot, xdot_old, tdata);
-        return;
+    virtual void fdsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
-    void fdeltaxB(realtype t, int ie, N_Vector x, N_Vector xB, N_Vector xdot, N_Vector xdot_old, amici::TempData *tdata) override {
-        deltaxB_model_neuron_o2(t, ie, x, xB, xdot, xdot_old, tdata);
-        return;
+    virtual void fdsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
-    void fdrzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdp_model_neuron_o2(t, ie, x, tdata);
-        return;
+    virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
     }
 
-    void fdrzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        drzdx_model_neuron_o2(t, ie, x, tdata);
-        return;
+    virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dwdx_model_neuron_o2(dwdx, t, x, p, k, h, w);
     }
 
-    void fdsigma_ydp(realtype t, amici::TempData *tdata) override {
-        dsigma_ydp_model_neuron_o2(t, tdata);
-        return;
+    virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) override {
+        dxdotdp_model_neuron_o2(dxdotdp, t, x, p, k, h, ip, w, dwdp);
     }
 
-    void fdsigma_zdp(realtype t, int ie, amici::TempData *tdata) override {
-        dsigma_zdp_model_neuron_o2(t, ie, tdata);
-        return;
+    virtual void fdydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
     }
 
-    void fdwdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdp_model_neuron_o2(t, x, dx, user_data);
-        return;
+    virtual void fdydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        dydx_model_neuron_o2(dydx, t, x, p, k, h);
     }
 
-    void fdwdx(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dwdx_model_neuron_o2(t, x, dx, user_data);
-        return;
+    virtual void fdzdp(double *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
     }
 
-    void fdxdotdp(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        dxdotdp_model_neuron_o2(t, x, dx, user_data);
-        return;
+    virtual void fdzdx(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        dzdx_model_neuron_o2(dzdx, ie, t, x, p, k, h);
     }
 
-    void fdydp(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydp_model_neuron_o2(t, it, x, tdata);
-        return;
+    virtual void fqBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp) override {
+        qBdot_model_neuron_o2(qBdot, ip, t, x, p, k, h, xB, w, dwdp);
     }
 
-    void fdydx(realtype t, int it, N_Vector x, amici::TempData *tdata) override {
-        dydx_model_neuron_o2(t, it, x, tdata);
-        return;
+    virtual void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        root_model_neuron_o2(root, t, x, p, k, h);
     }
 
-    void fdzdp(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdp_model_neuron_o2(t, ie, x, tdata);
-        return;
+    virtual void frz(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        rz_model_neuron_o2(rz, ie, t, x, p, k, h);
     }
 
-    void fdzdx(realtype t, int ie, N_Vector x, amici::TempData *tdata) override {
-        dzdx_model_neuron_o2(t, ie, x, tdata);
-        return;
+    virtual void fsigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) override {
+        sigma_y_model_neuron_o2(sigmay, t, p, k);
     }
 
-    int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot, void *user_data) override {
-        qBdot_model_neuron_o2(t, x, dx, xB, dxB, qBdot, user_data);
-        return(0);
+    virtual void fsigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) override {
+        sigma_z_model_neuron_o2(sigmaz, t, p, k);
     }
 
-    int froot(realtype t, N_Vector x, N_Vector dx, realtype *root, void *user_data) override {
-        root_model_neuron_o2(t, x, dx, root, user_data);
-        return(0);
+    virtual void fsrz(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
+        srz_model_neuron_o2(srz, ie, t, x, p, k, h, sx, ip);
     }
 
-    void frz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        rz_model_neuron_o2(t, ie, x, tdata, rdata);
-        return;
+    virtual void fstau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) override {
+        stau_model_neuron_o2(stau, t, x, p, k, h, sx, ip, ie);
     }
 
-    void fsigma_y(realtype t, amici::TempData *tdata) override {
-        sigma_y_model_neuron_o2(t, tdata);
-        return;
+    virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {
+        sx0_model_neuron_o2(sx0, t, x0, p, k, ip);
     }
 
-    void fsigma_z(realtype t, int ie, amici::TempData *tdata) override {
-        sigma_z_model_neuron_o2(t, ie, tdata);
-        return;
+    virtual void fsxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp) override {
+        sxdot_model_neuron_o2(sxdot, t, x, p, k, h, ip, sx, w, dwdx, J, dxdotdp);
     }
 
-    void fsrz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        srz_model_neuron_o2(t, ie, x, sx, tdata, rdata);
-        return;
+    virtual void fsz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
+        sz_model_neuron_o2(sz, ie, t, x, p, k, h, sx, ip);
     }
 
-    void fstau(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata) override {
-        stau_model_neuron_o2(t, ie, x, sx, tdata);
-        return;
+    virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        w_model_neuron_o2(w, t, x, p, k, h);
     }
 
-    void fsx0(N_Vector *sx0, N_Vector x, N_Vector dx, void *user_data) override {
-        sx0_model_neuron_o2(sx0, x, dx, user_data);
-        return;
+    virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {
+        x0_model_neuron_o2(x0, t, p, k);
     }
 
-    int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,int ip,  N_Vector sx, N_Vector sdx, N_Vector sxdot, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) override {
-        sxdot_model_neuron_o2(Ns, t, x, dx, xdot, ip, sx, sdx, sxdot, user_data, tmp1, tmp2, tmp3);
-        return(0);
+    virtual void fxBdot(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
+        xBdot_model_neuron_o2(xBdot, t, x, p, k, h, xB, w, dwdx);
     }
 
-    void fsz(realtype t, int ie, N_Vector x, N_Vector *sx, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        sz_model_neuron_o2(t, ie, x, sx, tdata, rdata);
-        return;
+    virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        xdot_model_neuron_o2(xdot, t, x, p, k, h, w);
     }
 
-    void fw(realtype t, N_Vector x, N_Vector dx, void *user_data) override {
-        w_model_neuron_o2(t, x, dx, user_data);
-        return;
+    virtual void fy(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        y_model_neuron_o2(y, t, x, p, k, h);
     }
 
-    void fx0(N_Vector x0, void *user_data) override {
-        x0_model_neuron_o2(x0, user_data);
-        return;
-    }
-
-    int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot, void *user_data) override {
-        xBdot_model_neuron_o2(t, x, dx, xB, dxB, xBdot, user_data);
-        return(0);
-    }
-
-    int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void *user_data) override {
-        xdot_model_neuron_o2(t, x, dx, xdot, user_data);
-        return(0);
-    }
-
-    void fy(realtype t, int it, N_Vector x, void *user_data, amici::ReturnData *rdata) override {
-        y_model_neuron_o2(t, it, x, user_data, rdata);
-        return;
-    }
-
-    void fz(realtype t, int ie, N_Vector x, amici::TempData *tdata, amici::ReturnData *rdata) override {
-        z_model_neuron_o2(t, ie, x, tdata, rdata);
-        return;
+    virtual void fz(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        z_model_neuron_o2(z, ie, t, x, p, k, h);
     }
 
 };

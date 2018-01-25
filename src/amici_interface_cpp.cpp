@@ -35,7 +35,7 @@ namespace amici {
  * @param[in] edata pointer to experimental data object @type ExpData
  * @return rdata pointer to return data object @type ReturnData
  */
-ReturnData *getSimulationResults(Model *model, UserData *udata,
+ReturnData *getSimulationResults(Model *model, const UserData *udata,
                                  const ExpData *edata) {
 
     ReturnData *rdata = new ReturnData(udata, model);
@@ -47,9 +47,7 @@ ReturnData *getSimulationResults(Model *model, UserData *udata,
         rdata->invalidate(ex.time);
         *(rdata->status) = ex.error_code;
     } catch (amici::SetupFailure& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n(%s)",ex.what());
-    } catch (amici::NullPointerException& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:null","AMICI internal memory was corrupted:\n(%s)",ex.what());
+        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI setup failed:\n%s",ex.what());
     } catch (...) {
         amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }
