@@ -148,7 +148,11 @@ void Solver::setupAMIB(BackwardProblem *bwd, const UserData *udata, Model *model
     AMISetUserDataB(bwd->getwhich(), model);
 
     /* Number of maximal internal steps */
-    AMISetMaxNumStepsB(bwd->getwhich(), udata->maxstepsB);
+    if(udata->maxstepsB > 0) {
+        AMISetMaxNumStepsB(bwd->getwhich(), udata->maxstepsB);
+    } else {
+        AMISetMaxNumStepsB(bwd->getwhich(), udata->maxsteps * 100);
+    }
     
     setLinearSolverB(udata, model, bwd->getwhich());
     
