@@ -2,6 +2,7 @@
 #define AMICI_UDATA_H
 
 #include "include/amici_defines.h"
+#include "include/symbolic_functions.h" //getNaN
 #include <cmath>
 #include <vector>
 
@@ -320,13 +321,13 @@ class UserData {
     int maxsteps = 0;
     
     /** absolute tolerances for backward quadratures */
-    double quad_atol = 1e-16;
+    double quad_atol = getNaN();
     
     /** relative tolerances for backward quadratures */
-    double quad_rtol = 1e-8;
+    double quad_rtol = getNaN();
     
     /** maximum number of allowed integration steps for backward problem */
-    int maxstepsB = 0;
+    int maxstepsB = getNaN();
     
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;

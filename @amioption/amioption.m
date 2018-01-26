@@ -14,11 +14,11 @@ classdef amioption < matlab.mixin.CustomDisplay
         % maximum number of integration steps
         maxsteps = 1e4;
         % absolute integration tolerace
-        quad_atol = [];
+        quad_atol = NaN;
         % relative integration tolerace
-        quad_rtol = [];
+        quad_rtol = NaN;
         % maximum number of integration steps
-        maxstepsB = [];
+        maxstepsB = NaN;
         % index of parameters for which the sensitivities are computed
         sens_ind = double.empty();
         % index of states for which positivity should be enforced
