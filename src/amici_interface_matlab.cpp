@@ -124,6 +124,9 @@ UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs) {
         readOptionScalarDouble(atol);
         readOptionScalarDouble(rtol);
         readOptionScalarInt(maxsteps, int);
+        readOptionScalarDouble(quad_atol);
+        readOptionScalarDouble(quad_rtol);
+        readOptionScalarInt(maxstepsB, int);
         readOptionScalarInt(lmm, LinearMultistepMethod);
         readOptionScalarInt(iter, NonlinearSolverIteration);
         readOptionScalarInt(interpType, InterpolationType);

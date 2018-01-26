@@ -13,6 +13,12 @@ classdef amioption < matlab.mixin.CustomDisplay
         rtol = 1e-8;
         % maximum number of integration steps
         maxsteps = 1e4;
+        % absolute integration tolerace
+        quad_atol = 1e-12;
+        % relative integration tolerace
+        quad_rtol = 1e-8;
+        % maximum number of integration steps
+        maxstepsB = 0;
         % index of parameters for which the sensitivities are computed
         sens_ind = double.empty();
         % index of states for which positivity should be enforced
