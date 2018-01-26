@@ -321,10 +321,10 @@ class UserData {
     int maxsteps = 0;
     
     /** absolute tolerances for backward quadratures */
-    double quad_atol = 1e-8;
+    double quad_atol = 1e-12;
     
     /** relative tolerances for backward quadratures */
-    double quad_rtol = 1e-6;
+    double quad_rtol = 1e-8;
     
     /** maximum number of allowed integration steps for backward problem */
     int maxstepsB = 0;
