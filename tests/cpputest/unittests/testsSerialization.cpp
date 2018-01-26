@@ -95,8 +95,8 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(*r.chi2, *s.chi2);
     CHECK_EQUAL(*r.status, *s.status);
 
-    checkEqualArray(r.sllh, s.sllh, r.nplist, 1e-16, 1e-16, "sllh");
-    checkEqualArray(r.s2llh, s.s2llh, r.nplist * r.nplist, 1e-16, 1e-16, "s2llh");
+    checkEqualArray(r.sllh, s.sllh, r.nplist, 1e-8, 1e-8, "sllh");
+    checkEqualArray(r.s2llh, s.s2llh, r.nplist * r.nplist, 1e-8, 1e-8, "s2llh");
 }
 
 
