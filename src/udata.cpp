@@ -37,10 +37,12 @@ UserData::UserData(const UserData &other) : UserData(other.np(), other.nk(), oth
     sensi = other.sensi;
     atol = other.atol;
     rtol = other.rtol;
-    maxsteps = other.maxsteps;
     quad_atol = other.quad_atol;
     quad_rtol = other.quad_rtol;
+    maxsteps = other.maxsteps;
     maxstepsB = other.maxstepsB;
+    if (maxstepsB == 0)
+        maxstepsB = 100 * maxsteps;
     newton_maxsteps = other.newton_maxsteps;
     newton_maxlinsteps = other.newton_maxlinsteps;
     newton_preeq = other.newton_preeq;
