@@ -1,3 +1,4 @@
+oldpath = addpath(genpath('.'));
 example_events
 example_dirac
 example_dirac_adjoint
@@ -10,3 +11,4 @@ example_nested_events
 example_adjoint_hessian
 example_dirac_adjoint_hessVecProd
 example_jakstat_adjoint_hvp
+path(oldpath);
