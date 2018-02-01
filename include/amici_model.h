@@ -14,11 +14,24 @@
 #include <memory>
 
 namespace amici {
-    
-    class ReturnData;
-    class ExpData;
-    class Solver;
 
+class ReturnData;
+class ExpData;
+class Model;
+class Solver;
+
+extern msgIdAndTxtFp warnMsgIdAndTxt;
+} // namespace amici
+
+
+// for serialization friend in Model
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::Model &u, const unsigned int version);
+}}
+
+namespace amici {
+    
     /**
      * @brief The Model class represents an AMICI ODE model.
      * The model can compute various model related quantities based
@@ -669,6 +682,15 @@ namespace amici {
             }
         }
         
+        /**
+         * @brief Serialize Model (see boost::serialization::serialize)
+         * @param ar Archive to serialize to
+         * @param r Data to serialize
+         * @param version Version number
+         */
+        template <class Archive>
+        friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
+
     protected:
         
         /** model specific implementation of fx0
