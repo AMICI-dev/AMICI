@@ -15,7 +15,20 @@ class ReturnData;
 class ForwardProblem;
 class BackwardProblem;
 class Model;
+class Solver;
+
 extern msgIdAndTxtFp warnMsgIdAndTxt;
+} // namespace amici
+
+
+// for serialization friend in Solver
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::Solver &u, const unsigned int version);
+}}
+
+
+namespace amici {
 
 /** Solver class.
  * provides a generic interface to CVode and IDA solvers, individual realizations
@@ -523,6 +536,16 @@ class Solver {
     void setInternalSensitivityMethod(InternalSensitivityMethod ism) {
         this->ism = ism;
     }
+
+    /**
+     * @brief Serialize Solver (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param r Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, Solver &r, const unsigned int version);
+
 
   protected:
     /**
