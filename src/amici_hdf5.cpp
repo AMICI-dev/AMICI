@@ -650,9 +650,10 @@ void readModelDataFromHDF5(hid_t fileId, Model &model, const std::string &datase
                     fileId, datasetPath, "qpositivex", &buffer, &length0);
         if (length0 == (unsigned) model.nx)
             model.setPositivityFlag(std::vector<int>(buffer, buffer + length0));
-        else if(length0 != 0) // currently not written correctly from matlab
+        else if(length0 != 0) { // currently not written correctly from matlab
             delete[] buffer;
             throw(AmiException("Failed reading qpositivex (%d).", length0));
+        }
         delete[] buffer;
     }
 
@@ -661,9 +662,10 @@ void readModelDataFromHDF5(hid_t fileId, Model &model, const std::string &datase
         hsize_t length0 = 0;
         AMI_HDF5_getDoubleArrayAttribute(
                     fileId, datasetPath, "theta", &buffer, &length0);
-        if (length0 != (unsigned) model.np())
+        if (length0 != (unsigned) model.np()) {
             delete[] buffer;
             throw(AmiException("Failed reading theta (%d).", length0));
+        }
         model.setParameters(std::vector<double>(buffer, buffer + length0));
         delete[] buffer;
     }
@@ -673,9 +675,10 @@ void readModelDataFromHDF5(hid_t fileId, Model &model, const std::string &datase
         hsize_t length0 = 0;
         AMI_HDF5_getDoubleArrayAttribute(
                     fileId, datasetPath, "kappa", &buffer, &length0);
-        if (length0 != (unsigned) model.nk())
+        if (length0 != (unsigned) model.nk()) {
             delete[] buffer;
             throw(AmiException("Failed reading kappa."));
+        }
         model.setFixedParameters(std::vector<double>(buffer, buffer + length0));
         delete[] buffer;
     }
