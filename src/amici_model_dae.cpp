@@ -229,7 +229,7 @@ namespace amici {
         fdwdp(t,x);
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 0; ip < plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),k_.data(),h.data(),
                           N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                           w.data(),dwdp.data());

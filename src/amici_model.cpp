@@ -333,7 +333,7 @@ void Model::fx0(AmiVector *x) {
      **/
     void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
         sx->reset();
-        for(int ip = 0; ip<plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
             fsx0(sx->data(ip),tstart,x->data(), unscaledParameters.data(),k_.data(),plist_.at(ip));
     }
     
@@ -345,7 +345,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
         std::fill(stau.begin(),stau.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++){
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
             fstau(&stau.at(ip),t,x->data(), unscaledParameters.data(),k_.data(),h.data(),sx->data(ip),plist_.at(ip),ie);
         }
     }
@@ -369,7 +369,7 @@ void Model::fx0(AmiVector *x) {
     void Model::fdydp(const int it, ReturnData *rdata) {
         getx(it,rdata);
         std::fill(dydp.begin(),dydp.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++){
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
             fdydp(&dydp.at(ip*ny),gett(it,rdata),x.data(), unscaledParameters.data(),k_.data(),h.data(),plist_.at(ip));
         }
     }
@@ -411,7 +411,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
         std::vector<realtype> szreturn(nz,0.0);
-        for(int ip = 0; ip < plist_.size();  ip++ ){
+        for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
             std::fill(szreturn.begin(), szreturn.end(), 0.0);
             fsz(szreturn.data(),ie,t,x->data(), unscaledParameters.data(),k_.data(),h.data(),sx->data(ip),plist_.at(ip));
             for(int iz = 0; iz < nz; iz++) {
@@ -448,7 +448,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
         std::vector<realtype> srzreturn(nz,0.0);
-        for(int ip = 0; ip < plist_.size();  ip++ ){
+        for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
             std::fill(srzreturn.begin(), srzreturn.end(), 0.0);
             fsrz(srzreturn.data(),ie,t,x->data(), unscaledParameters.data(),k_.data(),h.data(),sx->data(ip),plist_.at(ip));
             for(int iz = 0; iz < nz; iz++) {
@@ -465,7 +465,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(dzdp.begin(),dzdp.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++){
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
             fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),k_.data(),h.data(),plist_.at(ip));
         }
     }
@@ -487,7 +487,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
         std::fill(drzdp.begin(),drzdp.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++){
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
             fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),k_.data(),h.data(),plist_.at(ip));
         }
     }
@@ -527,7 +527,7 @@ void Model::fx0(AmiVector *x) {
                           const AmiVector *xdot, const AmiVector *xdot_old) {
         fw(t,x->getNVector());
         std::fill(deltasx.begin(),deltasx.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fdeltasx(&deltasx.at(nx*ip),t,x->data(), unscaledParameters.data(),k_.data(),h.data(),w.data(),
                           plist_.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
     }
@@ -557,7 +557,7 @@ void Model::fx0(AmiVector *x) {
     void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                           const AmiVector *xdot, const AmiVector *xdot_old) {
         std::fill(deltaqB.begin(),deltaqB.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fdeltaqB(deltaqB.data(),t,x->data(), unscaledParameters.data(),k_.data(),h.data(),
                           plist_.at(ip),ie,xdot->data(),xdot_old->data(),xB->data());
     }
@@ -589,7 +589,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fdsigma_ydp(const int it, const ReturnData *rdata) {
         std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fdsigma_ydp(dsigmaydp.data(),gett(it,rdata), unscaledParameters.data(),k_.data(),plist_.at(ip));
     }
     
@@ -621,7 +621,7 @@ void Model::fx0(AmiVector *x) {
      */
     void Model::fdsigma_zdp(const realtype t) {
         std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
-        for(int ip = 0; ip < plist_.size(); ip++)
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fdsigma_zdp(dsigmazdp.data(),t, unscaledParameters.data(),k_.data(),plist_.at(ip));
     }
     
