@@ -221,105 +221,203 @@ class Solver {
         return sensi_meth;
     }
 
+    /**
+     * @brief setSensitivityMethod
+     * @param sensi_meth
+     */
     void setSensitivityMethod(AMICI_sensi_meth sensi_meth) {
         this->sensi_meth = sensi_meth;
     }
 
+    /**
+     * @brief getNewtonMaxSteps
+     * @return
+     */
     int getNewtonMaxSteps() const {
         return newton_maxsteps;
     }
 
+    /**
+     * @brief setNewtonMaxSteps
+     * @param newton_maxsteps
+     */
     void setNewtonMaxSteps(int newton_maxsteps) {
         this->newton_maxsteps = newton_maxsteps;
     }
 
+    /**
+     * @brief getNewtonPreequilibration
+     * @return
+     */
     bool getNewtonPreequilibration() const {
         return newton_preeq;
     }
 
+    /**
+     * @brief setNewtonPreequilibration
+     * @param newton_preeq
+     */
     void setNewtonPreequilibration(bool newton_preeq) {
         this->newton_preeq = newton_preeq;
     }
 
+    /**
+     * @brief getNewtonPreconditioner
+     * @return
+     */
     int getNewtonPreconditioner() const {
         return newton_precon;
     }
 
+    /**
+     * @brief setNewtonPreconditioner
+     * @param newton_precon
+     */
     // TODO: what are valid options?
     void setNewtonPreconditioner(int newton_precon) {
         this->newton_precon = newton_precon;
     }
 
+    /**
+     * @brief getNewtonMaxLinearSteps
+     * @return
+     */
     int getNewtonMaxLinearSteps() const {
         return newton_maxlinsteps;
     }
 
+    /**
+     * @brief setNewtonMaxLinearSteps
+     * @param newton_maxlinsteps
+     */
     void setNewtonMaxLinearSteps(int newton_maxlinsteps) {
         this->newton_maxlinsteps = newton_maxlinsteps;
     }
 
-
+    /**
+     * @brief getSensitivityOrder
+     * @return
+     */
     AMICI_sensi_order getSensitivityOrder() const {
         return sensi;
     }
 
+    /**
+     * @brief setSensitivityOrder
+     * @param sensi
+     */
     void setSensitivityOrder(AMICI_sensi_order sensi) {
         this->sensi = sensi;
     }
 
+    /**
+     * @brief getRelativeTolerance
+     * @return
+     */
     double getRelativeTolerance() const {
         return rtol;
     }
 
+    /**
+     * @brief setRelativeTolerance
+     * @param rtol
+     */
     void setRelativeTolerance(double rtol) {
         this->rtol = rtol;
     }
 
+    /**
+     * @brief getAbsoluteTolerance
+     * @return
+     */
     double getAbsoluteTolerance() const {
         return atol;
     }
 
+    /**
+     * @brief setAbsoluteTolerance
+     * @param atol
+     */
     void setAbsoluteTolerance(double atol) {
         this->atol = atol;
     }
 
+    /**
+     * @brief getRelativeToleranceQuadratures
+     * @return
+     */
     double getRelativeToleranceQuadratures() const {
         return quad_rtol;
     }
 
+    /**
+     * @brief setRelativeToleranceQuadratures
+     * @param rtol
+     */
     void setRelativeToleranceQuadratures(double rtol) {
         this->quad_rtol = rtol;
     }
 
+    /**
+     * @brief getAbsoluteToleranceQuadratures
+     * @return
+     */
     double getAbsoluteToleranceQuadratures() const {
         return quad_atol;
     }
 
+    /**
+     * @brief setAbsoluteToleranceQuadratures
+     * @param atol
+     */
     void setAbsoluteToleranceQuadratures(double atol) {
         this->quad_atol = atol;
     }
 
+    /**
+     * @brief getMaxSteps
+     * @return
+     */
     int getMaxSteps() const {
         return maxsteps;
     }
 
+    /**
+     * @brief setMaxSteps
+     * @param maxsteps
+     */
     void setMaxSteps(int maxsteps) {
         this->maxsteps = maxsteps;
     }
 
+    /**
+     * @brief getMaxStepsBackwardProblem
+     * @return
+     */
     int getMaxStepsBackwardProblem() const {
         return maxstepsB;
     }
 
+    /**
+     * @brief setMaxStepsBackwardProblem
+     * @param maxsteps
+     */
     void setMaxStepsBackwardProblem(int maxsteps) {
         this->maxstepsB = maxsteps;
     }
 
-
+    /**
+     * @brief getLinearMultistepMethod
+     * @return
+     */
     LinearMultistepMethod getLinearMultistepMethod() const {
         return lmm;
     }
 
+    /**
+     * @brief setLinearMultistepMethod
+     * @param lmm
+     */
     void setLinearMultistepMethod(LinearMultistepMethod lmm) {
         if(lmm != ADAMS && lmm != BDF)
             throw AmiException("Illegal value for lmm!");
@@ -327,10 +425,18 @@ class Solver {
         this->lmm = lmm;
     }
 
+    /**
+     * @brief getNonlinearSolverIteration
+     * @return
+     */
     NonlinearSolverIteration getNonlinearSolverIteration() const {
         return iter;
     }
 
+    /**
+     * @brief setNonlinearSolverIteration
+     * @param iter
+     */
     void setNonlinearSolverIteration(NonlinearSolverIteration iter) {
         if(iter != NEWTON && iter != FUNCTIONAL)
             throw AmiException("Illegal value for iter!");
@@ -338,42 +444,82 @@ class Solver {
         this->iter = iter;
     }
 
+    /**
+     * @brief getInterpolationType
+     * @return
+     */
     InterpolationType getInterpolationType() const {
         return interpType;
     }
 
+    /**
+     * @brief setInterpolationType
+     * @param interpType
+     */
     void setInterpolationType(InterpolationType interpType) {
         this->interpType = interpType;
     }
 
+    /**
+     * @brief getStateOrdering
+     * @return
+     */
     StateOrdering getStateOrdering() const {
         return ordering;
     }
 
+    /**
+     * @brief setStateOrdering
+     * @param ordering
+     */
     void setStateOrdering(StateOrdering ordering) {
         this->ordering = ordering;
     }
 
+    /**
+     * @brief getStabilityLimitFlag
+     * @return
+     */
     int getStabilityLimitFlag() const {
         return stldet;
     }
 
+    /**
+     * @brief setStabilityLimitFlag
+     * @param stldet
+     */
     void setStabilityLimitFlag(int stldet) {
         this->stldet = stldet;
     }
 
+    /**
+     * @brief getLinearSolver
+     * @return
+     */
     LinearSolver getLinearSolver() const {
         return linsol;
     }
 
+    /**
+     * @brief setLinearSolver
+     * @param linsol
+     */
     void setLinearSolver(LinearSolver linsol) {
         this->linsol = linsol;
     }
 
+    /**
+     * @brief getInternalSensitivityMethod
+     * @return
+     */
     InternalSensitivityMethod getInternalSensitivityMethod() const {
         return ism;
     }
 
+    /**
+     * @brief setInternalSensitivityMethod
+     * @param ism
+     */
     void setInternalSensitivityMethod(InternalSensitivityMethod ism) {
         this->ism = ism;
     }

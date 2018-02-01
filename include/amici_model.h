@@ -339,6 +339,10 @@ namespace amici {
             return nmaxevent;
         }
 
+        /**
+         * @brief setNMaxEvent
+         * @param nmaxevent
+         */
         void setNMaxEvent(int nmaxevent) {
             this->nmaxevent = nmaxevent;
         }
@@ -351,30 +355,54 @@ namespace amici {
             return ts.size();
         }
 
+        /**
+         * @brief getParameterScale
+         * @return
+         */
         AMICI_parameter_scaling getParameterScale() const {
             return pscale;
         }
 
+        /**
+         * @brief setParameterScale
+         * @param pscale
+         */
         void setParameterScale(AMICI_parameter_scaling pscale) {
             this->pscale = pscale;
             unscaledParameters.resize(originalParameters.size());
             unscaleParameters(unscaledParameters.data());
         }
 
+        /**
+         * @brief getPositivityFlag
+         * @return
+         */
         std::vector<int> getPositivityFlag() const {
             return qpositivex;
         }
 
+        /**
+         * @brief setPositivityFlag
+         * @param qpositivex
+         */
         void setPositivityFlag(std::vector<int> const& qpositivex) {
             if(qpositivex.size() != (unsigned) this->nx)
                 throw AmiException("Dimension mismatch.");
             this->qpositivex = qpositivex;
         }
 
+        /**
+         * @brief getParameters
+         * @return The user-set parameters (see also getUnscaledParameters)
+         */
         std::vector<realtype> getParameters() const {
             return originalParameters;
         }
 
+        /**
+         * @brief setParameters
+         * @param p
+         */
         void setParameters(std::vector<realtype> const&p) {
             if(p.size() != (unsigned) this->originalParameters.size())
                 throw AmiException("Dimension mismatch.");
@@ -383,37 +411,69 @@ namespace amici {
             unscaleParameters(this->unscaledParameters.data());
         }
 
+        /**
+         * @brief getUnscaledParameters
+         * @return The unscaled parameters
+         */
         std::vector<realtype> getUnscaledParameters() const {
             return unscaledParameters;
         }
 
-
+        /**
+         * @brief getFixedParameters
+         * @return
+         */
         std::vector<realtype> getFixedParameters() const {
             return k_;
         }
 
+        /**
+         * @brief setFixedParameters
+         * @param k
+         */
         void setFixedParameters(std::vector<realtype> const&k) {
             if(k.size() != (unsigned) this->k_.size())
                 throw AmiException("Dimension mismatch.");
             this->k_ = k;
         }
 
+        /**
+         * @brief getTimepoints
+         * @return
+         */
         std::vector<realtype> getTimepoints() const {
             return ts;
         }
 
+        /**
+         * @brief setTimepoints
+         * @param ts
+         */
         void setTimepoints(std::vector<realtype> const& ts) {
             this->ts = ts;
         }
 
+        /**
+         * @brief Get timepoint for given index
+         * @param idx
+         * @return
+         */
         double t(int idx) const {
             return ts.at(idx);
         }
 
+        /**
+         * @brief getParameterList
+         * @return
+         */
         std::vector<int> getParameterList() const {
             return plist_;
         }
 
+        /**
+         * @brief setParameterList
+         * @param plist
+         */
         void setParameterList(std::vector<int> const& plist) {
             for(auto const& idx: plist)
                 if(idx < 0 || idx >= np())
@@ -423,30 +483,54 @@ namespace amici {
             initializeVectors();
         }
 
+        /**
+         * @brief getInitialStates
+         * @return
+         */
         std::vector<realtype> getInitialStates() const {
             return x0data;
         }
 
+        /**
+         * @brief setInitialStates
+         * @param x0
+         */
         void setInitialStates(std::vector<realtype> const& x0) {
             if(x0.size() != (unsigned) nx)
                 throw AmiException("Dimension mismatch.");
             this->x0data = x0;
         }
 
+        /**
+         * @brief getInitialStateSensitivities
+         * @return
+         */
         std::vector<realtype> getInitialStateSensitivities() const {
             return sx0data;
         }
 
+        /**
+         * @brief setInitialStateSensitivities
+         * @param sx0
+         */
         void setInitialStateSensitivities(std::vector<realtype> const& sx0) {
             if(sx0.size() != (unsigned) nx * nplist())
                 throw AmiException("Dimension mismatch.");
             this->sx0data = sx0;
         }
 
+        /**
+         * @brief getParameterScaling
+         * @return
+         */
         std::vector<realtype> getParameterScaling() const {
             return pbar;
         }
 
+        /**
+         * @brief setParameterScaling
+         * @param pbar
+         */
         void setParameterScaling(std::vector<realtype> const& pbar) {
             if(pbar.size() != (unsigned) nplist())
                 throw AmiException("Dimension mismatch.");
@@ -460,6 +544,10 @@ namespace amici {
             return tstart;
         }
 
+        /**
+         * @brief setT0
+         * @param t0
+         */
         void setT0(double t0) {
             tstart = t0;
         }
@@ -468,7 +556,6 @@ namespace amici {
           * @param pos index
           * @return entry
           */
-
         const int plist(int pos) const{
             return plist_.at(pos);
         }
