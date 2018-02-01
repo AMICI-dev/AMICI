@@ -38,6 +38,10 @@ class Solver {
   public:
     Solver() = default;
 
+    /**
+     * @brief Solver copy constructor
+     * @param other
+     */
     Solver(const Solver &other) : Solver()
     {
         sensi = other.sensi;

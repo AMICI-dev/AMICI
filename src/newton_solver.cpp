@@ -44,8 +44,11 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
      * @param x pointer to state variables
      * @param linsolType integer indicating which linear solver to use
      * @param model pointer to the AMICI model object
-     * @param udata pointer to the user data object
      * @param rdata pointer to the return data object
+     * @param maxlinsteps maximum number of allowed linear steps per Newton step for steady state computation
+     * @param maxsteps maximum number of allowed Newton steps for steady state computation
+     * @param atol absolute tolerance
+     * @param rtol relative tolerance
      * @return solver NewtonSolver according to the specified linsolType
      */
 

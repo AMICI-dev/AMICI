@@ -15,7 +15,6 @@ ExpData::ExpData(Model *model)
     /**
      * constructor that initializes with Model
      *
-     * @param[out] udata pointer to the return data struct @type ReturnData
      * @param[in] model pointer to model specification object @type Model
      */
     my.resize(model->nt() * model->nytrue);

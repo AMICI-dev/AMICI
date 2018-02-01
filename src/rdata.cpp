@@ -116,7 +116,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     /**
      * @brief applies the chain rule to account for parameter transformation
      * in the sensitivities of simulation results
-     * @type realtype
+     * @param model Model from which the ReturnData was obtained
      */
     if (pscale == AMICI_SCALING_NONE)
         return;
