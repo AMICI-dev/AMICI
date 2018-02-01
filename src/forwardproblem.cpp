@@ -5,9 +5,9 @@
 #include "include/edata.h"
 #include "include/rdata.h"
 #include "include/steadystateproblem.h"
-#include "include/udata.h"
 #include <cvodes/cvodes.h> // return/option codes
 
+#include <cmath>
 #include <cstring>
 
 namespace amici {
@@ -30,15 +30,13 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     
     /**
      * default constructor
-     * @param udata pointer to UserData instance
      * @param rdata pointer to ReturnData instance
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
      *
      */
-    ForwardProblem::ForwardProblem(const UserData *udata,
-                   ReturnData *rdata, const ExpData *edata,
+    ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver) :
     rootidx(model->ne*model->ne*model->ne*rdata->nmaxevent, 0),
     nroots(model->ne, 0),
@@ -46,11 +44,11 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     rvaltmp(model->ne, 0.0),
     discs(rdata->nmaxevent * model->ne, 0.0),
     irdiscs(rdata->nmaxevent * model->ne, 0.0),
-    x_disc(model->nx,udata->nme()*model->ne),
-    xdot_disc(model->nx,udata->nme()*model->ne),
-    xdot_old_disc(model->nx,udata->nme()*model->ne),
-    dJydx(model->nJ * model->nx * udata->nt(), 0.0),
-    dJzdx(model->nJ * model->nx * udata->nme(), 0.0),
+    x_disc(model->nx,model->nMaxEvent()*model->ne),
+    xdot_disc(model->nx,model->nMaxEvent()*model->ne),
+    xdot_old_disc(model->nx,model->nMaxEvent()*model->ne),
+    dJydx(model->nJ * model->nx * model->nt(), 0.0),
+    dJzdx(model->nJ * model->nx * model->nMaxEvent(), 0.0),
     rootsfound(model->ne, 0),
     x(model->nx),
     x_old(model->nx),
@@ -58,13 +56,12 @@ static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
     dx_old(model->nx),
     xdot(model->nx),
     xdot_old(model->nx),
-    sx(model->nx,udata->nplist()),
-    sdx(model->nx,udata->nplist())
+    sx(model->nx,model->nplist()),
+    sdx(model->nx,model->nplist())
     {
-        t = udata->t0();
+        t = model->t0();
         this->model = model;
         this->solver = solver;
-        this->udata = udata;
         this->edata = edata;
         this->rdata = rdata;
         Jtmp = NewDenseMat(model->nx,model->nx);
@@ -82,7 +79,7 @@ void ForwardProblem::workForwardProblem() {
      */
 
     try {
-        solver->setupAMI(this,udata, model);
+        solver->setupAMI(this, model);
     } catch (std::exception& ex) {
         throw AmiException("AMICI setup failed:\n(%s)",ex.what());
     } catch (...) {
@@ -92,9 +89,9 @@ void ForwardProblem::workForwardProblem() {
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */
-    if (udata->newton_preeq == 1) {
+    if (solver->getNewtonPreequilibration()) {
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-        sstate.workSteadyStateProblem(udata, rdata,
+        sstate.workSteadyStateProblem(rdata,
                                        solver, model, -1);
     }
 
@@ -104,13 +101,12 @@ void ForwardProblem::workForwardProblem() {
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             solver->AMISetStopTime(rdata->ts[it]);
         }
-        if (rdata->ts[it] > udata->t0()) {
+        if (rdata->ts[it] > model->t0()) {
             while (t < rdata->ts[it]) {
                 if (model->nx > 0) {
                     if (std::isinf(rdata->ts[it])) {
                         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-                        sstate.workSteadyStateProblem(udata,
-                                                      rdata, solver, model, it);
+                        sstate.workSteadyStateProblem(rdata, solver, model, it);
                     } else {
                         int status;
                         if (rdata->sensi_meth == AMICI_SENSI_ASA &&
@@ -293,7 +289,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->AMISensReInit(udata->ism, &sx, &sdx);
+                solver->AMISensReInit(solver->getInternalSensitivityMethod(), &sx, &sdx);
             }
         }
     }
@@ -491,7 +487,7 @@ void ForwardProblem::handleDataPoint(int it) {
         rdata->x[it + rdata->nt * ix] = x[ix];
     }
     
-    if (rdata->ts[it] > udata->t0()) {
+    if (rdata->ts[it] > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }
     
@@ -577,7 +573,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
      */
 
     if (!(std::isinf(rdata->ts[it]))) {
-        if (rdata->ts[it] > udata->t0()) {
+        if (rdata->ts[it] > model->t0()) {
             solver->AMIGetSens(&(t), &sx);
         }
     }
@@ -649,7 +645,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
             1) { /* only consider transitions false -> true */
             model->fdeltasx(ie, t, &x_old, &sx, &xdot, &xdot_old);
 
-            for (int ip = 0; ip < udata->nplist(); ip++) {
+            for (int ip = 0; ip < model->nplist(); ip++) {
                 for (int ix = 0; ix < model->nx; ix++) {
                     sx.at(ix,ip) += model->deltasx[ix + model->nx * ip];
                 }

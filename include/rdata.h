@@ -1,10 +1,12 @@
 #ifndef AMICI_RDATA_H
 #define AMICI_RDATA_H
-#include <include/udata.h>
+
+#include <include/amici_defines.h>
 
 namespace amici {
 class Model;
 class ReturnData;
+class Solver;
 }
 
 namespace boost {
@@ -25,7 +27,7 @@ class ReturnData {
   public:
     ReturnData();
 
-    ReturnData(const UserData *udata, const Model *model);
+    ReturnData(Solver const& solver, const Model *model);
 
     void invalidate(const realtype t);
     void invalidateLLH();
@@ -35,7 +37,7 @@ class ReturnData {
     void setLikelihoodSensitivitySecondOrderNaN();
 
     void 
-    applyChainRuleFactorToSimulationResults(const UserData *udata);
+    applyChainRuleFactorToSimulationResults(const Model *model);
 
     virtual ~ReturnData();
 
@@ -161,10 +163,8 @@ class ReturnData {
 
   protected:
 
-    ReturnData(const UserData *udata, const Model *model,
+    ReturnData(const Solver &solver, const Model *model,
                bool initializeFields);
-
-    virtual void copyFromUserData(const UserData *udata);
 
     virtual void initFields();
 

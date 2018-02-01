@@ -98,7 +98,6 @@ fprintf(fid,'#include <cmath>\n');
 fprintf(fid,'#include <memory>\n');
 fprintf(fid,'#include <include/amici_defines.h>\n');
 fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
-fprintf(fid,'#include <include/udata.h>\n');
 if(~strcmp(this.wtype,'iw'))
     fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
     fprintf(fid,'#include <include/amici_model_ode.h>\n');
@@ -107,7 +106,7 @@ else
     fprintf(fid,'#include <include/amici_model_dae.h>\n');
 end
 fprintf(fid,'\n');
-fprintf(fid,'namespace amici {\nclass UserData;\nclass Solver;\n}\n');
+fprintf(fid,'namespace amici {\nclass Solver;\n}\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
 
@@ -115,8 +114,8 @@ fprintf(fid,'#define pi M_PI\n');
 fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
-fprintf(fid,'std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);\n');
-fprintf(fid,'void getModelDims(int *nx, int *nk, int *np);\n\n');
+fprintf(fid,'std::unique_ptr<amici::Model> getModel();\n');
+
 for ifun = this.funs
     if(~isfield(this.fun,ifun{1}))
         
@@ -139,7 +138,7 @@ end
 
 fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '(const amici::UserData *udata) : amici::' baseclass '(' num2str(this.nx) ',\n']);
+fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.nx) ',\n']);
 fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.ny) ',\n']);
 fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
@@ -161,9 +160,9 @@ switch(this.o2flag)
     otherwise
         fprintf(fid,'                    amici::AMICI_O2MODE_NONE,\n');
 end
-fprintf(fid,['                    std::vector<realtype>(udata->unp(),udata->unp()+' num2str(this.np) '),\n']);
-fprintf(fid,['                    std::vector<realtype>(udata->k(),udata->k()+' num2str(this.nk) '),\n']);
-fprintf(fid,'                    udata->plist(),\n');
+fprintf(fid,['                    std::vector<realtype>(' num2str(this.np) '),\n']);
+fprintf(fid,['                    std::vector<realtype>(' num2str(this.nk) '),\n']);
+fprintf(fid,'                    std::vector<int>(),\n');
 initstr = num2str(transpose(double(this.id)), '%d, ');
 fprintf(fid,['                    std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');
@@ -186,16 +185,8 @@ fclose(fid);
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 fprintf(fid,'#include <include/amici_model.h>\n');
 fprintf(fid,'#include "wrapfunctions.h"\n\n');
-fprintf(fid,'std::unique_ptr<amici::Model> getModel(const amici::UserData *udata) {\n');
-fprintf(fid, ['    return std::unique_ptr<amici::Model>(new Model_' this.modelname '(udata));\n']);
-fprintf(fid,'}\n\n');
-fprintf(fid,'void getModelDims(int *nx, int *nk, int *np) {\n');
-fprintf(fid, ['    if(nx)\n']);
-fprintf(fid, ['        *nx = ' num2str(this.nx) ';\n']);
-fprintf(fid, ['    if(nk)\n']);
-fprintf(fid, ['        *nk = ' num2str(this.nk) ';\n']);
-fprintf(fid, ['    if(np)\n']);
-fprintf(fid, ['        *np = ' num2str(this.np) ';\n']);
+fprintf(fid,'std::unique_ptr<amici::Model> getModel() {\n');
+fprintf(fid, ['    return std::unique_ptr<amici::Model>(new Model_' this.modelname '());\n']);
 fprintf(fid,'}\n\n');
 fclose(fid);
 

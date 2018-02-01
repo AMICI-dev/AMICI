@@ -5,7 +5,8 @@
 #include "include/forwardproblem.h"
 #include "include/newton_solver.h"
 #include "include/rdata.h"
-#include "include/udata.h"
+
+#include <cmath>
 #include <cstring>
 #include <ctime>
 #include <sundials/sundials_dense.h>
@@ -13,8 +14,7 @@
 
 namespace amici {
 
-void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
-                                               ReturnData *rdata,
+void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                                                Solver *solver, Model *model,
                                                int it) {
     /**
@@ -23,7 +23,6 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
      * restarts Newton solver, if integration fails.
      * Computes steady state sensitivities
      *
-     * @param[in] udata pointer to the user data object @type UserData
      * @param[in] solver pointer to the AMICI solver object @type Solver
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] it integer with the index of the current time step
@@ -35,20 +34,25 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(t, x, udata->linsol, model, rdata, udata));
+    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(t, x, solver->getLinearSolver(),
+                                                                              model, rdata,
+                                                                              solver->getNewtonMaxLinearSteps(),
+                                                                              solver->getNewtonMaxSteps(),
+                                                                              solver->getAbsoluteTolerance(),
+                                                                              solver->getRelativeTolerance()));
                                                       
     int newton_status;
     try {
-        applyNewtonsMethod(udata, rdata, model, newtonSolver.get(), 1);
+        applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
         newton_status = 1;
     } catch(NewtonFailure& ex) {
         try {
             /* Newton solver did not find a steady state, so try integration */
-            getNewtonSimulation(udata, rdata, solver, model, it);
+            getNewtonSimulation(rdata, solver, model, it);
             newton_status = 2;
         } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
             try {
-                applyNewtonsMethod(udata, rdata, model, newtonSolver.get(), 2);
+                applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
                 // TODO: more informative NewtonFailure to give more informative error code
@@ -75,7 +79,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
         solver->AMIReInit(*t, x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                solver->AMISensReInit(udata->ism, sx, &sdx);
+                solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
     }
 }
 
@@ -86,8 +90,7 @@ void SteadystateProblem::workSteadyStateProblem(const UserData *udata,
 /* ----------------------------------------------------------------------------------
  */
 
-void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
-                                           ReturnData *rdata,
+void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
                                            Model *model,
                                            NewtonSolver *newtonSolver,
                                            int newton_try) {
@@ -95,7 +98,6 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
      * Runs the Newton solver iterations and checks for convergence to steady
      * state
      *
-     * @param[in] udata pointer to the user data object @type UserData
      * @param[out] rdata pointer to the return data object @type ReturnData
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] newtonSolver pointer to the NewtonSolver object @type
@@ -120,8 +122,8 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     x_newton = *x;
     N_VAbs(x_newton.getNVector(), x_newton.getNVector());
     for (ix = 0; ix < model->nx; ix++) {
-        if (x_newton[ix] < udata->atol) {
-            x_newton[ix] = udata->atol;
+        if (x_newton[ix] < newtonSolver->atol) {
+            x_newton[ix] = newtonSolver->atol;
         }
     }
     N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
@@ -130,8 +132,8 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
     xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
-    bool converged = (res_abs < udata->atol || res_rel < udata->rtol);
-    while (!converged && i_newtonstep < udata->newton_maxsteps) {
+    bool converged = (res_abs < newtonSolver->atol || res_rel < newtonSolver->rtol);
+    while (!converged && i_newtonstep < newtonSolver->maxsteps) {
 
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
@@ -148,8 +150,8 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
         N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x->getNVector());
         /* Ensure positivity of the state */
         for (ix = 0; ix < model->nx; ix++)
-            if ((*x)[ix] < udata->atol)
-                (*x)[ix] = udata->atol;
+            if ((*x)[ix] < newtonSolver->atol)
+                (*x)[ix] = newtonSolver->atol;
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
@@ -165,7 +167,7 @@ void SteadystateProblem::applyNewtonsMethod(const UserData *udata,
             /* New linear solve due to new state */
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
-            converged = (res_abs < udata->atol) || (res_rel < udata->rtol);
+            converged = (res_abs < newtonSolver->atol) || (res_rel < newtonSolver->rtol);
             /* increase dampening factor (superfluous, if converged) */
             gamma = fmin(1.0, 2.0 * gamma);
         } else {
@@ -229,13 +231,11 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
 /* ----------------------------------------------------------------------------------
  */
 
-void SteadystateProblem::getNewtonSimulation(const UserData *udata,
-                                            ReturnData *rdata, Solver *solver,
+void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
                                             Model *model, int it) {
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
-     * @param[in] udata pointer to the user data object @type UserData
      * @param[in] solver pointer to the AMICI solver object @type Solver
      * @param[in] model pointer to the AMICI model object @type Model
      * @param[out] rdata pointer to the return data object @type ReturnData
@@ -246,12 +246,12 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     
     /* Newton solver did not work, so try a simulation: reinitialize solver */
     if (it<1)
-        tstart = udata->t0();
+        tstart = model->t0();
     else
         tstart = rdata->ts[it-1];
     *t = tstart;
     
-    model->fx0(x, udata);
+    model->fx0(x);
     solver->AMIReInit(*t, x, &dx);
     
     /* Loop over steps and check for convergence */
@@ -259,7 +259,7 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
     double res_rel = INFINITY;
     
     int it_newton = 0;
-    while(res_abs > udata->atol && res_rel > udata->rtol) {
+    while(res_abs > solver->getAbsoluteTolerance() && res_rel > solver->getRelativeTolerance()) {
         /* One step of ODE integration
          reason for tout specification:
          max with 1 ensures correct direction (any positive value would do)
@@ -275,19 +275,19 @@ void SteadystateProblem::getNewtonSimulation(const UserData *udata,
         x_newton = *x;
         N_VAbs(x_newton.getNVector(), x_newton.getNVector());
         for (int ix = 0; ix < model->nx; ix++) {
-            if (x_newton[ix] < udata->atol) {
-                x_newton[ix] = udata->atol;
+            if (x_newton[ix] < solver->getAbsoluteTolerance()) {
+                x_newton[ix] = solver->getAbsoluteTolerance();
             }
         }
         N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
         res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
         
         /* Check for convergence */
-        if (res_abs < udata->atol || res_rel < udata->rtol) 
+        if (res_abs < solver->getAbsoluteTolerance() || res_rel < solver->getRelativeTolerance())
             break;
         /* increase counter, check for maxsteps */
         it_newton++;
-        if (it_newton >= udata->maxsteps)
+        if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure("Simulation based steady state failed to converge");
             
         

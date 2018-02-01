@@ -2,7 +2,6 @@
 
 #include "include/amici_defines.h"
 #include "include/amici_model.h"
-#include <include/udata.h>
 
 #include <cstring>
 
@@ -10,21 +9,19 @@ namespace amici {
 
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
-ExpData::ExpData(const UserData *udata, Model *model)
-    : nytrue(model->nytrue), nztrue(model->nztrue), nt(udata->nt()),
-      nmaxevent(udata->nme()) {
+ExpData::ExpData(Model *model)
+    : nytrue(model->nytrue), nztrue(model->nztrue), nt(model->nt()),
+      nmaxevent(model->nMaxEvent()) {
     /**
-     * constructor that initializes with UserData and model
+     * constructor that initializes with Model
      *
      * @param[out] udata pointer to the return data struct @type ReturnData
      * @param[in] model pointer to model specification object @type Model
      */
-    if (udata) {
-        my.resize(udata->nt() * model->nytrue);
-        sigmay.resize(udata->nt() * model->nytrue);
-        mz.resize(udata->nme() * model->nztrue);
-        sigmaz.resize(udata->nme() * model->nztrue);
-    }
+    my.resize(model->nt() * model->nytrue);
+    sigmay.resize(model->nt() * model->nytrue);
+    mz.resize(model->nMaxEvent() * model->nztrue);
+    sigmaz.resize(model->nMaxEvent() * model->nztrue);
 }
 
 void ExpData::setObservedData(const double *observedData) {

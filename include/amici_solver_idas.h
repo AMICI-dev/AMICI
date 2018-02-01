@@ -149,7 +149,7 @@ class IDASolver : public Solver {
 
     void rootInit(int ne) override;
 
-    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) override;
+    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) override;
 
     void setDenseJacFn() override;
 

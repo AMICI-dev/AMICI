@@ -1,7 +1,8 @@
 #include "testfunctions.h"
+
 #include <include/amici_hdf5.h>
-#include <include/amici_model.h>
-#include "include/amici_interface_cpp.h"
+#include <amici.h>
+
 #include <cstring>
 #include <execinfo.h>
 #include <dlfcn.h>    // for dladdr
@@ -10,7 +11,7 @@
 #include <cmath>
 #include <unistd.h>
 
-extern std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
+extern std::unique_ptr<amici::Model> getModel();
 
 namespace amici {
 
@@ -38,42 +39,46 @@ void simulateAndWriteToFile(std::string path, double atol, double rtol)
 
 void simulateAndVerifyFromFile(const std::string hdffile, std::string path, double atol, double rtol)
 {
-    // read simulation options
+    // read options from file
     std::string optionsPath = path + "/options";
-    auto udata = std::unique_ptr<const UserData>(AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str()));
+    auto model = getModel();
+    auto solver = model->getSolver();
+    readModelDataFromHDF5(hdffile, *model, optionsPath);
+    readSolverSettingsFromHDF5(hdffile, *solver, optionsPath);
 
-    auto model = getModel(udata.get());
-    
+    // read measurements from file
     std::string measurementPath = path + "/data";
-    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
+    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), measurementPath.c_str(), model.get()));
 
-    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(model.get(), udata.get(), edata.get()));
-
+    // simulate & verify
+    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
     std::string resultPath = path + "/results";
-    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata.get(), udata.get(), model.get(), atol, rtol);
+    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
 }
     
 void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)
 {
     // read simulation options
     std::string optionsPath = path + "/options";
-    auto udata = std::unique_ptr<const UserData>(AMI_HDF5_readSimulationUserDataFromFileName(hdffile.c_str(), optionsPath.c_str()));
-    
-    auto model = std::unique_ptr<Model>(getModel(udata.get()));
-    
+    auto model = getModel();
+    auto solver = model->getSolver();
+
+    readModelDataFromHDF5(hdffile, *model, optionsPath);
+    readSolverSettingsFromHDF5(hdffile, *solver, optionsPath);
+
     std::string measurementPath = path + "/data";
-    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), udata.get(), measurementPath.c_str(), model.get()));
+    auto edata = std::unique_ptr<const ExpData>(AMI_HDF5_readSimulationExpData(hdffile.c_str(), measurementPath.c_str(), model.get()));
     
-    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(model.get(), udata.get(), edata.get()));
+    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
     
     std::string writePath = path + "/write";
-    AMI_HDF5_writeReturnData(rdata.get(),udata.get(),hdffilewrite.c_str(), writePath.c_str());
-    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata.get(), udata.get(), model.get(), atol, rtol);
+    AMI_HDF5_writeReturnData(rdata.get(), hdffilewrite.c_str(), writePath.c_str());
+    verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata.get(), model.get(), atol, rtol);
 }
     
 
-ExpData *getTestExpData(const UserData *udata, Model *model) {
-    return new ExpData(udata, model);
+ExpData *getTestExpData(Model *model) {
+    return new ExpData(model);
 }
 
 bool withinTolerance(double expected, double actual, double atol, double rtol, int index, const char *name) {
@@ -123,8 +128,7 @@ void checkEqualArrayStrided(const double *expected, const double *actual, int le
     }
 }
 
-void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const UserData *udata, const Model *model, double atol, double rtol) {
-    CHECK_FALSE(udata == NULL);
+void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol) {
     CHECK_FALSE(rdata == NULL);
 
     // compare to saved data in hdf file
@@ -142,7 +146,7 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     CHECK_TRUE(withinTolerance(llhExp, *rdata->llh, atol, rtol, 1, "llh"));
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "x", &expected, &m, &n);
-    checkEqualArray(expected, rdata->x, udata->nt() * model->nxtrue, atol, rtol, "x");
+    checkEqualArray(expected, rdata->x, model->nt() * model->nxtrue, atol, rtol, "x");
     delete[] expected;
 
 //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
@@ -154,20 +158,20 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     }
 
     AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "y", &expected, &m, &n);
-    checkEqualArray(expected, rdata->y, udata->nt() * model->nytrue, atol, rtol, "y");
+    checkEqualArray(expected, rdata->y, model->nt() * model->nytrue, atol, rtol, "y");
     delete[] expected;
     
     if(model->nz>0) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "z", &expected, &m, &n);
-        checkEqualArray(expected, rdata->z, udata->nme() * model->nztrue, atol, rtol, "z");
+        checkEqualArray(expected, rdata->z, model->nMaxEvent() * model->nztrue, atol, rtol, "z");
         delete[] expected;
         
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "rz", &expected, &m, &n);
-        checkEqualArray(expected, rdata->rz, udata->nme() * model->nztrue, atol, rtol, "rz");
+        checkEqualArray(expected, rdata->rz, model->nMaxEvent() * model->nztrue, atol, rtol, "rz");
         delete[] expected;
         
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "sigmaz", &expected, &m, &n);
-        checkEqualArray(expected, rdata->sigmaz, udata->nme() * model->nztrue, atol, rtol, "sigmaz");
+        checkEqualArray(expected, rdata->sigmaz, model->nMaxEvent() * model->nztrue, atol, rtol, "sigmaz");
         delete[] expected;
     }
 
@@ -176,8 +180,8 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     checkEqualArray(expected, rdata->xdot, model->nxtrue, atol, rtol, "xdot");
     delete[] expected;
 
-    if(udata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        verifyReturnDataSensitivities(file_id, resultPath, rdata, udata, model, atol, rtol);
+    if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        verifyReturnDataSensitivities(file_id, resultPath, rdata, model, atol, rtol);
     } else {
         POINTERS_EQUAL(NULL, rdata->sllh);
         POINTERS_EQUAL(NULL, rdata->s2llh);
@@ -186,7 +190,7 @@ void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnD
     H5Fclose(file_id);
 }
 
-void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol) {
+void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol) {
     hsize_t m, n, o;
     double *expected;
     int status;
@@ -195,59 +199,59 @@ void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const 
     checkEqualArray(expected, rdata->sllh, rdata->nplist, atol, rtol, "sllh");
     delete[] expected;
 
-    if(udata->sensmeth() == AMICI_SENSI_FSA) {
+    if(rdata->sensi_meth == AMICI_SENSI_FSA) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sx", &expected, &m, &n, &o);
-        for(int ip = 0; ip < udata->nplist(); ++ip)
-            checkEqualArray(&expected[ip * udata->nt() * model->nxtrue],
-                    &rdata->sx[ip * udata->nt() * model->nx],
-                    udata->nt() * model->nxtrue, atol, rtol, "sx");
+        for(int ip = 0; ip < model->nplist(); ++ip)
+            checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
+                    &rdata->sx[ip * model->nt() * model->nx],
+                    model->nt() * model->nxtrue, atol, rtol, "sx");
         delete[] expected;
 
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sy", &expected, &m, &n, &o);
-        for(int ip = 0; ip < udata->nplist(); ++ip)
-            checkEqualArray(&expected[ip * udata->nt() * model->nytrue],
-                    &rdata->sy[ip * udata->nt() * model->ny],
-                    udata->nt() * model->nytrue, atol, rtol, "sy");
+        for(int ip = 0; ip < model->nplist(); ++ip)
+            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
+                    &rdata->sy[ip * model->nt() * model->ny],
+                    model->nt() * model->nytrue, atol, rtol, "sy");
         delete[] expected;
 
         if(model->nz>0) {
             AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "sz", &expected, &m, &n, &o);
-            for(int ip = 0; ip < udata->nplist(); ++ip)
-                checkEqualArray(&expected[ip * udata->nme() * model->nztrue],
-                                &rdata->sz[ip * udata->nme() * model->nz],
-                                udata->nme() * model->nztrue, atol, rtol, "sz");
+            for(int ip = 0; ip < model->nplist(); ++ip)
+                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                                &rdata->sz[ip * model->nMaxEvent() * model->nz],
+                                model->nMaxEvent() * model->nztrue, atol, rtol, "sz");
             delete[] expected;
             
             AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "srz", &expected, &m, &n, &o);
-            for(int ip = 0; ip < udata->nplist(); ++ip)
-                checkEqualArray(&expected[ip * udata->nme() * model->nztrue],
-                                &rdata->srz[ip * udata->nme() * model->nz],
-                                udata->nme() * model->nztrue, atol, rtol, "srz");
+            for(int ip = 0; ip < model->nplist(); ++ip)
+                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                                &rdata->srz[ip * model->nMaxEvent() * model->nz],
+                                model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
             delete[] expected;
         }
     }
 
     status = AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmay", &expected, &m, &n, &o);
     if(status == AMICI_SUCCESS) {
-        for(int ip = 0; ip < udata->nplist(); ++ip)
-            checkEqualArray(&expected[ip * udata->nt() * model->nytrue],
-                    &rdata->ssigmay[ip * udata->nt() * model->ny],
-                    udata->nt() * model->nytrue, atol, rtol, "ssigmay");
+        for(int ip = 0; ip < model->nplist(); ++ip)
+            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
+                    &rdata->ssigmay[ip * model->nt() * model->ny],
+                    model->nt() * model->nytrue, atol, rtol, "ssigmay");
         delete[] expected;
     }
 
     if(model->nz>0) {
         AMI_HDF5_getDoubleArrayAttribute3D(file_id, resultPath, "ssigmaz", &expected, &m, &n, &o);
-        for(int ip = 0; ip < udata->nplist(); ++ip)
-            checkEqualArray(&expected[ip * udata->nme() * model->nztrue],
-                            &rdata->ssigmaz[ip * udata->nme() * model->nz],
-                            udata->nme() * model->nztrue, atol, rtol, "ssigmaz");
+        for(int ip = 0; ip < model->nplist(); ++ip)
+            checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                            &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
+                            model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
         delete[] expected;
     }
 
-    if(udata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+    if(rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
         AMI_HDF5_getDoubleArrayAttribute2D(file_id, resultPath, "s2llh", &expected, &m, &n);
-        checkEqualArray(expected, rdata->s2llh, (model->nJ-1) * udata->nplist(), atol, rtol, "s2llh");
+        checkEqualArray(expected, rdata->s2llh, (model->nJ-1) * model->nplist(), atol, rtol, "s2llh");
         delete[] expected;
     } else {
         POINTERS_EQUAL(NULL, rdata->s2llh);

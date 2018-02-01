@@ -6,7 +6,6 @@
 
 namespace amici {
 
-class UserData;
 class Model;
 
 /** @brief struct that carries all information about experimental data */
@@ -15,7 +14,7 @@ class ExpData {
   public:
     /** default constructor */
     ExpData();
-    ExpData(const UserData *udata, Model *model);
+    ExpData(Model *model);
 
     /**
      * @brief ExpData is currently not copyable

@@ -5,7 +5,6 @@
 #include "include/amici_misc.h"
 #include <include/edata.h>
 #include <include/rdata.h>
-#include <include/udata.h>
 
 namespace amici {
 
@@ -13,13 +12,11 @@ namespace amici {
  * getSimulationResults runs the forward an backwards simulation and returns
  * results in a ReturnData struct
  *
- * @param[in] udata pointer to the user data struct @type UserData
  * @param[in] edata pointer to the experimental data struct @type ExpData
  * @return rdata data struct with simulation results @type ReturnData
  */
 
-ReturnData *getSimulationResults(Model *model, const UserData *udata,
-                                         const ExpData *edata);
+ReturnData *getSimulationResults(Model &model, const ExpData *edata, Solver &solver);
 
 } // namespace amici
 #endif

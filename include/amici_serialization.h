@@ -1,8 +1,9 @@
 #ifndef AMICI_SERIALIZATION_H
 #define AMICI_SERIALIZATION_H
 
-#include "include/udata.h"
 #include "include/rdata.h"
+#include "include/amici_model.h"
+#include "include/amici_solver.h"
 #include <cassert>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
@@ -34,11 +35,7 @@ void archiveVector(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::UserData &u, const unsigned int version) {
-    ar &u.pscale;
-    ar &u.nmaxevent;
-    ar &const_cast<int &>(u.sizex);
-    ar &u.tstart;
+void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.sensi;
     ar &u.atol;
     ar &u.rtol;
@@ -51,15 +48,20 @@ void serialize(Archive &ar, amici::UserData &u, const unsigned int version) {
     ar &u.iter;
     ar &u.stldet;
     ar &u.ordering;
+}
 
+template <class Archive>
+void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
+    ar &u.pscale;
+    ar &u.nmaxevent;
+    ar &u.tstart;
     ar &u.qpositivex;
-    ar &u.p_index;
-    ar &u.par;
-    ar &u.unpar;
-    ar &u.konst;
+    ar &u.plist_;
+    ar &u.unscaledParameters;
+    ar &u.originalParameters;
+    ar &u.k_;
     ar &u.ts;
     ar &u.pbar;
-    ar &u.xbar;
     ar &u.x0data;
     ar &u.sx0data;
 }
@@ -154,8 +156,7 @@ char *serializeToChar(const T *data, int *size) {
 }
 
 /**
- * @brief Deserialize AMICI::UserData that has been serialized using
- * serializeAmiciUserData
+ * @brief Deserialize object that has been serialized using serializeToChar
  * @param buffer
  * @param size
  * @return The deserialized object

@@ -21,7 +21,6 @@
 #include <include/amici_misc.h>
 #include <include/amici_model.h>
 #include <include/amici_exception.h>
-#include <include/udata.h>
 
 namespace amici {
 
@@ -45,8 +44,8 @@ void IDASolver::rootInit(int ne) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDARootInit");
 }
-void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) {
-    int status = IDASensInit(ami_mem, udata->nplist(), udata->sensmeth(), fsxdot,
+void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
+    int status = IDASensInit(ami_mem, nplist, getSensitivityMethod(), fsxdot,
                              sx->getNVectorArray(),sdx->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensInit");

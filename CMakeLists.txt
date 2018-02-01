@@ -62,7 +62,6 @@ set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/amici_interface_cpp.cpp
     ${AMICI_DIR}/src/amici.cpp
     ${AMICI_DIR}/src/amici_misc.cpp
-    ${AMICI_DIR}/src/udata.cpp
     ${AMICI_DIR}/src/rdata.cpp
     ${AMICI_DIR}/src/edata.cpp
     ${AMICI_DIR}/src/amici_hdf5.cpp

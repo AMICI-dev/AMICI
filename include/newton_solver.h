@@ -8,7 +8,6 @@
 
 namespace amici {
 
-class UserData;
 class ReturnData;
 class Model;
 class AmiVector;
@@ -21,10 +20,10 @@ class AmiVector;
 class NewtonSolver {
 
   public:
-    NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
 
     static NewtonSolver *getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
-                                   ReturnData *rdata, const UserData *udata);
+                                   ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol);
 
     void getStep(int ntry, int nnewt, AmiVector *delta);
 
@@ -47,7 +46,18 @@ class NewtonSolver {
      * overwritten by solution to the linear system 
      */
     virtual void solveLinearSystem(AmiVector *rhs) = 0;
-    virtual ~NewtonSolver() {};
+
+    virtual ~NewtonSolver() = default;
+
+    /** maximum number of allowed linear steps per Newton step for steady state
+     * computation */
+    int maxlinsteps = 0;
+    /** maximum number of allowed Newton steps for steady state computation */
+    int maxsteps = 0;
+    /** absolute tolerance */
+    double atol = 1e-16;
+    /** relative tolerance */
+    double rtol = 1e-8;
 
   protected:
     /** time variable */
@@ -56,14 +66,13 @@ class NewtonSolver {
     Model *model;
     /** pointer to the return data object */
     ReturnData *rdata;
-    /** pointer to the user data object */
-    const UserData *udata;
     /** right hand side AmiVector */
     AmiVector xdot;
     /** current state*/
     AmiVector *x;
     /** current state time derivative (DAE) */
     AmiVector dx;
+
 };
 
 /**
@@ -74,7 +83,7 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
-    NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     virtual ~NewtonSolverDense();
@@ -94,7 +103,7 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
-    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata, const UserData *udata);
+    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
     virtual ~NewtonSolverSparse();
@@ -120,12 +129,11 @@ class NewtonSolverSparse : public NewtonSolver {
 class NewtonSolverIterative : public NewtonSolver {
 
   public:
-    NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
-                          const UserData *udata);
+    NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
     void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
     void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
-    virtual ~NewtonSolverIterative();
+    virtual ~NewtonSolverIterative() = default;
 
   private:
     /** number of tries  */

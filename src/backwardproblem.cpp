@@ -1,10 +1,9 @@
-#include "../include/backwardproblem.h"
+#include "include/backwardproblem.h"
 #include "include/amici_model.h"
 #include "include/amici_solver.h"
 #include "include/amici_exception.h"
 #include "include/edata.h"
 #include "include/rdata.h"
-#include "include/udata.h"
 #include "include/forwardproblem.h"
 #include <cstring>
 
@@ -15,12 +14,12 @@ namespace amici {
      * @return new BackwardProblem instance
      */
 BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
-    llhS0(fwd->model->nJ*fwd->udata->nplist(),0.0),
+    llhS0(fwd->model->nJ*fwd->model->nplist(),0.0),
     xB(fwd->model->nx),
     xB_old(fwd->model->nx),
     dxB(fwd->model->nx),
-    xQB(fwd->model->nJ*fwd->udata->nplist()),
-    xQB_old(fwd->model->nJ*fwd->udata->nplist()),
+    xQB(fwd->model->nJ*fwd->model->nplist()),
+    xQB_old(fwd->model->nJ*fwd->model->nplist()),
     x_disc(fwd->getStatesAtDiscontinuities()),
     xdot_disc(fwd->getRHSAtDiscontinuities()),
     xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
@@ -35,10 +34,9 @@ BackwardProblem::BackwardProblem(ForwardProblem *fwd) :
         t = fwd->getTime();
         model = fwd->model;
         solver = fwd->solver;
-        udata = fwd->udata;
         rdata = fwd->rdata;
         iroot = fwd->getRootCounter();
-    };
+    }
 
     
 void BackwardProblem::workBackwardProblem() {
@@ -55,7 +53,7 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
     
-    solver->setupAMIB(this,udata,model);
+    solver->setupAMIB(this, model);
 
     int it = rdata->nt - 2;
     --iroot;
@@ -96,10 +94,10 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     /* we still need to integrate from first datapoint to tstart */
-    if (t > udata->t0()) {
+    if (t > model->t0()) {
         if (model->nx > 0) {
             /* solve for backward problems */
-            solver->AMISolveB(udata->t0(), AMICI_NORMAL);
+            solver->AMISolveB(model->t0(), AMICI_NORMAL);
 
             solver->AMIGetQuadB(which, &(t), &xQB);
 

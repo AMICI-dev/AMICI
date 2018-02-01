@@ -5,17 +5,17 @@
 #include "include/steadystateproblem.h"
 #include "include/forwardproblem.h"
 #include "include/rdata.h"
-#include "include/udata.h"
 #include "include/edata.h"
 #include "include/newton_solver.h"
+
 #include <cstring>
 #include <ctime>
+#include <cmath>
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
-                           const UserData *udata)
-    : model(model), rdata(rdata), udata(udata), xdot(x->getLength()), dx(x->getLength())
+NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
+    : model(model), rdata(rdata), xdot(x->getLength()), dx(x->getLength())
     {
     /**
      * default constructor, initializes all members with the provided objects
@@ -24,7 +24,6 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
      * @param x pointer to state variables
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
-     * @param udata pointer to the user data object
      */
     this->t = t;
     this->x = x;
@@ -34,7 +33,7 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
  */
 
 NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
-                                      ReturnData *rdata, const UserData *udata) {
+                                      ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -50,11 +49,14 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
      * @return solver NewtonSolver according to the specified linsolType
      */
 
+    NewtonSolver *solver = nullptr;
+
     switch (linsolType) {
 
     /* DIRECT SOLVERS */
     case AMICI_DENSE:
-        return new NewtonSolverDense(t, x, model, rdata, udata);
+        solver = new NewtonSolverDense(t, x, model, rdata);
+        break;
 
     case AMICI_BAND:
         throw NewtonFailure("Solver currently not supported!");
@@ -73,18 +75,26 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
         throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
-        return new NewtonSolverIterative(t, x, model, rdata, udata);
+        solver = new NewtonSolverIterative(t, x, model, rdata);
+        break;
 
     case AMICI_SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
-        return new NewtonSolverSparse(t, x, model, rdata, udata);
-
+        solver = new NewtonSolverSparse(t, x, model, rdata);
+        break;
     default:
         throw NewtonFailure("Invalid Choice of Solver!");
     }
+
+    solver->atol = atol;
+    solver->rtol = rtol;
+    solver->maxlinsteps = maxlinsteps;
+    solver->maxsteps = maxsteps;
+
+    return solver;
 }
 
 /* ----------------------------------------------------------------------------------
@@ -144,9 +154,8 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
  */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
-                                     const UserData *udata)
-    : NewtonSolver(t, x, model, rdata, udata) {
+NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
+    : NewtonSolver(t, x, model, rdata) {
     /**
      * default constructor, initializes all members with the provided objects
      * and
@@ -156,7 +165,6 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, Re
      * @param x pointer to state variables
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
-     * @param udata pointer to the user data object
      */
      pivots = NewLintArray(model->nx);
      Jtmp = NewDenseMat(model->nx,model->nx);
@@ -215,9 +223,8 @@ NewtonSolverDense::~NewtonSolverDense() {
  */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
-                                       const UserData *udata)
-    : NewtonSolver(t, x, model, rdata, udata) {
+NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
+    : NewtonSolver(t, x, model, rdata) {
     /**
      * default constructor, initializes all members with the provided objects,
      * initializes temporary storage objects and the klu solver
@@ -226,7 +233,6 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
      * @param x pointer to state variables
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
-     * @param udata pointer to the user data object
      */
 
     /* Initialize the KLU solver */
@@ -311,9 +317,8 @@ NewtonSolverSparse::~NewtonSolverSparse() {
  */
 
 /* Derived class for iterative linear solver */
-NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata,
-                                             const UserData *udata)
-    : NewtonSolver(t, x, model, rdata, udata), ns_p(model->nx), ns_h(model->nx),
+NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
+    : NewtonSolver(t, x, model, rdata), ns_p(model->nx), ns_h(model->nx),
     ns_t(model->nx), ns_s(model->nx), ns_r(model->nx), ns_rt(model->nx), ns_v(model->nx),
     ns_Jv(model->nx), ns_tmp(model->nx), ns_Jdiag(model->nx)
     {
@@ -323,7 +328,6 @@ NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *m
      * @param x pointer to state variables
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
-     * @param udata pointer to the user data object
      */
 }
 
@@ -414,7 +418,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
     ns_rt = ns_r;
     
-    for (int i_linstep = 0; i_linstep < udata->newton_maxlinsteps;
+    for (int i_linstep = 0; i_linstep < maxlinsteps;
          i_linstep++) {
         // Compute factors
         rho1 = rho;
@@ -454,9 +458,9 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
         res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
         
         // Test convergence
-        if (res < udata->atol) {
+        if (res < atol) {
             // Write number of steps needed
-            rdata->newton_numlinsteps[(ntry - 1) * udata->newton_maxsteps +
+            rdata->newton_numlinsteps[(ntry - 1) * maxsteps +
                                       nnewt] = i_linstep + 1;
             
             // Return success
@@ -469,11 +473,5 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     throw NewtonFailure("SPBCG solver failed to converge");
 }
     
-
-/* ----------------------------------------------------------------------------------
- */
-
-NewtonSolverIterative::~NewtonSolverIterative(){
-};
 
 } // namespace amici
