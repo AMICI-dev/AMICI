@@ -559,6 +559,12 @@ class Solver {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, Solver &r, const unsigned int version);
 
+    /**
+     * @brief Check equality of data members
+     * @param a
+     * @param b
+     * @return
+     */
     friend bool operator ==(const Solver &a, const Solver &b);
 
   protected:

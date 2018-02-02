@@ -691,6 +691,12 @@ namespace amici {
         template <class Archive>
         friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
 
+        /**
+         * @brief Check equality of data members
+         * @param a
+         * @param b
+         * @return
+         */
         friend bool operator ==(const Model &a, const Model &b);
 
     protected:

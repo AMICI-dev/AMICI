@@ -16,14 +16,16 @@ class ReturnDataMatlab;
 /**
  * @brief setModelData sets data from the matlab call to the model object
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @param[in/out] model: model to update
+ * @param[in] nrhs: number of elements in prhs
+ * @param[in,out] model: model to update
  */
 void setModelData(const mxArray *prhs[], int nrhs, Model& model);
 
 /**
  * @brief setSolverOptions solver options from the matlab call to a solver object
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @param[in/out] solver: solver to update
+ * @param[in] nrhs: number of elements in prhs
+ * @param[in,out] solver: solver to update
  */
 void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
 
