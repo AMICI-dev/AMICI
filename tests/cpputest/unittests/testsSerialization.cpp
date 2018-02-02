@@ -120,7 +120,7 @@ TEST(dataSerialization, testChar) {
     solver.setAbsoluteTolerance(4);
 
     int length;
-    char *buf = amici::serializeToChar<amici::CVodeSolver>(&solver, &length);
+    char *buf = amici::serializeToChar(solver, &length);
 
     amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf, length);
 
@@ -132,7 +132,7 @@ TEST(dataSerialization, testStdVec) {
     amici::CVodeSolver solver;
     solver.setAbsoluteTolerance(4);
 
-    auto buf = amici::serializeToStdVec<amici::CVodeSolver>(&solver);
+    auto buf = amici::serializeToStdVec(solver);
     amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf.data(), buf.size());
 
     CHECK_TRUE(solver == v);

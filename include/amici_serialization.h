@@ -164,13 +164,13 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
 namespace amici {
 
 template <typename T>
-char *serializeToChar(const T *data, int *size) {
+char *serializeToChar(T const& data, int *size) {
     std::string serialized;
     ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << *data;
+    oar << data;
     s.flush();
 
     char *charBuffer = new char[serialized.size()];
@@ -217,13 +217,13 @@ std::string serializeToString(T const& data) {
 }
 
 template <typename T>
-std::vector<char> serializeToStdVec(const T *data) {
+std::vector<char> serializeToStdVec(T const& data) {
     std::string serialized;
     ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << *data;
+    oar << data;
     s.flush();
 
     std::vector<char> buf(serialized.begin(), serialized.end());
