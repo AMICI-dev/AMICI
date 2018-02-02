@@ -74,6 +74,7 @@ void simulateAndWriteToFile(const std::string hdffile, const std::string hdffile
     std::string writePath = path + "/write";
     AMI_HDF5_writeReturnData(rdata.get(), hdffilewrite.c_str(), writePath.c_str());
     verifyReturnData(hdffilewrite.c_str(), writePath.c_str(), rdata.get(), model.get(), atol, rtol);
+    remove(hdffilewrite.c_str());
 }
     
 

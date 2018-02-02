@@ -102,19 +102,17 @@ ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile,
 void AMI_HDF5_writeReturnData(const ReturnData *rdata,
                               const char *hdffile, const char *datasetPath) {
 
-    hid_t file_id = H5Fopen(hdffile, H5F_ACC_RDWR, H5P_DEFAULT);
+    hid_t file_id = H5Fcreate(hdffile, H5F_ACC_TRUNC , H5P_DEFAULT, H5P_DEFAULT);
 
-    hid_t dataset;
+    hsize_t dim[] = {1};
+    hid_t dataspace = H5Screate_simple(1, dim, NULL);
 
-    if (H5Lexists(file_id, datasetPath, H5P_DEFAULT)) {
-        printf("INFO: result section already exists -- overwriting.\n");
-        dataset = H5Dopen2(file_id, datasetPath, H5P_DEFAULT);
-    } else {
-        hsize_t dim[] = {1};
-        hid_t dataspace = H5Screate_simple(1, dim, NULL);
-        dataset = H5Dcreate(file_id, datasetPath, H5T_IEEE_F64LE, dataspace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    }
+    auto plist_id  = H5Pcreate(H5P_LINK_CREATE);
+    H5Pset_create_intermediate_group(plist_id, true);
+
+    hid_t dataset = H5Dcreate(file_id, datasetPath, H5T_IEEE_F64LE, dataspace,
+                              plist_id, H5P_DEFAULT, H5P_DEFAULT);
+    H5Pclose(plist_id);
 
     if (rdata->ts)
         H5LTset_attribute_double(file_id, datasetPath, "t", rdata->ts,
