@@ -25,34 +25,34 @@ TEST(groupSteadystate, testSimulation) {
     amici::simulateAndWriteToFile("/model_steadystate/nosensi/");
 }
 
-//TEST(groupSteadystate, testSensitivityForward) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
-//    amici::simulateAndWriteToFile("/model_steadystate/sensiforward/");
-//}
+TEST(groupSteadystate, testSensitivityForward) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforward/");
+}
 
-//TEST(groupSteadystate, testSensitivityForwardPlist) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
-//    amici::simulateAndWriteToFile("/model_steadystate/sensiforwardplist/");
-//}
-
-
-//TEST(groupSteadystate, testSensitivityForwardErrorInt) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
-//    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrorint/");
-//}
-
-//TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
-//    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrornewt/");
-//}
+TEST(groupSteadystate, testSensitivityForwardPlist) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwardplist/");
+}
 
 
-//TEST(groupSteadystate, testSensitivityForwardDense) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
-//}
+TEST(groupSteadystate, testSensitivityForwardErrorInt) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrorint/");
+}
 
-//TEST(groupSteadystate, testSensitivityForwardSPBCG) {
-//    amici::simulateAndVerifyFromFile("/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
-//}
+TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
+    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrornewt/");
+}
+
+
+TEST(groupSteadystate, testSensitivityForwardDense) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
+}
+
+TEST(groupSteadystate, testSensitivityForwardSPBCG) {
+    amici::simulateAndVerifyFromFile("/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
+}
 
 
