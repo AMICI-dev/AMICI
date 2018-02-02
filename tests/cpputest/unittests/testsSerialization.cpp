@@ -120,7 +120,7 @@ TEST(dataSerialization, testChar) {
     solver.setAbsoluteTolerance(4);
 
     int length;
-    char *buf = serializeToChar<amici::CVodeSolver>(&solver, &length);
+    char *buf = amici::serializeToChar<amici::CVodeSolver>(&solver, &length);
 
     amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf, length);
 
