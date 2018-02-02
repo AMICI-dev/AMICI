@@ -12,11 +12,21 @@ namespace amici {
 class ExpData;
 class ReturnData;
 class Model_ODE;
+class CVodeSolver;
+}
+
+// for serialization friend in Solver
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version);
+}}
+
+
+namespace amici {
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver(){
-    }
+    CVodeSolver() = default;
 
     void *AMICreate(int lmm, int iter) override;
 
