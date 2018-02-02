@@ -691,6 +691,8 @@ namespace amici {
         template <class Archive>
         friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
 
+        friend bool operator ==(const Model &a, const Model &b);
+
     protected:
         
         /** model specific implementation of fx0
@@ -1258,6 +1260,8 @@ namespace amici {
         double tstart = 0.0;
 
     };
+
+    bool operator ==(const Model &a, const Model &b);
     
 } // namespace amici
 

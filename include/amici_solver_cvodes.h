@@ -145,6 +145,12 @@ class CVodeSolver : public Solver {
 
     ~CVodeSolver();
 
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);
+
+    friend bool operator ==(const CVodeSolver &a, const CVodeSolver &b);
+
+
   protected:
     
     void init(AmiVector *x, AmiVector *dx, realtype t) override;

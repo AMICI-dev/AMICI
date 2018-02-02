@@ -44,7 +44,7 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
     
     rootInit(model->ne);
     
-    setLinearSolver(model);
+    initializeLinearSolver(model);
         
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         
@@ -132,7 +132,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     /* Number of maximal internal steps */
     AMISetMaxNumStepsB(bwd->getwhich(), (maxstepsB == 0) ? maxsteps * 100 : maxstepsB);
     
-    setLinearSolverB(model, bwd->getwhich());
+    initializeLinearSolverB(model, bwd->getwhich());
     
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
@@ -261,7 +261,7 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProble
  *
  * @param model pointer to the model object
  */
-void Solver::setLinearSolver(Model *model) {
+void Solver::initializeLinearSolver(Model *model) {
     /* Attach linear solver module */
 
     switch (linsol) {
@@ -333,12 +333,12 @@ void Solver::setLinearSolver(Model *model) {
 }
     
     /**
-     * setLinearSolverB sets the linear solver for the backward problem
+     * Sets the linear solver for the backward problem
      *
      * @param model pointer to the model object
      * @param which index of the backward problem
      */
-void Solver::setLinearSolverB(Model *model, const int which) {
+void Solver::initializeLinearSolverB(Model *model, const int which) {
     switch (linsol) {
             
             /* DIRECT SOLVERS */
@@ -413,6 +413,30 @@ void Solver::setLinearSolverB(Model *model, const int which) {
             throw AmiException("Invalid local Solver!");
             break;
     }
+}
+
+bool operator ==(const Solver &a, const Solver &b)
+{
+    return (a.sensi_meth == b.sensi_meth)
+            && (a.sensi_meth == b.sensi_meth)
+            && (a.interpType == b.interpType)
+            && (a.lmm == b.lmm)
+            && (a.iter == b.iter)
+            && (a.stldet == b.stldet)
+            && (a.ordering == b.ordering)
+            && (a.newton_maxsteps == b.newton_maxsteps)
+            && (a.newton_maxlinsteps == b.newton_maxlinsteps)
+            && (a.newton_preeq == b.newton_preeq)
+            && (a.newton_precon == b.newton_precon)
+            && (a.ism == b.ism)
+            && (a.linsol == b.linsol)
+            && (a.atol == b.atol)
+            && (a.rtol == b.rtol)
+            && (a.maxsteps == b.maxsteps)
+            && (a.quad_atol == b.quad_atol)
+            && (a.quad_rtol == b.quad_rtol)
+            && (a.maxstepsB == b.maxstepsB)
+            && (a.sensi == b.sensi);
 }
 
 

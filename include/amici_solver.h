@@ -63,7 +63,6 @@ class Solver {
         iter = other.iter;
         stldet = other.stldet;
         ordering = other.ordering;
-        newton_precon = other.newton_precon;
         ism = other.ism;
     }
 
@@ -290,8 +289,9 @@ class Solver {
      * @brief setNewtonPreconditioner
      * @param newton_precon
      */
-    // TODO: what are valid options?
     void setNewtonPreconditioner(int newton_precon) {
+        if(newton_precon != 1)
+            throw AmiException("Only preconditioner 1 is supported.");
         this->newton_precon = newton_precon;
     }
 
@@ -324,6 +324,15 @@ class Solver {
      * @param sensi
      */
     void setSensitivityOrder(AMICI_sensi_order sensi) {
+        switch (sensi) {
+        case AMICI_SENSI_ORDER_NONE:
+        case AMICI_SENSI_ORDER_FIRST:
+        case AMICI_SENSI_ORDER_SECOND:
+            break;
+        default:
+            throw(AmiException("Invalid sensitivity order. Must be one of AMICI_sensi_order."));
+        }
+
         this->sensi = sensi;
     }
 
@@ -550,6 +559,7 @@ class Solver {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, Solver &r, const unsigned int version);
 
+    friend bool operator ==(const Solver &a, const Solver &b);
 
   protected:
     /**
@@ -1050,8 +1060,8 @@ class Solver {
      */
     virtual void *AMIGetAdjBmem(void *ami_mem, int which) = 0;
 
-    void setLinearSolver(Model *model);
-    void setLinearSolverB(Model *model, int which);
+    void initializeLinearSolver(Model *model);
+    void initializeLinearSolverB(Model *model, int which);
 
 protected:
     
@@ -1129,6 +1139,8 @@ private:
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
 
 };
+
+bool operator ==(const Solver &a, const Solver &b);
 
 } // namespace amici
 

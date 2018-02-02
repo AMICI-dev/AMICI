@@ -1,40 +1,10 @@
-
 #include <include/amici_serialization.h>
-
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
-
 #include "testfunctions.h"
-
 #include <include/amici_model.h>
 #include <include/amici_solver_cvodes.h>
 
-//void checkUserDataEqual(amici::UserData const& u, amici::UserData const& v) {
-//    CHECK_EQUAL(u.np(), v.np());
-//    CHECK_EQUAL(u.nx(), v.nx());
-//    CHECK_EQUAL(u.nk(), v.nk());
-//    //CHECK_EQUAL(u.pscale, v.pscale);
-
-//    CHECK_EQUAL(u.nme(), v.nme());
-//    CHECK_EQUAL(u.nplist(), v.nplist());
-//    CHECK_EQUAL(u.nt(), v.nt());
-//    CHECK_EQUAL(u.t0(), v.t0());
-//    CHECK_EQUAL(u.sensi, v.sensi);
-//    CHECK_EQUAL(u.atol, v.atol);
-//    CHECK_EQUAL(u.rtol, v.rtol);
-//    CHECK_EQUAL(u.maxsteps, v.maxsteps);
-//    CHECK_EQUAL(u.ism, v.ism);
-//    CHECK_EQUAL(u.sensmeth(), v.sensmeth());
-//    CHECK_EQUAL(u.linsol, v.linsol);
-//    //CHECK_EQUAL(u.interpType, v.interpType);
-//    //CHECK_EQUAL(u.lmm, v.lmm);
-//    //CHECK_EQUAL(u.iter, v.iter);
-//    //CHECK_EQUAL(u.stldet, v.stldet);
-//    //CHECK_EQUAL(u.ordering, v.ordering);
-
-//    amici::checkEqualArray(u.p(), v.p(), u.np(), 1e-16, 1e-16, "p");
-//    amici::checkEqualArray(u.k(), v.k(), u.nk(), 1e-16, 1e-16, "k");
-//}
+#include "CppUTest/TestHarness.h"
+#include "CppUTestExt/MockSupport.h"
 
 
 void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s) {
@@ -102,78 +72,83 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
 }
 
 
-TEST_GROUP(userDataSerialization){void setup(){}
+// clang-format off
+TEST_GROUP(dataSerialization){
 
-                          void teardown(){}};
+    void setup() {
 
+    }
 
-//TEST(userDataSerialization, testFile) {
-
-//    amici::UserData u(1, 2, 3);
-//    {
-//        std::ofstream ofs("sstore.dat");
-//        boost::archive::text_oarchive oar(ofs);
-//        oar &u;
-//    }
-//    {
-//        std::ifstream ifs("sstore.dat");
-//        boost::archive::text_iarchive iar(ifs);
-//        amici::UserData v;
-//        iar &v;
-//        checkUserDataEqual(u, v);
-//    }
-//}
-
-//TEST(userDataSerialization, testString) {
-//    amici::UserData u(1, 2, 3);
-
-//    std::string serialized = serializeToString(u);
-
-//    checkUserDataEqual(u, amici::deserializeFromString<amici::UserData>(serialized));
-//}
-
-//TEST(userDataSerialization, testChar) {
-//    amici::UserData u(2, 1, 3);
-//    double p[2] = {1,2};
-//    u.setParameters(p);
-
-//    int length;
-//    char *buf = serializeToChar(&u, &length);
-
-//    amici::UserData v = amici::deserializeFromChar<amici::UserData>(buf, length);
-
-//    delete[] buf;
-//    checkUserDataEqual(u, v);
-//}
-
-//TEST(userDataSerialization, testStdVec) {
-
-//    amici::UserData u(2, 1, 3);
-//    double p[2] = {1,2};
-//    u.setParameters(p);
-
-//    auto buf = amici::serializeToStdVec(&u);
-
-//    amici::UserData v = amici::deserializeFromChar<amici::UserData>(buf.data(), buf.size());
-
-//    checkUserDataEqual(u, v);
-//}
+    void teardown() {
+    }
+};
+// clang-format on
 
 
-TEST_GROUP(returnDataSerialization){void setup(){}
 
-                          void teardown(){}};
-
-TEST(returnDataSerialization, testString) {
+TEST(dataSerialization, testFile) {
     int np = 1;
     int nk = 2;
     int nx = 3;
     int nz = 4;
-    amici::Model_Test m( nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
-                   std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
-                   std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
-
     amici::CVodeSolver solver;
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+                                             std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
+                                             std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
+
+    {
+        std::ofstream ofs("sstore.dat");
+        boost::archive::text_oarchive oar(ofs);
+        oar & static_cast<amici::Solver&>(solver);
+        oar & static_cast<amici::Model&>(m);
+    }
+    {
+        std::ifstream ifs("sstore.dat");
+        boost::archive::text_iarchive iar(ifs);
+        amici::CVodeSolver v;
+        amici::Model_Test n;
+        iar &static_cast<amici::Solver&>(v);
+        iar &static_cast<amici::Model&>(n);
+        CHECK_TRUE(solver == v);
+        CHECK_TRUE(m == n);
+
+    }
+}
+
+TEST(dataSerialization, testChar) {
+    amici::CVodeSolver solver;
+    solver.setAbsoluteTolerance(4);
+
+    int length;
+    char *buf = serializeToChar(&solver, &length);
+
+    amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf, length);
+
+    delete[] buf;
+    CHECK_TRUE(solver == v);
+}
+
+TEST(dataSerialization, testStdVec) {
+    amici::CVodeSolver solver;
+    solver.setAbsoluteTolerance(4);
+
+    auto buf = amici::serializeToStdVec(&solver);
+    amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf.data(), buf.size());
+
+    CHECK_TRUE(solver == v);
+}
+
+
+TEST(dataSerialization, testString) {
+    int np = 1;
+    int nk = 2;
+    int nx = 3;
+    int nz = 4;
+    amici::CVodeSolver solver;
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+                                             std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
+                                             std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
+
     amici::ReturnData r(solver, &m);
 
     std::string serialized = amici::serializeToString(r);

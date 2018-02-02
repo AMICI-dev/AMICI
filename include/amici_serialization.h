@@ -4,6 +4,7 @@
 #include "include/rdata.h"
 #include "include/amici_model.h"
 #include "include/amici_solver.h"
+#include "include/amici_solver_cvodes.h"
 #include <cassert>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
@@ -50,20 +51,46 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.ordering;
 }
 
+
+template <class Archive>
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
+    ar & static_cast<amici::Solver&>(u);
+}
+
 template <class Archive>
 void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
-    ar &u.pscale;
-    ar &u.nmaxevent;
-    ar &u.tstart;
-    ar &u.qpositivex;
-    ar &u.plist_;
+    ar &const_cast<int &>(u.nx);
+    ar &const_cast<int &>(u.nxtrue);
+    ar &const_cast<int &>(u.ny);
+    ar &const_cast<int &>(u.nytrue);
+    ar &const_cast<int &>(u.nz);
+    ar &const_cast<int &>(u.nztrue);
+    ar &const_cast<int &>(u.ne);
+    ar &const_cast<int &>(u.nw);
+    ar &const_cast<int &>(u.ndwdx);
+    ar &const_cast<int &>(u.ndwdp);
+    ar &const_cast<int &>(u.nnz);
+    ar &const_cast<int &>(u.nJ);
+    ar &const_cast<int &>(u.ubw);
+    ar &const_cast<int &>(u.lbw);
+    ar &const_cast<amici::AMICI_o2mode &>(u.o2mode);
+    ar &const_cast<std::vector<int> &>(u.z2event);
+    ar &const_cast<std::vector<realtype> &>(u.idlist);
+    ar &u.h;
     ar &u.unscaledParameters;
     ar &u.originalParameters;
-    ar &u.k_;
-    ar &u.ts;
-    ar &u.pbar;
+    ar &u.fixedParameters;
+    ar &u.plist_;
     ar &u.x0data;
     ar &u.sx0data;
+    ar &u.ts;
+    ar &u.pbar;
+    ar &u.qpositivex;
+    ar &u.nmaxevent;
+    ar &u.pscale;
+    ar &u.pscale;
+    ar &u.tstart;
+
 }
 
 

@@ -699,6 +699,11 @@ void CVodeSolver::turnOffRootFinding() {
         return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 
-CVodeSolver::~CVodeSolver() { AMIFree(); }
+    CVodeSolver::~CVodeSolver() { AMIFree(); }
+
+    bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
+    {
+        return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
+    }
 
 } // namespace amici
