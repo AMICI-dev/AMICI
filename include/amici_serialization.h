@@ -210,7 +210,7 @@ std::string serializeToString(T const& data) {
         ::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << data;
+    oar << static_cast<T const&>(data);
     s.flush();
 
     return serialized;
@@ -223,7 +223,7 @@ std::vector<char> serializeToStdVec(T const& data) {
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << data;
+    oar << static_cast<T const&>(data);
     s.flush();
 
     std::vector<char> buf(serialized.begin(), serialized.end());
