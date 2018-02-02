@@ -400,7 +400,7 @@ namespace amici {
          */
         void setPositivityFlag(std::vector<int> const& qpositivex) {
             if(qpositivex.size() != (unsigned) this->nx)
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of qpositivex does not match number of states.");
             this->qpositivex = qpositivex;
         }
 
@@ -418,7 +418,7 @@ namespace amici {
          */
         void setParameters(std::vector<realtype> const&p) {
             if(p.size() != (unsigned) this->originalParameters.size())
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
             this->originalParameters = p;
             this->unscaledParameters.resize(originalParameters.size());
             unscaleParameters(this->unscaledParameters.data());
@@ -446,7 +446,7 @@ namespace amici {
          */
         void setFixedParameters(std::vector<realtype> const&k) {
             if(k.size() != (unsigned) this->k_.size())
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
             this->k_ = k;
         }
 
@@ -510,7 +510,7 @@ namespace amici {
          */
         void setInitialStates(std::vector<realtype> const& x0) {
             if(x0.size() != (unsigned) nx)
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
             this->x0data = x0;
         }
 
@@ -528,7 +528,7 @@ namespace amici {
          */
         void setInitialStateSensitivities(std::vector<realtype> const& sx0) {
             if(sx0.size() != (unsigned) nx * nplist())
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
             this->sx0data = sx0;
         }
 
@@ -546,7 +546,7 @@ namespace amici {
          */
         void setParameterScaling(std::vector<realtype> const& pbar) {
             if(pbar.size() != (unsigned) nplist())
-                throw AmiException("Dimension mismatch.");
+                throw AmiException("Dimension mismatch. Size of pbar does not match number of parameter selected for sensitivities.");
             this->pbar = pbar;
         }
 
