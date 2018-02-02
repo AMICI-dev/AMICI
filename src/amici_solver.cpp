@@ -137,7 +137,6 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
     
-    // TODO: does this still make sense?
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
     double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
     

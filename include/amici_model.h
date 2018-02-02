@@ -118,7 +118,7 @@ namespace amici {
         stau(plist.size(), 0.0),
         h(ne,0.0),
         originalParameters(p),
-        k_(k),
+        fixedParameters(k),
         plist_(plist)
         {
             J = SparseNewMat(nx, nx, nnz, CSC_MAT);
@@ -334,14 +334,14 @@ namespace amici {
          * @return length of constant vector
          */
         const int nk() const {
-            return k_.size();
+            return fixedParameters.size();
         }
 
         /** constants
          * @return pointer to constants array
          */
         const double *k() const{
-            return k_.data();
+            return fixedParameters.data();
         }
 
         /**
@@ -437,7 +437,7 @@ namespace amici {
          * @return
          */
         std::vector<realtype> getFixedParameters() const {
-            return k_;
+            return fixedParameters;
         }
 
         /**
@@ -445,9 +445,9 @@ namespace amici {
          * @param k
          */
         void setFixedParameters(std::vector<realtype> const&k) {
-            if(k.size() != (unsigned) this->k_.size())
+            if(k.size() != (unsigned) this->fixedParameters.size())
                 throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
-            this->k_ = k;
+            this->fixedParameters = k;
         }
 
         /**
@@ -1228,7 +1228,7 @@ namespace amici {
         std::vector<realtype>originalParameters;
 
         /** constants */
-        std::vector<realtype> k_;
+        std::vector<realtype> fixedParameters;
 
         /** indexes of parameters wrt to which sensitivities are computed */
         std::vector<int> plist_;
