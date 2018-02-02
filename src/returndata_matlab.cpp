@@ -1,19 +1,20 @@
 #include "returndata_matlab.h"
 
+#include <amici_model.h>
+
 namespace amici {
 
-ReturnDataMatlab::ReturnDataMatlab(const UserData *udata, const Model *model)
-    : ReturnData(udata, model, false) {
+ReturnDataMatlab::ReturnDataMatlab(Solver const& solver, const Model *model)
+    : ReturnData(solver, model, false) {
     /**
-      * @brief initialises the returnData struct, initialises the fields and
-     * copies
-      * model dimensions from the udata struct
-      * @param[in] udata pointer to the user data struct @type UserData
+      * @brief initialises the ReturnData struct, initialises the fields
+      * @param[in] solver pointer to the solver @type Solver
       * @param[in] model pointer to model specification object @type Model
       */
     freeFieldsOnDestruction = false;
     initFields();
-    copyFromUserData(udata);
+    auto const t = model->getTimepoints();
+    std::copy(t.begin(), t.end(), ts);
 }
 
 void ReturnDataMatlab::initFields() {

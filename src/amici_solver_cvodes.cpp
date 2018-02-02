@@ -19,7 +19,6 @@
 #include <include/amici_model_ode.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_exception.h>
-#include <include/udata.h>
 
 /**
  * @ brief extract information from a property of a matlab class (matrix)
@@ -52,8 +51,8 @@ void CVodeSolver::rootInit(int ne) {
          throw CvodeException(status,"CVodeRootInit");
 }
 
-void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) {
-    int status = CVodeSensInit1(ami_mem, udata->nplist(), udata->sensmeth(), fsxdot,
+void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
+    int status = CVodeSensInit1(ami_mem, nplist, getSensitivityMethod(), fsxdot,
                           sx->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensInit1");
@@ -700,6 +699,11 @@ void CVodeSolver::turnOffRootFinding() {
         return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 
-CVodeSolver::~CVodeSolver() { AMIFree(); }
+    CVodeSolver::~CVodeSolver() { AMIFree(); }
+
+    bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
+    {
+        return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
+    }
 
 } // namespace amici

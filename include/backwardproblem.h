@@ -7,7 +7,6 @@
 
 namespace amici {
 
-class UserData;
 class ReturnData;
 class ExpData;
 class Solver;
@@ -80,7 +79,6 @@ class BackwardProblem {
     Model *model;
     ReturnData *rdata;
     Solver *solver;
-    const UserData *udata;
     
     void handleEventB(int iroot);
     

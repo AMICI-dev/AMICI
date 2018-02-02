@@ -9,16 +9,29 @@
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
 
+#include <numeric>
 #include <vector>
 #include <memory>
 
 namespace amici {
-    
-    class UserData;
-    class ReturnData;
-    class ExpData;
-    class Solver;
 
+class ReturnData;
+class ExpData;
+class Model;
+class Solver;
+
+extern msgIdAndTxtFp warnMsgIdAndTxt;
+} // namespace amici
+
+
+// for serialization friend in Model
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::Model &u, const unsigned int version);
+}}
+
+namespace amici {
+    
     /**
      * @brief The Model class represents an AMICI ODE model.
      * The model can compute various model related quantities based
@@ -104,25 +117,24 @@ namespace amici {
         M(nx*nx, 0.0),
         stau(plist.size(), 0.0),
         h(ne,0.0),
-        p(p),
-        k(k),
-        plist(plist)
+        originalParameters(p),
+        fixedParameters(k),
+        plist_(plist)
         {
             J = SparseNewMat(nx, nx, nnz, CSC_MAT);
         }
         
-        /**
-         * @brief Returns a UserData instance with preset model dimensions
-         * @return The UserData instance
+        /** Copy assignment is disabled until const members are removed
+         * @param other object to copy from
+         * @return
          */
-        UserData getUserData() const;
-        
+        Solver& operator=(Solver const &other)=delete;
+
         /**
-         * @brief Returns a new UserData instance with preset model dimensions
-         * @return The UserData instance
+         * @brief Set the nplist-dependent vectors to their proper sizes
          */
-        UserData *getNewUserData() const;
-        
+        void initializeVectors();
+
         /** Retrieves the solver object
          * @return The Solver instance
          */
@@ -197,7 +209,7 @@ namespace amici {
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) = 0;
         
-        void fx0(AmiVector *x, const UserData *udata);
+        void fx0(AmiVector *x);
         
         /** Initial value for time derivative of states (only necessary for DAEs)
          * @param x0 Vector with the initial states
@@ -206,7 +218,7 @@ namespace amici {
          **/
         virtual void fdx0(AmiVector *x0, AmiVector *dx0) {};
 
-        void fsx0(AmiVectorArray *sx, const AmiVector *x, const UserData *udata);
+        void fsx0(AmiVectorArray *sx, const AmiVector *x);
         
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *necessary for DAEs)
@@ -280,7 +292,7 @@ namespace amici {
         virtual ~Model() {
             if(J)
                 SparseDestroyMat(J);
-        };
+        }
         
         // Generic implementations
         void fsy(const int it, ReturnData *rdata);
@@ -300,30 +312,282 @@ namespace amici {
         
         void fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
-        void initialize(AmiVector *x, AmiVector *dx, const UserData *udata);
+        void initialize(AmiVector *x, AmiVector *dx);
         
-        void initializeStates(AmiVector *x, const UserData *udata);
+        void initializeStates(AmiVector *x);
         
-        void initHeaviside(AmiVector *x, AmiVector *dx, const UserData *udata);
+        void initHeaviside(AmiVector *x, AmiVector *dx);
         
         /** number of paramaeters wrt to which sensitivities are computed
          * @return length of sensitivity index vector
          */
         const int nplist() const {
-            return plist.size();
-        };
+            return plist_.size();
+        }
         /** total number of model parameters
          * @return length of parameter vector
          */
         const int np() const {
-            return p.size();
-        };
+            return originalParameters.size();
+        }
         /** number of constants
          * @return length of constant vector
          */
         const int nk() const {
-            return k.size();
-        };
+            return fixedParameters.size();
+        }
+
+        /** constants
+         * @return pointer to constants array
+         */
+        const double *k() const{
+            return fixedParameters.data();
+        }
+
+        /**
+         * @brief Get nmaxevent
+         * @return nmaxevent
+         */
+        int nMaxEvent() const {
+            return nmaxevent;
+        }
+
+        /**
+         * @brief setNMaxEvent
+         * @param nmaxevent
+         */
+        void setNMaxEvent(int nmaxevent) {
+            this->nmaxevent = nmaxevent;
+        }
+
+        /**
+         * @brief Get number of timepoints
+         * @return number of timepoints
+         */
+        int nt() const {
+            return ts.size();
+        }
+
+        /**
+         * @brief getParameterScale
+         * @return
+         */
+        AMICI_parameter_scaling getParameterScale() const {
+            return pscale;
+        }
+
+        /**
+         * @brief setParameterScale
+         * @param pscale
+         */
+        void setParameterScale(AMICI_parameter_scaling pscale) {
+            this->pscale = pscale;
+            unscaledParameters.resize(originalParameters.size());
+            unscaleParameters(unscaledParameters.data());
+        }
+
+        /**
+         * @brief getPositivityFlag
+         * @return
+         */
+        std::vector<int> getPositivityFlag() const {
+            return qpositivex;
+        }
+
+        /**
+         * @brief setPositivityFlag
+         * @param qpositivex
+         */
+        void setPositivityFlag(std::vector<int> const& qpositivex) {
+            if(qpositivex.size() != (unsigned) this->nx)
+                throw AmiException("Dimension mismatch. Size of qpositivex does not match number of states.");
+            this->qpositivex = qpositivex;
+        }
+
+        /**
+         * @brief getParameters
+         * @return The user-set parameters (see also getUnscaledParameters)
+         */
+        std::vector<realtype> getParameters() const {
+            return originalParameters;
+        }
+
+        /**
+         * @brief setParameters
+         * @param p
+         */
+        void setParameters(std::vector<realtype> const&p) {
+            if(p.size() != (unsigned) this->originalParameters.size())
+                throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
+            this->originalParameters = p;
+            this->unscaledParameters.resize(originalParameters.size());
+            unscaleParameters(this->unscaledParameters.data());
+        }
+
+        /**
+         * @brief getUnscaledParameters
+         * @return The unscaled parameters
+         */
+        std::vector<realtype> getUnscaledParameters() const {
+            return unscaledParameters;
+        }
+
+        /**
+         * @brief getFixedParameters
+         * @return
+         */
+        std::vector<realtype> getFixedParameters() const {
+            return fixedParameters;
+        }
+
+        /**
+         * @brief setFixedParameters
+         * @param k
+         */
+        void setFixedParameters(std::vector<realtype> const&k) {
+            if(k.size() != (unsigned) this->fixedParameters.size())
+                throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
+            this->fixedParameters = k;
+        }
+
+        /**
+         * @brief getTimepoints
+         * @return
+         */
+        std::vector<realtype> getTimepoints() const {
+            return ts;
+        }
+
+        /**
+         * @brief setTimepoints
+         * @param ts
+         */
+        void setTimepoints(std::vector<realtype> const& ts) {
+            this->ts = ts;
+        }
+
+        /**
+         * @brief Get timepoint for given index
+         * @param idx
+         * @return
+         */
+        double t(int idx) const {
+            return ts.at(idx);
+        }
+
+        /**
+         * @brief getParameterList
+         * @return
+         */
+        std::vector<int> getParameterList() const {
+            return plist_;
+        }
+
+        /**
+         * @brief setParameterList
+         * @param plist
+         */
+        void setParameterList(std::vector<int> const& plist) {
+            for(auto const& idx: plist)
+                if(idx < 0 || idx >= np())
+                    throw AmiException("Indices in plist must be in [0..np]");
+            this->plist_ = plist;
+
+            initializeVectors();
+        }
+
+        /**
+         * @brief getInitialStates
+         * @return
+         */
+        std::vector<realtype> getInitialStates() const {
+            return x0data;
+        }
+
+        /**
+         * @brief setInitialStates
+         * @param x0
+         */
+        void setInitialStates(std::vector<realtype> const& x0) {
+            if(x0.size() != (unsigned) nx)
+                throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
+            this->x0data = x0;
+        }
+
+        /**
+         * @brief getInitialStateSensitivities
+         * @return
+         */
+        std::vector<realtype> getInitialStateSensitivities() const {
+            return sx0data;
+        }
+
+        /**
+         * @brief setInitialStateSensitivities
+         * @param sx0
+         */
+        void setInitialStateSensitivities(std::vector<realtype> const& sx0) {
+            if(sx0.size() != (unsigned) nx * nplist())
+                throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
+            this->sx0data = sx0;
+        }
+
+        /**
+         * @brief getParameterScaling
+         * @return
+         */
+        std::vector<realtype> getParameterScaling() const {
+            return pbar;
+        }
+
+        /**
+         * @brief setParameterScaling
+         * @param pbar
+         */
+        void setParameterScaling(std::vector<realtype> const& pbar) {
+            if(pbar.size() != (unsigned) nplist())
+                throw AmiException("Dimension mismatch. Size of pbar does not match number of parameter selected for sensitivities.");
+            this->pbar = pbar;
+        }
+
+        /** initial timepoint
+         *  @return timepoint
+         */
+        double t0() const{
+            return tstart;
+        }
+
+        /**
+         * @brief setT0
+         * @param t0
+         */
+        void setT0(double t0) {
+            tstart = t0;
+        }
+
+        /** entry in parameter list
+          * @param pos index
+          * @return entry
+          */
+        const int plist(int pos) const{
+            return plist_.at(pos);
+        }
+
+        /**
+         * @brief unscaleParameters
+         * @param bufferUnscaled
+         */
+        void unscaleParameters(double *bufferUnscaled) const;
+
+        /**
+         * @brief Require computation of sensitivities for all parameters p [0..np[
+         * in natural order.
+         */
+        void requireSensitivitiesForAllParameters() {
+            plist_.resize(np());
+            std::iota(plist_.begin(), plist_.end(), 0);
+        }
+
         /** number of states */
         const int nx;
         /** number of states in the unaugmented system */
@@ -418,6 +682,23 @@ namespace amici {
             }
         }
         
+        /**
+         * @brief Serialize Model (see boost::serialization::serialize)
+         * @param ar Archive to serialize to
+         * @param r Data to serialize
+         * @param version Version number
+         */
+        template <class Archive>
+        friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
+
+        /**
+         * @brief Check equality of data members
+         * @param a
+         * @param b
+         * @return
+         */
+        friend bool operator ==(const Model &a, const Model &b);
+
     protected:
         
         /** model specific implementation of fx0
@@ -891,6 +1172,7 @@ namespace amici {
         
         void getrz(const int nroots, const ReturnData *rdata);
         
+
         /** Jacobian */
         SlsMat J = nullptr;
         
@@ -946,13 +1228,46 @@ namespace amici {
         /** flag indicating whether a certain heaviside function should be active or
          not */
         std::vector<realtype> h;
-        /** parameters */
-        const std::vector<realtype> p;
+
+        /** unscaled parameters */
+        std::vector<realtype> unscaledParameters;
+
+        /** orignal user-provided, possibly scaled parameter array (size np) */
+        std::vector<realtype>originalParameters;
+
         /** constants */
-        const std::vector<realtype> k;
+        std::vector<realtype> fixedParameters;
+
         /** indexes of parameters wrt to which sensitivities are computed */
-        const std::vector<int> plist;
+        std::vector<int> plist_;
+
+        /** state initialisation (size nx) */
+        std::vector<double>x0data;
+
+        /** sensitivity initialisation (size nx * nplist) */
+        std::vector<realtype>sx0data;
+
+        /** timepoints (size nt) */
+        std::vector<realtype>ts;
+
+        /** scaling of parameters (size nplist) */
+        std::vector<realtype>pbar;
+
+        /** positivity flag (size nx) */
+        std::vector<int>qpositivex;
+
+        /** maximal number of events to track */
+        int nmaxevent = 10;
+
+        /** parameter transformation of p */
+        AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
+
+        /** starting time */
+        double tstart = 0.0;
+
     };
+
+    bool operator ==(const Model &a, const Model &b);
     
 } // namespace amici
 

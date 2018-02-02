@@ -2,11 +2,11 @@
 #define RETURNDATA_MATLAB_H
 
 #include "include/rdata.h"
+#include "include/amici_solver.h"
 #include <mex.h>
 
 namespace amici {
 
-class UserData;
 class Model;
 
 /**
@@ -17,7 +17,7 @@ class Model;
 class ReturnDataMatlab : public ReturnData {
 
   public:
-    ReturnDataMatlab(const UserData *udata, const Model *model);
+    ReturnDataMatlab(Solver const& solver, const Model *model);
 
     /** sol struct that is passed back to matlab */
     mxArray *matlabSolutionStruct = nullptr;
