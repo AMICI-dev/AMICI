@@ -4,6 +4,7 @@
 
 #include <include/amici.h>
 #include <include/amici_solver_idas.h>
+#include <include/amici_solver_cvodes.h>
 #include <include/symbolic_functions.h>
 #include <include/amici_model_ode.h>
 #include <cstring>
@@ -39,7 +40,8 @@ TEST(amici, testRunAmiciSimulationRdataMissing) {
     CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(solver, nullptr, nullptr, model))
 }
 
-TEST_GROUP(userData)
+
+TEST_GROUP(model)
 {
     void setup() {
 
@@ -50,7 +52,7 @@ TEST_GROUP(userData)
     }
 };
 
-TEST(userData, testScalingLin) {
+TEST(model, testScalingLin) {
     Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
@@ -65,7 +67,7 @@ TEST(userData, testScalingLin) {
     CHECK_EQUAL(p[0], unscaled[0]);
 }
 
-TEST(userData, testScalingLog) {
+TEST(model, testScalingLog) {
     Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
@@ -80,7 +82,7 @@ TEST(userData, testScalingLog) {
     DOUBLES_EQUAL(exp(p[0]), unscaled[0], 1e-16);
 }
 
-TEST(userData, testScalingLog10) {
+TEST(model, testScalingLog10) {
     Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
@@ -152,6 +154,38 @@ TEST(symbolicFunctions, testDMax) {
     CHECK_EQUAL(1, amici::Dmax(2, -1, 2, 0));
 }
 
+TEST_GROUP(amiciSolver)
+{
+    void setup() {
+
+    }
+
+    void teardown() {
+
+    }
+};
+
+TEST(amiciSolver, testEquality) {
+    IDASolver i1, i2;
+    CVodeSolver c1, c2;
+
+    CHECK_TRUE(i1 == i2);
+    CHECK_TRUE(c1 == c2);
+    CHECK_FALSE(i1 == c1);
+}
+
+TEST(amiciSolver, testClone) {
+    IDASolver i1;
+    auto i2 = std::unique_ptr<Solver>(i1.clone());
+    CHECK_TRUE(i1 == *i2);
+
+    CVodeSolver c1;
+    auto c2 = std::unique_ptr<Solver>(c1.clone());
+    CHECK_TRUE(c1 == *c2);
+    CHECK_FALSE(*i2 == *c2);
+}
+
+
 TEST_GROUP(amiciSolverIdas)
 {
     void setup() {
@@ -166,3 +200,4 @@ TEST_GROUP(amiciSolverIdas)
 TEST(amiciSolverIdas, testConstructionDestruction) {
     IDASolver solver;
 }
+

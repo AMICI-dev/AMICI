@@ -10,8 +10,13 @@ namespace amici {
 
 class IDASolver : public Solver {
   public:
-    IDASolver(){
-    };
+    IDASolver() = default;
+
+    /**
+     * @brief Clone this instance
+     * @return The clone
+     */
+    virtual Solver* clone() const override;
 
     void *AMICreate(int lmm, int iter) override;
 

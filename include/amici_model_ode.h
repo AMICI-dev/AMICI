@@ -58,6 +58,10 @@ namespace amici {
         : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
 
+        /**
+         * @brief Copy constructor
+         * @param other
+         */
         Model_ODE(Model_ODE const& other)
             :Model(other) {}
 

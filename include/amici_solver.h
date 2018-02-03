@@ -6,6 +6,7 @@
 #include <include/amici_misc.h>
 #include <include/amici_exception.h>
 #include <include/symbolic_functions.h>
+
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
 
@@ -67,6 +68,13 @@ class Solver {
     }
 
     virtual ~Solver() = default;
+
+    /**
+     * @brief Clone this instance
+     * @return The clone
+     */
+    virtual Solver* clone() const = 0;
+
 
     void setupAMI(ForwardProblem *fwd, Model *model);
 
@@ -577,8 +585,6 @@ class Solver {
      */
     virtual void init(AmiVector *x, AmiVector *dx, realtype t) = 0;
 
-    // TODO: check if model has adjoint sensitivities, else return -1
-
     /**
      * binit initialises the adjoint states at the specified final timepoint
      *
@@ -588,8 +594,6 @@ class Solver {
      * @param t final timepoint
      */
     virtual void binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) = 0;
-
-    // TODO: check if model has adjoint sensitivities, else return -1
 
     /**
      * qbinit initialises the quadrature states at the specified final timepoint
@@ -606,7 +610,6 @@ class Solver {
      */
     virtual void rootInit(int ne) = 0;
 
-    // TODO: check if model has forward sensitivities, else return -1
     /**
      * SensInit1 initialises the sensitivities at the specified initial
      * timepoint
@@ -641,7 +644,6 @@ class Solver {
      */
     virtual void setJacTimesVecFn() = 0;
 
-    // TODO: check if model has adjoint sensitivities, else return -1
     /**
      * SetDenseJacFn sets the dense Jacobian function
      *
@@ -649,7 +651,6 @@ class Solver {
      */
     virtual void setDenseJacFnB(int which) = 0;
 
-    // TODO: check if model has adjoint sensitivities, else return -1
     /**
      * SetSparseJacFn sets the sparse Jacobian function
      *
@@ -657,7 +658,6 @@ class Solver {
      */
     virtual void setSparseJacFnB(int which) = 0;
 
-    // TODO: check if model has adjoint sensitivities, else return -1
     /**
      * SetBandJacFn sets the banded Jacobian function
      *
@@ -665,7 +665,6 @@ class Solver {
      */
     virtual void setBandJacFnB(int which) = 0;
 
-    // TODO: check if model has adjoint sensitivities, else return -1
     /**
      * SetJacTimesVecFn sets the Jacobian vector multiplication function
      *

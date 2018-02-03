@@ -106,6 +106,10 @@ void CVodeSolver::setJacTimesVecFnB(int which) {
          throw CvodeException(status,"CVSpilsSetJacTimesVecFnB");
 }
 
+Solver *CVodeSolver::clone() const {
+    return new CVodeSolver(*this);
+}
+
 void *CVodeSolver::AMICreate(int lmm, int iter) {
     return CVodeCreate(lmm, iter);
 }

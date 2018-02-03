@@ -19,6 +19,14 @@ TEST_GROUP(groupSteadystate)
     }
 };
 
+TEST(groupSteadystate, testInequality) {
+    auto modelA = getModel();
+    auto modelB = std::unique_ptr<amici::Model>(new amici::Model_Test());
+
+    CHECK_FALSE(*modelA == *modelB);
+}
+
+
 TEST(groupSteadystate, testCopyModel) {
     auto modelA = getModel();
     auto modelB = std::unique_ptr<amici::Model>(modelA->clone());

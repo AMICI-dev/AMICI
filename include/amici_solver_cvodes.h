@@ -28,6 +28,13 @@ class CVodeSolver : public Solver {
   public:
     CVodeSolver() = default;
 
+    /**
+     * @brief Clone this instance
+     * @return The clone
+     */
+    virtual Solver* clone() const override;
+
+
     void *AMICreate(int lmm, int iter) override;
 
     void AMISStolerances(double rtol, double atol) override;
