@@ -69,6 +69,8 @@ public:
                     std::vector<int>{})
                     {};
 
+    virtual amici::Model* clone() const override { return new Model_model_robertson(*this); };
+
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
         J_model_robertson(J, t, x, p, k, h, cj, dx, w, dwdx);
     }

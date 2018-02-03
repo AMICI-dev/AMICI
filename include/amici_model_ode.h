@@ -57,6 +57,10 @@ namespace amici {
                   const std::vector<realtype> idlist, const std::vector<int> z2event)
         : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
+
+        Model_ODE(Model_ODE const& other)
+            :Model(other) {}
+
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                         AmiVector *xdot, DlsMat J) override;
         void fJ(realtype t, N_Vector x, N_Vector xdot, DlsMat J);
@@ -94,7 +98,7 @@ namespace amici {
         void fdxdotdp(const realtype t, const N_Vector x);
         virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
             fdxdotdp(t,x->getNVector());
-        };
+        }
         
         void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
         

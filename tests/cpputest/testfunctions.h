@@ -70,6 +70,7 @@ public:
 	Model_Test()
     : Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,AMICI_O2MODE_NONE,std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {}
 
+    virtual Model* clone() const override { return new Model_Test(*this); }
 
 	virtual std::unique_ptr<Solver> getSolver() override {
 	 throw AmiException("not implemented");

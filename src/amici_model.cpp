@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <cmath>
+#include <typeinfo>
 
 namespace amici {
 
@@ -938,6 +939,9 @@ void Model::unscaleParameters(double *bufferUnscaled) const
 
 bool operator ==(const Model &a, const Model &b)
 {
+    if (typeid(a) != typeid(b))
+            return false;
+
     return (a.nx == b.nx)
             && (a.nxtrue == b.nxtrue)
             && (a.ny == b.ny)

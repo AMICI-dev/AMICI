@@ -5,6 +5,7 @@
 #include <include/amici_defines.h>
 #include <include/amici_vector.h>
 #include <include/symbolic_functions.h>
+
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_sparse.h>
@@ -128,7 +129,84 @@ namespace amici {
          * @param other object to copy from
          * @return
          */
-        Solver& operator=(Solver const &other)=delete;
+        Model& operator=(Model const &other)=delete;
+
+        /** Copy constructor
+         * @param other object to copy from
+         * @return
+         */
+        Model(Model const& other)
+            : nx(other.nx), nxtrue(other.nxtrue),
+              ny(other.ny), nytrue(other.nytrue),
+              nz(other.nz), nztrue(other.nztrue),
+              ne(other.ne), nw(other.nw),
+              ndwdx(other.ndwdx), ndwdp(other.ndwdp),
+              nnz(other.nnz), nJ(other.nJ),
+              ubw(other.ubw), lbw(other.lbw),
+              o2mode(other.o2mode),
+              z2event(other.z2event),
+              idlist(other.idlist),
+
+              sigmay(other.sigmay),
+              dsigmaydp(other.dsigmaydp),
+              sigmaz(other.sigmaz),
+              dsigmazdp(other.dsigmazdp),
+              dJydp(other.dJydp),
+              dJzdp(other.dJzdp),
+              deltax(other.deltax),
+              deltasx(other.deltasx),
+              deltaxB(other.deltaxB),
+              deltaqB(other.deltaqB),
+              dxdotdp(other.dxdotdp),
+
+              J(nullptr),
+              x(other.x),
+              sx(other.sx),
+              y(other.y),
+              my(other.my),
+              z(other.z),
+              mz(other.mz),
+              rz(other.rz),
+              dJydy(other.dJydy),
+              dJydsigma(other.dJydsigma),
+              dJzdz(other.dJzdz),
+              dJzdsigma(other.dJzdsigma),
+              dJrzdz(other.dJrzdz),
+              dJrzdsigma(other.dJrzdsigma),
+              dzdx(other.dzdx),
+              dzdp(other.dzdp),
+              drzdx(other.drzdx),
+              drzdp(other.drzdp),
+              dydp(other.dydp),
+              dydx(other.dydx),
+              w(other.w),
+              dwdx(other.dwdx),
+              dwdp(other.dwdp),
+              M(other.M),
+              stau(other.stau),
+              h(other.h),
+              unscaledParameters(other.unscaledParameters),
+              originalParameters(other.originalParameters),
+              fixedParameters(other.fixedParameters),
+              plist_(other.plist_),
+              x0data(other.x0data),
+              sx0data(other.sx0data),
+              ts(other.ts),
+              pbar(other.pbar),
+              qpositivex(other.qpositivex),
+              nmaxevent(other.nmaxevent),
+              pscale(other.pscale),
+              tstart(other.tstart)
+        {
+            J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+            SparseCopyMat(other.J, J);
+        }
+
+        /**
+         * @brief Clone this instance
+         * @return The clone
+         */
+        virtual Model* clone() const = 0;
 
         /**
          * @brief Set the nplist-dependent vectors to their proper sizes
@@ -216,14 +294,14 @@ namespace amici {
          * @param dx0 Vector to which the initial derivative states will be
          * written (only DAE)
          **/
-        virtual void fdx0(AmiVector *x0, AmiVector *dx0) {};
+        virtual void fdx0(AmiVector *x0, AmiVector *dx0) {}
 
         void fsx0(AmiVectorArray *sx, const AmiVector *x);
         
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *necessary for DAEs)
          **/
-        virtual void fsdx0() {};
+        virtual void fsdx0() {}
         
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
         
