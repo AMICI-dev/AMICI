@@ -664,6 +664,7 @@ namespace amici {
         void requireSensitivitiesForAllParameters() {
             plist_.resize(np());
             std::iota(plist_.begin(), plist_.end(), 0);
+            initializeVectors();
         }
 
         /** number of states */
