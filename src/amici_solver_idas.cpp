@@ -92,6 +92,10 @@ void IDASolver::setJacTimesVecFnB(int which) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFnB");
 }
+Solver *IDASolver::clone() const {
+    return new IDASolver(*this);
+}
+
 void *IDASolver::AMICreate(int lmm, int iter) {
     return IDACreate();
 }

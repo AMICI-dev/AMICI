@@ -85,6 +85,8 @@ public:
                     std::vector<int>{1})
                     {};
 
+    virtual amici::Model* clone() const override { return new Model_model_neuron(*this); };
+
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         J_model_neuron(J, t, x, p, k, h, w, dwdx);
     }

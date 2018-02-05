@@ -417,6 +417,9 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
 
 bool operator ==(const Solver &a, const Solver &b)
 {
+    if (typeid(a) != typeid(b))
+            return false;
+
     return (a.sensi_meth == b.sensi_meth)
             && (a.sensi_meth == b.sensi_meth)
             && (a.interpType == b.interpType)

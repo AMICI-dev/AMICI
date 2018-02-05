@@ -71,6 +71,8 @@ public:
                     std::vector<int>{})
                     {};
 
+    virtual amici::Model* clone() const override { return new Model_model_nested_events(*this); };
+
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         J_model_nested_events(J, t, x, p, k, h, w, dwdx);
     }
