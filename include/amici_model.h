@@ -399,19 +399,19 @@ namespace amici {
         /** number of paramaeters wrt to which sensitivities are computed
          * @return length of sensitivity index vector
          */
-        const int nplist() const {
+        int nplist() const {
             return plist_.size();
         }
         /** total number of model parameters
          * @return length of parameter vector
          */
-        const int np() const {
+        int np() const {
             return originalParameters.size();
         }
         /** number of constants
          * @return length of constant vector
          */
-        const int nk() const {
+        int nk() const {
             return fixedParameters.size();
         }
 
@@ -647,7 +647,7 @@ namespace amici {
           * @param pos index
           * @return entry
           */
-        const int plist(int pos) const{
+        int plist(int pos) const{
             return plist_.at(pos);
         }
 
@@ -1243,7 +1243,7 @@ namespace amici {
         
         void getsx(const int it, const ReturnData *rdata);
         
-        const realtype gett(const int it, const ReturnData *rdata) const;
+        realtype gett(const int it, const ReturnData *rdata) const;
         
         void getmz(const int nroots, const ExpData *edata);
         

@@ -869,7 +869,7 @@ void Model::getsx(const int it, const ReturnData *rdata) {
      * @param rdata pointer to return data instance
      * @return current timepoint
      */
-const realtype Model::gett(const int it, const ReturnData *rdata) const {
+realtype Model::gett(const int it, const ReturnData *rdata) const {
     return static_cast<realtype>(rdata->ts[it]);
 }
 
