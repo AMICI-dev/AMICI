@@ -143,10 +143,10 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     archiveVector(ar, &r.numnonlinsolvconvfailsB, r.nt);
     archiveVector(ar, &r.order, r.nt);
 
-    archiveVector(ar, &r.newton_status, r.nt);
-    archiveVector(ar, &r.newton_time, r.nt);
-    archiveVector(ar, &r.newton_numsteps, r.nt);
-    archiveVector(ar, &r.newton_numlinsteps, r.nt);
+    archiveVector(ar, &r.newton_status, 1);
+    archiveVector(ar, &r.newton_time, 1);
+    archiveVector(ar, &r.newton_numsteps, 2);
+    archiveVector(ar, &r.newton_numlinsteps, r.newton_maxsteps * 2);
     archiveVector(ar, &r.x0, r.nx);
     archiveVector(ar, &r.sx0, r.nx * r.nplist);
 
