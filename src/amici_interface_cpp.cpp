@@ -37,19 +37,7 @@ namespace amici {
  * @return rdata pointer to return data object @type ReturnData
  */
 ReturnData *getSimulationResults(Model &model, const ExpData *edata, Solver &solver) {
-
-    ReturnData *rdata = new ReturnData(solver, &model);
-    
-    try {
-        runAmiciSimulation(solver, edata, rdata, model);
-        *rdata->status = AMICI_SUCCESS;
-        rdata->applyChainRuleFactorToSimulationResults(&model);
-    } catch (amici::IntegrationFailure& ex) {
-        rdata->invalidate(ex.time);
-        *(rdata->status) = ex.error_code;
-    }
-
-    return rdata;
+    return runAmiciSimulation(solver, edata, model);
 }
 
 /*!
