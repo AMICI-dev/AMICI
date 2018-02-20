@@ -1237,19 +1237,23 @@ namespace amici {
         
         void getmy(const int it, const ExpData *edata);
         
-        void gety(const int it, const ReturnData *rdata);
+        realtype *gety(const int it, const ReturnData *rdata) const;
         
-        void getx(const int it, const ReturnData *rdata);
+        realtype *getx(const int it, const ReturnData *rdata) const;
         
-        void getsx(const int it, const ReturnData *rdata);
+        realtype *getsx(const int it, const ReturnData *rdata) const;
         
         realtype gett(const int it, const ReturnData *rdata) const;
         
         void getmz(const int nroots, const ExpData *edata);
         
-        void getz(const int nroots, const ReturnData *rdata);
+        realtype *getz(const int nroots, const ReturnData *rdata) const;
         
-        void getrz(const int nroots, const ReturnData *rdata);
+        realtype *getrz(const int nroots, const ReturnData *rdata) const;
+        
+        realtype *getsz(const int nroots, const int nplist, const ReturnData *rdata) const;
+        
+        realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
         
 
         /** Jacobian */
