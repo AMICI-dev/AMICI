@@ -305,12 +305,10 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
        (realtype)
        we should perform proper casting here. */
     model->fxdot(t, &x, &dx, &xdot);
-    memcpy(rdata->xdot, xdot.data(), model->nx * sizeof(realtype));
+    rdata->xdot = xdot.data();
 
     model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp);
-    memcpy(rdata->J, Jtmp->data,
-           model->nx * model->nx * sizeof(realtype));
-
+    rdata->J.assign(Jtmp->data,Jtmp->data + model->nx * model->nx);
 }
 
 void ForwardProblem::getEventOutput() {

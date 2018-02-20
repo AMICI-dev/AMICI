@@ -2,40 +2,23 @@
 #define RETURNDATA_MATLAB_H
 
 #include "include/rdata.h"
-#include "include/amici_solver.h"
 #include <mex.h>
 
 namespace amici {
 
-class Model;
+void initFields();
 
-/**
- * @brief The ReturnDataMatlab class sets up ReturnData to be returned by the
- * MATLAB mex functions.
- * Memory is allocated using matlab functions.
- */
-class ReturnDataMatlab : public ReturnData {
+template <typename T>
+void writeMatlabField1(mxArray *matlabstruct, const char *fieldName, std::vector<T> fieldData, const int dim);
 
-  public:
-    ReturnDataMatlab(Solver const& solver, const Model *model);
+template <typename T>
+void writeMatlabField2(mxArray *matlabstruct, const char *fieldName, std::vector<T> fieldData, int dim1, int dim2);
 
-    /** sol struct that is passed back to matlab */
-    mxArray *matlabSolutionStruct = nullptr;
+template <typename T>
+void writeMatlabField3(mxArray *matlabstruct, const char *fieldName, std::vector<T> fieldData, int dim1, int dim2, int dim3);
 
-  protected:
-    void initFields() override;
-
-    virtual void initField1(double **fieldPointer, const char *fieldName,
-                            int dim) override;
-
-    virtual void initField2(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2) override;
-
-    virtual void initField3(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3) override;
-
-    virtual void initField4(double **fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3, int dim4) override;
+template <typename T>
+void writeMatlabField4(mxArray *matlabstruct, const char *fieldName, std::vector<T> fieldData, int dim1, int dim2, int dim3, int dim4);
 };
 
 } // namespace amici
