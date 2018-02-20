@@ -319,7 +319,7 @@ void ForwardProblem::getEventOutput() {
      *
      */
 
-    if (t == rdata->ts[rdata->nt - 1]) {
+    if (t == model->gett(rdata->nt - 1,rdata)) {
         // call from fillEvent at last timepoint
         model->froot(t, &x, &dx, rootvals.data());
     }
@@ -331,7 +331,7 @@ void ForwardProblem::getEventOutput() {
         if (nroots.at(ie) >= rdata->nmaxevent)
             continue;
 
-        if (rootsfound.at(ie) == 1 || t == rdata->ts[rdata->nt - 1]) {
+        if (rootsfound.at(ie) == 1 || t == model->gett(rdata->nt - 1,rdata)) {
             /* only consider transitions false
              -> true  or event filling*/
 
@@ -342,7 +342,7 @@ void ForwardProblem::getEventOutput() {
 
                 model->fJz(nroots.at(ie), rdata, edata);
 
-                if (t == rdata->ts[rdata->nt - 1]) {
+                if (t == model->gett(rdata->nt - 1,rdata)) {
                     // call from fillEvent at last
                     // timepoint, add regularization
                     // based on rz
@@ -360,7 +360,7 @@ void ForwardProblem::getEventOutput() {
             nroots.at(ie)++;
         }
     }
-    if (t == rdata->ts[rdata->nt - 1]) {
+    if (t == model->gett(rdata->nt - 1,rdata)) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
         bool continue_loop = false;
@@ -391,13 +391,12 @@ void ForwardProblem::prepEventSensis(int ie) {
     if (edata) {
         for (int iz = 0; iz < model->nztrue; iz++) {
             if (model->z2event[iz] - 1 == ie) {
-                if (!isNaN(
-                              edata->mz[iz * rdata->nmaxevent + nroots.at(ie)])) {
+                if (!isNaN(edata->mz[iz * rdata->nmaxevent + nroots.at(ie)])) {
                     model->fdzdp(t, ie, &x);
                     
                     model->fdzdx(t, ie, &x);
                     
-                    if (t == rdata->ts[rdata->nt - 1]) {
+                    if (t == model->gett(rdata->nt - 1,rdata)) {
                         model->fdrzdp(t, ie, &x);
                         model->fdrzdx(t, ie, &x);
                     }
@@ -409,19 +408,18 @@ void ForwardProblem::prepEventSensis(int ie) {
                                                rdata->nmaxevent * iz])) {
                         model->fdsigma_zdp(t);
                     } else {
-                        for (int ip = 0; ip < rdata->nplist; ip++) {
+                        for (int ip = 0; ip < model->nplist(); ip++) {
                             model->dsigmazdp[iz + model->nz * ip] = 0;
                         }
                         model->sigmaz[iz] =
                         edata->sigmaz[nroots.at(ie) +
                                       rdata->nmaxevent * iz];
                     }
-                    rdata->sigmaz[nroots.at(ie) + rdata->nmaxevent * iz] =
+                    rdata->sigmaz[nroots.at(ie)*nz + iz] =
                     model->sigmaz[iz];
-                    for (int ip = 0; ip < rdata->nplist; ip++) {
-                        rdata->ssigmaz[nroots.at(ie) +
-                                       rdata->nmaxevent *
-                                       (iz + model->nz * ip)] =
+                    for (int ip = 0; ip < model->nplist(); ip++) {
+                        rdata->ssigmaz[(nroots.at(ie)*model->np+ip)*
+                                       model->nz + iz] =
                         model->dsigmazdp[iz + model->nz * ip];
                     }
                 }
@@ -438,7 +436,7 @@ void ForwardProblem::prepEventSensis(int ie) {
         model->fdJzdp(nroots.at(ie), t, edata, rdata);
         if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             for (int iJ = 0; iJ < model->nJ; iJ++) {
-                for (int ip = 0; ip < rdata->nplist; ip++) {
+                for (int ip = 0; ip < model->nplist(); ip++) {
                     if (iJ == 0) {
                         if (model->nz > 0) {
                             rdata->sllh[ip] -= model->dJzdp[ip];
@@ -484,7 +482,7 @@ void ForwardProblem::handleDataPoint(int it) {
      */
 
     for (int ix = 0; ix < model->nx; ix++) {
-        rdata->x[it + rdata->nt * ix] = x[ix];
+        rdata->x.at(it*model->nx + ix) = x[ix];
     }
     
     if (rdata->ts[it] > model->t0()) {
@@ -531,11 +529,11 @@ void ForwardProblem::prepDataSensis(int it) {
 
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (!isNaN(edata->sigmay[iy * rdata->nt + it])) {
-            for (int ip = 0; ip < rdata->nplist; ip++) {
+            for (int ip = 0; ip < model->nplist(); ip++) {
                 model->dsigmaydp[ip * model->ny + iy] = 0;
             }
         }
-        for (int ip = 0; ip < rdata->nplist; ip++) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             rdata->ssigmay[it + rdata->nt * (ip * model->ny + iy)] =
                 model->dsigmaydp[ip * model->ny + iy];
         }
@@ -549,14 +547,14 @@ void ForwardProblem::prepDataSensis(int it) {
         return;
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (int ip = 0; ip < rdata->nplist; ip++) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             if (iJ == 0) {
                 if (model->ny > 0) {
-                    rdata->sllh[ip] -= model->dJydp[ip * model->nJ];
+                    rdata->sllh.at(ip) -= model->dJydp[ip * model->nJ];
                 }
             } else {
                 if (model->ny > 0) {
-                    rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
+                    rdata->s2llh.at((iJ - 1) + ip * (model->nJ - 1)) -=
                         model->dJydp[iJ + ip * model->nJ];
                 }
             }
@@ -578,10 +576,10 @@ void ForwardProblem::getDataSensisFSA(int it) {
         }
     }
     
-    for (int ip = 0; ip < rdata->nplist; ip++) {
+    for (int ip = 0; ip < model->nplist(); ip++) {
         if (model->nx > 0) {
             for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx[(ip * model->nx + ix) * rdata->nt + it] =
+                rdata->sx[(it * model->nplist() + ip) * rdata->nx + ix] =
                 sx.at(ix,ip);
             }
         }
@@ -592,17 +590,17 @@ void ForwardProblem::getDataSensisFSA(int it) {
             if (isNaN(edata->sigmay[iy * rdata->nt + it])) {
                 model->fdsigma_ydp(it, rdata);
             } else {
-                for (int ip = 0; ip < rdata->nplist; ip++) {
+                for (int ip = 0; ip < model->nplist(); ip++) {
                     model->dsigmaydp[ip * model->ny + iy] = 0;
                 }
             }
-            for (int ip = 0; ip < rdata->nplist; ip++) {
-                rdata->ssigmay[it + rdata->nt * (ip * model->ny + iy)] =
+            for (int ip = 0; ip < model->nplist(); ip++) {
+                rdata->ssigmay[(it * model->nplist() + ip) * model->ny + iy] =
                     model->dsigmaydp[ip * model->ny + iy];
             }
         } else {
-            for (int ip = 0; ip < rdata->nplist; ip++) {
-                rdata->ssigmay[it + rdata->nt * (ip * model->ny + iy)] = 0;
+            for (int ip = 0; ip < model->nplist(); ip++) {
+                rdata->ssigmay[(it * model->nplist() + ip) * model->ny + iy] = 0;
             }
         }
     }
