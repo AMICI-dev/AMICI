@@ -4,7 +4,7 @@
 
 namespace amici {
 
-mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const rdata) {
+mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata) {
     /**
       * @brief generates matlab mxArray from a ReturnData object
       * @param rdata ReturnDataObject
@@ -15,7 +15,7 @@ mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const rdata) {
     return matlabSolutionStruct;
 }
 
-mxArray *initMatlabReturnFields(ReturnData const rdata) {
+mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     /**
      * @brief initialises sol object with the corresponding fields
      * @param rdata ReturnDataObject
@@ -44,55 +44,55 @@ mxArray *initMatlabReturnFields(ReturnData const rdata) {
                                               "sx0",
                                               "diagnosis"};
 
-    matlabSolutionStruct =
+    mxArray *matlabSolutionStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
-    writeMatlabField1(matlabSolutionStruct, "status", rdata->status, 1);
+    writeMatlabField0(matlabSolutionStruct, "status", rdata->status);
 
     writeMatlabField1(matlabSolutionStruct, "t", rdata->ts, rdata->nt);
-    writeMatlabField1(matlabSolutionStruct, "llh", rdata->llh, 1);
-    writeMatlabField1(matlabSolutionStruct, "chi2", rdata->chi2, 1);
+    writeMatlabField0(matlabSolutionStruct, "llh", rdata->llh);
+    writeMatlabField0(matlabSolutionStruct, "chi2", rdata->chi2);
 
-    if ((nz > 0) & (ne > 0)) {
+    if ((rdata->nz > 0) & (rdata->ne > 0)) {
         writeMatlabField2(matlabSolutionStruct, "z", rdata->z, rdata->nmaxevent, rdata->nz);
         writeMatlabField2(matlabSolutionStruct, "rz", rdata->rz, rdata->nmaxevent, rdata->nz);
         writeMatlabField2(matlabSolutionStruct, "sigmaz", rdata->sigmaz, rdata->nmaxevent, rdata->nz);
     }
-    if (nx > 0) {
+    if (rdata->nx > 0) {
         writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx);
         writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist);
     }
-    if (ny > 0) {
+    if (rdata->ny > 0) {
         writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny);
         writeMatlabField2(matlabSolutionStruct, "sigmay", rdata->sigmay, rdata->nt, rdata->ny);
     }
-    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         writeMatlabField2(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist, 1);
 
-        if (sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
             writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nx, rdata->nplist);
-            if (ny > 0) {
-                writeMatlabField3(matlabSolutionStruct, "sy", rdata->sy, rdata->ny, rdata->nplist);
+            if (rdata->ny > 0) {
+                writeMatlabField3(matlabSolutionStruct, "sy", rdata->sy, rdata->nt, rdata->ny, rdata->nplist);
             }
-            if ((nz > 0) & (ne > 0)) {
+            if ((rdata->nz > 0) & (rdata->ne > 0)) {
                 writeMatlabField3(matlabSolutionStruct, "srz", rdata->srz, rdata->nmaxevent, rdata->nz, rdata->nplist);
-                if (sensi >= AMICI_SENSI_ORDER_SECOND) {
+                if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
                     writeMatlabField4(matlabSolutionStruct, "s2rz", rdata->s2rz, rdata->nmaxevent, rdata->nztrue, rdata->nplist,
-                               nplist);
+                               rdata->nplist);
                 }
                 writeMatlabField3(matlabSolutionStruct, "sz", rdata->sz, rdata->nmaxevent, rdata->nz, rdata->nplist);
             }
         }
 
-        if (ny > 0) {
-            writeMatlabField3(matlabSolutionStruct, "ssigmay", rdata->nt, rdata->ny, rdata->nplist);
+        if (rdata->ny > 0) {
+            writeMatlabField3(matlabSolutionStruct, "ssigmay", rdata->ssigmay, rdata->nt, rdata->ny, rdata->nplist);
         }
-        if ((nz > 0) & (ne > 0)) {
-            writeMatlabField3(matlabSolutionStruct, "ssigmaz", rdata->nmaxevent, rdata->nz, rdata->nplist);
+        if ((rdata->nz > 0) & (rdata->ne > 0)) {
+            writeMatlabField3(matlabSolutionStruct, "ssigmaz", rdata->ssigmaz, rdata->nmaxevent, rdata->nz, rdata->nplist);
         }
 
-        if (sensi >= AMICI_SENSI_ORDER_SECOND) {
-            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, nJ - 1, rdata->nplist);
+        if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nJ - 1, rdata->nplist);
         }
     }
 
@@ -102,7 +102,7 @@ mxArray *initMatlabReturnFields(ReturnData const rdata) {
     return(matlabSolutionStruct);
 }
 
-mxArray *initMatlabDiagnosisFields(ReturnData const rdata) {
+mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     /**
      * @brief initialises diagnosis object with the corresponding fields
      * @param rdata ReturnDataObject
@@ -124,7 +124,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const rdata) {
                                               "newton_numlinsteps",
                                               "newton_time"};
 
-    matlabDiagnosisStruct =
+    mxArray *matlabDiagnosisStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
     writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
@@ -133,17 +133,16 @@ mxArray *initMatlabDiagnosisFields(ReturnData const rdata) {
     writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, rdata->nt);
 
-    if (nx > 0) {
-        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot.data(), rdata->nx);
-        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->nx, rdata->nx);
-        writeMatlabField1(matlabDiagnosisStruct, "newton_status", rdata->newston_status, 1);
-        writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newston_numsteps, 2);
-        writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newston_numlinsteps, rdata->newton_maxsteps,
-                   2);
-        writeMatlabField1(matlabDiagnosisStruct, "newton_time", rdata->newston_time, 1);
+    if (rdata->nx > 0) {
+        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
+        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx);
+        writeMatlabField0(matlabDiagnosisStruct, "newton_status", rdata->newton_status);
+        writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newton_numsteps, 2);
+        writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2);
+        writeMatlabField0(matlabDiagnosisStruct, "newton_time", rdata->newton_time);
     }
-    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (sensi_meth == AMICI_SENSI_ASA) {
+    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numrhsevals, rdata->nt);
@@ -154,9 +153,26 @@ mxArray *initMatlabDiagnosisFields(ReturnData const rdata) {
     return(matlabDiagnosisStruct);
 }
 
+
+template<typename T>
+void writeMatlabField0(mxArray *matlabSolutionStruct, const char *fieldName,
+                       T fielddata) {
+    /**
+     * @brief initialise vector and attach to the field
+     * @param fieldPointer pointer of the field to which the vector will be
+     * attached
+     * @param fieldName Name of the field to which the vector will be attached
+     */
+    
+    mxArray *matlab_array = mxCreateDoubleMatrix(1, 1, mxREAL);
+    mxSetField(matlabSolutionStruct, 0, fieldName, matlab_array);
+    double *c_array = mxGetPr(matlab_array);
+    c_array[0] = static_cast<double>(fielddata);
+}
+
 template<typename T>
 void writeMatlabField1(mxArray *matlabSolutionStruct, const char *fieldName,
-                       const std::vector<T> fielddata, dim0) {
+                       const std::vector<T> fieldData, int dim0) {
     /**
      * @brief initialise vector and attach to the field
      * @param fieldPointer pointer of the field to which the vector will be
@@ -164,13 +180,15 @@ void writeMatlabField1(mxArray *matlabSolutionStruct, const char *fieldName,
      * @param fieldName Name of the field to which the vector will be attached
      * @param dim0 number of elements in the vector
      */
+    if(fieldData.size() != dim0) {
+        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+    }
     
-    assert(fielddata.length() == dim0);
-    
-    mxArray *array = mxCreateDoubleMatrix(dim, 1, mxREAL);
-    mxSetField(matlabSolutionStruct, 0, fieldName, array);
-    for(int i = 0; i < dim, i++)
-        array[i] = static_cast<double>(fielddata[i]);
+    mxArray *matlab_array = mxCreateDoubleMatrix(dim0, 1, mxREAL);
+    mxSetField(matlabSolutionStruct, 0, fieldName, matlab_array);
+    double *c_array = mxGetPr(matlab_array);
+    for(int i = 0; i < dim0; i++)
+        c_array[i] = static_cast<double>(fieldData[i]);
 }
 
 template<typename T>
@@ -184,17 +202,18 @@ void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
      * @param dim0 number of rows in the tensor
      * @param dim1 number of columns in the tensor
      */
-    assert(fielddata.length() == dim0*dim1);
-    
+    if(fieldData.size() != dim0*dim1) {
+        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+    }
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1)};
     
-    array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
     /* transform rowmajor (c++) to colmajor (matlab) */
     for (int i = 0; i < dim0; i++) {
-        for (int j = 0; j < dim1]; j++) {
-            array[i + (j + k*dim1)*dim0] =
-                static_cast<double>(fieldData[(i*dim1 + j)*dim2 + k]);
+        for (int j = 0; j < dim1; j++) {
+            array[i + j*dim0] =
+                static_cast<double>(fieldData[i*dim1 + j]);
         }
     }
 }
@@ -212,11 +231,13 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
      * @param dim1 number of columns in the tensor
      * @param dim2 number of elements in the third dimension of the tensor
      */
-    assert(fielddata.length() == dim0*dim1*dim2);
+    if(fieldData.size() != dim0*dim1*dim2) {
+        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+    }
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1), (mwSize)(dim2)};
     
-    array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
     /* transform rowmajor (c++) to colmajor (matlab) */
     for (int i = 0; i < dim0; i++) {
@@ -243,17 +264,19 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
      * @param dim2 number of elements in the third dimension of the tensor
      * @param dim3 number of elements in the fourth dimension of the tensor
      */
-    assert(fielddata.length() == dim0*dim1*dim2*dim3);
+    if(fieldData.size() != dim0*dim1*dim2*dim3) {
+        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+    }
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
     
-    array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
     /* transform rowmajor (c++) to colmajor (matlab) */
     for (int i = 0; i < dim0; i++) {
-        for (int j = 0; j < dim1]; j++) {
+        for (int j = 0; j < dim1; j++) {
             for (int k = 0; k < dim2; k++) {
-                for (int l = 0; ; < dim3; l++) {
+                for (int l = 0; l < dim3; l++) {
                     array[i + (j + (k + l*dim2)*dim1)*dim0] =
                     static_cast<double>(fieldData[((i*dim1 + j)*dim2 + k)*dim3 + l]);
                 }
@@ -262,10 +285,10 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
     }
 }
 
-double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> *dim) {
-    mxArray *array = mxCreateNumericArray(dim.length(), dim.data(), mxDOUBLE_CLASS, mxREAL);
+double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> dim) {
+    mxArray *array = mxCreateNumericArray(dim.size(), dim.data(), mxDOUBLE_CLASS, mxREAL);
     mxSetField(matlabStruct, 0, fieldName, array);
-    return(array)
+    return(mxGetPr(array));
 }
 
 

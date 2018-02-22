@@ -2,6 +2,8 @@
 #define AMICI_RDATA_H
 
 #include <include/amici_defines.h>
+#include <vector>
+#include <include/amici_exception.h>
 
 namespace amici {
 class Model;
@@ -141,10 +143,10 @@ class ReturnData {
     double newton_time;
 
     /** number of Newton steps for steady state problem */
-    int newton_numsteps;
+    std::vector<int> newton_numsteps;
 
     /** number of linear steps by Newton step for steady state problem */
-    int newton_numlinsteps;
+    std::vector<int> newton_numlinsteps;
 
     /** preequilibration steady state found be Newton solver */
     std::vector<realtype> x0;
@@ -167,29 +169,6 @@ class ReturnData {
 
     /** status code (double[1]) */
     int status = 0;
-
-  protected:
-
-    ReturnData(const Solver &solver, const Model *model,
-               bool initializeFields);
-
-    virtual void initFields();
-
-    virtual void initField1(std::vector<realtype> *fieldPointer, const char *fieldName,
-                            int dim);
-
-    virtual void initField2(std::vector<realtype> *fieldPointer, const char *fieldName,
-                            int dim1, int dim2);
-
-    virtual void initField3(std::vector<realtype> *fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3);
-
-    virtual void initField4(std::vector<realtype> *fieldPointer, const char *fieldName,
-                            int dim1, int dim2, int dim3, int dim4);
-
-    /** flag indicating whether memory for fields needs to be freed on
-     * destruction */
-    bool freeFieldsOnDestruction = true;
 
   public:
     /** total number of model parameters */

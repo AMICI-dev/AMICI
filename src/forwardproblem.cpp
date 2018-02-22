@@ -305,7 +305,7 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
        (realtype)
        we should perform proper casting here. */
     model->fxdot(t, &x, &dx, &xdot);
-    rdata->xdot = xdot.data();
+    rdata->xdot = xdot.getVector();
 
     model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp);
     rdata->J.assign(Jtmp->data,Jtmp->data + model->nx * model->nx);
@@ -413,10 +413,10 @@ void ForwardProblem::prepEventSensis(int ie) {
                         edata->sigmaz[nroots.at(ie) +
                                       rdata->nmaxevent * iz];
                     }
-                    rdata->sigmaz[nroots.at(ie)*nz + iz] =
+                    rdata->sigmaz[nroots.at(ie)*model->nz + iz] =
                     model->sigmaz[iz];
                     for (int ip = 0; ip < model->nplist(); ip++) {
-                        rdata->ssigmaz[(nroots.at(ie)*model->np+ip)*
+                        rdata->ssigmaz[(nroots.at(ie)*model->np()+ip)*
                                        model->nz + iz] =
                         model->dsigmazdp[iz + model->nz * ip];
                     }

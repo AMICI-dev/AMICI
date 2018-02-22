@@ -514,12 +514,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
         
         /* ensures that plhs[0] is available */
-        auto rdata = amici::runAmiciSimulation(*solver, edata.get(), rdata.get(), *model);
-        plhs[0] = getReturnDataMatlabFromAmiciCall(rdata);
-        
-        amici::runAmiciSimulation(*solver, edata.get(), rdata.get(), *model);
+        auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
+        plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
+
     } catch(std::exception& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI execution failed:\n%s",ex.what());
+        amici::errMsgIdAndTxt("AMICI:mex","AMICI execution failed:\n%s",ex.what());
     } catch(...) {
         amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }

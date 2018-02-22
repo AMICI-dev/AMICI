@@ -37,7 +37,7 @@ namespace amici {
  * @return rdata pointer to return data object @type ReturnData
  */
 ReturnData *getSimulationResults(Model &model, const ExpData *edata, Solver &solver) {
-    return runAmiciSimulation(solver, edata, model);
+    return runAmiciSimulation(solver, edata, model).get();
 }
 
 /*!

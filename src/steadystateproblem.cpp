@@ -208,8 +208,8 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
      */
 
     /* Get time for Newton solve */
-    rdata->newton_time[0] = run_time;
-    rdata->newton_status[0] = newton_status;
+    rdata->newton_time = run_time;
+    rdata->newton_status = newton_status;
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
