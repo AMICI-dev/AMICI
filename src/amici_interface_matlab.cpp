@@ -96,7 +96,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc) {
-    assert(layout == AMICI_BLAS_ColMajor);
+    //assert(layout == AMICI_BLAS_RowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -140,7 +140,7 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY) {
-    assert(layout == AMICI_BLAS_ColMajor);
+    //assert(layout == AMICI_BLAS_RowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;

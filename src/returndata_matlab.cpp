@@ -61,6 +61,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
         writeMatlabField2(matlabSolutionStruct, "sigmaz", rdata->sigmaz, rdata->nmaxevent, rdata->nz);
     }
     if (rdata->nx > 0) {
+        writeMatlabField2(matlabSolutionStruct, "x", rdata->x, rdata->nt, rdata->nx);
         writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx);
         writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist);
     }

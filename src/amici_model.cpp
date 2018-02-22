@@ -123,7 +123,7 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     // dJydx         nJ x nx x nt
     getmy(it,edata);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (isNaN(my.at(it*ny+iyt)))
+        if (isNaN(my.at(iyt)))
             continue;
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
