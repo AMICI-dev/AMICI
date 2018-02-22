@@ -164,14 +164,16 @@ void writeMatlabField0(mxArray *matlabSolutionStruct, const char *fieldName,
      * @param fieldName Name of the field to which the vector will be attached
      */
     
-    mxArray *matlab_array = mxCreateDoubleMatrix(1, 1, mxREAL);
-    mxSetField(matlabSolutionStruct, 0, fieldName, matlab_array);
-    double *c_array = mxGetPr(matlab_array);
-    c_array[0] = static_cast<double>(fielddata);
+    std::vector<mwSize> dim = {(mwSize)(1), (mwSize)(1)};
+    
+    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
+    
+    /* transform rowmajor (c++) to colmajor (matlab) */
+    array[0] = static_cast<double>(fielddata);
 }
 
 template<typename T>
-void writeMatlabField1(mxArray *matlabSolutionStruct, const char *fieldName,
+void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
                        const std::vector<T> fieldData, int dim0) {
     /**
      * @brief initialise vector and attach to the field
@@ -184,11 +186,13 @@ void writeMatlabField1(mxArray *matlabSolutionStruct, const char *fieldName,
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
     }
     
-    mxArray *matlab_array = mxCreateDoubleMatrix(dim0, 1, mxREAL);
-    mxSetField(matlabSolutionStruct, 0, fieldName, matlab_array);
-    double *c_array = mxGetPr(matlab_array);
+    std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(1)};
+    
+    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
+    
+    /* transform rowmajor (c++) to colmajor (matlab) */
     for(int i = 0; i < dim0; i++)
-        c_array[i] = static_cast<double>(fieldData[i]);
+        array[i] = static_cast<double>(fieldData[i]);
 }
 
 template<typename T>
@@ -244,7 +248,7 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
         for (int j = 0; j < dim1; j++) {
             for (int k = 0; k < dim2; k++) {
                 array[i + (j + k*dim1)*dim0] =
-                static_cast<double>(fieldData[(i*dim1 + j)*dim2 + k]);
+                    static_cast<double>(fieldData[(i*dim1 + j)*dim2 + k]);
             }
         }
     }
@@ -278,7 +282,7 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
             for (int k = 0; k < dim2; k++) {
                 for (int l = 0; l < dim3; l++) {
                     array[i + (j + (k + l*dim2)*dim1)*dim0] =
-                    static_cast<double>(fieldData[((i*dim1 + j)*dim2 + k)*dim3 + l]);
+                        static_cast<double>(fieldData[((i*dim1 + j)*dim2 + k)*dim3 + l]);
                 }
             }
         }
