@@ -43,6 +43,19 @@ TEST(groupSteadystate, testCloneModel) {
 }
 
 
+TEST(groupSteadystate, testReuseSolver) {
+    auto model = getModel();
+    auto solver = model->getSolver();
+
+    amici::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
+    amici::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
+
+    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
+    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
+}
+
+
+
 TEST(groupSteadystate, testSimulation) {
     amici::simulateAndVerifyFromFile("/model_steadystate/nosensi/");
     amici::simulateAndWriteToFile("/model_steadystate/nosensi/");
