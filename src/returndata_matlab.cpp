@@ -265,7 +265,7 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
      * @param dim3 number of elements in the fourth dimension of the tensor
      */
     if(fieldData.size() != dim0*dim1*dim2*dim3) {
-        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results!",fieldName);
     }
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
@@ -286,6 +286,9 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
 }
 
 double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> dim) {
+    if(!mxGetField(matlabStruct, 0, fieldName))
+        throw AmiException("Trying to access non-existent field %s!",fieldName);
+
     mxArray *array = mxCreateNumericArray(dim.size(), dim.data(), mxDOUBLE_CLASS, mxREAL);
     mxSetField(matlabStruct, 0, fieldName, array);
     return(mxGetPr(array));
