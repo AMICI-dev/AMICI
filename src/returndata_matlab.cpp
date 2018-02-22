@@ -99,7 +99,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
         }
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nplist, rdata->nJ - 1, perm2);
+            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nplist, rdata->nJ - 1, perm1);
         }
     }
 

@@ -125,6 +125,10 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
+    // dJydy A[nyt,nJ,ny] * dydx B[ny,nx] = dJydx C[it,nJ,nx]
+    //         slice                                slice
+    //             M  K            K  N                M  N
+    //             lda             ldb                 ldc
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
                     &dJydx->at(it*nx*nJ), nJ);

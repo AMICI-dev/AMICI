@@ -182,7 +182,7 @@ function example_steadystate
     for it = 1:length(t)
         tt = [0,t(it)];
         solss = simulate_model_steadystate(tt,log10(p),k,[],options);
-        ssxdot(it,:) = solss.xdot;
+        ssxdot(it,:) = solss.diagnosis.xdot;
     end
     
     % Compute steady state wihtout integration before
@@ -201,10 +201,10 @@ function example_steadystate
         hold on;
         for ix = 1:size(sol.x,2)
             plot(t,abs(ssxdot(:,ix)),'o-','Color',c_x(ix,:));
-            plot([10 1000], abs(sol_newton_fail.xdot(ix))*[1, 1],'--','Color',c_x(ix,:));
+            plot([10 1000], abs(sol_newton_fail.diagnosis.xdot(ix))*[1, 1],'--','Color',c_x(ix,:));
         end
         plot(t,sqrt(sum(ssxdot.^2,2)), 'ko-');
-        plot([10 1000],sqrt(sum(sol_newton_fail.xdot.^2,2))*[1, 1], 'k--');
+        plot([10 1000],sqrt(sum(sol_newton_fail.diagnosis.xdot.^2,2))*[1, 1], 'k--');
         legend('dx_1/dt','dx_1/dt, ss','dx_2/dt','dx_2/dt, ss',...
             'dx_3/dt','dx_3/dt, ss','||dx/dt||','||dx/dt||, ss',...
             'Location','NorthEastOutside');
@@ -218,7 +218,7 @@ function example_steadystate
         
         subplot(1,3,3);
         hold on;
-        bar(sol_newton_fail.newton_numsteps);
+        bar(sol_newton_fail.diagnosis.newton_numsteps);
         legend boxoff;
         title('Number of Newton steps');
         xlabel('Solver run');

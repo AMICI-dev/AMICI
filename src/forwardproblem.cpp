@@ -135,7 +135,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* fill events */
-    if (model->ne > 0) {
+    if (model->nz > 0) {
         getEventOutput();
     }
 
@@ -194,8 +194,9 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         }
         *tlastroot = t;
     }
-
-    getEventOutput();
+    
+    if(model->nz>0)
+        getEventOutput();
 
     /* if we need to do forward sensitivities later on we need to store the old
      * x and the old xdot */
@@ -332,7 +333,7 @@ void ForwardProblem::getEventOutput() {
         if (rootsfound.at(ie) == 1 || t == model->gett(rdata->nt - 1,rdata)) {
             /* only consider transitions false
              -> true  or event filling*/
-
+            
             model->fz(nroots.at(ie), ie, t, &x, rdata);
 
             if (edata) {

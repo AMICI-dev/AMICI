@@ -73,7 +73,7 @@ char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
  * routine dgemm. This routines computes
  * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]
  *
- * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param layout    memory layout.
  * @param TransA    flag indicating whether A should be transposed before
  * multiplication
  * @param TransB    flag indicating whether B should be transposed before

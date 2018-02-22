@@ -39,22 +39,23 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
     J.resize(nx * nx, getNaN());
 
-    z.resize(nmaxevent * nz, getNaN());
-    sigmaz.resize(nmaxevent * nz, getNaN());
-    sz.resize(nmaxevent * nz * nplist, getNaN());
-    ssigmaz.resize(nmaxevent * nz * nplist, getNaN());
-    rz.resize(nmaxevent * nz, getNaN());
-    srz.resize(nmaxevent * nz * nplist, getNaN());
-    s2rz.resize(nmaxevent * nz * nplist * nplist, getNaN());
+    // initialize with 0.0, so we only need to write non-zero values
+    z.resize(nmaxevent * nz, 0.0);
+    sigmaz.resize(nmaxevent * nz, 0.0);
+    sz.resize(nmaxevent * nz * nplist, 0.0);
+    ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
+    rz.resize(nmaxevent * nz, 0.0);
+    srz.resize(nmaxevent * nz * nplist, 0.0);
+    s2rz.resize(nmaxevent * nz * nplist * nplist, 0.0);
 
-    x.resize(nt * nx, getNaN());
-    sx.resize(nt * nx * nplist, getNaN());
+    x.resize(nt * nx, 0.0);
+    sx.resize(nt * nx * nplist, 0.0);
     
-    y.resize(nt * model->ny, getNaN());
-    sigmay.resize(nt * model->ny, getNaN());
+    y.resize(nt * model->ny, 0.0);
+    sigmay.resize(nt * model->ny, 0.0);
     res.clear();
-    sy.resize(nt * model->ny * nplist, getNaN());
-    ssigmay.resize(nt * model->ny * nplist, getNaN());
+    sy.resize(nt * model->ny * nplist, 0.0);
+    ssigmay.resize(nt * model->ny * nplist, 0.0);
     sres.clear();
 
     numsteps.resize(nt, getNaN());
@@ -72,8 +73,8 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     x0.resize(nx, getNaN());
     sx0.resize(nx * nplist, getNaN());
     
-    sllh.resize(nplist, getNaN());
-    s2llh.resize(nplist * (model->nJ - 1), getNaN());
+    sllh.resize(nplist, 0.0);
+    s2llh.resize(nplist * (model->nJ - 1), 0.0);
 }
 
 void ReturnData::invalidate(const realtype t) {
@@ -138,19 +139,17 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
             coefficient = log(10.0);
             for (int ip = 0; ip < nplist; ++ip)
                 pcoefficient.at(ip) = unscaledParameters[model->plist(ip)] * log(10);
-            if (sensi == AMICI_SENSI_ORDER_SECOND)
-                if (o2mode == AMICI_O2MODE_FULL)
-                    for (int ip = 0; ip < np; ++ip)
-                        augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
+            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
+                for (int ip = 0; ip < np; ++ip)
+                    augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
             break;
         case AMICI_SCALING_LN:
             coefficient = 1.0;
             for (int ip = 0; ip < nplist; ++ip)
                 pcoefficient.at(ip) = unscaledParameters[model->plist(ip)];
-            if (sensi == AMICI_SENSI_ORDER_SECOND)
-                if (o2mode == AMICI_O2MODE_FULL)
-                    for (int ip = 0; ip < np; ++ip)
-                        augcoefficient.at(ip) = unscaledParameters.at(ip);
+            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
+                for (int ip = 0; ip < np; ++ip)
+                    augcoefficient.at(ip) = unscaledParameters.at(ip);
             break;
         case AMICI_SCALING_NONE:
             // this should never be reached
@@ -161,7 +160,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity
         // analysis
-        if (sensi == AMICI_SENSI_ORDER_SECOND) {
+        if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL) {
             if (sensi_meth == AMICI_SENSI_ASA) {
                 for (int ip = 0; ip < nplist; ++ip)
                     for (int ix = 0; ix < nxtrue; ++ix)
@@ -222,12 +221,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         for (int iJ = 1; iJ < nJ; ++iJ)                                         \
             for (int IND1 = 0; IND1 < N1T; ++IND1)                              \
                 for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
-                    s##QUANT.at((ip * N1 + iJ * N1T + IND1) * N2 + IND2) *=     \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) *=       \
                         pcoefficient.at(ip) * augcoefficient[iJ - 1];           \
                     if (model->plist(ip) == iJ - 1)                             \
-                        s##QUANT[(ip * N1 + iJ * N1T + IND1) * N2 +             \
-                                 IND2] +=                                       \
-                            s##QUANT.at((ip * N1 + IND1) * N2 + IND2) *         \
+                        s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) +=   \
+                            s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *    \
                             coefficient;                                        \
                 }
 
@@ -250,11 +248,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     for (int ip = 0; ip < nplist; ++ip)                                         \
         for (int IND1 = 0; IND1 < N1T; ++IND1)                                  \
             for (int IND2 = 0; IND2 < N2; ++IND2) {                             \
-                s##QUANT.at((ip * N1 + N1T + IND1) * N2 + IND2) *=              \
+                s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) *=              \
                     pcoefficient.at(ip);                                        \
-                s##QUANT.at((ip * N1 + N1T + IND1) * N2 + IND2) +=              \
+                s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) +=              \
                     model->k()[nk - nplist + ip] *                              \
-                    s##QUANT.at((ip * N1 + IND1) * N2 + IND2) /                 \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1) /                 \
                     unscaledParameters[model->plist(ip)];                       \
             }
 
