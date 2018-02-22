@@ -43,6 +43,8 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
                                               "x0",
                                               "sx0",
                                               "diagnosis"};
+    
+    checkFieldNames(field_names_sol,numFields);
 
     mxArray *matlabSolutionStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
@@ -118,12 +120,14 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "numstepsB",
                                               "numrhsevalsB",
                                               "numerrtestfailsB",
-                                              "numnonlinsolvconvfailsB"
+                                              "numnonlinsolvconvfailsB",
                                               "newton_status",
                                               "newton_numsteps",
                                               "newton_numlinsteps",
                                               "newton_time"};
-
+    
+    checkFieldNames(field_names_sol,numFields);
+    
     mxArray *matlabDiagnosisStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
@@ -155,7 +159,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 
 
 template<typename T>
-void writeMatlabField0(mxArray *matlabSolutionStruct, const char *fieldName,
+void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
                        T fielddata) {
     /**
      * @brief initialise vector and attach to the field
@@ -290,12 +294,23 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
 }
 
 double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> dim) {
-    if(!mxGetField(matlabStruct, 0, fieldName))
-        throw AmiException("Trying to access non-existent field %s!",fieldName);
+    if(!mxIsStruct(matlabStruct))
+        throw AmiException("Passing non-struct mxArray to initAndAttachArray!",fieldName);
+    
+    int fieldNumber = mxGetFieldNumber(matlabStruct, fieldName);
+    if(fieldNumber<0)
+        throw AmiException("Trying to access non-existent field '%s'!",fieldName);
 
     mxArray *array = mxCreateNumericArray(dim.size(), dim.data(), mxDOUBLE_CLASS, mxREAL);
-    mxSetField(matlabStruct, 0, fieldName, array);
+    mxSetFieldByNumber(matlabStruct, 0, fieldNumber, array);
     return(mxGetPr(array));
+}
+
+void checkFieldNames(const char **fieldNames,const int fieldCount) {
+    for (int ifield = 0; ifield<fieldCount; ifield++) {
+        if(!fieldNames[ifield])
+            throw AmiException("Incorrect field name allocation, number of fields is smaller than fieldCount!");
+    }
 }
 
 

@@ -29,6 +29,8 @@ void writeMatlabField4(mxArray *matlabstruct, const char *fieldName, std::vector
 
 double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> dim);
 
+void checkFieldNames(const char **fieldNames,const int fieldCount);
+
 } // namespace amici
 
 #endif // RETURNDATA_MATLAB_H

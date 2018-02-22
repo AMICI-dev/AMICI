@@ -516,7 +516,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         /* ensures that plhs[0] is available */
         auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
         plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
-
+    } catch (amici::AmiException& ex) {
+        amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI execution failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
     } catch(std::exception& ex) {
         amici::errMsgIdAndTxt("AMICI:mex","AMICI execution failed:\n%s",ex.what());
     } catch(...) {
