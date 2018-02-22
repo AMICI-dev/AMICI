@@ -16,17 +16,10 @@ function getFun(this,HTable,funstr)
 
     if(~isfield(this.fun,funstr)) % check whether we already computed the respective fun
         if(~all(strcmp(fun.deps,funstr))) % prevent infinite loops
-            % check whether the corresponding c file exists, if not we have to
-            % force recompilation by passing an empty HTable
-            if(~exist(fullfile(wrap_path,'models',this.modelname,[this.modelname '_' funstr '.cpp']),'file') ...
-                    || and(~exist(fullfile(wrap_path,'models',this.modelname,[funstr  '_' this.modelname '.m'])),ismember(funstr,this.mfuns)))
+            if(this.recompile)
                 cflag = this.checkDeps([],fun.deps);
             else
-                if(this.recompile)
-                    cflag = this.checkDeps([],fun.deps);
-                else
-                    cflag = this.checkDeps(HTable,fun.deps);
-                end
+                cflag = this.checkDeps(HTable,fun.deps);
             end
         else
             if(~isempty(fun.deps))
