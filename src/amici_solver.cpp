@@ -22,6 +22,12 @@ namespace amici {
  * @param model pointer to the model object
  */
 void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
+    if (ami_mem) {
+        /* This solver was used before. Not sure what we need to do to reuse the allocated
+         *  memory, so just free here and then reallocate. */
+        AMIFree();
+    }
+
     model->initialize(fwd->getStatePointer(), fwd->getStateDerivativePointer());
 
     /* Create solver memory object */
