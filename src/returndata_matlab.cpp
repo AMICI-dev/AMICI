@@ -49,6 +49,10 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     mxArray *matlabSolutionStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
+    std::vector<int> perm1 = {0, 1};
+    std::vector<int> perm2 = {0, 2, 1};
+    std::vector<int> perm3 = {0, 2, 3, 1};
+    
     writeMatlabField0(matlabSolutionStruct, "status", rdata->status);
 
     writeMatlabField1(matlabSolutionStruct, "t", rdata->ts, rdata->nt);
@@ -56,46 +60,46 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     writeMatlabField0(matlabSolutionStruct, "chi2", rdata->chi2);
 
     if ((rdata->nz > 0) & (rdata->ne > 0)) {
-        writeMatlabField2(matlabSolutionStruct, "z", rdata->z, rdata->nmaxevent, rdata->nz);
-        writeMatlabField2(matlabSolutionStruct, "rz", rdata->rz, rdata->nmaxevent, rdata->nz);
-        writeMatlabField2(matlabSolutionStruct, "sigmaz", rdata->sigmaz, rdata->nmaxevent, rdata->nz);
+        writeMatlabField2(matlabSolutionStruct, "z", rdata->z, rdata->nmaxevent, rdata->nz, perm1);
+        writeMatlabField2(matlabSolutionStruct, "rz", rdata->rz, rdata->nmaxevent, rdata->nz, perm1);
+        writeMatlabField2(matlabSolutionStruct, "sigmaz", rdata->sigmaz, rdata->nmaxevent, rdata->nz, perm1);
     }
     if (rdata->nx > 0) {
-        writeMatlabField2(matlabSolutionStruct, "x", rdata->x, rdata->nt, rdata->nx);
-        writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx);
-        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist);
+        writeMatlabField2(matlabSolutionStruct, "x", rdata->x, rdata->nt, rdata->nx, perm1);
+        writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx, perm1);
+        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist, perm1);
     }
     if (rdata->ny > 0) {
-        writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny);
-        writeMatlabField2(matlabSolutionStruct, "sigmay", rdata->sigmay, rdata->nt, rdata->ny);
+        writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny, perm1);
+        writeMatlabField2(matlabSolutionStruct, "sigmay", rdata->sigmay, rdata->nt, rdata->ny, perm1);
     }
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        writeMatlabField2(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist, 1);
+        writeMatlabField1(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist);
 
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-            writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nx, rdata->nplist);
+            writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nplist, rdata->nx, perm2);
             if (rdata->ny > 0) {
-                writeMatlabField3(matlabSolutionStruct, "sy", rdata->sy, rdata->nt, rdata->ny, rdata->nplist);
+                writeMatlabField3(matlabSolutionStruct, "sy", rdata->sy, rdata->nt, rdata->nplist, rdata->ny, perm2);
             }
             if ((rdata->nz > 0) & (rdata->ne > 0)) {
-                writeMatlabField3(matlabSolutionStruct, "srz", rdata->srz, rdata->nmaxevent, rdata->nz, rdata->nplist);
+                writeMatlabField3(matlabSolutionStruct, "srz", rdata->srz, rdata->nmaxevent, rdata->nplist, rdata->nz, perm2);
                 if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-                    writeMatlabField4(matlabSolutionStruct, "s2rz", rdata->s2rz, rdata->nmaxevent, rdata->nztrue, rdata->nplist,
-                               rdata->nplist);
+                    writeMatlabField4(matlabSolutionStruct, "s2rz", rdata->s2rz, rdata->nmaxevent, rdata->nplist, rdata->nztrue,
+                               rdata->nplist, perm3);
                 }
-                writeMatlabField3(matlabSolutionStruct, "sz", rdata->sz, rdata->nmaxevent, rdata->nz, rdata->nplist);
+                writeMatlabField3(matlabSolutionStruct, "sz", rdata->sz, rdata->nmaxevent, rdata->nplist, rdata->nz, perm2);
             }
         }
 
         if (rdata->ny > 0) {
-            writeMatlabField3(matlabSolutionStruct, "ssigmay", rdata->ssigmay, rdata->nt, rdata->ny, rdata->nplist);
+            writeMatlabField3(matlabSolutionStruct, "ssigmay", rdata->ssigmay, rdata->nt, rdata->nplist, rdata->ny, perm2);
         }
         if ((rdata->nz > 0) & (rdata->ne > 0)) {
-            writeMatlabField3(matlabSolutionStruct, "ssigmaz", rdata->ssigmaz, rdata->nmaxevent, rdata->nz, rdata->nplist);
+            writeMatlabField3(matlabSolutionStruct, "ssigmaz", rdata->ssigmaz, rdata->nmaxevent, rdata->nplist, rdata->nz, perm2);
         }
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nJ - 1, rdata->nplist);
+            writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nplist, rdata->nJ - 1, perm2);
         }
     }
 
@@ -132,6 +136,9 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     mxArray *matlabDiagnosisStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
+    std::vector<int> perm1 = {0, 1};
+    std::vector<int> perm1T = {1, 0};
+    
     writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numrhsevals, rdata->nt);
@@ -140,10 +147,10 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 
     if (rdata->nx > 0) {
         writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
-        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx);
+        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1T);
         writeMatlabField0(matlabDiagnosisStruct, "newton_status", rdata->newton_status);
         writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newton_numsteps, 2);
-        writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2);
+        writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "newton_time", rdata->newton_time);
     }
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
@@ -187,9 +194,8 @@ void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
      * @param fieldName Name of the field to which the vector will be attached
      * @param dim0 number of elements in the vector
      */
-    if(fieldData.size() != dim0) {
+    if(fieldData.size() != dim0)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
-    }
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(1)};
     
@@ -202,7 +208,8 @@ void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
-                      const std::vector<T> fieldData, int dim0, int dim1) {
+                      const std::vector<T> fieldData, int dim0, int dim1,
+                      std::vector<int> perm) {
     /**
      * @brief initialise matrix, attach to the field and write data
      * @param matlabStruct Pointer to the matlab structure
@@ -211,18 +218,22 @@ void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
      * @param dim0 number of rows in the tensor
      * @param dim1 number of columns in the tensor
      */
-    if(fieldData.size() != dim0*dim1) {
+    if(fieldData.size() != dim0*dim1)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
-    }
+    
+    if(perm.size() != 2)
+        throw AmiException("Dimension mismatch when applying permutation!");
+    
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1)};
     
-    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, reorder(dim,perm));
     
-    /* transform rowmajor (c++) to colmajor (matlab) */
-    for (int i = 0; i < dim0; i++) {
-        for (int j = 0; j < dim1; j++) {
-            array[i + j*dim0] =
-                static_cast<double>(fieldData[i*dim1 + j]);
+    std::vector<int> index = {0,0};
+    /* transform rowmajor (c++) to colmajor (matlab) and apply permutation */
+    for (index[0] = 0; index[0] < dim[0]; index[0]++) {
+        for (index[1] = 0; index[1] < dim[1]; index[1]++) {
+            array[index[perm[0]] + index[perm[1]]*dim[perm[0]]] =
+                static_cast<double>(fieldData[index[0]*dim[1] + index[1]]);
         }
     }
 }
@@ -230,7 +241,7 @@ void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
 template<typename T>
 void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
                       const std::vector<T> fieldData, int dim0, int dim1,
-                      int dim2) {
+                      int dim2, std::vector<int> perm) {
     /**
      * @brief initialise 3D tensor, attach to the field and write data
      * @param matlabStruct Pointer to the matlab structure
@@ -240,20 +251,23 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
      * @param dim1 number of columns in the tensor
      * @param dim2 number of elements in the third dimension of the tensor
      */
-    if(fieldData.size() != dim0*dim1*dim2) {
+    if(fieldData.size() != dim0*dim1*dim2)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
-    }
+    
+    if(perm.size() != 3)
+        throw AmiException("Dimension mismatch when applying permutation!");
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1), (mwSize)(dim2)};
     
-    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, reorder(dim,perm));
     
-    /* transform rowmajor (c++) to colmajor (matlab) */
-    for (int i = 0; i < dim0; i++) {
-        for (int j = 0; j < dim1; j++) {
-            for (int k = 0; k < dim2; k++) {
-                array[i + (j + k*dim1)*dim0] =
-                    static_cast<double>(fieldData[(i*dim1 + j)*dim2 + k]);
+    std::vector<int> index = {0,0,0};
+    /* transform rowmajor (c++) to colmajor (matlab) and apply permutation */
+    for (index[0] = 0; index[0] < dim[0]; index[0]++) {
+        for (index[1] = 0; index[1] < dim[1]; index[1]++) {
+            for (index[2] = 0; index[2] < dim[2]; index[2]++) {
+                array[index[perm[0]] + (index[perm[1]] + index[perm[2]]*dim[perm[1]])*dim[perm[0]]] =
+                    static_cast<double>(fieldData[(index[0]*dim[1] + index[1])*dim[2] + index[2]]);
             }
         }
     }
@@ -262,7 +276,7 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
 template<typename T>
 void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
                       const std::vector<T> fieldData, int dim0, int dim1,
-                      int dim2, int dim3) {
+                      int dim2, int dim3, std::vector<int> perm) {
     /**
      * @brief initialise 4D tensor, attach to the field and write data
      * @param matlabStruct Pointer to the matlab structure
@@ -273,21 +287,24 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
      * @param dim2 number of elements in the third dimension of the tensor
      * @param dim3 number of elements in the fourth dimension of the tensor
      */
-    if(fieldData.size() != dim0*dim1*dim2*dim3) {
+    if(fieldData.size() != dim0*dim1*dim2*dim3)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results!",fieldName);
-    }
+    
+    if(perm.size() != 4)
+        throw AmiException("Dimension mismatch when applying permutation!");
     
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(dim1), (mwSize)(dim2), (mwSize)(dim3)};
     
-    double *array = initAndAttachArray(matlabStruct, fieldName, dim);
+    double *array = initAndAttachArray(matlabStruct, fieldName, reorder(dim,perm));
     
-    /* transform rowmajor (c++) to colmajor (matlab) */
-    for (int i = 0; i < dim0; i++) {
-        for (int j = 0; j < dim1; j++) {
-            for (int k = 0; k < dim2; k++) {
-                for (int l = 0; l < dim3; l++) {
-                    array[i + (j + (k + l*dim2)*dim1)*dim0] =
-                        static_cast<double>(fieldData[((i*dim1 + j)*dim2 + k)*dim3 + l]);
+    std::vector<int> index = {0,0,0,0};
+    /* transform rowmajor (c++) to colmajor (matlab) and apply permutation */
+    for (index[0] = 0; index[0] < dim[0]; index[0]++) {
+        for (index[1] = 0; index[1] < dim[1]; index[1]++) {
+            for (index[2] = 0; index[2] < dim[2]; index[2]++) {
+                for (index[3] = 0; index[3] < dim[3]; index[3]++) {
+                    array[index[perm[0]] + (index[perm[1]] + (index[perm[2]] + index[perm[3]]*dim[perm[2]])*dim[perm[1]])*dim[perm[0]]] =
+                        static_cast<double>(fieldData[((index[0]*dim[1] + index[1])*dim[2] + index[2])*dim[3] + index[3]]);
                 }
             }
         }
@@ -312,6 +329,17 @@ void checkFieldNames(const char **fieldNames,const int fieldCount) {
         if(!fieldNames[ifield])
             throw AmiException("Incorrect field name allocation, number of fields is smaller than fieldCount!");
     }
+}
+
+template<typename T>
+std::vector<T> reorder(const std::vector<T> input, const std::vector<int> order) {
+    if(order.size() != input.size())
+        throw AmiException("Input dimension mismatch!");
+    std::vector<T> reordered;
+    reordered.resize(input.size());
+    for(int i = 0; i < input.size(); i++)
+        reordered[i] = input[order[i]];
+    return(reordered);
 }
 
 

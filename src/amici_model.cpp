@@ -18,7 +18,7 @@ void Model::fsy(const int it, ReturnData *rdata) {
     for (int ip = 0; ip < nplist(); ++ip) {
         for (int iy = 0; iy < ny; ++iy)
             // copy dydp to sy
-            rdata->sy.at(ip * rdata->nt * ny + iy * rdata->nt + it) =
+            rdata->sy.at((it*nplist()+ip)*ny+iy) =
                     dydp.at(iy + ip * ny);
     }
     // compute sy = 1.0*dydx*sx + 1.0*sy
@@ -27,7 +27,7 @@ void Model::fsy(const int it, ReturnData *rdata) {
     //        lda           ldb               ldc
     amici_dgemm(AMICI_BLAS_RowMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, ny, nplist(), nx,
                 1.0, dydx.data(), ny, getsx(it,rdata), nx, 1.0,
-                &rdata->sy[it*nplist()*rdata->ny], ny);
+                &rdata->sy[it*nplist()*ny], ny);
 }
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),

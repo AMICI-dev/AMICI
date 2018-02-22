@@ -574,9 +574,9 @@ void ForwardProblem::getDataSensisFSA(int it) {
         }
     }
     
-    for (int ip = 0; ip < model->nplist(); ip++) {
-        if (model->nx > 0) {
-            for (int ix = 0; ix < model->nx; ix++) {
+    if (model->nx > 0) {
+        for (int ix = 0; ix < model->nx; ix++) {
+            for (int ip = 0; ip < model->nplist(); ip++) {
                 rdata->sx[(it * model->nplist() + ip) * rdata->nx + ix] =
                 sx.at(ix,ip);
             }

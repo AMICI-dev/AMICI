@@ -78,7 +78,7 @@ namespace amici {
             int nFrames = backtrace(callstack, nMaxFrames);
             char **symbols = backtrace_symbols(callstack, nFrames);
             
-            for (int i = 0; i < nFrames; i++) {
+            for (int i = 2; i < nFrames; i++) { // start at 2 to omit AmiException and storeBacktrace call
                 Dl_info info;
                 if (dladdr(callstack[i], &info) && info.dli_sname) {
                     char *demangled = NULL;
