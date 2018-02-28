@@ -22,8 +22,6 @@
 #include "include/backwardproblem.h"
 #include "include/forwardproblem.h"
 
-#include "include/udata.h"
-
 #include <include/amici.h> /* amici functions */
 #include <include/amici_misc.h>
 #include <include/amici_exception.h>
@@ -56,35 +54,27 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
 
 /*!
  * runAmiciSimulation is the core integration routine. It initializes the solver
- * and temporary storage in tdata and
- * runs the forward and backward problem.
+ * and runs the forward and backward problem.
  *
- * @param[in] udata pointer to user data object @type UserData
+ * @param[in] solver Solver instance
  * @param[in] edata pointer to experimental data object @type ExpData
  * @param[in] rdata pointer to return data object @type ReturnData
- * @param[in] model pointer to model specification object @type Model
+ * @param[in] model model specification object @type Model
  */
-void runAmiciSimulation(const UserData *udata, const ExpData *edata,
-                       ReturnData *rdata, Model *model) {
-    if (!udata || udata->nx() != model->nx || udata->np() != model->np() ||
-        udata->nk() != model->nk())
-        throw SetupFailure("udata was not allocated or does not agree with model!");
+void runAmiciSimulation(Solver &solver, const ExpData *edata,
+                       ReturnData *rdata, Model &model) {
     if (!rdata)
         throw SetupFailure("rdata was not allocated!");
 
-    if (model->nx <= 0) {
+    if (model.nx <= 0) {
         return;
     }
-    
-    auto solver = model->getSolver();
-    
-    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(udata,rdata,edata,model,solver.get()));
-    fwd.get()->workForwardProblem();
+
+    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata,edata,&model,&solver));
+    fwd->workForwardProblem();
 
     auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
-    bwd.get()->workBackwardProblem();
-
-    return;
+    bwd->workBackwardProblem();
 }
 
 /*!

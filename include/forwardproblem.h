@@ -7,8 +7,6 @@
 #include <vector>
 namespace amici {
 
-class UserData;
-class TempData;
 class ReturnData;
 class ExpData;
 class Solver;
@@ -21,13 +19,12 @@ class Model;
  */
 class ForwardProblem {
   public:
-    ForwardProblem(const UserData *udata,
-                   ReturnData *rdata, const ExpData *edata,
+    ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
     /** default destructor */
     ~ForwardProblem() {
         DestroyMat(Jtmp);
-    };
+    }
     
     void workForwardProblem();
     
@@ -37,8 +34,6 @@ class ForwardProblem {
     ReturnData *rdata;
     /** pointer to solver instance */
     Solver *solver;
-    /** pointer to user data instance */
-    const UserData *udata;
     /** pointer to experimental data instance */
     const ExpData *edata;
     

@@ -10,8 +10,13 @@ namespace amici {
 
 class IDASolver : public Solver {
   public:
-    IDASolver(){
-    };
+    IDASolver() = default;
+
+    /**
+     * @brief Clone this instance
+     * @return The clone
+     */
+    virtual Solver* clone() const override;
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -149,7 +154,7 @@ class IDASolver : public Solver {
 
     void rootInit(int ne) override;
 
-    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) override;
+    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) override;
 
     void setDenseJacFn() override;
 

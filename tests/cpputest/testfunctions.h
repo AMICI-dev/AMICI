@@ -17,7 +17,6 @@
 
 namespace amici {
 
-class UserData;
 class ReturnData;
 class ExpData;
 
@@ -65,12 +64,13 @@ public:
               const AMICI_o2mode o2mode, const std::vector<realtype> p,
               const std::vector<realtype> k, const std::vector<int> plist,
               const std::vector<realtype> idlist, const std::vector<int> z2event)
-	: Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event) {};
+    : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event) {}
     
     /** default constructor */
 	Model_Test()
-	: Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,AMICI_O2MODE_NONE,std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {};
+    : Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,AMICI_O2MODE_NONE,std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {}
 
+    virtual Model* clone() const override { return new Model_Test(*this); }
 
 	virtual std::unique_ptr<Solver> getSolver() override {
 	 throw AmiException("not implemented");
@@ -114,15 +114,15 @@ void simulateAndWriteToFile(std::string path, double atol, double rtol);
 
 void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol);
 
-ExpData *getTestExpData(const UserData *udata, Model *model);
+ExpData *getTestExpData(Model *model);
 
 bool withinTolerance(double expected, double actual, double atol, double rtol, int index);
 
 void checkEqualArray(const double *expected, const double *actual, int length, double atol, double rtol, const char *name);
 
-void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
+void verifyReturnData(const char *hdffile, const char* resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
 
-void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const UserData*udata, const Model *model, double atol, double rtol);
+void verifyReturnDataSensitivities(hid_t file_id, const char* resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
 
 void printBacktrace(int depth);
 

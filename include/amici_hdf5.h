@@ -1,6 +1,8 @@
 #ifndef AMICI_HDF5_H
 #define AMICI_HDF5_H
 
+#include <string>
+
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
@@ -8,42 +10,57 @@
 
 namespace amici {
 
-class UserData;
 class ReturnData;
 class ExpData;
 class Model;
+class Solver;
 
 /* Functions for reading and writing AMICI data to/from HDF5 files. */
+// TODO: proper type checking, exception instead of return code, c++ api; check if all fields are read and saved
+/**
+ * @brief Read solver options from HDF5 file
+ * @param fileId hdf5 file handle to read from
+ * @param solver solver to set options on
+ * @param datasetPath Path inside the HDF5 file
+ */
+void readSolverSettingsFromHDF5(hid_t fileId, Solver& solver, std::string const& datasetPath);
+
+/**
+ * @brief Read solver options from HDF5 file
+ * @param hdffile Name of HDF5 file
+ * @param solver solver to set options on
+ * @param datasetPath Path inside the HDF5 file
+ */
+void readSolverSettingsFromHDF5(std::string const& hdffile, Solver& solver, std::string const& datasetPath);
+
+/**
+ * @brief Read model data from HDF5 file
+ * @param hdffile Name of HDF5 file
+ * @param model model to set data on
+ * @param datasetPath Path inside the HDF5 file
+ */
+void readModelDataFromHDF5(std::string const& hdffile, Model& model, std::string const& datasetPath);
+
+/**
+ * @brief Read model data from HDF5 file
+ * @param fileId hdf5 file handle to read from
+ * @param model model to set data on
+ * @param datasetPath Path inside the HDF5 file
+ */
+void readModelDataFromHDF5(hid_t fileId, Model& model, std::string const& datasetPath);
+
 
 /**
   * @brief AMI_HDF5_writeReturnData writes ReturnData struct to attributes of an
  * HDF5 dataset
   * @param rdata Data to write
-  * @param udata UserData for model from which rdata was obtained.
   * @param hdffile Filename of HDF5 file
   * @param datasetPath Full dataset path inside the HDF5 file (will be created)
   */
 
 void AMI_HDF5_writeReturnData(const ReturnData *rdata,
-                                      const UserData *udata,
                                       const char *hdffile,
                                       const char *datasetPath);
-
-/**
- * @brief AMI_HDF5_readSimulationUserDataFromFileName reads AMICI simulation
- * options from HDF5 file.
- * @param fileName Name of HDF5 file
- * @param datasetPath Path inside the HDF5 file
- * @return
- */
-
-UserData *AMI_HDF5_readSimulationUserDataFromFileName(
-    const char *fileName, const char *datasetPath);
-
-template <class hid_t>
-UserData *AMI_HDF5_readSimulationUserDataFromFileObject(
-    hid_t fileId, const char *datasetPath);
-
 /**
  * @brief AMI_HDF5_readSimulationExpData reads AMICI experimental data from
  * attributes in HDF5 file.
@@ -54,7 +71,6 @@ UserData *AMI_HDF5_readSimulationUserDataFromFileObject(
  */
 
 ExpData *AMI_HDF5_readSimulationExpData(const char *hdffile,
-                                                const UserData *udata,
                                                 const char *dataObject,
                                                 Model *model);
 

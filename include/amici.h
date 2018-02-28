@@ -3,13 +3,16 @@
 
 #include <include/symbolic_functions.h>
 #include <include/amici_defines.h>
+#include <include/amici_model.h>
+#include <include/amici_solver.h>
+#include "include/amici_interface_cpp.h"
 
 namespace amici {
 
-class UserData;
 class ReturnData;
 class ExpData;
 class Model;
+class Solver;
 
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
 
@@ -20,8 +23,8 @@ extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 
-void runAmiciSimulation(const UserData *udata, const ExpData *edata,
-                       ReturnData *rdata, Model *model);
+void runAmiciSimulation(Solver &solver, const ExpData *edata,
+                       ReturnData *rdata, Model &model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,

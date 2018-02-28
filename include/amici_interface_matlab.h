@@ -5,46 +5,43 @@
 #include <mex.h>
 #include <memory>
 
-class UserData;
 class Model;
-extern std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
-extern void getModelDims(int *nx, int *nk, int *np);
+extern std::unique_ptr<amici::Model> getModel();
 
-namespace amici {
-    
-    
+namespace amici {    
 
 class ReturnDataMatlab;
 
 
-
+/**
+ * @brief setModelData sets data from the matlab call to the model object
+ * @param[in] prhs: pointer to the array of input arguments @type mxArray
+ * @param[in] nrhs: number of elements in prhs
+ * @param[in,out] model: model to update
+ */
+void setModelData(const mxArray *prhs[], int nrhs, Model& model);
 
 /**
- * @brief userDataFromMatlabCall extracts information from the matlab call and
- * returns the corresponding UserData struct
+ * @brief setSolverOptions solver options from the matlab call to a solver object
  * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @return udata: struct containing all provided user data @type *UserData
+ * @param[in] nrhs: number of elements in prhs
+ * @param[in,out] solver: solver to update
  */
-template <class mxArray>
-UserData *userDataFromMatlabCall(const mxArray *prhs[], int nrhs);
+void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
 
 /**
  * setupReturnData initialises the return data struct
  * @param[in] plhs user input @type mxArray
- * @param[in] udata pointer to the user data struct @type UserData
  * @return rdata: return data struct @type *ReturnData
  */
-ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs,
-                                  const UserData *udata);
+ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
 
 /**
  * expDataFromMatlabCall initialises the experimental data struct
  * @param[in] prhs user input @type *mxArray
- * @param[in] udata pointer to the user data struct @type UserData
  * @return edata: experimental data struct @type *ExpData
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[], const UserData *udata,
-                               Model *model);
+ExpData *expDataFromMatlabCall(const mxArray *prhs[], Model *model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,

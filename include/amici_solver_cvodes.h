@@ -9,15 +9,31 @@
 
 namespace amici {
 
-class UserData;
 class ExpData;
 class ReturnData;
 class Model_ODE;
+class CVodeSolver;
+}
+
+// for serialization friend in Solver
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version);
+}}
+
+
+namespace amici {
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver(){
-    }
+    CVodeSolver() = default;
+
+    /**
+     * @brief Clone this instance
+     * @return The clone
+     */
+    virtual Solver* clone() const override;
+
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -146,6 +162,12 @@ class CVodeSolver : public Solver {
 
     ~CVodeSolver();
 
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);
+
+    friend bool operator ==(const CVodeSolver &a, const CVodeSolver &b);
+
+
   protected:
     
     void init(AmiVector *x, AmiVector *dx, realtype t) override;
@@ -156,7 +178,7 @@ class CVodeSolver : public Solver {
 
     void rootInit(int ne) override;
 
-    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, const UserData *udata) override;
+    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) override;
 
     void setDenseJacFn() override;
 

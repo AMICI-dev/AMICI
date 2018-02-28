@@ -5,9 +5,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <include/amici_interface_cpp.h> /* AMICI API */
+#include <include/amici.h>               /* AMICI base functions */
 #include <include/amici_hdf5.h>          /* AMICI HDF5 I/O functions */
-#include <include/amici_model.h>
 #include "wrapfunctions.h"               /* model-provided functions */
 
 /* This is a scaffold for a stand-alone AMICI simulation executable
@@ -40,8 +39,8 @@
  */
 
 // Function prototypes
-void processReturnData(amici::ReturnData *rdata, const amici::UserData *udata, amici::Model *model);
-void printReturnData(amici::ReturnData *rdata, const amici::UserData *udata, amici::Model *model);
+void processReturnData(amici::ReturnData *rdata, amici::Model *model);
+void printReturnData(amici::ReturnData *rdata, amici::Model *model);
 
 int main(int argc, char **argv) {
     // HDF5 file to read and write data (full path)
@@ -56,61 +55,50 @@ int main(int argc, char **argv) {
         hdffile = argv[1];
     }
 
-    // Read UserData (AMICI settings and model parameters) from HDF5 file
-    auto udata = std::unique_ptr<const amici::UserData>(
-        amici::AMI_HDF5_readSimulationUserDataFromFileName(hdffile, "/options"));
-    
-    auto model = std::unique_ptr<amici::Model>(getModel(udata.get()));
+    auto model = getModel();
+    auto solver = model->getSolver();
+
+    // Read AMICI settings and model parameters from HDF5 file
+    amici::readModelDataFromHDF5(hdffile, *model, "/options");
+    amici::readSolverSettingsFromHDF5(hdffile, *solver, "/options");
 
     // Read ExpData (experimental data for model) from HDF5 file
-    amici::ExpData *edata =
-        amici::AMI_HDF5_readSimulationExpData(hdffile, udata.get(), "/data", model.get());
+    auto edata = std::unique_ptr<amici::ExpData>(amici::AMI_HDF5_readSimulationExpData(hdffile, "/data", model.get()));
 
     // Run the simulation
-    amici::ReturnData *rdata = amici::getSimulationResults(model.get(), udata.get(), edata);
-    if (rdata == NULL) {
-        if (edata)
-            delete edata;
-        return 1;
-    }
+    auto rdata = std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, edata.get(), *solver));
 
     // Do something with the simulation results
-    processReturnData(rdata, udata.get(), model.get());
+    processReturnData(rdata.get(), model.get());
 
     // Save simulation results to HDF5 file
-    amici::AMI_HDF5_writeReturnData(rdata, udata.get(), hdffile, "/solution");
-
-    // Free memory
-    if (edata)
-        delete edata;
-    if (rdata)
-        delete rdata;
+    amici::AMI_HDF5_writeReturnData(rdata.get(), hdffile, "/solution");
 
     return 0;
 }
 
-void processReturnData(amici::ReturnData *rdata, const amici::UserData *udata, amici::Model *model) {
+void processReturnData(amici::ReturnData *rdata, amici::Model *model) {
     // show some the simulation results
-    printReturnData(rdata, udata, model);
+    printReturnData(rdata, model);
 }
 
-void printReturnData(amici::ReturnData *rdata, const amici::UserData *udata, amici::Model *model) {
+void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     // Print of some the simulation results
 
     printf("Timepoints (tsdata): ");
-    amici::printArray(rdata->ts, udata->nt());
+    amici::printArray(rdata->ts, model->nt());
 
     printf("\n\nStates (xdata):\n");
     for (int i = 0; i < model->nx; ++i) {
-        for (int j = 0; j < udata->nt(); ++j)
-            printf("%e\t", rdata->x[j + udata->nt() * i]);
+        for (int j = 0; j < model->nt(); ++j)
+            printf("%e\t", rdata->x[j + model->nt() * i]);
         printf("\n");
     }
 
     printf("\nObservables (ydata):\n");
     for (int i = 0; i < model->ny; ++i) {
-        for (int j = 0; j < udata->nt(); ++j)
-            printf("%e\t", rdata->y[j + udata->nt() * i]);
+        for (int j = 0; j < model->nt(); ++j)
+            printf("%e\t", rdata->y[j + model->nt() * i]);
         printf("\n");
     }
 
@@ -126,13 +114,13 @@ void printReturnData(amici::ReturnData *rdata, const amici::UserData *udata, ami
     //    }
 
     printf("\nnumsteps: \t\t");
-    amici::printfArray(rdata->numsteps, udata->nt(), "%.0f ");
+    amici::printfArray(rdata->numsteps, model->nt(), "%.0f ");
 
     printf("\nnumrhsevalsdata: \t");
-    amici::printfArray(rdata->numrhsevals, udata->nt(), "%.0f ");
+    amici::printfArray(rdata->numrhsevals, model->nt(), "%.0f ");
 
     printf("\norder: \t\t");
-    amici::printfArray(rdata->order, udata->nt(), "%.0f ");
+    amici::printfArray(rdata->order, model->nt(), "%.0f ");
 
     printf("\n");
     printf("Loglikelihood (llh): %e\n", *rdata->llh);

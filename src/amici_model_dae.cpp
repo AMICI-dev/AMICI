@@ -21,7 +21,7 @@ namespace amici {
                       N_Vector xdot, DlsMat J) {
         fdwdx(t,x);
         SetToZero(J);
-        fJ(J->data,t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJ(J->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                   cj,N_VGetArrayPointer(dx),w.data(),dwdx.data());
     }
 
@@ -40,7 +40,7 @@ namespace amici {
     void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, SlsMat J) {
         fdwdx(t,x);
         SparseSetMatToZero(J);
-        fJSparse(J,t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJSparse(J,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                         cj,N_VGetArrayPointer(dx),w.data(),dwdx.data());
     }
     
@@ -63,7 +63,7 @@ namespace amici {
                        realtype cj) {
         fdwdx(t,x);
         N_VConst(0.0,Jv);
-        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                    cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),w.data(),dwdx.data());
     }
     
@@ -79,7 +79,7 @@ namespace amici {
      */
     void Model_DAE::froot(realtype t, N_Vector x, N_Vector dx, realtype *root) {
         memset(root,0.0,sizeof(realtype)*ne);
-        froot(root,t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        froot(root,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      N_VGetArrayPointer(dx));
     }
     
@@ -96,7 +96,7 @@ namespace amici {
     void Model_DAE::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot) {
         fw(t,x);
         N_VConst(0.0,xdot);
-        fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      N_VGetArrayPointer(dx),w.data());
     }
     
@@ -112,7 +112,7 @@ namespace amici {
                           AmiVector *dx) {
         fdwdx(t,x->getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        fJDiag(JDiag->data(),t,x->data(),p.data(),k.data(),h.data(),
+        fJDiag(JDiag->data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                0.0,dx->data(),w.data(),dwdx.data());
         if(!isFinite(nx,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
@@ -128,8 +128,8 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,x);
         for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-                     plist[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
+            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+                     plist_[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
     }
     
     /**
@@ -139,7 +139,7 @@ namespace amici {
      */
      void Model_DAE::fM(realtype t, const N_Vector x) {
         std::fill(M.begin(),M.end(),0.0);
-        fM(M.data(),t,N_VGetArrayPointer(x),p.data(),k.data());
+        fM(M.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data());
     }
     
     std::unique_ptr<Solver> Model_DAE::getSolver() {
@@ -158,7 +158,7 @@ namespace amici {
     void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, DlsMat JB) {
         fdwdx(t,x);
         SetToZero(JB);
-        fJB(JB->data,t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJB(JB->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                    cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                    w.data(),dwdx.data());
     }
@@ -175,7 +175,7 @@ namespace amici {
     void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB) {
         fdwdx(t,x);
         SparseSetMatToZero(JB);
-        fJSparseB(JB,t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJSparseB(JB,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                          cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                          w.data(),dwdx.data());
     }
@@ -195,7 +195,7 @@ namespace amici {
                         N_Vector vB, N_Vector JvB, realtype cj) {
         fdwdx(t,x);
         N_VConst(0.0,JvB);
-        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                     cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                     N_VGetArrayPointer(vB),w.data(),dwdx.data());
     }
@@ -212,7 +212,7 @@ namespace amici {
                           N_Vector dxB, N_Vector xBdot) {
         fdwdx(t,x);
         N_VConst(0.0,xBdot);
-        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                       N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                       w.data(),dwdx.data());
     }
@@ -229,8 +229,8 @@ namespace amici {
         fdwdp(t,x);
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 0; ip < plist.size(); ip++)
-            fqBdot(&qBdot_tmp[ip*nJ],plist[ip],t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
+        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                           w.data(),dwdp.data());
     }
@@ -252,8 +252,8 @@ namespace amici {
             fJSparse(t,0.0,x,dx,J);// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
-        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x),p.data(),k.data(),h.data(),
-               plist[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
+        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+               plist_[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
                w.data(),dwdx.data(),J->data,M.data(),&dxdotdp.at(ip*nx));
     }
 }

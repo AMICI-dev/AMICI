@@ -11,7 +11,6 @@
 namespace amici {
     extern msgIdAndTxtFp warnMsgIdAndTxt;
     
-    class UserData;
     class ExpData;
     class IDASolver;
     

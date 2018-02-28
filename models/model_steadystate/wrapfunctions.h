@@ -4,12 +4,10 @@
 #include <memory>
 #include <include/amici_defines.h>
 #include <sundials/sundials_sparse.h> //SlsMat definition
-#include <include/udata.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_model_ode.h>
 
 namespace amici {
-class UserData;
 class Solver;
 }
 
@@ -22,9 +20,7 @@ class Solver;
 #define EXTERNC
 #endif
 
-std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
-void getModelDims(int *nx, int *nk, int *np);
-
+std::unique_ptr<amici::Model> getModel();
 extern void J_model_steadystate(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void JB_model_steadystate(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_steadystate(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
@@ -50,7 +46,7 @@ extern void y_model_steadystate(double *y, const realtype t, const realtype *x, 
 
 class Model_model_steadystate : public amici::Model_ODE {
 public:
-    Model_model_steadystate(const amici::UserData *udata) : amici::Model_ODE(3,
+    Model_model_steadystate() : amici::Model_ODE(3,
                     3,
                     3,
                     3,
@@ -65,12 +61,14 @@ public:
                     2,
                     2,
                     amici::AMICI_O2MODE_NONE,
-                    std::vector<realtype>(udata->unp(),udata->unp()+5),
-                    std::vector<realtype>(udata->k(),udata->k()+4),
-                    udata->plist(),
+                    std::vector<realtype>(5),
+                    std::vector<realtype>(4),
+                    std::vector<int>(),
                     std::vector<realtype>{0, 0, 0},
                     std::vector<int>{})
                     {};
+
+    virtual amici::Model* clone() const override { return new Model_model_steadystate(*this); };
 
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         J_model_steadystate(J, t, x, p, k, h, w, dwdx);

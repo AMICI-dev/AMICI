@@ -4,12 +4,10 @@
 #include <memory>
 #include <include/amici_defines.h>
 #include <sundials/sundials_sparse.h> //SlsMat definition
-#include <include/udata.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_model_ode.h>
 
 namespace amici {
-class UserData;
 class Solver;
 }
 
@@ -22,9 +20,7 @@ class Solver;
 #define EXTERNC
 #endif
 
-std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
-void getModelDims(int *nx, int *nk, int *np);
-
+std::unique_ptr<amici::Model> getModel();
 extern void J_model_neuron(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void JB_model_neuron(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_neuron(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
@@ -67,7 +63,7 @@ extern void z_model_neuron(double *z, const int ie, const realtype t, const real
 
 class Model_model_neuron : public amici::Model_ODE {
 public:
-    Model_model_neuron(const amici::UserData *udata) : amici::Model_ODE(2,
+    Model_model_neuron() : amici::Model_ODE(2,
                     2,
                     1,
                     1,
@@ -82,12 +78,14 @@ public:
                     1,
                     1,
                     amici::AMICI_O2MODE_NONE,
-                    std::vector<realtype>(udata->unp(),udata->unp()+4),
-                    std::vector<realtype>(udata->k(),udata->k()+2),
-                    udata->plist(),
+                    std::vector<realtype>(4),
+                    std::vector<realtype>(2),
+                    std::vector<int>(),
                     std::vector<realtype>{0, 0},
                     std::vector<int>{1})
                     {};
+
+    virtual amici::Model* clone() const override { return new Model_model_neuron(*this); };
 
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         J_model_neuron(J, t, x, p, k, h, w, dwdx);

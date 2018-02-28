@@ -4,12 +4,10 @@
 #include <memory>
 #include <include/amici_defines.h>
 #include <sundials/sundials_sparse.h> //SlsMat definition
-#include <include/udata.h>
 #include <include/amici_solver_idas.h>
 #include <include/amici_model_dae.h>
 
 namespace amici {
-class UserData;
 class Solver;
 }
 
@@ -22,9 +20,7 @@ class Solver;
 #define EXTERNC
 #endif
 
-std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
-void getModelDims(int *nx, int *nk, int *np);
-
+std::unique_ptr<amici::Model> getModel();
 extern void J_model_robertson(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
 extern void JB_model_robertson(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_robertson(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx);
@@ -51,7 +47,7 @@ extern void y_model_robertson(double *y, const realtype t, const realtype *x, co
 
 class Model_model_robertson : public amici::Model_DAE {
 public:
-    Model_model_robertson(const amici::UserData *udata) : amici::Model_DAE(3,
+    Model_model_robertson() : amici::Model_DAE(3,
                     3,
                     3,
                     3,
@@ -66,12 +62,14 @@ public:
                     2,
                     2,
                     amici::AMICI_O2MODE_NONE,
-                    std::vector<realtype>(udata->unp(),udata->unp()+3),
-                    std::vector<realtype>(udata->k(),udata->k()+1),
-                    udata->plist(),
+                    std::vector<realtype>(3),
+                    std::vector<realtype>(1),
+                    std::vector<int>(),
                     std::vector<realtype>{1, 1, 0},
                     std::vector<int>{})
                     {};
+
+    virtual amici::Model* clone() const override { return new Model_model_robertson(*this); };
 
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) override {
         J_model_robertson(J, t, x, p, k, h, cj, dx, w, dwdx);

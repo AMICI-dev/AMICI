@@ -4,12 +4,10 @@
 #include <memory>
 #include <include/amici_defines.h>
 #include <sundials/sundials_sparse.h> //SlsMat definition
-#include <include/udata.h>
 #include <include/amici_solver_cvodes.h>
 #include <include/amici_model_ode.h>
 
 namespace amici {
-class UserData;
 class Solver;
 }
 
@@ -22,9 +20,7 @@ class Solver;
 #define EXTERNC
 #endif
 
-std::unique_ptr<amici::Model> getModel(const amici::UserData *udata);
-void getModelDims(int *nx, int *nk, int *np);
-
+std::unique_ptr<amici::Model> getModel();
 extern void J_model_jakstat_adjoint_o2(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void JB_model_jakstat_adjoint_o2(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_jakstat_adjoint_o2(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
@@ -53,7 +49,7 @@ extern void y_model_jakstat_adjoint_o2(double *y, const realtype t, const realty
 
 class Model_model_jakstat_adjoint_o2 : public amici::Model_ODE {
 public:
-    Model_model_jakstat_adjoint_o2(const amici::UserData *udata) : amici::Model_ODE(162,
+    Model_model_jakstat_adjoint_o2() : amici::Model_ODE(162,
                     9,
                     54,
                     3,
@@ -68,12 +64,14 @@ public:
                     8,
                     154,
                     amici::AMICI_O2MODE_FULL,
-                    std::vector<realtype>(udata->unp(),udata->unp()+17),
-                    std::vector<realtype>(udata->k(),udata->k()+2),
-                    udata->plist(),
+                    std::vector<realtype>(17),
+                    std::vector<realtype>(2),
+                    std::vector<int>(),
                     std::vector<realtype>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                     std::vector<int>{})
                     {};
+
+    virtual amici::Model* clone() const override { return new Model_model_jakstat_adjoint_o2(*this); };
 
     virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         J_model_jakstat_adjoint_o2(J, t, x, p, k, h, w, dwdx);

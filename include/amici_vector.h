@@ -25,7 +25,7 @@ namespace amici {
          */
         AmiVector(const long int length) : vec(length,0.0) {
             nvec = N_VMake_Serial(length,vec.data());
-        };
+        }
         
         /** constructor from vector, copies data from vector
          * and constructs an nvec that points to the data
@@ -35,7 +35,7 @@ namespace amici {
         AmiVector(std::vector<realtype> rvec) {
             vec = rvec;
             nvec = N_VMake_Serial(rvec.size(),rvec.data());
-        };
+        }
         
         /** copy constructor
          * @param vold vector from which the data will be copied
@@ -43,7 +43,7 @@ namespace amici {
         AmiVector(const AmiVector& vold) {
             vec = vold.vec;
             nvec = N_VMake_Serial(vold.vec.size(),vec.data());
-        };
+        }
         
         /** copy-move assignment operator
          * @param other right hand side
@@ -55,7 +55,7 @@ namespace amici {
                 N_VDestroy_Serial(nvec);
             nvec = N_VMake_Serial(vec.size(),vec.data());
             return *this;
-        };
+        }
         
         /** data accessor
          * @return pointer to data array
@@ -81,7 +81,7 @@ namespace amici {
         /** returns the length of the vector
          * @return length
          */
-        const int getLength() const {
+        int getLength() const {
             return vec.size();
         }
         
@@ -128,7 +128,7 @@ namespace amici {
          */
         ~AmiVector(){
             N_VDestroy_Serial(nvec);
-        };
+        }
     private:
         /** main data storage
          */
@@ -161,7 +161,7 @@ namespace amici {
             for (int idx = 0; idx < length_outer; idx++) {
                 nvec_array[idx] = vec_array.at(idx).getNVector();
             }
-        };
+        }
         
         /** copy constructor
          * @param vaold object to copy from
@@ -233,7 +233,7 @@ namespace amici {
         /** length of AmiVectorArray
          * @return length
          */
-        const int getLength() const {
+        int getLength() const {
             return vec_array.size();
         }
         

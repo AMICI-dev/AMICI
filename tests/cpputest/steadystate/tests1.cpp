@@ -19,6 +19,42 @@ TEST_GROUP(groupSteadystate)
     }
 };
 
+TEST(groupSteadystate, testInequality) {
+    auto modelA = getModel();
+    auto modelB = std::unique_ptr<amici::Model>(new amici::Model_Test());
+
+    CHECK_FALSE(*modelA == *modelB);
+}
+
+
+TEST(groupSteadystate, testCopyModel) {
+    auto modelA = getModel();
+    auto modelB = std::unique_ptr<amici::Model>(modelA->clone());
+
+    CHECK_TRUE(*modelA == *modelB);
+}
+
+
+TEST(groupSteadystate, testCloneModel) {
+    auto modelA = getModel();
+    auto modelB = std::unique_ptr<amici::Model>(new Model_model_steadystate());
+
+    CHECK_TRUE(*modelA == *modelB);
+}
+
+
+TEST(groupSteadystate, testReuseSolver) {
+    auto model = getModel();
+    auto solver = model->getSolver();
+
+    amici::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
+    amici::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
+
+    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
+    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
+}
+
+
 
 TEST(groupSteadystate, testSimulation) {
     amici::simulateAndVerifyFromFile("/model_steadystate/nosensi/");

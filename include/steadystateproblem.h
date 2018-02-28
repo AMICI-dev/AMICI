@@ -8,8 +8,6 @@
 
 namespace amici {
 
-class UserData;
-class TempData;
 class ReturnData;
 class ExpData;
 class Solver;
@@ -26,23 +24,21 @@ class NewtonSolverIterative;
 
 class SteadystateProblem {
   public:
-    void workSteadyStateProblem(const UserData *udata,
-                                      ReturnData *rdata, Solver *solver,
+    void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
 
     /**
      * applyNewtonsMethod applies Newtons method to the current state x to
      * find the steady state
      */
-    void applyNewtonsMethod(const UserData *udata, ReturnData *rdata, Model *model,
+    void applyNewtonsMethod(ReturnData *rdata, Model *model,
                                   NewtonSolver *newtonSolver, int newton_try);
 
     void getNewtonOutput(ReturnData *rdata,
                                 Model *model, int newton_status,
                                 double run_time, int it);
 
-    void getNewtonSimulation(const UserData *udata,
-                                   ReturnData *rdata, Solver *solver,
+    void getNewtonSimulation(ReturnData *rdata, Solver *solver,
                                    Model *model, int it);
     
     
@@ -64,10 +60,8 @@ class SteadystateProblem {
         this->t = t;
         this->x = x;
         this->sx = sx;
-    };
-    
-    /** default destructor */
-    ~SteadystateProblem(){};
+    }
+
   private:
     realtype *t;
     /** newton step? */
