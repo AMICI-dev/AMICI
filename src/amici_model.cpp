@@ -41,7 +41,7 @@ void Model::fsz_tf(const int nroots, ReturnData *rdata) {
     for (int ip = 0; ip < nplist(); ++ip) {
         for (int iz = 0; iz < nz; ++iz)
             // copy dydp to sy
-            rdata->sz.at(nroots + (iz + ip * nz) * rdata->nmaxevent) =
+            rdata->sz.at((nroots*nplist()+ip)*nz + iz) =
                     0.0;
     }
 }

@@ -85,6 +85,14 @@ void ForwardProblem::workForwardProblem() {
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
+    /* initialise objective function values */
+    if(edata){
+        rdata->llh = 0.0;
+        rdata->chi2 = 0.0;
+        std::fill(rdata->sllh.begin(),rdata->sllh.end(), 0.0);
+        std::fill(rdata->s2llh.begin(),rdata->s2llh.end(), 0.0);
+    }
+    
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
     realtype tlastroot = 0; /* storage for last found root */
 
@@ -93,6 +101,15 @@ void ForwardProblem::workForwardProblem() {
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
         sstate.workSteadyStateProblem(rdata,
                                        solver, model, -1);
+    } else {
+        for (int ix = 0; ix < model->nx; ix++) {
+            rdata->x0[ix] = x[ix];
+            if (rdata->sensi_meth == AMICI_SENSI_FSA &&
+            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                for (int ip = 0; ip < model->nplist(); ip++)
+                    rdata->sx0[ip*model->nx + ix] = sx.at(ix,ip);
+            }
+        }
     }
 
     /* loop over timepoints */

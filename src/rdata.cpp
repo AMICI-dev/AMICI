@@ -46,7 +46,7 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
     rz.resize(nmaxevent * nz, 0.0);
     srz.resize(nmaxevent * nz * nplist, 0.0);
-    s2rz.resize(nmaxevent * nz * nplist * nplist, 0.0);
+    s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
 
     x.resize(nt * nx, 0.0);
     sx.resize(nt * nx * nplist, 0.0);
@@ -58,23 +58,36 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     ssigmay.resize(nt * model->ny * nplist, 0.0);
     sres.clear();
 
-    numsteps.resize(nt, getNaN());
-    numstepsB.resize(nt, getNaN());
-    numrhsevals.resize(nt, getNaN());
-    numrhsevalsB.resize(nt, getNaN());
-    numerrtestfails.resize(nt, getNaN());
-    numerrtestfailsB.resize(nt, getNaN());
-    numnonlinsolvconvfails.resize(nt, getNaN());
-    numnonlinsolvconvfailsB.resize(nt, getNaN());
-    order.resize(nt, getNaN());
-    newton_numsteps.resize(2, getNaN());
-    newton_numlinsteps.resize(newton_maxsteps*2, getNaN());
+    if(nt>0) {
+        numsteps.resize(nt, getNaN());
+        numsteps[0] = 0;
+        numstepsB.resize(nt, getNaN());
+        numstepsB[nt-1] = 0;
+        numrhsevals.resize(nt, getNaN());
+        numrhsevals[0] = 0;
+        numrhsevalsB.resize(nt, getNaN());
+        numrhsevalsB[nt-1] = 0;
+        numerrtestfails.resize(nt, getNaN());
+        numerrtestfails[0] = 0;
+        numerrtestfailsB.resize(nt, getNaN());
+        numerrtestfailsB[nt-1] = 0;
+        numnonlinsolvconvfails.resize(nt, getNaN());
+        numnonlinsolvconvfails[0] = 0;
+        numnonlinsolvconvfailsB.resize(nt, getNaN());
+        numnonlinsolvconvfailsB[nt-1] = 0;
+        order.resize(nt, getNaN());
+        order[0] = 0;
+        newton_numsteps.resize(2, 0);
+        newton_numlinsteps.resize(newton_maxsteps*2, 0);
+    }
 
     x0.resize(nx, getNaN());
     sx0.resize(nx * nplist, getNaN());
     
-    sllh.resize(nplist, 0.0);
-    s2llh.resize(nplist * (model->nJ - 1), 0.0);
+    llh = getNaN();
+    sllh.resize(nplist, getNaN());
+    s2llh.resize(nplist * (model->nJ - 1), getNaN());
+    chi2 = getNaN();
 }
 
 void ReturnData::invalidate(const realtype t) {

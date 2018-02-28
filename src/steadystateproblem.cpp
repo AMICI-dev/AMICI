@@ -140,8 +140,8 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             try{
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
-            } catch(...) {
-                rdata->newton_numsteps[newton_try - 1] = getNaN();
+            } catch(std::exception ex) {
+                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
                 throw NewtonFailure("Newton method failed to compute new step!");
             }
         }
@@ -181,7 +181,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     }
     
     /* Set return values */
-    rdata->newton_numsteps[newton_try-1] = (double) i_newtonstep;
+    rdata->newton_numsteps[newton_try-1] = i_newtonstep;
     if (!converged)
         throw NewtonFailure("Newton method failed to converge!");
 }

@@ -141,7 +141,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     
     writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numrhsevals, rdata->nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, rdata->nt);
 
@@ -157,7 +157,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         if (rdata->sensi_meth == AMICI_SENSI_ASA) {
             writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numrhsevals, rdata->nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, rdata->nt);
         }
     }

@@ -137,10 +137,10 @@ class ReturnData {
     std::vector<realtype> order;
 
     /** flag indicating success of Newton solver */
-    int newton_status ;
+    int newton_status = 0;
 
     /** computation time of the Newton solver [s] */
-    double newton_time;
+    double newton_time = 0.0;
 
     /** number of Newton steps for steady state problem */
     std::vector<int> newton_numsteps;
@@ -155,10 +155,10 @@ class ReturnData {
     std::vector<realtype> sx0;
 
     /** likelihood value (double[1]) */
-    realtype llh = 0;
+    realtype llh = 0.0;
 
     /** chi2 value (double[1]) */
-    realtype chi2 = 0;
+    realtype chi2 = 0.0;
 
     /** parameter derivative of likelihood (dimension: nplist) */
     std::vector<realtype> sllh;
@@ -168,7 +168,7 @@ class ReturnData {
     std::vector<realtype> s2llh;
 
     /** status code (double[1]) */
-    int status = 0;
+    int status = 0.0;
 
   public:
     /** total number of model parameters */
