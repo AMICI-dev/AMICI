@@ -30,7 +30,7 @@ set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 set(CMAKE_MODULE_PATH ${AMICI_DIR}/CMakeModules)
 
-find_package(HDF5 COMPONENTS C HL REQUIRED)
+find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
@@ -91,6 +91,7 @@ target_link_libraries(${PROJECT_NAME}
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${HDF5_HL_LIBRARIES}
     ${HDF5_C_LIBRARIES}
+    ${HDF5_CXX_LIBRARIES}
     ${BLAS_LIBRARIES}
     -ldl -lz -lm
 )
