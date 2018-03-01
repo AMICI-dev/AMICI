@@ -9,18 +9,20 @@ namespace amici {
 
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
-ExpData::ExpData(Model *model)
-    : nytrue(model->nytrue), nztrue(model->nztrue), nt(model->nt()),
-      nmaxevent(model->nMaxEvent()) {
+ExpData::ExpData(Model const& model)
+    : nytrue(model.nytrue),
+      nztrue(model.nztrue),
+      nt(model.nt()),
+      nmaxevent(model.nMaxEvent()) {
     /**
      * constructor that initializes with Model
      *
      * @param[in] model pointer to model specification object @type Model
      */
-    my.resize(model->nt() * model->nytrue);
-    sigmay.resize(model->nt() * model->nytrue);
-    mz.resize(model->nMaxEvent() * model->nztrue);
-    sigmaz.resize(model->nMaxEvent() * model->nztrue);
+    my.resize(model.nt() * model.nytrue);
+    sigmay.resize(model.nt() * model.nytrue);
+    mz.resize(model.nMaxEvent() * model.nztrue);
+    sigmaz.resize(model.nMaxEvent() * model.nztrue);
 }
 
 void ExpData::setObservedData(const double *observedData) {
