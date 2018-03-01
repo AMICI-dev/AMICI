@@ -27,7 +27,7 @@ class Solver;
 namespace hdf5 {
 
 
-/** @file Functions for reading and writing AMICI data to/from HDF5 files. */
+/* Functions for reading and writing AMICI data to/from HDF5 files. */
 
 // TODO: proper type checking, exception instead of return code, c++ api; check if all fields are read and saved
 
