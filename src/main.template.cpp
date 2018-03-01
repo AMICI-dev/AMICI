@@ -59,11 +59,11 @@ int main(int argc, char **argv) {
     auto solver = model->getSolver();
 
     // Read AMICI settings and model parameters from HDF5 file
-    amici::readModelDataFromHDF5(hdffile, *model, "/options");
-    amici::readSolverSettingsFromHDF5(hdffile, *solver, "/options");
+    amici::hdf5::readModelDataFromHDF5(hdffile, *model, "/options");
+    amici::hdf5::readSolverSettingsFromHDF5(hdffile, *solver, "/options");
 
     // Read ExpData (experimental data for model) from HDF5 file
-    auto edata = std::unique_ptr<amici::ExpData>(amici::AMI_HDF5_readSimulationExpData(hdffile, "/data", model.get()));
+    auto edata = amici::hdf5::readSimulationExpData(hdffile, "/data", *model);
 
     // Run the simulation
     auto rdata = std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, edata.get(), *solver));
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     processReturnData(rdata.get(), model.get());
 
     // Save simulation results to HDF5 file
-    amici::AMI_HDF5_writeReturnData(rdata.get(), hdffile, "/solution");
+    amici::hdf5::writeReturnData(*rdata, hdffile, "/solution");
 
     return 0;
 }

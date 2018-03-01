@@ -14,7 +14,7 @@ class ExpData {
   public:
     /** default constructor */
     ExpData();
-    ExpData(Model *model);
+    ExpData(const Model &model);
 
     /**
      * @brief ExpData is currently not copyable

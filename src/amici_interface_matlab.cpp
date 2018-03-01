@@ -166,7 +166,7 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * @return edata pointer to experimental data object
  */
 ExpData *expDataFromMatlabCall(const mxArray *prhs[],
-                               Model *model) {
+                               Model const &model) {
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
 
@@ -185,16 +185,16 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
         ny_my = (int)mxGetN(dataY);
-        if (ny_my != model->nytrue) {
+        if (ny_my != model.nytrue) {
             throw AmiException("Number of observables in data matrix (%i) does "
                                "not match model ny (%i)",
-                               ny_my, model->nytrue);
+                               ny_my, model.nytrue);
         }
         nt_my = (int)mxGetM(dataY);
-        if (nt_my != model->nt()) {
+        if (nt_my != model.nt()) {
             throw AmiException("Number of time-points in data matrix does (%i) "
                                "not match provided time vector (%i)",
-                               nt_my, model->nt());
+                               nt_my, model.nt());
         }
         
         edata->setObservedData(mxGetPr(dataY));
@@ -206,16 +206,16 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     // Sigma Y
     if (mxArray *dataSigmaY = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")) {
         ny_sigmay = (int)mxGetN(dataSigmaY);
-        if (ny_sigmay != model->nytrue) {
+        if (ny_sigmay != model.nytrue) {
             throw AmiException("Number of observables in data-sigma matrix (%i) "
                                "does not match model ny (%i)",
-                               ny_sigmay, model->nytrue);
+                               ny_sigmay, model.nytrue);
         }
         nt_sigmay = (int)mxGetM(dataSigmaY);
-        if (nt_sigmay != model->nt()) {
+        if (nt_sigmay != model.nt()) {
             throw AmiException("Number of time-points in data-sigma matrix (%i) "
                                "does not match provided time vector (%i)",
-                               nt_sigmay, model->nt());
+                               nt_sigmay, model.nt());
         }
         
         edata->setObservedDataStdDev(mxGetPr(dataSigmaY));
@@ -226,16 +226,16 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     // Z
     if (mxArray *dataZ = mxGetProperty(prhs[RHS_DATA], 0, "Z")) {
         nz_mz = (int)mxGetN(dataZ);
-        if (nz_mz != model->nztrue) {
+        if (nz_mz != model.nztrue) {
             throw AmiException("Number of events in event matrix (%i) does not "
                                "match provided nz (%i)",
-                               nz_mz, model->nztrue);
+                               nz_mz, model.nztrue);
         }
         ne_mz = (int)mxGetM(dataZ);
-        if (ne_mz != model->nMaxEvent()) {
+        if (ne_mz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event matrix (%i) does "
                                "not match provided nmaxevent (%i)",
-                               ne_mz, model->nMaxEvent());
+                               ne_mz, model.nMaxEvent());
         }
         edata->setObservedEvents(mxGetPr(dataZ));
     } else {
@@ -245,16 +245,16 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     // Sigma Z
     if (mxArray *dataSigmaZ = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z")) {
         nz_sigmaz = (int)mxGetN(dataSigmaZ);
-        if (nz_sigmaz != model->nztrue) {
+        if (nz_sigmaz != model.nztrue) {
             throw AmiException("Number of events in event-sigma matrix (%i) does "
                                "not match provided nz (%i)",
-                               nz_sigmaz, model->nztrue);
+                               nz_sigmaz, model.nztrue);
         }
         ne_sigmaz = (int)mxGetM(dataSigmaZ);
-        if (ne_sigmaz != model->nMaxEvent()) {
+        if (ne_sigmaz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event-sigma matrix (%i) "
                                "does not match provided nmaxevent (%i)",
-                               ne_sigmaz, model->nMaxEvent());
+                               ne_sigmaz, model.nMaxEvent());
         }
         
         edata->setObservedEventsStdDev(mxGetPr(dataSigmaZ));
@@ -505,7 +505,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         
         std::unique_ptr<amici::ExpData> edata;
         if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-            edata.reset(amici::expDataFromMatlabCall(prhs, model.get()));
+            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
             if (!edata)
                 amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
         } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&

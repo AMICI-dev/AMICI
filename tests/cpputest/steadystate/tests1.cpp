@@ -47,8 +47,8 @@ TEST(groupSteadystate, testReuseSolver) {
     auto model = getModel();
     auto solver = model->getSolver();
 
-    amici::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
-    amici::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
+    amici::hdf5::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
+    amici::hdf5::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
 
     std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
     std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
