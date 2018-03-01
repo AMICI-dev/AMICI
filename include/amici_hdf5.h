@@ -119,6 +119,9 @@ bool attributeExists(H5::H5File const& file,
                      const std::string &optionsObject,
                      const std::string &attributeName);
 
+bool attributeExists(H5::H5Object const& object,
+                     const std::string &attributeName);
+
 // Helper functions to reading and writing HDF5 attributes:
 
 void createAndWriteDouble2DAttribute(H5::H5Object &location,

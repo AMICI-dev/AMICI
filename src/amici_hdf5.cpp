@@ -446,7 +446,7 @@ void createAndWriteDouble2DAttribute(H5::H5Object& location,
                                      std::string const& attributeName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n) {
-    if (location.attrExists(attributeName)) {
+    if (attributeExists(location, attributeName)) {
         location.removeAttr(attributeName);
     }
 
@@ -460,7 +460,7 @@ void createAndWriteDouble3DAttribute(H5::H5Object& location,
                                      std::string const& attributeName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n, hsize_t o) {
-    if (location.attrExists(attributeName)) {
+    if (attributeExists(location, attributeName)) {
         location.removeAttr(attributeName);
     }
 
@@ -489,17 +489,18 @@ void setAttributeIntFromDouble(H5::H5File const& file,
 bool attributeExists(H5::H5File const& file,
                      const std::string &optionsObject,
                      const std::string &attributeName) {
-    // Is optionsObject a group or a dataset?
     AMICI_H5_SAVE_ERROR_HANDLER;
-    try {
-        auto group = file.openGroup(optionsObject);
-        AMICI_H5_RESTORE_ERROR_HANDLER;
-        return group.attrExists(attributeName.c_str());
-    } catch (...) {
-        AMICI_H5_RESTORE_ERROR_HANDLER;
-        auto dataset = file.openDataSet(optionsObject);
-        return dataset.attrExists(attributeName.c_str());
-    }
+    int result = H5Aexists_by_name(file.getId(), optionsObject.c_str(), attributeName.c_str(), H5P_DEFAULT);
+    AMICI_H5_RESTORE_ERROR_HANDLER;
+    return result > 0;
+}
+
+bool attributeExists(H5::H5Object const& object,
+                     const std::string &attributeName) {
+    AMICI_H5_SAVE_ERROR_HANDLER;
+    int result = H5Aexists(object.getId(), attributeName.c_str());
+    AMICI_H5_RESTORE_ERROR_HANDLER;
+    return result > 0;
 }
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const std::string &datasetPath) {
