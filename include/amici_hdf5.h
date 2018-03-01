@@ -121,12 +121,12 @@ bool attributeExists(H5::H5File const& file,
 
 // Helper functions to reading and writing HDF5 attributes:
 
-void createAndWriteDouble2DAttribute(H5::H5Location &location,
+void createAndWriteDouble2DAttribute(H5::H5Object &location,
                                      const std::string &attributeName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n);
 
-void createAndWriteDouble3DAttribute(H5::H5Location &location,
+void createAndWriteDouble3DAttribute(H5::H5Object &location,
                                      const std::string &attributeName,
                                      const double *buffer,
                                      hsize_t m, hsize_t n, hsize_t o);

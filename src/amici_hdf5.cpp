@@ -442,7 +442,7 @@ std::vector<int> getIntArrayAttribute(H5::H5File const&file,
 
 
 
-void createAndWriteDouble2DAttribute(H5::H5Location& location,
+void createAndWriteDouble2DAttribute(H5::H5Object& location,
                                      std::string const& attributeName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n) {
@@ -456,7 +456,7 @@ void createAndWriteDouble2DAttribute(H5::H5Location& location,
     attr.write(H5::PredType::NATIVE_DOUBLE, buffer);
 }
 
-void createAndWriteDouble3DAttribute(H5::H5Location& location,
+void createAndWriteDouble3DAttribute(H5::H5Object& location,
                                      std::string const& attributeName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n, hsize_t o) {
