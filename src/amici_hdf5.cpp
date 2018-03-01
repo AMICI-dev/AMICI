@@ -146,43 +146,43 @@ void writeReturnData(ReturnData const& rdata,
 
     // are double, but should write as int:
     if (rdata.numsteps)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(), "numsteps",
+        setAttributeIntFromDouble(file, hdf5Location, "numsteps",
                                   rdata.numsteps, rdata.nt);
 
     if (rdata.numrhsevals)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(), "numrhsevals",
+        setAttributeIntFromDouble(file, hdf5Location, "numrhsevals",
                                   rdata.numrhsevals, rdata.nt);
 
     if (rdata.numerrtestfails)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(),
+        setAttributeIntFromDouble(file, hdf5Location,
                                   "numerrtestfails",
                                   rdata.numerrtestfails, rdata.nt);
 
     if (rdata.numnonlinsolvconvfails)
         setAttributeIntFromDouble(
-                    file.getId(), hdf5Location.c_str(), "numnonlinsolvconvfails",
+                    file, hdf5Location, "numnonlinsolvconvfails",
                     rdata.numnonlinsolvconvfails, rdata.nt);
 
     if (rdata.order)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(), "order",
+        setAttributeIntFromDouble(file, hdf5Location, "order",
                                   rdata.order, rdata.nt);
 
     if (rdata.numstepsB)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(), "numstepsB",
+        setAttributeIntFromDouble(file, hdf5Location, "numstepsB",
                                   rdata.numstepsB, rdata.nt);
 
     if (rdata.numrhsevalsB)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(), "numrhsevalsB",
+        setAttributeIntFromDouble(file, hdf5Location, "numrhsevalsB",
                                   rdata.numrhsevalsB, rdata.nt);
 
     if (rdata.numerrtestfailsB)
-        setAttributeIntFromDouble(file.getId(), hdf5Location.c_str(),
+        setAttributeIntFromDouble(file, hdf5Location,
                                   "numerrtestfailsB",
                                   rdata.numerrtestfailsB, rdata.nt);
 
     if (rdata.numnonlinsolvconvfailsB)
         setAttributeIntFromDouble(
-                    file.getId(), hdf5Location.c_str(), "numnonlinsolvconvfailsB",
+                    file, hdf5Location, "numnonlinsolvconvfailsB",
                     rdata.numnonlinsolvconvfailsB, rdata.nt);
 
     auto group = file.openGroup(hdf5Location);
