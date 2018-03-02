@@ -426,8 +426,7 @@ std::vector<int> getIntArrayAttribute(H5::H5File const&file,
 #endif
 
     std::vector<int> buffer(length);
-    if(length)
-        status = H5LTget_attribute_int(file.getId(), optionsObject.c_str(), attributeName.c_str(),
+    status = H5LTget_attribute_int(file.getId(), optionsObject.c_str(), attributeName.c_str(),
                                    buffer.data());
     if (status < 0)
         throw AmiException("Error in getIntArrayAttribute: Cannot read "
@@ -623,11 +622,15 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(attributeExists(file, datasetPath, "sens_ind")) {
         auto sensInd = getIntArrayAttribute(file, datasetPath, "sens_ind");
-        // currently base 1 indices are written
-        for (int i = 0; (unsigned)i < sensInd.size(); ++i) {
-            sensInd[i] -= 1;
+        if (sensInd.size() > 0) {
+            // currently base 1 indices are written
+            for (int i = 0; (unsigned)i < sensInd.size(); ++i) {
+                sensInd[i] -= 1;
+            }
+            model.setParameterList(sensInd);
+        } else {
+            model.requireSensitivitiesForAllParameters();
         }
-        model.setParameterList(sensInd);
     }
 
     if(attributeExists(file, datasetPath, "x0")) {
