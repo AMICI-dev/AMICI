@@ -22,7 +22,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(r.nmaxevent, s.nmaxevent);
     CHECK_EQUAL(r.nt, s.nt);
     CHECK_EQUAL(r.newton_maxsteps, s.newton_maxsteps);
-    CHECK_EQUAL(r.pscale, s.pscale);
+    CHECK_TRUE(r.pscale == s.pscale);
     CHECK_EQUAL(r.o2mode, s.o2mode);
     CHECK_EQUAL(r.sensi, s.sensi);
     CHECK_EQUAL(r.sensi_meth, s.sensi_meth);

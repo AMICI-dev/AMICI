@@ -3,6 +3,8 @@
 
 #include <include/amici_defines.h>
 
+#include <vector>
+
 namespace amici {
 class Model;
 class ReturnData;
@@ -215,7 +217,7 @@ class ReturnData {
     /** maximal number of newton iterations for steady state calculation */
     const int newton_maxsteps;
     /** scaling of parameterization (lin,log,log10) */
-    const AMICI_parameter_scaling pscale;
+    std::vector<AMICI_parameter_scaling> pscale;
     /** flag indicating whether second order sensitivities were requested */
     const AMICI_o2mode o2mode;
     /** sensitivity order */
