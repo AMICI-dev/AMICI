@@ -123,6 +123,12 @@ void checkEqualArray(const double *expected, const double *actual, int length, d
 void checkEqualArray(std::vector<double> const& expected, std::vector<double> const& actual,
                      double atol, double rtol, std::string const& name);
 
+// TODO: delete after transitioning to C++-written test results
+void verifyReturnDataMatlab(const std::string &hdffile, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
+
+// TODO: delete after transitioning to C++-written test results
+void verifyReturnDataSensitivitiesMatlab(const H5::H5File &file_id, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
+
 void verifyReturnData(const std::string &hdffile, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
 
 void verifyReturnDataSensitivities(const H5::H5File &file_id, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
