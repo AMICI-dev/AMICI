@@ -214,7 +214,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
 
     if (rdata.s2llh)
         createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh,
-                                        rdata.nJ, rdata.nplist);
+                                        rdata.nJ - 1, rdata.nplist);
 
     if (rdata.sx)
         createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx, rdata.nt, rdata.nx, rdata.nplist);
