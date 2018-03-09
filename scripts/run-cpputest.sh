@@ -11,3 +11,4 @@ fi
 cd ${AMICI_PATH}/tests/cpputest/build
 
 ctest -V
+mv ${AMICI_PATH}/tests/cpputest/writeResults.h5 ${AMICI_PATH}/tests/cpputest/writeResults.h5.bak
