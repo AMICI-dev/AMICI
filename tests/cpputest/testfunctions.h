@@ -19,6 +19,7 @@ namespace amici {
 class ReturnData;
 class ExpData;
 
+#define NEW_OPTION_FILE "../../testOptions.h5"
 #define HDFFILE "../../expectedResults.h5"
 #define HDFFILEWRITE "../../writeResults.h5"
 #define TEST_ATOL 1e-10
@@ -105,7 +106,7 @@ void simulateAndVerifyFromFile(const std::string path);
 
 void simulateAndVerifyFromFile(std::string path, double atol, double rtol);
 
-void simulateAndVerifyFromFile(const std::string hdffile, std::string path, double atol, double rtol);
+void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::string hdffileResults, std::string path, double atol, double rtol);
 
 void simulateAndWriteToFile(const std::string path);
 

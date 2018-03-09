@@ -17,14 +17,13 @@ namespace amici {
 
 void simulateAndVerifyFromFile(const std::string path)
 {
-    simulateAndVerifyFromFile(HDFFILE, path, TEST_ATOL, TEST_RTOL);
+    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, path, TEST_ATOL, TEST_RTOL);
 }
 
 void simulateAndVerifyFromFile(std::string path, double atol, double rtol)
 {
-    simulateAndVerifyFromFile(HDFFILE, path, atol, rtol);
+    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, path, atol, rtol);
 }
-
 
 void simulateAndWriteToFile(const std::string path)
 {
@@ -37,26 +36,27 @@ void simulateAndWriteToFile(std::string path, double atol, double rtol)
 }
 
 
-void simulateAndVerifyFromFile(const std::string hdffile, std::string path, double atol, double rtol)
+void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::string hdffileResults, std::string path, double atol, double rtol)
 {
+    using namespace amici;
     // read options from file
     std::string optionsPath = path + "/options";
     auto model = getModel();
     auto solver = model->getSolver();
-    hdf5::readModelDataFromHDF5(hdffile, *model, optionsPath);
-    hdf5::readSolverSettingsFromHDF5(hdffile, *solver, optionsPath);
+    hdf5::readModelDataFromHDF5(hdffileOptions, *model, optionsPath);
+    hdf5::readSolverSettingsFromHDF5(hdffileOptions, *solver, optionsPath);
 
     // read measurements from file
     std::string measurementPath = path + "/data";
 
     std::unique_ptr<const ExpData> edata;
-    if(hdf5::locationExists(hdffile, measurementPath))
-        edata = hdf5::readSimulationExpData(hdffile, measurementPath, *model);
+    if(hdf5::locationExists(hdffileOptions, measurementPath))
+        edata = hdf5::readSimulationExpData(hdffileResults, measurementPath, *model);
 
     // simulate & verify
     auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
     std::string resultPath = path + "/results";
-    verifyReturnData(hdffile.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
+    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
 }
 
 void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)

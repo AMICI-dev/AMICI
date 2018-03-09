@@ -1,64 +1,24 @@
+#!/usr/bin/env python3
+import sys
 import h5py
 import numpy as np
-from doctest import Example
 
-def dict2attrs(object, dictionary):
-    for key, value in dictionary.items():
-        object.attrs[key] = value
-        
-class ExampleSteadystate:
+from example import AmiciExample, dict2attrs
+
+class ExampleSteadystate(AmiciExample):
   
     def __init__(self):
+        AmiciExample.__init__( self )
+
         self.numX = 3
         self.numP = 5
         self.numK = 4
         
-        self.modelOptions = {
-            #'pscale' : []
-            'theta' : np.log10([1, 0.5, 0.4, 2, 0.1]),
-            'kappa' : [0.1, 0.4, 0.7, 1],
-            'ts' : np.linspace(0, 100, 50),
-            'tstart' : 0.0
-        }
-        self.solverOptions = {
-            'atol' : 1e-16,
-            'interpType' : 1,
-            'ism': 1,
-            'iter' : 2,
-            'linsol': 9,
-            'lmm': 2,
-            'maxsteps' : 1e4,
-            'newton_maxlinsteps': 100,
-            'newton_maxsteps' : 40,
-            # newton_precon ununsed
-            'newton_preeq' : 0,
-            'nmaxevent' : 10,
-            'ordering' : 0,
-            # pbar
-            # 'qpositivex'
-            'rtol' : 1e-8,
-            'sens_ind' : [],
-            'sensi': 0,
-            'sensi_meth' : 1,
-            'ss' : 0, # ?
-            'stldet' : 1,
-            # sx0
-            # x0
-            'z2event' : 0.0
-        }
+        self.modelOptions['theta'] = np.log10([1, 0.5, 0.4, 2, 0.1])
+        self.modelOptions['kappa'] = [0.1, 0.4, 0.7, 1]
+        self.modelOptions['ts'] = np.linspace(0, 100, 50)
         self.modelOptions['pscale'] = 2
         self.modelOptions['qpositivex'] = [0] * self.numX 
-        #self.modelOptions['sx0'] = [1.0] * np 
-        #self.modelOptions['x0'] = [1.0] * np 
-
-
-    def writeToFile(self, filename, root = "/"):
-        with h5py.File(filename, "a") as f:
-            g = f.require_group(root + 'options')
-            
-            dict2attrs(g, self.modelOptions)
-            dict2attrs(g, self.solverOptions)
-
             
 def writeNoSensi(filename):
     ex = ExampleSteadystate()
@@ -136,7 +96,11 @@ def writeSensiForwardErrorNewt(filename):
 
 
 def main():
-    filename = "testOptions.h5"
+    if len(sys.argv) < 2:
+        print("Error: Must provide output file as first and only argument.")
+        sys.exit(1)
+    filename = sys.argv[1]
+
     writeNoSensi(filename)
     writeSensiForward(filename)
     writeSensiForwardPlist(filename)

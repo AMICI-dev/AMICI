@@ -8,7 +8,6 @@
 #include <cstring>
 #include "wrapfunctions.h"
 
-#define NEW_OPTION_FILE "../../testOptions.h5"
 TEST_GROUP(groupSteadystate)
 {
     void setup() {
@@ -19,34 +18,6 @@ TEST_GROUP(groupSteadystate)
 
     }
 };
-
-void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::string hdffileResults, std::string path, double atol, double rtol)
-{
-    using namespace amici;
-    // read options from file
-    std::string optionsPath = path + "/options";
-    auto model = getModel();
-    auto solver = model->getSolver();
-    hdf5::readModelDataFromHDF5(hdffileOptions, *model, optionsPath);
-    hdf5::readSolverSettingsFromHDF5(hdffileOptions, *solver, optionsPath);
-
-    // read measurements from file
-    std::string measurementPath = path + "/data";
-
-    std::unique_ptr<const ExpData> edata;
-    if(hdf5::locationExists(hdffileOptions, measurementPath))
-        edata = hdf5::readSimulationExpData(hdffileResults, measurementPath, *model);
-
-    // simulate & verify
-    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
-    std::string resultPath = path + "/results";
-    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
-}
-void simulateAndVerifyFromFile(std::string path) {
-    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, path, TEST_ATOL, TEST_RTOL);
-
-}
-
 
 TEST(groupSteadystate, testModelFromHDF5) {
     // Test reading some python-written options
@@ -106,38 +77,38 @@ TEST(groupSteadystate, testReuseSolver) {
 
 
 TEST(groupSteadystate, testSimulation) {
-    simulateAndVerifyFromFile("/model_steadystate/nosensi/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/nosensi/");
     amici::simulateAndWriteToFile("/model_steadystate/nosensi/");
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
-    simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
     amici::simulateAndWriteToFile("/model_steadystate/sensiforward/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardPlist) {
-    simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
     amici::simulateAndWriteToFile("/model_steadystate/sensiforwardplist/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardErrorInt) {
-    simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
     amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrorint/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
-    simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
     amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrornewt/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardDense) {
-    simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
+    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardSPBCG) {
-    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, "/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
+    amici::simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, "/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 
