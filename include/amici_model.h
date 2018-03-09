@@ -120,7 +120,8 @@ namespace amici {
         h(ne,0.0),
         originalParameters(p),
         fixedParameters(k),
-        plist_(plist)
+        plist_(plist),
+        pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
         {
             J = SparseNewMat(nx, nx, nnz, CSC_MAT);
         }
@@ -450,7 +451,7 @@ namespace amici {
          * @brief getParameterScale
          * @return
          */
-        AMICI_parameter_scaling getParameterScale() const {
+        std::vector<AMICI_parameter_scaling> getParameterScale() const {
             return pscale;
         }
 
@@ -459,10 +460,21 @@ namespace amici {
          * @param pscale
          */
         void setParameterScale(AMICI_parameter_scaling pscale) {
+            this->pscale.assign(this->pscale.size(), pscale);
+            unscaledParameters.resize(originalParameters.size());
+            unscaleParameters(unscaledParameters.data());
+        }
+
+        /**
+         * @brief setParameterScale
+         * @param pscale
+         */
+        void setParameterScale(std::vector<AMICI_parameter_scaling> pscale) {
             this->pscale = pscale;
             unscaledParameters.resize(originalParameters.size());
             unscaleParameters(unscaledParameters.data());
         }
+
 
         /**
          * @brief getPositivityFlag
@@ -1339,7 +1351,7 @@ namespace amici {
         int nmaxevent = 10;
 
         /** parameter transformation of p */
-        AMICI_parameter_scaling pscale = AMICI_SCALING_NONE;
+        std::vector<AMICI_parameter_scaling> pscale;
 
         /** starting time */
         double tstart = 0.0;

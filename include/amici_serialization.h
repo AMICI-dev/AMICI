@@ -88,7 +88,6 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.qpositivex;
     ar &u.nmaxevent;
     ar &u.pscale;
-    ar &u.pscale;
     ar &u.tstart;
 
 }
@@ -111,7 +110,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &const_cast<int &>(r.nmaxevent);
     ar &const_cast<int &>(r.nt);
     ar &const_cast<int &>(r.newton_maxsteps);
-    ar &const_cast<amici::AMICI_parameter_scaling &>(r.pscale);
+    ar &r.pscale;
     ar &const_cast<amici::AMICI_o2mode &>(r.o2mode);
     ar &const_cast<amici::AMICI_sensi_order &>(r.sensi);
     ar &const_cast<amici::AMICI_sensi_meth &>(r.sensi_meth);
