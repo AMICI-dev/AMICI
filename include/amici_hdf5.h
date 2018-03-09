@@ -80,6 +80,10 @@ void readModelDataFromHDF5(H5::H5File const&file, Model& model, std::string cons
   */
 
 void writeReturnData(const ReturnData &rdata,
+                     H5::H5File& file,
+                     const std::string& hdf5Location);
+
+void writeReturnData(const ReturnData &rdata,
                      std::string const& hdf5Filename,
                      const std::string& hdf5Location);
 

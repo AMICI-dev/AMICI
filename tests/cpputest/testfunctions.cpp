@@ -27,12 +27,12 @@ void simulateAndVerifyFromFile(std::string path, double atol, double rtol)
 
 void simulateAndWriteToFile(const std::string path)
 {
-    simulateAndWriteToFile(HDFFILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
+    simulateAndWriteToFile(NEW_OPTION_FILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
 }
 
 void simulateAndWriteToFile(std::string path, double atol, double rtol)
 {
-    simulateAndWriteToFile(HDFFILE, HDFFILEWRITE, path, atol, rtol);
+    simulateAndWriteToFile(NEW_OPTION_FILE, HDFFILEWRITE, path, atol, rtol);
 }
 
 
@@ -76,10 +76,20 @@ void simulateAndWriteToFile(const std::string hdffile, const std::string hdffile
 
     auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
 
-    std::string writePath = path + "/write";
-    hdf5::writeReturnData(*rdata, hdffilewrite, writePath);
+    H5::H5File in(hdffile, H5F_ACC_RDONLY);
+    auto out = amici::hdf5::createOrOpenForWriting(hdffilewrite);
+    if(!hdf5::locationExists(out, path))
+        hdf5::createGroup(out, path);
+    std::string writePath = path + "/options";
+    H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    writePath = path + "/data";
+    if(hdf5::locationExists(in, writePath))
+        H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+
+    writePath = path + "/results";
+    hdf5::writeReturnData(*rdata, out, writePath);
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
-    remove(hdffilewrite.c_str());
+    //remove(hdffilewrite.c_str());
 }
 
 

@@ -118,10 +118,8 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     return edata;
 }
 
-void writeReturnData(ReturnData const& rdata,
-                     std::string const& hdf5Filename,
-                     std::string const& hdf5Location) {
-    auto file = createOrOpenForWriting(hdf5Filename);
+void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::string &hdf5Location)
+{
 
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
@@ -136,7 +134,7 @@ void writeReturnData(ReturnData const& rdata,
 
     if (rdata.llh)
         H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", rdata.llh, 1);
-    
+
     if (rdata.status)
         H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "status", rdata.status, 1);
 
@@ -246,6 +244,15 @@ void writeReturnData(ReturnData const& rdata,
         createAndWriteDouble3DAttribute(
                     group, "ssigmaz", rdata.ssigmaz, rdata.nmaxevent, rdata.nz,
                     rdata.nplist);
+}
+
+
+void writeReturnData(ReturnData const& rdata,
+                     std::string const& hdf5Filename,
+                     std::string const& hdf5Location) {
+    auto file = createOrOpenForWriting(hdf5Filename);
+
+    writeReturnData(rdata, file, hdf5Location);
 }
 
 double getDoubleScalarAttribute(H5::H5File const& file,
