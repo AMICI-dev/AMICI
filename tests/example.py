@@ -14,7 +14,8 @@ class AmiciExample:
             'theta' : [],
             'kappa' : [],
             'ts' : [],
-            'tstart' : 0.0
+            'tstart' : 0.0,
+            'pscale' : 0
         }
         self.solverOptions = {
             'atol' : 1e-16,
@@ -30,19 +31,16 @@ class AmiciExample:
             'newton_preeq' : 0,
             'nmaxevent' : 10,
             'ordering' : 0,
-            # pbar
+            # pbar unused
             # 'qpositivex'
             'rtol' : 1e-8,
             'sens_ind' : [],
             'sensi': 0,
             'sensi_meth' : 1,
-            'ss' : 0, # ?
             'stldet' : 1,
             # sx0
             # x0
-            'z2event' : 0.0
         }
-        self.modelOptions['pscale'] = 0
         #self.modelOptions['qpositivex'] = [0] * self.numX 
         #self.modelOptions['sx0'] = [1.0] * np 
         #self.modelOptions['x0'] = [1.0] * np 
