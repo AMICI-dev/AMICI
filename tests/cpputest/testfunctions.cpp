@@ -15,28 +15,18 @@ extern std::unique_ptr<amici::Model> getModel();
 
 namespace amici {
 
-void simulateAndVerifyFromFile(const std::string path)
+void simulateVerifyWrite(const std::string path)
 {
-    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, path, TEST_ATOL, TEST_RTOL);
+    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
 }
 
-void simulateAndVerifyFromFile(std::string path, double atol, double rtol)
+void simulateVerifyWrite(std::string path, double atol, double rtol)
 {
-    simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, path, atol, rtol);
-}
-
-void simulateAndWriteToFile(const std::string path)
-{
-    simulateAndWriteToFile(NEW_OPTION_FILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
-}
-
-void simulateAndWriteToFile(std::string path, double atol, double rtol)
-{
-    simulateAndWriteToFile(NEW_OPTION_FILE, HDFFILEWRITE, path, atol, rtol);
+    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, atol, rtol);
 }
 
 
-void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::string hdffileResults, std::string path, double atol, double rtol)
+void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults, const std::string hdffilewrite, std::string path, double atol, double rtol)
 {
     using namespace amici;
     // read options from file
@@ -57,26 +47,9 @@ void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::stri
     auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
     std::string resultPath = path + "/results";
     verifyReturnDataMatlab(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
-}
 
-void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol)
-{
-    // read simulation options
-    std::string optionsPath = path + "/options";
-    auto model = getModel();
-    auto solver = model->getSolver();
 
-    hdf5::readModelDataFromHDF5(hdffile, *model, optionsPath);
-    hdf5::readSolverSettingsFromHDF5(hdffile, *solver, optionsPath);
-
-    std::string measurementPath = path + "/data";
-    std::unique_ptr<const ExpData> edata;
-    if(hdf5::locationExists(hdffile, measurementPath))
-        edata = hdf5::readSimulationExpData(hdffile, measurementPath, *model);
-
-    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
-
-    H5::H5File in(hdffile, H5F_ACC_RDONLY);
+    H5::H5File in(hdffileOptions, H5F_ACC_RDONLY);
     auto out = amici::hdf5::createOrOpenForWriting(hdffilewrite);
     if(!hdf5::locationExists(out, path))
         hdf5::createGroup(out, path);
@@ -91,7 +64,6 @@ void simulateAndWriteToFile(const std::string hdffile, const std::string hdffile
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
     //remove(hdffilewrite.c_str());
 }
-
 
 std::unique_ptr<ExpData> getTestExpData(Model const& model) {
     return std::unique_ptr<ExpData>(new ExpData(model));
@@ -228,7 +200,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
 
 
         if(model->nz>0) {
-            expected = hdf5::getDoubleDataset3D(file, resultPath +"sz", m, n, o);
+            expected = hdf5::getDoubleDataset3D(file, resultPath + "/sz", m, n, o);
             for(int ip = 0; ip < model->nplist(); ++ip)
                 checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
                         &rdata->sz[ip * model->nMaxEvent() * model->nz],

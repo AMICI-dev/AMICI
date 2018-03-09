@@ -20,11 +20,11 @@ TEST_GROUP(groupEvents)
 };
 
 TEST(groupEvents, testSimulation) {
-    amici::simulateAndVerifyFromFile("/model_nested_events/nosensi/");
+    amici::simulateVerifyWrite("/model_nested_events/nosensi/");
 }
 
 TEST(groupEvents, testSensitivityForward) {
-    amici::simulateAndVerifyFromFile("/model_nested_events/sensiforward/");
+    amici::simulateVerifyWrite("/model_nested_events/sensiforward/");
 }
 
 

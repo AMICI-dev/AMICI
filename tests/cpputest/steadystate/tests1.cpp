@@ -77,38 +77,33 @@ TEST(groupSteadystate, testReuseSolver) {
 
 
 TEST(groupSteadystate, testSimulation) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/nosensi/");
-    amici::simulateAndWriteToFile("/model_steadystate/nosensi/");
+    amici::simulateVerifyWrite("/model_steadystate/nosensi/");
 }
 
 TEST(groupSteadystate, testSensitivityForward) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforward/");
-    amici::simulateAndWriteToFile("/model_steadystate/sensiforward/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforward/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardPlist) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwardplist/");
-    amici::simulateAndWriteToFile("/model_steadystate/sensiforwardplist/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforwardplist/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardErrorInt) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrorint/");
-    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrorint/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforwarderrorint/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardErrorNewt) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarderrornewt/");
-    amici::simulateAndWriteToFile("/model_steadystate/sensiforwarderrornewt/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforwarderrornewt/");
 }
 
 
 TEST(groupSteadystate, testSensitivityForwardDense) {
-    amici::simulateAndVerifyFromFile("/model_steadystate/sensiforwarddense/");
+    amici::simulateVerifyWrite("/model_steadystate/sensiforwarddense/");
 }
 
 TEST(groupSteadystate, testSensitivityForwardSPBCG) {
-    amici::simulateAndVerifyFromFile(NEW_OPTION_FILE, HDFFILE, "/model_steadystate/nosensiSPBCG/",10*TEST_ATOL, 10*TEST_RTOL);
+    amici::simulateVerifyWrite("/model_steadystate/nosensiSPBCG/", 10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 

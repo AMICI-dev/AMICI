@@ -102,17 +102,13 @@ public:
 };
 
 
-void simulateAndVerifyFromFile(const std::string path);
+void simulateVerifyWrite(const std::string path);
 
-void simulateAndVerifyFromFile(std::string path, double atol, double rtol);
+void simulateVerifyWrite(std::string path, double atol, double rtol);
 
-void simulateAndVerifyFromFile(const std::string hdffileOptions, const std::string hdffileResults, std::string path, double atol, double rtol);
-
-void simulateAndWriteToFile(const std::string path);
-
-void simulateAndWriteToFile(std::string path, double atol, double rtol);
-
-void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol);
+void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults,
+                         const std::string hdffilewrite, std::string path,
+                         double atol, double rtol);
 
 std::unique_ptr<ExpData> getTestExpData(const Model &model);
 

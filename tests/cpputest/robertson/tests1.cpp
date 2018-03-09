@@ -19,11 +19,11 @@ TEST_GROUP(groupRobertson)
 };
 
 TEST(groupRobertson, testSimulation) {
-    amici::simulateAndVerifyFromFile("/model_robertson/nosensi/");
+    amici::simulateVerifyWrite("/model_robertson/nosensi/");
 }
 
 TEST(groupRobertson, testSensitivityForward) {
-    amici::simulateAndVerifyFromFile("/model_robertson/sensiforward/");
+    amici::simulateVerifyWrite("/model_robertson/sensiforward/");
 }
 
 
