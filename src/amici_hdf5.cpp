@@ -210,7 +210,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
         createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", rdata.sigmay, rdata.nt, rdata.ny);
 
     if (rdata.sigmaz)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", rdata.sigmaz, rdata.nt, rdata.nz);
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", rdata.sigmaz, rdata.nmaxevent, rdata.nz);
 
     if (rdata.s2llh)
         createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh,
