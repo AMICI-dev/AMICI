@@ -65,8 +65,9 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 
-    DOUBLES_EQUAL(r.llh, s.llh, 1e-16);
-    DOUBLES_EQUAL(r.chi2, s.chi2, 1e-16);
+
+    CHECK_TRUE(r.llh == s.llh || (std::isnan(r.llh) && std::isnan(s.llh)));
+    CHECK_TRUE(r.chi2 == s.chi2 || (std::isnan(r.llh) && std::isnan(s.llh)));
     CHECK_EQUAL(r.status, s.status);
 
     checkEqualArray(r.sllh, s.sllh, 1e-5, 1e-5, "sllh");

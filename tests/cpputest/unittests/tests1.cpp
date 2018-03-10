@@ -32,15 +32,6 @@ TEST_GROUP(amici)
     }
 };
 
-TEST(amici, testRunAmiciSimulationRdataMissing) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
-                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-    amici::IDASolver solver;
-    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(solver, nullptr, model))
-}
-
-
 TEST_GROUP(model)
 {
     void setup() {
