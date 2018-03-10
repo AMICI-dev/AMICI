@@ -38,8 +38,8 @@ void assertMeasurementDimensionsCompatible(hsize_t m, hsize_t n, Model const& mo
         assert(m == (unsigned)model.nytrue || m == (unsigned)model.nt());
         assert(m * n == (unsigned)model.nytrue * model.nt());
     } else {
-        assert(n == (unsigned)model.nt());
-        assert(m == (unsigned)model.nytrue);
+        assert(n == (unsigned)model.nytrue);
+        assert(m == (unsigned)model.nt());
     }
 }
 
@@ -59,8 +59,8 @@ void assertEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
                m == (unsigned)model.nMaxEvent());
         assert(m * n == (unsigned)model.nytrue * model.nMaxEvent());
     } else {
-        assert(n == (unsigned)model.nMaxEvent());
-        assert(m == (unsigned)model.nztrue);
+        assert(n == (unsigned)model.nztrue);
+        assert(m == (unsigned)model.nMaxEvent());
     }
 }
 

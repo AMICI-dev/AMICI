@@ -36,7 +36,7 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
-        self.data['Y'] = np.transpose(xls.loc[:,['pSTAT_au', 'tSTAT_au', 'pEpoR_au']])
+        self.data['Y'] = np.array(xls.loc[:,['pSTAT_au', 'tSTAT_au', 'pEpoR_au']])
         self.data['Sigma_Y'] = np.full(self.data['Y'].shape, np.nan)
         self.data['Sigma_Z'] = []
         self.data['Z'] = []

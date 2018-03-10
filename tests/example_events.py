@@ -33,8 +33,8 @@ class ExampleEvents(AmiciExample):
         self.data['Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
         self.data['Sigma_Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
 
-        self.data['Z'] = np.full((self.numZ, self.solverOptions['nmaxevent']), np.nan)
-        self.data['Sigma_Z'] = np.full((self.numZ, self.solverOptions['nmaxevent']), np.nan)
+        self.data['Z'] = np.full((self.solverOptions['nmaxevent'], self.numZ ), np.nan)
+        self.data['Sigma_Z'] = np.full((self.solverOptions['nmaxevent'], self.numZ ), np.nan)
         
         self.data['condition'] = self.modelOptions['kappa']
         self.data['t'] = self.modelOptions['ts']
