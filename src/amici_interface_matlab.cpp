@@ -196,8 +196,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "not match provided time vector (%i)",
                                nt_my, model.nt());
         }
-        
-        edata->setObservedData(mxGetPr(dataY));
+        mxArray *dataYT;
+        mexCallMATLAB(1, &dataYT, 1, &dataY, "transpose");
+        edata->setObservedData(mxGetPr(dataYT));
         
     } else {
         throw AmiException("Field Y not specified as field in data struct!");
@@ -218,7 +219,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                nt_sigmay, model.nt());
         }
         
-        edata->setObservedDataStdDev(mxGetPr(dataSigmaY));
+        mxArray *dataSigmaYT;
+        mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
+        edata->setObservedDataStdDev(mxGetPr(dataSigmaYT));
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
     }
@@ -237,7 +240,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "not match provided nmaxevent (%i)",
                                ne_mz, model.nMaxEvent());
         }
-        edata->setObservedEvents(mxGetPr(dataZ));
+        mxArray *dataZT;
+        mexCallMATLAB(1, &dataZT, 1, &dataZ, "transpose");
+        edata->setObservedEvents(mxGetPr(dataZT));
     } else {
         throw AmiException("Field Z not specified as field in data struct!");
     }
@@ -256,8 +261,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "does not match provided nmaxevent (%i)",
                                ne_sigmaz, model.nMaxEvent());
         }
-        
-        edata->setObservedEventsStdDev(mxGetPr(dataSigmaZ));
+        mxArray *dataSigmaZT;
+        mexCallMATLAB(1, &dataSigmaZT, 1, &dataSigmaZ, "transpose");
+        edata->setObservedEventsStdDev(mxGetPr(dataSigmaZT));
     } else {
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
         
