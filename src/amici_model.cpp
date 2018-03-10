@@ -540,16 +540,16 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
 void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmay.begin(),sigmay.end(),0.0);
     fsigma_y(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
-    for (int iy = 0; iy < nytrue; iy++) {
+    for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
              is NaN, use
              the parameter value. Store this value in the return struct */
         if(edata){
-            if (!isNaN(edata->sigmay[iy * rdata->nt + it])) {
-                sigmay.at(iy) = edata->sigmay[iy * rdata->nt + it];
+            if (!isNaN(edata->sigmay[it * edata->nytrue + iytrue])) {
+                sigmay.at(iytrue) = edata->sigmay[it * edata->nytrue + iytrue];
             }
         }
-        rdata->sigmay[it * rdata->ny + iy] = sigmay.at(iy);
+        rdata->sigmay[it * rdata->ny + iytrue] = sigmay.at(iytrue);
     }
 }
 
@@ -574,14 +574,14 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
                      const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
     fsigma_z(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
-    for (int iz = 0; iz < nztrue; iz++) {
-        if (z2event.at(iz) - 1 == ie) {
+    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+        if (z2event.at(iztrue) - 1 == ie) {
             if(edata) {
-                if (!isNaN(edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz])) {
-                    sigmaz.at(iz) = edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz];
+                if (!isNaN(edata->sigmaz[nroots[ie]*edata->nztrue + iztrue])) {
+                    sigmaz.at(iztrue) = edata->sigmaz[nroots[ie]*edata->nztrue + iztrue];
                 }
             }
-            rdata->sigmaz[nroots[ie]*rdata->nz + iz] = sigmaz.at(iz);
+            rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
         }
     }
 }
@@ -784,7 +784,7 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = static_cast<realtype>(edata->my[it + edata->nt*iytrue]);
+            my.at(iytrue) = static_cast<realtype>(edata->my[it*edata->nytrue + iytrue]);
         }
     } else {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
@@ -834,7 +834,7 @@ const realtype Model::gett(const int it, const ReturnData *rdata) const {
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots + edata->nmaxevent*iztrue]);
+            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots*edata->nztrue + iztrue]);
         }
     } else {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
