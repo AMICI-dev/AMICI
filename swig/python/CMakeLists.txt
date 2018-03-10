@@ -13,7 +13,7 @@ SWIG_LINK_LIBRARIES(edata ${PYTHON_LIBRARIES})
 
 SET(PYTHON_INSTALL_FILES
         ${CMAKE_CURRENT_BINARY_DIR}/edata.py
-        ${CMAKE_CURRENT_BINARY_DIR}/edata.so)
+        ${CMAKE_CURRENT_BINARY_DIR}/_edata.so)
         
 # Configure setup.py and copy to output directory
 SET(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in)
@@ -21,5 +21,5 @@ SET(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 
 add_custom_target(install-python
-        DEPENDS _edata.so
+        DEPENDS _edata
         COMMAND python ${SETUP_PY_OUT} install)
