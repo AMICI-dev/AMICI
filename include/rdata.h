@@ -136,8 +136,7 @@ class ReturnData {
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (dimension: nt) */
-    // TODO @Review: should be int?
-    std::vector<realtype> order;
+    std::vector<int> order;
 
     /** flag indicating success of Newton solver */
     int newton_status = 0;

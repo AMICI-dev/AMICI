@@ -54,8 +54,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.numerrtestfailsB == s.numerrtestfailsB);
     CHECK_TRUE(r.numnonlinsolvconvfails == s.numnonlinsolvconvfails);
     CHECK_TRUE(r.numnonlinsolvconvfailsB == s.numnonlinsolvconvfailsB);
-
-    checkEqualArray(r.order, s.order, 1e-16, 1e-16, "order");
+    CHECK_TRUE(r.order == s.order);
 
     CHECK_TRUE(r.newton_status == s.newton_status);
     CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);

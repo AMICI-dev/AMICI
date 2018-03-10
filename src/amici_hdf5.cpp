@@ -158,7 +158,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
                                    rdata.numnonlinsolvconvfails);
 
     if (rdata.order.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/order", rdata.order.data(), rdata.order.size());
+        createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
 
     if (rdata.numstepsB.size())
         createAndWriteInt1DDataset(file, hdf5Location + "/numstepsB", rdata.numstepsB);

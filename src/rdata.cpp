@@ -59,24 +59,15 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     sres.clear();
 
     if(nt>0) {
-        numsteps.resize(nt, getNaN());
-        numsteps[0] = 0;
-        numstepsB.resize(nt, getNaN());
-        numstepsB[nt-1] = 0;
-        numrhsevals.resize(nt, getNaN());
-        numrhsevals[0] = 0;
-        numrhsevalsB.resize(nt, getNaN());
-        numrhsevalsB[nt-1] = 0;
-        numerrtestfails.resize(nt, getNaN());
-        numerrtestfails[0] = 0;
-        numerrtestfailsB.resize(nt, getNaN());
-        numerrtestfailsB[nt-1] = 0;
-        numnonlinsolvconvfails.resize(nt, getNaN());
-        numnonlinsolvconvfails[0] = 0;
-        numnonlinsolvconvfailsB.resize(nt, getNaN());
-        numnonlinsolvconvfailsB[nt-1] = 0;
-        order.resize(nt, getNaN());
-        order[0] = 0;
+        numsteps.resize(nt, 0);
+        numstepsB.resize(nt, 0);
+        numrhsevals.resize(nt, 0);
+        numrhsevalsB.resize(nt, 0);
+        numerrtestfails.resize(nt, 0);
+        numerrtestfailsB.resize(nt, 0);
+        numnonlinsolvconvfails.resize(nt, 0);
+        numnonlinsolvconvfailsB.resize(nt, 0);
+        order.resize(nt, 0);
         newton_numsteps.resize(2, 0);
         newton_numlinsteps.resize(newton_maxsteps*2, 0);
     }
