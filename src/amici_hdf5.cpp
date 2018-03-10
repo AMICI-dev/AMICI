@@ -735,7 +735,8 @@ std::vector<int> getIntDataset1D(const H5::H5File &file,
     hsize_t dim;
     dataspace.getSimpleExtentDims(&dim);
     std::vector<int> result(dim);
-    dataset.read(result.data(), H5::PredType::NATIVE_INT);
+    if(result.size())
+        dataset.read(result.data(), H5::PredType::NATIVE_INT);
     return result;
 }
 
