@@ -28,8 +28,7 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
      * @param solver solver
-     * @param model pointer to model specification object @type Model
-     * @param initializeFields flag to initialize arrays (needs to happen elsewhere if false) @type
+     * @param model pointer to model specification object
      * bool
      */
 

@@ -36,10 +36,6 @@ class ReturnData {
     void invalidate(const realtype t);
     void invalidateLLH();
 
-    void setLikelihoodSensitivityFirstOrderNaN();
-
-    void setLikelihoodSensitivitySecondOrderNaN();
-
     void 
     applyChainRuleFactorToSimulationResults(const Model *model);
 

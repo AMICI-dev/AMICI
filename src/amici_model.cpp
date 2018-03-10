@@ -796,6 +796,7 @@ void Model::getmy(const int it, const ExpData *edata){
 /** create x slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @return x x-slice from rdata instance
      */
 const realtype *Model::getx(const int it, const ReturnData *rdata) const {
     return &rdata->x.at(it*nx);
@@ -804,6 +805,7 @@ const realtype *Model::getx(const int it, const ReturnData *rdata) const {
 /** create sx slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @return sx sx-slice from rdata instance
      */
 const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
     return &rdata->sx.at(it*nx*nplist());
@@ -812,6 +814,7 @@ const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
 /** create y slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @return y y-slice from rdata instance
      */
 const realtype *Model::gety(const int it, const ReturnData *rdata) const {
     return &rdata->y.at(it*ny);
@@ -863,6 +866,7 @@ const realtype *Model::getrz(const int nroots, const ReturnData *rdata) const {
 
 /** create sz slice at event
      * @param nroots event occurence
+     * @param ip sensitivity index
      * @param rdata pointer to return data instance
      * @return z slice
      */
@@ -872,6 +876,7 @@ const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *r
 
 /** create srz slice at event
      * @param nroots event occurence
+     * @param ip sensitivity index
      * @param rdata pointer to return data instance
      * @return rz slice
      */
