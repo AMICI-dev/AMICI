@@ -752,7 +752,8 @@ std::vector<double> getDoubleDataset1D(const H5::H5File &file, const std::string
     hsize_t dim;
     dataspace.getSimpleExtentDims(&dim);
     std::vector<double> result(dim);
-    dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
+    if(result.size())
+        dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
 
@@ -775,7 +776,8 @@ std::vector<double> getDoubleDataset2D(const H5::H5File &file, const std::string
     n = dims[1];
 
     std::vector<double> result(m * n);
-    dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
+    if(result.size())
+        dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
 }
@@ -798,7 +800,8 @@ std::vector<double> getDoubleDataset3D(const H5::H5File &file, const std::string
     o = dims[2];
 
     std::vector<double> result(m * n * o);
-    dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
+    if(result.size())
+        dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
 }
