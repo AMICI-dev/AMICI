@@ -890,20 +890,18 @@ void Model::unscaleParameters(double *bufferUnscaled) const
          *
          * @return status flag indicating success of execution @type int
          */
-    switch (pscale) {
-    case AMICI_SCALING_LOG10:
-        for (int ip = 0; ip < np(); ++ip) {
+    for (int ip = 0; ip < np(); ++ip) {
+        switch (pscale[ip]) {
+        case AMICI_SCALING_LOG10:
             bufferUnscaled[ip] = pow(10, originalParameters[ip]);
-        }
-        break;
-    case AMICI_SCALING_LN:
-        for (int ip = 0; ip < np(); ++ip)
+            break;
+        case AMICI_SCALING_LN:
             bufferUnscaled[ip] = exp(originalParameters[ip]);
-        break;
-    case AMICI_SCALING_NONE:
-        for (int ip = 0; ip < np(); ++ip)
+            break;
+        case AMICI_SCALING_NONE:
             bufferUnscaled[ip] = originalParameters[ip];
-        break;
+            break;
+        }
     }
 }
 

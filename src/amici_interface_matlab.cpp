@@ -367,8 +367,20 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             model.setT0(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "tstart")));
         }
 
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
-            model.setParameterScale(static_cast<AMICI_parameter_scaling>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")))));
+        if (mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
+            if(mxGetM(a) == 1 && mxGetN(a) == 1) {
+                model.setParameterScale(static_cast<AMICI_parameter_scaling>(dbl2int(mxGetScalar(a))));
+            } else if((mxGetM(a) == 1 && mxGetN(a) == model.np())
+                      || (mxGetN(a) == 1 && mxGetM(a) == model.np())) {
+                auto pscaleArray = static_cast<double *>(mxGetData(a));
+                std::vector<AMICI_parameter_scaling> pscale(model.np());
+                for(int ip = 0; ip < model.np(); ++ip) {
+                    pscale[ip] = static_cast<AMICI_parameter_scaling>(dbl2int(pscaleArray[ip]));
+                }
+                model.setParameterScale(pscale);
+            } else {
+                throw AmiException("Provided pscale has invalid dimensions!");
+            }
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex")) {

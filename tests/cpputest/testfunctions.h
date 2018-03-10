@@ -19,6 +19,7 @@ namespace amici {
 class ReturnData;
 class ExpData;
 
+#define NEW_OPTION_FILE "../../testOptions.h5"
 #define HDFFILE "../../expectedResults.h5"
 #define HDFFILEWRITE "../../writeResults.h5"
 #define TEST_ATOL 1e-10
@@ -101,17 +102,13 @@ public:
 };
 
 
-void simulateAndVerifyFromFile(const std::string path);
+void simulateVerifyWrite(const std::string path);
 
-void simulateAndVerifyFromFile(std::string path, double atol, double rtol);
+void simulateVerifyWrite(std::string path, double atol, double rtol);
 
-void simulateAndVerifyFromFile(const std::string hdffile, std::string path, double atol, double rtol);
-
-void simulateAndWriteToFile(const std::string path);
-
-void simulateAndWriteToFile(std::string path, double atol, double rtol);
-
-void simulateAndWriteToFile(const std::string hdffile, const std::string hdffilewrite, std::string path, double atol, double rtol);
+void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults,
+                         const std::string hdffilewrite, std::string path,
+                         double atol, double rtol);
 
 std::unique_ptr<ExpData> getTestExpData(const Model &model);
 
@@ -121,6 +118,12 @@ void checkEqualArray(const double *expected, const double *actual, int length, d
 
 void checkEqualArray(std::vector<double> const& expected, std::vector<double> const& actual,
                      double atol, double rtol, std::string const& name);
+
+// TODO: delete after transitioning to C++-written test results
+void verifyReturnDataMatlab(const std::string &hdffile, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
+
+// TODO: delete after transitioning to C++-written test results
+void verifyReturnDataSensitivitiesMatlab(const H5::H5File &file_id, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
 
 void verifyReturnData(const std::string &hdffile, const std::string &resultPath, const ReturnData *rdata, const Model *model, double atol, double rtol);
 

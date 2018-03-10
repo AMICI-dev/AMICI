@@ -13,7 +13,7 @@ ReturnData::ReturnData()
      */
     : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
-      pscale(AMICI_SCALING_NONE), o2mode(AMICI_O2MODE_NONE),
+      pscale(std::vector<AMICI_parameter_scaling>(0, AMICI_SCALING_NONE)), o2mode(AMICI_O2MODE_NONE),
       sensi(AMICI_SENSI_ORDER_NONE), sensi_meth(AMICI_SENSI_NONE) {}
 
 ReturnData::ReturnData(Solver const& solver, const Model *model)
@@ -136,39 +136,37 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
      * in the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    if (pscale == AMICI_SCALING_NONE)
-        return;
 
     // chain-rule factor: multiplier for am_p
-    realtype coefficient;
+    std::vector<realtype> coefficient(nplist, 1.0);
 
-    std::vector<realtype> pcoefficient(nplist);
+    std::vector<realtype> pcoefficient(nplist, 1.0);
     std::vector<realtype> unscaledParameters(np);
     model->unscaleParameters(unscaledParameters.data());
     std::vector<realtype> augcoefficient(np);
 
-    switch (pscale) {
+    for (int ip = 0; ip < nplist; ++ip) {
+        switch (pscale[model->plist(ip)]) {
         case AMICI_SCALING_LOG10:
-            coefficient = log(10.0);
-            for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient.at(ip) = unscaledParameters[model->plist(ip)] * log(10);
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
+            coefficient[ip] = log(10.0);
+
+            pcoefficient[ip] = unscaledParameters[model->plist(ip)] * log(10);
+            if (sensi == AMICI_SENSI_ORDER_SECOND)
+                if (o2mode == AMICI_O2MODE_FULL)
+                    augcoefficient[ip] = unscaledParameters[ip] * log(10);
             break;
         case AMICI_SCALING_LN:
-            coefficient = 1.0;
-            for (int ip = 0; ip < nplist; ++ip)
-                pcoefficient.at(ip) = unscaledParameters[model->plist(ip)];
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                for (int ip = 0; ip < np; ++ip)
-                    augcoefficient.at(ip) = unscaledParameters.at(ip);
+            coefficient[ip] = 1.0;
+            pcoefficient[ip] = unscaledParameters[model->plist(ip)];
+            if (sensi == AMICI_SENSI_ORDER_SECOND)
+                if (o2mode == AMICI_O2MODE_FULL)
+                    augcoefficient[ip] = unscaledParameters[ip];
             break;
         case AMICI_SCALING_NONE:
-            // this should never be reached
+            coefficient[ip] = 1.0;
             break;
+        }
     }
-    
 
     if (sensi >= AMICI_SENSI_ORDER_FIRST) {
         // recover first order sensitivies from states for adjoint sensitivity
@@ -219,13 +217,17 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     }
 
     if (o2mode == AMICI_O2MODE_FULL) { // full
-        for (int ip = 0; ip < nplist; ++ip) {
-            for (int iJ = 1; iJ < nJ; ++iJ) {
-                s2llh[ip * nplist + (iJ - 1)] *=
-                    pcoefficient.at(ip) * augcoefficient[iJ - 1];
-                if (model->plist(ip) == iJ - 1)
-                    s2llh[ip * nplist + (iJ - 1)] +=
-                        sllh.at(ip) * coefficient;
+        if (s2llh) {
+            if (sllh) {
+                for (int ip = 0; ip < nplist; ++ip) {
+                    for (int iJ = 1; iJ < nJ; ++iJ) {
+                        s2llh[ip * nplist + (iJ - 1)] *=
+                            pcoefficient[ip] * augcoefficient[iJ - 1];
+                        if (model->plist(ip) == iJ - 1)
+                            s2llh[ip * nplist + (iJ - 1)] +=
+                                    sllh[ip] * coefficient[ip];
+                    }
+                }
             }
         }
 
@@ -238,7 +240,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                         pcoefficient.at(ip) * augcoefficient[iJ - 1];           \
                     if (model->plist(ip) == iJ - 1)                             \
                         s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) +=   \
-                            s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *    \
+                            s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *         \
                             coefficient;                                        \
                 }
 

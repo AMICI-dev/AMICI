@@ -153,3 +153,15 @@ mtoc/config/latexextras.sty
 
 mtoc/config/Doxyfile-e
 
+.project
+
+.pydevproject
+
+.settings/
+
+cppcheck.txt
+
+__pycache__
+
+tests/cpputest/writeResults.h5
+tests/cpputest/writeResults.h5.bak

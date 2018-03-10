@@ -21,7 +21,7 @@ TEST_GROUP(groupNeuronO2)
 
 
 TEST(groupNeuronO2, testSensitivity2) {
-    amici::simulateAndVerifyFromFile("/model_neuron/sensi2forward/", 10*TEST_ATOL, 10*TEST_RTOL);
+    amici::simulateVerifyWrite("/model_neuron/sensi2forward/", 10*TEST_ATOL, 10*TEST_RTOL);
 }
 
 
