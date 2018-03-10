@@ -22,3 +22,4 @@ for MODEL in `ctest -N | grep "Test[ ]*#" | grep -v unittests | sed -E 's/ *Test
     do cd ${AMICI_PATH}/tests/cpputest/build/${MODEL}/ && valgrind ${VALGRIND_OPTS} ./model_${MODEL}_test
 done
 cd ${AMICI_PATH}/tests/cpputest/build/unittests/ && valgrind ${VALGRIND_OPTS} ./unittests
+rm ${AMICI_PATH}/tests/cpputest/writeResults.h5

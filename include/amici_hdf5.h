@@ -80,6 +80,10 @@ void readModelDataFromHDF5(H5::H5File const&file, Model& model, std::string cons
   */
 
 void writeReturnData(const ReturnData &rdata,
+                     H5::H5File& file,
+                     const std::string& hdf5Location);
+
+void writeReturnData(const ReturnData &rdata,
                      std::string const& hdf5Filename,
                      const std::string& hdf5Location);
 
@@ -122,6 +126,20 @@ bool attributeExists(H5::H5File const& file,
 bool attributeExists(H5::H5Object const& object,
                      const std::string &attributeName);
 
+void createAndWriteDouble1DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const double *buffer, hsize_t m);
+
+void createAndWriteDouble2DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const double *buffer, hsize_t m,
+                                     hsize_t n);
+
+void createAndWriteDouble3DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const double *buffer, hsize_t m,
+                                     hsize_t n, hsize_t o);
+
 // Helper functions to reading and writing HDF5 attributes:
 
 void createAndWriteDouble2DAttribute(H5::H5Object &location,
@@ -158,6 +176,17 @@ std::vector<double> getDoubleArrayAttribute2D(H5::H5File const& file,
 std::vector<double> getDoubleArrayAttribute3D(const H5::H5File &file,
                                               std::string const& optionsObject,
                                               std::string const& attributeName,
+                                              hsize_t &m, hsize_t &n, hsize_t &o);
+
+std::vector<double> getDoubleDataset1D(const H5::H5File &file,
+                                              std::string const& name);
+
+std::vector<double> getDoubleDataset2D(const H5::H5File &file,
+                                              std::string const& name,
+                                              hsize_t &m, hsize_t &n);
+
+std::vector<double> getDoubleDataset3D(const H5::H5File &file,
+                                              std::string const& name,
                                               hsize_t &m, hsize_t &n, hsize_t &o);
 
 void setAttributeIntFromDouble(const H5::H5File &file,
