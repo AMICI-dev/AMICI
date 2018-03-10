@@ -187,6 +187,9 @@ std::vector<double> getDoubleArrayAttribute3D(const H5::H5File &file,
                                               std::string const& attributeName,
                                               hsize_t &m, hsize_t &n, hsize_t &o);
 
+std::vector<int> getIntDataset1D(const H5::H5File &file,
+                                              std::string const& name);
+
 std::vector<double> getDoubleDataset1D(const H5::H5File &file,
                                               std::string const& name);
 

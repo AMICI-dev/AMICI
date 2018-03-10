@@ -1,10 +1,33 @@
 import h5py
 import numpy as np
+import pandas as pd
+
+def dict2hdf5(object, dictionary):
+    for key, value in dictionary.items():
+        if isArray(value):
+            a = np.array(value)
+            if not len(value):
+                dtype = 'f8'
+            elif isArray(value[0]):
+                if isinstance(value[0][0], (np.float64, float)):
+                    dtype = 'f8'
+                else:
+                    dtype = '<i4'
+            elif isinstance(value[0], (np.float64, float)):
+                dtype = 'f8'
+            else:
+                dtype = '<i4'
+            object.require_dataset(name=key, data=a, shape=a.shape, dtype=dtype)
+        else:
+            object.attrs[key] = value
 
 def dict2attrs(object, dictionary):
     for key, value in dictionary.items():
         object.attrs[key] = value
-        
+
+def isArray(var):
+    return isinstance(var, (list, tuple, np.ndarray, pd.core.frame.DataFrame, pd.core.series.Series))        
+
 class AmiciExample:
   
     def __init__(self):
@@ -49,10 +72,10 @@ class AmiciExample:
     def writeToFile(self, filename, root = "/"):
         with h5py.File(filename, "a") as f:
             g = f.require_group(root + '/options')
-            dict2attrs(g, self.modelOptions)
-            dict2attrs(g, self.solverOptions)
+            dict2hdf5(g, self.modelOptions)
+            dict2hdf5(g, self.solverOptions)
 
             if 'data' in self.__dict__ and len(self.data):
                 g = f.require_group(root + '/data')
-                dict2attrs(g, self.data)
+                dict2hdf5(g, self.data)
     
