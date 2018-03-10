@@ -44,7 +44,7 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
         edata = hdf5::readSimulationExpData(hdffileResults, measurementPath, *model);
 
     // simulate & verify
-    auto rdata = std::unique_ptr<ReturnData>(getSimulationResults(*model, edata.get(), *solver));
+    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
     verifyReturnDataMatlab(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
 

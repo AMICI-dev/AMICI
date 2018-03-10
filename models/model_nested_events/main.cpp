@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     auto edata = amici::hdf5::readSimulationExpData(hdffile, "/data", *model);
 
     // Run the simulation
-    auto rdata = std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, edata.get(), *solver));
+    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
 
     // Do something with the simulation results
     processReturnData(rdata.get(), model.get());

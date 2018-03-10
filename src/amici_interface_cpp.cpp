@@ -26,21 +26,6 @@ extern "C"
 namespace amici {
 
 /*!
- * getSimulationResults is the core cpp interface function. It initializes the
- * model and return data and
- * then calls the core simulation routine.
- *
- * @param[in] model the model object, this is necessary to perform
- * dimension checks @type Model
- * @param[in] edata pointer to experimental data object @type ExpData
- * @param[in] solver solver object @type Solver
- * @return rdata pointer to return data object @type ReturnData
- */
-ReturnData *getSimulationResults(Model &model, const ExpData *edata, Solver &solver) {
-    return runAmiciSimulation(solver, edata, model).get();
-}
-
-/*!
  * amici_dgemm provides an interface to the blas matrix matrix multiplication
  * routine dgemm. This routines computes
  * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]

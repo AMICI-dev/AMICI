@@ -3,7 +3,7 @@
 
 #include "testfunctions.h"
 #include <include/amici_hdf5.h>
-#include <include/amici_interface_cpp.h>
+#include <include/amici.h>
 
 #include <cstring>
 #include "wrapfunctions.h"
@@ -70,8 +70,8 @@ TEST(groupSteadystate, testReuseSolver) {
     amici::hdf5::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
     amici::hdf5::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
 
-    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
-    std::unique_ptr<amici::ReturnData>(amici::getSimulationResults(*model, nullptr, *solver));
+    runAmiciSimulation(*solver, nullptr, *model);
+    runAmiciSimulation(*solver, nullptr, *model);
 }
 
 
