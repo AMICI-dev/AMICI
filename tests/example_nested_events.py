@@ -29,10 +29,12 @@ class ExampleNestedEvents(AmiciExample):
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
-        self.data['Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Sigma_Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Sigma_Z'] = [np.array(np.full((self.numZ, self.solverOptions['nmaxevent']), 0.5))]
-        self.data['Z'] = [np.array(np.full((self.numZ, 2), np.nan))]
+        self.data['Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+        self.data['Sigma_Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+
+        self.data['Z'] = np.full((self.numZ, self.solverOptions['nmaxevent']), np.nan)
+        self.data['Sigma_Z'] = np.full((self.numZ, self.solverOptions['nmaxevent']), 0.5)
+
         self.data['condition'] = self.modelOptions['kappa']
         self.data['t'] = self.modelOptions['ts']
     

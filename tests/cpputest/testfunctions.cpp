@@ -38,21 +38,22 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
 
     // read measurements from file
     std::string measurementPath = path + "/data";
-
     std::unique_ptr<const ExpData> edata;
     if(hdf5::locationExists(hdffileOptions, measurementPath))
-        edata = hdf5::readSimulationExpData(hdffileResults, measurementPath, *model);
+        edata = hdf5::readSimulationExpData(hdffileOptions, measurementPath, *model);
 
     // simulate & verify
     auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
-    verifyReturnDataMatlab(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
+    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
 
-
+    // write
+    // delete destination group
     H5::H5File in(hdffileOptions, H5F_ACC_RDONLY);
     auto out = amici::hdf5::createOrOpenForWriting(hdffilewrite);
-    if(!hdf5::locationExists(out, path))
-        hdf5::createGroup(out, path);
+    if(hdf5::locationExists(out, path))
+        H5Ldelete(out.getId(), path.c_str(), H5P_DEFAULT);
+    hdf5::createGroup(out, path);
     std::string writePath = path + "/options";
     H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
     writePath = path + "/data";
@@ -61,6 +62,8 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
 
     writePath = path + "/results";
     hdf5::writeReturnData(*rdata, out, writePath);
+
+    // verify
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
     //remove(hdffilewrite.c_str());
 }
@@ -172,8 +175,9 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         verifyReturnDataSensitivities(file, resultPath, rdata, model, atol, rtol);
     } else {
-        CHECK_EQUAL(0, rdata->sllh.size());
-        CHECK_EQUAL(0, rdata->s2llh.size());
+        // @REVIEW: Obsolete? Those fields are initialized no matter if they are used or not
+        //CHECK_EQUAL(0, rdata->sllh.size());
+        //CHECK_EQUAL(0, rdata->s2llh.size());
     }
 }
 
@@ -239,125 +243,12 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/s2llh", m, n);
         checkEqualArray(expected, rdata->s2llh, atol, rtol, "s2llh");
     } else {
-        CHECK_EQUAL(0, rdata->s2llh.size());
-        CHECK_EQUAL(0, rdata->s2rz.size());
+        // @REVIEW: Obsolete? Those fields are initialized no matter if they are used or not
+        //CHECK_EQUAL(0, rdata->s2llh.size());
+        //CHECK_EQUAL(0, rdata->s2rz.size());
     }
 
 }
-
-
-void verifyReturnDataMatlab(std::string const& hdffile, std::string const& resultPath,
-                      const ReturnData *rdata, const Model *model, double atol, double rtol) {
-    CHECK_FALSE(rdata == nullptr);
-
-    // compare to saved data in hdf file
-    H5::H5File file(hdffile, H5F_ACC_RDONLY);
-
-    hsize_t m, n;
-
-
-    auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
-    CHECK_EQUAL(statusExp, rdata->status);
-
-    double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");
-    CHECK_TRUE(withinTolerance(llhExp, rdata->llh, atol, rtol, 1, "llh"));
-
-    auto expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "x", m, n);
-    checkEqualArray(expected, rdata->x, atol, rtol, "x");
-
-    //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
-
-    if(hdf5::attributeExists(file, resultPath, "J")) {
-        expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "J", m, n);
-        checkEqualArray(expected, rdata->J, atol, rtol, "J");
-    }
-
-    expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "y", m, n);
-    checkEqualArray(expected, rdata->y, atol, rtol, "y");
-
-    if(model->nz>0) {
-        expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "z", m, n);
-        checkEqualArray(expected, rdata->z, atol, rtol, "z");
-
-        expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "rz", m, n);
-        checkEqualArray(expected, rdata->rz, atol, rtol, "rz");
-
-        expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "sigmaz", m, n);
-        checkEqualArray(expected, rdata->sigmaz, atol, rtol, "sigmaz");
-    }
-
-    expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "xdot", m, n);
-    checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
-
-    if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        verifyReturnDataSensitivitiesMatlab(file, resultPath, rdata, model, atol, rtol);
-    } else {
-        CHECK_EQUAL(0, rdata->sllh.size());
-        CHECK_EQUAL(0, rdata->s2llh.size());
-    }
-}
-
-void verifyReturnDataSensitivitiesMatlab(H5::H5File const& file, std::string const& resultPath,
-                                   const ReturnData *rdata, const Model *model, double atol, double rtol) {
-    hsize_t m, n, o;
-    int status;
-
-    auto expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "sllh", m, n);
-    checkEqualArray(expected, rdata->sllh, atol, rtol, "sllh");
-
-    if(rdata->sensi_meth == AMICI_SENSI_FSA) {
-        expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "sx", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
-                    &rdata->sx[ip * model->nt() * model->nx],
-                    model->nt() * model->nxtrue, atol, rtol, "sx");
-
-        expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "sy", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
-                    &rdata->sy[ip * model->nt() * model->ny],
-                    model->nt() * model->nytrue, atol, rtol, "sy");
-
-
-        if(model->nz>0) {
-            expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "sz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->sz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "sz");
-
-            expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "srz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->srz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
-        }
-
-        expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "ssigmay", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
-                    &rdata->ssigmay[ip * model->nt() * model->ny],
-                    model->nt() * model->nytrue, atol, rtol, "ssigmay");
-
-        if(model->nz>0) {
-            expected = hdf5::getDoubleArrayAttribute3D(file, resultPath, "ssigmaz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
-        }
-    }
-
-    if(rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
-        expected = hdf5::getDoubleArrayAttribute2D(file, resultPath, "s2llh", m, n);
-        checkEqualArray(expected, rdata->s2llh, atol, rtol, "s2llh");
-    } else {
-        CHECK_EQUAL(0, rdata->s2llh.size());
-        CHECK_EQUAL(0, rdata->s2rz.size());
-    }
-
-}
-
 
 void printBacktrace(const int nMaxFrames) {
     void *callstack[nMaxFrames];

@@ -125,18 +125,16 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
         createGroup(file, hdf5Location);
 
     if (rdata.ts.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "//t",
+        createAndWriteDouble1DDataset(file, hdf5Location + "/t",
                                       rdata.ts.data(), rdata.nt);
 
     if (rdata.xdot.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/xdot",
                                       rdata.xdot.data(), rdata.nx);
 
-    if (rdata.llh)
-        H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", &rdata.llh, 1);
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", &rdata.llh, 1);
 
-    if (rdata.status)
-        H5LTset_attribute_int(file.getId(), hdf5Location.c_str(), "status", &rdata.status, 1);
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(), "status", &rdata.status, 1);
 
     if (rdata.sllh.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
@@ -627,6 +625,8 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         for(int i = 0; (unsigned)i < pscaleInt.size(); ++i)
             pscale[i] = static_cast<AMICI_parameter_scaling>(pscaleInt[i]);
         model.setParameterScale(pscale);
+    } else if (attributeExists(file, datasetPath, "pscale")) {
+        model.setParameterScale(static_cast<AMICI_parameter_scaling>(getDoubleScalarAttribute(file,  datasetPath, "pscale")));
     }
 
     if(attributeExists(file, datasetPath, "nmaxevent")) {

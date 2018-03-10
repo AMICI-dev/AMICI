@@ -27,7 +27,7 @@ TEST(groupSteadystate, testModelFromHDF5) {
     auto model = getModel();
     amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
 
-    amici::checkEqualArray(kExp.data(), model->k(), kExp.size(), TEST_ATOL, TEST_RTOL, "k");
+    amici::checkEqualArray(kExp, model->getFixedParameters(), TEST_ATOL, TEST_RTOL, "k");
     CHECK_EQUAL(51, model->nt());
     CHECK_EQUAL(0.0, model->t(0));
     CHECK_EQUAL(100.0, model->t(model->nt() - 2));
@@ -67,8 +67,8 @@ TEST(groupSteadystate, testReuseSolver) {
     auto model = getModel();
     auto solver = model->getSolver();
 
-    amici::hdf5::readModelDataFromHDF5(HDFFILE, *model, "/model_steadystate/nosensi/options");
-    amici::hdf5::readSolverSettingsFromHDF5(HDFFILE, *solver, "/model_steadystate/nosensi/options");
+    amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
+    amici::hdf5::readSolverSettingsFromHDF5(NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
 
     runAmiciSimulation(*solver, nullptr, *model);
     runAmiciSimulation(*solver, nullptr, *model);
