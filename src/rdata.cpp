@@ -231,6 +231,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                                     coefficient[ip];                           \
 }
 
+
         s2ChainRule(x, ix, nxtrue, nx, it, nt);
         s2ChainRule(y, iy, nytrue, ny, it, nt);
         s2ChainRule(sigmay, iy, nytrue, ny, it, nt);
