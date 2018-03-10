@@ -25,7 +25,7 @@ void Model::fsy(const int it, ReturnData *rdata) {
     // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
     //        M  K          K  N              M  N
     //        lda           ldb               ldc
-    amici_dgemm(AMICI_BLAS_RowMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, ny, nplist(), nx,
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, ny, nplist(), nx,
                 1.0, dydx.data(), ny, getsx(it,rdata), nx, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
 }
