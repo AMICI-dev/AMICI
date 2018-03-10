@@ -25,11 +25,7 @@ class CompiledLibInstall(setuptools.command.install.install):
 
 if __name__ == '__main__':
     setuptools.setup(
-        name='amici',
-        version='1.0.0-dev',
+        name='edata',
         packages=['edata'],
-        license='Apache License 2.0',
-        author='Fabian Fröhlich',
-        author_email='fabian@schaluck.com',
         cmdclass={'install': CompiledLibInstall}
     )
