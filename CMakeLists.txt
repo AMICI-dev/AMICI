@@ -102,6 +102,7 @@ endif()
 
 include(CMakeModules/clang-tools.cmake)
 
+
 # <Export cmake configuration>
 include(GenerateExportHeader)
 generate_export_header(amici)
@@ -123,3 +124,7 @@ configure_file(CMakeModules/AmiciConfig.cmake
 # Register package
 export(PACKAGE Amici)
 # </Export cmake configuration>
+
+
+# build interfaces for other languages
+add_subdirectory(swig)
