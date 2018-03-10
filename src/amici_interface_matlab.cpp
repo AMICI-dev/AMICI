@@ -457,41 +457,40 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
         }
     }
 
-        /* Check, if initial states and sensitivities are passed by user or must be
+    /* Check, if initial states and sensitivities are passed by user or must be
              * calculated */
-        if (mxGetPr(prhs[RHS_INITIALIZATION])) {
-            mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
-            if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
-                /* check dimensions */
-                if (mxGetN(x0) != 1) {
-                    throw AmiException("Number of rows in x0 field must be equal to 1!");
-                }
-                if (mxGetM(x0) != model.nx) {
-                    throw AmiException("Number of columns in x0 field "
-                                       "does not agree with number of "
-                                       "model states!");
-                }
-
-                model.setInitialStates(std::vector<double>(mxGetPr(x0),
-                                                           mxGetPr(x0) + mxGetM(x0) * mxGetN(x0)));
+    if (mxGetPr(prhs[RHS_INITIALIZATION])) {
+        mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
+        if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
+            /* check dimensions */
+            if (mxGetN(x0) != 1) {
+                throw AmiException("Number of rows in x0 field must be equal to 1!");
+            }
+            if (mxGetM(x0) != model.nx) {
+                throw AmiException("Number of columns in x0 field "
+                                   "does not agree with number of "
+                                   "model states!");
             }
 
-            mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
-            if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
-                /* check dimensions */
-                if (mxGetN(sx0) != model.nplist()) {
-                    throw AmiException("Number of rows in sx0 field "
-                                       "does not agree with number of "
-                                       "model parameters!");
-                }
-                if (mxGetM(sx0) != model.nx) {
-                    throw AmiException("Number of columns in sx0 "
-                                       "field does not agree with "
-                                       "number of model states!");
-                }
-                model.setInitialStateSensitivities(std::vector<double>(mxGetPr(sx0),
-                                                                       mxGetPr(sx0) + mxGetM(sx0) * mxGetN(sx0)));
+            model.setInitialStates(std::vector<double>(mxGetPr(x0),
+                                                       mxGetPr(x0) + mxGetM(x0) * mxGetN(x0)));
+        }
+
+        mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
+        if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
+            /* check dimensions */
+            if (mxGetN(sx0) != model.nplist()) {
+                throw AmiException("Number of rows in sx0 field "
+                                   "does not agree with number of "
+                                   "model parameters!");
             }
+            if (mxGetM(sx0) != model.nx) {
+                throw AmiException("Number of columns in sx0 "
+                                   "field does not agree with "
+                                   "number of model states!");
+            }
+            model.setInitialStateSensitivities(std::vector<double>(mxGetPr(sx0),
+                                                                   mxGetPr(sx0) + mxGetM(sx0) * mxGetN(sx0)));
         }
     }
 }
