@@ -78,7 +78,9 @@ function compareResults(sol,results)
     for ifield = transpose(fieldnames(sol))
         if(strcmp(ifield{1},'diagnosis'))
             for jfield = transpose(fieldnames(sol.diagnosis))
-                checkAgreement(sol.diagnosis,results.diagnosis,jfield{1},0,1);
+                if(~ismember(jfield{1},{'newton_time'}))
+                    checkAgreement(sol.diagnosis,results.diagnosis,jfield{1},0,1);
+                end
             end
         else
             if(ismember(ifield,{'s2llh'}))
