@@ -16,7 +16,7 @@ set -e
 # run tests
 cd ${AMICI_PATH}/tests/cpputest/build
 
-VALGRIND_OPTS="--leak-check=full --error-exitcode=1 --trace-children=yes"
+VALGRIND_OPTS="--leak-check=full --error-exitcode=1 --trace-children=yes --show-leak-kinds=definite"
 
 for MODEL in `ctest -N | grep "Test[ ]*#" | grep -v unittests | sed -E 's/ *Test[ ]*#[0-9]+: (.*)/\1/'`
     do cd ${AMICI_PATH}/tests/cpputest/build/${MODEL}/ && valgrind ${VALGRIND_OPTS} ./model_${MODEL}_test
