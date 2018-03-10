@@ -28,47 +28,49 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(r.sensi_meth, s.sensi_meth);
 
     using amici::checkEqualArray;
-    checkEqualArray(r.ts, s.ts, r.nt, 1e-16, 1e-16, "ts");
-    checkEqualArray(r.xdot, s.xdot, r.nx, 1e-16, 1e-16, "xdot");
-    checkEqualArray(r.J, s.J, r.nx * r.nx, 1e-16, 1e-16, "J");
-    checkEqualArray(r.z, s.z, r.nmaxevent * r.nz, 1e-16, 1e-16, "z");
-    checkEqualArray(r.sigmaz, s.sigmaz, r.nmaxevent * r.nz, 1e-16, 1e-16, "sigmaz");
-    checkEqualArray(r.sz, s.sz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "sz");
-    checkEqualArray(r.ssigmaz, s.ssigmaz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "ssigmaz");
-    checkEqualArray(r.rz, s.rz, r.nmaxevent * r.nz, 1e-16, 1e-16, "rz");
-    checkEqualArray(r.srz, s.srz, r.nmaxevent * r.nz * r.nplist, 1e-16, 1e-16, "srz");
-    checkEqualArray(r.s2rz, s.s2rz, r.nmaxevent * r.nz * r.nplist * r.nplist, 1e-16, 1e-16, "s2rz");
-    checkEqualArray(r.x, s.x, r.nt * r.nx, 1e-16, 1e-16, "x");
-    checkEqualArray(r.sx, s.sx, r.nt * r.nx * r.nplist, 1e-16, 1e-16, "sx");
+    checkEqualArray(r.ts, s.ts, 1e-16, 1e-16, "ts");
+    checkEqualArray(r.xdot, s.xdot, 1e-16, 1e-16, "xdot");
+    checkEqualArray(r.J, s.J, 1e-16, 1e-16, "J");
+    checkEqualArray(r.z, s.z, 1e-16, 1e-16, "z");
+    checkEqualArray(r.sigmaz, s.sigmaz,1e-16, 1e-16, "sigmaz");
+    checkEqualArray(r.sz, s.sz, 1e-16, 1e-16, "sz");
+    checkEqualArray(r.ssigmaz, s.ssigmaz, 1e-16, 1e-16, "ssigmaz");
+    checkEqualArray(r.rz, s.rz, 1e-16, 1e-16, "rz");
+    checkEqualArray(r.srz, s.srz, 1e-16, 1e-16, "srz");
+    checkEqualArray(r.s2rz, s.s2rz, 1e-16, 1e-16, "s2rz");
+    checkEqualArray(r.x, s.x, 1e-16, 1e-16, "x");
+    checkEqualArray(r.sx, s.sx, 1e-16, 1e-16, "sx");
 
-    checkEqualArray(r.y, s.y, r.nt * r.ny, 1e-16, 1e-16, "y");
-    checkEqualArray(r.sigmay, s.sigmay, r.nt * r.ny * r.nplist, 1e-16, 1e-16, "sigmay");
-    checkEqualArray(r.sy, s.sy, r.nt * r.ny * r.nplist, 1e-16, 1e-16, "sy");
-    checkEqualArray(r.ssigmay, s.ssigmay, r.nt * r.ny * r.nplist, 1e-16, 1e-16, "ssigmay");
+    checkEqualArray(r.y, s.y, 1e-16, 1e-16, "y");
+    checkEqualArray(r.sigmay, s.sigmay, 1e-16, 1e-16, "sigmay");
+    checkEqualArray(r.sy, s.sy, 1e-16, 1e-16, "sy");
+    checkEqualArray(r.ssigmay, s.ssigmay, 1e-16, 1e-16, "ssigmay");
 
-    checkEqualArray(r.numsteps, s.numsteps, r.nt, 1e-16, 1e-16, "numsteps");
-    checkEqualArray(r.numstepsB, s.numstepsB, r.nt, 1e-16, 1e-16, "numstepsB");
-    checkEqualArray(r.numrhsevals, s.numrhsevals, r.nt, 1e-16, 1e-16, "numrhsevals");
-    checkEqualArray(r.numrhsevalsB, s.numrhsevalsB, r.nt, 1e-16, 1e-16, "numrhsevalsB");
-    checkEqualArray(r.numerrtestfails, s.numerrtestfails, r.nt, 1e-16, 1e-16, "numerrtestfails");
-    checkEqualArray(r.numerrtestfailsB, s.numerrtestfailsB, r.nt, 1e-16, 1e-16, "numerrtestfailsB");
-    checkEqualArray(r.numnonlinsolvconvfails, s.numnonlinsolvconvfails, r.nt, 1e-16, 1e-16, "numnonlinsolvconvfails");
-    checkEqualArray(r.numnonlinsolvconvfailsB, s.numnonlinsolvconvfailsB, r.nt, 1e-16, 1e-16, "numnonlinsolvconvfailsB");
-    checkEqualArray(r.order, s.order, r.nt, 1e-16, 1e-16, "order");
+    CHECK_TRUE(r.numsteps == s.numsteps);
+    CHECK_TRUE(r.numstepsB == s.numstepsB);
+    CHECK_TRUE(r.numrhsevals == s.numrhsevals);
+    CHECK_TRUE(r.numrhsevalsB == s.numrhsevalsB);
+    CHECK_TRUE(r.numerrtestfails == s.numerrtestfails);
+    CHECK_TRUE(r.numerrtestfailsB == s.numerrtestfailsB);
+    CHECK_TRUE(r.numnonlinsolvconvfails == s.numnonlinsolvconvfails);
+    CHECK_TRUE(r.numnonlinsolvconvfailsB == s.numnonlinsolvconvfailsB);
+    CHECK_TRUE(r.order == s.order);
 
-    checkEqualArray(r.newton_status, s.newton_status, r.nt, 1e-16, 1e-16, "newton_status");
-    checkEqualArray(r.newton_time, s.newton_time, r.nt, 1e-16, 1e-16, "newton_time");
-    checkEqualArray(r.newton_numsteps, s.newton_numsteps, r.nt, 1e-16, 1e-16, "newton_numsteps");
-    checkEqualArray(r.newton_numlinsteps, s.newton_numlinsteps, r.nt, 1e-16, 1e-16, "newton_numlinsteps");
-    checkEqualArray(r.x0, s.x0, r.nx, 1e-16, 1e-16, "x0");
-    checkEqualArray(r.sx0, s.sx0, r.nx * r.nplist, 1e-16, 1e-16, "sx0");
+    CHECK_TRUE(r.newton_status == s.newton_status);
+    CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);
+    CHECK_TRUE(r.newton_numlinsteps == s.newton_numlinsteps);
 
-    CHECK_EQUAL(*r.llh, *s.llh);
-    CHECK_EQUAL(*r.chi2, *s.chi2);
-    CHECK_EQUAL(*r.status, *s.status);
+    DOUBLES_EQUAL(r.newton_time, s.newton_time, 1e-16);
+    checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
+    checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 
-    checkEqualArray(r.sllh, s.sllh, r.nplist, 1e-5, 1e-5, "sllh");
-    checkEqualArray(r.s2llh, s.s2llh, r.nplist * r.nplist, 1e-5, 1e-5, "s2llh");
+
+    CHECK_TRUE(r.llh == s.llh || (std::isnan(r.llh) && std::isnan(s.llh)));
+    CHECK_TRUE(r.chi2 == s.chi2 || (std::isnan(r.llh) && std::isnan(s.llh)));
+    CHECK_EQUAL(r.status, s.status);
+
+    checkEqualArray(r.sllh, s.sllh, 1e-5, 1e-5, "sllh");
+    checkEqualArray(r.s2llh, s.s2llh, 1e-5, 1e-5, "s2llh");
 }
 
 

@@ -95,23 +95,23 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
 
-    auto my = getDoubleArrayAttribute2D(file, hdf5Root, "Y", m, n);
+    auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
     if(m * n > 0) {
         assertMeasurementDimensionsCompatible(m, n, model);
         edata->my = my;
     }
 
-    auto sigmay = getDoubleArrayAttribute2D(file, hdf5Root, "Sigma_Y", m, n);
+    auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
     if(m * n > 0) {
         assertMeasurementDimensionsCompatible(m, n, model);
         edata->sigmay = sigmay;
     }
 
     if (model.nz) {
-        edata->mz = getDoubleArrayAttribute2D(file, hdf5Root, "Z", m, n);
+        edata->mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
         assertEventDimensionsCompatible(m, n, model);
 
-        edata->sigmaz = getDoubleArrayAttribute2D(file, hdf5Root, "Sigma_Z", m, n);
+        edata->sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
         assertEventDimensionsCompatible(m, n, model);
     }
 
@@ -124,119 +124,105 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
 
-    if (rdata.ts)
+    if (rdata.ts.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "//t",
-                                      rdata.ts, rdata.nt);
+                                      rdata.ts.data(), rdata.nt);
 
-    if (rdata.xdot)
+    if (rdata.xdot.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/xdot",
-                                      rdata.xdot, rdata.nx);
+                                      rdata.xdot.data(), rdata.nx);
 
     if (rdata.llh)
-        H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", rdata.llh, 1);
+        H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", &rdata.llh, 1);
 
     if (rdata.status)
-        H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "status", rdata.status, 1);
+        H5LTset_attribute_int(file.getId(), hdf5Location.c_str(), "status", &rdata.status, 1);
 
-    if (rdata.sllh)
+    if (rdata.sllh.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
-                                      rdata.sllh, rdata.nplist);
+                                      rdata.sllh.data(), rdata.nplist);
 
     // are double, but should write as int:
     // TODO: change to dataset as soon as are of type int
-    if (rdata.numsteps)
-        setAttributeIntFromDouble(file, hdf5Location, "numsteps",
-                                  rdata.numsteps, rdata.nt);
+    if (rdata.numsteps.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numsteps", rdata.numsteps);
 
-    if (rdata.numrhsevals)
-        setAttributeIntFromDouble(file, hdf5Location, "numrhsevals",
-                                  rdata.numrhsevals, rdata.nt);
+    if (rdata.numrhsevals.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevals", rdata.numrhsevals);
 
-    if (rdata.numerrtestfails)
-        setAttributeIntFromDouble(file, hdf5Location,
-                                  "numerrtestfails",
-                                  rdata.numerrtestfails, rdata.nt);
+    if (rdata.numerrtestfails.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfails", rdata.numerrtestfails);
 
-    if (rdata.numnonlinsolvconvfails)
-        setAttributeIntFromDouble(
-                    file, hdf5Location, "numnonlinsolvconvfails",
-                    rdata.numnonlinsolvconvfails, rdata.nt);
+    if (rdata.numnonlinsolvconvfails.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfails",
+                                   rdata.numnonlinsolvconvfails);
 
-    if (rdata.order)
-        setAttributeIntFromDouble(file, hdf5Location, "order",
-                                  rdata.order, rdata.nt);
+    if (rdata.order.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
 
-    if (rdata.numstepsB)
-        setAttributeIntFromDouble(file, hdf5Location, "numstepsB",
-                                  rdata.numstepsB, rdata.nt);
+    if (rdata.numstepsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numstepsB", rdata.numstepsB);
 
-    if (rdata.numrhsevalsB)
-        setAttributeIntFromDouble(file, hdf5Location, "numrhsevalsB",
-                                  rdata.numrhsevalsB, rdata.nt);
+    if (rdata.numrhsevalsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevalsB", rdata.numrhsevalsB);
 
-    if (rdata.numerrtestfailsB)
-        setAttributeIntFromDouble(file, hdf5Location,
-                                  "numerrtestfailsB",
-                                  rdata.numerrtestfailsB, rdata.nt);
+    if (rdata.numerrtestfailsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfailsB", rdata.numerrtestfailsB);
 
-    if (rdata.numnonlinsolvconvfailsB)
-        setAttributeIntFromDouble(
-                    file, hdf5Location, "numnonlinsolvconvfailsB",
-                    rdata.numnonlinsolvconvfailsB, rdata.nt);
+    if (rdata.numnonlinsolvconvfailsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
 
-    auto group = file.openGroup(hdf5Location);
-
-    if (rdata.J)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J,
+    if (rdata.J.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J.data(),
                                         rdata.nx, rdata.nx);
 
-    if (rdata.x)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/x", rdata.x,
+    if (rdata.x.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/x", rdata.x.data(),
                                         rdata.nt, rdata.nx);
 
-    if (rdata.y)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/y", rdata.y,
+    if (rdata.y.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/y", rdata.y.data(),
                                         rdata.nt, rdata.ny);
 
-    if (rdata.z)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/z", rdata.z,
+    if (rdata.z.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/z", rdata.z.data(),
                                         rdata.nmaxevent, rdata.nz);
 
-    if (rdata.rz)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/rz", rdata.rz,
+    if (rdata.rz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/rz", rdata.rz.data(),
                                         rdata.nmaxevent, rdata.nz);
 
-    if (rdata.sigmay)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", rdata.sigmay, rdata.nt, rdata.ny);
+    if (rdata.sigmay.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", rdata.sigmay.data(), rdata.nt, rdata.ny);
 
-    if (rdata.sigmaz)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", rdata.sigmaz, rdata.nmaxevent, rdata.nz);
+    if (rdata.sigmaz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", rdata.sigmaz.data(), rdata.nmaxevent, rdata.nz);
 
-    if (rdata.s2llh)
-        createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh,
+    if (rdata.s2llh.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh.data(),
                                         rdata.nJ - 1, rdata.nplist);
 
-    if (rdata.sx)
-        createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx, rdata.nt, rdata.nx, rdata.nplist);
+    if (rdata.sx.size())
+        createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nx, rdata.nplist);
 
-    if (rdata.sy)
-        createAndWriteDouble3DDataset(file, hdf5Location + "/sy", rdata.sy, rdata.nt, rdata.ny, rdata.nplist);
+    if (rdata.sy.size())
+        createAndWriteDouble3DDataset(file, hdf5Location + "/sy", rdata.sy.data(), rdata.nt, rdata.ny, rdata.nplist);
 
-    if (rdata.ssigmay)
+    if (rdata.ssigmay.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmay",
-                                        rdata.ssigmay, rdata.nt,
+                                        rdata.ssigmay.data(), rdata.nt,
                                         rdata.ny, rdata.nplist);
 
-    if (rdata.sz)
-        createAndWriteDouble3DDataset(file, hdf5Location + "/sz", rdata.sz,
+    if (rdata.sz.size())
+        createAndWriteDouble3DDataset(file, hdf5Location + "/sz", rdata.sz.data(),
                                         rdata.nmaxevent, rdata.nz, rdata.nplist);
 
-    if (rdata.srz)
-        createAndWriteDouble3DDataset(file, hdf5Location + "/srz", rdata.srz,
+    if (rdata.srz.size())
+        createAndWriteDouble3DDataset(file, hdf5Location + "/srz", rdata.srz.data(),
                                         rdata.nmaxevent, rdata.nz, rdata.nplist);
 
-    if (rdata.ssigmaz)
-        createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmaz", rdata.ssigmaz,
+    if (rdata.ssigmaz.size())
+        createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmaz", rdata.ssigmaz.data(),
                                       rdata.nmaxevent, rdata.nz, rdata.nplist);
 }
 
@@ -444,6 +430,20 @@ std::vector<int> getIntArrayAttribute(H5::H5File const&file,
     return buffer;
 }
 
+void createAndWriteInt1DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const int *buffer, hsize_t m) {
+    H5::DataSpace dataspace(1, &m);
+    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_INT, dataspace);
+    dataset.write(buffer, H5::PredType::NATIVE_INT);
+}
+
+void createAndWriteInt1DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                std::vector<int> const& buffer) {
+    createAndWriteInt1DDataset(file, datasetName, buffer.data(), buffer.size());
+}
+
 void createAndWriteDouble1DDataset(H5::H5File& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m) {
@@ -621,17 +621,21 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         model.setT0(getDoubleScalarAttribute(file, datasetPath, "tstart"));
     }
 
-    if(attributeExists(file, datasetPath, "pscale")) {
-        model.setParameterScale(static_cast<AMICI_parameter_scaling>(getIntScalarAttribute(file, datasetPath, "pscale")));
+    if(locationExists(file, datasetPath + "/pscale")) {
+        auto pscaleInt = getIntDataset1D(file, datasetPath + "/pscale");
+        std::vector<AMICI_parameter_scaling> pscale(pscaleInt.size());
+        for(int i = 0; (unsigned)i < pscaleInt.size(); ++i)
+            pscale[i] = static_cast<AMICI_parameter_scaling>(pscaleInt[i]);
+        model.setParameterScale(pscale);
     }
 
     if(attributeExists(file, datasetPath, "nmaxevent")) {
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent"));
     }
 
-    if(attributeExists(file, datasetPath, "qpositivex")) {
+    if(locationExists(file, datasetPath + "/qpositivex")) {
         // TODO double vs int?!
-        auto dblQPosX = getDoubleArrayAttribute(file, datasetPath, "qpositivex");
+        auto dblQPosX = getDoubleDataset1D(file, datasetPath + "/qpositivex");
         if (dblQPosX.size() == (unsigned) model.nx)
             model.setPositivityFlag(std::vector<int>(dblQPosX.begin(), dblQPosX.end()));
         else if(dblQPosX.size() != 0) { // currently not written correctly from matlab
@@ -639,22 +643,23 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         }
     }
 
-    if(attributeExists(file, datasetPath, "theta")) {
-        model.setParameters(getDoubleArrayAttribute(file, datasetPath, "theta"));
+    if(locationExists(file, datasetPath + "/theta")) {
+        model.setParameters(getDoubleDataset1D(file, datasetPath + "/theta"));
     }
 
-    if(attributeExists(file, datasetPath, "kappa")) {
-        model.setFixedParameters(getDoubleArrayAttribute(file, datasetPath, "kappa"));
+    if(locationExists(file, datasetPath + "/kappa")) {
+        model.setFixedParameters(getDoubleDataset1D(file, datasetPath + "/kappa"));
     }
 
-    if(attributeExists(file, datasetPath, "ts")) {
-        model.setTimepoints(getDoubleArrayAttribute(file, datasetPath, "ts"));
+    if(locationExists(file, datasetPath + "/ts")) {
+        model.setTimepoints(getDoubleDataset1D(file, datasetPath + "/ts"));
     }
 
-    if(attributeExists(file, datasetPath, "sens_ind")) {
-        auto sensInd = getIntArrayAttribute(file, datasetPath, "sens_ind");
+    if(locationExists(file, datasetPath + "/sens_ind")) {
+        auto sensInd = getIntDataset1D(file, datasetPath + "/sens_ind");
         if (sensInd.size() > 0) {
             // currently base 1 indices are written
+            // TODO: should change asap
             for (int i = 0; (unsigned)i < sensInd.size(); ++i) {
                 sensInd[i] -= 1;
             }
@@ -664,16 +669,16 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         }
     }
 
-    if(attributeExists(file, datasetPath, "x0")) {
-        auto x0 = getDoubleArrayAttribute(file, datasetPath, "x0");
+    if(locationExists(file, datasetPath + "/x0")) {
+        auto x0 = getDoubleDataset1D(file, datasetPath + "/x0");
         if(x0.size())
             model.setInitialStates(x0);
     }
 
-    if(attributeExists(file, datasetPath, "sx0")) {
+    if(locationExists(file, datasetPath + "/sx0")) {
         hsize_t length0 = 0;
         hsize_t length1 = 0;
-        auto sx0 = getDoubleArrayAttribute2D(file, datasetPath, "sx0", length0, length1);
+        auto sx0 = getDoubleDataset2D(file, datasetPath + "/sx0", length0, length1);
         if(sx0.size()) {
             if (length0 != (unsigned) model.nx && length1 != (unsigned) model.nplist())
                 throw(AmiException("Dimension mismatch when reading sx0. Expected %dx%d, got %llu, %llu.",
@@ -682,8 +687,8 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         }
     }
 
-    if(attributeExists(file, datasetPath, "pbar")) {
-        auto pbar = getDoubleArrayAttribute(file, datasetPath, "pbar");
+    if(locationExists(file, datasetPath + "/pbar")) {
+        auto pbar = getDoubleDataset1D(file, datasetPath + "/pbar");
         if(pbar.size())
             model.setParameterScaling(pbar);
     }
@@ -717,6 +722,23 @@ bool locationExists(const std::string &filename, const std::string &location)
     H5::H5File file(filename, H5F_ACC_RDONLY);
     return locationExists(file, location);
 }
+
+std::vector<int> getIntDataset1D(const H5::H5File &file,
+                                 std::string const& name) {
+    auto dataset = file.openDataSet(name);
+    auto dataspace = dataset.getSpace();
+
+    int rank = dataspace.getSimpleExtentNdims();
+    if(rank != 1)
+        throw(AmiException("Expected array of rank 1 in %s", name.c_str()));
+
+    hsize_t dim;
+    dataspace.getSimpleExtentDims(&dim);
+    std::vector<int> result(dim);
+    dataset.read(result.data(), H5::PredType::NATIVE_INT);
+    return result;
+}
+
 
 std::vector<double> getDoubleDataset1D(const H5::H5File &file, const std::string &name)
 {

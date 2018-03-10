@@ -59,24 +59,15 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     sres.clear();
 
     if(nt>0) {
-        numsteps.resize(nt, getNaN());
-        numsteps[0] = 0;
-        numstepsB.resize(nt, getNaN());
-        numstepsB[nt-1] = 0;
-        numrhsevals.resize(nt, getNaN());
-        numrhsevals[0] = 0;
-        numrhsevalsB.resize(nt, getNaN());
-        numrhsevalsB[nt-1] = 0;
-        numerrtestfails.resize(nt, getNaN());
-        numerrtestfails[0] = 0;
-        numerrtestfailsB.resize(nt, getNaN());
-        numerrtestfailsB[nt-1] = 0;
-        numnonlinsolvconvfails.resize(nt, getNaN());
-        numnonlinsolvconvfails[0] = 0;
-        numnonlinsolvconvfailsB.resize(nt, getNaN());
-        numnonlinsolvconvfailsB[nt-1] = 0;
-        order.resize(nt, getNaN());
-        order[0] = 0;
+        numsteps.resize(nt, 0);
+        numstepsB.resize(nt, 0);
+        numrhsevals.resize(nt, 0);
+        numrhsevalsB.resize(nt, 0);
+        numerrtestfails.resize(nt, 0);
+        numerrtestfailsB.resize(nt, 0);
+        numnonlinsolvconvfails.resize(nt, 0);
+        numnonlinsolvconvfailsB.resize(nt, 0);
+        order.resize(nt, 0);
         newton_numsteps.resize(2, 0);
         newton_numlinsteps.resize(newton_maxsteps*2, 0);
     }
@@ -148,22 +139,19 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     for (int ip = 0; ip < nplist; ++ip) {
         switch (pscale[model->plist(ip)]) {
         case AMICI_SCALING_LOG10:
-            coefficient[ip] = log(10.0);
-
-            pcoefficient[ip] = unscaledParameters[model->plist(ip)] * log(10);
-            if (sensi == AMICI_SENSI_ORDER_SECOND)
-                if (o2mode == AMICI_O2MODE_FULL)
-                    augcoefficient[ip] = unscaledParameters[ip] * log(10);
+            coefficient.at(ip) = log(10.0);
+            pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
+            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
+                augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
             break;
         case AMICI_SCALING_LN:
-            coefficient[ip] = 1.0;
-            pcoefficient[ip] = unscaledParameters[model->plist(ip)];
-            if (sensi == AMICI_SENSI_ORDER_SECOND)
-                if (o2mode == AMICI_O2MODE_FULL)
-                    augcoefficient[ip] = unscaledParameters[ip];
+            coefficient.at(ip) = 1.0;
+            pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
+            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
+                augcoefficient.at(ip) = unscaledParameters.at(ip);
             break;
         case AMICI_SCALING_NONE:
-            coefficient[ip] = 1.0;
+            coefficient.at(ip) = 1.0;
             break;
         }
     }
@@ -217,32 +205,32 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     }
 
     if (o2mode == AMICI_O2MODE_FULL) { // full
-        if (s2llh) {
-            if (sllh) {
-                for (int ip = 0; ip < nplist; ++ip) {
-                    for (int iJ = 1; iJ < nJ; ++iJ) {
-                        s2llh[ip * nplist + (iJ - 1)] *=
-                            pcoefficient[ip] * augcoefficient[iJ - 1];
-                        if (model->plist(ip) == iJ - 1)
-                            s2llh[ip * nplist + (iJ - 1)] +=
-                                    sllh[ip] * coefficient[ip];
-                    }
+        if (s2llh.size() && sllh.size()) {
+            for (int ip = 0; ip < nplist; ++ip) {
+                for (int iJ = 1; iJ < nJ; ++iJ) {
+                    s2llh[ip * nplist + (iJ - 1)] *=
+                            pcoefficient.at(ip) * augcoefficient[iJ - 1];
+                    if (model->plist(ip) == iJ - 1)
+                        s2llh[ip * nplist + (iJ - 1)] +=
+                                sllh.at(ip) * coefficient.at(ip);
                 }
             }
         }
 
-#define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                             \
-    for (int ip = 0; ip < nplist; ++ip)                                         \
-        for (int iJ = 1; iJ < nJ; ++iJ)                                         \
-            for (int IND1 = 0; IND1 < N1T; ++IND1)                              \
-                for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
-                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) *=       \
-                        pcoefficient.at(ip) * augcoefficient[iJ - 1];           \
-                    if (model->plist(ip) == iJ - 1)                             \
-                        s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) +=   \
-                            s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *         \
-                            coefficient;                                        \
-                }
+#define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                            \
+    if (s##QUANT.size())                                                       \
+        for (int ip = 0; ip < nplist; ++ip)                                    \
+            for (int iJ = 1; iJ < nJ; ++iJ)                                    \
+                for (int IND1 = 0; IND1 < N1T; ++IND1)                         \
+                    for (int IND2 = 0; IND2 < N2; ++IND2) {                    \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) *=      \
+                        pcoefficient.at(ip) * augcoefficient[iJ - 1];          \
+                        if (model->plist(ip) == iJ - 1)                        \
+                            s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) +=   \
+                                s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *    \
+                                    coefficient[ip];                           \
+}
+
 
         s2ChainRule(x, ix, nxtrue, nx, it, nt);
         s2ChainRule(y, iy, nytrue, ny, it, nt);

@@ -218,19 +218,19 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
 
     if(solverWasCalled) {
         AMIGetNumSteps(ami_mem, &number);
-        rdata->numsteps[it] = (double)number;
+        rdata->numsteps[it] = number;
         
         AMIGetNumRhsEvals(ami_mem, &number);
-        rdata->numrhsevals[it] = (double)number;
+        rdata->numrhsevals[it] = number;
         
         AMIGetNumErrTestFails(ami_mem, &number);
-        rdata->numerrtestfails[it] = (double)number;
+        rdata->numerrtestfails[it] = number;
         
         AMIGetNumNonlinSolvConvFails(ami_mem, &number);
-        rdata->numnonlinsolvconvfails[it] = (double)number;
+        rdata->numnonlinsolvconvfails[it] = number;
         
         AMIGetLastOrder(ami_mem, &order);
-        rdata->order[it] = (double)order;
+        rdata->order[it] = order;
     }
 }
 

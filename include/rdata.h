@@ -136,7 +136,7 @@ class ReturnData {
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (dimension: nt) */
-    std::vector<realtype> order;
+    std::vector<int> order;
 
     /** flag indicating success of Newton solver */
     int newton_status = 0;
@@ -170,7 +170,7 @@ class ReturnData {
     std::vector<realtype> s2llh;
 
     /** status code (double[1]) */
-    int status = 0.0;
+    int status = 0;
 
   public:
     /** total number of model parameters */

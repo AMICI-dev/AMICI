@@ -390,56 +390,72 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
                 throw AmiException("Provided qpositivex has invalid dimensions!");
             model.setPositivityFlag(std::vector<int>((double *)mxGetData(a),(double *)mxGetData(a)+len));
         }
+    }
 
-        if (prhs[RHS_TIMEPOINTS] &&
+    if (prhs[RHS_TIMEPOINTS] &&
                 mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]) > 0) {
             model.setTimepoints(std::vector<double>(
                                     mxGetPr(prhs[RHS_TIMEPOINTS]),
                                     mxGetPr(prhs[RHS_TIMEPOINTS])
                                     + (int)mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS])));
 
-        }
+    }
 
-        if (model.np() > 0) {
-            if (mxGetPr(prhs[RHS_PARAMETERS])) {
-                if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
-                        model.np()) {
-                    model.setParameters(std::vector<double>(mxGetPr(prhs[RHS_PARAMETERS]),
-                                                            mxGetPr(prhs[RHS_PARAMETERS])
-                                                            + mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])));
-                }
+    if (model.np() > 0) {
+        if (mxGetPr(prhs[RHS_PARAMETERS])) {
+            if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
+                    model.np()) {
+                model.setParameters(std::vector<double>(mxGetPr(prhs[RHS_PARAMETERS]),
+                                                        mxGetPr(prhs[RHS_PARAMETERS])
+                                                        + mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])));
             }
         }
+    }
 
-        if (model.nk() > 0) {
-            if (mxGetPr(prhs[RHS_CONSTANTS])) {
-                if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
-                        model.nk()) {
-                    model.setFixedParameters(std::vector<double>(mxGetPr(prhs[RHS_CONSTANTS]),
-                                                                 mxGetPr(prhs[RHS_CONSTANTS])
-                                                                 + mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])));
-                }
+    if (model.nk() > 0) {
+        if (mxGetPr(prhs[RHS_CONSTANTS])) {
+            if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
+                    model.nk()) {
+                model.setFixedParameters(std::vector<double>(mxGetPr(prhs[RHS_CONSTANTS]),
+                                                             mxGetPr(prhs[RHS_CONSTANTS])
+                                                             + mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])));
             }
         }
+    }
+    if (mxGetPr(prhs[RHS_PLIST])) {
+        model.setParameterList(std::vector<int>(mxGetPr(prhs[RHS_PLIST]),
+                                                mxGetPr(prhs[RHS_PLIST])
+                                                + mxGetM(prhs[RHS_PLIST]) * mxGetN(prhs[RHS_PLIST])));
+    } else {
+        model.requireSensitivitiesForAllParameters();
+    }
 
-        if (mxGetPr(prhs[RHS_PLIST])) {
-            model.setParameterList(std::vector<int>(mxGetPr(prhs[RHS_PLIST]),
-                                                    mxGetPr(prhs[RHS_PLIST])
-                                                    + mxGetM(prhs[RHS_PLIST]) * mxGetN(prhs[RHS_PLIST])));
-        } else {
-            model.requireSensitivitiesForAllParameters();
-        }
-
-        if (model.nplist() > 0) {
-            if (mxGetPr(prhs[RHS_PBAR])) {
-                if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
-                        model.nplist()) {
-                    model.setParameterScaling(std::vector<double>(mxGetPr(prhs[RHS_PBAR]),
-                                                                  mxGetPr(prhs[RHS_PBAR])
-                                                                  + mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR])));
-                }
+    if (model.nplist() > 0) {
+        if (mxGetPr(prhs[RHS_PBAR])) {
+            if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
+                    model.nplist()) {
+                model.setParameterScaling(std::vector<double>(mxGetPr(prhs[RHS_PBAR]),
+                                                              mxGetPr(prhs[RHS_PBAR])
+                                                              + mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR])));
             }
         }
+    }
+    /* Check, if initial states and sensitivities are passed by user or must be
+             * calculated */
+    if (mxGetPr(prhs[RHS_INITIALIZATION])) {
+        mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
+        if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
+            /* check dimensions */
+            if (mxGetN(x0) != 1) {
+                throw AmiException("Number of rows in x0 field must be equal to 1!");
+            }
+            if (mxGetM(x0) != model.nx) {
+                throw AmiException("Number of columns in x0 field "
+                                   "does not agree with number of "
+                                   "model states!");
+            }
+        }
+    }
 
         /* Check, if initial states and sensitivities are passed by user or must be
              * calculated */

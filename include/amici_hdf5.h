@@ -126,6 +126,15 @@ bool attributeExists(H5::H5File const& file,
 bool attributeExists(H5::H5Object const& object,
                      const std::string &attributeName);
 
+void createAndWriteInt1DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const int *buffer, hsize_t m);
+
+void createAndWriteInt1DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     std::vector<int> const& buffer);
+
+
 void createAndWriteDouble1DDataset(H5::H5File& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m);
@@ -177,6 +186,9 @@ std::vector<double> getDoubleArrayAttribute3D(const H5::H5File &file,
                                               std::string const& optionsObject,
                                               std::string const& attributeName,
                                               hsize_t &m, hsize_t &n, hsize_t &o);
+
+std::vector<int> getIntDataset1D(const H5::H5File &file,
+                                              std::string const& name);
 
 std::vector<double> getDoubleDataset1D(const H5::H5File &file,
                                               std::string const& name);
