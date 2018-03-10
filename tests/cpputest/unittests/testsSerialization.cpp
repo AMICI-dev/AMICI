@@ -3,6 +3,8 @@
 #include <include/amici_model.h>
 #include <include/amici_solver_cvodes.h>
 
+#include <cmath>
+
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
