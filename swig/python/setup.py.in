@@ -29,3 +29,9 @@ if __name__ == '__main__':
         packages=['edata'],
         cmdclass={'install': CompiledLibInstall}
     )
+    
+    setuptools.setup(
+        name='rdata',
+        packages=['rdata'],
+        cmdclass={'install': CompiledLibInstall}
+    )
