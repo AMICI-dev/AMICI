@@ -25,13 +25,8 @@ class CompiledLibInstall(setuptools.command.install.install):
 
 if __name__ == '__main__':
     setuptools.setup(
-        name='edata',
-        packages=['edata'],
+        name='amici',
+        packages=['amici'],
         cmdclass={'install': CompiledLibInstall}
     )
     
-    setuptools.setup(
-        name='rdata',
-        packages=['rdata'],
-        cmdclass={'install': CompiledLibInstall}
-    )
