@@ -86,7 +86,7 @@ void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     // Print of some the simulation results
 
     printf("Timepoints (tsdata): ");
-    amici::printArray(rdata->ts, model->nt());
+    amici::printArray(rdata->ts.data(), model->nt());
 
     printf("\n\nStates (xdata):\n");
     for (int i = 0; i < model->nx; ++i) {
@@ -113,15 +113,6 @@ void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     //        printf("\n");
     //    }
 
-    printf("\nnumsteps: \t\t");
-    amici::printfArray(rdata->numsteps, model->nt(), "%.0f ");
-
-    printf("\nnumrhsevalsdata: \t");
-    amici::printfArray(rdata->numrhsevals, model->nt(), "%.0f ");
-
-    printf("\norder: \t\t");
-    amici::printfArray(rdata->order, model->nt(), "%.0f ");
-
     printf("\n");
-    printf("Loglikelihood (llh): %e\n", *rdata->llh);
+    printf("Loglikelihood (llh): %e\n", rdata->llh);
 }

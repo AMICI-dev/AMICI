@@ -56,25 +56,46 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  * runAmiciSimulation is the core integration routine. It initializes the solver
  * and runs the forward and backward problem.
  *
- * @param[in] solver Solver instance
- * @param[in] edata pointer to experimental data object @type ExpData
- * @param[in] rdata pointer to return data object @type ReturnData
- * @param[in] model model specification object @type Model
+ * @param solver Solver instance
+ * @param edata pointer to experimental data object
+ * @param model model specification object
+ * @return rdata pointer to return data object
  */
-void runAmiciSimulation(Solver &solver, const ExpData *edata,
-                       ReturnData *rdata, Model &model) {
-    if (!rdata)
-        throw SetupFailure("rdata was not allocated!");
-
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model) {
+    
+    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
+    
     if (model.nx <= 0) {
-        return;
+        return rdata;
     }
 
-    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata,edata,&model,&solver));
-    fwd->workForwardProblem();
+    try{
+        auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
+        fwd->workForwardProblem();
 
-    auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
-    bwd->workBackwardProblem();
+        auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
+        bwd->workBackwardProblem();
+    
+        rdata.get()->status = AMICI_SUCCESS;
+    } catch (amici::IntegrationFailure& ex) {
+        rdata.get()->invalidate(ex.time);
+        rdata.get()->status = ex.error_code;
+        amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed at t = %f:\n%s\nError occured in:\n%s",ex.time,ex.what(),ex.getBacktrace());
+    } catch (amici::AmiException& ex) {
+        rdata.get()->invalidate(model.t0());
+        rdata.get()->status = AMICI_ERROR;
+        amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
+    } catch (std::exception& ex) {
+        rdata.get()->invalidate(model.t0());
+        rdata.get()->status = AMICI_ERROR;
+        amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());
+    } catch (...) {
+        rdata.get()->invalidate(model.t0());
+        rdata.get()->status = AMICI_ERROR;
+        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+    }
+    rdata.get()->applyChainRuleFactorToSimulationResults(&model);
+    return rdata;
 }
 
 /*!

@@ -93,13 +93,8 @@ namespace amici {
         deltaxB(nx, 0.0),
         deltaqB(nJ*plist.size(), 0.0),
         dxdotdp(nx*plist.size(), 0.0),
-        x(nx, 0.0),
-        sx(plist.size(), std::vector<realtype>(nx, 0.0)),
-        y(ny, 0.0),
         my(nytrue, 0.0),
-        z(nz, 0.0),
         mz(nztrue, 0.0),
-        rz(nz, 0.0),
         dJydy(nJ*nytrue*ny, 0.0),
         dJydsigma(nJ*nytrue*ny, 0.0),
         dJzdz(nJ*nztrue*nz, 0.0),
@@ -161,13 +156,8 @@ namespace amici {
               dxdotdp(other.dxdotdp),
 
               J(nullptr),
-              x(other.x),
-              sx(other.sx),
-              y(other.y),
               my(other.my),
-              z(other.z),
               mz(other.mz),
-              rz(other.rz),
               dJydy(other.dJydy),
               dJydsigma(other.dJydsigma),
               dJzdz(other.dJzdz),
@@ -385,7 +375,7 @@ namespace amici {
         
         void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
-        void fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, const ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, ReturnData *rdata);
         
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
@@ -789,6 +779,8 @@ namespace amici {
          * @return
          */
         friend bool operator ==(const Model &a, const Model &b);
+        
+        const realtype gett(const int it, const ReturnData *rdata) const;
 
     protected:
         
@@ -1249,38 +1241,30 @@ namespace amici {
         
         void getmy(const int it, const ExpData *edata);
         
-        void gety(const int it, const ReturnData *rdata);
-        
-        void getx(const int it, const ReturnData *rdata);
-        
-        void getsx(const int it, const ReturnData *rdata);
-        
-        realtype gett(const int it, const ReturnData *rdata) const;
-        
         void getmz(const int nroots, const ExpData *edata);
         
-        void getz(const int nroots, const ReturnData *rdata);
+        const realtype *gety(const int it, const ReturnData *rdata) const;
         
-        void getrz(const int nroots, const ReturnData *rdata);
+        const realtype *getx(const int it, const ReturnData *rdata) const;
+        
+        const realtype *getsx(const int it, const ReturnData *rdata) const;
+        
+        const realtype *getz(const int nroots, const ReturnData *rdata) const;
+        
+        const realtype *getrz(const int nroots, const ReturnData *rdata) const;
+        
+        const realtype *getsz(const int nroots, const int nplist, const ReturnData *rdata) const;
+        
+        const realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
         
 
         /** Jacobian */
         SlsMat J = nullptr;
         
-        /** current state */
-        std::vector<realtype> x;
-        /** current state */
-        std::vector<std::vector<realtype>> sx;
         /** current observable */
-        std::vector<realtype> y;
-        /** current observable measurement */
         std::vector<realtype> my;
-        /** current event output */
-        std::vector<realtype> z;
         /** current event measurement */
         std::vector<realtype> mz;
-        /** current root output */
-        std::vector<realtype> rz;
         /** observable derivative of data likelihood */
         std::vector<realtype> dJydy;
         /** observable sigma derivative of data likelihood */

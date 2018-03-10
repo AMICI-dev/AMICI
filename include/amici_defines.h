@@ -14,6 +14,7 @@ namespace amici {
 #define AMICI_ERR_FAILURE               -3
 #define AMICI_CONV_FAILURE              -4
 #define AMICI_ILL_INPUT                -22
+#define AMICI_ERROR                    -99
 #define AMICI_SUCCESS                    0
 #define AMICI_DATA_RETURN                1
 #define AMICI_ROOT_RETURN                2

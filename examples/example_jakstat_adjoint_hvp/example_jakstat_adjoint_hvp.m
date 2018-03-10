@@ -83,7 +83,7 @@ if(usejava('jvm'))
     figure();
     
     subplot(1,2,1);
-    bar([abs((sol.s2llh-transpose(hvp))./sol.s2llh);abs((sol.s2llh-transpose(hvp_f))./sol.s2llh);abs((sol.s2llh-transpose(hvp_b))./sol.s2llh);abs((sol.s2llh-solf.s2llh)./sol.s2llh)]')
+    bar([abs((sol.s2llh-hvp)./sol.s2llh),abs((sol.s2llh-hvp_f)./sol.s2llh),abs((sol.s2llh-hvp_b)./sol.s2llh),abs((sol.s2llh-solf.s2llh)./sol.s2llh)])
     hold on
     set(gca,'YScale','log')
     ylim([1e-16,1e0])

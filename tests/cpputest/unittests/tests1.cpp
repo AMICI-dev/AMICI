@@ -37,7 +37,7 @@ TEST(amici, testRunAmiciSimulationRdataMissing) {
                      std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     amici::IDASolver solver;
-    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(solver, nullptr, nullptr, model))
+    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(solver, nullptr, model))
 }
 
 

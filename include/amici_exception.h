@@ -78,7 +78,7 @@ namespace amici {
             int nFrames = backtrace(callstack, nMaxFrames);
             char **symbols = backtrace_symbols(callstack, nFrames);
             
-            for (int i = 0; i < nFrames; i++) {
+            for (int i = 2; i < nFrames; i++) { // start at 2 to omit AmiException and storeBacktrace call
                 Dl_info info;
                 if (dladdr(callstack[i], &info) && info.dli_sname) {
                     char *demangled = NULL;
@@ -86,14 +86,14 @@ namespace amici {
                     if (info.dli_sname[0] == '_')
                         demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
                     snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
-                             i, int(2 + sizeof(void*) * 2), callstack[i],
+                             i-2, int(2 + sizeof(void*) * 2), callstack[i],
                              status == 0 ? demangled :
                              info.dli_sname == 0 ? symbols[i] : info.dli_sname,
                              (char *)callstack[i] - (char *)info.dli_saddr);
                     free(demangled);
                 } else {
                     snprintf(buf, sizeof(buf), "%-3d %*p %s\n",
-                             i, int(2 + sizeof(void*) * 2), callstack[i], symbols[i]);
+                             i-2, int(2 + sizeof(void*) * 2), callstack[i], symbols[i]);
                 }
                 trace_buf << buf;
             }

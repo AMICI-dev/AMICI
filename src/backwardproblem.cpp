@@ -108,17 +108,17 @@ void BackwardProblem::workBackwardProblem() {
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
-            for (int ip = 0; ip < rdata->nplist; ++ip) {
+            for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model->nxtrue; ++ix) {
                     llhS0[ip] += xB[ix] * sx.at(ix,ip);
                 }
             }
         } else {
-            for (int ip = 0; ip < rdata->nplist; ++ip) {
-                llhS0[ip + iJ * rdata->nplist] = 0.0;
+            for (int ip = 0; ip < model->nplist(); ++ip) {
+                llhS0[ip + iJ * model->nplist()] = 0.0;
                 for (int ix = 0; ix < model->nxtrue; ++ix) {
-                    llhS0[ip + iJ * rdata->nplist] +=
+                    llhS0[ip + iJ * model->nplist()] +=
                         xB[ix + iJ * model->nxtrue] * sx.at(ix,ip)+
                         xB[ix] * sx.at(ix + iJ * model->nxtrue,ip);
                 }
@@ -127,12 +127,12 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (int ip = 0; ip < rdata->nplist; ip++) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             if (iJ == 0) {
-                rdata->sllh[ip] -= llhS0[ip] + xQB[ip*model->nJ];
+                rdata->sllh.at(ip) -= llhS0[ip] + xQB[ip*model->nJ];
             } else {
-                rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
-                    llhS0[ip + iJ * rdata->nplist] +
+                rdata->s2llh.at(iJ - 1 + ip * (model->nJ - 1)) -=
+                    llhS0[ip + iJ * model->nplist()] +
                     xQB[iJ + ip*model->nJ];
             }
         }
@@ -176,9 +176,9 @@ void BackwardProblem::handleEventB(int iroot) {
             }
 
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                for (int ip = 0; ip < rdata->nplist; ++ip) {
-                    xQB[ip + iJ * rdata->nplist] +=
-                        model->deltaqB[ip + iJ * rdata->nplist];
+                for (int ip = 0; ip < model->nplist(); ++ip) {
+                    xQB[ip + iJ * model->nplist()] +=
+                        model->deltaqB[ip + iJ * model->nplist()];
                 }
             }
 

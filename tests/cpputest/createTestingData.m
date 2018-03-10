@@ -8,8 +8,7 @@ function createTestingData()
     
     oldwd = pwd;
     
-    amiciPath = fileparts(mfilename('fullpath'));
-    amiciPath = [amiciPath '/../..'];
+    amiciPath = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 
     global amiHDFfile
     global amiHDFprefix;
@@ -34,42 +33,50 @@ function createTestingData()
     options = amioption('sensi',0,...
         'maxsteps',1e4);
         
-    amiHDFprefix = '/model_steadystate/nosensi/';
+    amiHDFprefix = '/model_steadystate/nosensi';
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
 
-    amiHDFprefix = '/model_steadystate/sensiforward/';
+    amiHDFprefix = '/model_steadystate/sensiforward';
     options.sensi = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
     
-    amiHDFprefix = '/model_steadystate/sensiforwardplist/';
+    amiHDFprefix = '/model_steadystate/sensiforwardplist';
     options.sensi = 1;
     options.sens_ind = [3,1,2,4];
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
     
-    amiHDFprefix = '/model_steadystate/sensiforwarddense/';
+    amiHDFprefix = '/model_steadystate/sensiforwarddense';
     options.sensi = 1;
     options.sens_ind = 1:5;
     options.linsol = 1;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
-    amiHDFprefix = '/model_steadystate/nosensiSPBCG/';
+    amiHDFprefix = '/model_steadystate/nosensiSPBCG';
     options.sensi = 0;
     options.linsol = 7;
     sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
     
-    amiHDFprefix = '/model_steadystate/sensiforwarderrorint/';
+    amiHDFprefix = '/model_steadystate/sensiforwarderrorint';
     options.sensi = 1;
     options.linsol = 9;
     options.maxsteps = 100;
-    sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    try
+        sol = simulate_model_steadystate_hdf([t,inf],log10(p),k,[],options);
+    catch
+        sol.status = -1;
+    end
     
-    amiHDFprefix = '/model_steadystate/sensiforwarderrornewt/';
+    amiHDFprefix = '/model_steadystate/sensiforwarderrornewt';
     options.sensi = 1;
     options.linsol = 9;
     options.newton_maxsteps = 2;
-    sol = simulate_model_steadystate_hdf([0,inf],log10(p),k,[],options);
+    try
+        sol = simulate_model_steadystate_hdf([0,inf],log10(p),k,[],options);
+    catch
+        sol.status = -1;
+    end
 
     %% EXAMPLE DIRAC
     cd([amiciPath '/examples/example_dirac/']);
@@ -87,10 +94,10 @@ function createTestingData()
     options = amioption('sensi',0,...
         'maxsteps',1e4);
         
-    amiHDFprefix = '/model_dirac/nosensi/';
+    amiHDFprefix = '/model_dirac/nosensi';
     sol = simulate_model_dirac_hdf(t,log10(p),k,[],options);
     
-    amiHDFprefix = '/model_dirac/sensiforward/';
+    amiHDFprefix = '/model_dirac/sensiforward';
     options.sensi = 1;
     sol = simulate_model_dirac_hdf(t,log10(p),k,[],options);
     
@@ -129,37 +136,37 @@ function createTestingData()
         0
         -0.5];
     
-    amiHDFprefix = '/model_jakstat_adjoint/nosensi/';
+    amiHDFprefix = '/model_jakstat_adjoint/nosensi';
     options.sensi = 0;
     simulate_model_jakstat_adjoint_hdf([],xi,[],D,options);
     
     xi_rand = xi + 0.1;
     options.sensi = 1;
-    amiHDFprefix = '/model_jakstat_adjoint/sensiadjoint/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensiadjoint';
     options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
-    amiHDFprefix = '/model_jakstat_adjoint/sensiforward/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensiforward';
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
 
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2forward/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2forward';
     options.sensi = 2;
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2adjoint';
     options.sensi = 2;
     options.sensi_meth = 'adjoint';
     simulate_model_jakstat_adjoint_hdf([],xi_rand,[],D,options);
     
-    amiHDFprefix = '/model_jakstat_adjoint/sensiforwardlogparam/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensiforwardlogparam';
     options.sensi = 1;
     options.pscale = 'log';
     options.sensi_meth = 'forward';
     simulate_model_jakstat_adjoint_hdf([],log(10.^xi_rand),[],D,options);
     
-    amiHDFprefix = '/model_jakstat_adjoint/sensi2forwardlogparam/';
+    amiHDFprefix = '/model_jakstat_adjoint/sensi2forwardlogparam';
     options.sensi = 2;
     options.pscale = 'log';
     options.sensi_meth = 'forward';
@@ -199,16 +206,16 @@ function createTestingData()
     D.t = t;
     D.condition = k;
     
-    amiHDFprefix = '/model_neuron/nosensi/';
+    amiHDFprefix = '/model_neuron/nosensi';
     options.sensi = 0;
     simulate_model_neuron_hdf([],log10(p),[],D,options);
     
     options.sensi = 1;
-    amiHDFprefix = '/model_neuron/sensiforward/';
+    amiHDFprefix = '/model_neuron/sensiforward';
     options.sensi_meth = 'forward';
     simulate_model_neuron_hdf([],log10(p),[],D,options);
 
-    amiHDFprefix = '/model_neuron/sensi2forward/';
+    amiHDFprefix = '/model_neuron/sensi2forward';
     options.sensi = 2;
     options.sensi_meth = 'forward';
     simulate_model_neuron_hdf([],log10(p),[],D,options);
@@ -235,11 +242,11 @@ function createTestingData()
     D.t = t;
     D.condition = k;
     
-    amiHDFprefix = '/model_events/nosensi/';
+    amiHDFprefix = '/model_events/nosensi';
     options.sensi = 0;
     simulate_model_events_hdf([],log10(p),k,D,options);
     
-    amiHDFprefix = '/model_events/sensiforward/';
+    amiHDFprefix = '/model_events/sensiforward';
     options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_events_hdf([],log10(p),[],D,options);
@@ -268,11 +275,11 @@ function createTestingData()
         'nmaxevent', 2);
     D = amidata(length(t),1,0,2,0);
     
-    amiHDFprefix = '/model_nested_events/nosensi/';
+    amiHDFprefix = '/model_nested_events/nosensi';
     options.sensi = 0;
     simulate_model_nested_events_hdf(t,log10(p),k,D,options);
     
-    amiHDFprefix = '/model_nested_events/sensiforward/';
+    amiHDFprefix = '/model_nested_events/sensiforward';
     options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_nested_events_hdf(t,log10(p),k,D,options);
@@ -297,11 +304,11 @@ function createTestingData()
         'atol',1e-6,...
         'rtol',1e-4);
     
-    amiHDFprefix = '/model_robertson/nosensi/';
+    amiHDFprefix = '/model_robertson/nosensi';
     options.sensi = 0;
     simulate_model_robertson_hdf(t,log10(p),k,[],options);
     
-    amiHDFprefix = '/model_robertson/sensiforward/';
+    amiHDFprefix = '/model_robertson/sensiforward';
     options.sensi = 1;
     options.sensi_meth = 'forward';
     simulate_model_robertson_hdf(t,log10(p),k,[],options);
