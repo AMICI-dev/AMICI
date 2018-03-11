@@ -83,8 +83,8 @@ function compareResults(sol,results)
                 end
             end
         else
-            if(ismember(ifield,{'s2llh'}))
-                checkAgreement(sol,results,ifield{1},1e-4,1e-5)
+            if(ismember(ifield,{'s2llh', 's2x', 's2y', 's2z', 'sx'}))
+                checkAgreement(sol,results,ifield{1},1e-4,1e-3)
             else
                 checkAgreement(sol,results,ifield{1})
             end
@@ -115,6 +115,6 @@ function checkAgreement(sol,results,fieldname,atol,rtol)
         assert(all(isinf(actual)==isinf(expected)));
         actual = actual(~isinf(actual));
         expected = expected(~isinf(actual));
-        assert(all(abs(expected - actual) <= atol) || all(abs((expected - actual) ./ (rtol + expected)) <= rtol));
+        assert(all(abs(expected - actual) <= atol) || all(abs((expected - actual) ./ (rtol + abs(expected))) <= rtol));
     end
 end
