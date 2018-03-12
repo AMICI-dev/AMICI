@@ -16,6 +16,11 @@ When making code changes:
 * when adding new functionality, please also provide test cases (see `tests/cpputest/`)
 * Write meaningful commit messages
 * Run all tests to ensure nothing got broken
-  * Run `tests/cpputest/wrapTestModels.m` followed by CI tests `scripts/run-build.sh && scripts/run-cpputest.sh`
-  * Run `examples/amiExamples.m`
+  * Run `tests/cpputest/wrapTestModels.m` followed by CI tests `scripts/buildAll.sh && scripts/run-cpputest.sh`
+  * Run `tests/testModels.m`
 * When all tests are passing and you think your code is ready to merge, request a code review
+
+## Adding/Updating tests
+
+To add new tests add a new corresponding python script (see, e.g.,  `tests/example_dirac.py`) and add it to and run `tests/generateTestConfigurationForExamples.sh`
+To update test results replace  `tests/cpputest/expectedResults.h5` by `tests/cpputest/writeResults.h5.bak` [ONLY DO THIS AFTER TRIPLE CHECKING CORRECTNES OF RESULTS]
