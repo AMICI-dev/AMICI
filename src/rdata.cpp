@@ -41,20 +41,12 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     // initialize with 0.0, so we only need to write non-zero values
     z.resize(nmaxevent * nz, 0.0);
     sigmaz.resize(nmaxevent * nz, 0.0);
-    sz.resize(nmaxevent * nz * nplist, 0.0);
-    ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
-    rz.resize(nmaxevent * nz, 0.0);
-    srz.resize(nmaxevent * nz * nplist, 0.0);
-    s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
 
+    rz.resize(nmaxevent * nz, 0.0);
     x.resize(nt * nx, 0.0);
-    sx.resize(nt * nx * nplist, 0.0);
-    
     y.resize(nt * model->ny, 0.0);
     sigmay.resize(nt * model->ny, 0.0);
     res.clear();
-    sy.resize(nt * model->ny * nplist, 0.0);
-    ssigmay.resize(nt * model->ny * nplist, 0.0);
     sres.clear();
 
     if(nt>0) {
@@ -75,9 +67,20 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     sx0.resize(nx * nplist, getNaN());
     
     llh = getNaN();
-    sllh.resize(nplist, getNaN());
-    s2llh.resize(nplist * (model->nJ - 1), getNaN());
     chi2 = getNaN();
+    if (sensi >= AMICI_SENSI_ORDER_FIRST){
+        sllh.resize(nplist, getNaN());
+        sx.resize(nt * nx * nplist, 0.0);
+        sy.resize(nt * model->ny * nplist, 0.0);
+        sz.resize(nmaxevent * nz * nplist, 0.0);
+        srz.resize(nmaxevent * nz * nplist, 0.0);
+        ssigmay.resize(nt * model->ny * nplist, 0.0);
+        ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
+        if (sensi >= AMICI_SENSI_ORDER_SECOND) {
+            s2llh.resize(nplist * (model->nJ - 1), getNaN());
+            s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
+        }
+    }
 }
 
 void ReturnData::invalidate(const realtype t) {

@@ -151,7 +151,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
 
     if(hdf5::attributeExists(file, resultPath, "J")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/J", m, n);
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
         checkEqualArray(expected, rdata->J, atol, rtol, "J");
     }
 
@@ -169,15 +169,14 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
         checkEqualArray(expected, rdata->sigmaz, atol, rtol, "sigmaz");
     }
 
-    expected = hdf5::getDoubleDataset1D(file, resultPath + "/xdot");
+    expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
     checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
 
     if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         verifyReturnDataSensitivities(file, resultPath, rdata, model, atol, rtol);
     } else {
-        // @REVIEW: Obsolete? Those fields are initialized no matter if they are used or not
-        //CHECK_EQUAL(0, rdata->sllh.size());
-        //CHECK_EQUAL(0, rdata->s2llh.size());
+        CHECK_EQUAL(0, rdata->sllh.size());
+        CHECK_EQUAL(0, rdata->s2llh.size());
     }
 }
 
@@ -243,9 +242,8 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/s2llh", m, n);
         checkEqualArray(expected, rdata->s2llh, atol, rtol, "s2llh");
     } else {
-        // @REVIEW: Obsolete? Those fields are initialized no matter if they are used or not
-        //CHECK_EQUAL(0, rdata->s2llh.size());
-        //CHECK_EQUAL(0, rdata->s2rz.size());
+        CHECK_EQUAL(0, rdata->s2llh.size());
+        CHECK_EQUAL(0, rdata->s2rz.size());
     }
 
 }

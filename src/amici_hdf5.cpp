@@ -123,16 +123,20 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
 
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
+    
+    if(!locationExists(file, hdf5Location + "/diagnosis"))
+        createGroup(file, hdf5Location  + "/diagnosis");
 
     if (rdata.ts.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/t",
                                       rdata.ts.data(), rdata.nt);
 
     if (rdata.xdot.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/xdot",
+        createAndWriteDouble1DDataset(file, hdf5Location + "/diagnosis/xdot",
                                       rdata.xdot.data(), rdata.nx);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", &rdata.llh, 1);
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "chi2", &rdata.chi2, 1);
 
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(), "status", &rdata.status, 1);
 
@@ -143,35 +147,35 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
     // are double, but should write as int:
     // TODO: change to dataset as soon as are of type int
     if (rdata.numsteps.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numsteps", rdata.numsteps);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numsteps", rdata.numsteps);
 
     if (rdata.numrhsevals.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevals", rdata.numrhsevals);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numrhsevals", rdata.numrhsevals);
 
     if (rdata.numerrtestfails.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfails", rdata.numerrtestfails);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numerrtestfails", rdata.numerrtestfails);
 
     if (rdata.numnonlinsolvconvfails.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfails",
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numnonlinsolvconvfails",
                                    rdata.numnonlinsolvconvfails);
 
     if (rdata.order.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/order", rdata.order);
 
     if (rdata.numstepsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numstepsB", rdata.numstepsB);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numstepsB", rdata.numstepsB);
 
     if (rdata.numrhsevalsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevalsB", rdata.numrhsevalsB);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numrhsevalsB", rdata.numrhsevalsB);
 
     if (rdata.numerrtestfailsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfailsB", rdata.numerrtestfailsB);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numerrtestfailsB", rdata.numerrtestfailsB);
 
     if (rdata.numnonlinsolvconvfailsB.size())
         createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
 
     if (rdata.J.size())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J.data(),
+        createAndWriteDouble2DDataset(file, hdf5Location + "/diagnosis/J", rdata.J.data(),
                                         rdata.nx, rdata.nx);
 
     if (rdata.x.size())
@@ -201,27 +205,27 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
                                         rdata.nJ - 1, rdata.nplist);
 
     if (rdata.sx.size())
-        createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nx, rdata.nplist);
+        createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nplist, rdata.nx);
 
     if (rdata.sy.size())
-        createAndWriteDouble3DDataset(file, hdf5Location + "/sy", rdata.sy.data(), rdata.nt, rdata.ny, rdata.nplist);
+        createAndWriteDouble3DDataset(file, hdf5Location + "/sy", rdata.sy.data(), rdata.nt, rdata.nplist, rdata.ny);
 
     if (rdata.ssigmay.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmay",
                                         rdata.ssigmay.data(), rdata.nt,
-                                        rdata.ny, rdata.nplist);
+                                        rdata.nplist, rdata.ny);
 
     if (rdata.sz.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sz", rdata.sz.data(),
-                                        rdata.nmaxevent, rdata.nz, rdata.nplist);
+                                        rdata.nmaxevent, rdata.nplist, rdata.nz);
 
     if (rdata.srz.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/srz", rdata.srz.data(),
-                                        rdata.nmaxevent, rdata.nz, rdata.nplist);
+                                        rdata.nmaxevent, rdata.nplist, rdata.nz);
 
     if (rdata.ssigmaz.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmaz", rdata.ssigmaz.data(),
-                                      rdata.nmaxevent, rdata.nz, rdata.nplist);
+                                      rdata.nmaxevent, rdata.nplist, rdata.nz);
 }
 
 
