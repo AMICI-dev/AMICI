@@ -194,6 +194,9 @@ fclose(fid);
 fprintf('CMakeLists | ');
 generateCMakeFile(this);
 
+fprintf('swig | ');
+generateSwigInterfaceFile(this)
+
 fprintf('main | ');
 generateMainC(this);
 
@@ -237,9 +240,19 @@ function generateCMakeFile(this)
     t.add('TPL_MODELNAME', this.modelname);
     t.add('TPL_SOURCES', sourceStr);
     CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
-    CMakeTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/CMakeLists.template.txt');
+    CMakeTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src' , 'CMakeLists.template.txt');
     t.replace(CMakeTemplateFileName, CMakeFileName);
 end
+
+function generateSwigInterfaceFile(this)
+    t = template();
+    t.add('TPL_MODELNAME', this.modelname);
+    SwigInterfaceFile = fullfile(this.wrap_path,'models',this.modelname,[this.modelname '.i']);
+    SwigInterfaceTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src' , 'modelname.template.i');
+    t.replace(SwigInterfaceTemplateFileName, SwigInterfaceFile);
+end
+    
+    
 
 function generateMainC(this)
     mainFileSource = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/main.template.cpp');
