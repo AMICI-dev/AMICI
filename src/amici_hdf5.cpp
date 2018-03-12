@@ -172,7 +172,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
         createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numerrtestfailsB", rdata.numerrtestfailsB);
 
     if (rdata.numnonlinsolvconvfailsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
     
     H5LTset_attribute_int(file.getId(), (hdf5Location + "/diagnosis").c_str(), "newton_status", &rdata.newton_status, 1);
     
