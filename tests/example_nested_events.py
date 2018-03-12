@@ -14,7 +14,7 @@ class ExampleNestedEvents(AmiciExample):
         self.numX = 1
         self.numP = 5
         self.numK = 0
-        self.numZ = 1
+        self.numZ = 0
         
         self.modelOptions['theta'] = np.log10([0.1, 1000, 2, 8e-1, 1.6])
         self.modelOptions['ts'] = np.linspace(0, 20, 100)
