@@ -195,7 +195,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         /* TODO REMOVE ASAP */
         if(rdata->sensi < AMICI_SENSI_ORDER_SECOND) {
         /* /TODO REMOVE ASAP */
-
+        /*
         expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
         for(int ip = 0; ip < model->nplist(); ++ip)
             checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
@@ -222,7 +222,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                         &rdata->srz[ip * model->nMaxEvent() * model->nz],
                         model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
         }
-
+        */
         expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
         for(int ip = 0; ip < model->nplist(); ++ip)
             checkEqualArray(&expected[ip * model->nt() * model->nytrue],
@@ -236,6 +236,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                         &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
                         model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
         }
+        
         /* TODO REMOVE ASAP */
         }
         /* /TODO REMOVE ASAP */

@@ -68,22 +68,29 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
     x0.resize(nx, getNaN());
     sx0.resize(nx * nplist, getNaN());
-    
+
     llh = getNaN();
     chi2 = getNaN();
     if (sensi >= AMICI_SENSI_ORDER_FIRST){
         sllh.resize(nplist, getNaN());
-        sx.resize(nt * nx * nplist, 0.0);
-        sy.resize(nt * model->ny * nplist, 0.0);
-        sz.resize(nmaxevent * nz * nplist, 0.0);
-        srz.resize(nmaxevent * nz * nplist, 0.0);
+        
+        if (sensi_meth == AMICI_SENSI_FSA || sensi >= AMICI_SENSI_ORDER_SECOND){
+            // for second order we can fill in from the augmented states
+            sx.resize(nt * nx * nplist, 0.0);
+            sy.resize(nt * ny * nplist, 0.0);
+            sz.resize(nmaxevent * nz * nplist, 0.0);
+            srz.resize(nmaxevent * nz * nplist, 0.0);
+        }
+        
         ssigmay.resize(nt * model->ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= AMICI_SENSI_ORDER_SECOND) {
             s2llh.resize(nplist * (model->nJ - 1), getNaN());
-            s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
+            if (sensi_meth == AMICI_SENSI_FSA)
+                s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
         }
     }
+    
 }
 
 void ReturnData::invalidate(const realtype t) {
@@ -193,12 +200,13 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
             sllh.at(ip) *= pcoefficient.at(ip);
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
-    for (int IND1 = 0; IND1 < N1T; ++IND1)                                      \
-        for (int ip = 0; ip < nplist; ++ip)                                     \
-            for (int IND2 = 0; IND2 < N2; ++IND2) {                             \
-                s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *=                    \
-                    pcoefficient.at(ip);                                        \
-            }
+    if (s##QUANT.size())                                                        \
+        for (int IND1 = 0; IND1 < N1T; ++IND1)                                  \
+            for (int ip = 0; ip < nplist; ++ip)                                 \
+                for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *=                \
+                        pcoefficient.at(ip);                                    \
+                }
 
         chainRule(x, ix, nxtrue, nx, it, nt);
         chainRule(y, iy, nytrue, ny, it, nt);
@@ -253,16 +261,17 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         }
 
 #define s2vecChainRule(QUANT, IND1, N1T, N1, IND2, N2)                          \
-    for (int ip = 0; ip < nplist; ++ip)                                         \
-        for (int IND1 = 0; IND1 < N1T; ++IND1)                                  \
-            for (int IND2 = 0; IND2 < N2; ++IND2) {                             \
-                s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) *=              \
-                    pcoefficient.at(ip);                                        \
-                s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) +=              \
-                    model->k()[nk - nplist + ip] *                              \
-                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1) /                 \
-                    unscaledParameters[model->plist(ip)];                       \
-            }
+    if (s##QUANT.size())                                                        \
+        for (int ip = 0; ip < nplist; ++ip)                                     \
+            for (int IND1 = 0; IND1 < N1T; ++IND1)                              \
+                for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) *=          \
+                        pcoefficient.at(ip);                                    \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) +=          \
+                        model->k()[nk - nplist + ip] *                          \
+                        s##QUANT.at((IND2*nplist + ip)*N1 + IND1) /             \
+                        unscaledParameters[model->plist(ip)];                   \
+                }
 
         s2vecChainRule(x, ix, nxtrue, nx, it, nt);
         s2vecChainRule(y, iy, nytrue, ny, it, nt);
