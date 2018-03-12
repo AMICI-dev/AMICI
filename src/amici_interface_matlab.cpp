@@ -527,35 +527,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         amici::errMsgIdAndTxt("AMICI:mex:setup", "Incorrect number of input arguments (must be at least 7)!");
     };
 
-    try{
-        auto model = getModel();
-        auto solver = model->getSolver();
-        setModelData(prhs, nrhs, *model);
-        setSolverOptions(prhs, nrhs, *solver);
+    auto model = getModel();
+    auto solver = model->getSolver();
+    setModelData(prhs, nrhs, *model);
+    setSolverOptions(prhs, nrhs, *solver);
 
-        
-
-        
-        std::unique_ptr<amici::ExpData> edata;
-        if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
-            if (!edata)
-                amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
-        } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
-                   solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
-            amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
-        }
-        
-        /* ensures that plhs[0] is available */
-        auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
-        plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
-    } catch (amici::AmiException& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI execution failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-    } catch(std::exception& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex","AMICI execution failed:\n%s",ex.what());
-    } catch(...) {
-        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+    std::unique_ptr<amici::ExpData> edata;
+    if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
+        edata.reset(amici::expDataFromMatlabCall(prhs, *model));
+        if (!edata)
+            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
+    } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
+               solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
     }
+    
+    /* ensures that plhs[0] is available */
+    auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
+    plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
     
 }
 

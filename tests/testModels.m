@@ -62,11 +62,7 @@ function sol = getResults(modelname,options,data,t,theta,kappa)
     else
         ami_data = [];
     end
-    try
-        sol = feval(['simulate_' modelname],t,theta,kappa,ami_data,ami_options);
-    catch
-        sol.status = -1;
-    end
+    sol = feval(['simulate_' modelname],t,theta,kappa,ami_data,ami_options);
 end
 
 function compareResults(sol,results)
