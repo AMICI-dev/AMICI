@@ -20,7 +20,7 @@ class ReturnData;
 class ExpData;
 
 #define NEW_OPTION_FILE "../../testOptions.h5"
-#define HDFFILE "../../expectedResultsCpputest.h5"
+#define HDFFILE "../../expectedResults.h5"
 #define HDFFILEWRITE "../../writeResults.h5"
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
