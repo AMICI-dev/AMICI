@@ -171,6 +171,9 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
     checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
+    
+    expected = hdf5::getDoubleDataset1D(file, resultPath + "/x0");
+    checkEqualArray(expected, rdata->x0, atol, rtol, "x0");
 
     if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         verifyReturnDataSensitivities(file, resultPath, rdata, model, atol, rtol);
@@ -187,6 +190,9 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
     checkEqualArray(expected, rdata->sllh, atol, rtol, "sllh");
 
     if(rdata->sensi_meth == AMICI_SENSI_FSA) {
+    
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
+        checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
 
         /* TODO REMOVE ASAP */
         if(rdata->sensi < AMICI_SENSI_ORDER_SECOND) {

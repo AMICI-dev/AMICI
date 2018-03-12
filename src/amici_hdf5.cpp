@@ -178,6 +178,9 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
         createAndWriteDouble2DDataset(file, hdf5Location + "/diagnosis/J", rdata.J.data(),
                                         rdata.nx, rdata.nx);
 
+    if (rdata.x0.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0.data(), rdata.nx);
+
     if (rdata.x.size())
         createAndWriteDouble2DDataset(file, hdf5Location + "/x", rdata.x.data(),
                                         rdata.nt, rdata.nx);
@@ -203,6 +206,9 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
     if (rdata.s2llh.size())
         createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh.data(),
                                         rdata.nJ - 1, rdata.nplist);
+
+    if (rdata.sx0.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nplist, rdata.nx);
 
     if (rdata.sx.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nplist, rdata.nx);
