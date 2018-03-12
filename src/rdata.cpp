@@ -51,16 +51,19 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
     if(nt>0) {
         numsteps.resize(nt, 0);
-        numstepsB.resize(nt, 0);
         numrhsevals.resize(nt, 0);
-        numrhsevalsB.resize(nt, 0);
         numerrtestfails.resize(nt, 0);
-        numerrtestfailsB.resize(nt, 0);
         numnonlinsolvconvfails.resize(nt, 0);
-        numnonlinsolvconvfailsB.resize(nt, 0);
         order.resize(nt, 0);
         newton_numsteps.resize(2, 0);
         newton_numlinsteps.resize(newton_maxsteps*2, 0);
+        
+        if (sensi_meth == AMICI_SENSI_ASA && sensi >= AMICI_SENSI_ORDER_FIRST) {
+            numstepsB.resize(nt, 0);
+            numrhsevalsB.resize(nt, 0);
+            numerrtestfailsB.resize(nt, 0);
+            numnonlinsolvconvfailsB.resize(nt, 0);
+        }
     }
 
     x0.resize(nx, getNaN());
