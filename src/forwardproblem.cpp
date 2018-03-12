@@ -326,7 +326,12 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     rdata->xdot = xdot.getVector();
 
     model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp);
-    rdata->J.assign(Jtmp->data,Jtmp->data + model->nx * model->nx);
+    // CVODES uses colmajor, so we need to transform to rowmajor
+    for (int ix = 0; ix < model->nx; ix++) {
+        for (int jx = 0; jx < model->nx; jx++) {
+            rdata->J[ix*model->nx + jx] = Jtmp->data[ix + model->nx*jx];
+        }
+    }
 }
 
 void ForwardProblem::getEventOutput() {

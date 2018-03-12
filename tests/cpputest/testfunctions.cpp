@@ -150,10 +150,8 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
 
-    if(hdf5::attributeExists(file, resultPath, "J")) {
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
-        checkEqualArray(expected, rdata->J, atol, rtol, "J");
-    }
+    expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
+    checkEqualArray(expected, rdata->J, atol, rtol, "J");
 
     expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
     checkEqualArray(expected, rdata->y, atol, rtol, "y");
