@@ -407,7 +407,7 @@ void ForwardProblem::prepEventSensis(int ie) {
     if (edata) {
         for (int iz = 0; iz < model->nztrue; iz++) {
             if (model->z2event[iz] - 1 == ie) {
-                if (!isNaN(edata->mz[iz * rdata->nmaxevent + nroots.at(ie)])) {
+                if (!isNaN(edata->mz[nroots.at(ie) * rdata->nztrue + iz])) {
                     model->fdzdp(t, ie, &x);
                     
                     model->fdzdx(t, ie, &x);
@@ -420,16 +420,14 @@ void ForwardProblem::prepEventSensis(int ie) {
                      value is NaN, use
                      the parameter value. Store this value in the return
                      struct */
-                    if (isNaN(edata->sigmaz[nroots.at(ie) +
-                                               rdata->nmaxevent * iz])) {
+                    if (isNaN(edata->sigmaz[nroots.at(ie) * rdata->nztrue + iz])) {
                         model->fdsigma_zdp(t);
                     } else {
                         for (int ip = 0; ip < model->nplist(); ip++) {
                             model->dsigmazdp[iz + model->nz * ip] = 0;
                         }
                         model->sigmaz[iz] =
-                        edata->sigmaz[nroots.at(ie) +
-                                      rdata->nmaxevent * iz];
+                        edata->sigmaz[nroots.at(ie)*model->nz + iz];
                     }
                     rdata->sigmaz[nroots.at(ie)*model->nz + iz] =
                     model->sigmaz[iz];
@@ -544,7 +542,7 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdsigma_ydp(it, rdata);
 
     for (int iy = 0; iy < model->nytrue; iy++) {
-        if (!isNaN(edata->sigmay[iy * rdata->nt + it])) {
+        if (!isNaN(edata->sigmay[it * rdata->ny + iy])) {
             for (int ip = 0; ip < model->nplist(); ip++) {
                 model->dsigmaydp[ip * model->ny + iy] = 0;
             }
@@ -603,7 +601,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
 
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (edata) {
-            if (isNaN(edata->sigmay[iy * rdata->nt + it])) {
+            if (isNaN(edata->sigmay[it * rdata->ny + iy])) {
                 model->fdsigma_ydp(it, rdata);
             } else {
                 for (int ip = 0; ip < model->nplist(); ip++) {
