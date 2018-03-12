@@ -93,7 +93,7 @@ function compareResults(sol,results)
                     if(ismember(ifield,{'s2llh'}))
                         checkAgreement(sol,results,ifield{1},1e-4,1e-3)
                     elseif(ismember(ifield,{'x','sx','s2x','y','sy','s2y','z','sz','s2z','rz','srz','s2rz','sigmay','ssigmay','s2sigmay','sigmaz','ssigmaz','s2sigmaz','x0','sx0'}))
-                       % TODO: reimplement this as soon as 
+                       % TODO: reimplement this as soon as #264 is done
                     else
                         checkAgreement(sol,results,ifield{1})
                     end
