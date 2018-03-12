@@ -534,9 +534,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-        edata.reset(amici::expDataFromMatlabCall(prhs, *model));
-        if (!edata)
-            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
+        try {
+            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
+        } catch (amici::AmiException& ex) {
+            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
+        }
     } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
                solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");

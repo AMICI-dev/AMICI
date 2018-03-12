@@ -137,7 +137,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
     std::vector<int> perm1 = {0, 1};
-    std::vector<int> perm1T = {1, 0};
     
     writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
     writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, rdata->nt);
@@ -147,7 +146,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 
     if (rdata->nx > 0) {
         writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
-        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1T);
+        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "newton_status", rdata->newton_status);
         writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newton_numsteps, 2);
         writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2, perm1);
