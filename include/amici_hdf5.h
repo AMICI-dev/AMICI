@@ -144,6 +144,11 @@ void createAndWriteDouble2DDataset(H5::H5File& file,
                                      const double *buffer, hsize_t m,
                                      hsize_t n);
 
+void createAndWriteInt2DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const int *buffer, hsize_t m,
+                                     hsize_t n);
+
 void createAndWriteDouble3DDataset(H5::H5File& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,

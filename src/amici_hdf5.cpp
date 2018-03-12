@@ -173,6 +173,18 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
 
     if (rdata.numnonlinsolvconvfailsB.size())
         createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
+    
+    H5LTset_attribute_int(file.getId(), (hdf5Location + "/diagnosis").c_str(), "newton_status", &rdata.newton_status, 1);
+    
+    if (rdata.newton_numsteps.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/newton_numsteps", rdata.newton_numsteps);
+    
+    if (rdata.newton_numlinsteps.size())
+        createAndWriteInt2DDataset(file, hdf5Location + "/diagnosis/newton_numlinsteps", rdata.newton_numlinsteps.data(),
+                                    rdata.newton_maxsteps, 2);
+    
+    
+    H5LTset_attribute_double(file.getId(), (hdf5Location + "/diagnosis").c_str(), "newton_time", &rdata.newton_time, 1);
 
     if (rdata.J.size())
         createAndWriteDouble2DDataset(file, hdf5Location + "/diagnosis/J", rdata.J.data(),
@@ -468,6 +480,16 @@ void createAndWriteDouble2DDataset(H5::H5File& file,
     H5::DataSpace dataspace(2, adims);
     auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE, dataspace);
     dataset.write(buffer, H5::PredType::NATIVE_DOUBLE);
+}
+
+void createAndWriteInt2DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const int *buffer, hsize_t m,
+                                     hsize_t n) {
+    const hsize_t adims[] {m, n};
+    H5::DataSpace dataspace(2, adims);
+    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_INT, dataspace);
+    dataset.write(buffer, H5::PredType::NATIVE_INT);
 }
 
 void createAndWriteDouble3DDataset(H5::H5File& file,
