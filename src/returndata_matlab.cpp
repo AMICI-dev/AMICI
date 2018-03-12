@@ -67,7 +67,6 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     if (rdata->nx > 0) {
         writeMatlabField2(matlabSolutionStruct, "x", rdata->x, rdata->nt, rdata->nx, perm1);
         writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx, perm1);
-        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist, perm1);
     }
     if (rdata->ny > 0) {
         writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny, perm1);
@@ -75,6 +74,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     }
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         writeMatlabField1(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist);
+        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist, perm1);
 
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
             writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nplist, rdata->nx, perm2);

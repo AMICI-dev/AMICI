@@ -67,12 +67,12 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     }
 
     x0.resize(nx, getNaN());
-    sx0.resize(nx * nplist, getNaN());
 
     llh = getNaN();
     chi2 = getNaN();
     if (sensi >= AMICI_SENSI_ORDER_FIRST){
         sllh.resize(nplist, getNaN());
+        sx0.resize(nx * nplist, getNaN());
         
         if (sensi_meth == AMICI_SENSI_FSA || sensi >= AMICI_SENSI_ORDER_SECOND){
             // for second order we can fill in from the augmented states
