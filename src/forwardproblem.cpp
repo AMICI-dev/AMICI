@@ -427,7 +427,7 @@ void ForwardProblem::prepEventSensis(int ie) {
                             model->dsigmazdp[iz + model->nz * ip] = 0;
                         }
                         model->sigmaz[iz] =
-                        edata->sigmaz[nroots.at(ie)*model->nz + iz];
+                        edata->sigmaz[nroots.at(ie)*model->nztrue + iz];
                     }
                     rdata->sigmaz[nroots.at(ie)*model->nz + iz] =
                     model->sigmaz[iz];
@@ -542,7 +542,7 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdsigma_ydp(it, rdata);
 
     for (int iy = 0; iy < model->nytrue; iy++) {
-        if (!isNaN(edata->sigmay[it * rdata->ny + iy])) {
+        if (!isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
             for (int ip = 0; ip < model->nplist(); ip++) {
                 model->dsigmaydp[ip * model->ny + iy] = 0;
             }
@@ -601,7 +601,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
 
     for (int iy = 0; iy < model->nytrue; iy++) {
         if (edata) {
-            if (isNaN(edata->sigmay[it * rdata->ny + iy])) {
+            if (isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
                 model->fdsigma_ydp(it, rdata);
             } else {
                 for (int ip = 0; ip < model->nplist(); ip++) {
