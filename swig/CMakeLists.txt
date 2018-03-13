@@ -2,7 +2,7 @@
 # Build additional AMICI interfaces via swig
 #
 
-find_package(SWIG REQUIRED)
+find_package(SWIG REQUIRED 3)
 include(${SWIG_USE_FILE})
 
 set(AMICI_INTERFACE_LIST

@@ -24,7 +24,7 @@ matrix:
             - doxygen
             - doxygen-latex
             - cppcheck
-            - swig
+            - swig3.0
             - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
