@@ -1,4 +1,5 @@
 %module amici
+
 %include edata.i
 %include rdata.i
 
@@ -8,6 +9,7 @@
 %include model.i
 %include model_ode.i
 %include model_dae.i
+%include hdf5.i
 
 
 // Add necessary symbols to generated header
