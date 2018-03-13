@@ -1,6 +1,6 @@
 /**
- * @file   amici_interface_cpp.cpp
- * @brief  core routines for cpp interface
+ * @file   amici_cblas.cpp
+ * @brief  BLAS routines required by AMICI
  *
  **/
 
