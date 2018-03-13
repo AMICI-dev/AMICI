@@ -1,12 +1,13 @@
-#include "include/amici_defines.h"
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/amici_vector.h"
-#include "include/steadystateproblem.h"
-#include "include/forwardproblem.h"
-#include "include/rdata.h"
-#include "include/edata.h"
-#include "include/newton_solver.h"
+#include "amici/newton_solver.h"
+
+#include "amici/amici_defines.h"
+#include "amici/amici_model.h"
+#include "amici/amici_solver.h"
+#include "amici/amici_vector.h"
+#include "amici/steadystateproblem.h"
+#include "amici/forwardproblem.h"
+#include "amici/rdata.h"
+#include "amici/edata.h"
 
 #include <cstring>
 #include <ctime>

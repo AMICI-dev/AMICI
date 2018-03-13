@@ -1,7 +1,7 @@
-#include "include/edata.h"
+#include "amici/edata.h"
 
-#include "include/amici_defines.h"
-#include "include/amici_model.h"
+#include "amici/amici_defines.h"
+#include "amici/amici_model.h"
 
 #include <cstring>
 

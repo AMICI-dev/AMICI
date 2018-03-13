@@ -1,10 +1,10 @@
-#include "../include/steadystateproblem.h"
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/edata.h"
-#include "include/forwardproblem.h"
-#include "include/newton_solver.h"
-#include "include/rdata.h"
+#include "amici/steadystateproblem.h"
+#include "amici/amici_model.h"
+#include "amici/amici_solver.h"
+#include "amici/edata.h"
+#include "amici/forwardproblem.h"
+#include "amici/newton_solver.h"
+#include "amici/rdata.h"
 
 #include <cmath>
 #include <cstring>

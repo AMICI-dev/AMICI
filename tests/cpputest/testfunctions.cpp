@@ -1,8 +1,5 @@
 #include "testfunctions.h"
 
-#include <include/amici_hdf5.h>
-#include <amici.h>
-
 #include <cstring>
 #include <execinfo.h>
 #include <dlfcn.h>    // for dladdr

@@ -1,9 +1,9 @@
 #ifndef AMICI_SOLVER_CVODES_h
 #define AMICI_SOLVER_CVODES_h
 
-#include "include/amici_solver.h"
-#include "include/amici_exception.h"
-#include "include/amici_defines.h"
+#include "amici/amici_solver.h"
+#include "amici/amici_defines.h"
+
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 

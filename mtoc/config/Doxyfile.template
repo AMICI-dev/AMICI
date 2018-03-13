@@ -680,8 +680,8 @@ EXCLUDE                = "sundials" \
                          "README.md" \
                          "src/amici_solver_cvodes.cpp" \
                          "src/amici_solver_idas.cpp" \
-                         "include/amici_solver_cvodes.h" \
-                         "include/amici_solver_idas.h"
+                         "include/amici/amici_solver_cvodes.h" \
+                         "include/amici/amici_solver_idas.h"
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

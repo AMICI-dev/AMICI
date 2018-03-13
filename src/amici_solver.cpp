@@ -1,10 +1,9 @@
-#include "include/amici_solver.h"
-#include "include/amici.h"
-#include "include/amici_exception.h"
-#include "include/forwardproblem.h"
-#include "include/backwardproblem.h"
-#include <include/amici_model.h>
-#include <include/rdata.h>
+#include "amici/amici_solver.h"
+#include "amici/amici_exception.h"
+#include "amici/forwardproblem.h"
+#include "amici/backwardproblem.h"
+#include "amici/amici_model.h"
+#include "amici/rdata.h"
 
 #include <cmath>
 #include <cstdio>

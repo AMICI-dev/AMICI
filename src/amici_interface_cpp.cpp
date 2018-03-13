@@ -4,11 +4,11 @@
  *
  **/
 
-#include "include/amici_interface_cpp.h"
-#include "include/amici.h"
-#include <include/amici_model.h>
-#include <include/amici_exception.h>
-#include <include/amici_solver.h>
+#include "amici/amici_interface_cpp.h"
+#include "amici/amici.h"
+#include "amici/amici_model.h"
+#include "amici/amici_exception.h"
+#include "amici/amici_solver.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>

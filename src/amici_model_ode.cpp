@@ -1,5 +1,5 @@
-#include <include/amici_solver_cvodes.h>
-#include <include/amici_model_ode.h>
+#include "amici/amici_solver_cvodes.h"
+#include "amici/amici_model_ode.h"
 
 namespace amici {
     

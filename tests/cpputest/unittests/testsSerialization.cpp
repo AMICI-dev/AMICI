@@ -1,7 +1,8 @@
-#include <include/amici_serialization.h>
+#include <amici/amici_serialization.h> // needs to be included before cpputest
+#include <amici/amici_model.h>
+#include <amici/amici_solver_cvodes.h>
+
 #include "testfunctions.h"
-#include <include/amici_model.h>
-#include <include/amici_solver_cvodes.h>
 
 #include <cmath>
 

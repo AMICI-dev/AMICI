@@ -1,4 +1,9 @@
-#include <include/amici_solver_idas.h>
+#include "amici/amici_solver_idas.h"
+
+#include "amici/amici_misc.h"
+#include "amici/amici_model.h"
+#include "amici/amici_exception.h"
+#include "amici/amici_model_dae.h"
 
 #include <idas/idas.h>
 /*#include <idas/idas_lapack.h>*/
@@ -17,10 +22,6 @@
 #include <klu.h>
 
 #include <cstring>
-#include <include/amici.h>
-#include <include/amici_misc.h>
-#include <include/amici_model.h>
-#include <include/amici_exception.h>
 
 namespace amici {
 

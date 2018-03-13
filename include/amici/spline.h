@@ -2,9 +2,6 @@
 #define amici_spline_h
 #include <math.h>
 
-#undef k
-#undef ss
-
 namespace amici {
 
 int spline(int n, int end1, int end2, double slope1, double slope2, double x[],

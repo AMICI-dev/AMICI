@@ -1,21 +1,18 @@
 #ifndef AMICI_STEADYSTATEPROBLEM_H
 #define AMICI_STEADYSTATEPROBLEM_H
 
-#include "include/amici_defines.h"
-#include "include/amici_vector.h"
+#include "amici/amici_defines.h"
+#include "amici/amici_vector.h"
+#include <amici/newton_solver.h>
+
 #include <nvector/nvector_serial.h>
-#include <include/newton_solver.h>
+
 
 namespace amici {
 
 class ReturnData;
-class ExpData;
 class Solver;
 class Model;
-class NewtonSolver;
-class NewtonSolverDense;
-class NewtonSolverSparse;
-class NewtonSolverIterative;
 
 /**
  * @brief The SteadystateProblem class solves a steady-state problem using

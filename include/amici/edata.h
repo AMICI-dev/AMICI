@@ -1,8 +1,9 @@
 #ifndef AMICI_EDATA_H
 #define AMICI_EDATA_H
 
+#include "amici/amici_defines.h"
+
 #include <vector>
-#include <include/amici_defines.h>
 
 namespace amici {
 

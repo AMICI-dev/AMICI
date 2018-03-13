@@ -1,7 +1,8 @@
-#include "include/amici.h"
-#include "include/amici_model.h"
-#include <include/edata.h>
-#include <include/rdata.h>
+#include "amici/amici_model.h"
+
+#include "amici/amici.h"
+#include "amici/edata.h"
+#include "amici/rdata.h"
 
 #include <cstring>
 #include <cmath>

@@ -1,12 +1,11 @@
 #include "testfunctions.h"
-#include <include/amici_hdf5.h>
-#include <include/amici_interface_cpp.h>
 
-#include <include/amici.h>
-#include <include/amici_solver_idas.h>
-#include <include/amici_solver_cvodes.h>
-#include <include/symbolic_functions.h>
-#include <include/amici_model_ode.h>
+#include <amici/amici.h>
+#include <amici/amici_solver_idas.h>
+#include <amici/amici_solver_cvodes.h>
+#include <amici/symbolic_functions.h>
+#include <amici/amici_model_ode.h>
+
 #include <cstring>
 #include <cmath>
 #include <vector>

@@ -1,11 +1,15 @@
 #ifndef AMICI_SERIALIZATION_H
 #define AMICI_SERIALIZATION_H
 
-#include "include/rdata.h"
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/amici_solver_cvodes.h"
+#include "amici/rdata.h"
+#include "amici/amici_model.h"
+#include "amici/amici_solver.h"
+#include "amici/amici_solver_cvodes.h"
+
 #include <cassert>
+#include <fstream>
+#include <iostream>
+
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -14,8 +18,6 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <fstream>
-#include <iostream>
 
 /* Helper functions and forward declarations for boost::serialization */
 namespace boost {

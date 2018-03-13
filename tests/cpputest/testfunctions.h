@@ -1,8 +1,8 @@
 #ifndef TESTFUNCTIONS_H
 #define TESTFUNCTIONS_H
 
-#include <include/amici_exception.h>
-#include <include/amici_model.h>
+#include <amici/amici_hdf5.h>
+#include <amici/amici.h>
 
 #include <H5Cpp.h>
 

@@ -1,18 +1,16 @@
 #ifndef amici_h
 #define amici_h
 
-#include <include/symbolic_functions.h>
-#include <include/amici_defines.h>
-#include <include/amici_model.h>
-#include <include/amici_solver.h>
-#include "include/amici_interface_cpp.h"
+#include "amici/amici_model.h"
+#include "amici/amici_solver.h"
+#include "amici/amici_exception.h"
+#include "amici/amici_defines.h"
+#include "amici/amici_interface_cpp.h"
+#include "amici/rdata.h"
+#include "amici/edata.h"
+#include "amici/symbolic_functions.h"
 
 namespace amici {
-
-class ReturnData;
-class ExpData;
-class Model;
-class Solver;
 
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
 

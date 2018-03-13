@@ -1,8 +1,8 @@
 #ifndef AMICI_SOLVER_IDAS_h
 #define AMICI_SOLVER_IDAS_h
 
-#include "include/amici_solver.h"
-#include "include/amici_model_dae.h"
+#include "amici/amici_solver.h"
+
 #include <idas/idas_dense.h>
 #include <sundials/sundials_sparse.h>
 

@@ -1,11 +1,11 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
-#include <include/amici_vector.h>
-#include <include/amici_defines.h>
-#include <include/amici_misc.h>
-#include <include/amici_exception.h>
-#include <include/symbolic_functions.h>
+#include "amici/amici_vector.h"
+#include "amici/amici_defines.h"
+#include "amici/amici_misc.h"
+#include "amici/amici_exception.h"
+#include "amici/symbolic_functions.h"
 
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat

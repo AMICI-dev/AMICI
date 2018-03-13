@@ -172,7 +172,7 @@ function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, 
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
-    recompile = headersHaveChanged([amiciSourcePath '/../include/'], DEBUG);
+    recompile = headersHaveChanged([amiciSourcePath '/../include/amici/'], DEBUG);
     objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
     objectStrAmici = strjoin(objectArray, ' ');
     sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
@@ -186,7 +186,7 @@ function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, 
         eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
             includesstr ' ' sourceStr]);
         cellfun(@(x) updateFileHashSource(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
-        updateHeaderFileHashes([amiciSourcePath '/../include/'], DEBUG);
+        updateHeaderFileHashes([amiciSourcePath '/../include/amici/'], DEBUG);
     end
     
 end

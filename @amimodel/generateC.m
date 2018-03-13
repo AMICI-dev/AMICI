@@ -30,8 +30,8 @@ for ifun = this.funs
             fprintf([ifun{1} ' | ']);
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
             fprintf(fid,'\n');
-            fprintf(fid,'#include <include/symbolic_functions.h>\n');
-            fprintf(fid,'#include <include/amici_defines.h> //realtype definition\n');
+            fprintf(fid,'#include "amici/symbolic_functions.h"\n');
+            fprintf(fid,'#include "amici/amici_defines.h" //realtype definition\n');
             
             if(ismember(ifun{1},{'JSparse','JSparseB'}))
                 fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
@@ -96,14 +96,14 @@ fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
 fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'#include <cmath>\n');
 fprintf(fid,'#include <memory>\n');
-fprintf(fid,'#include <include/amici_defines.h>\n');
+fprintf(fid,'#include "amici/amici_defines.h"\n');
 fprintf(fid,'#include <sundials/sundials_sparse.h> //SlsMat definition\n');
 if(~strcmp(this.wtype,'iw'))
-    fprintf(fid,'#include <include/amici_solver_cvodes.h>\n');
-    fprintf(fid,'#include <include/amici_model_ode.h>\n');
+    fprintf(fid,'#include "amici/amici_solver_cvodes.h"\n');
+    fprintf(fid,'#include "amici/amici_model_ode.h"\n');
 else
-    fprintf(fid,'#include <include/amici_solver_idas.h>\n');
-    fprintf(fid,'#include <include/amici_model_dae.h>\n');
+    fprintf(fid,'#include "amici/amici_solver_idas.h"\n');
+    fprintf(fid,'#include "amici/amici_model_dae.h"\n');
 end
 fprintf(fid,'\n');
 fprintf(fid,'namespace amici {\nclass Solver;\n}\n');
@@ -184,7 +184,7 @@ fclose(fid);
 
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
-fprintf(fid,'#include <include/amici_model.h>\n');
+fprintf(fid,'#include "amici/amici_model.h"\n');
 fprintf(fid,'#include "wrapfunctions.h"\n\n');
 fprintf(fid,'std::unique_ptr<amici::Model> getModel() {\n');
 fprintf(fid, ['    return std::unique_ptr<amici::Model>(new Model_' this.modelname '());\n']);

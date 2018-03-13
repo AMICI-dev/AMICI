@@ -1,3 +1,8 @@
+#include "amici/amici_misc.h"
+#include "amici/amici_model_ode.h"
+#include "amici/amici_solver_cvodes.h"
+#include "amici/amici_exception.h"
+
 #include <cvodes/cvodes.h>
 /*#include <cvodes/cvodes_lapack.h>*/
 #include <cvodes/cvodes_band.h>
@@ -13,12 +18,6 @@
 #include <btf.h>
 #include <colamd.h>
 #include <klu.h>
-
-#include <include/amici.h>
-#include <include/amici_misc.h>
-#include <include/amici_model_ode.h>
-#include <include/amici_solver_cvodes.h>
-#include <include/amici_exception.h>
 
 /**
  * @ brief extract information from a property of a matlab class (matrix)

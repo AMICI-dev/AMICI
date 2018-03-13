@@ -2,10 +2,10 @@
 #define _amici_wrapfunctions_h
 #include <cmath>
 #include <memory>
-#include <include/amici_defines.h>
+#include "amici/amici_defines.h"
 #include <sundials/sundials_sparse.h> //SlsMat definition
-#include <include/amici_solver_cvodes.h>
-#include <include/amici_model_ode.h>
+#include "amici/amici_solver_cvodes.h"
+#include "amici/amici_model_ode.h"
 
 namespace amici {
 class Solver;
