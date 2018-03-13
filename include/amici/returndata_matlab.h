@@ -1,7 +1,10 @@
 #ifndef RETURNDATA_MATLAB_H
 #define RETURNDATA_MATLAB_H
 
-#include "include/rdata.h"
+#include "amici/rdata.h"
+
+#include <vector>
+
 #include <mex.h>
 
 namespace amici {

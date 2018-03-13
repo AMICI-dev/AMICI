@@ -2,8 +2,6 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include "testfunctions.h"
-#include <include/amici_hdf5.h>
-#include <include/amici.h>
 
 #include <cstring>
 #include "wrapfunctions.h"

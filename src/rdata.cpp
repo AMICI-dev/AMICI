@@ -1,8 +1,11 @@
-#include "include/rdata.h"
-#include "include/amici_misc.h"
-#include "include/amici_model.h"
-#include "include/symbolic_functions.h"
-#include "include/amici_solver.h"
+#include "amici/rdata.h"
+
+#include "amici/misc.h"
+#include "amici/model.h"
+#include "amici/symbolic_functions.h"
+#include "amici/solver.h"
+#include "amici/exception.h"
+
 #include <cstring>
 
 namespace amici {

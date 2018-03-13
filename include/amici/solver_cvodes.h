@@ -1,22 +1,39 @@
-#ifndef AMICI_SOLVER_IDAS_h
-#define AMICI_SOLVER_IDAS_h
+#ifndef AMICI_SOLVER_CVODES_h
+#define AMICI_SOLVER_CVODES_h
 
-#include "include/amici_solver.h"
-#include "include/amici_model_dae.h"
-#include <idas/idas_dense.h>
+#include "amici/solver.h"
+#include "amici/defines.h"
+
+#include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>
 
 namespace amici {
 
-class IDASolver : public Solver {
+class ExpData;
+class ReturnData;
+class Model_ODE;
+class CVodeSolver;
+}
+
+// for serialization friend in Solver
+namespace boost { namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version);
+}}
+
+
+namespace amici {
+
+class CVodeSolver : public Solver {
   public:
-    IDASolver() = default;
+    CVodeSolver() = default;
 
     /**
      * @brief Clone this instance
      * @return The clone
      */
     virtual Solver* clone() const override;
+
 
     void *AMICreate(int lmm, int iter) override;
 
@@ -129,9 +146,10 @@ class IDASolver : public Solver {
     void AMIGetNumNonlinSolvConvFails(void *ami_mem,
                                      long int *numnonlinsolvconvfails) override;
 
-    void AMIGetLastOrder(void *ami_mem, int *order) override;
+    void AMIGetLastOrder(void *ami_ami_mem, int *order) override;
 
     void *AMIGetAdjBmem(void *ami_mem, int which) override;
+
 
     void AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
 
@@ -142,7 +160,13 @@ class IDASolver : public Solver {
 
     void turnOffRootFinding() override;
 
-    ~IDASolver();
+    ~CVodeSolver();
+
+    template <class Archive>
+    friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);
+
+    friend bool operator ==(const CVodeSolver &a, const CVodeSolver &b);
+
 
   protected:
     
@@ -172,57 +196,55 @@ class IDASolver : public Solver {
 
     void setJacTimesVecFnB(int which) override;
     
-    static int fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx,
-                  N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
-                  N_Vector tmp2, N_Vector tmp3);
+    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
+                    DlsMat J, void *user_data, N_Vector tmp1,
+                    N_Vector tmp2, N_Vector tmp3);
     
-    static int fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
+    static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J,
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3);
     
-    static int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj,
-                      N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data,
+    static int fJBand(long int N, long int mupper, long int mlower, realtype t,
+                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
     
-    
     static int fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                       realtype t, realtype cj, N_Vector x, N_Vector dx,
-                       N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                       realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                        DlsMat JB, void *user_data, N_Vector tmp1B,
                        N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
-                   realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2);
+    static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
     
-    static int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                    N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
-                    N_Vector tmpB1, N_Vector tmpB2);
+    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
+                   void *user_data, N_Vector tmp);
     
-    static int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
+    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                    void *user_data, N_Vector tmpB);
+    
+    static int froot(realtype t, N_Vector x, realtype *root,
                      void *user_data);
     
-    static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
-                     void *user_data);
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
     
-    static int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
-                      N_Vector dxB, N_Vector xBdot, void *user_data);
+    static int fxBdot(realtype t, N_Vector x, N_Vector xB,
+                      N_Vector xBdot, void *user_data);
     
-    static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                       void *user_data);
     
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
-                      N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
+                      N_Vector sx, N_Vector sxdot, void *user_data,
+                      N_Vector tmp1, N_Vector tmp2);
 };
 
 } // namespace amici
 
-#endif /* idawrap_h */
+#endif /* CVodewrap_h */

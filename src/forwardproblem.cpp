@@ -1,10 +1,11 @@
-#include "include/amici_model.h"
-#include "include/forwardproblem.h"
-#include "include/amici_solver.h"
-#include "include/amici_exception.h"
-#include "include/edata.h"
-#include "include/rdata.h"
-#include "include/steadystateproblem.h"
+#include "amici/model.h"
+#include "amici/forwardproblem.h"
+#include "amici/solver.h"
+#include "amici/exception.h"
+#include "amici/edata.h"
+#include "amici/rdata.h"
+#include "amici/steadystateproblem.h"
+
 #include <cvodes/cvodes.h> // return/option codes
 
 #include <cmath>

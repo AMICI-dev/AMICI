@@ -5,9 +5,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <include/amici.h>               /* AMICI base functions */
-#include <include/amici_hdf5.h>          /* AMICI HDF5 I/O functions */
-#include "wrapfunctions.h"               /* model-provided functions */
+#include <amici/amici.h>    /* AMICI base functions */
+#include <amici/hdf5.h>     /* AMICI HDF5 I/O functions */
+#include "wrapfunctions.h"  /* model-provided functions */
 
 /* This is a scaffold for a stand-alone AMICI simulation executable
  * demonstrating

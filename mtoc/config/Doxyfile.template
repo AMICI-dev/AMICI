@@ -670,7 +670,7 @@ RECURSIVE              = YES
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
 EXCLUDE                = "sundials" \
-					"scripts" \
+			 "scripts" \
                          "SuiteSparse" \
                          "ThirdParty" \
                          "models" \
@@ -678,10 +678,10 @@ EXCLUDE                = "sundials" \
                          "mtoc" \
                          "auxiliary" \
                          "README.md" \
-                         "src/amici_solver_cvodes.cpp" \
-                         "src/amici_solver_idas.cpp" \
-                         "include/amici_solver_cvodes.h" \
-                         "include/amici_solver_idas.h"
+                         "src/solver_cvodes.cpp" \
+                         "src/solver_idas.cpp" \
+                         "include/amici/solver_cvodes.h" \
+                         "include/amici/solver_idas.h"
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

@@ -1,8 +1,5 @@
-#include "include/amici_hdf5.h"
-#include "include/amici.h"
-#include "include/edata.h"
-#include "include/rdata.h"
-#include <amici_exception.h>
+#include "amici/hdf5.h"
+#include "amici/amici.h"
 
 #include <hdf5_hl.h>
 
