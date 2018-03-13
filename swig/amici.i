@@ -1,19 +1,14 @@
 %module amici
 
+typedef double realtype;
+
 %include <std_string.i>
 %include <std_vector.i>
 
-
-namespace std
-{
-    %template(DoubleVector) vector<double>;
-    %template(IntVector) vector<int>;
-}
 %include std_unique_ptr.i
 wrap_unique_ptr(SolverPtr, amici::Solver)
 wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
-
 
 %include edata.i
 %include rdata.i
@@ -33,9 +28,11 @@ wrap_unique_ptr(ModelPtr, amici::Model)
 using namespace amici;
 %}
 
-
-
-
-
 // Process symbols in header
 %include "amici/amici.h"
+
+namespace std
+{
+    %template(DoubleVector) vector<realtype>;
+    %template(IntVector) vector<int>;
+}
