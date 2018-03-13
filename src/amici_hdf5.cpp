@@ -144,8 +144,6 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
 
-    // are double, but should write as int:
-    // TODO: change to dataset as soon as are of type int
     if (rdata.numsteps.size())
         createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numsteps", rdata.numsteps);
 
@@ -292,163 +290,6 @@ int getIntScalarAttribute(H5::H5File const& file,
     return data;
 }
 
-std::vector<double> getDoubleArrayAttribute(H5::H5File file,
-                                            const std::string &optionsObject,
-                                            const std::string &attributeName) {
-    H5T_class_t type_class;
-    size_t type_size;
-    herr_t status = 0;
-    hsize_t length = 0; // TODO: check why not set when reading scalar
-    status = H5LTget_attribute_info(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                    &length, &type_class, &type_size);
-
-    if (status < 0) {
-        throw AmiException("Error in getDoubleArrayAttribute: Cannot read "
-                           "attribute '%s' of '%s'\n",
-                           attributeName.c_str(), optionsObject.c_str());
-    }
-
-#ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %lld: ", attributeName, length);
-#endif
-
-    std::vector<double> buffer(length);
-    if(length) {
-        status = H5LTget_attribute_double(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                          buffer.data());
-        if (status < 0)
-            throw AmiException("Error in getDoubleArrayAttribute: Cannot read "
-                               "attribute '%s' of '%s'\n",
-                               attributeName.c_str(), optionsObject.c_str());
-    }
-#ifdef AMI_HDF5_H_DEBUG
-    // printfArray(*destination, length, "%e ");
-    printf("\n");
-#endif
-    return buffer;
-}
-
-std::vector<double> getDoubleArrayAttribute2D(H5::H5File const& file,
-                                              std::string const& optionsObject,
-                                              std::string const& attributeName,
-                                              hsize_t &m, hsize_t &n) {
-
-    int rank = 0;
-    m = n = 0;
-
-    herr_t status = H5LTget_attribute_ndims(file.getId(), optionsObject.c_str(),
-                                            attributeName.c_str(), &rank);
-    if(rank == 0)
-        return std::vector<double>(); // This should also throw
-    if(status < 0 || rank > 2) {
-        throw AmiException("Error reading attribute %s of %s. Non-existing or of wrong rank.",
-                           attributeName.c_str(), optionsObject.c_str());
-    }
-
-    hsize_t dims[2];
-    H5T_class_t type_class;
-    size_t type_size;
-    status = H5LTget_attribute_info(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                    dims, &type_class, &type_size);
-    if (rank == 1) {
-        m = dims[0];
-        n = 1;
-        return getDoubleArrayAttribute(file, optionsObject, attributeName);
-    }
-
-#ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %lld x %lld: ", attributeName, dims[0], dims[1]);
-#endif
-    m = dims[0];
-    n = dims[1];
-
-    std::vector<double> result(m * n);
-    H5LTget_attribute_double(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                             result.data());
-
-#ifdef AMI_HDF5_H_DEBUG
-    // printfArray(*destination, (*m) * (*n), "%e ");
-    printf("\n");
-#endif
-
-    return result;
-}
-
-std::vector<double> getDoubleArrayAttribute3D(H5::H5File const&file,
-                                              std::string const& optionsObject,
-                                              std::string const& attributeName,
-                                              hsize_t &m, hsize_t &n, hsize_t &o) {
-
-    int rank = 0;
-    m = n = o = 0;
-
-    herr_t status = H5LTget_attribute_ndims(file.getId(), optionsObject.c_str(),
-                                            attributeName.c_str(), &rank);
-
-    if(status < 0 || rank != 3)
-        throw(AmiException("Expected array of rank 3 in %s::%s", optionsObject.c_str(), attributeName.c_str()));
-    hsize_t dims[3];
-    H5T_class_t type_class;
-    size_t type_size;
-    status = H5LTget_attribute_info(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                    dims, &type_class, &type_size);
-
-#ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %lld x %lld x %lld", attributeName, dims[0], dims[1], dims[2]);
-#endif
-    m = dims[0];
-    n = dims[1];
-    o = dims[2];
-
-    std::vector<double> result(m * n * o);
-    H5LTget_attribute_double(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                             result.data());
-
-#ifdef AMI_HDF5_H_DEBUG
-    // printfArray(*destination, (*m) * (*n), "%e ");
-    printf("\n");
-#endif
-
-    return result;
-}
-
-std::vector<int> getIntArrayAttribute(H5::H5File const&file,
-                                      const std::string &optionsObject,
-                                      const std::string &attributeName) {
-    H5T_class_t type_class;
-    size_t type_size;
-    herr_t status = 0;
-    hsize_t length = 0; // TODO: check why not set when reading scalar
-    status = H5LTget_attribute_info(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                    &length, &type_class, &type_size);
-
-    if (status < 0) {
-        throw AmiException("Error in getIntArrayAttribute: Cannot read "
-                           "attribute '%s' of '%s'\n",
-                           attributeName.c_str(), optionsObject.c_str());
-    }
-
-#ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %lld: ", attributeName, length);
-#endif
-
-    std::vector<int> buffer(length);
-    if(!length)
-        return buffer;
-
-    status = H5LTget_attribute_int(file.getId(), optionsObject.c_str(), attributeName.c_str(),
-                                   buffer.data());
-    if (status < 0)
-        throw AmiException("Error in getIntArrayAttribute: Cannot read "
-                           "attribute '%s' of '%s'\n",
-                           attributeName.c_str(), optionsObject.c_str());
-
-#ifdef AMI_HDF5_H_DEBUG
-    // printfArray(*destination, length, "%e ");
-    printf("\n");
-#endif
-    return buffer;
-}
 
 void createAndWriteInt1DDataset(H5::H5File& file,
                                      std::string const& datasetName,
@@ -502,50 +343,6 @@ void createAndWriteDouble3DDataset(H5::H5File& file,
     dataset.write(buffer, H5::PredType::NATIVE_DOUBLE);
 }
 
-
-void createAndWriteDouble2DAttribute(H5::H5Object& location,
-                                     std::string const& attributeName,
-                                     const double *buffer, hsize_t m,
-                                     hsize_t n) {
-    if (attributeExists(location, attributeName)) {
-        location.removeAttr(attributeName);
-    }
-
-    const hsize_t adims[] {m, n};
-    H5::DataSpace space(2, adims);
-    auto attr = location.createAttribute(attributeName,  H5::PredType::NATIVE_DOUBLE, space);
-    attr.write(H5::PredType::NATIVE_DOUBLE, buffer);
-}
-
-void createAndWriteDouble3DAttribute(H5::H5Object& location,
-                                     std::string const& attributeName,
-                                     const double *buffer, hsize_t m,
-                                     hsize_t n, hsize_t o) {
-    if (attributeExists(location, attributeName)) {
-        location.removeAttr(attributeName);
-    }
-
-    const hsize_t adims[] {m, n, o};
-    H5::DataSpace space(3, adims);
-    auto attr = location.createAttribute(attributeName, H5::PredType::NATIVE_DOUBLE, space);
-    attr.write(H5::PredType::NATIVE_DOUBLE, buffer);
-}
-
-void setAttributeIntFromDouble(H5::H5File const& file,
-                               const std::string &optionsObject,
-                               const std::string &attributeName,
-                               const double *bufferDouble,
-                               hsize_t length) {
-    int bufferInt[length];
-    for (int i = 0; (unsigned)i < length; ++i)
-        bufferInt[i] = bufferDouble[i];
-
-    auto result = H5LTset_attribute_int(file.getId(), optionsObject.c_str(), attributeName.c_str(), bufferInt, length);
-
-    if(result < 0)
-        throw(AmiException("Failure writing attribute %s on %s.",
-                           attributeName.c_str(), optionsObject.c_str()));
-}
 
 bool attributeExists(H5::H5File const& file,
                      const std::string &optionsObject,
@@ -666,13 +463,8 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
     }
 
     if(locationExists(file, datasetPath + "/qpositivex")) {
-        // TODO double vs int?!
-        auto dblQPosX = getDoubleDataset1D(file, datasetPath + "/qpositivex");
-        if (dblQPosX.size() == (unsigned) model.nx)
-            model.setPositivityFlag(std::vector<int>(dblQPosX.begin(), dblQPosX.end()));
-        else if(dblQPosX.size() != 0) { // currently not written correctly from matlab
-            throw(AmiException("Failed reading qpositivex (%d).", dblQPosX.size()));
-        }
+        auto qPosX = getIntDataset1D(file, datasetPath + "/qpositivex");
+        model.setPositivityFlag(qPosX);
     }
 
     if(locationExists(file, datasetPath + "/theta")) {
