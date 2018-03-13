@@ -1,5 +1,4 @@
 %module amici
-%include std_unique_ptr.i
 %include edata.i
 %include rdata.i
 %include model.i
@@ -14,6 +13,10 @@
 #include "amici.h"
 using namespace amici;
 %}
+
+%include std_unique_ptr.i
+
+wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 
 // Process symbols in header
 %include "amici.h"

@@ -6,6 +6,10 @@
 using namespace amici;
 %}
 
+%include std_unique_ptr.i
+
+wrap_unique_ptr(SolverPtr, amici::Solver)
+
 // Process symbols in header
-%ignore getSolver;
+
 %include "amici_model_ode.h"
