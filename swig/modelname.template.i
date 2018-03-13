@@ -1,4 +1,4 @@
-%module model_robertson
+%module TPL_MODELNAME
 %import ../../swig/amici.i
 // Add necessary symbols to generated header
 

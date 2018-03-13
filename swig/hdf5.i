@@ -2,7 +2,7 @@
 
 // Add necessary symbols to generated header
 %{
-#include "amici_hdf5.h"
+#include "amici/hdf5.h"
 using namespace amici;
 %}
 
@@ -13,4 +13,4 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 // Process symbols in header
 
-%include "amici_hdf5.h"
+%include "amici/hdf5.h"

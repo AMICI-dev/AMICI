@@ -25,7 +25,7 @@ namespace std
 
 // Add necessary symbols to generated header
 %{
-#include "amici.h"
+#include "amici/amici.h"
 using namespace amici;
 %}
 
@@ -34,4 +34,4 @@ using namespace amici;
 wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 
 // Process symbols in header
-%include "amici.h"
+%include "amici/amici.h"

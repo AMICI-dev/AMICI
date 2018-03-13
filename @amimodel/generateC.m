@@ -195,7 +195,7 @@ fprintf('CMakeLists | ');
 generateCMakeFile(this);
 
 fprintf('swig | ');
-generateSwigInterfaceFile(this)
+generateSwigInterfaceFiles(this)
 
 fprintf('main | ');
 generateMainC(this);
@@ -244,12 +244,24 @@ function generateCMakeFile(this)
     t.replace(CMakeTemplateFileName, CMakeFileName);
 end
 
-function generateSwigInterfaceFile(this)
+function generateSwigInterfaceFiles(this)
+    
+    modelSwigDir = fullfile(this.wrap_path,'models',this.modelname,'swig');
+    amiciSwigDir = fullfile(this.wrap_path,'swig');
+    
+    %interface file
     t = template();
     t.add('TPL_MODELNAME', this.modelname);
-    SwigInterfaceFile = fullfile(this.wrap_path,'models',this.modelname,[this.modelname '.i']);
-    SwigInterfaceTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src' , 'modelname.template.i');
+    SwigInterfaceFile = fullfile(modelSwigDir,[this.modelname '.i']);
+    SwigInterfaceTemplateFileName = fullfile(amiciSwigDir, 'modelname.template.i');
     t.replace(SwigInterfaceTemplateFileName, SwigInterfaceFile);
+    
+    %CMakeLists.txt
+    if(~exist(fullfile(this.wrap_path,'models',this.modelname,'swig'),'dir'))
+        mkdir(fullfile(this.wrap_path,'models',this.modelname),'swig');
+    end
+    copyfile(fullfile(amiciSwigDir,'CMakeLists_model.txt'),fullfile(modelSwigDir,'CMakeLists.txt'));
+    
 end
     
     

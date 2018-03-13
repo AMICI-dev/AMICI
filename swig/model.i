@@ -2,7 +2,7 @@
 
 // Add necessary symbols to generated header
 %{
-#include "amici_model.h"
+#include "amici/model.h"
 using namespace amici;
 %}
 
@@ -11,4 +11,4 @@ wrap_unique_ptr(SolverPtr, amici::Solver)
 
 // Process symbols in header
 
-%include "amici_model.h"
+%include "amici/model.h"

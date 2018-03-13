@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, "../build/swig/python/")
-sys.path.insert(0, "../models/model_events/build")
+sys.path.insert(0, "../models/model_events/swig/build")
 import amici
 import model_events
 

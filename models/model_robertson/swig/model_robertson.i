@@ -1,11 +1,11 @@
-%module TPL_MODELNAME
+%module model_robertson
 %import ../../swig/amici.i
 // Add necessary symbols to generated header
 
 %{
 #include "wrapfunctions.h"
-#include "include/amici_model_ode.h"
-#include "include/amici_model_dae.h"
+#include "amici/model_ode.h"
+#include "amici/model_dae.h"
 using namespace amici;
 %}
 
