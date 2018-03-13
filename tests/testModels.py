@@ -9,13 +9,18 @@ def trace(frame, event, arg):
     return trace
 
 
-sys.settrace(trace)
+#sys.settrace(trace)
 
 model = model_events.getModel()
-print(model)
-print(model.nx)
 solver = model.getSolver()
-print(solver)
-rdata = amici.runAmiciSimulation(solver,None,model)
+
+print(model.get())
+
+amici.readModelDataFromHDF5("./cpputest/expectedResults.h5",model,"/model_events/nosensi/options")
+amici.readSolverSettingsFromHDF5("./cpputest/expectedResults.h5",solver.get(),"/model_events/nosensi/options")
+
+edata = amici.readSimulationExpData("./cpputest/expectedResults.h5","/model_events/nosensi/data",model.get())
+
+rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
 print(rdata)
 

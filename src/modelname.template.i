@@ -1,19 +1,16 @@
 %module TPL_MODELNAME
-
+%import ../../swig/amici.i
 // Add necessary symbols to generated header
 
 %{
 #include "wrapfunctions.h"
+#include "include/amici_model_ode.h"
+#include "include/amici_model_dae.h"
+using namespace amici;
 %}
 
-%rename(getModel) getModelSwig;
-%inline %{
- amici::Model_TPL_MODELTYPE *getModelSwig() {
-    return new Model_TPL_MODELNAME();
-}
-%}
-%ignore getModel;
-
+%include ../swig/std_unique_ptr.i
+wrap_unique_ptr(ModelPtr, amici::Model)
 
 
 // Process symbols in header

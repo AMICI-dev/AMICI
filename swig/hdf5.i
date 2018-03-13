@@ -10,21 +10,6 @@ using namespace amici;
 
 wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
-%rename(readModelDataFromHDF5) readModelDataFromHDF5Swig;
-%inline %{
-
-    Model_model_events *getModelSwig() {
-        return new Model_model_events();
-    }
-    // Helper function to dereference pointers within python
-    template <typename T>
-    T& dereference(T* ptr)
-    {
-        return *ptr;
-    }
-%}
-%ignore getModel;
-
 
 // Process symbols in header
 

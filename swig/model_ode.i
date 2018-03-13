@@ -6,15 +6,11 @@
 using namespace amici;
 %}
 
-%ignore getSolver;
+%include std_unique_ptr.i
+wrap_unique_ptr(SolverPtr, amici::Solver)
 
 // Process symbols in header
 
 %include "amici_model_ode.h"
-%rename(getSolver) getSolverSwig;
-%extend amici::Model_ODE {
-    amici::Solver *getSolverSwig() {
-        return new amici::CVodeSolver();
-    }
-}
+
 
