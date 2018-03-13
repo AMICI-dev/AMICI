@@ -1,9 +1,7 @@
 #include "include/amici_hdf5.h"
 #include "include/amici.h"
-#include "include/amici_model.h"
 #include "include/edata.h"
 #include "include/rdata.h"
-#include <amici_solver.h>
 #include <amici_exception.h>
 
 #include <hdf5_hl.h>
@@ -31,16 +29,20 @@ namespace hdf5 {
  * @param n
  * @param model
  */
-void assertMeasurementDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+void checkMeasurementDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+    bool compatible = true;
     // if this is rank 1, n and m can be swapped
     if (n == 1) {
-        assert(n == (unsigned)model.nt() || n == (unsigned)model.nytrue);
-        assert(m == (unsigned)model.nytrue || m == (unsigned)model.nt());
-        assert(m * n == (unsigned)model.nytrue * model.nt());
+        compatible &= (n == (unsigned)model.nt() || n == (unsigned)model.nytrue);
+        compatible &= (m == (unsigned)model.nytrue || m == (unsigned)model.nt());
+        compatible &= (m * n == (unsigned)model.nytrue * model.nt());
     } else {
-        assert(n == (unsigned)model.nytrue);
-        assert(m == (unsigned)model.nt());
+        compatible &= (n == (unsigned)model.nytrue);
+        compatible &= (m == (unsigned)model.nt());
     }
+
+    if(!compatible)
+        throw(AmiException("HDF5 measurement data does not match model. Incompatible dimensions."));
 }
 
 
@@ -50,18 +52,23 @@ void assertMeasurementDimensionsCompatible(hsize_t m, hsize_t n, Model const& mo
  * @param n
  * @param model
  */
-void assertEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
+    bool compatible = true;
+
     // if this is rank 1, n and m can be swapped
     if (n == 1) {
-        assert(n == (unsigned)model.nMaxEvent() ||
+        compatible &= (n == (unsigned)model.nMaxEvent() ||
                n == (unsigned)model.nztrue);
-        assert(m == (unsigned)model.nztrue ||
+        compatible &= (m == (unsigned)model.nztrue ||
                m == (unsigned)model.nMaxEvent());
-        assert(m * n == (unsigned)model.nytrue * model.nMaxEvent());
+        compatible &= (m * n == (unsigned)model.nytrue * model.nMaxEvent());
     } else {
-        assert(n == (unsigned)model.nztrue);
-        assert(m == (unsigned)model.nMaxEvent());
+        compatible &= (n == (unsigned)model.nztrue);
+        compatible &= (m == (unsigned)model.nMaxEvent());
     }
+
+    if(!compatible)
+        throw(AmiException("HDF5 event data does not match model. Incompatible dimensions."));
 }
 
 
@@ -97,22 +104,22 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
 
     auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
     if(m * n > 0) {
-        assertMeasurementDimensionsCompatible(m, n, model);
+        checkMeasurementDimensionsCompatible(m, n, model);
         edata->my = my;
     }
 
     auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
     if(m * n > 0) {
-        assertMeasurementDimensionsCompatible(m, n, model);
+        checkMeasurementDimensionsCompatible(m, n, model);
         edata->sigmay = sigmay;
     }
 
     if (model.nz) {
         edata->mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
-        assertEventDimensionsCompatible(m, n, model);
+        checkEventDimensionsCompatible(m, n, model);
 
         edata->sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
-        assertEventDimensionsCompatible(m, n, model);
+        checkEventDimensionsCompatible(m, n, model);
     }
 
     return edata;
