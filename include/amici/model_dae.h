@@ -1,7 +1,7 @@
 #ifndef AMICI_MODEL_DAE_H
 #define AMICI_MODEL_DAE_H
 
-#include "amici/amici_model.h"
+#include "amici/model.h"
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>

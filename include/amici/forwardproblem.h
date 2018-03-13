@@ -1,8 +1,8 @@
 #ifndef AMICI_FORWARDPROBLEM_H
 #define AMICI_FORWARDPROBLEM_H
 
-#include "amici/amici_defines.h"
-#include "amici/amici_vector.h"
+#include "amici/defines.h"
+#include "amici/vector.h"
 
 #include <sundials/sundials_direct.h>
 #include <vector>

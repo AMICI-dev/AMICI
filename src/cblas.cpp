@@ -4,7 +4,7 @@
  *
  **/
 
-#include "amici/amici_defines.h"
+#include "amici/defines.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>

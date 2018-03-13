@@ -1,7 +1,7 @@
 #ifndef AMICI_RDATA_H
 #define AMICI_RDATA_H
 
-#include "amici/amici_defines.h"
+#include "amici/defines.h"
 
 #include <vector>
 

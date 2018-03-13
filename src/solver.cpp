@@ -1,8 +1,8 @@
-#include "amici/amici_solver.h"
-#include "amici/amici_exception.h"
+#include "amici/solver.h"
+#include "amici/exception.h"
 #include "amici/forwardproblem.h"
 #include "amici/backwardproblem.h"
-#include "amici/amici_model.h"
+#include "amici/model.h"
 #include "amici/rdata.h"
 
 #include <cmath>

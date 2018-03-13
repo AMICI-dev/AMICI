@@ -1,5 +1,5 @@
-#include "amici/amici_solver_idas.h"
-#include "amici/amici_model_dae.h"
+#include "amici/solver_idas.h"
+#include "amici/model_dae.h"
 
 namespace amici {
     

@@ -1,7 +1,7 @@
 #ifndef TESTFUNCTIONS_H
 #define TESTFUNCTIONS_H
 
-#include <amici/amici_hdf5.h>
+#include <amici/hdf5.h>
 #include <amici/amici.h>
 
 #include <H5Cpp.h>

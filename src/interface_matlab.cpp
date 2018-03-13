@@ -6,10 +6,10 @@
  * mex file from matlab
  */
 
-#include "amici/amici_interface_matlab.h"
+#include "amici/interface_matlab.h"
 
-#include "amici/amici_model.h"
-#include "amici/amici_exception.h"
+#include "amici/model.h"
+#include "amici/exception.h"
 #include "amici/edata.h"
 #include "amici/returndata_matlab.h"
 

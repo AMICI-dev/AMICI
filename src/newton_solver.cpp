@@ -1,9 +1,9 @@
 #include "amici/newton_solver.h"
 
-#include "amici/amici_defines.h"
-#include "amici/amici_model.h"
-#include "amici/amici_solver.h"
-#include "amici/amici_vector.h"
+#include "amici/defines.h"
+#include "amici/model.h"
+#include "amici/solver.h"
+#include "amici/vector.h"
 #include "amici/steadystateproblem.h"
 #include "amici/forwardproblem.h"
 #include "amici/rdata.h"

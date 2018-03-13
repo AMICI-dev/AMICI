@@ -1,7 +1,7 @@
-#include "amici/amici_misc.h"
-#include "amici/amici_model_ode.h"
-#include "amici/amici_solver_cvodes.h"
-#include "amici/amici_exception.h"
+#include "amici/misc.h"
+#include "amici/model_ode.h"
+#include "amici/solver_cvodes.h"
+#include "amici/exception.h"
 
 #include <cvodes/cvodes.h>
 /*#include <cvodes/cvodes_lapack.h>*/

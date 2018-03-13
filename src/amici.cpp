@@ -7,7 +7,7 @@
 
 #include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
-#include "amici/amici_misc.h"
+#include "amici/misc.h"
 
 #include <sundials/sundials_types.h> //realtype
 #include <cvodes/cvodes.h> //return codes

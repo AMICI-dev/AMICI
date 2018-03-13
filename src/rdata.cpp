@@ -1,10 +1,10 @@
 #include "amici/rdata.h"
 
-#include "amici/amici_misc.h"
-#include "amici/amici_model.h"
+#include "amici/misc.h"
+#include "amici/model.h"
 #include "amici/symbolic_functions.h"
-#include "amici/amici_solver.h"
-#include "amici/amici_exception.h"
+#include "amici/solver.h"
+#include "amici/exception.h"
 
 #include <cstring>
 

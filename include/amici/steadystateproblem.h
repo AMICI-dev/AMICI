@@ -1,8 +1,8 @@
 #ifndef AMICI_STEADYSTATEPROBLEM_H
 #define AMICI_STEADYSTATEPROBLEM_H
 
-#include "amici/amici_defines.h"
-#include "amici/amici_vector.h"
+#include "amici/defines.h"
+#include "amici/vector.h"
 #include <amici/newton_solver.h>
 
 #include <nvector/nvector_serial.h>

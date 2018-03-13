@@ -2,9 +2,9 @@
 #define AMICI_SERIALIZATION_H
 
 #include "amici/rdata.h"
-#include "amici/amici_model.h"
-#include "amici/amici_solver.h"
-#include "amici/amici_solver_cvodes.h"
+#include "amici/model.h"
+#include "amici/solver.h"
+#include "amici/solver_cvodes.h"
 
 #include <cassert>
 #include <fstream>

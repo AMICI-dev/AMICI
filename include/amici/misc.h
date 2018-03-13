@@ -1,7 +1,7 @@
 #ifndef AMICI_MISC_H
 #define AMICI_MISC_H
 
-#include "amici/amici_defines.h"
+#include "amici/defines.h"
 
 #include<algorithm>
 

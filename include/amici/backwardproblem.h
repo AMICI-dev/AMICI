@@ -1,8 +1,8 @@
 #ifndef AMICI_BACKWARDPROBLEM_H
 #define AMICI_BACKWARDPROBLEM_H
 
-#include "amici/amici_defines.h"
-#include "amici/amici_vector.h"
+#include "amici/defines.h"
+#include "amici/vector.h"
 
 #include <vector>
 

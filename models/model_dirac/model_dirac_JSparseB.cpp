@@ -1,6 +1,6 @@
 
 #include "amici/symbolic_functions.h"
-#include "amici/amici_defines.h" //realtype definition
+#include "amici/defines.h" //realtype definition
 #include <sundials/sundials_sparse.h> //SlsMat definition
 typedef amici::realtype realtype;
 #include <cmath> 

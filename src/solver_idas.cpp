@@ -1,9 +1,9 @@
-#include "amici/amici_solver_idas.h"
+#include "amici/solver_idas.h"
 
-#include "amici/amici_misc.h"
-#include "amici/amici_model.h"
-#include "amici/amici_exception.h"
-#include "amici/amici_model_dae.h"
+#include "amici/misc.h"
+#include "amici/model.h"
+#include "amici/exception.h"
+#include "amici/model_dae.h"
 
 #include <idas/idas.h>
 /*#include <idas/idas_lapack.h>*/

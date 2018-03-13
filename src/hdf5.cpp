@@ -1,4 +1,4 @@
-#include "amici/amici_hdf5.h"
+#include "amici/hdf5.h"
 #include "amici/amici.h"
 
 #include <hdf5_hl.h>

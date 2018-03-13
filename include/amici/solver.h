@@ -1,10 +1,10 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
-#include "amici/amici_vector.h"
-#include "amici/amici_defines.h"
-#include "amici/amici_misc.h"
-#include "amici/amici_exception.h"
+#include "amici/vector.h"
+#include "amici/defines.h"
+#include "amici/misc.h"
+#include "amici/exception.h"
 #include "amici/symbolic_functions.h"
 
 #include <nvector/nvector_serial.h>   // DlsMat

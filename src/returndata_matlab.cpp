@@ -1,6 +1,6 @@
 #include "amici/returndata_matlab.h"
-#include "amici/amici_exception.h"
-#include "amici/amici_defines.h"
+#include "amici/exception.h"
+#include "amici/defines.h"
 
 namespace amici {
 

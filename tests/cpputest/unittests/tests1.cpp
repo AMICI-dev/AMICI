@@ -1,10 +1,10 @@
 #include "testfunctions.h"
 
 #include <amici/amici.h>
-#include <amici/amici_solver_idas.h>
-#include <amici/amici_solver_cvodes.h>
+#include <amici/solver_idas.h>
+#include <amici/solver_cvodes.h>
 #include <amici/symbolic_functions.h>
-#include <amici/amici_model_ode.h>
+#include <amici/model_ode.h>
 
 #include <cstring>
 #include <cmath>

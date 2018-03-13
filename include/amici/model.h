@@ -1,9 +1,9 @@
 #ifndef AMICI_MODEL_H
 #define AMICI_MODEL_H
 
-#include "amici/amici_exception.h"
-#include "amici/amici_defines.h"
-#include "amici/amici_vector.h"
+#include "amici/exception.h"
+#include "amici/defines.h"
+#include "amici/vector.h"
 #include "amici/symbolic_functions.h"
 
 #include <nvector/nvector_serial.h>
