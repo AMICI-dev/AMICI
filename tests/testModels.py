@@ -14,13 +14,12 @@ def trace(frame, event, arg):
 model = model_events.getModel()
 solver = model.getSolver()
 
-print(model.get())
 
-amici.readModelDataFromHDF5("./cpputest/expectedResults.h5",model,"/model_events/nosensi/options")
+amici.readModelDataFromHDF5("./cpputest/expectedResults.h5",model.get(),"/model_events/nosensi/options")
 amici.readSolverSettingsFromHDF5("./cpputest/expectedResults.h5",solver.get(),"/model_events/nosensi/options")
 
 edata = amici.readSimulationExpData("./cpputest/expectedResults.h5","/model_events/nosensi/data",model.get())
 
-rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
-print(rdata)
+rdata = amici.runAmiciSimulation(solver.get(),edata.get(),model.get())
+print(rdata.numsteps)
 

@@ -1,5 +1,16 @@
 %module amici
 
+%include <std_string.i>
+%include <std_vector.i>
+%include std_unique_ptr.i
+
+namespace std
+{
+    %template(DoubleVector) vector<double>;
+    %template(DoubleVector) vector<realtype>;
+    %template(IntVector) vector<int>;
+}
+
 %include edata.i
 %include rdata.i
 
@@ -18,7 +29,7 @@
 using namespace amici;
 %}
 
-%include std_unique_ptr.i
+
 
 wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 
