@@ -6,10 +6,15 @@
 using namespace amici;
 %}
 
-%include std_unique_ptr.i
 
-wrap_unique_ptr(SolverPtr, amici::Solver)
+%ignore getSolver;
 
 // Process symbols in header
 
 %include "amici_model_dae.h"
+%rename(getSolver) getSolverSwig;
+%extend amici::Model_DAE {
+    amici::Solver *getSolverSwig() {
+        return new amici::IDASolver();
+    }
+}

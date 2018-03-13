@@ -247,6 +247,11 @@ end
 function generateSwigInterfaceFile(this)
     t = template();
     t.add('TPL_MODELNAME', this.modelname);
+    if(strcmp(this.wtype,'cw'))
+        t.add('TPL_MODELTYPE', 'ODE');
+    else
+        t.add('TPL_MODELTYPE', 'DAE');
+    end
     SwigInterfaceFile = fullfile(this.wrap_path,'models',this.modelname,[this.modelname '.i']);
     SwigInterfaceTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src' , 'modelname.template.i');
     t.replace(SwigInterfaceTemplateFileName, SwigInterfaceFile);

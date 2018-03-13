@@ -6,9 +6,7 @@
 using namespace amici;
 %}
 
-%include std_unique_ptr.i
-
-wrap_unique_ptr(SolverPtr, amici::Solver)
+%ignore getSolver;
 
 // Process symbols in header
 
