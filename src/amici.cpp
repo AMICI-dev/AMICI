@@ -3,11 +3,22 @@
  * @brief  core routines for integration
  */
 
+#include "amici/amici.h"
+
+#include "amici/backwardproblem.h"
+#include "amici/forwardproblem.h"
+#include "amici/misc.h"
+
+#include <sundials/sundials_types.h> //realtype
+#include <cvodes/cvodes.h> //return codes
+
+#include <type_traits>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
 #include <memory>
+
 /** MS definition of PI and other constants */
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -15,22 +26,6 @@
 /** define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
-
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/amici_exception.h"
-#include "include/backwardproblem.h"
-#include "include/forwardproblem.h"
-
-#include <include/amici.h> /* amici functions */
-#include <include/amici_misc.h>
-#include <include/amici_exception.h>
-#include <include/symbolic_functions.h>
-
-#include <sundials/sundials_types.h> //realtype
-#include <cvodes/cvodes.h> //return codes
-
-#include <type_traits>
 
 // ensure definitions are in sync
 static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");

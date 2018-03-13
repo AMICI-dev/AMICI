@@ -1,6 +1,6 @@
-#include "include/amici_misc.h"
-#include "include/amici.h"
-#include "include/symbolic_functions.h"
+#include "amici/misc.h"
+#include "amici/amici.h"
+#include "amici/symbolic_functions.h"
 
 #include <cstdio>
 #include <cstring>

@@ -1,6 +1,6 @@
 
-#include <include/symbolic_functions.h>
-#include <include/amici_defines.h> //realtype definition
+#include "amici/symbolic_functions.h"
+#include "amici/defines.h" //realtype definition
 typedef amici::realtype realtype;
 #include <cmath> 
 

@@ -1,14 +1,10 @@
 /**
- * @file   amici_interface_cpp.cpp
- * @brief  core routines for cpp interface
+ * @file   cblas.cpp
+ * @brief  BLAS routines required by AMICI
  *
  **/
 
-#include "include/amici_interface_cpp.h"
-#include "include/amici.h"
-#include <include/amici_model.h>
-#include <include/amici_exception.h>
-#include <include/amici_solver.h>
+#include "amici/defines.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -20,8 +16,6 @@ extern "C"
    #include <cblas.h>
 }
 #endif
-
-#include <cstring>
 
 namespace amici {
 

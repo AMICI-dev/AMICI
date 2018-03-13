@@ -1,16 +1,17 @@
 /**
- * @file   amici_interface_matlab.cpp
+ * @file   interface_matlab.cpp
  * @brief  core routines for mex interface
  *
  * This file defines the fuction mexFunction which is executed upon calling the
  * mex file from matlab
  */
 
-#include "include/amici_interface_matlab.h"
-#include "include/amici_model.h"
-#include "include/amici_exception.h"
-#include "include/edata.h"
-#include "include/returndata_matlab.h"
+#include "amici/interface_matlab.h"
+
+#include "amici/model.h"
+#include "amici/exception.h"
+#include "amici/edata.h"
+#include "amici/returndata_matlab.h"
 
 #include <assert.h>
 #include <blas.h>

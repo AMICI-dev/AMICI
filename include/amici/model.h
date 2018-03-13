@@ -1,10 +1,10 @@
 #ifndef AMICI_MODEL_H
 #define AMICI_MODEL_H
 
-#include <include/amici_exception.h>
-#include <include/amici_defines.h>
-#include <include/amici_vector.h>
-#include <include/symbolic_functions.h>
+#include "amici/exception.h"
+#include "amici/defines.h"
+#include "amici/vector.h"
+#include "amici/symbolic_functions.h"
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_direct.h>

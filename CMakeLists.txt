@@ -45,8 +45,7 @@ else()
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
 
-include_directories("${AMICI_DIR}")
-include_directories("${AMICI_DIR}/include")
+include_directories("${AMICI_DIR}/include/")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${AMICI_DIR}/sundials/src")
@@ -59,19 +58,19 @@ endif()
 # Library source files
 set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/symbolic_functions.cpp
-    ${AMICI_DIR}/src/amici_interface_cpp.cpp
+    ${AMICI_DIR}/src/cblas.cpp
     ${AMICI_DIR}/src/amici.cpp
-    ${AMICI_DIR}/src/amici_misc.cpp
+    ${AMICI_DIR}/src/misc.cpp
     ${AMICI_DIR}/src/rdata.cpp
     ${AMICI_DIR}/src/edata.cpp
-    ${AMICI_DIR}/src/amici_hdf5.cpp
+    ${AMICI_DIR}/src/hdf5.cpp
     ${AMICI_DIR}/src/spline.cpp
-    ${AMICI_DIR}/src/amici_solver.cpp
-    ${AMICI_DIR}/src/amici_solver_cvodes.cpp
-    ${AMICI_DIR}/src/amici_solver_idas.cpp
-    ${AMICI_DIR}/src/amici_model.cpp
-    ${AMICI_DIR}/src/amici_model_ode.cpp
-    ${AMICI_DIR}/src/amici_model_dae.cpp
+    ${AMICI_DIR}/src/solver.cpp
+    ${AMICI_DIR}/src/solver_cvodes.cpp
+    ${AMICI_DIR}/src/solver_idas.cpp
+    ${AMICI_DIR}/src/model.cpp
+    ${AMICI_DIR}/src/model_ode.cpp
+    ${AMICI_DIR}/src/model_dae.cpp
     ${AMICI_DIR}/src/newton_solver.cpp
     ${AMICI_DIR}/src/forwardproblem.cpp
     ${AMICI_DIR}/src/steadystateproblem.cpp

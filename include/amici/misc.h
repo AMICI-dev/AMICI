@@ -1,8 +1,10 @@
 #ifndef AMICI_MISC_H
 #define AMICI_MISC_H
 
+#include "amici/defines.h"
+
 #include<algorithm>
-#include<include/amici_defines.h>
+
 
 namespace amici {
 

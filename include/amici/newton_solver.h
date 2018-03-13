@@ -1,6 +1,8 @@
 #ifndef amici_newton_solver_h
 #define amici_newton_solver_h
 
+#include "amici/vector.h"
+
 #include <klu.h>
 #include <nvector/nvector_serial.h> // DlsMat
 #include <sundials/sundials_dense.h>

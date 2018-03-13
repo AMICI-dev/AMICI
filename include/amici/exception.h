@@ -1,7 +1,8 @@
 #ifndef amici_exception_h
 #define amici_exception_h
 
-#include <amici_defines.h> // necessary for realtype
+#include "amici/defines.h" // necessary for realtype
+
 #include <exception>
 #include <cstdarg>
 #include <cstdio>

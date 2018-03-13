@@ -1,7 +1,8 @@
 #ifndef AMICI_INTERFACE_MATLAB_H
 #define AMICI_INTERFACE_MATLAB_H
 
-#include "include/amici.h"
+#include "amici/amici.h"
+
 #include <mex.h>
 #include <memory>
 
