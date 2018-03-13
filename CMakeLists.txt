@@ -4,6 +4,8 @@
 
 project(amici)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 cmake_minimum_required(VERSION 2.8)
 
 set(AMICI_DIR ${CMAKE_CURRENT_SOURCE_DIR})

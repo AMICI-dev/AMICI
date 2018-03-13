@@ -1,5 +1,7 @@
 project(model_jakstat_adjoint)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 cmake_minimum_required(VERSION 2.8)
 
 include(CheckCXXCompilerFlag)

@@ -2,14 +2,18 @@
 
 %include <std_string.i>
 %include <std_vector.i>
-%include std_unique_ptr.i
+
 
 namespace std
 {
     %template(DoubleVector) vector<double>;
-    %template(DoubleVector) vector<realtype>;
     %template(IntVector) vector<int>;
 }
+%include std_unique_ptr.i
+wrap_unique_ptr(SolverPtr, amici::Solver)
+wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
+wrap_unique_ptr(ModelPtr, amici::Model)
+
 
 %include edata.i
 %include rdata.i
@@ -31,7 +35,7 @@ using namespace amici;
 
 
 
-wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
+
 
 // Process symbols in header
 %include "amici/amici.h"
