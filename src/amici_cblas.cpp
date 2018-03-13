@@ -4,11 +4,7 @@
  *
  **/
 
-#include "amici/amici_interface_cpp.h"
-#include "amici/amici.h"
-#include "amici/amici_model.h"
-#include "amici/amici_exception.h"
-#include "amici/amici_solver.h"
+#include "amici/amici_defines.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -20,8 +16,6 @@ extern "C"
    #include <cblas.h>
 }
 #endif
-
-#include <cstring>
 
 namespace amici {
 

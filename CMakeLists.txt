@@ -58,7 +58,7 @@ endif()
 # Library source files
 set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/symbolic_functions.cpp
-    ${AMICI_DIR}/src/amici_interface_cpp.cpp
+    ${AMICI_DIR}/src/amici_cblas.cpp
     ${AMICI_DIR}/src/amici.cpp
     ${AMICI_DIR}/src/amici_misc.cpp
     ${AMICI_DIR}/src/rdata.cpp

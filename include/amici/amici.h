@@ -5,7 +5,6 @@
 #include "amici/amici_solver.h"
 #include "amici/amici_exception.h"
 #include "amici/amici_defines.h"
-#include "amici/amici_interface_cpp.h"
 #include "amici/rdata.h"
 #include "amici/edata.h"
 #include "amici/symbolic_functions.h"
