@@ -28,6 +28,10 @@ function [results,options,data,t,theta,kappa] = readDataFromHDF5(groups,hdf5file
         [~,name] = fileparts(group.Name);
         eval([name ' =  hdf2struct(group,''' group.Name ''',hdf5file);']);
     end
+    if(isfield(options, 'sens_ind'))
+        % adapt to base 1 indexing
+        options.sens_ind = options.sens_ind + 1;
+    end
     if(~isempty(data))
        if(length(data.t)~=size(data.Y,1)) % no idea why this goes wrong only _sometimes_
            data.Y = transpose(data.Y);

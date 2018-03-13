@@ -54,7 +54,7 @@ def writeSensiForward(filename):
     ex = ExampleJakStatAdjoint()
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
 
@@ -65,7 +65,7 @@ def writeSensiAdjoint(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
@@ -77,7 +77,7 @@ def writeSensi2Forward(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1
@@ -90,7 +90,7 @@ def writeSensi2Adjoint(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 2
@@ -103,7 +103,7 @@ def writeSensiForwardLogParam(filename):
     ex.modelOptions['theta'] = np.log(np.power(10.0, ex.modelOptions['theta'] + 0.1))
     ex.modelOptions['pscale'] = 1
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
@@ -116,7 +116,7 @@ def writeSensi2ForwardLogParam(filename):
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
     ex.modelOptions['pscale'] = 1
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1

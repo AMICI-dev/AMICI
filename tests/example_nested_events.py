@@ -48,7 +48,7 @@ def writeNoSensi(filename):
 def writeSensiForward(filename):
     ex = ExampleNestedEvents()
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
 

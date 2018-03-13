@@ -31,7 +31,7 @@ def writeSensiForward(filename):
     ex = ExampleSteadystate()
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
 
@@ -52,7 +52,7 @@ def writeSensiForwardDense(filename):
     ex = ExampleSteadystate()
     
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 1
@@ -72,7 +72,7 @@ def writeSensiForwardErrorInt(filename):
     ex = ExampleSteadystate()
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 9
@@ -86,7 +86,7 @@ def writeSensiForwardErrorNewt(filename):
    
     ex.modelOptions['ts'] = [0, np.inf]
     ex.solverOptions['sensi'] = 1
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100

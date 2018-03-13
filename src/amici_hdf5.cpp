@@ -497,16 +497,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(locationExists(file, datasetPath + "/sens_ind")) {
         auto sensInd = getIntDataset1D(file, datasetPath + "/sens_ind");
-        if (sensInd.size() > 0) {
-            // currently base 1 indices are written
-            // TODO: should change asap
-            for (int i = 0; (unsigned)i < sensInd.size(); ++i) {
-                sensInd[i] -= 1;
-            }
-            model.setParameterList(sensInd);
-        } else {
-            model.requireSensitivitiesForAllParameters();
-        }
+        model.setParameterList(sensInd);
     }
 
     if(locationExists(file, datasetPath + "/x0")) {
