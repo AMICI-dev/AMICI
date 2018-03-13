@@ -30,10 +30,12 @@ class ExampleNeuron(AmiciExample):
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
-        self.data['Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Sigma_Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Z'] = np.array([2.4420740245701733, 5.921007525639647, np.nan, 10.366527794075543, 12.83694308382395, 14.624269559247253, 18.722446363647578, 22.20739095602005, 28.602369747827655, 31.442843729542822, 34.01927181474919, 41.26726577405225, 44.275254172160395, 51.56486254598814, 57.100273114298204, 61.961654997481084, 69.03838073191332, 74.3546047146856, 81.21960802401809, 87.2873927650102, 93.34894804384085, 98.57346300859241])
+        self.data['Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+        self.data['Sigma_Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+
+        self.data['Z'] = np.transpose([[2.4420740245701733, 5.921007525639647, np.nan, 10.366527794075543, 12.83694308382395, 14.624269559247253, 18.722446363647578, 22.20739095602005, 28.602369747827655, 31.442843729542822, 34.01927181474919, 41.26726577405225, 44.275254172160395, 51.56486254598814, 57.100273114298204, 61.961654997481084, 69.03838073191332, 74.3546047146856, 81.21960802401809, 87.2873927650102, 93.34894804384085, 98.57346300859241]])
         self.data['Sigma_Z'] = 0.5 * np.ones(self.data['Z'].shape)
+
         self.data['condition'] = self.modelOptions['kappa']
         self.data['t'] = self.modelOptions['ts']
     
@@ -58,8 +60,7 @@ def writeNoSensi(filename):
 def writeSensiForward(filename):
     ex = ExampleNeuron()
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_neuron/sensiforward/')
@@ -68,8 +69,7 @@ def writeSensiForward(filename):
 def writeSensi2Forward(filename):
     ex = ExampleNeuron()
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1
 

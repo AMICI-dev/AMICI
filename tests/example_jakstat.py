@@ -36,7 +36,7 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
-        self.data['Y'] = np.transpose(xls.loc[:,['pSTAT_au', 'tSTAT_au', 'pEpoR_au']])
+        self.data['Y'] = np.array(xls.loc[:,['pSTAT_au', 'tSTAT_au', 'pEpoR_au']])
         self.data['Sigma_Y'] = np.full(self.data['Y'].shape, np.nan)
         self.data['Sigma_Z'] = []
         self.data['Z'] = []
@@ -54,8 +54,7 @@ def writeSensiForward(filename):
     ex = ExampleJakStatAdjoint()
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_jakstat_adjoint/sensiforward/')
@@ -65,8 +64,7 @@ def writeSensiAdjoint(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
 
@@ -77,8 +75,7 @@ def writeSensi2Forward(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1
 
@@ -90,8 +87,7 @@ def writeSensi2Adjoint(filename):
 
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 2
 
@@ -103,8 +99,7 @@ def writeSensiForwardLogParam(filename):
     ex.modelOptions['theta'] = np.log(np.power(10.0, ex.modelOptions['theta'] + 0.1))
     ex.modelOptions['pscale'] = 1
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
 
@@ -116,8 +111,7 @@ def writeSensi2ForwardLogParam(filename):
     ex.modelOptions['theta'] = 0.1 + ex.modelOptions['theta']
     ex.modelOptions['pscale'] = 1
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1
 

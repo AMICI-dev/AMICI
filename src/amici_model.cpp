@@ -15,18 +15,19 @@ namespace amici {
  */
 void Model::fsy(const int it, ReturnData *rdata) {
     // Compute sy = dydx * sx + dydp
-    getsx(it,rdata);
-    for (int ip = 0; ip < rdata->nplist; ++ip) {
+    for (int ip = 0; ip < nplist(); ++ip) {
         for (int iy = 0; iy < ny; ++iy)
             // copy dydp to sy
-            rdata->sy[ip * rdata->nt * ny + iy * rdata->nt + it] =
+            rdata->sy.at((it*nplist()+ip)*ny+iy) =
                     dydp.at(iy + ip * ny);
-
-        // compute sy = 1.0*dydx*sx + 1.0*sy
-        amici_dgemv(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, ny, nx, 1.0,
-                    dydx.data(), ny, sx.at(ip).data(), 1, 1.0,
-                    &rdata->sy[it + ip * rdata->nt * ny], rdata->nt);
     }
+    // compute sy = 1.0*dydx*sx + 1.0*sy
+    // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
+    //        M  K          K  N              M  N
+    //        lda           ldb               ldc
+    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, ny, nplist(), nx,
+                1.0, dydx.data(), ny, getsx(it,rdata), nx, 1.0,
+                &rdata->sy[it*nplist()*ny], ny);
 }
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
@@ -37,10 +38,10 @@ void Model::fsy(const int it, ReturnData *rdata) {
 void Model::fsz_tf(const int nroots, ReturnData *rdata) {
     // Compute sz = dzdx * sz + dzdp
 
-    for (int ip = 0; ip < rdata->nplist; ++ip) {
+    for (int ip = 0; ip < nplist(); ++ip) {
         for (int iz = 0; iz < nz; ++iz)
             // copy dydp to sy
-            rdata->sz[nroots + (iz + ip * nz) * rdata->nmaxevent] =
+            rdata->sz.at((nroots*nplist()+ip)*nz + iz) =
                     0.0;
     }
 }
@@ -55,34 +56,28 @@ void Model::fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rd
 
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
-    // sx           rdata->nt x nx x rdata->nplist
-    std::vector<realtype> multResult(nJ * rdata->nplist, 0);
-    std::vector<realtype> sxTmp(rdata->nplist * nx, 0);
-    
-    for (int ix = 0; ix < nx; ++ix) {
-        for (int ip = 0; ip < rdata->nplist; ++ip)
-            sxTmp.at(ix + ip * nx) = static_cast<realtype>(rdata->sx[it + (ix + ip * nx) * rdata->nt]);
-    }
+    // sx           rdata->nt x nx x nplist()
+    std::vector<realtype> multResult(nJ * nplist(), 0);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
-                rdata->nplist, nx, 1.0, &dJydx.at(it*nJ*nx), nJ, sxTmp.data(), nx, 0.0,
+                nplist(), nx, 1.0, &dJydx.at(it*nJ*nx), nJ, getsx(it,rdata), nx, 0.0,
                 multResult.data(), nJ);
 
-    // multResult    nJ x rdata->nplist
-    // dJydp         nJ x rdata->nplist
+    // multResult    nJ x nplist()
+    // dJydp         nJ x nplist()
     // dJydxTmp      nJ x nx
-    // sxTmp         nx x rdata->nplist
+    // sxTmp         nx x nplist()
 
     // sJy += multResult + dJydp
     for (int iJ = 0; iJ < nJ; ++iJ) {
         if (iJ == 0)
-            for (int ip = 0; ip < rdata->nplist; ++ip)
-                rdata->sllh[ip] -= static_cast<double>(multResult.at(ip * nJ) + dJydp.at(ip * nJ));
+            for (int ip = 0; ip < nplist(); ++ip)
+                rdata->sllh.at(ip) -= multResult.at(ip * nJ) + dJydp.at(ip * nJ);
         else
-            for (int ip = 0; ip < rdata->nplist; ++ip)
-                rdata->s2llh[(iJ - 1) + ip * (nJ - 1)] -=
-                        static_cast<realtype>(multResult.at(iJ + ip * nJ) + dJydp.at(iJ + ip * nJ));
+            for (int ip = 0; ip < nplist(); ++ip)
+                rdata->s2llh.at((iJ - 1) + ip * (nJ - 1)) -=
+                        multResult.at(iJ + ip * nJ) + dJydp.at(iJ + ip * nJ);
     }
 }
 
@@ -96,8 +91,8 @@ void Model::fdJydp(const int it, const ExpData *edata,
                    const ReturnData *rdata) {
 
     // dJydy         nytrue x nJ x ny
-    // dydp          ny x rdata->nplist
-    // dJydp         nJ x rdata->nplist
+    // dydp          ny x nplist()
+    // dJydp         nJ x nplist()
     getmy(it,edata);
     fill(dJydp.begin(),dJydp.end(),0.0);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
@@ -105,11 +100,11 @@ void Model::fdJydp(const int it, const ExpData *edata,
             continue;
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, &dJydy.at(iyt*nJ*ny), nJ, dydp.data(), ny,
+                    nJ, nplist(), ny, 1.0, &dJydy.at(iyt*nJ*ny), nJ, dydp.data(), ny,
                     1.0, dJydp.data(), nJ);
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, ny, 1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
+                    nJ, nplist(), ny, 1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
                     dsigmaydp.data(), ny, 1.0, dJydp.data(), nJ);
     }
 }
@@ -130,6 +125,10 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
+    // dJydy A[nyt,nJ,ny] * dydx B[ny,nx] = dJydx C[it,nJ,nx]
+    //         slice                                slice
+    //             M  K            K  N                M  N
+    //             lda             ldb                 ldc
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
                     nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
                     &dJydx->at(it*nx*nJ), nJ);
@@ -143,17 +142,17 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
  * @param sx pointer to state sensitivities
  * @param rdata pointer to return data instance
  */
-void Model::fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, const ReturnData *rdata) {
-    // sJz           nJ x rdata->nplist
-    // dJzdp         nJ x rdata->nplist
+void Model::fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
+    // sJz           nJ x nplist()
+    // dJzdp         nJ x nplist()
     // dJzdx         nmaxevent x nJ x nx
-    // sx            rdata->nt x nx x rdata->nplist
+    // sx            rdata->nt x nx x nplist()
 
     // Compute dJzdx*sx for current 'ie'
     // dJzdx        rdata->nt x nJ x nx
-    // sx           rdata->nt x nx x rdata->nplist
+    // sx           rdata->nt x nx x nplist()
 
-    std::vector<realtype> multResult(nJ * rdata->nplist, 0);
+    std::vector<realtype> multResult(nJ * nplist(), 0);
     std::vector<realtype> sxTmp(rdata->nplist * nx, 0);
     for (int ip = 0; ip < rdata->nplist; ++ip) {
         for (int ix = 0; ix < nx; ++ix)
@@ -162,18 +161,18 @@ void Model::fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorA
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
-                rdata->nplist, nx, 1.0, &dJzdx.at(nroots*nx*nJ), nJ, sxTmp.data(), nx, 1.0,
+                nplist(), nx, 1.0, &dJzdx.at(nroots*nx*nJ), nJ, sxTmp.data(), nx, 1.0,
                 multResult.data(), nJ);
 
     // sJy += multResult + dJydp
     for (int iJ = 0; iJ < nJ; ++iJ) {
         if (iJ == 0)
-            for (int ip = 0; ip < rdata->nplist; ++ip)
-                rdata->sllh[ip] -= static_cast<double>(multResult.at(ip * nJ) + dJzdp.at(ip * nJ));
+            for (int ip = 0; ip < nplist(); ++ip)
+                rdata->sllh.at(ip) -= multResult.at(ip * nJ) + dJzdp.at(ip * nJ);
         else
-            for (int ip = 0; ip < rdata->nplist; ++ip)
-                rdata->s2llh[(iJ - 1) + ip * (nJ - 1)] -=
-                        static_cast<double>(multResult.at(iJ + ip * nJ) + dJzdp.at(iJ + ip * nJ));
+            for (int ip = 0; ip < nplist(); ++ip)
+                rdata->s2llh.at((iJ - 1) + ip * (nJ - 1)) -=
+                        multResult.at(iJ + ip * nJ) + dJzdp.at(iJ + ip * nJ);
     }
 }
 
@@ -188,8 +187,8 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
                    const ReturnData *rdata) {
     // dJzdz         nJ x nz x nztrue
     // dJzdsigma     nJ x nz x nztrue
-    // dzdp          nz x rdata->nplist
-    // dJzdp         nJ x rdata->nplist
+    // dzdp          nz x nplist()
+    // dJzdp         nJ x nplist()
 
     getmz(nroots,edata);
     std::fill(dJzdp.begin(),dJzdp.end(),0.0);
@@ -197,25 +196,25 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
         if (isNaN(mz.at(izt)))
             continue;
 
-        if (t < gett(rdata->nt - 1,rdata)) {
+        if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // with z
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                        nJ, rdata->nplist, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
+                        nJ, nplist(), nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
                         1.0, dJzdp.data(), nJ);
         } else {
             // with rz
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, rdata->nplist, nz, 1.0,
+                        AMICI_BLAS_NoTrans, nJ, nplist(), nz, 1.0,
                         &dJrzdsigma.at(izt*nz*nJ), nJ, dsigmazdp.data(), nz, 1.0,
                         dJzdp.data(), nJ);
             
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                        nJ, rdata->nplist, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
+                        nJ, nplist(), nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
                         1.0, dJzdp.data(), nJ);
         }
 
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, rdata->nplist, nz, 1.0, &dJzdsigma.at(izt*nz*nJ), nJ,
+                    nJ, nplist(), nz, 1.0, &dJzdsigma.at(izt*nz*nJ), nJ,
                     dsigmazdp.data(), nz, 1.0, dJzdp.data(), nJ);
     }
 }
@@ -237,7 +236,7 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
         if (isNaN(mz.at(izt)))
             continue;
         
-        if (t < gett(rdata->nt - 1,rdata)) {
+        if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // z
             amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
                         AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
@@ -312,12 +311,10 @@ void Model::initializeVectors()
     deltasx.resize(nx * nplist(), 0.0);
     deltaqB.resize(nJ * nplist(), 0.0);
     dxdotdp.resize(nx * nplist(), 0.0);
-    sx.resize(nplist(), std::vector<realtype>(nx, 0.0));
     dzdp.resize(nz * nplist(), 0.0);
     drzdp.resize(nz * nplist(), 0.0);
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
-    pbar.resize(nplist(), 1.0);
 }
 
 /** Initial states
@@ -356,11 +353,7 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
      * @param rdata pointer to return data instance
      */
 void Model::fy(int it, ReturnData *rdata) {
-    getx(it,rdata);
-    std::fill(y.begin(),y.end(),0.0);
-    fy(y.data(),gett(it,rdata),x.data(), unscaledParameters.data(),fixedParameters.data(),h.data());
-    for(int iy = 0; iy < ny; iy++)
-        rdata->y[it + rdata->nt*iy] = static_cast<double>(y.at(iy));
+    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /** partial derivative of observables y w.r.t. model parameters p
@@ -368,10 +361,9 @@ void Model::fy(int it, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fdydp(const int it, ReturnData *rdata) {
-    getx(it,rdata);
     std::fill(dydp.begin(),dydp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fdydp(&dydp.at(ip*ny),gett(it,rdata),x.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
+        fdydp(&dydp.at(ip*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
     }
 }
 
@@ -380,10 +372,8 @@ void Model::fdydp(const int it, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fdydx(const int it, ReturnData *rdata) {
-    const realtype t = gett(it,rdata);
-    getx(it,rdata);
     std::fill(dydx.begin(),dydx.end(),0.0);
-    fdydx(dydx.data(),t,x.data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /** Event-resolved output
@@ -394,12 +384,7 @@ void Model::fdydx(const int it, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
-    std::vector<realtype> zreturn(nz,0.0);
-    fz(zreturn.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
-    for(int iz = 0; iz < nz; iz++) {
-        if (z2event[iz] - 1 == ie)
-            rdata->z[nroots+rdata->nmaxevent*iz] = static_cast<double>(zreturn.at(iz));
-    }
+    fz(&rdata->z.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /** Sensitivity of z, total derivative
@@ -411,14 +396,8 @@ void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector
      * @param rdata pointer to return data instance
      */
 void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
-    std::vector<realtype> szreturn(nz,0.0);
     for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
-        std::fill(szreturn.begin(), szreturn.end(), 0.0);
-        fsz(szreturn.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
-        for(int iz = 0; iz < nz; iz++) {
-            if (z2event[iz] - 1 == ie)
-                rdata->sz[nroots+rdata->nmaxevent*(ip*nz + iz)] = static_cast<double>(szreturn.at(iz));
-        }
+        fsz(&rdata->sz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
     }
 }
 
@@ -431,12 +410,7 @@ void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVecto
      * @param rdata pointer to return data instance
      */
 void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
-    std::vector<realtype> rzreturn(nz,0.0);
-    frz(rzreturn.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
-    for(int iz = 0; iz < nz; iz++) {
-        if (z2event[iz] - 1 == ie)
-            rdata->rz[nroots+rdata->nmaxevent*iz] = static_cast<double>(rzreturn.at(iz));
-    }
+    frz(&rdata->rz.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /** Sensitivity of rz, total derivative
@@ -448,14 +422,8 @@ void Model::frz(const int nroots, const int ie, const realtype t, const AmiVecto
      * @param rdata pointer to return data instance
      */
 void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
-    std::vector<realtype> srzreturn(nz,0.0);
     for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
-        std::fill(srzreturn.begin(), srzreturn.end(), 0.0);
-        fsrz(srzreturn.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
-        for(int iz = 0; iz < nz; iz++) {
-            if (z2event[iz] - 1 == ie)
-                rdata->srz[nroots+rdata->nmaxevent*(ip*nz + iz)] = static_cast<double>(srzreturn.at(iz));
-        }
+        fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
     }
 }
 
@@ -570,17 +538,17 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
      */
 void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmay.begin(),sigmay.end(),0.0);
-    fsigma_y(sigmay.data(),gett(it,rdata), unscaledParameters.data(),fixedParameters.data());
-    for (int iy = 0; iy < nytrue; iy++) {
+    fsigma_y(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
+    for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
              is NaN, use
              the parameter value. Store this value in the return struct */
         if(edata){
-            if (!isNaN(edata->sigmay[iy * rdata->nt + it])) {
-                sigmay.at(iy) = edata->sigmay[iy * rdata->nt + it];
+            if (!isNaN(edata->sigmay[it * edata->nytrue + iytrue])) {
+                sigmay.at(iytrue) = edata->sigmay[it * edata->nytrue + iytrue];
             }
         }
-        rdata->sigmay[iy * rdata->nt + it] = static_cast<double>(sigmay.at(iy));
+        rdata->sigmay[it * rdata->ny + iytrue] = sigmay.at(iytrue);
     }
 }
 
@@ -591,7 +559,7 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
 void Model::fdsigma_ydp(const int it, const ReturnData *rdata) {
     std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_ydp(dsigmaydp.data(),gett(it,rdata), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fdsigma_ydp(dsigmaydp.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
 /** Standard deviation of events
@@ -605,14 +573,14 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
                      const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
     fsigma_z(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
-    for (int iz = 0; iz < nztrue; iz++) {
-        if (z2event.at(iz) - 1 == ie) {
+    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+        if (z2event.at(iztrue) - 1 == ie) {
             if(edata) {
-                if (!isNaN(edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz])) {
-                    sigmaz.at(iz) = edata->sigmaz[nroots[ie]+rdata->nmaxevent*iz];
+                if (!isNaN(edata->sigmaz[nroots[ie]*edata->nztrue + iztrue])) {
+                    sigmaz.at(iztrue) = edata->sigmaz[nroots[ie]*edata->nztrue + iztrue];
                 }
             }
-            rdata->sigmaz[nroots[ie]+rdata->nmaxevent * iz] = static_cast<double>(sigmaz.at(iz));
+            rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
         }
     }
 }
@@ -633,13 +601,12 @@ void Model::fdsigma_zdp(const realtype t) {
      */
 void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
     std::vector<realtype> nllh(nJ,0.0);
-    gety(it,rdata);
     getmy(it,edata);
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
             std::fill(nllh.begin(),nllh.end(),0.0);
-            fJy(nllh.data(),iytrue, unscaledParameters.data(),fixedParameters.data(),y.data(),sigmay.data(),my.data());
-            rdata->llh[0] -= static_cast<double>(nllh.at(0));
+            fJy(nllh.data(),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
+            rdata->llh -= nllh.at(0);
         }
     }
 }
@@ -651,13 +618,12 @@ void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
      */
 void Model::fJz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     std::vector<realtype> nllh(nJ,0.0);
-    getz(nroots,rdata);
     getmz(nroots,edata);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
             std::fill(nllh.begin(),nllh.end(),0.0);
-            fJz(nllh.data(),iztrue, unscaledParameters.data(),fixedParameters.data(),z.data(),sigmaz.data(),mz.data());
-            rdata->llh[0] -= static_cast<double>(nllh.at(0));
+            fJz(nllh.data(),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
+            rdata->llh -= nllh.at(0);
         }
     }
 }
@@ -674,8 +640,8 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
             std::fill(nllh.begin(),nllh.end(),0.0);
-            fJrz(nllh.data(),iztrue, unscaledParameters.data(),fixedParameters.data(),rz.data(),sigmaz.data());
-            rdata->llh[0] -= static_cast<double>(nllh.at(0));
+            fJrz(nllh.data(),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
+            rdata->llh -= nllh.at(0);
         }
     }
 }
@@ -687,12 +653,11 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
      */
 void Model::fdJydy(const int it, const ReturnData *rdata,
                    const ExpData *edata) {
-    gety(it,rdata);
     getmy(it,edata);
     std::fill(dJydy.begin(),dJydy.end(),0.0);
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydy(&dJydy.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),y.data(),sigmay.data(),my.data());
+            fdJydy(&dJydy.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
         }
     }
 }
@@ -705,12 +670,11 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
      */
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        const ExpData *edata) {
-    gety(it,rdata);
     getmy(it,edata);
     std::fill(dJydsigma.begin(),dJydsigma.end(),0.0);
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),y.data(),sigmay.data(),my.data());
+            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
         }
     }
 }
@@ -722,12 +686,11 @@ void Model::fdJydsigma(const int it, const ReturnData *rdata,
      */
 void Model::fdJzdz(const int nroots, const ReturnData *rdata,
                    const ExpData *edata) {
-    getz(nroots,rdata);
     getmz(nroots,edata);
     std::fill(dJzdz.begin(),dJzdz.end(),0.0);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
-            fdJzdz(&dJzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),z.data(),sigmaz.data(),mz.data());
+            fdJzdz(&dJzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
     }
 }
@@ -740,12 +703,11 @@ void Model::fdJzdz(const int nroots, const ReturnData *rdata,
      */
 void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
                        const ExpData *edata) {
-    getz(nroots,rdata);
     getmz(nroots,edata);
     std::fill(dJzdsigma.begin(),dJzdsigma.end(),0.0);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
-            fdJzdsigma(&dJzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),z.data(),sigmaz.data(),mz.data());
+            fdJzdsigma(&dJzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
     }
 }
@@ -757,12 +719,11 @@ void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
      */
 void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
                     const ExpData *edata) {
-    getrz(nroots,rdata);
     getmz(nroots,edata);
     std::fill(dJrzdz.begin(),dJrzdz.end(),0.0);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
-            fdJrzdz(&dJrzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),rz.data(),sigmaz.data());
+            fdJrzdz(&dJrzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
 }
@@ -775,11 +736,10 @@ void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
      */
 void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
                         const ExpData *edata) {
-    getrz(nroots,rdata);
     std::fill(dJrzdsigma.begin(),dJrzdsigma.end(),0.0);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
-            fdJrzdsigma(&dJrzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),rz.data(),sigmaz.data());
+            fdJrzdsigma(&dJrzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
 }
@@ -820,10 +780,10 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
      * @param it timepoint index
      * @param edata pointer to experimental data instance
      */
-void Model::getmy(const int it, const ExpData *edata) {
+void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = static_cast<realtype>(edata->my[it + edata->nt*iytrue]);
+            my.at(iytrue) = static_cast<realtype>(edata->my[it*edata->nytrue + iytrue]);
         }
     } else {
         for(int iytrue = 0; iytrue < nytrue; iytrue++){
@@ -832,45 +792,41 @@ void Model::getmy(const int it, const ExpData *edata) {
     }
 }
 
-/** create y slice at timepoint
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     */
-void Model::gety(const int it, const ReturnData *rdata) {
-    for(int iy = 0; iy < ny; iy++){
-        y.at(iy) = static_cast<realtype>(rdata->y[it + rdata->nt*iy]);
-    }
-}
-
 /** create x slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @return x x-slice from rdata instance
      */
-void Model::getx(const int it, const ReturnData *rdata) {
-    for(int ix = 0; ix < nx; ix++){
-        x.at(ix) = static_cast<realtype>(rdata->x[it + rdata->nt*ix]);
-    }
+const realtype *Model::getx(const int it, const ReturnData *rdata) const {
+    return &rdata->x.at(it*nx);
 }
 
 /** create sx slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @return sx sx-slice from rdata instance
      */
-void Model::getsx(const int it, const ReturnData *rdata) {
-    for(int ip = 0; ip < rdata->nplist; ip++) {
-        for(int ix = 0; ix < nx; ix++){
-            sx.at(ip).at(ix) = static_cast<realtype>(rdata->sx[(ip * nx + ix) * rdata->nt + it]);
-        }
-    }
+const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
+    return &rdata->sx.at(it*nx*nplist());
 }
+
+/** create y slice at timepoint
+     * @param it timepoint index
+     * @param rdata pointer to return data instance
+     * @return y y-slice from rdata instance
+     */
+const realtype *Model::gety(const int it, const ReturnData *rdata) const {
+    return &rdata->y.at(it*ny);
+}
+
 
 /** get current timepoint from index
      * @param it timepoint index
      * @param rdata pointer to return data instance
      * @return current timepoint
      */
-realtype Model::gett(const int it, const ReturnData *rdata) const {
-    return static_cast<realtype>(rdata->ts[it]);
+const realtype Model::gett(const int it, const ReturnData *rdata) const {
+    return rdata->ts.at(it);
 }
 
 /** create mz slice at event
@@ -880,7 +836,7 @@ realtype Model::gett(const int it, const ReturnData *rdata) const {
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots + edata->nmaxevent*iztrue]);
+            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots*edata->nztrue + iztrue]);
         }
     } else {
         for(int iztrue = 0; iztrue < nztrue; iztrue++){
@@ -892,21 +848,39 @@ void Model::getmz(const int nroots, const ExpData *edata) {
 /** create z slice at event
      * @param nroots event occurence
      * @param rdata pointer to return data instance
+     * @return z slice
      */
-void Model::getz(const int nroots, const ReturnData *rdata) {
-    for(int iz = 0; iz < nz; iz++){
-        z.at(iz) = static_cast<realtype>(rdata->z[nroots+rdata->nmaxevent*iz]);
-    }
+const realtype *Model::getz(const int nroots, const ReturnData *rdata) const {
+    return(&rdata->z.at(nroots*nz));
 }
 
 /** create rz slice at event
      * @param nroots event occurence
      * @param rdata pointer to return data instance
+     * @return rz slice
      */
-void Model::getrz(const int nroots, const ReturnData *rdata) {
-    for(int iz = 0; iz < nz; iz++){
-        rz.at(iz) = static_cast<realtype>(rdata->rz[nroots+rdata->nmaxevent*iz]);
-    }
+const realtype *Model::getrz(const int nroots, const ReturnData *rdata) const {
+    return(&rdata->rz.at(nroots*nz));
+}
+
+/** create sz slice at event
+     * @param nroots event occurence
+     * @param ip sensitivity index
+     * @param rdata pointer to return data instance
+     * @return z slice
+     */
+const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *rdata) const {
+    return(&rdata->sz.at((nroots*nplist()+ip)*nz));
+}
+
+/** create srz slice at event
+     * @param nroots event occurence
+     * @param ip sensitivity index
+     * @param rdata pointer to return data instance
+     * @return rz slice
+     */
+const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *rdata) const {
+    return(&rdata->srz.at((nroots*nplist()+ip)*nz));
 }
 
 void Model::unscaleParameters(double *bufferUnscaled) const
@@ -965,7 +939,6 @@ bool operator ==(const Model &a, const Model &b)
             && (a.x0data == b.x0data)
             && (a.sx0data == b.sx0data)
             && (a.ts == b.ts)
-            && (a.pbar == b.pbar)
             && (a.qpositivex == b.qpositivex)
             && (a.nmaxevent == b.nmaxevent)
             && (a.pscale == b.pscale)

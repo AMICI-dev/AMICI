@@ -181,12 +181,6 @@ fprintf(fid,'    error(''Second order sensitivities were requested but not compu
 fprintf(fid,'end\n');
 end
 fprintf(fid,'\n');
-fprintf(fid,'if(~isempty(options_ami.pbar))\n');
-fprintf(fid,'    pbar = options_ami.pbar;\n');
-fprintf(fid,'else\n');
-fprintf(fid,'    pbar = ones(size(theta));\n');
-fprintf(fid,'end\n');
-fprintf(fid,'\n');
 
 fprintf(fid,'if(isempty(options_ami.pscale))\n');
 fprintf(fid,['    options_ami.pscale = ''' this.param ''' ;\n']);
@@ -335,17 +329,17 @@ fprintf(fid,'end\n');
 
 if(o2flag)
     fprintf(fid,'if(options_ami.sensi<2)\n');
-    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+    fprintf(fid,['    sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,xscale,init,data);\n']);
     fprintf(fid,'else\n');
     switch(o2flag)
         case 1
-            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,xscale,init,data);\n']);
         case 2
-            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+            fprintf(fid,['    sol = ami_' this.modelname '_o2vec(tout,theta(1:' num2str(np) '),kappa(1:' num2str(amimodelo2.nk) '),options_ami,plist,xscale,init,data);\n']);
     end
     fprintf(fid,'end\n');
 else
-    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,pbar(plist+1),xscale,init,data);\n']);
+    fprintf(fid,['sol = ami_' this.modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,xscale,init,data);\n']);
 end
 
 if(o2flag)

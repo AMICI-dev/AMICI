@@ -38,8 +38,7 @@ def writeNoSensi(filename):
 def writeSensiForward(filename):
     ex = ExampleDirac()
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_dirac/sensiforward/')

@@ -120,8 +120,8 @@ void CVodeSolver::AMISStolerances(double rtol, double atol) {
          throw CvodeException(status,"CVodeSStolerances");
 }
 
-void CVodeSolver::AMISensEEtolerances() {
-    int status = CVodeSensEEtolerances(ami_mem);
+void CVodeSolver::AMISensSStolerances(double rtol, double *atol) {
+    int status = CVodeSensSStolerances(ami_mem, rtol, atol);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensEEtolerances");
 }

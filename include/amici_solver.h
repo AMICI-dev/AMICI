@@ -686,7 +686,7 @@ class Solver {
     virtual void *AMICreate(int lmm, int iter) = 0;
 
     /**
-     * AMISStolerances sets relative and absolute tolerances for the forward
+     * AMISStolerances sets scalar relative and absolute tolerances for the forward
      * problem
      *
      * @param rtol relative tolerances
@@ -695,11 +695,13 @@ class Solver {
     virtual void AMISStolerances(double rtol, double atol) = 0;
 
     /**
-     * AMISensEEtolerances activates automatic estimation of tolerances for the
-     * forward problem
+     * AMISensSStolerances activates sets scalar relative and absolute tolerances for the
+     * sensitivity variables
      *
+     * @param rtol relative tolerances
+     * @param atol array of absolute tolerances for every sensitivy variable
      */
-    virtual void AMISensEEtolerances() = 0;
+    virtual void AMISensSStolerances(double rtol, double *atol) = 0;
 
     /**
      * AMISetSensErrCon specifies whether error control is also enforced for
