@@ -1,5 +1,5 @@
 /**
- * @file   amici_cblas.cpp
+ * @file   cblas.cpp
  * @brief  BLAS routines required by AMICI
  *
  **/
