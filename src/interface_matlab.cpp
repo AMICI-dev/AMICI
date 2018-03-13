@@ -1,5 +1,5 @@
 /**
- * @file   amici_interface_matlab.cpp
+ * @file   interface_matlab.cpp
  * @brief  core routines for mex interface
  *
  * This file defines the fuction mexFunction which is executed upon calling the
