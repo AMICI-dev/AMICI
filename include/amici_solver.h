@@ -698,6 +698,8 @@ class Solver {
      * AMISensSStolerances activates sets scalar relative and absolute tolerances for the
      * sensitivity variables
      *
+     * @param rtol relative tolerances
+     * @param atol array of absolute tolerances for every sensitivy variable
      */
     virtual void AMISensSStolerances(double rtol, double *atol) = 0;
 

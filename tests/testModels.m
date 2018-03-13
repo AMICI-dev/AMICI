@@ -1,4 +1,11 @@
 function testModels()
+    
+    % disable specific warnings for these tests, some tests are supposed
+    % to produce warnings
+    warningreset = warning;
+    warning('off','AMICI:mex:simulation')
+    warning('off','AMICI:mex:CVODES:CVode:TOO_MUCH_WORK')
+    
     cd(fileparts(mfilename('fullpath')))
     addpath(genpath('cpputest'));
     wrapTestModels()
@@ -21,6 +28,10 @@ function testModels()
             compareResults(sol,results);
         end
     end
+    
+    warning(warningreset);
+    
+    %% begin nested functions
     
     function sol = getResults(modelname,options,data,t,theta,kappa)
         theta = options.theta;
