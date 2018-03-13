@@ -84,7 +84,6 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.x0data;
     ar &u.sx0data;
     ar &u.ts;
-    ar &u.pbar;
     ar &u.qpositivex;
     ar &u.nmaxevent;
     ar &u.pscale;
@@ -115,45 +114,40 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &const_cast<amici::AMICI_sensi_order &>(r.sensi);
     ar &const_cast<amici::AMICI_sensi_meth &>(r.sensi_meth);
 
-    archiveVector(ar, &r.ts, r.nt);
-    archiveVector(ar, &r.xdot, r.nx);
-    archiveVector(ar, &r.J, r.nx * r.nx);
-    archiveVector(ar, &r.z, r.nmaxevent * r.nz);
-    archiveVector(ar, &r.sigmaz, r.nmaxevent * r.nz);
-    archiveVector(ar, &r.sz, r.nmaxevent * r.nz * r.nplist);
-    archiveVector(ar, &r.ssigmaz, r.nmaxevent * r.nz * r.nplist);
-    archiveVector(ar, &r.rz, r.nmaxevent * r.nz);
-    archiveVector(ar, &r.srz, r.nmaxevent * r.nz * r.nplist);
-    archiveVector(ar, &r.s2rz, r.nmaxevent * r.nz * r.nplist * r.nplist);
-    archiveVector(ar, &r.x, r.nt * r.nx);
-    archiveVector(ar, &r.sx, r.nt * r.nx * r.nplist);
-    archiveVector(ar, &r.y, r.nt * r.ny);
-    archiveVector(ar, &r.sigmay, r.nt * r.ny);
-    archiveVector(ar, &r.sy, r.nt * r.ny * r.nplist);
-    archiveVector(ar, &r.ssigmay, r.nt * r.ny * r.nplist);
+    ar &r.ts;
+    ar &r.xdot;
+    ar &r.J;
+    ar &r.z & r.sigmaz;
+    ar &r.sz &r.ssigmaz;
+    ar &r.rz;
+    ar &r.srz;
+    ar &r.s2rz;
+    ar &r.x;
+    ar &r.sx;
+    ar &r.y & r.sigmay;
+    ar &r.sy & r.ssigmay;
 
-    archiveVector(ar, &r.numsteps, r.nt);
-    archiveVector(ar, &r.numstepsB, r.nt);
-    archiveVector(ar, &r.numrhsevals, r.nt);
-    archiveVector(ar, &r.numrhsevalsB, r.nt);
-    archiveVector(ar, &r.numerrtestfails, r.nt);
-    archiveVector(ar, &r.numerrtestfailsB, r.nt);
-    archiveVector(ar, &r.numnonlinsolvconvfails, r.nt);
-    archiveVector(ar, &r.numnonlinsolvconvfailsB, r.nt);
-    archiveVector(ar, &r.order, r.nt);
+    ar &r.numsteps;
+    ar &r.numstepsB;
+    ar &r.numrhsevals;
+    ar &r.numrhsevalsB;
+    ar &r.numerrtestfails;
+    ar &r.numerrtestfailsB;
+    ar &r.numnonlinsolvconvfails;
+    ar &r.numnonlinsolvconvfailsB;
+    ar &r.order;
 
-    archiveVector(ar, &r.newton_status, 1);
-    archiveVector(ar, &r.newton_time, 1);
-    archiveVector(ar, &r.newton_numsteps, 2);
-    archiveVector(ar, &r.newton_numlinsteps, r.newton_maxsteps * 2);
-    archiveVector(ar, &r.x0, r.nx);
-    archiveVector(ar, &r.sx0, r.nx * r.nplist);
-
-    archiveVector(ar, &r.llh, 1);
-    archiveVector(ar, &r.chi2, 1);
-    archiveVector(ar, &r.sllh, r.nplist);
-    archiveVector(ar, &r.s2llh, r.nplist * r.nplist);
-    archiveVector(ar, &r.status, 1);
+    ar &r.newton_status;
+    ar &r.newton_time;
+    ar &r.newton_numsteps;
+    ar &r.newton_numlinsteps;
+    ar &r.x0;
+    ar &r.sx0;
+    ar &r.llh;
+    ar &r.chi2;
+    ar &r.sllh;
+    ar &r.s2llh;
+    ar &r.status;
 }
 
 

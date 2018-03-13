@@ -23,8 +23,7 @@ extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 
-void runAmiciSimulation(Solver &solver, const ExpData *edata,
-                       ReturnData *rdata, Model &model);
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,

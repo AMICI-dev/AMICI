@@ -30,10 +30,12 @@ class ExampleEvents(AmiciExample):
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
-        self.data['Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Sigma_Y'] = [np.nan] * len(self.modelOptions['ts'])
-        self.data['Sigma_Z'] = [np.array(np.full((self.numZ, self.solverOptions['nmaxevent']), np.nan))]
-        self.data['Z'] = [np.array(np.full((self.numZ, self.solverOptions['nmaxevent']), np.nan))]
+        self.data['Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+        self.data['Sigma_Y'] = np.full((len(self.modelOptions['ts']), 1), np.nan)
+
+        self.data['Z'] = np.full((self.solverOptions['nmaxevent'], self.numZ ), np.nan)
+        self.data['Sigma_Z'] = np.full((self.solverOptions['nmaxevent'], self.numZ ), np.nan)
+        
         self.data['condition'] = self.modelOptions['kappa']
         self.data['t'] = self.modelOptions['ts']
     
@@ -47,8 +49,7 @@ def writeNoSensi(filename):
 def writeSensiForward(filename):
     ex = ExampleEvents()
 
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
 

@@ -39,7 +39,6 @@ enum mexRhsArguments {
     RHS_CONSTANTS,
     RHS_OPTIONS,
     RHS_PLIST,
-    RHS_PBAR,
     RHS_XSCALE_UNUSED,
     RHS_INITIALIZATION,
     RHS_DATA,
@@ -73,7 +72,7 @@ char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
  * routine dgemm. This routines computes
  * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]
  *
- * @param layout    always needs to be AMICI_BLAS_ColMajor.
+ * @param layout    memory layout.
  * @param TransA    flag indicating whether A should be transposed before
  * multiplication
  * @param TransB    flag indicating whether B should be transposed before
@@ -96,7 +95,7 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc) {
-    assert(layout == AMICI_BLAS_ColMajor);
+    //assert(layout == AMICI_BLAS_RowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -140,7 +139,7 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY) {
-    assert(layout == AMICI_BLAS_ColMajor);
+    assert(layout == AMICI_BLAS_RowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -196,8 +195,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "not match provided time vector (%i)",
                                nt_my, model.nt());
         }
-        
-        edata->setObservedData(mxGetPr(dataY));
+        mxArray *dataYT;
+        mexCallMATLAB(1, &dataYT, 1, &dataY, "transpose");
+        edata->setObservedData(mxGetPr(dataYT));
         
     } else {
         throw AmiException("Field Y not specified as field in data struct!");
@@ -218,7 +218,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                nt_sigmay, model.nt());
         }
         
-        edata->setObservedDataStdDev(mxGetPr(dataSigmaY));
+        mxArray *dataSigmaYT;
+        mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
+        edata->setObservedDataStdDev(mxGetPr(dataSigmaYT));
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
     }
@@ -237,7 +239,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "not match provided nmaxevent (%i)",
                                ne_mz, model.nMaxEvent());
         }
-        edata->setObservedEvents(mxGetPr(dataZ));
+        mxArray *dataZT;
+        mexCallMATLAB(1, &dataZT, 1, &dataZ, "transpose");
+        edata->setObservedEvents(mxGetPr(dataZT));
     } else {
         throw AmiException("Field Z not specified as field in data struct!");
     }
@@ -256,8 +260,9 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
                                "does not match provided nmaxevent (%i)",
                                ne_sigmaz, model.nMaxEvent());
         }
-        
-        edata->setObservedEventsStdDev(mxGetPr(dataSigmaZ));
+        mxArray *dataSigmaZT;
+        mexCallMATLAB(1, &dataSigmaZT, 1, &dataSigmaZ, "transpose");
+        edata->setObservedEventsStdDev(mxGetPr(dataSigmaZT));
     } else {
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
         
@@ -277,178 +282,128 @@ int dbl2int(const double x){
 
 void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
 {
-    if (!mxGetPr(prhs[RHS_OPTIONS])) {
-        throw AmiException("No options provided!");
-    }
+    if (mxGetPr(prhs[RHS_OPTIONS])) {
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")) {
+            solver.setAbsoluteTolerance(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")) {
-        solver.setAbsoluteTolerance(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")));
-    } else {
-        throw AmiException("Provided options do not have field atol!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "rtol")) {
+            solver.setRelativeTolerance(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "rtol")));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "rtol")) {
-        solver.setRelativeTolerance(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "rtol")));
-    } else {
-        throw AmiException("Provided options do not have field rtol!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_atol")) {
+            solver.setAbsoluteToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_atol")));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_atol")) {
-        solver.setAbsoluteToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_atol")));
-    } else {
-        throw AmiException("Provided options do not have field quad_atol!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_rtol")) {
+            solver.setRelativeToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_rtol")));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_rtol")) {
-        solver.setRelativeToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_rtol")));
-    } else {
-        throw AmiException("Provided options do not have field quad_rtol!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps")) {
+            solver.setMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps")) {
-        solver.setMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps"))));
-    } else {
-        throw AmiException("Provided options do not have field maxsteps!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxstepsB")) {
+            solver.setMaxStepsBackwardProblem(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxstepsB"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxstepsB")) {
-        solver.setMaxStepsBackwardProblem(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxstepsB"))));
-    } else {
-        throw AmiException("Provided options do not have field maxstepsB!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")) {
+            solver.setLinearMultistepMethod(static_cast<LinearMultistepMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")) {
-        solver.setLinearMultistepMethod(static_cast<LinearMultistepMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "lmm")))));
-    } else {
-        throw AmiException("Provided options do not have field lmm!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "iter")) {
+            solver.setNonlinearSolverIteration(static_cast<NonlinearSolverIteration>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "iter")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "iter")) {
-        solver.setNonlinearSolverIteration(static_cast<NonlinearSolverIteration>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "iter")))));
-    } else {
-        throw AmiException("Provided options do not have field iter!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")) {
+            solver.setInterpolationType(static_cast<InterpolationType>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")) {
-        solver.setInterpolationType(static_cast<InterpolationType>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "interpType")))));
-    } else {
-        throw AmiException("Provided options do not have field interpType!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol")) {
+            solver.setLinearSolver(static_cast<LinearSolver>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol")) {
-        solver.setLinearSolver(static_cast<LinearSolver>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "linsol")))));
-    } else {
-        throw AmiException("Provided options do not have field linsol!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")) {
+            solver.setSensitivityOrder(static_cast<AMICI_sensi_order>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")) {
-        solver.setSensitivityOrder(static_cast<AMICI_sensi_order>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")))));
-    } else {
-        throw AmiException("Provided options do not have field sensi!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")) {
+            solver.setInternalSensitivityMethod(static_cast<InternalSensitivityMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")) {
-        solver.setInternalSensitivityMethod(static_cast<InternalSensitivityMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")))));
-    } else {
-        throw AmiException("Provided options do not have field ism!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")) {
+            solver.setSensitivityMethod(static_cast<AMICI_sensi_meth>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")) {
-        solver.setSensitivityMethod(static_cast<AMICI_sensi_meth>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")))));
-    } else {
-        throw AmiException("Provided options do not have field sensi_meth!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
+            solver.setStateOrdering(static_cast<StateOrdering>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
-        solver.setStateOrdering(static_cast<StateOrdering>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")))));
-    } else {
-        throw AmiException("Provided options do not have field ordering!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet")) {
+            solver.setStabilityLimitFlag(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet")) {
-        solver.setStabilityLimitFlag(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet"))));
-    } else {
-        throw AmiException("Provided options do not have field stldet!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq")) {
+            solver.setNewtonPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq")) {
-        solver.setNewtonPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
-    } else {
-        throw AmiException("Provided options do not have field newton_preeq!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon")) {
+            solver.setNewtonPreconditioner(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon")) {
-        solver.setNewtonPreconditioner(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon"))));
-    } else {
-        throw AmiException("Provided options do not have field newton_precon!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
+            solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
-        solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
-    } else {
-        throw AmiException("Provided options do not have field newton_maxsteps!");
-    }
-
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps")) {
-        solver.setNewtonMaxLinearSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps"))));
-    } else {
-        throw AmiException("Provided options do not have field newton_maxlinsteps!");
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps")) {
+            solver.setNewtonMaxLinearSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps"))));
+        }
     }
 }
 
 void setModelData(const mxArray *prhs[], int nrhs, Model &model)
 {
-    if (!mxGetPr(prhs[RHS_OPTIONS])) {
-        throw AmiException("No options provided!");
-    }
+    if (mxGetPr(prhs[RHS_OPTIONS])) {
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent")) {
+            model.setNMaxEvent(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent"))));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent")) {
-        model.setNMaxEvent(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent"))));
-    } else {
-        throw AmiException("Provided options do not have field nmaxevent!");
-    }
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "tstart")) {
+            model.setT0(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "tstart")));
+        }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "tstart")) {
-        model.setT0(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "tstart")));
-    } else {
-        throw AmiException("Provided options do not have field tstart!");
-    }
-
-    if (mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
-        if(mxGetM(a) == 1 && mxGetN(a) == 1) {
-            model.setParameterScale(static_cast<AMICI_parameter_scaling>(dbl2int(mxGetScalar(a))));
-        } else if((mxGetM(a) == 1 && mxGetN(a) == model.np())
-                  || (mxGetN(a) == 1 && mxGetM(a) == model.np())) {
-            auto pscaleArray = static_cast<double *>(mxGetData(a));
-            std::vector<AMICI_parameter_scaling> pscale(model.np());
-            for(int ip = 0; ip < model.np(); ++ip) {
-                pscale[ip] = static_cast<AMICI_parameter_scaling>(dbl2int(pscaleArray[ip]));
+        if (mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
+            if(mxGetM(a) == 1 && mxGetN(a) == 1) {
+                model.setParameterScale(static_cast<AMICI_parameter_scaling>(dbl2int(mxGetScalar(a))));
+            } else if((mxGetM(a) == 1 && mxGetN(a) == model.np())
+                      || (mxGetN(a) == 1 && mxGetM(a) == model.np())) {
+                auto pscaleArray = static_cast<double *>(mxGetData(a));
+                std::vector<AMICI_parameter_scaling> pscale(model.np());
+                for(int ip = 0; ip < model.np(); ++ip) {
+                    pscale[ip] = static_cast<AMICI_parameter_scaling>(dbl2int(pscaleArray[ip]));
+                }
+                model.setParameterScale(pscale);
+            } else {
+                throw AmiException("Provided pscale has invalid dimensions!");
             }
-            model.setParameterScale(pscale);
-        } else {
-            throw AmiException("Provided pscale has invalid dimensions!");
+        }
+
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex")) {
+            mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex");
+            int len = (int)mxGetM(a) * mxGetN(a);
+            if(mxGetM(a) != 1 && mxGetN(a) != 1)
+                throw AmiException("Provided qpositivex has invalid dimensions!");
+            model.setPositivityFlag(std::vector<int>((double *)mxGetData(a),(double *)mxGetData(a)+len));
         }
     }
 
-    if (mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex")) {
-        mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex");
-        int len = (int)mxGetM(a) * mxGetN(a);
-        if(mxGetM(a) != 1 && mxGetN(a) != 1)
-            throw AmiException("Provided qpositivex has invalid dimensions!");
-        model.setPositivityFlag(std::vector<int>((double *)mxGetData(a),(double *)mxGetData(a)+len));
-    } else {
-        throw AmiException("Provided options do not have field qpositivex!");
-    }
-
     if (prhs[RHS_TIMEPOINTS] &&
-            mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]) > 0) {
-        model.setTimepoints(std::vector<double>(
-                                mxGetPr(prhs[RHS_TIMEPOINTS]),
-                                mxGetPr(prhs[RHS_TIMEPOINTS])
-                                + (int)mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS])));
+                mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS]) > 0) {
+            model.setTimepoints(std::vector<double>(
+                                    mxGetPr(prhs[RHS_TIMEPOINTS]),
+                                    mxGetPr(prhs[RHS_TIMEPOINTS])
+                                    + (int)mxGetM(prhs[RHS_TIMEPOINTS]) * mxGetN(prhs[RHS_TIMEPOINTS])));
 
-    } else {
-        throw AmiException("No valid time vector provided!");
     }
 
     if (model.np() > 0) {
@@ -458,11 +413,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
                 model.setParameters(std::vector<double>(mxGetPr(prhs[RHS_PARAMETERS]),
                                                         mxGetPr(prhs[RHS_PARAMETERS])
                                                         + mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])));
-            } else {
-                throw AmiException("Provided parameter vector has incorrect length!");
             }
-        } else {
-            throw AmiException("No parameter vector provided!");
         }
     }
 
@@ -473,14 +424,9 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
                 model.setFixedParameters(std::vector<double>(mxGetPr(prhs[RHS_CONSTANTS]),
                                                              mxGetPr(prhs[RHS_CONSTANTS])
                                                              + mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])));
-            } else {
-                throw AmiException("Provided constant vector has incorrect length!");
             }
-        } else {
-            throw AmiException("No constant vector provided!");
         }
     }
-
     if (mxGetPr(prhs[RHS_PLIST])) {
         model.setParameterList(std::vector<int>(mxGetPr(prhs[RHS_PLIST]),
                                                 mxGetPr(prhs[RHS_PLIST])
@@ -489,23 +435,25 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
         model.requireSensitivitiesForAllParameters();
     }
 
-    if (model.nplist() > 0) {
-        if (mxGetPr(prhs[RHS_PBAR])) {
-            if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
-                    model.nplist()) {
-                model.setParameterScaling(std::vector<double>(mxGetPr(prhs[RHS_PBAR]),
-                                                              mxGetPr(prhs[RHS_PBAR])
-                                                              + mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR])));
-            } else {
-                throw AmiException("Provided parameter scales have incorrect length!");
+    /* Check, if initial states and sensitivities are passed by user or must be
+             * calculated */
+    if (mxGetPr(prhs[RHS_INITIALIZATION])) {
+        mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
+        if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
+            /* check dimensions */
+            if (mxGetN(x0) != 1) {
+                throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-        } else {
-            throw AmiException("No parameter scales provided!");
+            if (mxGetM(x0) != model.nx) {
+                throw AmiException("Number of columns in x0 field "
+                                   "does not agree with number of "
+                                   "model states!");
+            }
         }
     }
 
     /* Check, if initial states and sensitivities are passed by user or must be
-         * calculated */
+             * calculated */
     if (mxGetPr(prhs[RHS_INITIALIZATION])) {
         mxArray *x0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "x0");
         if (x0 && (mxGetM(x0) * mxGetN(x0)) > 0) {
@@ -568,47 +516,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         amici::errMsgIdAndTxt("AMICI:mex:setup", "Incorrect number of input arguments (must be at least 7)!");
     };
 
+    auto model = getModel();
+    auto solver = model->getSolver();
+    setModelData(prhs, nrhs, *model);
+    setSolverOptions(prhs, nrhs, *solver);
 
-    try{
-        auto model = getModel();
-        auto solver = model->getSolver();
-        setModelData(prhs, nrhs, *model);
-        setSolverOptions(prhs, nrhs, *solver);
-
-        auto rdata = std::unique_ptr<amici::ReturnDataMatlab>(new amici::ReturnDataMatlab(*solver, model.get()));
-        
-        /* ensures that plhs[0] is available */
-        plhs[0] = rdata->matlabSolutionStruct;
-        
-        std::unique_ptr<amici::ExpData> edata;
-        if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
-            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
-            if (!edata)
-                amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data!");
-        } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
-                   solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
-            amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
-        }
-        
+    std::unique_ptr<amici::ExpData> edata;
+    if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
-            amici::runAmiciSimulation(*solver, edata.get(), rdata.get(), *model);
-            *rdata->status = AMICI_SUCCESS;
-        } catch (amici::IntegrationFailure& ex) {
-            rdata->invalidate(ex.time);
-            *(rdata->status) = ex.error_code;
+            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
         } catch (amici::AmiException& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-        } catch (std::exception& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());
-        } catch (...) {
-            amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
-        rdata->applyChainRuleFactorToSimulationResults(model.get());
-    } catch(std::exception& ex) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","AMICI execution failed:\n%s",ex.what());
-    } catch(...) {
-        amici::errMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+    } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
+               solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
+        amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
     }
+    
+    /* ensures that plhs[0] is available */
+    auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
+    plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
     
 }
 

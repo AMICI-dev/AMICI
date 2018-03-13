@@ -182,8 +182,12 @@ if(isfield(this.fun,'J'))
 end
 
 if(strcmp(this.wtype,'iw'))
-    this.getFun([],'M');
-    this.id = double(logical(sum(this.fun.M.sym,2)~=0));
+    if(isfield(this.fun,'M'))
+        this.getFun([],'M');
+        this.id = double(logical(sum(this.fun.M.sym,2)~=0));
+    else
+        
+    end
 else
     this.id = zeros(nx,1);
 end

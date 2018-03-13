@@ -29,16 +29,16 @@ class ExpData {
 
     ~ExpData();
 
-    /** observed data (dimension: nt x nytrue, column-major) */
-    std::vector<amici::realtype> my;
-    /** standard deviation of observed data (dimension: nt x nytrue, column-major) */
-    std::vector<amici::realtype> sigmay;
+    /** observed data (dimension: nt x nytrue, row-major) */
+    std::vector<realtype> my;
+    /** standard deviation of observed data (dimension: nt x nytrue, row-major) */
+    std::vector<realtype> sigmay;
 
-    /** observed events (dimension: nmaxevents x nztrue, column-major) */
-    std::vector<amici::realtype> mz;
+    /** observed events (dimension: nmaxevents x nztrue, row-major) */
+    std::vector<realtype> mz;
     /** standard deviation of observed events/roots
-     * (dimension: nmaxevents x nztrue, column-major)*/
-    std::vector<amici::realtype> sigmaz;
+     * (dimension: nmaxevents x nztrue, row-major)*/
+    std::vector<realtype> sigmaz;
     
     /** number of observables */
     const int nytrue;

@@ -15,17 +15,21 @@ function cflag = checkDeps(this,HTable,deps)
     if(~isempty(HTable))
         cflags = zeros(length(deps),1);
         for id = 1:length(deps)
-            if(~isfield(this.HTable,deps{id}))
-                % check subdependencies
-                fun = amifun(deps{id},this);
-                fun = fun.getDeps(this);
-                cflagdep = this.checkDeps(HTable,fun.deps);
-                cflags(id) = cflagdep;
+            if(ismember(deps{id},{'w','dwdx','dwdp'}))
+                cflags(id) = 0;
             else
-                if(~isfield(HTable,deps{id})) %newly added field in HTable, need to recompile
-                    cflags(id) = 1;
+                if(~isfield(this.HTable,deps{id}))
+                    % check subdependencies
+                    fun = amifun(deps{id},this);
+                    fun = fun.getDeps(this);
+                    cflagdep = this.checkDeps(HTable,fun.deps);
+                    cflags(id) = cflagdep;
                 else
-                    cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
+                    if(~isfield(HTable,deps{id})) %newly added field in HTable, need to recompile
+                        cflags(id) = 1;
+                    else
+                        cflags(id) = ~strcmp(this.HTable.(deps{id}),HTable.(deps{id}));
+                    end
                 end
             end
         end

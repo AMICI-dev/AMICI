@@ -31,8 +31,7 @@ def writeSensiForward(filename):
     ex = ExampleSteadystate()
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_steadystate/sensiforward/')
@@ -43,7 +42,6 @@ def writeSensiForwardPlist(filename):
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
     ex.solverOptions['sens_ind'] = [3, 1, 2, 4]
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_steadystate/sensiforwardplist/')
@@ -52,8 +50,7 @@ def writeSensiForwardDense(filename):
     ex = ExampleSteadystate()
     
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 1
     ex.writeToFile(filename, '/model_steadystate/sensiforwarddense/')
@@ -72,8 +69,7 @@ def writeSensiForwardErrorInt(filename):
     ex = ExampleSteadystate()
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100
@@ -86,8 +82,7 @@ def writeSensiForwardErrorNewt(filename):
    
     ex.modelOptions['ts'] = [0, np.inf]
     ex.solverOptions['sensi'] = 1
-    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP) + 1
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100
     ex.solverOptions['newton_maxsteps'] = 2

@@ -105,8 +105,8 @@ void IDASolver::AMISStolerances(double rtol, double atol) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASStolerances");
 }
-void IDASolver::AMISensEEtolerances() {
-    int status = IDASensEEtolerances(ami_mem);
+void IDASolver::AMISensSStolerances(double rtol, double *atol) {
+    int status = IDASensSStolerances(ami_mem, rtol, atol);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASensEEtolerances");
 }

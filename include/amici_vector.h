@@ -78,6 +78,13 @@ namespace amici {
             return nvec;
         }
         
+        /** Vector accessor
+         * @return Vector
+         */
+        std::vector<realtype> getVector() const {
+            return vec;
+        }
+        
         /** returns the length of the vector
          * @return length
          */
