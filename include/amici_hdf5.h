@@ -9,6 +9,9 @@
 
 #undef AMI_HDF5_H_DEBUG
 
+/* Macros for enabling/disabling  HDF5 error auto-printing
+ * AMICI_H5_SAVE_ERROR_HANDLER and AMICI_H5_RESTORE_ERROR_HANDLER must be called
+ * within the same context, otherwise the stack handler is lost. */
 #define AMICI_H5_SAVE_ERROR_HANDLER                                            \
     herr_t (*old_func)(void *);                                                \
     void *old_client_data;                                                     \
@@ -30,7 +33,7 @@ namespace hdf5 {
 /* Functions for reading and writing AMICI data to/from HDF5 files. */
 
 /**
- * @brief createOrOpenForWriting
+ * @brief Open the given file for writing. Append if exists, create if not.
  * @param hdf5filename
  * @return
  */
@@ -84,6 +87,10 @@ void writeReturnData(const ReturnData &rdata,
                      std::string const& hdf5Filename,
                      const std::string& hdf5Location);
 
+void writeReturnDataDiagnosis(const ReturnData &rdata,
+                     H5::H5File& file,
+                     const std::string& hdf5Location);
+
 /**
  * @brief Create the given group and possibly parents
  * @param file
@@ -123,14 +130,19 @@ bool attributeExists(H5::H5File const& file,
 bool attributeExists(H5::H5Object const& object,
                      const std::string &attributeName);
 
+
 void createAndWriteInt1DDataset(H5::H5File& file,
                                      std::string const& datasetName,
                                      const int *buffer, hsize_t m);
 
 void createAndWriteInt1DDataset(H5::H5File& file,
-                                     std::string const& datasetName,
-                                     std::vector<int> const& buffer);
+                                std::string const& datasetName,
+                                std::vector<int> const& buffer);
 
+void createAndWriteInt2DDataset(H5::H5File& file,
+                                     std::string const& datasetName,
+                                     const int *buffer, hsize_t m,
+                                     hsize_t n);
 
 void createAndWriteDouble1DDataset(H5::H5File& file,
                                      std::string const& datasetName,
@@ -139,11 +151,6 @@ void createAndWriteDouble1DDataset(H5::H5File& file,
 void createAndWriteDouble2DDataset(H5::H5File& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,
-                                     hsize_t n);
-
-void createAndWriteInt2DDataset(H5::H5File& file,
-                                     std::string const& datasetName,
-                                     const int *buffer, hsize_t m,
                                      hsize_t n);
 
 void createAndWriteDouble3DDataset(H5::H5File& file,
@@ -174,11 +181,6 @@ std::vector<double> getDoubleDataset3D(const H5::H5File &file,
                                               std::string const& name,
                                               hsize_t &m, hsize_t &n, hsize_t &o);
 
-void setAttributeIntFromDouble(const H5::H5File &file,
-                               const std::string &optionsObject,
-                               const std::string &attributeName, const double *buffer,
-                               hsize_t length);
-
 /**
  * @brief Check if the given location (group, link or dataset) exists in the given file
  * @param filename
@@ -188,6 +190,7 @@ void setAttributeIntFromDouble(const H5::H5File &file,
 bool locationExists(std::string const& filename, std::string const& location);
 
 bool locationExists(H5::H5File const& file, std::string const& location);
+
 } // namespace hdf5
 } // namespace amici
 

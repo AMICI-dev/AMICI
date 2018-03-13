@@ -130,17 +130,10 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
 
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
-    
-    if(!locationExists(file, hdf5Location + "/diagnosis"))
-        createGroup(file, hdf5Location  + "/diagnosis");
 
     if (rdata.ts.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/t",
                                       rdata.ts.data(), rdata.nt);
-
-    if (rdata.xdot.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/diagnosis/xdot",
-                                      rdata.xdot.data(), rdata.nx);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "llh", &rdata.llh, 1);
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "chi2", &rdata.chi2, 1);
@@ -150,50 +143,6 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
     if (rdata.sllh.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
-
-    if (rdata.numsteps.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numsteps", rdata.numsteps);
-
-    if (rdata.numrhsevals.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numrhsevals", rdata.numrhsevals);
-
-    if (rdata.numerrtestfails.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numerrtestfails", rdata.numerrtestfails);
-
-    if (rdata.numnonlinsolvconvfails.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numnonlinsolvconvfails",
-                                   rdata.numnonlinsolvconvfails);
-
-    if (rdata.order.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/order", rdata.order);
-
-    if (rdata.numstepsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numstepsB", rdata.numstepsB);
-
-    if (rdata.numrhsevalsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numrhsevalsB", rdata.numrhsevalsB);
-
-    if (rdata.numerrtestfailsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numerrtestfailsB", rdata.numerrtestfailsB);
-
-    if (rdata.numnonlinsolvconvfailsB.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
-    
-    H5LTset_attribute_int(file.getId(), (hdf5Location + "/diagnosis").c_str(), "newton_status", &rdata.newton_status, 1);
-    
-    if (rdata.newton_numsteps.size())
-        createAndWriteInt1DDataset(file, hdf5Location + "/diagnosis/newton_numsteps", rdata.newton_numsteps);
-    
-    if (rdata.newton_numlinsteps.size())
-        createAndWriteInt2DDataset(file, hdf5Location + "/diagnosis/newton_numlinsteps", rdata.newton_numlinsteps.data(),
-                                    rdata.newton_maxsteps, 2);
-    
-    
-    H5LTset_attribute_double(file.getId(), (hdf5Location + "/diagnosis").c_str(), "newton_time", &rdata.newton_time, 1);
-
-    if (rdata.J.size())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/diagnosis/J", rdata.J.data(),
-                                        rdata.nx, rdata.nx);
 
     if (rdata.x0.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0.data(), rdata.nx);
@@ -249,6 +198,64 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
     if (rdata.ssigmaz.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmaz", rdata.ssigmaz.data(),
                                       rdata.nmaxevent, rdata.nplist, rdata.nz);
+
+    writeReturnDataDiagnosis(rdata, file, hdf5Location + "/diagnosis");
+}
+
+void writeReturnDataDiagnosis(const ReturnData &rdata,
+                              H5::H5File& file,
+                              const std::string& hdf5Location) {
+
+    if(!locationExists(file, hdf5Location))
+        createGroup(file, hdf5Location);
+
+    if (rdata.xdot.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/xdot",
+                                      rdata.xdot.data(), rdata.nx);
+
+    if (rdata.numsteps.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numsteps", rdata.numsteps);
+
+    if (rdata.numrhsevals.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevals", rdata.numrhsevals);
+
+    if (rdata.numerrtestfails.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfails", rdata.numerrtestfails);
+
+    if (rdata.numnonlinsolvconvfails.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfails",
+                                   rdata.numnonlinsolvconvfails);
+
+    if (rdata.order.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
+
+    if (rdata.numstepsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numstepsB", rdata.numstepsB);
+
+    if (rdata.numrhsevalsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevalsB", rdata.numrhsevalsB);
+
+    if (rdata.numerrtestfailsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfailsB", rdata.numerrtestfailsB);
+
+    if (rdata.numnonlinsolvconvfailsB.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
+
+    H5LTset_attribute_int(file.getId(), (hdf5Location + "").c_str(), "newton_status", &rdata.newton_status, 1);
+
+    if (rdata.newton_numsteps.size())
+        createAndWriteInt1DDataset(file, hdf5Location + "/newton_numsteps", rdata.newton_numsteps);
+
+    if (rdata.newton_numlinsteps.size())
+        createAndWriteInt2DDataset(file, hdf5Location + "/newton_numlinsteps", rdata.newton_numlinsteps.data(),
+                                    rdata.newton_maxsteps, 2);
+
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "newton_time", &rdata.newton_time, 1);
+
+    if (rdata.J.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J.data(),
+                                        rdata.nx, rdata.nx);
+
 }
 
 
@@ -462,6 +469,8 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
             pscale[i] = static_cast<AMICI_parameter_scaling>(pscaleInt[i]);
         model.setParameterScale(pscale);
     } else if (attributeExists(file, datasetPath, "pscale")) {
+        // if pscale is the same for all parameters,
+        // it can be set as scalar attribute for convenience
         model.setParameterScale(static_cast<AMICI_parameter_scaling>(getDoubleScalarAttribute(file,  datasetPath, "pscale")));
     }
 
@@ -520,8 +529,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(locationExists(file, datasetPath + "/pbar")) {
         auto pbar = getDoubleDataset1D(file, datasetPath + "/pbar");
-        if(pbar.size())
-            model.setParameterScaling(pbar);
+        model.setParameterScaling(pbar);
     }
 }
 
