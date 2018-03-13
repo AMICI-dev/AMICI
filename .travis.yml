@@ -24,6 +24,7 @@ matrix:
             - doxygen
             - doxygen-latex
             - cppcheck
+            - swig
             - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
@@ -35,7 +36,7 @@ matrix:
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
         - (brew install gcc || brew link --overwrite gcc) # fix linker warning regarding /usr/local/include/c++
-        - brew install hdf5 cppcheck
+        - brew install hdf5 cppcheck swig
         
 install:
     - ./scripts/buildSuiteSparse.sh
