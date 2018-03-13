@@ -48,7 +48,7 @@ function s = hdf2struct(group,hdf5path,hdf5file)
     s = struct;
     if(~isempty(group.Attributes))
         for attr = {group.Attributes.Name};
-            s.(attr{1}) = h5readatt(hdf5file,hdf5path,attr{1});
+            s.(attr{1}) = double(h5readatt(hdf5file,hdf5path,attr{1}));
         end
     end
     if(~isempty(group.Datasets))

@@ -76,13 +76,13 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
                 /* Set sensitivity analysis optional inputs */
                 auto plist = model->getParameterList();
                 auto par = model->getUnscaledParameters();
-                auto pbar = model->getParameterScaling();
 
                 /* Activate sensitivity calculations */
                 sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
-                AMISetSensParams(par.data(), pbar.data(), plist.data());
+                AMISetSensParams(par.data(), nullptr, plist.data());
+                std::vector<realtype> atols(plist.size(),atol);
+                AMISensSStolerances( rtol, atols.data());
                 AMISetSensErrCon(TRUE);
-                AMISensEEtolerances();
             }
         }
 

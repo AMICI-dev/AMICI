@@ -518,10 +518,6 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         }
     }
 
-    if(locationExists(file, datasetPath + "/pbar")) {
-        auto pbar = getDoubleDataset1D(file, datasetPath + "/pbar");
-        model.setParameterScaling(pbar);
-    }
 }
 
 H5::H5File createOrOpenForWriting(const std::string &hdf5filename)

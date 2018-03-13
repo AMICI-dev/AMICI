@@ -183,7 +183,6 @@ namespace amici {
               x0data(other.x0data),
               sx0data(other.sx0data),
               ts(other.ts),
-              pbar(other.pbar),
               qpositivex(other.qpositivex),
               nmaxevent(other.nmaxevent),
               pscale(other.pscale),
@@ -610,24 +609,6 @@ namespace amici {
             if(sx0.size() != (unsigned) nx * nplist())
                 throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
             this->sx0data = sx0;
-        }
-
-        /**
-         * @brief getParameterScaling
-         * @return
-         */
-        std::vector<realtype> getParameterScaling() const {
-            return pbar;
-        }
-
-        /**
-         * @brief setParameterScaling
-         * @param pbar
-         */
-        void setParameterScaling(std::vector<realtype> const& pbar) {
-            if(pbar.size() != (unsigned) nplist())
-                throw AmiException("Dimension mismatch. Size of pbar does not match number of parameter selected for sensitivities.");
-            this->pbar = pbar;
         }
 
         /** initial timepoint
@@ -1324,9 +1305,6 @@ namespace amici {
 
         /** timepoints (size nt) */
         std::vector<realtype>ts;
-
-        /** scaling of parameters (size nplist) */
-        std::vector<realtype>pbar;
 
         /** positivity flag (size nx) */
         std::vector<int>qpositivex;

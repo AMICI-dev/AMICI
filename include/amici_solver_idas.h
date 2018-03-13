@@ -22,7 +22,7 @@ class IDASolver : public Solver {
 
     void AMISStolerances(double rtol, double atol) override;
 
-    void AMISensEEtolerances() override;
+    void AMISensSStolerances(double rtol, double *atol) override;
 
     void AMISetSensErrCon(bool error_corr) override;
 

@@ -61,7 +61,6 @@ def writeSensiForward(filename):
     ex = ExampleNeuron()
 
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 1
 
     ex.writeToFile(filename, '/model_neuron/sensiforward/')
@@ -71,7 +70,6 @@ def writeSensi2Forward(filename):
     ex = ExampleNeuron()
 
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
-    ex.solverOptions['pbar'] = [1.0] * len(ex.solverOptions['sens_ind'])
     ex.solverOptions['sensi'] = 2
     ex.solverOptions['sensi_meth'] = 1
 

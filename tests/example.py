@@ -54,7 +54,6 @@ class AmiciExample:
             'newton_preeq' : 0,
             'nmaxevent' : 10,
             'ordering' : 0,
-            # pbar unused
             # 'qpositivex'
             'rtol' : 1e-8,
             'sens_ind' : [],

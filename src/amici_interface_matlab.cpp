@@ -39,7 +39,6 @@ enum mexRhsArguments {
     RHS_CONSTANTS,
     RHS_OPTIONS,
     RHS_PLIST,
-    RHS_PBAR,
     RHS_XSCALE_UNUSED,
     RHS_INITIALIZATION,
     RHS_DATA,
@@ -436,16 +435,6 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
         model.requireSensitivitiesForAllParameters();
     }
 
-    if (model.nplist() > 0) {
-        if (mxGetPr(prhs[RHS_PBAR])) {
-            if (mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR]) ==
-                    model.nplist()) {
-                model.setParameterScaling(std::vector<double>(mxGetPr(prhs[RHS_PBAR]),
-                                                              mxGetPr(prhs[RHS_PBAR])
-                                                              + mxGetM(prhs[RHS_PBAR]) * mxGetN(prhs[RHS_PBAR])));
-            }
-        }
-    }
     /* Check, if initial states and sensitivities are passed by user or must be
              * calculated */
     if (mxGetPr(prhs[RHS_INITIALIZATION])) {

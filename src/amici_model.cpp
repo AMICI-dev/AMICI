@@ -315,7 +315,6 @@ void Model::initializeVectors()
     drzdp.resize(nz * nplist(), 0.0);
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
-    pbar.resize(nplist(), 1.0);
 }
 
 /** Initial states
@@ -940,7 +939,6 @@ bool operator ==(const Model &a, const Model &b)
             && (a.x0data == b.x0data)
             && (a.sx0data == b.sx0data)
             && (a.ts == b.ts)
-            && (a.pbar == b.pbar)
             && (a.qpositivex == b.qpositivex)
             && (a.nmaxevent == b.nmaxevent)
             && (a.pscale == b.pscale)
