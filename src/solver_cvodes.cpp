@@ -468,7 +468,7 @@ void CVodeSolver::turnOffRootFinding() {
            N_Vector tmp2, N_Vector tmp3) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJ(t, x, xdot, J);
-        return isFinite(N,J->data,"Jacobian");
+        return model->checkFinite(N,J->data,"Jacobian");
     }
     
     /** Jacobian of xBdot with respect to adjoint state xB
@@ -489,7 +489,7 @@ void CVodeSolver::turnOffRootFinding() {
                    N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJB(t, x, xB, xBdot, JB);
-        return isFinite(NeqBdot,JB->data,"Jacobian");
+        return model->checkFinite(NeqBdot,JB->data,"Jacobian");
     }
     
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -508,7 +508,7 @@ void CVodeSolver::turnOffRootFinding() {
                         N_Vector tmp3) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJSparse(t, x, J);
-        return isFinite(J->NNZ,J->data,"Jacobian");
+        return model->checkFinite(J->NNZ,J->data,"Jacobian");
     }
     
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -528,7 +528,7 @@ void CVodeSolver::turnOffRootFinding() {
                          N_Vector tmp2B, N_Vector tmp3B) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJSparseB(t, x, xB, xBdot, JB);
-        return isFinite(JB->NNZ,JB->data,"Jacobian");
+        return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
     }
     
     /** J in banded form (for banded solvers)
@@ -583,7 +583,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJDiag(t, JDiag, x);
-        return isFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
     
     /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -601,7 +601,7 @@ void CVodeSolver::turnOffRootFinding() {
                    void *user_data, N_Vector tmp) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJv(v,Jv,t,x);
-        return isFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
     /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -620,7 +620,7 @@ void CVodeSolver::turnOffRootFinding() {
                     void *user_data, N_Vector tmpB) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fJvB(vB, JvB, t, x, xB);
-        return isFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
     /** Event trigger function for events
@@ -634,7 +634,7 @@ void CVodeSolver::turnOffRootFinding() {
                      void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->froot(t, x, root);
-        return isFinite(model->ne,root,"root function");
+        return model->checkFinite(model->ne,root,"root function");
     }
     
     /** residual function of the ODE
@@ -647,7 +647,7 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fxdot(t, x, xdot);
-        return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     
     /** Right hand side of differential equation for adjoint state xB
@@ -662,7 +662,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector xBdot, void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fxBdot(t, x, xB, xBdot);
-        return isFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
     
     /** Right hand side of integral equation for quadrature states qB
@@ -677,7 +677,7 @@ void CVodeSolver::turnOffRootFinding() {
                       void *user_data) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fqBdot(t, x, xB, qBdot);
-        return isFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return model->checkFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
@@ -699,7 +699,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector tmp1, N_Vector tmp2) {
         Model_ODE *model = static_cast<Model_ODE*>(user_data);
         model->fsxdot(t, x, ip, sx, sxdot);
-        return isFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
 
     CVodeSolver::~CVodeSolver() { AMIFree(); }

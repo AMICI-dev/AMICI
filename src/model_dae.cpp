@@ -114,7 +114,7 @@ namespace amici {
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
         fJDiag(JDiag->data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                0.0,dx->data(),w.data(),dwdx.data());
-        if(!isFinite(nx,JDiag->data(),"Jacobian"))
+        if(!checkFinite(nx,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
     }
     

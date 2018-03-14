@@ -882,6 +882,20 @@ const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *
     return(&rdata->srz.at((nroots*nplist()+ip)*nz));
 }
 
+int Model::checkFinite(const int N, const realtype *array, const char *fun) const
+{
+    auto result = amici::checkFinite(N, array, fun);
+
+    if(result != AMICI_SUCCESS) {
+        amici::checkFinite(ts.size(), ts.data(), "ts");
+        amici::checkFinite(fixedParameters.size(), fixedParameters.data(), "k");
+        amici::checkFinite(unscaledParameters.size(), unscaledParameters.data(), "p");
+        amici::checkFinite(w.size(), w.data(), "w");
+    }
+
+    return result;
+}
+
 void Model::unscaleParameters(double *bufferUnscaled) const
 {
     /**
