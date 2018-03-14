@@ -33,4 +33,11 @@ TEST(groupJakstatAdjoint, testSensitivityAdjoint) {
     amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiadjoint/");
 }
 
+TEST(groupJakstatAdjoint, testSensitivityForwardEmptySensInd) {
+    amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiforwardemptysensind/");
+}
+
+TEST(groupJakstatAdjoint, testSensitivityAdjointEmptySensInd) {
+    amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiadjointemptysensind/");
+}
 
