@@ -6,6 +6,9 @@ function testModels()
     warning('off','AMICI:mex:simulation')
     warning('off','AMICI:mex:CVODES:CVode:TOO_MUCH_WORK')
     
+    ignoredTests = {'/model_jakstat_adjoint/sensiadjointemptysensind', ...
+                    '/model_jakstat_adjoint/sensiforwardemptysensind'};
+    
     cd(fileparts(mfilename('fullpath')))
     addpath(genpath('cpputest'));
     wrapTestModels()
@@ -23,6 +26,10 @@ function testModels()
             model_rtol = 1e-5;
         end
         for itest = 1:length(info.Groups(imodel).Groups)
+            if(any(strcmp(ignoredTests, info.Groups(imodel).Groups(itest).Name)))
+                continue
+            end
+            
             [results,options,data,t,theta,kappa] = readDataFromHDF5(info.Groups(imodel).Groups(itest),hdf5file);
             sol = getResults(info.Groups(imodel).Name(2:end),options,data,t,theta,kappa);
             compareResults(sol,results);
