@@ -46,12 +46,15 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         DEBUG = '';
     end
     
+    compilerVersion = getCompilerVersionString();
+    baseObjectFolder = fullfile(wrap_path,'models',mexext,version('-release'),compilerVersion);
+    baseModelObjectFolder = fullfile(wrap_path,'models',modelname,version('-release'),compilerVersion);
     if(debug)
-        objectFolder = fullfile(wrap_path,'models',mexext,'debug');
-        modelObjectFolder = fullfile(wrap_path,'models',modelname,'debug');
+        objectFolder = fullfile(baseObjectFolder, 'debug');
+        modelObjectFolder = fullfile(baseModelObjectFolder, 'debug');
     else
-        objectFolder = fullfile(wrap_path,'models',mexext,'release');
-        modelObjectFolder = fullfile(wrap_path,'models',modelname,'release');
+        objectFolder = fullfile(baseObjectFolder, 'release');
+        modelObjectFolder = fullfile(baseModelObjectFolder, 'release');
     end
     % compile directory
     if(~exist(objectFolder, 'dir'))
@@ -328,3 +331,14 @@ function hasChanged = hashHasChanged(sourceFilename, hashFilename)
     fclose(fid);
     hasChanged = ~strcmp(tline, hash);
 end
+
+function versionstring = getCompilerVersionString()
+    [~,systemreturn] = system([mex.getCompilerConfigurations('c++').Details.CompilerExecutable ' --version']);
+    newlinePos = strfind(systemreturn,newline);
+    str = systemreturn(1:(newlinePos(1)-1));
+    str = regexprep(str,'[\(\)]','');
+    str = regexprep(str,'[\s\.\-]','_');
+    versionstring = genvarname(str); % fix everything else we have missed
+end
+    
+    
