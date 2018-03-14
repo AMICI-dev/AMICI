@@ -763,6 +763,16 @@ namespace amici {
         
         const realtype gett(const int it, const ReturnData *rdata) const;
 
+        /**
+         * @brief Check if the given array has only finite elements.
+         * If not try to give hints by which other fields this could be caused.
+         * @param N
+         * @param array
+         * @param fun
+         * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
+         */
+        int checkFinite(const int N,const realtype *array, const char* fun) const;
+
     protected:
         
         /** model specific implementation of fx0
@@ -1237,7 +1247,6 @@ namespace amici {
         const realtype *getsz(const int nroots, const int nplist, const ReturnData *rdata) const;
         
         const realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
-        
 
         /** Jacobian */
         SlsMat J = nullptr;

@@ -109,7 +109,7 @@ namespace amici {
     void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
         fJDiag(t, JDiag->getNVector(), x->getNVector());
-        if(!isFinite(nx,JDiag->data(),"Jacobian"))
+        if(!checkFinite(nx,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
     }
     
