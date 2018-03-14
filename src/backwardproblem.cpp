@@ -51,7 +51,7 @@ void BackwardProblem::workBackwardProblem() {
     double tnext;
 
     if (model->nx <= 0 || rdata->sensi < AMICI_SENSI_ORDER_FIRST ||
-        rdata->sensi_meth != AMICI_SENSI_ASA ) {
+        rdata->sensi_meth != AMICI_SENSI_ASA || model->nplist() == 0) {
         return;
     }
     
