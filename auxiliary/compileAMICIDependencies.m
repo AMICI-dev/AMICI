@@ -9,11 +9,7 @@ function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectF
     
     lapack_path = fullfile(wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
-    
-    % compile directory
-    if(~exist(objectFolder, 'dir'))
-        mkdir(objectFolder)
-    end
+   
     
     version_file = fullfile(objectFolder, 'versions.txt');
     [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver);

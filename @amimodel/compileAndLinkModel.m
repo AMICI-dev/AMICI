@@ -48,8 +48,17 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     
     if(debug)
         objectFolder = fullfile(wrap_path,'models',mexext,'debug');
+        modelObjectFolder = fullfile(wrap_path,'models',modelname,'debug');
     else
         objectFolder = fullfile(wrap_path,'models',mexext,'release');
+        modelObjectFolder = fullfile(wrap_path,'models',modelname,'release');
+    end
+    % compile directory
+    if(~exist(objectFolder, 'dir'))
+        mkdir(objectFolder);
+    end
+    if(~exist(modelObjectFolder, 'dir'))
+        mkdir(modelObjectFolder);
     end
     
     %% Third party libraries
@@ -62,8 +71,8 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFilename = fullfile(modelSourceFolder,[modelname '_' funs{j}]);
-        cfun(1).(funs{j}) = sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
+        baseFileName = [modelname '_' funs{j}];
+        cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
     
     funsForRecompile = {};
@@ -118,8 +127,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
             ' -c -outdir ' modelSourceFolder ' ' ...
             sources ' ' ...
             includesstr ]);
-        
-        cellfun(@(x) updateFileHashSource(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
+        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);                
     end
     
     % append model object files
