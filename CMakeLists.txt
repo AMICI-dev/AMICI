@@ -30,7 +30,7 @@ set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
 set(CMAKE_MODULE_PATH ${AMICI_DIR}/CMakeModules)
 
-find_package(HDF5 COMPONENTS C HL REQUIRED)
+find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
@@ -45,8 +45,7 @@ else()
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
 
-include_directories("${AMICI_DIR}")
-include_directories("${AMICI_DIR}/include")
+include_directories("${AMICI_DIR}/include/")
 include_directories("${HDF5_INCLUDE_DIRS}")
 include_directories("${AMICI_DIR}/sundials/include")
 include_directories("${AMICI_DIR}/sundials/src")
@@ -59,19 +58,19 @@ endif()
 # Library source files
 set(AMICI_SRC_LIST
     ${AMICI_DIR}/src/symbolic_functions.cpp
-    ${AMICI_DIR}/src/amici_interface_cpp.cpp
+    ${AMICI_DIR}/src/cblas.cpp
     ${AMICI_DIR}/src/amici.cpp
-    ${AMICI_DIR}/src/amici_misc.cpp
+    ${AMICI_DIR}/src/misc.cpp
     ${AMICI_DIR}/src/rdata.cpp
     ${AMICI_DIR}/src/edata.cpp
-    ${AMICI_DIR}/src/amici_hdf5.cpp
+    ${AMICI_DIR}/src/hdf5.cpp
     ${AMICI_DIR}/src/spline.cpp
-    ${AMICI_DIR}/src/amici_solver.cpp
-    ${AMICI_DIR}/src/amici_solver_cvodes.cpp
-    ${AMICI_DIR}/src/amici_solver_idas.cpp
-    ${AMICI_DIR}/src/amici_model.cpp
-    ${AMICI_DIR}/src/amici_model_ode.cpp
-    ${AMICI_DIR}/src/amici_model_dae.cpp
+    ${AMICI_DIR}/src/solver.cpp
+    ${AMICI_DIR}/src/solver_cvodes.cpp
+    ${AMICI_DIR}/src/solver_idas.cpp
+    ${AMICI_DIR}/src/model.cpp
+    ${AMICI_DIR}/src/model_ode.cpp
+    ${AMICI_DIR}/src/model_dae.cpp
     ${AMICI_DIR}/src/newton_solver.cpp
     ${AMICI_DIR}/src/forwardproblem.cpp
     ${AMICI_DIR}/src/steadystateproblem.cpp
@@ -91,6 +90,7 @@ target_link_libraries(${PROJECT_NAME}
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${HDF5_HL_LIBRARIES}
     ${HDF5_C_LIBRARIES}
+    ${HDF5_CXX_LIBRARIES}
     ${BLAS_LIBRARIES}
     -ldl -lz -lm
 )

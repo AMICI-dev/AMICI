@@ -5,13 +5,14 @@
  * This file contains definitions of various symbolic functions which
  */
 
+#include "amici/symbolic_functions.h"
+#include "amici/spline.h"
+
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstdarg>
 #include <cstdlib>
-#include <include/spline.h>
-#include <include/symbolic_functions.h>
 #if _MSC_VER && !__INTEL_COMPILER
 #include <malloc.h>
 #define alloca _alloca

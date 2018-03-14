@@ -57,7 +57,7 @@ set(SRC_LIST_EXE main.cpp)
 
 add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
     
-target_link_libraries(simulate_${PROJECT_NAME} Upstream::amici ${PROJECT_NAME})
+target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME} Upstream::amici)
 
 if($ENV{ENABLE_GCOV_COVERAGE})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")

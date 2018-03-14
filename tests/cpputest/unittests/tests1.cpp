@@ -1,12 +1,11 @@
 #include "testfunctions.h"
-#include <include/amici_hdf5.h>
-#include <include/amici_interface_cpp.h>
 
-#include <include/amici.h>
-#include <include/amici_solver_idas.h>
-#include <include/amici_solver_cvodes.h>
-#include <include/symbolic_functions.h>
-#include <include/amici_model_ode.h>
+#include <amici/amici.h>
+#include <amici/solver_idas.h>
+#include <amici/solver_cvodes.h>
+#include <amici/symbolic_functions.h>
+#include <amici/model_ode.h>
+
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -31,15 +30,6 @@ TEST_GROUP(amici)
 
     }
 };
-
-TEST(amici, testRunAmiciSimulationRdataMissing) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
-                     std::vector<realtype>(4,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-    amici::IDASolver solver;
-    CHECK_THROWS(amici::AmiException, amici::runAmiciSimulation(solver, nullptr, nullptr, model))
-}
-
 
 TEST_GROUP(model)
 {

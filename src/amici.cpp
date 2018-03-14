@@ -3,11 +3,22 @@
  * @brief  core routines for integration
  */
 
+#include "amici/amici.h"
+
+#include "amici/backwardproblem.h"
+#include "amici/forwardproblem.h"
+#include "amici/misc.h"
+
+#include <sundials/sundials_types.h> //realtype
+#include <cvodes/cvodes.h> //return codes
+
+#include <type_traits>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
 #include <memory>
+
 /** MS definition of PI and other constants */
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -15,22 +26,6 @@
 /** define PI if we still have no definition */
 #define M_PI 3.14159265358979323846
 #endif
-
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/amici_exception.h"
-#include "include/backwardproblem.h"
-#include "include/forwardproblem.h"
-
-#include <include/amici.h> /* amici functions */
-#include <include/amici_misc.h>
-#include <include/amici_exception.h>
-#include <include/symbolic_functions.h>
-
-#include <sundials/sundials_types.h> //realtype
-#include <cvodes/cvodes.h> //return codes
-
-#include <type_traits>
 
 // ensure definitions are in sync
 static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
@@ -56,25 +51,46 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  * runAmiciSimulation is the core integration routine. It initializes the solver
  * and runs the forward and backward problem.
  *
- * @param[in] solver Solver instance
- * @param[in] edata pointer to experimental data object @type ExpData
- * @param[in] rdata pointer to return data object @type ReturnData
- * @param[in] model model specification object @type Model
+ * @param solver Solver instance
+ * @param edata pointer to experimental data object
+ * @param model model specification object
+ * @return rdata pointer to return data object
  */
-void runAmiciSimulation(Solver &solver, const ExpData *edata,
-                       ReturnData *rdata, Model &model) {
-    if (!rdata)
-        throw SetupFailure("rdata was not allocated!");
-
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model) {
+    
+    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
+    
     if (model.nx <= 0) {
-        return;
+        return rdata;
     }
 
-    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata,edata,&model,&solver));
-    fwd->workForwardProblem();
+    try{
+        auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
+        fwd->workForwardProblem();
 
-    auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
-    bwd->workBackwardProblem();
+        auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
+        bwd->workBackwardProblem();
+    
+        rdata->status = AMICI_SUCCESS;
+    } catch (amici::IntegrationFailure& ex) {
+        rdata->invalidate(ex.time);
+        rdata->status = ex.error_code;
+        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed at t = %f:\n%s\nError occured in:\n%s",ex.time,ex.what(),ex.getBacktrace());
+    } catch (amici::AmiException& ex) {
+        rdata->invalidate(model.t0());
+        rdata->status = AMICI_ERROR;
+        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
+    } catch (std::exception& ex) {
+        rdata->invalidate(model.t0());
+        rdata->status = AMICI_ERROR;
+        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());
+    } catch (...) {
+        rdata->invalidate(model.t0());
+        rdata->status = AMICI_ERROR;
+        amici::warnMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+    }
+    rdata->applyChainRuleFactorToSimulationResults(&model);
+    return rdata;
 }
 
 /*!

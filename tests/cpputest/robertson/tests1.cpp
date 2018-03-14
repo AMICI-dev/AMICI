@@ -2,8 +2,6 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include <testfunctions.h>
-#include <include/amici_hdf5.h>
-#include <include/amici_interface_cpp.h>
 #include <cstring>
 #include "wrapfunctions.h"
 
@@ -19,11 +17,11 @@ TEST_GROUP(groupRobertson)
 };
 
 TEST(groupRobertson, testSimulation) {
-    amici::simulateAndVerifyFromFile("/model_robertson/nosensi/");
+    amici::simulateVerifyWrite("/model_robertson/nosensi/");
 }
 
 TEST(groupRobertson, testSensitivityForward) {
-    amici::simulateAndVerifyFromFile("/model_robertson/sensiforward/");
+    amici::simulateVerifyWrite("/model_robertson/sensiforward/");
 }
 
 

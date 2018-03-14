@@ -1,10 +1,10 @@
-#include "../include/steadystateproblem.h"
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/edata.h"
-#include "include/forwardproblem.h"
-#include "include/newton_solver.h"
-#include "include/rdata.h"
+#include "amici/steadystateproblem.h"
+#include "amici/model.h"
+#include "amici/solver.h"
+#include "amici/edata.h"
+#include "amici/forwardproblem.h"
+#include "amici/newton_solver.h"
+#include "amici/rdata.h"
 
 #include <cmath>
 #include <cstring>
@@ -140,8 +140,8 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             try{
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
-            } catch(...) {
-                rdata->newton_numsteps[newton_try - 1] = getNaN();
+            } catch(std::exception ex) {
+                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
                 throw NewtonFailure("Newton method failed to compute new step!");
             }
         }
@@ -181,7 +181,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     }
     
     /* Set return values */
-    rdata->newton_numsteps[newton_try-1] = (double) i_newtonstep;
+    rdata->newton_numsteps[newton_try-1] = i_newtonstep;
     if (!converged)
         throw NewtonFailure("Newton method failed to converge!");
 }
@@ -208,8 +208,8 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
      */
 
     /* Get time for Newton solve */
-    rdata->newton_time[0] = run_time;
-    rdata->newton_status[0] = newton_status;
+    rdata->newton_time = run_time;
+    rdata->newton_status = newton_status;
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {

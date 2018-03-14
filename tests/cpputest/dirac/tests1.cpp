@@ -2,8 +2,7 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include <testfunctions.h>
-#include <include/amici_hdf5.h>
-#include <include/amici_interface_cpp.h>
+
 #include <cstring>
 #include "wrapfunctions.h"
 
@@ -19,7 +18,7 @@ TEST_GROUP(groupDirac)
 };
 
 TEST(groupDirac, testSimulation) {
-    amici::simulateAndVerifyFromFile("/model_dirac/nosensi/");
+    amici::simulateVerifyWrite("/model_dirac/nosensi/");
 }
 
 TEST(groupDirac, testSimulationExpData) {
@@ -27,7 +26,7 @@ TEST(groupDirac, testSimulationExpData) {
 }
 
 TEST(groupDirac, testSensitivityForward) {
-   amici::simulateAndVerifyFromFile("/model_dirac/sensiforward/");
+   amici::simulateVerifyWrite("/model_dirac/sensiforward/");
 }
 
 TEST(groupDirac, testSensitivityState) {

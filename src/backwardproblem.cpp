@@ -1,10 +1,12 @@
-#include "include/backwardproblem.h"
-#include "include/amici_model.h"
-#include "include/amici_solver.h"
-#include "include/amici_exception.h"
-#include "include/edata.h"
-#include "include/rdata.h"
-#include "include/forwardproblem.h"
+#include "amici/backwardproblem.h"
+
+#include "amici/model.h"
+#include "amici/solver.h"
+#include "amici/exception.h"
+#include "amici/edata.h"
+#include "amici/rdata.h"
+#include "amici/forwardproblem.h"
+
 #include <cstring>
 
 namespace amici {
@@ -49,7 +51,7 @@ void BackwardProblem::workBackwardProblem() {
     double tnext;
 
     if (model->nx <= 0 || rdata->sensi < AMICI_SENSI_ORDER_FIRST ||
-        rdata->sensi_meth != AMICI_SENSI_ASA ) {
+        rdata->sensi_meth != AMICI_SENSI_ASA || model->nplist() == 0) {
         return;
     }
     
@@ -108,17 +110,17 @@ void BackwardProblem::workBackwardProblem() {
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
         if (iJ == 0) {
-            for (int ip = 0; ip < rdata->nplist; ++ip) {
+            for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model->nxtrue; ++ix) {
                     llhS0[ip] += xB[ix] * sx.at(ix,ip);
                 }
             }
         } else {
-            for (int ip = 0; ip < rdata->nplist; ++ip) {
-                llhS0[ip + iJ * rdata->nplist] = 0.0;
+            for (int ip = 0; ip < model->nplist(); ++ip) {
+                llhS0[ip + iJ * model->nplist()] = 0.0;
                 for (int ix = 0; ix < model->nxtrue; ++ix) {
-                    llhS0[ip + iJ * rdata->nplist] +=
+                    llhS0[ip + iJ * model->nplist()] +=
                         xB[ix + iJ * model->nxtrue] * sx.at(ix,ip)+
                         xB[ix] * sx.at(ix + iJ * model->nxtrue,ip);
                 }
@@ -127,12 +129,12 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (int ip = 0; ip < rdata->nplist; ip++) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             if (iJ == 0) {
-                rdata->sllh[ip] -= llhS0[ip] + xQB[ip*model->nJ];
+                rdata->sllh.at(ip) -= llhS0[ip] + xQB[ip*model->nJ];
             } else {
-                rdata->s2llh[iJ - 1 + ip * (model->nJ - 1)] -=
-                    llhS0[ip + iJ * rdata->nplist] +
+                rdata->s2llh.at(iJ - 1 + ip * (model->nJ - 1)) -=
+                    llhS0[ip + iJ * model->nplist()] +
                     xQB[iJ + ip*model->nJ];
             }
         }
@@ -176,9 +178,9 @@ void BackwardProblem::handleEventB(int iroot) {
             }
 
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                for (int ip = 0; ip < rdata->nplist; ++ip) {
-                    xQB[ip + iJ * rdata->nplist] +=
-                        model->deltaqB[ip + iJ * rdata->nplist];
+                for (int ip = 0; ip < model->nplist(); ++ip) {
+                    xQB[ip + iJ * model->nplist()] +=
+                        model->deltaqB[ip + iJ * model->nplist()];
                 }
             }
 

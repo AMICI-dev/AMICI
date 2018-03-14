@@ -5,9 +5,6 @@
  * Australia.
  */
 
-#undef k
-#undef ss
-
 namespace amici {
 /************************************************/
 /*  adapted from                                */

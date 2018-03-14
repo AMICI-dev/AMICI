@@ -14,12 +14,24 @@ function [ commit_hash,branch,url ] = getCommitHash( wrap_path )
         fid = fopen(fullfile(wrap_path,'.git','FETCH_HEAD'));
         str = fgetl(fid);
         fclose(fid);
-        t_hash = regexp(str,'^([\w]*)','tokens');
-        commit_hash = t_hash{1}{1};
-        t_branch = regexp(str,'branch ''([\w]*)''','tokens');
-        branch = t_branch{1}{1};
-        idx_url = strfind(str,'https://github.com');
-        url = str(idx_url:end);
+        if(str~=-1)
+            t_hash = regexp(str,'^([\w]*)','tokens');
+            commit_hash = t_hash{1}{1};
+            t_branch = regexp(str,'branch ''([\w]*)''','tokens');
+            branch = t_branch{1}{1};
+            idx_url = strfind(str,'https://github.com');
+            url = str(idx_url:end);
+        else
+            fid = fopen(fullfile(wrap_path,'.git','ORIG_HEAD'));
+            commit_hash = ['dev_' fgetl(fid)];
+            fclose(fid);
+            
+            fid = fopen(fullfile(wrap_path,'.git','HEAD'));
+            branch = strrep(fgetl(fid),'ref: refs/heads/','');
+            fclose(fid);
+            
+            url = 'local';
+        end
     catch
         commit_hash = [];
         branch = 'unknown branch';
