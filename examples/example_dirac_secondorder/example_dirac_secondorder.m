@@ -35,7 +35,6 @@ sol = simulate_model_dirac_secondorder(t,log10(p),k,[],options);
 
 optionsfd = options;
 optionsfd.sensi = 1;
-optionsfd.sens_ind = 1:4;
 
 eps = 1e-4;
 xi = log10(p);
@@ -53,9 +52,9 @@ end
 if(usejava('jvm'))
     figure
     c_x = get(gca,'ColorOrder');
-    for ip = 1:4
+    for ip = 1:length(options.sens_ind)
         for jp = 1:length(options.sens_ind)
-            subplot(length(options.sens_ind),4,(jp-1)*4+ip)
+            subplot(length(options.sens_ind),length(options.sens_ind),(jp-1)*length(options.sens_ind)+ip)
             hold on
             for ix = 1:size(sol.x,2)
                 plot(t,sol.s2x(:,ix,ip,jp),'.-','Color',c_x(ix,:))
@@ -64,7 +63,7 @@ if(usejava('jvm'))
             ylim([-10,10])
             legend('x1','x1_{fd}','x2','x2_{fd}','Location','NorthEastOutside')
             legend boxoff
-            title(['state sensitivity for p' num2str(ip) '-p' num2str(options.sens_ind(jp))])
+            title(['state sensitivity for p' num2str(options.sens_ind(ip)) '-p' num2str(options.sens_ind(jp))])
             xlabel('time t')
             ylabel('x')
             box on
@@ -72,13 +71,13 @@ if(usejava('jvm'))
     end
     set(gcf,'Position',[100 300 1200 500])
     figure
-    for ip = 1:4
+    for ip = 1:length(options.sens_ind)
         for jp = 1:length(options.sens_ind)
-            subplot(length(options.sens_ind),4,(jp-1)*4+ip)
+            subplot(length(options.sens_ind),length(options.sens_ind),(jp-1)*length(options.sens_ind)+ip)
             plot(t,abs(sol.s2x(:,:,ip,jp)-s2x_fd(:,:,ip,jp)),'r--')
             legend('error x1','error x2','Location','NorthEastOutside')
             legend boxoff
-            title(['state sensitivity for p' num2str(ip) '-p' num2str(options.sens_ind(jp))])
+            title(['state sensitivity for p' num2str(options.sens_ind(ip)) '-p' num2str(options.sens_ind(jp))])
             xlabel('time t')
             ylabel('error')
             ylim([1e-12,1e0])
