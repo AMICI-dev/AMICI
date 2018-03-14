@@ -58,6 +58,11 @@ function amiwrap( varargin )
     warning('off','MATLAB:dispatcher:nameConflict')
     warning('off','symbolic:sym:sym:DeprecateExpressions')
     warning('off','symbolic:generate:FunctionNotVerifiedToBeValid')
+    
+    %% 
+    % Display AMICI version
+    disp(['amiwrap version ' getCommitHash(fileparts(mfilename('fullpath')))])
+    
     %% 
     % computations
     wrap_path=fileparts(mfilename('fullpath'));
