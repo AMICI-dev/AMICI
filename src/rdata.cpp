@@ -118,11 +118,17 @@ void ReturnData::invalidate(const realtype t) {
             y.at(iy * nt + it) = getNaN();
     }
 
-    if (sensi_meth == AMICI_SENSI_FSA || sensi >= AMICI_SENSI_ORDER_SECOND) {
+    if (sx.size()) {
         for (int it = it_start; it < nt; it++){
             for (int ip = 0; ip < nplist; ip++) {
                 for (int ix = 0; ix < nx; ix++)
                     sx.at((ip*nx + ix) * nt + it) = getNaN();
+            }
+        }
+    }
+    if(sy.size()) {
+        for (int it = it_start; it < nt; it++){
+            for (int ip = 0; ip < nplist; ip++) {
                 for (int iy = 0; iy < ny; iy++)
                     sy.at((ip*ny + iy) * nt + it) = getNaN();
             }
