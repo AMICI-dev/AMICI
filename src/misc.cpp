@@ -33,7 +33,7 @@ void printfArray(double const *array, int numElements, char const *format) {
  * @param fun name of calling function
  * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
  */
-int isFinite(const int N,const realtype *array, const char* fun){
+int checkFinite(const int N,const realtype *array, const char* fun){
     for(int idx = 0; idx < N; idx++) {
         if(isNaN(array[idx])) {
             warnMsgIdAndTxt("AMICI:mex:NaN","AMICI encountered a NaN value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
