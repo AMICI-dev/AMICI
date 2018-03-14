@@ -26,7 +26,7 @@ function testModels()
             model_rtol = 1e-5;
         end
         for itest = 1:length(info.Groups(imodel).Groups)
-            if(any(strcmp(ignoredTests, info.Groups(imodel).Groups(itest).Name)))
+            if(ismember(info.Groups(imodel).Groups(itest).Name, ignoredTests))
                 continue
             end
             
