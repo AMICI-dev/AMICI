@@ -168,9 +168,12 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
             switch (pscale[ip]) {
             case AMICI_SCALING_LOG10:
                 augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
+                break;
             case AMICI_SCALING_LN:
                 augcoefficient.at(ip) = unscaledParameters.at(ip);
+                break;
             case AMICI_SCALING_NONE:
+                augcoefficient.at(ip) = 1;
                 break;
             }
         }
@@ -181,9 +184,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         case AMICI_SCALING_LOG10:
             coefficient.at(ip) = log(10.0);
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
+            break;
         case AMICI_SCALING_LN:
             coefficient.at(ip) = 1.0;
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
+            break;
         case AMICI_SCALING_NONE:
             coefficient.at(ip) = 1.0;
             break;
