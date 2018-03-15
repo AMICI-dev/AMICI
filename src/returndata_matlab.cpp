@@ -179,7 +179,6 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
     
     double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
-    /* transform rowmajor (c++) to colmajor (matlab) */
     array[0] = static_cast<double>(fielddata);
 }
 
@@ -200,7 +199,6 @@ void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
     
     double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
-    /* transform rowmajor (c++) to colmajor (matlab) */
     for(int i = 0; i < dim0; i++)
         array[i] = static_cast<double>(fieldData[i]);
 }
