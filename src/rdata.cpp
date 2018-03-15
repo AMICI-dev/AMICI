@@ -161,7 +161,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     std::vector<realtype> pcoefficient(nplist, 1.0);
     std::vector<realtype> unscaledParameters(np);
     model->unscaleParameters(unscaledParameters.data());
-    std::vector<realtype> augcoefficient(np);
+    std::vector<realtype> augcoefficient(np, 1.0);
     
     if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL) {
         for (int ip = 0; ip < np; ++ip) {
@@ -173,7 +173,6 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                 augcoefficient.at(ip) = unscaledParameters.at(ip);
                 break;
             case AMICI_SCALING_NONE:
-                augcoefficient.at(ip) = 1;
                 break;
             }
         }
@@ -186,11 +185,9 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
             break;
         case AMICI_SCALING_LN:
-            coefficient.at(ip) = 1.0;
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
             break;
         case AMICI_SCALING_NONE:
-            coefficient.at(ip) = 1.0;
             break;
         }
     }
