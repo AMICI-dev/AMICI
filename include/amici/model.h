@@ -761,7 +761,7 @@ namespace amici {
          */
         friend bool operator ==(const Model &a, const Model &b);
         
-        const realtype gett(const int it, const ReturnData *rdata) const;
+        realtype gett(const int it, const ReturnData *rdata) const;
 
         /**
          * @brief Check if the given array has only finite elements.

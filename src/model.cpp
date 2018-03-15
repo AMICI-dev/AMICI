@@ -824,7 +824,7 @@ const realtype *Model::gety(const int it, const ReturnData *rdata) const {
      * @param rdata pointer to return data instance
      * @return current timepoint
      */
-const realtype Model::gett(const int it, const ReturnData *rdata) const {
+realtype Model::gett(const int it, const ReturnData *rdata) const {
     return rdata->ts.at(it);
 }
 
