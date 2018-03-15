@@ -357,9 +357,7 @@ if(o2flag)
     switch(o2flag)
         case 1
             fprintf(fid,['        sol.s2x = reshape(sol.sx(:,' num2str(nxtrue+1) ':end,:),length(tout),' num2str(nxtrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
-            fprintf(fid,['        sol.s2x = sol.s2x(:,:,options_ami.sens_ind,:);\n']);
             fprintf(fid,['        sol.s2y = reshape(sol.sy(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
-            fprintf(fid,['        sol.s2y = sol.s2y(:,:,options_ami.sens_ind,:);\n']);
             fprintf(fid,['        sol.s2sigmay = reshape(sol.ssigmay(:,' num2str(nytrue+1) ':end,:),length(tout),' num2str(nytrue) ',' num2str(np) ',length(options_ami.sens_ind));\n']);
         case 2
             fprintf(fid,['        sol.s2x = sol.sx(:,' num2str(nxtrue+1) ':end,:);\n']);
@@ -388,10 +386,6 @@ if(o2flag)
             fprintf(fid,['            sol.s2rz(:,iz,:) = reshape(sol.srz(:,2*(iz-1)+2,:),options_ami.nmaxevent,1,length(theta(options_ami.sens_ind)));\n']);
     end
     fprintf(fid,'        end\n');
-    if(o2flag && nz > 0)
-        fprintf(fid,['        sol.s2z = sol.s2z(:,:,options_ami.sens_ind,:);\n']);
-        fprintf(fid,['        sol.s2rz = sol.s2rz(:,:,options_ami.sens_ind,:);\n']);
-    end
     fprintf(fid,['        sol.sx = sol.sx(:,1:' num2str(nxtrue) ',:);\n']);
     fprintf(fid,['        sol.sy = sol.sy(:,1:' num2str(nytrue) ',:);\n']);
     fprintf(fid,['        sol.ssigmay = sol.ssigmay(:,1:' num2str(nytrue) ',:);\n']);

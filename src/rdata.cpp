@@ -162,21 +162,28 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     std::vector<realtype> unscaledParameters(np);
     model->unscaleParameters(unscaledParameters.data());
     std::vector<realtype> augcoefficient(np);
+    
+    if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL) {
+        for (int ip = 0; ip < np; ++ip) {
+            switch (pscale[ip]) {
+            case AMICI_SCALING_LOG10:
+                augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
+            case AMICI_SCALING_LN:
+                augcoefficient.at(ip) = unscaledParameters.at(ip);
+            case AMICI_SCALING_NONE:
+                break;
+            }
+        }
+    }
 
     for (int ip = 0; ip < nplist; ++ip) {
         switch (pscale[model->plist(ip)]) {
         case AMICI_SCALING_LOG10:
             coefficient.at(ip) = log(10.0);
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
-            break;
         case AMICI_SCALING_LN:
             coefficient.at(ip) = 1.0;
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                augcoefficient.at(ip) = unscaledParameters.at(ip);
-            break;
         case AMICI_SCALING_NONE:
             coefficient.at(ip) = 1.0;
             break;
