@@ -127,7 +127,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         sources = strjoin(sources,' ');
         
         eval(['mex ' DEBUG COPT ...
-            ' -c -outdir ' modelSourceFolder ' ' ...
+            ' -c -outdir ' modelObjectFolder ' ' ...
             sources ' ' ...
             includesstr ]);
         cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);                
@@ -135,7 +135,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [modelname '_' funs{j} objectFileSuffix]);
         if(exist(filename,'file'))
             objectsstr = strcat(objectsstr,...
                 ' "',filename,'"');
@@ -145,10 +145,10 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % compile the wrapfunctions object
     fprintf('wrapfunctions | '); 
     eval(['mex ' DEBUG COPT ...
-        ' -c -outdir ' modelSourceFolder ' ' ...
+        ' -c -outdir ' modelObjectFolder ' ' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
         includesstr]);
-    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' objectFileSuffix]) '"'];
+    objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try
