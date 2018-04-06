@@ -9,20 +9,45 @@ namespace amici {
 
 ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
 
+ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent)
+    : ExpData(nytrue, nztrue, nt, nmaxevent,
+              std::vector<realtype>(nt * nytrue),
+              std::vector<realtype>(nt * nytrue),
+              std::vector<realtype>(nmaxevent * nztrue),
+              std::vector<realtype>(nmaxevent * nztrue))
+
+{
+}
+
+ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+                 const std::vector<realtype> &my,
+                 const std::vector<realtype> &sigmay,
+                 const std::vector<realtype> &mz,
+                 const std::vector<realtype> &sigmaz)
+    : my(my), sigmay(sigmay), mz(mz), sigmaz(sigmaz),
+      nytrue(nytrue), nztrue(nztrue), nt(nt), nmaxevent(nmaxevent)
+{
+
+}
+
 ExpData::ExpData(Model const& model)
-    : nytrue(model.nytrue),
-      nztrue(model.nztrue),
-      nt(model.nt()),
-      nmaxevent(model.nMaxEvent()) {
-    /**
-     * constructor that initializes with Model
-     *
-     * @param model pointer to model specification object @type Model
-     */
-    my.resize(model.nt() * model.nytrue);
-    sigmay.resize(model.nt() * model.nytrue);
-    mz.resize(model.nMaxEvent() * model.nztrue);
-    sigmaz.resize(model.nMaxEvent() * model.nztrue);
+    : ExpData(model.nytrue, model.nztrue, model.nt(), model.nMaxEvent())
+{
+}
+
+ExpData::ExpData(const ExpData &other)
+    : ExpData(other.nytrue, other.nztrue, other.nt, other.nmaxevent,
+              other.my, other.sigmay, other.mz, other.sigmaz)
+{
+//    std::vector<realtype> my;
+//    /** standard deviation of observed data (dimension: nt x nytrue, row-major) */
+//    std::vector<realtype> sigmay;
+
+//    /** observed events (dimension: nmaxevents x nztrue, row-major) */
+//    std::vector<realtype> mz;
+//    /** standard deviation of observed events/roots
+//     * (dimension: nmaxevents x nztrue, row-major)*/
+//    std::vector<realtype> sigmaz;
 }
 
 void ExpData::setObservedData(const double *observedData) {
