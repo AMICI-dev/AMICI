@@ -113,6 +113,7 @@ namespace amici {
         M(nx*nx, 0.0),
         stau(plist.size(), 0.0),
         h(ne,0.0),
+        unscaledParameters(p),
         originalParameters(p),
         fixedParameters(k),
         plist_(plist),

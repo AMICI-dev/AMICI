@@ -64,8 +64,8 @@ public:
                     0,
                     0,
                     amici::AMICI_O2MODE_NONE,
-                    std::vector<realtype>(5),
-                    std::vector<realtype>(0),
+                    std::vector<realtype>(5,1.0),
+                    std::vector<realtype>(0,1.0),
                     std::vector<int>(),
                     std::vector<realtype>{0},
                     std::vector<int>{})

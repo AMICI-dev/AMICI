@@ -15,13 +15,13 @@ def runTest(testId):
     try:
         sbmlfile = os.path.join(test_path, testId, testId + '-sbml-l3v2.xml')
         wrapper = Model(sbmlfile,'SBMLTest' + testId)
-        wrapper.wrapModel()
+        #wrapper.wrapModel()
         sys.path.insert(0,os.path.join(wrapper.model_path,'build','swig'))
 
         mod = importlib.import_module(wrapper.modelname)
         model = mod.getModel()
         solver = model.getSolver()
-        edata = amici.ExpDataPtr(amici.ExpData())
+        edata = amici.ExpDataPtr(amici.ExpData(model.get()))
         rdata = amici.runAmiciSimulation(solver.get(),edata.get(),model.get())
         print(rdata)
 

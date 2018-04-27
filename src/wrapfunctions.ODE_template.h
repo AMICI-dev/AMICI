@@ -61,8 +61,8 @@ public:
                     TPL_UBW,
                     TPL_LBW,
                     TPL_O2MODE,
-                    std::vector<realtype>(TPL_NP),
-                    std::vector<realtype>(TPL_NK),
+                    std::vector<realtype>(TPL_NP,1.0),
+                    std::vector<realtype>(TPL_NK,1.0),
                     std::vector<int>(),
                     std::vector<realtype>(TPL_NX,0.0),
                     std::vector<int>{})

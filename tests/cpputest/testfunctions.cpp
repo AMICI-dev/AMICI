@@ -22,6 +22,13 @@ void simulateVerifyWrite(std::string path, double atol, double rtol)
     simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, atol, rtol);
 }
 
+void simulateWithDefaultOptions() {
+    using namespace amici;
+    auto model = getModel();
+    auto solver = model->getSolver();
+    std::unique_ptr<const ExpData> edata;
+    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+}
 
 void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults, const std::string hdffilewrite, std::string path, double atol, double rtol)
 {
