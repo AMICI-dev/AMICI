@@ -22,11 +22,11 @@ TEST(groupEvents, testDefault) {
 }
 
 TEST(groupEvents, testSimulation) {
-    //amici::simulateVerifyWrite("/model_events/nosensi/");
+    amici::simulateVerifyWrite("/model_events/nosensi/");
 }
 
 TEST(groupEvents, testSensitivityForward) {
-    //amici::simulateVerifyWrite("/model_events/sensiforward/");
+    amici::simulateVerifyWrite("/model_events/sensiforward/");
 }
 
 

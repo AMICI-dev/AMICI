@@ -198,9 +198,9 @@ class Model:
         symbolList = []
         symbolColPtrs = []
         symbolRowVals = []
-        for col in range(0,matrix.cols-1):
+        for col in range(0,matrix.cols):
             symbolColPtrs.append(symbolIndex)
-            for row in range(0, matrix.rows - 1):
+            for row in range(0, matrix.rows):
                 if(not(matrix[row, col]==0)):
                     name = symbolName + str(symbolIndex)
                     symbolMatrix[row, col] = sp.sympify(name)
@@ -346,7 +346,6 @@ class Model:
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):
-                symbol = self.__getattribute__(function + 'Symbols')
                 rowVals = self.__getattribute__(function + 'RowVals')
                 colPtrs = self.__getattribute__(function + 'ColPtrs')
                 lines += writeSparseSym(symbol, rowVals, colPtrs, variableName, 4)

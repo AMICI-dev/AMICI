@@ -17,6 +17,11 @@ TEST_GROUP(groupSteadystate)
     }
 };
 
+TEST(groupSteadystate, testDefault) {
+    amici::simulateWithDefaultOptions();
+}
+
+
 TEST(groupSteadystate, testModelFromHDF5) {
     // Test reading some python-written options
     std::vector<double> pExp {1, 0.5, 0.4, 2, 0.1};
