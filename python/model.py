@@ -23,10 +23,10 @@ class Model:
                   'symbol': 'J',
                   'diagonality': True},
         'JSparse': {'signature': '(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
-                    'symbol': 'J',
+                    'symbol': 'JSparseList',
                     'sparsity': True},
         'JSparseB': {'signature': '(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx)',
-                     'symbol': 'JB',
+                     'symbol': 'JSparseBList',
                      'sparsity': True},
         'Jv': {'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx)'},
         'JvB': {'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx)'},
@@ -208,8 +208,9 @@ class Model:
     def getSparseSymbols(self,symbolName):
         matrix = self.__getattribute__(symbolName)
         symbolIndex = 0
-        symbolMatrix = sp.zeros(matrix.rows,matrix.cols)
+        sparseMatrix = sp.zeros(matrix.rows,matrix.cols)
         symbolList = []
+        sparseList = []
         symbolColPtrs = []
         symbolRowVals = []
         for col in range(0,matrix.cols):
@@ -217,12 +218,14 @@ class Model:
             for row in range(0, matrix.rows):
                 if(not(matrix[row, col]==0)):
                     name = symbolName + str(symbolIndex)
-                    symbolMatrix[row, col] = sp.sympify(name)
+                    sparseMatrix[row, col] = sp.sympify(name)
                     symbolList.append(name)
+                    sparseList.append(matrix[row, col])
                     symbolRowVals.append(row)
                     symbolIndex += 1
         symbolColPtrs.append(symbolIndex)
-        return symbolMatrix, symbolList, symbolColPtrs, symbolRowVals
+        sparseList = sp.Matrix(sparseList)
+        return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
 
     def getModelEquations(self):
@@ -238,7 +241,7 @@ class Model:
         self.J = self.xdot.jacobian(self.speciesSymbols) + self.stoichiometricMatrix * self.dwdxSparse
         self.vectorSymbols = getSymbols('v',self.n_species)
         self.Jv = self.J*self.vectorSymbols
-        self.JSparse, self.JSparseSymbols, self.JSparseColPtrs, self.JSparseRowVals = self.getSparseSymbols('J')
+        self.JSparse, self.JSparseSymbols, self.JSparseList, self.JSparseColPtrs, self.JSparseRowVals = self.getSparseSymbols('J')
 
         self.x0 = self.speciesInitial
 
@@ -258,7 +261,7 @@ class Model:
         self.JB = self.J.transpose()
         self.vectorBSymbols = getSymbols('vB', self.n_species)
         self.JvB = self.JB * self.vectorBSymbols
-        self.JSparseB, self.JSparseBSymbols, self.JSparseBColPtrs, self.JSparseBRowVals = self.getSparseSymbols('JB')
+        self.JSparseB, self.JSparseBSymbols, self.JSparseBList, self.JSparseBColPtrs, self.JSparseBRowVals = self.getSparseSymbols('JB')
 
         self.adjointSymbols = getSymbols('xB',self.n_species)
         self.xBdot = - self.JB*self.adjointSymbols
@@ -272,8 +275,8 @@ class Model:
         # objective function
         self.sigmaySymbols = sp.Matrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
         self.mySymbols = sp.Matrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
-        self.Jy = sp.Matrix([sp.sympify('0.5*(2*pi*sigma' + str(symbol) + '^2) ' +
-                                        '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')^2')
+        self.Jy = sp.Matrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
+                                        '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
                              for iy, symbol in enumerate(self.observableSymbols)])
         self.dJydy = self.Jy.jacobian(self.observableSymbols)
         self.dJydsigma = self.Jy.jacobian(self.sigmaySymbols)
