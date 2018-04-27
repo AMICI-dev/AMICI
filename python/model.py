@@ -98,6 +98,7 @@ class Model:
         # parameters
         parameters = self.sbml.getListOfParameters()
         self.parameterSymbols = sp.Matrix([sp.symbols(par.getId()) for par in parameters])
+        self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.parameterSymbols)
 
     def processCompartments(self):
@@ -124,7 +125,9 @@ class Model:
         # localparameters
         localParameters = []
         [localParameters.extend(getLocalParameters(reaction)) for reaction in reactions]
+
         self.parameterSymbols += sp.Matrix([sp.symbols(par.getId()) for par in localParameters])
+        self.parameterValues += [par.getValue() for par in localParameters]
 
         # stoichiometric matrix
         self.stoichiometricMatrix = sp.zeros(self.n_species, self.n_reactions)
@@ -379,7 +382,8 @@ class Model:
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
                         'NK': '0',
-                        'O2MODE': 'amici::AMICI_O2MODE_NONE'}
+                        'O2MODE': 'amici::AMICI_O2MODE_NONE',
+                        'PARAMETERS': str(self.parameterValues)[1:-1]}
         applyTemplate(os.path.join(self.amici_src_path, 'wrapfunctions.ODE_template.h'),
                       os.path.join(self.model_path, 'wrapfunctions.h'), templateData)
 
