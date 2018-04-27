@@ -6,11 +6,15 @@ import os
 import re
 import shutil
 import subprocess
+from symengine.lib.symengine_wrapper import ccode
 from string import Template
 
 class Model:
 
-    shortenedVariables = [('species','x'), ('sensitivity', 'sx'), ('vector','v'), ('vectorB','vB'), ('parameter','p'), ('observable','y'), ('adjoint','xB'), ('flux', 'w'), ('dxdotdp','dxdotdp'), ('dwdxSparse', 'dwdx'), ('dwdpSparse', 'dwdp'), ('JSparse', 'J')]
+    shortenedVariables = [('species','x'), ('sensitivity', 'sx'), ('vector','v'), ('vectorB','vB'), ('parameter','p'),
+                          ('observable','y'), ('adjoint','xB'), ('flux', 'w'), ('dxdotdp','dxdotdp'),
+                          ('dwdxSparse', 'dwdx'), ('dwdpSparse', 'dwdp'), ('JSparse', 'J'), ('JSparse', 'J'),
+                          ('my', 'my'), ('sigmay', 'sigmay')]
 
     functions = {
         'J': {'signature': '(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
@@ -26,7 +30,9 @@ class Model:
                      'sparsity': True},
         'Jv': {'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx)'},
         'JvB': {'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx)'},
-        'Jy': {'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)'},
+        'Jy': {'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
+               'variable': 'nllh',
+               'multiobs': True},
         'dJydsigma': {'signature': '(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)'},
         'dJydy': {'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)'},
         'dwdp': {'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
@@ -37,7 +43,7 @@ class Model:
         'qBdot': {'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp)',
                   'sensitivity': True},
         'sigma_y': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
-                    'symbol': 'sigma',
+                    'symbol': 'sigmay',
                     'variable': 'sigmay'},
         'sxdot': {'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)'},
         'w': {'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)'},
@@ -189,9 +195,14 @@ class Model:
                 observableSymbols.append(sp.sympify('y' + str(len(observableSymbols))))
                 self.observableNames.append(str(variable))
 
-        self.observables = sp.Matrix(observables)
-        self.observableSymbols = sp.Matrix(observableSymbols)
-        self.n_observables = len(observables)
+        if(len(observables)>0):
+            self.observables = sp.Matrix(observables)
+            self.observableSymbols = sp.Matrix(observableSymbols)
+            self.n_observables = len(observables)
+        else:
+            self.observables = self.speciesSymbols
+            self.observableSymbols = sp.Matrix([sp.sympify('y' + str(index)) for index in range(0,len(self.speciesSymbols))])
+            self.n_observables = len(self.speciesSymbols)
 
 
     def getSparseSymbols(self,symbolName):
@@ -259,13 +270,14 @@ class Model:
         self.dydx = self.y.jacobian(self.speciesSymbols)
 
         # objective function
-        self.sigmaSymbols = sp.Matrix([sp.sympify('sigma_' + str(symbol)) for symbol in self.observableSymbols])
-        self.Jy = sp.Matrix([sp.sympify('0.5*(2*pi*sigma_' + str(symbol) + '**2) ' +
-                                        '+ 0.5*((' + str(symbol) + '-my_' + str(iy) + ')/sigma_' + str(symbol) + ')**2)')
+        self.sigmaySymbols = sp.Matrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
+        self.mySymbols = sp.Matrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
+        self.Jy = sp.Matrix([sp.sympify('0.5*(2*pi*sigma' + str(symbol) + '^2) ' +
+                                        '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')^2')
                              for iy, symbol in enumerate(self.observableSymbols)])
         self.dJydy = self.Jy.jacobian(self.observableSymbols)
-        self.dJydsigma = self.Jy.jacobian(self.sigmaSymbols)
-        self.sigma = sp.zeros(self.sigmaSymbols.cols,self.sigmaSymbols.rows)
+        self.dJydsigma = self.Jy.jacobian(self.sigmaySymbols)
+        self.sigmay = sp.zeros(self.sigmaySymbols.cols,self.sigmaySymbols.rows)
 
 
     def generateCCode(self):
@@ -314,7 +326,7 @@ class Model:
         lines.append('')
 
         for variable, shortenedVariable in self.shortenedVariables:
-            if(not re.search('const realtype \*' + shortenedVariable + '[,)]+',signature) is None):
+            if(not re.search('const (realtype|double) \*' + shortenedVariable + '[,)]+',signature) is None):
                 lines.append('#include "' + variable + '.h"')
 
         lines.append('')
@@ -344,8 +356,13 @@ class Model:
 
         if('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
-            for ipar in range(0,self.n_parameters-1):
+            for ipar in range(0,self.n_parameters):
                 lines += writeSym(symbol[:,ipar], variableName, 8)
+            lines.append('}')
+        elif('multiobs' in self.functions[function].keys()):
+            lines.append(' '*4 + 'switch(iy) {')
+            for iobs in range(0,self.n_observables):
+                lines += writeSym([symbol[iobs]], variableName, 8)
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):
@@ -392,7 +409,7 @@ class Model:
         try:
             sources.remove('')
         except:
-            None
+            pass
         templateData = {'MODELNAME': self.modelname,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(os.path.join(self.amici_src_path, 'CMakeLists.template.txt'),
@@ -418,22 +435,22 @@ def getSymbols(prefix,length):
     return sp.Matrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
 
 def writeSym(symbols,variable,indentLevel):
-    lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + str(math) + ';'
+    lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + ccode(math) + ';'
      if not math == 0 else '' for index, math in enumerate(symbols)]
 
     try:
         lines.remove('')
     except:
-        None
+        pass
 
     return lines
 
 def writeSparseSym(symbolList,RowVals,ColPtrs,variable,indentLevel):
-    lines = [' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + str(math) + ';'
+    lines = [' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + ccode(math) + ';'
              for index, math in enumerate(RowVals)]
-    lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + str(math) + ';'
+    lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + ccode(math) + ';'
              for index, math in enumerate(ColPtrs)])
-    lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + str(math) + ';'
+    lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + ccode(math) + ';'
                   for index, math in enumerate(symbolList)])
 
     return lines
