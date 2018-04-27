@@ -17,6 +17,10 @@ TEST_GROUP(groupEvents)
     }
 };
 
+TEST(groupEvents, testDefault) {
+    amici::simulateWithDefaultOptions();
+}
+
 TEST(groupEvents, testSimulation) {
     amici::simulateVerifyWrite("/model_events/nosensi/");
 }

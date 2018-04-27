@@ -101,6 +101,7 @@ public:
     }
 };
 
+void simulateWithDefaultOptions();
 
 void simulateVerifyWrite(const std::string path);
 

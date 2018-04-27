@@ -80,8 +80,8 @@ public:
                     1,
                     8,
                     amici::AMICI_O2MODE_FULL,
-                    std::vector<realtype>(4),
-                    std::vector<realtype>(2),
+                    std::vector<realtype>(4,1.0),
+                    std::vector<realtype>(2,1.0),
                     std::vector<int>(),
                     std::vector<realtype>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                     std::vector<int>{1, 1, 1, 1, 1})

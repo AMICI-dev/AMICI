@@ -167,3 +167,13 @@ __pycache__
 
 tests/cpputest/writeResults.h5
 tests/cpputest/writeResults.h5.bak
+
+tests/sbml-semantic-test-cases/*
+
+python/.idea/misc.xml
+
+python/.idea/modules.xml
+
+python/.idea/python.iml
+
+python/.idea/workspace.xml
