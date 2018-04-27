@@ -4,8 +4,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -std=c++11 -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
+set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
 foreach(FLAG ${MY_CXX_FLAGS})
     unset(CUR_FLAG_SUPPORTED CACHE)
     CHECK_CXX_COMPILER_FLAG(${FLAG} CUR_FLAG_SUPPORTED)

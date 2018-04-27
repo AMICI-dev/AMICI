@@ -824,7 +824,7 @@ const realtype *Model::gety(const int it, const ReturnData *rdata) const {
      * @param rdata pointer to return data instance
      * @return current timepoint
      */
-const realtype Model::gett(const int it, const ReturnData *rdata) const {
+realtype Model::gett(const int it, const ReturnData *rdata) const {
     return rdata->ts.at(it);
 }
 
@@ -880,6 +880,20 @@ const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *r
      */
 const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *rdata) const {
     return(&rdata->srz.at((nroots*nplist()+ip)*nz));
+}
+
+int Model::checkFinite(const int N, const realtype *array, const char *fun) const
+{
+    auto result = amici::checkFinite(N, array, fun);
+
+    if(result != AMICI_SUCCESS) {
+        amici::checkFinite(ts.size(), ts.data(), "ts");
+        amici::checkFinite(fixedParameters.size(), fixedParameters.data(), "k");
+        amici::checkFinite(unscaledParameters.size(), unscaledParameters.data(), "p");
+        amici::checkFinite(w.size(), w.data(), "w");
+    }
+
+    return result;
 }
 
 void Model::unscaleParameters(double *bufferUnscaled) const

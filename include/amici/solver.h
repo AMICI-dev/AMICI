@@ -67,7 +67,7 @@ class Solver {
         ism = other.ism;
     }
 
-    virtual ~Solver() = default;
+    virtual ~Solver() {}
 
     /**
      * @brief Clone this instance

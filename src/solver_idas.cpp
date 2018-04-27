@@ -428,7 +428,7 @@ void IDASolver::turnOffRootFinding() {
                   N_Vector tmp2, N_Vector tmp3) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJ(t,cj, x, dx, xdot, J);
-        return isFinite(N,J->data,"Jacobian");
+        return model->checkFinite(N,J->data,"Jacobian");
     }
     
     /** Jacobian of xBdot with respect to adjoint state xB
@@ -452,7 +452,7 @@ void IDASolver::turnOffRootFinding() {
                    N_Vector tmp2B, N_Vector tmp3B) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJB(t, cj, x, dx, xB, dxB, JB);
-        return isFinite(NeqBdot,JB->data,"Jacobian");
+        return model->checkFinite(NeqBdot,JB->data,"Jacobian");
     }
     
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -473,7 +473,7 @@ void IDASolver::turnOffRootFinding() {
                         N_Vector tmp3) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJSparse(t, cj, x, dx, J);
-        return isFinite(J->NNZ,J->data,"Jacobian");
+        return model->checkFinite(J->NNZ,J->data,"Jacobian");
     }
 
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -496,7 +496,7 @@ void IDASolver::turnOffRootFinding() {
                          N_Vector tmp2B, N_Vector tmp3B) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
-        return isFinite(JB->NNZ,JB->data,"Jacobian");
+        return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
     }
     
     /** J in banded form (for banded solvers)
@@ -566,7 +566,7 @@ void IDASolver::turnOffRootFinding() {
                    realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJv(t, x, dx, v, Jv, cj);
-        return isFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
     /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -590,7 +590,7 @@ void IDASolver::turnOffRootFinding() {
                     N_Vector tmpB1, N_Vector tmpB2) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-        return isFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
     /** Event trigger function for events
@@ -605,7 +605,7 @@ void IDASolver::turnOffRootFinding() {
                      void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->froot(t,x,dx,root);
-        return isFinite(model->ne,root,"root function");
+        return model->checkFinite(model->ne,root,"root function");
     }
     
     /** residual function of the DAE
@@ -620,7 +620,7 @@ void IDASolver::turnOffRootFinding() {
                      void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fxdot(t,x,dx,xdot);
-        return isFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
     
     /** Right hand side of differential equation for adjoint state xB
@@ -637,7 +637,7 @@ void IDASolver::turnOffRootFinding() {
                       N_Vector dxB, N_Vector xBdot, void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fxBdot(t, x, dx, xB, dxB, xBdot);
-        return isFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
     
     /** Right hand side of integral equation for quadrature states qB
@@ -654,7 +654,7 @@ void IDASolver::turnOffRootFinding() {
                       void *user_data) {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         model->fqBdot(t, x, dx, xB, dxB, qBdot);
-        return isFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return model->checkFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
@@ -678,7 +678,7 @@ void IDASolver::turnOffRootFinding() {
         Model_DAE *model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-            if(isFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
+            if(model->checkFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
                 return AMICI_RECOVERABLE_ERROR;
         }
         return AMICI_SUCCESS;

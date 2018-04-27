@@ -46,18 +46,36 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         DEBUG = '';
     end
     
+    compilerVersion = getCompilerVersionString();
+    baseObjectFolder = fullfile(wrap_path,'models',mexext,version('-release'),compilerVersion);
+    baseModelObjectFolder = fullfile(wrap_path,'models',modelname,version('-release'),compilerVersion);
+    if(debug)
+        objectFolder = fullfile(baseObjectFolder, 'debug');
+        modelObjectFolder = fullfile(baseModelObjectFolder, 'debug');
+    else
+        objectFolder = fullfile(baseObjectFolder, 'release');
+        modelObjectFolder = fullfile(baseModelObjectFolder, 'release');
+    end
+    % compile directory
+    if(~exist(objectFolder, 'dir'))
+        mkdir(objectFolder);
+    end
+    if(~exist(modelObjectFolder, 'dir'))
+        mkdir(modelObjectFolder);
+    end
+    
     %% Third party libraries
-    [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectFileSuffix, COPT, DEBUG);
+    [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectFolder, objectFileSuffix, COPT, DEBUG);
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    
     %% Recompile AMICI base files if necessary
-    [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT);
+    [objectStrAmici] = compileAmiciBase(wrap_path, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
     objectsstr = [objectsstr, objectStrAmici];
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFilename = fullfile(modelSourceFolder,[modelname '_' funs{j}]);
-        cfun(1).(funs{j}) = sourceNeedsRecompilation(baseFilename,objectFileSuffix,DEBUG);
+        baseFileName = [modelname '_' funs{j}];
+        cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
     
     funsForRecompile = {};
@@ -109,16 +127,15 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         sources = strjoin(sources,' ');
         
         eval(['mex ' DEBUG COPT ...
-            ' -c -outdir ' modelSourceFolder ' ' ...
+            ' -c -outdir ' modelObjectFolder ' ' ...
             sources ' ' ...
             includesstr ]);
-        
-        cellfun(@(x) updateFileHashSource(fullfile(modelSourceFolder,[modelname '_' x]), DEBUG),funsForRecompile,'UniformOutput',false);                
+        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);                
     end
     
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelSourceFolder, [modelname '_' funs{j} objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [modelname '_' funs{j} objectFileSuffix]);
         if(exist(filename,'file'))
             objectsstr = strcat(objectsstr,...
                 ' "',filename,'"');
@@ -128,10 +145,10 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % compile the wrapfunctions object
     fprintf('wrapfunctions | '); 
     eval(['mex ' DEBUG COPT ...
-        ' -c -outdir ' modelSourceFolder ' ' ...
+        ' -c -outdir ' modelObjectFolder ' ' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
         includesstr]);
-    objectsstr = [objectsstr, ' "' fullfile(modelSourceFolder,['wrapfunctions' objectFileSuffix]) '"'];
+    objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try
@@ -161,7 +178,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
         ' -output ' mexFilename ' ' objectsstr])
 end        
     
-function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, includesstr, DEBUG, COPT)
+function [objectStrAmici] = compileAmiciBase(wrap_path, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT)
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
@@ -172,10 +189,12 @@ function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, 
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver'};
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
-    recompile = headersHaveChanged([amiciSourcePath '/../include/amici/'], DEBUG);
-    objectArray = cellfun(@(x) [' "', fullfile(amiciSourcePath, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
+    amiciIncludePath = fullfile(wrap_path,'include','amici');
+    amiciSourcePath = fullfile(wrap_path,'src');
+    recompile = headersHaveChanged(amiciIncludePath,objectFolder);
+    objectArray = cellfun(@(x) [' "', fullfile(objectFolder, x), objectFileSuffix, '"'], cppsrc, 'UniformOutput', false);
     objectStrAmici = strjoin(objectArray, ' ');
-    sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(fullfile(amiciSourcePath, x), objectFileSuffix, DEBUG), cppsrc));
+    sourcesForRecompile = cppsrc(cellfun(@(x) recompile || sourceNeedsRecompilation(amiciSourcePath, objectFolder, x, objectFileSuffix), cppsrc));
     if(numel(sourcesForRecompile))
         fprintf('AMICI base files | ');
         sourceStr = '';
@@ -183,29 +202,29 @@ function [objectStrAmici] = compileAmiciBase(amiciSourcePath, objectFileSuffix, 
             baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
             sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
         end
-        eval(['mex ' DEBUG COPT ' -c -outdir ' amiciSourcePath ...
+        eval(['mex ' DEBUG COPT ' -c -outdir ' objectFolder ...
             includesstr ' ' sourceStr]);
-        cellfun(@(x) updateFileHashSource(fullfile(amiciSourcePath, x), DEBUG), sourcesForRecompile);
-        updateHeaderFileHashes([amiciSourcePath '/../include/amici/'], DEBUG);
+        cellfun(@(x) updateFileHashSource(amiciSourcePath, objectFolder, x), sourcesForRecompile);
+        updateHeaderFileHashes(amiciIncludePath, objectFolder);
     end
     
 end
 
-function headersChanged = headersHaveChanged(includePath, DEBUG)
+function headersChanged = headersHaveChanged(includePath, objectFolder)
     list = dir([includePath '/*.h']);
     headersChanged = false;
     for file = {list.name}
-        headersChanged = headerFileChanged(fullfile(includePath, file{:}), DEBUG);
+        headersChanged = headerFileChanged(includePath, objectFolder, file{:});
         if(headersChanged)
             break;
         end            
     end
 end
 
-function updateHeaderFileHashes(includePath, DEBUG)
+function updateHeaderFileHashes(includePath, objectFolder)
     list = dir([includePath '/*.h']);
     for file = {list.name}
-        updateFileHash(fullfile(includePath, file{:}), DEBUG);
+        updateFileHash(includePath, objectFolder, file{:});
     end
 end
 
@@ -221,84 +240,105 @@ function hash = getFileHash(file)
     hash = CalcMD5(file,'File','hex');
 end    
 
-function updateFileHashSource(baseFilename, DEBUG)
-    if(exist([baseFilename '.cpp'], 'file'))
-        updateFileHash([baseFilename '.cpp'], DEBUG);
+function updateFileHashSource(sourceFolder,objectFolder,baseFilename)
+    fileName = [baseFilename '.cpp'];
+    if(exist(fullfile(sourceFolder,fileName), 'file'))
+        updateFileHash(sourceFolder,objectFolder,fileName);
     end
 end
 
 
-function updateFileHash(filename, DEBUG)
-    hash = getFileHash(filename);
-    hash = [hash DEBUG];
-    fid = fopen([filename '_' mexext '.md5'],'w');
+function updateFileHash(fileFolder,hashFolder,filename)
+    hash = getFileHash(fullfile(fileFolder,filename));
+    fid = fopen(fullfile(hashFolder,[filename '.md5']),'w');
     fprintf(fid,hash);
     fclose(fid);
 end
 
-function headerChanged = headerFileChanged(filename, DEBUG)
-    hashFileSufffix = ['_' mexext '.md5'];
-    
-    if(~exist(filename, 'file') && exist([filename, hashFileSufffix], 'file'))
+function headerChanged = headerFileChanged(includePath, objectFolder, fileName)
+    % headerFileChanged checks whether fileName.h  has changed since last compilation
+    %
+    % Parameters:
+    %  * includePath: path to directory containing header file @type string
+    %  * objectFolder: path to directory containing compiled md5 file @type string
+    %  * fileName: name of header @type string
+    %
+    % Return values:
+    %  headerChanged: flag indicating whether we need to recompile filestr.cpp
+    hashFileSufffix = ['.md5'];
+    headerFile = fullfile(includePath,fileName);
+    hashFile = fullfile(objectFolder,[fileName hashFileSufffix]);
+    if(~exist(headerFile , 'file') && exist(hashFile, 'file'))
         % header file has been removed, recompile and remove stray
         % hash file
         headerChanged = true;
-        delete([filename, hashFileSufffix])      
-    elseif(~exist([filename, hashFileSufffix], 'file'))
+        delete(hashFile);
+    elseif(~exist(hashFile, 'file'))
         % there exists a header file but no corresponding hash file
         headerChanged = true;
     else
         % hash file exist, did hash change?
-        headerChanged = hashHasChanged(filename, [filename hashFileSufffix], DEBUG);
+        headerChanged = hashHasChanged(headerFile, hashFile);
     end
 end
 
-function recompile = sourceNeedsRecompilation(filestr, o_suffix,DEBUG)
-    % sourceNeedsRecompilation checks whether filestr.cpp  has already been 
-    % compiled as filestr.o and whether the md5 hash of filestr.cpp matches 
-    % the one in filestr.md5
+function recompile = sourceNeedsRecompilation(amiciSourcePath, objectFolder, fileName, o_suffix)
+    % sourceNeedsRecompilation checks whether fileName.cpp  has already been 
+    % compiled as fileName.o and whether the md5 hash of fileName.cpp matches 
+    % the one in fileName.md5
     %
     % Parameters:
-    %  * filestr: path of the file @type string
-    %  * o_suffix: OS specific suffix for compiled objects
-    %  * DEBUG: debug flag
+    %  * amiciSourcePath: path to directory containing source file @type string
+    %  * objectFolder: path to directory containing compiled object and md5 file @type string
+    %  * fileName: name of source @type string
+    %  * o_suffix: OS specific suffix for compiled objects @type string
     %
     % Return values:
     %  recompile: flag indicating whether we need to recompile filestr.cpp
     
-    if(~exist([filestr '.cpp'],'file'))
+    sourceFile = fullfile(amiciSourcePath,[fileName '.cpp']);
+    
+    if(~exist(sourceFile,'file'))
         % cpp does not exist, we don't need to compile :)
         recompile = 0;
-    elseif(~exist([filestr o_suffix],'file'))
+    elseif(~exist(fullfile(objectFolder,[fileName o_suffix]),'file'))
         % object file does not exist, we need to recompile
         recompile = 1;
     else
-        sourceFilename = [filestr '.cpp'];
-        hashFileName = [sourceFilename '_' mexext '.md5'];
-        if(~exist(hashFileName, 'file'))
+        hashFile = fullfile(objectFolder,[fileName '.cpp.md5']);
+        if(~exist(hashFile, 'file'))
             % source file hash does not exist, we need to recompile
             recompile = 1;
         else
             % hash files exists, did they change?
-            recompile = hashHasChanged(sourceFilename, hashFileName, DEBUG);
+            recompile = hashHasChanged(sourceFile, hashFile);
         end
     end
 end
 
-function hasChanged = hashHasChanged(sourceFilename, hashFilename, hashSuffix)
+function hasChanged = hashHasChanged(sourceFilename, hashFilename)
     % checkHash checks whether the given file matches the saved hash
     % 
     % Parameters:
     %  * sourceFilename: the file to hash (has to exist)
     %  * hashFilename: the file where the hash is saved (has to exist)
-    %  * hashSuffix: string to be appended to the hash
     % Return values:
     %  * hasChanged: true if file and saved hash do not match
 
     hash = getFileHash(sourceFilename);
-    hash = [hash hashSuffix];
     fid = fopen(hashFilename);
     tline = fgetl(fid);
     fclose(fid);
-    hasChanged = ~strcmp(tline, hash(1:end));
+    hasChanged = ~strcmp(tline, hash);
 end
+
+function versionstring = getCompilerVersionString()
+    [~,systemreturn] = system([mex.getCompilerConfigurations('c++').Details.CompilerExecutable ' --version']);
+    newlinePos = strfind(systemreturn,newline);
+    str = systemreturn(1:(newlinePos(1)-1));
+    str = regexprep(str,'[\(\)]','');
+    str = regexprep(str,'[\s\.\-]','_');
+    versionstring = genvarname(str); % fix everything else we have missed
+end
+    
+    

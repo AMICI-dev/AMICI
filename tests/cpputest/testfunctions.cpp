@@ -188,14 +188,18 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& resultPath,
                                    const ReturnData *rdata, const Model *model, double atol, double rtol) {
     hsize_t m, n, o;
-    auto expected = hdf5::getDoubleDataset1D(file, resultPath + "/sllh");
-    checkEqualArray(expected, rdata->sllh, atol, rtol, "sllh");
+    std::vector<double> expected;
+    if(hdf5::locationExists(file, resultPath + "/sllh") || rdata->sllh.size()) {
+        expected = hdf5::getDoubleDataset1D(file, resultPath + "/sllh");
+        checkEqualArray(expected, rdata->sllh, atol, rtol, "sllh");
+    }
 
     if(rdata->sensi_meth == AMICI_SENSI_FSA) {
     
-        expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
-        checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
-
+        if(hdf5::locationExists(file, resultPath + "/sx0") || rdata->sx0.size()) {
+            expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
+            checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
+        }
         /* TODO REMOVE ASAP */
         if(rdata->sensi < AMICI_SENSI_ORDER_SECOND) {
         /* /TODO REMOVE ASAP */
@@ -227,20 +231,22 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                         model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
         }
         */
-        expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
-                    &rdata->ssigmay[ip * model->nt() * model->ny],
-                    model->nt() * model->nytrue, atol, rtol, "ssigmay");
-
-        if(model->nz>0) {
-            expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmaz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
-        }
-        
+            if(hdf5::locationExists(file, resultPath + "/ssigmay") || rdata->ssigmay.size()) {
+                expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
+                for(int ip = 0; ip < model->nplist(); ++ip)
+                    checkEqualArray(&expected[ip * model->nt() * model->nytrue],
+                            &rdata->ssigmay[ip * model->nt() * model->ny],
+                            model->nt() * model->nytrue, atol, rtol, "ssigmay");
+            }
+            if(hdf5::locationExists(file, resultPath + "/ssigmaz") || rdata->ssigmaz.size()) {
+                if(model->nz>0) {
+                    expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmaz", m, n, o);
+                    for(int ip = 0; ip < model->nplist(); ++ip)
+                        checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                                &rdata->ssigmaz[ip * model->nMaxEvent() * model->nz],
+                                model->nMaxEvent() * model->nztrue, atol, rtol, "ssigmaz");
+                }
+            }
         /* TODO REMOVE ASAP */
         }
         /* /TODO REMOVE ASAP */

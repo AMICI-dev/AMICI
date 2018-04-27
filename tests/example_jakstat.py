@@ -70,6 +70,27 @@ def writeSensiAdjoint(filename):
 
     ex.writeToFile(filename, '/model_jakstat_adjoint/sensiadjoint/')
 
+
+def writeSensiForwardEmptySensInd(filename):
+    ex = ExampleJakStatAdjoint()
+
+    ex.solverOptions['sens_ind'] = np.array([])
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['sensi_meth'] = 1
+
+    ex.writeToFile(filename, '/model_jakstat_adjoint/sensiforwardemptysensind/')
+
+
+def writeSensiAdjointEmptySensInd(filename):
+    ex = ExampleJakStatAdjoint()
+
+    ex.solverOptions['sens_ind'] = np.array([])
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['sensi_meth'] = 2
+
+    ex.writeToFile(filename, '/model_jakstat_adjoint/sensiadjointemptysensind/')
+
+
 def writeSensi2Forward(filename):
     ex = ExampleJakStatAdjoint()
 
@@ -130,7 +151,10 @@ def main():
     writeSensi2Adjoint(filename)
     writeSensiForwardLogParam(filename)
     writeSensi2ForwardLogParam(filename)
-
+    writeSensiForwardEmptySensInd(filename)
+    writeSensiAdjointEmptySensInd(filename)
+    
+    
 if __name__ == "__main__":
     main()
     

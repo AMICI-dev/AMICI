@@ -52,14 +52,15 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     res.clear();
     sres.clear();
 
+    newton_numsteps.resize(2, 0);
+    newton_numlinsteps.resize(newton_maxsteps*2, 0);
+
     if(nt>0) {
         numsteps.resize(nt, 0);
         numrhsevals.resize(nt, 0);
         numerrtestfails.resize(nt, 0);
         numnonlinsolvconvfails.resize(nt, 0);
         order.resize(nt, 0);
-        newton_numsteps.resize(2, 0);
-        newton_numlinsteps.resize(newton_maxsteps*2, 0);
         
         if (sensi_meth == AMICI_SENSI_ASA && sensi >= AMICI_SENSI_ORDER_FIRST) {
             numstepsB.resize(nt, 0);
@@ -115,11 +116,22 @@ void ReturnData::invalidate(const realtype t) {
             x.at(ix * nt + it) = getNaN();
         for (int iy = 0; iy < ny; iy++)
             y.at(iy * nt + it) = getNaN();
-        for (int ip = 0; ip < nplist; ip++) {
-            for (int ix = 0; ix < nx; ix++)
-                sx.at((ip*nx + ix) * nt + it) = getNaN();
-            for (int iy = 0; iy < ny; iy++)
-                sy.at((ip*ny + iy) * nt + it) = getNaN();
+    }
+
+    if (sx.size()) {
+        for (int it = it_start; it < nt; it++){
+            for (int ip = 0; ip < nplist; ip++) {
+                for (int ix = 0; ix < nx; ix++)
+                    sx.at((ip*nx + ix) * nt + it) = getNaN();
+            }
+        }
+    }
+    if(sy.size()) {
+        for (int it = it_start; it < nt; it++){
+            for (int ip = 0; ip < nplist; ip++) {
+                for (int iy = 0; iy < ny; iy++)
+                    sy.at((ip*ny + iy) * nt + it) = getNaN();
+            }
         }
     }
 }
@@ -149,24 +161,33 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     std::vector<realtype> pcoefficient(nplist, 1.0);
     std::vector<realtype> unscaledParameters(np);
     model->unscaleParameters(unscaledParameters.data());
-    std::vector<realtype> augcoefficient(np);
+    std::vector<realtype> augcoefficient(np, 1.0);
+    
+    if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL) {
+        for (int ip = 0; ip < np; ++ip) {
+            switch (pscale[ip]) {
+            case AMICI_SCALING_LOG10:
+                augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
+                break;
+            case AMICI_SCALING_LN:
+                augcoefficient.at(ip) = unscaledParameters.at(ip);
+                break;
+            case AMICI_SCALING_NONE:
+                break;
+            }
+        }
+    }
 
     for (int ip = 0; ip < nplist; ++ip) {
         switch (pscale[model->plist(ip)]) {
         case AMICI_SCALING_LOG10:
             coefficient.at(ip) = log(10.0);
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                augcoefficient.at(ip) = unscaledParameters.at(ip) * log(10);
             break;
         case AMICI_SCALING_LN:
-            coefficient.at(ip) = 1.0;
             pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
-            if (sensi == AMICI_SENSI_ORDER_SECOND && o2mode == AMICI_O2MODE_FULL)
-                augcoefficient.at(ip) = unscaledParameters.at(ip);
             break;
         case AMICI_SCALING_NONE:
-            coefficient.at(ip) = 1.0;
             break;
         }
     }

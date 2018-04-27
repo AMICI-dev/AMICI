@@ -10,13 +10,10 @@ cmake_minimum_required(VERSION 2.8)
 
 set(AMICI_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG(-std=c++11 COMPILER_SUPPORTS_CXX11)
-if(!COMPILER_SUPPORTS_CXX11)
-    message(FATAL_ERROR "AMICI requires a C++11 compatible compiler")
-endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CheckCXXCompilerFlag)
 set(MY_CXX_FLAGS -Wall)
 foreach(FLAG ${MY_CXX_FLAGS})
     unset(CUR_FLAG_SUPPORTED CACHE)

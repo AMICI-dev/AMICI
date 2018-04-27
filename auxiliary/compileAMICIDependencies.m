@@ -1,11 +1,5 @@
-function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, o_suffix, COPT, DEBUG)
+function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectFolder, o_suffix, COPT, DEBUG)
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
-
-    if(strcmp(DEBUG, ''))
-        objectFolder = fullfile(wrap_path,'models',mexext, 'release');
-    else
-        objectFolder = fullfile(wrap_path,'models',mexext, 'debug');
-    end
 
     sundials_path = fullfile(wrap_path,'sundials');
     sundials_ver = '2.7.0';
@@ -15,11 +9,7 @@ function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, o_suffi
     
     lapack_path = fullfile(wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
-    
-    % compile directory
-    if(~exist(objectFolder, 'dir'))
-        mkdir(objectFolder)
-    end
+   
     
     version_file = fullfile(objectFolder, 'versions.txt');
     [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver);
