@@ -17,7 +17,7 @@ def runTest(testId):
         current_test_path = os.path.join(test_path, testId)
         sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
         settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
-        resultsFile = os.path.join(current_test_path, testId + '-settings.txt')
+        resultsFile = os.path.join(current_test_path, testId + '-results.csv')
         wrapper = Model(sbmlFile,'SBMLTest' + testId)
         wrapper.wrapModel()
         sys.path.insert(0,os.path.join(wrapper.model_path,'build','swig'))
@@ -28,7 +28,7 @@ def runTest(testId):
                 if not line == '\n':
                     (key, val) = line.split(':')
                     settings[key] = val
-        ts = np.linspace(float(settings['start']),float(settings['start'])+float(settings['duration']),int(settings['steps']))
+        ts = np.linspace(float(settings['start']),float(settings['start'])+float(settings['duration']),int(settings['steps'])+1)
         atol = float(settings['absolute'])
         rtol = float(settings['relative'])
 
@@ -36,16 +36,26 @@ def runTest(testId):
         model = mod.getModel()
         model.setTimepoints(mod.amici.DoubleVector(ts))
         solver = model.getSolver()
-        solver.setRelativeTolerance(rtol)
-        solver.setAbsoluteTolerance(atol)
+        #solver.setRelativeTolerance(rtol)
+        #solver.setAbsoluteTolerance(atol)
         rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
-        print(rdata)
+        simulated_x = np.array(rdata.x).reshape([len(ts),model.nx])
+        results = np.genfromtxt(resultsFile, delimiter=',')
+        test_x = results[1:, 1:]
 
+        adev = abs(simulated_x-test_x)
+        adev = adev[~np.isnan(adev)]
+        rdev = abs((simulated_x-test_x)/test_x)
+        rdev = rdev[~np.isnan(rdev)]
+        if(not np.all(adev<atol)):
+            raise Exception('Absolute tolerance violated')
 
+        if (not np.all(rdev < rtol)):
+            raise Exception('Relative tolerance violated')
 
 
     except AssertionError:
-        None
+        pass
 
 def getTestStr(testId):
     testStr = str(testId)
