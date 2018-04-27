@@ -33,8 +33,10 @@ class Model:
         'Jy': {'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
                'variable': 'nllh',
                'multiobs': True},
-        'dJydsigma': {'signature': '(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)'},
-        'dJydy': {'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)'},
+        'dJydsigma': {'signature': '(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
+                      'multiobs': True},
+        'dJydy': {'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
+                  'multiobs': True},
         'dwdp': {'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
         'dwdx': {'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
         'dxdotdp': {'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp)',
@@ -274,13 +276,16 @@ class Model:
 
         # objective function
         self.sigmaySymbols = sp.Matrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
+        self.sigmay = sp.zeros(self.sigmaySymbols.cols, self.sigmaySymbols.rows)
         self.mySymbols = sp.Matrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
         self.Jy = sp.Matrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
                                         '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
                              for iy, symbol in enumerate(self.observableSymbols)])
         self.dJydy = self.Jy.jacobian(self.observableSymbols)
         self.dJydsigma = self.Jy.jacobian(self.sigmaySymbols)
-        self.sigmay = sp.zeros(self.sigmaySymbols.cols,self.sigmaySymbols.rows)
+        self.Jy = self.Jy.transpose()
+        self.dJydy = self.dJydy.transpose()
+        self.dJydsigma = self.dJydsigma.transpose()
 
 
     def generateCCode(self):
@@ -357,23 +362,26 @@ class Model:
             symbol = self.__getattribute__(function)
         lines = []
 
+        if ('diagonality' in self.functions[function].keys()):
+            symbol = getSymbolicDiagonal(symbol)
+
         if('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
                 lines += writeSym(symbol[:,ipar], variableName, 8)
+                lines.append(' ' * 8 + 'break;')
             lines.append('}')
         elif('multiobs' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(0,self.n_observables):
-                lines += writeSym([symbol[iobs]], variableName, 8)
+                lines += writeSym(symbol[:,iobs], variableName, 8)
+                lines.append(' ' * 8 + 'break;')
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):
                 rowVals = self.__getattribute__(function + 'RowVals')
                 colPtrs = self.__getattribute__(function + 'ColPtrs')
                 lines += writeSparseSym(symbol, rowVals, colPtrs, variableName, 4)
-            elif('diagonality' in self.functions[function].keys()):
-                lines += writeSym(getSymbolicDiagonal(symbol), variableName, 4)
             else:
                 lines += writeSym(symbol, variableName, 4)
 
