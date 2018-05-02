@@ -177,3 +177,7 @@ python/.idea/modules.xml
 python/.idea/python.iml
 
 python/.idea/workspace.xml
+
+*.pyc
+
+python/testSpeedy.py

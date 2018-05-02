@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import symengine as sp
+import symengine.lib.symengine_wrapper as sp
+from symengine.printing import CCodePrinter
 import libsbml as sbml
 import os
 import re
 import shutil
 import subprocess
-from symengine.lib.symengine_wrapper import ccode
+from symengine import symbols
 from string import Template
 
 class Model:
@@ -73,6 +74,7 @@ class Model:
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         self.functionBodies = {}
+        self.Codeprinter = CCodePrinter()
 
 
     def wrapModel(self):
@@ -98,22 +100,22 @@ class Model:
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
         self.speciesIndex = {species_id.getId(): species_index for species_index, species_id in enumerate(list(species))}
-        self.speciesSymbols = sp.Matrix([sp.symbols(spec.getId()) for spec in species])
-        self.speciesInitial = sp.Matrix([sp.sympify(spec.getInitialAmount()) for spec in species])
+        self.speciesSymbols = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+        self.speciesInitial = sp.DenseMatrix([sp.sympify(spec.getInitialAmount()) for spec in species])
 
 
     def processParameters(self):
         # parameters
         parameters = self.sbml.getListOfParameters()
-        self.parameterSymbols = sp.Matrix([sp.symbols(par.getId()) for par in parameters])
+        self.parameterSymbols = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.parameterSymbols)
 
     def processCompartments(self):
         # parameters
         compartments = self.sbml.getListOfCompartments()
-        self.compartmentSymbols = sp.Matrix([sp.symbols(comp.getId()) for comp in compartments])
-        self.compartmentVolume = sp.Matrix([sp.sympify(comp.getVolume()) for comp in compartments])
+        self.compartmentSymbols = sp.DenseMatrix([symbols(comp.getId()) for comp in compartments])
+        self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) for comp in compartments])
 
         self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols, self.compartmentVolume)
         self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols, self.compartmentVolume)
@@ -128,14 +130,18 @@ class Model:
 
         def getLocalParameters(reaction):
             kinlaw = reaction.getKineticLaw()
-            return kinlaw.getListOfLocalParameters()
+            param = [par for par in kinlaw.getListOfLocalParameters()]
+            param.extend([kinlaw.getParameter(ipar) for ipar in range(0,kinlaw.getNumParameters())])
+            return param
 
         # localparameters
         localParameters = []
         [localParameters.extend(getLocalParameters(reaction)) for reaction in reactions]
 
-        self.parameterSymbols += sp.Matrix([sp.symbols(par.getId()) for par in localParameters])
-        self.parameterValues += [par.getValue() for par in localParameters]
+        if len(localParameters)>0:
+            self.parameterSymbols = self.parameterSymbols.col_join(sp.DenseMatrix(
+                [symbols(par.getId()) for par in localParameters]))
+            self.parameterValues += [par.getValue() for par in localParameters]
 
         # stoichiometric matrix
         self.stoichiometricMatrix = sp.zeros(self.n_species, self.n_reactions)
@@ -159,7 +165,7 @@ class Model:
     def processRules(self):
         rules = self.sbml.getListOfRules()
 
-        rulevars = sp.Matrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
+        rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
         fluxvars = self.fluxVector.free_symbols
         initvars = self.speciesInitial.free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
@@ -198,12 +204,12 @@ class Model:
                 self.observableNames.append(str(variable))
 
         if(len(observables)>0):
-            self.observables = sp.Matrix(observables)
-            self.observableSymbols = sp.Matrix(observableSymbols)
+            self.observables = sp.DenseMatrix(observables)
+            self.observableSymbols = sp.DenseMatrix(observableSymbols)
             self.n_observables = len(observables)
         else:
             self.observables = self.speciesSymbols
-            self.observableSymbols = sp.Matrix([sp.sympify('y' + str(index)) for index in range(0,len(self.speciesSymbols))])
+            self.observableSymbols = sp.DenseMatrix([sp.sympify('y' + str(index)) for index in range(0,len(self.speciesSymbols))])
             self.n_observables = len(self.speciesSymbols)
 
 
@@ -226,7 +232,7 @@ class Model:
                     symbolRowVals.append(row)
                     symbolIndex += 1
         symbolColPtrs.append(symbolIndex)
-        sparseList = sp.Matrix(sparseList)
+        sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
 
@@ -275,10 +281,10 @@ class Model:
         self.dydx = self.y.jacobian(self.speciesSymbols)
 
         # objective function
-        self.sigmaySymbols = sp.Matrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
+        self.sigmaySymbols = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
         self.sigmay = sp.zeros(self.sigmaySymbols.cols, self.sigmaySymbols.rows)
-        self.mySymbols = sp.Matrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
-        self.Jy = sp.Matrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
+        self.mySymbols = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
+        self.Jy = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
                                         '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
                              for iy, symbol in enumerate(self.observableSymbols)])
         self.dJydy = self.Jy.jacobian(self.observableSymbols)
@@ -368,22 +374,22 @@ class Model:
         if('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
-                lines += writeSym(symbol[:,ipar], variableName, 8)
+                lines += self.writeSym(symbol[:,ipar], variableName, 8)
                 lines.append(' ' * 8 + 'break;')
             lines.append('}')
         elif('multiobs' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(0,self.n_observables):
-                lines += writeSym(symbol[:,iobs], variableName, 8)
+                lines += self.writeSym(symbol[:,iobs], variableName, 8)
                 lines.append(' ' * 8 + 'break;')
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):
                 rowVals = self.__getattribute__(function + 'RowVals')
                 colPtrs = self.__getattribute__(function + 'ColPtrs')
-                lines += writeSparseSym(symbol, rowVals, colPtrs, variableName, 4)
+                lines += self.writeSparseSym(symbol, rowVals, colPtrs, variableName, 4)
             else:
-                lines += writeSym(symbol, variableName, 4)
+                lines += self.writeSym(symbol, variableName, 4)
 
         return lines
 
@@ -435,6 +441,28 @@ class Model:
         shutil.copy(os.path.join(self.amici_swig_path, 'CMakeLists_model.txt'),
                     os.path.join(self.model_swig_path, 'CMakeLists.txt'))
 
+    def writeSym(self,symbols,variable,indentLevel):
+        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+         if not math == 0 else '' for index, math in enumerate(symbols)]
+
+        try:
+            lines.remove('')
+        except:
+            pass
+
+        return lines
+
+    def writeSparseSym(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
+        lines = [
+            ' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+            for index, math in enumerate(RowVals)]
+        lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+                      for index, math in enumerate(ColPtrs)])
+        lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+                      for index, math in enumerate(symbolList)])
+
+        return lines
+
 def applyTemplate(sourceFile,targetFile,templateData):
     filein = open(sourceFile)
     src = TemplateAmici(filein.read())
@@ -442,29 +470,10 @@ def applyTemplate(sourceFile,targetFile,templateData):
     open(targetFile, 'w').write(result)
 
 
+
 def getSymbols(prefix,length):
-    return sp.Matrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
+    return sp.DenseMatrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
 
-def writeSym(symbols,variable,indentLevel):
-    lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + ccode(math) + ';'
-     if not math == 0 else '' for index, math in enumerate(symbols)]
-
-    try:
-        lines.remove('')
-    except:
-        pass
-
-    return lines
-
-def writeSparseSym(symbolList,RowVals,ColPtrs,variable,indentLevel):
-    lines = [' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + ccode(math) + ';'
-             for index, math in enumerate(RowVals)]
-    lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + ccode(math) + ';'
-             for index, math in enumerate(ColPtrs)])
-    lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + ccode(math) + ';'
-                  for index, math in enumerate(symbolList)])
-
-    return lines
 
 def getSymbolicDiagonal(matrix):
     assert matrix.cols == matrix.rows
@@ -472,7 +481,7 @@ def getSymbolicDiagonal(matrix):
     for index in range(0,matrix.cols):
         diagonal.append(matrix[index,index])
 
-    return sp.Matrix(diagonal)
+    return sp.DenseMatrix(diagonal)
 
 class TemplateAmici(Template):
     delimiter = 'TPL_'

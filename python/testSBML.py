@@ -15,13 +15,10 @@ test_path = os.path.join(amici_path,'tests','sbml-semantic-test-cases','cases','
 def runTest(testId):
     try:
         current_test_path = os.path.join(test_path, testId)
-        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
-        settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
-        resultsFile = os.path.join(current_test_path, testId + '-results.csv')
-        wrapper = Model(sbmlFile,'SBMLTest' + testId)
-        wrapper.wrapModel()
-        sys.path.insert(0,os.path.join(wrapper.model_path,'build','swig'))
 
+
+        # settings
+        settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
         settings = {}
         with open(settingsFile) as f:
             for line in f:
@@ -32,7 +29,18 @@ def runTest(testId):
         atol = float(settings['absolute'])
         rtol = float(settings['relative'])
 
+        # results
+        resultsFile = os.path.join(current_test_path, testId + '-results.csv')
+        results = np.genfromtxt(resultsFile, delimiter=',')
+        test_x = results[1:, 1:]
+
+        # model
+        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
+        wrapper = Model(sbmlFile,'SBMLTest' + testId)
+        wrapper.wrapModel()
+        sys.path.insert(0,os.path.join(wrapper.model_path,'build','swig'))
         mod = importlib.import_module(wrapper.modelname)
+
         model = mod.getModel()
         model.setTimepoints(mod.amici.DoubleVector(ts))
         solver = model.getSolver()
@@ -40,8 +48,7 @@ def runTest(testId):
         #solver.setAbsoluteTolerance(atol)
         rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
         simulated_x = np.array(rdata.x).reshape([len(ts),model.nx])
-        results = np.genfromtxt(resultsFile, delimiter=',')
-        test_x = results[1:, 1:]
+
 
         adev = abs(simulated_x-test_x)
         adev = adev[~np.isnan(adev)]
