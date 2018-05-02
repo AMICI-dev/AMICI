@@ -5,7 +5,6 @@ import os
 import sys
 import importlib
 import numpy as np
-sys.path.insert(0, "../build/swig/python/")
 import amici
 
 dirname = os.path.split(os.path.abspath(__file__))[0]
@@ -70,7 +69,7 @@ def getTestStr(testId):
     return testStr
 
 
-for testId in range(1,1781):
+for testId in range(17,1781):
     runTest(getTestStr(testId))
 
 #model = Model('/Users/F.Froehlich/Downloads/Speedy_v3_r403445_v1.sbml','speedy')

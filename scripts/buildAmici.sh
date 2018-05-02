@@ -11,3 +11,5 @@ mkdir -p ${AMICI_PATH}/build
 cd ${AMICI_PATH}/build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
+
+python3 ${AMICI_PATH}/build/swig/python/setup.py install
