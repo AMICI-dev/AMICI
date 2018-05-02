@@ -94,14 +94,16 @@ class Model:
         self.processCompartments()
         self.processRules()
 
-
-
     def processSpecies(self):
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
-        self.speciesIndex = {species_id.getId(): species_index for species_index, species_id in enumerate(list(species))}
+        self.speciesIndex = {species_element.getId(): species_index for species_index, species_element in enumerate(species)}
         self.speciesSymbols = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
         self.speciesInitial = sp.DenseMatrix([sp.sympify(spec.getInitialAmount()) for spec in species])
+        self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
+                                for species_element in species]
+        self.boundaryConditionSpecies = [species_element.getId() if species_element.getBoundaryCondition() else None
+                                         for species_element in species]
 
 
     def processParameters(self):
@@ -120,8 +122,6 @@ class Model:
         self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols, self.compartmentVolume)
         self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols, self.compartmentVolume)
         self.fluxVector = self.fluxVector.subs(self.compartmentSymbols, self.compartmentVolume)
-
-
 
     def processReactions(self):
         # reactions
@@ -153,10 +153,12 @@ class Model:
             products = {p.getSpecies(): p.getStoichiometry() for p in reaction.getListOfProducts()}
 
             for reactant in reactants.keys():
-                self.stoichiometricMatrix[self.speciesIndex[reactant], reaction_index] -= sp.sympify(reactants[reactant])
+                if not (reactant in self.constantSpecies or reactant in self.boundaryConditionSpecies):
+                    self.stoichiometricMatrix[self.speciesIndex[reactant], reaction_index] -= sp.sympify(reactants[reactant])
 
             for product in products.keys():
-                self.stoichiometricMatrix[self.speciesIndex[product], reaction_index] += sp.sympify(products[product])
+                if not (product in self.constantSpecies or product in self.boundaryConditionSpecies):
+                    self.stoichiometricMatrix[self.speciesIndex[product], reaction_index] += sp.sympify(products[product])
 
             self.fluxVector[reaction_index] = sp.sympify(reaction.getKineticLaw().getFormula())
             self.fluxSymbols[reaction_index] = sp.sympify('w' + str(reaction_index))
