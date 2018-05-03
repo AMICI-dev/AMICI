@@ -82,7 +82,7 @@ def getTestStr(testId):
     return testStr
 
 
-for testId in range(30,1781):
+for testId in range(38,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 

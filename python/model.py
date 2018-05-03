@@ -172,6 +172,9 @@ class Model:
         if len(self.sbml.getListOfEvents()):
             raise Exception('Events are currently not supported.')
 
+        if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
+            raise Exception('Algebraic and rate rules currently not supported.')
+
 
     def processSpecies(self):
         """Get species information from SBML model."""
@@ -276,7 +279,7 @@ class Model:
                 isObservable = False
 
             if variable in initvars:
-                self.speciesInitial = self.speciesInitial.subs(variable, formula)
+                self.speciesInitial = self.speciesInitial.subs(variable, formula.subs(self.speciesSymbols,self.speciesInitial))
                 isObservable = False
 
             if variable in fluxvars:
@@ -311,10 +314,10 @@ class Model:
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
-            self.fluxVector = self.fluxVector.subs(self.speciesSymbols,
-                                                   self.speciesSymbols.mul_matrix(
-                                                       self.speciesCompartment.applyfunc(lambda x: 1/x).
-                                                           subs(self.compartmentSymbols,self.compartmentVolume)))
+        self.fluxVector = self.fluxVector.subs(self.speciesSymbols,
+                                                self.speciesSymbols.mul_matrix(
+                                                    self.speciesCompartment.applyfunc(lambda x: 1/x).
+                                                        subs(self.compartmentSymbols,self.compartmentVolume)))
 
 
     def getSparseSymbols(self,symbolName):
@@ -471,7 +474,9 @@ class Model:
         lines.append('')
 
         for variable, shortenedVariable in self.shortenedVariables:
-            if(not re.search('const (realtype|double) \*' + shortenedVariable + '[,)]+',signature) is None):
+            # added |double for data
+            # added '[0]*' for initial conditions
+            if(not re.search('const (realtype|double) \*' + shortenedVariable + '[0]*[,)]+',signature) is None):
                 lines.append('#include "' + variable + '.h"')
 
         lines.append('')
