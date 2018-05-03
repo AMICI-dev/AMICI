@@ -228,6 +228,7 @@ class Model:
         self.processCompartments()
         self.processRules()
         self.processVolumeConversion()
+        self.cleanReservedSymbols()
 
 
     def checkSupport(self):
@@ -388,6 +389,20 @@ class Model:
                                                     self.speciesCompartment.applyfunc(lambda x: 1/x).
                                                         subs(self.compartmentSymbols,
                                                              self.compartmentVolume)))
+        
+    def cleanReservedSymbols(self):
+        reservedSymbols = ['k','p']
+        for str in reservedSymbols:
+            old_symbol = sp.sympify(str)
+            new_symbol = sp.sympify('amici_' + str)
+            fields = ['observables','stoichiometricMatrix','compartmentSymbols','fluxVector']
+            for field in fields:
+                self.__setattr__(field,self.__getattribute__(field).subs(old_symbol,new_symbol))
+            for symbol in self.symbols.keys():
+                if 'expression' in self.symbols[symbol].keys():
+                    self.symbols[symbol]['expression'] = self.symbols[symbol]['expression'].subs(old_symbol,new_symbol)
+
+
 
 
     def getSparseSymbols(self,symbolName):
