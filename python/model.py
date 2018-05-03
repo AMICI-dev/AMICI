@@ -5,6 +5,7 @@ from symengine.printing import CCodePrinter
 import libsbml as sbml
 import os
 import re
+import math
 import shutil
 import subprocess
 from symengine import symbols
@@ -38,8 +39,10 @@ class Model:
                       'multiobs': True},
         'dJydy': {'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
                   'multiobs': True},
-        'dwdp': {'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
-        'dwdx': {'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
+        'dwdp': {'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)',
+                 'symbol': 'dwdxSparseList'},
+        'dwdx': {'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)',
+                 'symbol': 'dwdpSparseList'},
         'dxdotdp': {'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp)',
                     'sensitivity': True},
         'dydx': {'signature': '(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)'},
@@ -93,17 +96,33 @@ class Model:
         self.processReactions()
         self.processCompartments()
         self.processRules()
+        self.processVolumeConversion()
+        self.processFunctions()
 
     def processSpecies(self):
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
         self.speciesIndex = {species_element.getId(): species_index for species_index, species_element in enumerate(species)}
         self.speciesSymbols = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
-        self.speciesInitial = sp.DenseMatrix([sp.sympify(spec.getInitialAmount()) for spec in species])
+        self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
         self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
                                 for species_element in species]
         self.boundaryConditionSpecies = [species_element.getId() if species_element.getBoundaryCondition() else None
                                          for species_element in species]
+        concentrations = [spec.getInitialConcentration() for spec in species]
+        amounts = [spec.getInitialAmount() for spec in species]
+
+        self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
+                                              sp.sympify(amounts[index])/self.speciesCompartment[index]
+                                              for index, conc in enumerate(concentrations)])
+
+        if self.sbml.isSetConversionFactor():
+            conversionFactor = self.sbml.getConversionFactor()
+        else:
+            conversionFactor = 1.0
+        self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
+                                                       specie.isSetConversionFactor() else conversionFactor
+                                                       for specie in species])
 
 
     def processParameters(self):
@@ -154,11 +173,16 @@ class Model:
 
             for reactant in reactants.keys():
                 if not (reactant in self.constantSpecies or reactant in self.boundaryConditionSpecies):
-                    self.stoichiometricMatrix[self.speciesIndex[reactant], reaction_index] -= sp.sympify(reactants[reactant])
+                    self.stoichiometricMatrix[self.speciesIndex[reactant], reaction_index] -= \
+                        sp.sympify(reactants[reactant])*self.speciesConversionFactor[self.speciesIndex[reactant]]/ \
+                        self.speciesCompartment[self.speciesIndex[reactant]]
+
 
             for product in products.keys():
                 if not (product in self.constantSpecies or product in self.boundaryConditionSpecies):
-                    self.stoichiometricMatrix[self.speciesIndex[product], reaction_index] += sp.sympify(products[product])
+                    self.stoichiometricMatrix[self.speciesIndex[product], reaction_index] += \
+                        sp.sympify(products[product])*self.speciesConversionFactor[self.speciesIndex[product]]/ \
+                        self.speciesCompartment[self.speciesIndex[product]]
 
             self.fluxVector[reaction_index] = sp.sympify(reaction.getKineticLaw().getFormula())
             self.fluxSymbols[reaction_index] = sp.sympify('w' + str(reaction_index))
@@ -170,6 +194,7 @@ class Model:
         rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
         fluxvars = self.fluxVector.free_symbols
         initvars = self.speciesInitial.free_symbols
+        volumevars = self.compartmentVolume.free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
 
         observables = []
@@ -193,6 +218,10 @@ class Model:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
                 isObservable = False
 
+            if variable in volumevars:
+                self.compartmentVolume = self.compartmentVolume.subs(variable, formula)
+                isObservable = False
+
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(nested_rule.getFormula())
@@ -211,8 +240,30 @@ class Model:
             self.n_observables = len(observables)
         else:
             self.observables = self.speciesSymbols
-            self.observableSymbols = sp.DenseMatrix([sp.sympify('y' + str(index)) for index in range(0,len(self.speciesSymbols))])
+            self.observableSymbols = sp.DenseMatrix([sp.sympify('y' + str(index))
+                                                     for index in range(0,len(self.speciesSymbols))])
             self.n_observables = len(self.speciesSymbols)
+
+    def processVolumeConversion(self):
+        if __name__ == '__main__':
+            self.fluxVector = self.fluxVector.subs(self.speciesSymbols,
+                                                   self.speciesSymbols.mul_matrix(
+                                                       self.speciesCompartment.applyfunc(lambda x: 1/x).
+                                                           subs(self.compartmentSymbols,self.compartmentVolume)))
+
+    def processFunctions(self):
+        functions = self.sbml.getListOfFunctionDefinitions()
+        for function in functions:
+            def funeval(cls,x):
+                return x
+
+            bodyDict = {
+                eval: funeval
+            }
+            exec(function.getId() + ' = type("' + function.getId() + '", (sp.Function,), bodyDict)')
+        pass
+
+
 
 
     def getSparseSymbols(self,symbolName):
@@ -246,18 +297,19 @@ class Model:
         self.w = self.fluxVector
 
         self.dwdx = self.fluxVector.jacobian(self.speciesSymbols)
-        self.dwdxSparse, self.dwdxSparseSymbols = self.getSparseSymbols('dwdx')[0:2]
+        self.dwdxSparse, self.dwdxSparseSymbols, self.dwdxSparseList  = self.getSparseSymbols('dwdx')[0:3]
 
         self.J = self.xdot.jacobian(self.speciesSymbols) + self.stoichiometricMatrix * self.dwdxSparse
         self.vectorSymbols = getSymbols('v',self.n_species)
         self.Jv = self.J*self.vectorSymbols
-        self.JSparse, self.JSparseSymbols, self.JSparseList, self.JSparseColPtrs, self.JSparseRowVals = self.getSparseSymbols('J')
+        self.JSparse, self.JSparseSymbols, self.JSparseList, self.JSparseColPtrs, self.JSparseRowVals \
+            = self.getSparseSymbols('J')
 
         self.x0 = self.speciesInitial
 
         # sensitivity
         self.dwdp = self.fluxVector.jacobian(self.parameterSymbols)
-        self.dwdpSparse, self.dwdpSparseSymbols = self.getSparseSymbols('dwdp')[0:2]
+        self.dwdpSparse, self.dwdpSparseSymbols, self.dwdpSparseList = self.getSparseSymbols('dwdp')[0:3]
 
         self.dxdotdp = self.xdot.jacobian(self.parameterSymbols) + self.stoichiometricMatrix * self.dwdpSparse
         self.dxdotdpSymbols = getSymbols('dxdotdp',self.n_species)
@@ -271,7 +323,8 @@ class Model:
         self.JB = self.J.transpose()
         self.vectorBSymbols = getSymbols('vB', self.n_species)
         self.JvB = self.JB * self.vectorBSymbols
-        self.JSparseB, self.JSparseBSymbols, self.JSparseBList, self.JSparseBColPtrs, self.JSparseBRowVals = self.getSparseSymbols('JB')
+        self.JSparseB, self.JSparseBSymbols, self.JSparseBList, self.JSparseBColPtrs, self.JSparseBRowVals \
+            = self.getSparseSymbols('JB')
 
         self.adjointSymbols = getSymbols('xB',self.n_species)
         self.xBdot = - self.JB*self.adjointSymbols
@@ -376,14 +429,16 @@ class Model:
         if('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
-                lines += self.writeSym(symbol[:,ipar], variableName, 8)
-                lines.append(' ' * 8 + 'break;')
+                lines.append(' ' * 8 + 'case ' + str(ipar) + ':')
+                lines += self.writeSym(symbol[:,ipar], variableName, 12)
+                lines.append(' ' * 12 + 'break;')
             lines.append('}')
         elif('multiobs' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(0,self.n_observables):
-                lines += self.writeSym(symbol[:,iobs], variableName, 8)
-                lines.append(' ' * 8 + 'break;')
+                lines.append(' ' * 8 + 'case ' + str(iobs) + ':')
+                lines += self.writeSym(symbol[:,iobs], variableName, 12)
+                lines.append(' ' * 12 + 'break;')
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):

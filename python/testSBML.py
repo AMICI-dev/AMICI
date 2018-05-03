@@ -43,21 +43,28 @@ def runTest(testId):
         model = mod.getModel()
         model.setTimepoints(mod.amici.DoubleVector(ts))
         solver = model.getSolver()
-        #solver.setRelativeTolerance(rtol)
-        #solver.setAbsoluteTolerance(atol)
+        solver.setMaxSteps(int(1e6))
+        solver.setRelativeTolerance(rtol/1000.0)
+        solver.setAbsoluteTolerance(atol/1000.0)
         rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
+        amountSpecies = settings['amount'].replace(' ','').replace('\n','').split(',')
         simulated_x = np.array(rdata.x).reshape([len(ts),model.nx])
+        for species in amountSpecies:
+            volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,wrapper.compartmentVolume)
+            simulated_x[:, wrapper.speciesIndex[species]] = simulated_x[:, wrapper.speciesIndex[species]]*volume
+            pass
 
 
         adev = abs(simulated_x-test_x)
-        adev = adev[~np.isnan(adev)]
+        adev[np.isnan(adev)] = True
         rdev = abs((simulated_x-test_x)/test_x)
-        rdev = rdev[~np.isnan(rdev)]
-        if(not np.all(adev<atol)):
-            raise Exception('Absolute tolerance violated')
+        rdev[np.isnan(rdev)] = True
+        if(not np.all(np.logical_or(adev < atol, rdev < rtol))):
+            if(not np.all(adev<atol)):
+                raise Exception('Absolute tolerance violated')
 
-        if (not np.all(rdev < rtol)):
-            raise Exception('Relative tolerance violated')
+            if (not np.all(rdev < rtol)):
+                raise Exception('Relative tolerance violated')
 
 
     except AssertionError:
@@ -69,7 +76,7 @@ def getTestStr(testId):
     return testStr
 
 
-for testId in range(17,1781):
+for testId in range(25,1781):
     runTest(getTestStr(testId))
 
 #model = Model('/Users/F.Froehlich/Downloads/Speedy_v3_r403445_v1.sbml','speedy')
