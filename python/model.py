@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import symengine.lib.symengine_wrapper as sp
+import symengine as sp
 from symengine.printing import CCodePrinter
 import libsbml as sbml
 import os
@@ -64,9 +64,22 @@ class Model:
     def __init__(self, SBMLFile, modelname):
         self.SBMLreader = sbml.SBMLReader()
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
-        self.sbml = self.sbml_doc.getModel()
-        if(self.sbml is None):
+        if (self.sbml_doc is None):
             raise Exception('Provided SBML file does not exit or is invalid!')
+
+        # apply several model simplifications that make our life substantially easier
+        convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
+        convertConfig.addOption('initialDefinition')
+        convertConfig.addOption('localParameters')
+        status = self.sbml_doc.convert(convertConfig)
+        if status != sbml.LIBSBML_OPERATION_SUCCESS:
+            raise Exception('Could not apply model conversions!')
+
+        self.sbml = self.sbml_doc.getModel()
+        if (self.sbml is None):
+            raise Exception('Provided SBML file is invalid!')
+
+
         self.modelname = modelname
         dirname, filename = os.path.split(os.path.abspath(__file__))
         self.amici_path = os.path.split(dirname)[0]
@@ -97,7 +110,7 @@ class Model:
         self.processCompartments()
         self.processRules()
         self.processVolumeConversion()
-        self.processFunctions()
+
 
     def processSpecies(self):
         species = self.sbml.getListOfSpecies()
@@ -146,21 +159,6 @@ class Model:
         # reactions
         reactions = self.sbml.getListOfReactions()
         self.n_reactions = len(reactions)
-
-        def getLocalParameters(reaction):
-            kinlaw = reaction.getKineticLaw()
-            param = [par for par in kinlaw.getListOfLocalParameters()]
-            param.extend([kinlaw.getParameter(ipar) for ipar in range(0,kinlaw.getNumParameters())])
-            return param
-
-        # localparameters
-        localParameters = []
-        [localParameters.extend(getLocalParameters(reaction)) for reaction in reactions]
-
-        if len(localParameters)>0:
-            self.parameterSymbols = self.parameterSymbols.col_join(sp.DenseMatrix(
-                [symbols(par.getId()) for par in localParameters]))
-            self.parameterValues += [par.getValue() for par in localParameters]
 
         # stoichiometric matrix
         self.stoichiometricMatrix = sp.zeros(self.n_species, self.n_reactions)
@@ -250,20 +248,6 @@ class Model:
                                                    self.speciesSymbols.mul_matrix(
                                                        self.speciesCompartment.applyfunc(lambda x: 1/x).
                                                            subs(self.compartmentSymbols,self.compartmentVolume)))
-
-    def processFunctions(self):
-        functions = self.sbml.getListOfFunctionDefinitions()
-        for function in functions:
-            def funeval(cls,x):
-                return x
-
-            bodyDict = {
-                eval: funeval
-            }
-            exec(function.getId() + ' = type("' + function.getId() + '", (sp.Function,), bodyDict)')
-        pass
-
-
 
 
     def getSparseSymbols(self,symbolName):
@@ -526,11 +510,8 @@ def applyTemplate(sourceFile,targetFile,templateData):
     result = src.safe_substitute(templateData)
     open(targetFile, 'w').write(result)
 
-
-
 def getSymbols(prefix,length):
     return sp.DenseMatrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
-
 
 def getSymbolicDiagonal(matrix):
     assert matrix.cols == matrix.rows
@@ -542,8 +523,3 @@ def getSymbolicDiagonal(matrix):
 
 class TemplateAmici(Template):
     delimiter = 'TPL_'
-
-
-
-
-
