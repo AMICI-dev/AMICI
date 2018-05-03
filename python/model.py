@@ -11,6 +11,7 @@ import subprocess
 from symengine import symbols
 from string import Template
 
+
 class Model:
     """The Model class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
@@ -30,55 +31,6 @@ class Model:
 
     # TODO: are units respected on sbml import? if not convert; at least throw if differ?
     # TODO: camelCase?
-    # TODO: dupe:  ('JSparse', 'J'); to dict?
-    """Long and short names for model components"""
-    shortenedVariables = [('species','x'), ('sensitivity', 'sx'), ('vector','v'), ('vectorB','vB'), ('parameter','p'),
-                          ('observable','y'), ('adjoint','xB'), ('flux', 'w'), ('dxdotdp','dxdotdp'),
-                          ('dwdxSparse', 'dwdx'), ('dwdpSparse', 'dwdp'), ('JSparse', 'J'), ('JSparse', 'J'),
-                          ('my', 'my'), ('sigmay', 'sigmay')]
-
-    """Signatures and properties of generated model functions (see include/amici/model.h for details)."""
-    functions = {
-        'J': {'signature': '(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
-        'JB': {'signature': '(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx)'},
-        'JDiag': {'signature': '(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
-                  'symbol': 'J',
-                  'diagonality': True},
-        'JSparse': {'signature': '(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
-                    'symbol': 'JSparseList',
-                    'sparsity': True},
-        'JSparseB': {'signature': '(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx)',
-                     'symbol': 'JSparseBList',
-                     'sparsity': True},
-        'Jv': {'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx)'},
-        'JvB': {'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx)'},
-        'Jy': {'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
-               'variable': 'nllh',
-               'multiobs': True},
-        'dJydsigma': {'signature': '(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
-                      'multiobs': True},
-        'dJydy': {'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my)',
-                  'multiobs': True},
-        'dwdp': {'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)',
-                 'symbol': 'dwdxSparseList'},
-        'dwdx': {'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)',
-                 'symbol': 'dwdpSparseList'},
-        'dxdotdp': {'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp)',
-                    'sensitivity': True},
-        'dydx': {'signature': '(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)'},
-        'qBdot': {'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp)',
-                  'sensitivity': True},
-        'sigma_y': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
-                    'symbol': 'sigmay',
-                    'variable': 'sigmay'},
-        'sxdot': {'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)'},
-        'w': {'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)'},
-        'x0': {'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
-        'sx0': {'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip)'},
-        'xBdot': {'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx)'},
-        'xdot': {'signature': '(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)'},
-        'y': {'signature': '(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)'}
-    }
 
 
     # TODO: move arguments to wrap model? 
@@ -99,6 +51,116 @@ class Model:
 
         self.functionBodies = {} # TODO: "private" ?
         self.Codeprinter = CCodePrinter()
+
+        """Signatures and properties of generated model functions (see include/amici/model.h for details)."""
+        self.functions = {
+            'J': {
+                'signature': '(realtype *J, const realtype t, const realtype *x, const double *p,'
+                             ' const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+            'JB': {
+                'signature': '(realtype *JB, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
+                             ' const realtype *dwdx)'},
+            'JDiag': {
+                'signature': '(realtype *JDiag, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+            'JSparse': {
+                'signature': '(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
+                'symbol': 'sparseList'},
+            'JSparseB': {
+                'signature': '(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
+                             ' const realtype *dwdx)',
+                'symbol': 'sparseList'},
+            'Jv': {
+                'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *v, const realtype *w,'
+                             ' const realtype *dwdx)'},
+            'JvB': {
+                'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *xB, const realtype *vB,'
+                             ' const realtype *w, const realtype *dwdx)'},
+            'Jy': {
+                'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y,'
+                             ' const double *sigmay, const double *my)',
+                'variable': 'nllh',
+                'multiobs': True},
+            'dJydsigma': {
+                'signature': '(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y,'
+                             ' const double *sigmay, const double *my)',
+                'multiobs': True},
+            'dJydy': {
+                'signature': '(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y,'
+                             ' const double *sigmay, const double *my)',
+                'multiobs': True},
+            'dwdp': {
+                'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *w)',
+                'symbol': 'sparseList'},
+            'dwdx': {
+                'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *w)',
+                'symbol': 'sparseList'},
+            'dxdotdp': {
+                'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const int ip, const realtype *w,'
+                             ' const realtype *dwdp)',
+                'sensitivity': True},
+            'dydx': {
+                'signature': '(double *dydx, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h)'},
+            'dydp': {
+                'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h)'},
+            'qBdot': {
+                'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
+                             ' const realtype *dwdp)',
+                'sensitivity': True},
+            'sigma_y': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
+                        'variable': 'sigmay'},
+            'sxdot': {
+                'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const int ip, const realtype *sx,'
+                             ' const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)'},
+            'w': {
+                'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h)'},
+            'x0': {'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+            'sx0': {
+                'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
+                             ' const realtype *k, const int ip)'},
+            'xBdot': {
+                'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
+                             ' const realtype *dwdx)'},
+            'xdot': {
+                'signature': '(realtype *xdot, const realtype t, const realtype *x, const realtype *p,'
+                             ' const realtype *k, const realtype *h, const realtype *w)'},
+            'y': {
+                'signature': '(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k,'
+                             ' const realtype *h)'}
+        }
+
+        """Long and short names for model components"""
+        self.symbols = {
+            'species': {'shortName': 'x'},
+            'sensitivity': {'shortName': 'sx'},
+            'vector': {'shortName': 'v'},
+            'vectorB': {'shortName': 'vB'},
+            'parameter': {'shortName': 'p'},
+            'observable': {'shortName': 'y'},
+            'adjoint': {'shortName': 'xB'},
+            'flux': {'shortName': 'w'},
+            'dxdotdp': {'shortName': 'dxdotdp'},
+            'dwdx': {'shortName': 'dwdx'},
+            'dwdp': {'shortName': 'dwdp'},
+            'JSparse': {'shortName': 'J'},
+            'JSparseB': {'shortName': 'JB'},
+            'my': {'shortName': 'my'},
+            'sigma_y': {'shortName': 'sigmay'}
+        }
 
     def loadSBMLFile(self, SBMLFile):
         """Parse the provided SBML file."""
@@ -180,8 +242,9 @@ class Model:
         """Get species information from SBML model."""
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
-        self.speciesIndex = {species_element.getId(): species_index for species_index, species_element in enumerate(species)}
-        self.speciesSymbols = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+        self.speciesIndex = {species_element.getId(): species_index
+                             for species_index, species_element in enumerate(species)}
+        self.symbols['species']['expression'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
         self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
                                 for species_element in species]
@@ -193,7 +256,7 @@ class Model:
         self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
                                               sp.sympify(amounts[index])/self.speciesCompartment[index] if not
                                               math.isnan(amounts[index]) else
-                                              self.speciesSymbols[index]
+                                              self.symbols['species']['expression'][index]
                                               for index, conc in enumerate(concentrations)])
 
         if self.sbml.isSetConversionFactor():
@@ -208,20 +271,24 @@ class Model:
     def processParameters(self):
         """Get parameter information from SBML model."""
         parameters = self.sbml.getListOfParameters()
-        self.parameterSymbols = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
+        self.symbols['parameter']['expression'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
-        self.n_parameters = len(self.parameterSymbols)
+        self.n_parameters = len(self.symbols['parameter']['expression'])
 
     def processCompartments(self):
         """Get compartment information, stoichiometric matrix and fluxes from SBML model."""
         compartments = self.sbml.getListOfCompartments()
         self.compartmentSymbols = sp.DenseMatrix([symbols(comp.getId()) for comp in compartments])
-        self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) for comp in compartments])
+        self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) if comp.isSetVolume()
+                                                 else sp.sympify(1.0) for comp in compartments])
 
         # replace occurences of compartment ids by the respective volume
-        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols, self.compartmentVolume)
-        self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols, self.compartmentVolume)
-        self.fluxVector = self.fluxVector.subs(self.compartmentSymbols, self.compartmentVolume)
+        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols,
+                                                                   self.compartmentVolume)
+        self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols,
+                                                       self.compartmentVolume)
+        self.fluxVector = self.fluxVector.subs(self.compartmentSymbols,
+                                               self.compartmentVolume)
 
 
     def processReactions(self):
@@ -232,7 +299,7 @@ class Model:
         # stoichiometric matrix
         self.stoichiometricMatrix = sp.zeros(self.n_species, self.n_reactions)
         self.fluxVector = sp.zeros(self.n_reactions, 1)
-        self.fluxSymbols = sp.zeros(self.n_reactions, 1)
+        self.symbols['flux']['expression'] = sp.zeros(self.n_reactions, 1)
 
         for reaction_index, reaction in enumerate(reactions):
             reactants = {r.getSpecies(): r.getStoichiometry() for r in reaction.getListOfReactants()}
@@ -252,7 +319,7 @@ class Model:
                         self.speciesCompartment[self.speciesIndex[product]]
 
             self.fluxVector[reaction_index] = sp.sympify(reaction.getKineticLaw().getFormula())
-            self.fluxSymbols[reaction_index] = sp.sympify('w' + str(reaction_index))
+            self.symbols['flux']['expression'][reaction_index] = sp.sympify('w' + str(reaction_index))
 
 
     def processRules(self):
@@ -279,7 +346,9 @@ class Model:
                 isObservable = False
 
             if variable in initvars:
-                self.speciesInitial = self.speciesInitial.subs(variable, formula.subs(self.speciesSymbols,self.speciesInitial))
+                self.speciesInitial = self.speciesInitial.subs(variable,
+                                                               formula.subs(self.symbols['species']['expression'],
+                                                                            self.speciesInitial))
                 isObservable = False
 
             if variable in fluxvars:
@@ -304,20 +373,21 @@ class Model:
 
         if(len(observables)>0):
             self.observables = sp.DenseMatrix(observables)
-            self.observableSymbols = sp.DenseMatrix(observableSymbols)
+            self.symbols['observable']['expression'] = sp.DenseMatrix(observableSymbols)
             self.n_observables = len(observables)
         else:
-            self.observables = self.speciesSymbols
-            self.observableSymbols = sp.DenseMatrix([sp.sympify('y' + str(index))
-                                                     for index in range(0,len(self.speciesSymbols))])
-            self.n_observables = len(self.speciesSymbols)
+            self.observables = self.symbols['species']['expression']
+            self.symbols['observable']['expression'] = sp.DenseMatrix([sp.sympify('y' + str(index))
+                                                     for index in range(0,len(self.symbols['species']['expression']))])
+            self.n_observables = len(self.symbols['species']['expression'])
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
-        self.fluxVector = self.fluxVector.subs(self.speciesSymbols,
-                                                self.speciesSymbols.mul_matrix(
+        self.fluxVector = self.fluxVector.subs(self.symbols['species']['expression'],
+                                                self.symbols['species']['expression'].mul_matrix(
                                                     self.speciesCompartment.applyfunc(lambda x: 1/x).
-                                                        subs(self.compartmentSymbols,self.compartmentVolume)))
+                                                        subs(self.compartmentSymbols,
+                                                             self.compartmentVolume)))
 
 
     def getSparseSymbols(self,symbolName):
@@ -333,7 +403,7 @@ class Model:
         symbolColPtrs:
         symbolRowVals:
         """
-        matrix = self.__getattribute__(symbolName)
+        matrix = self.functions[symbolName]['expression']
         symbolIndex = 0
         sparseMatrix = sp.zeros(matrix.rows,matrix.cols)
         symbolList = []
@@ -354,71 +424,93 @@ class Model:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    # TODO: write results to self.functions instead of to instance? saves the need for getattr
     def computeModelEquations(self):
         """Perform symbolic computations required to populate functions in `self.functions`."""
         # core
-        self.xdot = self.stoichiometricMatrix * self.fluxSymbols
+        self.functions['xdot']['expression'] = self.stoichiometricMatrix * self.symbols['flux']['expression']
 
-        self.w = self.fluxVector
+        self.functions['w']['expression'] = self.fluxVector
 
-        self.dwdx = self.fluxVector.jacobian(self.speciesSymbols)
-        self.dwdxSparse, self.dwdxSparseSymbols, self.dwdxSparseList  = self.getSparseSymbols('dwdx')[0:3]
+        self.functions['dwdx']['expression'] = self.fluxVector.jacobian(self.symbols['species']['expression'])
+        self.functions['dwdx']['sparseExpression'], self.symbols['dwdx']['expression'],\
+            self.functions['dwdx']['sparseList']  = self.getSparseSymbols('dwdx')[0:3]
 
-        self.J = self.xdot.jacobian(self.speciesSymbols) + self.stoichiometricMatrix * self.dwdxSparse
-        self.vectorSymbols = getSymbols('v',self.n_species)
-        self.Jv = self.J*self.vectorSymbols
-        self.JSparse, self.JSparseSymbols, self.JSparseList, self.JSparseColPtrs, self.JSparseRowVals \
-            = self.getSparseSymbols('J')
+        self.functions['J']['expression'] = self.functions['xdot']['expression']\
+                                                .jacobian(self.symbols['species']['expression']) \
+                                            + self.stoichiometricMatrix * self.functions['dwdx']['sparseExpression']
+        self.symbols['vector']['expression'] = getSymbols('v',self.n_species)
+        self.functions['Jv']['expression'] = self.functions['J']['expression']*self.symbols['vector']['expression']
+        self.functions['JSparse']['expression'], self.symbols['JSparse']['expression'],\
+            self.functions['JSparse']['sparseList'], self.functions['JSparse']['colPtrs'],\
+            self.functions['JSparse']['rowVals'] = self.getSparseSymbols('J')
 
-        self.x0 = self.speciesInitial
+        self.functions['x0']['expression'] = self.speciesInitial
+
+        self.functions['JDiag']['expression'] = getSymbolicDiagonal(self.functions['J']['expression'])
 
         # sensitivity
-        self.dwdp = self.fluxVector.jacobian(self.parameterSymbols)
-        self.dwdpSparse, self.dwdpSparseSymbols, self.dwdpSparseList = self.getSparseSymbols('dwdp')[0:3]
+        self.functions['dwdp']['expression'] = self.fluxVector.jacobian(self.symbols['parameter']['expression'])
+        self.functions['dwdp']['sparseExpression'], self.symbols['dwdp']['expression'],\
+            self.functions['dwdp']['sparseList'] = self.getSparseSymbols('dwdp')[0:3]
 
-        self.dxdotdp = self.xdot.jacobian(self.parameterSymbols) + self.stoichiometricMatrix * self.dwdpSparse
-        self.dxdotdpSymbols = getSymbols('dxdotdp',self.n_species)
-        self.sx0 = self.speciesInitial.jacobian(self.parameterSymbols)
+        self.functions['dxdotdp']['expression'] = self.functions['xdot']['expression']\
+                                                      .jacobian(self.symbols['parameter']['expression'])\
+                                                  + self.stoichiometricMatrix\
+                                                    * self.functions['dwdp']['sparseExpression']
+        self.symbols['dxdotdp']['expression'] = getSymbols('dxdotdp',self.n_species)
+        self.functions['sx0']['expression'] = self.speciesInitial.jacobian(self.symbols['parameter']['expression'])
 
         # forward
-        self.sensitivitySymbols = getSymbols('sx',self.n_species)
-        self.sxdot = self.JSparse*self.sensitivitySymbols + self.dxdotdpSymbols
+        self.symbols['sensitivity']['expression'] = getSymbols('sx',self.n_species)
+        self.functions['sxdot']['expression'] = self.functions['JSparse']['expression']\
+                                                * self.symbols['sensitivity']['expression'] \
+                                                + self.symbols['dxdotdp']['expression']
 
         # adjoint
-        self.JB = self.J.transpose()
-        self.vectorBSymbols = getSymbols('vB', self.n_species)
-        self.JvB = self.JB * self.vectorBSymbols
-        self.JSparseB, self.JSparseBSymbols, self.JSparseBList, self.JSparseBColPtrs, self.JSparseBRowVals \
-            = self.getSparseSymbols('JB')
+        self.functions['JB']['expression'] = self.functions['J']['expression'].transpose()
+        self.symbols['vectorB']['expression'] = getSymbols('vB', self.n_species)
+        self.functions['JvB']['expression'] = self.functions['JB']['expression'] \
+                                              * self.symbols['vectorB']['expression']
+        self.functions['JSparseB']['expression'], self.symbols['JSparseB']['expression'],\
+            self.functions['JSparseB']['sparseList'], self.functions['JSparseB']['colPtrs'],\
+            self.functions['JSparseB']['rowVals'] = self.getSparseSymbols('JB')
 
-        self.adjointSymbols = getSymbols('xB',self.n_species)
-        self.xBdot = - self.JB*self.adjointSymbols
-        self.qBdot = - self.adjointSymbols.transpose()*self.dxdotdp
+        self.symbols['adjoint']['expression'] = getSymbols('xB',self.n_species)
+        self.functions['xBdot']['expression'] = - self.functions['JB']['expression']\
+                                                  * self.symbols['adjoint']['expression']
+        self.functions['qBdot']['expression'] = - self.symbols['adjoint']['expression'].transpose()\
+                                                  * self.functions['dxdotdp']['expression']
 
         # observables
-        self.y = self.observables
-        self.dydp = self.y.jacobian(self.parameterSymbols)
-        self.dydx = self.y.jacobian(self.speciesSymbols)
+        self.functions['y']['expression'] = self.observables
+        self.functions['dydp']['expression'] = self.functions['y']['expression']\
+                                                .jacobian(self.symbols['parameter']['expression'])
+        self.functions['dydx']['expression'] = self.functions['y']['expression']\
+                                                .jacobian(self.symbols['species']['expression'])
 
         # objective function
-        self.sigmaySymbols = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in self.observableSymbols])
-        self.sigmay = sp.zeros(self.sigmaySymbols.cols, self.sigmaySymbols.rows)
-        self.mySymbols = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in self.observableSymbols])
-        self.Jy = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
-                                        '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
-                             for iy, symbol in enumerate(self.observableSymbols)])
-        self.dJydy = self.Jy.jacobian(self.observableSymbols)
-        self.dJydsigma = self.Jy.jacobian(self.sigmaySymbols)
-        self.Jy = self.Jy.transpose()
-        self.dJydy = self.dJydy.transpose()
-        self.dJydsigma = self.dJydsigma.transpose()
+        self.symbols['sigma_y']['expression'] = sp.DenseMatrix([sp.sympify('sigma' + str(symbol))
+                                                               for symbol in self.symbols['observable']['expression']])
+        self.functions['sigma_y']['expression'] = sp.zeros(self.symbols['sigma_y']['expression'].cols,
+                                                          self.symbols['sigma_y']['expression'].rows)
+        self.symbols['my']['expression'] = sp.DenseMatrix([sp.sympify('m' + str(symbol))
+                                                           for symbol in self.symbols['observable']['expression']])
+        self.functions['Jy']['expression'] = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
+                                    '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
+                                    for iy, symbol in enumerate(self.symbols['observable']['expression'])])
+        self.functions['dJydy']['expression'] = self.functions['Jy']['expression']\
+                                                .jacobian(self.symbols['observable']['expression'])
+        self.functions['dJydsigma']['expression'] = self.functions['Jy']['expression']\
+                                                        .jacobian(self.symbols['sigma_y']['expression'])
+        self.functions['Jy']['expression'] = self.functions['Jy']['expression'].transpose()
+        self.functions['dJydy']['expression'] = self.functions['dJydy']['expression'].transpose()
+        self.functions['dJydsigma']['expression'] = self.functions['dJydsigma']['expression'].transpose()
 
 
     def generateCCode(self):
         """Create C++ code files for the model based on."""
-        for field,name in self.shortenedVariables:
-            self.writeIndexFiles(self.__getattribute__(field + 'Symbols'), name, field + '.h')
+        for name in self.symbols.keys():
+            self.writeIndexFiles(self.symbols[name]['expression'], self.symbols[name]['shortName'], name + '.h')
 
         for function in self.functions.keys():
             self.writeFunctionFile(function)
@@ -473,11 +565,12 @@ class Model:
 
         lines.append('')
 
-        for variable, shortenedVariable in self.shortenedVariables:
+        for symbol in self.symbols.keys():
             # added |double for data
             # added '[0]*' for initial conditions
-            if(not re.search('const (realtype|double) \*' + shortenedVariable + '[0]*[,)]+',signature) is None):
-                lines.append('#include "' + variable + '.h"')
+            if not re.search('const (realtype|double) \*' + self.symbols[symbol]['shortName'] + '[0]*[,)]+',
+                             signature) is None :
+                lines.append('#include "' + symbol + '.h"')
 
         lines.append('')
 
@@ -485,7 +578,7 @@ class Model:
         
         # function body
         body = self.getFunctionBody(function)
-        self.functionBodies[function] = body
+        self.functions[function]['body'] = body
         lines += body
         lines.append('}')
         #if not body is None:
@@ -505,13 +598,11 @@ class Model:
             variableName = function
 
         if ('symbol' in self.functions[function].keys()):
-            symbol = self.__getattribute__(self.functions[function]['symbol'])
+            symbol = self.functions[function][self.functions[function]['symbol']]
         else:
-            symbol = self.__getattribute__(function)
+            symbol = self.functions[function]['expression']
         lines = []
 
-        if ('diagonality' in self.functions[function].keys()):
-            symbol = getSymbolicDiagonal(symbol)
 
         if('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
@@ -528,9 +619,9 @@ class Model:
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         else:
-            if('sparsity' in self.functions[function].keys()):
-                rowVals = self.__getattribute__(function + 'RowVals')
-                colPtrs = self.__getattribute__(function + 'ColPtrs')
+            if('colPtrs' in self.functions[function].keys()):
+                rowVals = self.functions[function]['rowVals']
+                colPtrs = self.functions[function]['colPtrs']
                 lines += self.getSparseSymLines(symbol, rowVals, colPtrs, variableName, 4)
             else:
                 lines += self.getSymLines(symbol, variableName, 4)
@@ -556,10 +647,10 @@ class Model:
                         'NZTRUE': '0',
                         'NEVENT': '0',
                         'NOBJECTIVE': '1',
-                        'NW': str(len(self.fluxSymbols)),
-                        'NDWDDX': str(len(self.dwdxSparseSymbols)),
-                        'NDWDP': str(len(self.dwdpSparseSymbols)),
-                        'NNZ': str(len(self.JSparseSymbols)),
+                        'NW': str(len(self.symbols['flux']['expression'])),
+                        'NDWDDX': str(len(self.functions['dwdx']['sparseList'])),
+                        'NDWDP': str(len(self.functions['dwdp']['sparseList'])),
+                        'NNZ': str(len(self.functions['JSparse']['sparseList'])),
                         'UBW': str(self.n_species),
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
@@ -571,8 +662,8 @@ class Model:
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model."""
-        sources = [ self.modelname + '_' + function + '.cpp ' if self.functionBodies[function] is not None else ''
-                    for function in self.functionBodies.keys() ]
+        sources = [ self.modelname + '_' + function + '.cpp ' if self.functions[function]['body'] is not None else ''
+                    for function in self.functions.keys() ]
         try:
             sources.remove('')
         except:
