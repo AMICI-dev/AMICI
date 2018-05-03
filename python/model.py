@@ -188,7 +188,9 @@ class Model:
         amounts = [spec.getInitialAmount() for spec in species]
 
         self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
-                                              sp.sympify(amounts[index])/self.speciesCompartment[index]
+                                              sp.sympify(amounts[index])/self.speciesCompartment[index] if not
+                                              math.isnan(amounts[index]) else
+                                              self.speciesSymbols[index]
                                               for index, conc in enumerate(concentrations)])
 
         if self.sbml.isSetConversionFactor():
