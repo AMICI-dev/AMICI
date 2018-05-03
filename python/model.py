@@ -147,7 +147,7 @@ class Model:
         """Generate AMICI C++ files for the model provided to the constructor."""
         self.processSBML()
         self.checkModelDimensions()
-        self.getModelEquations()
+        self.computeModelEquations()
         self.generateCCode()
         self.compileCCode()
 
@@ -215,7 +215,7 @@ class Model:
         self.compartmentSymbols = sp.DenseMatrix([symbols(comp.getId()) for comp in compartments])
         self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) for comp in compartments])
 
-        #TODO: ?? overwritten in processReactions
+        # replace occurences of compartment ids by the respective volume
         self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols, self.compartmentVolume)
         self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols, self.compartmentVolume)
         self.fluxVector = self.fluxVector.subs(self.compartmentSymbols, self.compartmentVolume)
@@ -310,7 +310,7 @@ class Model:
             self.n_observables = len(self.speciesSymbols)
 
     def processVolumeConversion(self):
-        if __name__ == '__main__':
+        """Convert equations from amount to volume."""
             self.fluxVector = self.fluxVector.subs(self.speciesSymbols,
                                                    self.speciesSymbols.mul_matrix(
                                                        self.speciesCompartment.applyfunc(lambda x: 1/x).
@@ -351,10 +351,8 @@ class Model:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-
-    # TODO: misleading name, does not return
     # TODO: write results to self.functions instead of to instance? saves the need for getattr
-    def getModelEquations(self):
+    def computeModelEquations(self):
         """Perform symbolic computations required to populate functions in `self.functions`."""
         # core
         self.xdot = self.stoichiometricMatrix * self.fluxSymbols
@@ -514,23 +512,23 @@ class Model:
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
                 lines.append(' ' * 8 + 'case ' + str(ipar) + ':')
-                lines += self.writeSym(symbol[:,ipar], variableName, 12)
+                lines += self.getSymLines(symbol[:, ipar], variableName, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         elif('multiobs' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(0,self.n_observables):
                 lines.append(' ' * 8 + 'case ' + str(iobs) + ':')
-                lines += self.writeSym(symbol[:,iobs], variableName, 12)
+                lines += self.getSymLines(symbol[:, iobs], variableName, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         else:
             if('sparsity' in self.functions[function].keys()):
                 rowVals = self.__getattribute__(function + 'RowVals')
                 colPtrs = self.__getattribute__(function + 'ColPtrs')
-                lines += self.writeSparseSym(symbol, rowVals, colPtrs, variableName, 4)
+                lines += self.getSparseSymLines(symbol, rowVals, colPtrs, variableName, 4)
             else:
-                lines += self.writeSym(symbol, variableName, 4)
+                lines += self.getSymLines(symbol, variableName, 4)
 
         return lines
 
@@ -589,7 +587,7 @@ class Model:
         shutil.copy(os.path.join(self.amici_swig_path, 'CMakeLists_model.txt'),
                     os.path.join(self.model_swig_path, 'CMakeLists.txt'))
 
-    def writeSym(self,symbols,variable,indentLevel):
+    def getSymLines(self, symbols, variable, indentLevel):
         """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.
         
         Args: 
@@ -609,15 +607,14 @@ class Model:
             pass
 
         return lines
-    
-    # TODO: rename, does not *write*
-    def writeSparseSym(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
+
+    def getSparseSymLines(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
         """Generate C++ code for assigning sparse symbolic matrix to a C++ array `variable`.
      
         Args: 
         symbolList: vectors of symbolic terms
-        RowVals:
-        ColPtrs:
+        RowVals: list of row indices of each nonzero entry (see CVODES SlsMat documentation for details)
+        ColPtrs: list of indices of the first column entries (see CVODES SlsMat documentation for details)
         variable: name of the C++ array to assign to
         indentLevel: indentation level (number of leading blanks)
         
