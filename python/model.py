@@ -12,12 +12,32 @@ from symengine import symbols
 from string import Template
 
 class Model:
+    """The Model class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
+    
+    Attributes:
+    -----------
+    SBMLreader = sbml.SBMLReader()
+        sbml_doc: private?
+        sbml: private?
+        modelname:
+        amici_path:
+        amici_swig_path:
+        amici_src_path:
+        model_path:
+        model_swig_path:
+        self.functionBodies:
+    """
 
+    # TODO: are units respected on sbml import? if not convert; at least throw if differ?
+    # TODO: camelCase?
+    # TODO: dupe:  ('JSparse', 'J'); to dict?
+    """Long and short names for model components"""
     shortenedVariables = [('species','x'), ('sensitivity', 'sx'), ('vector','v'), ('vectorB','vB'), ('parameter','p'),
                           ('observable','y'), ('adjoint','xB'), ('flux', 'w'), ('dxdotdp','dxdotdp'),
                           ('dwdxSparse', 'dwdx'), ('dwdpSparse', 'dwdp'), ('JSparse', 'J'), ('JSparse', 'J'),
                           ('my', 'my'), ('sigmay', 'sigmay')]
 
+    """Signatures and properties of generated model functions (see include/amici/model.h for details)."""
     functions = {
         'J': {'signature': '(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
         'JB': {'signature': '(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx)'},
@@ -61,9 +81,30 @@ class Model:
     }
 
 
+    # TODO: move arguments to wrap model? 
     def __init__(self, SBMLFile, modelname):
-        self.SBMLReader = sbml.SBMLReader()
-        self.sbml_doc = self.SBMLReader.readSBML(SBMLFile)
+        """Create a new Model instance.
+        
+        Arguments:
+        ----------
+        SBMLFile: Path to SBML file where the model is specified
+        modelname: Name of Model to be generated
+        """
+        self.loadSBMLFile(SBMLFile)
+        self.modelname = modelname
+        
+        self.setPaths()
+        if not os.path.exists(self.model_path):
+            os.makedirs(self.model_path)
+
+        self.functionBodies = {} # TODO: "private" ?
+        self.Codeprinter = CCodePrinter()
+
+    def loadSBMLFile(self, SBMLFile):
+        """Parse the provided SBML file."""
+        self.SBMLreader = sbml.SBMLReader()
+        self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
+
         if (self.sbml_doc is None):
             raise Exception('Provided SBML file does not exit or is invalid!')
 
@@ -90,30 +131,34 @@ class Model:
         self.SBMLWriter = sbml.SBMLWriter()
         self.SBMLWriter.writeSBML(self.sbml_doc,SBMLFile.replace('.xml','_converted.xml'))
 
-        self.modelname = modelname
+   
+
+    def setPaths(self):
+        """Deduce paths input and output paths from script file name."""
+        # TODO: move amici_*_path to amici module?
         dirname, filename = os.path.split(os.path.abspath(__file__))
         self.amici_path = os.path.split(dirname)[0]
         self.amici_swig_path = os.path.join(self.amici_path, 'swig')
         self.amici_src_path = os.path.join(self.amici_path, 'src')
         self.model_path = os.path.join(self.amici_path,'models', self.modelname)
         self.model_swig_path = os.path.join(self.model_path, 'swig')
-        if not os.path.exists(self.model_path):
-            os.makedirs(self.model_path)
-        self.functionBodies = {}
-        self.Codeprinter = CCodePrinter()
-
 
     def wrapModel(self):
+        """Generate AMICI C++ files for the model provided to the constructor."""
         self.processSBML()
         self.checkModelDimensions()
         self.getModelEquations()
         self.generateCCode()
         self.compileCCode()
 
+
     def checkModelDimensions(self):
+        """Ensure the model has species to simulate"""
         assert self.n_species > 0
 
+
     def processSBML(self):
+        """Read parameters, species, reactions, and so on from SBML model"""
         self.checkSupport()
         self.processParameters()
         self.processSpecies()
@@ -129,6 +174,7 @@ class Model:
 
 
     def processSpecies(self):
+        """Get species information from SBML model."""
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
         self.speciesIndex = {species_element.getId(): species_index for species_index, species_element in enumerate(species)}
@@ -155,24 +201,26 @@ class Model:
 
 
     def processParameters(self):
-        # parameters
+        """Get parameter information from SBML model."""
         parameters = self.sbml.getListOfParameters()
         self.parameterSymbols = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.parameterSymbols)
 
     def processCompartments(self):
-        # parameters
+        """Get compartment information, stoichiometric matrix and fluxes from SBML model."""
         compartments = self.sbml.getListOfCompartments()
         self.compartmentSymbols = sp.DenseMatrix([symbols(comp.getId()) for comp in compartments])
         self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) for comp in compartments])
 
+        #TODO: ?? overwritten in processReactions
         self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols, self.compartmentVolume)
         self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols, self.compartmentVolume)
         self.fluxVector = self.fluxVector.subs(self.compartmentSymbols, self.compartmentVolume)
 
+
     def processReactions(self):
-        # reactions
+        """Get reactions from SBML model."""
         reactions = self.sbml.getListOfReactions()
         self.n_reactions = len(reactions)
 
@@ -203,6 +251,7 @@ class Model:
 
 
     def processRules(self):
+        """Process *Rules defined in the SBML model."""
         rules = self.sbml.getListOfRules()
 
         rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
@@ -267,6 +316,18 @@ class Model:
 
 
     def getSparseSymbols(self,symbolName):
+        """Create sparse symbolic matrix.
+        
+        Args:
+        symbolName:
+        
+        Returns:
+        sparseMatrix:
+        symbolList:
+        sparseList:
+        symbolColPtrs:
+        symbolRowVals:
+        """
         matrix = self.__getattribute__(symbolName)
         symbolIndex = 0
         sparseMatrix = sp.zeros(matrix.rows,matrix.cols)
@@ -289,8 +350,10 @@ class Model:
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
 
+    # TODO: misleading name, does not return
+    # TODO: write results to self.functions instead of to instance? saves the need for getattr
     def getModelEquations(self):
-
+        """Perform symbolic computations required to populate functions in `self.functions`."""
         # core
         self.xdot = self.stoichiometricMatrix * self.fluxSymbols
 
@@ -350,6 +413,7 @@ class Model:
 
 
     def generateCCode(self):
+        """Create C++ code files for the model based on."""
         for field,name in self.shortenedVariables:
             self.writeIndexFiles(self.__getattribute__(field + 'Symbols'), name, field + '.h')
 
@@ -366,11 +430,19 @@ class Model:
 
 
     def compileCCode(self):
+        """Compile the generated model code"""
         subprocess.call([os.path.join(self.amici_path, 'scripts', 'buildModel.sh'), self.modelname])
 
 
 
     def writeIndexFiles(self,Symbols,CVariableName,fileName):
+        """Write index file for a symbolic array.
+        
+        Args:
+        Symbols: symbolic variables
+        CVariableName: Name of the C++ array the symbols  
+        fileName: filename without path
+        """
         lines = []
         [lines.append('#define ' + str(symbol) + ' ' + CVariableName + '[' + str(index) + ']')
          for index, symbol in enumerate(Symbols)]
@@ -378,15 +450,19 @@ class Model:
 
 
     def writeFunctionFile(self,function):
-
+        """Write the function `function`.
+        
+        Args:
+        function: name of the function to be written (see self.functions)"""
+        
         # function header
         lines = ['#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h" //realtype definition',
-            'typedef amici::realtype realtype;',
+            'using amici::realtype;',
             '#include <cmath> ',
             '']
+        
         # function signature
-
         signature = self.functions[function]['signature']
 
         if(not signature.find('SlsMat') == -1):
@@ -401,6 +477,7 @@ class Model:
         lines.append('')
 
         lines.append('void ' + function + '_' + self.modelname + signature + '{')
+        
         # function body
         body = self.getFunctionBody(function)
         self.functionBodies[function] = body
@@ -411,7 +488,12 @@ class Model:
 
 
     def getFunctionBody(self,function):
-
+        """Generate C++ code for body of function `function`.
+        
+        Args:
+        function: name of the function to be written (see self.functions)
+        """
+        
         if('variable' in self.functions[function].keys()):
             variableName = self.functions[function]['variable']
         else:
@@ -450,12 +532,16 @@ class Model:
 
         return lines
 
+
     def writeWrapfunctionsCPP(self):
+        """Write model-specific 'wrapper' file (wrapfunctions.cpp)."""
         templateData = {'MODELNAME': self.modelname}
         applyTemplate(os.path.join(self.amici_src_path, 'wrapfunctions.template.cpp'),
                       os.path.join(self.model_path, 'wrapfunctions.cpp'), templateData)
 
+
     def writeWrapfunctionsHeader(self):
+        """Write model-specific header file (wrapfunctions.h)."""
         templateData = {'MODELNAME': str(self.modelname),
                         'NX': str(self.n_species),
                         'NXTRUE': str(self.n_species),
@@ -479,6 +565,7 @@ class Model:
                       os.path.join(self.model_path, 'wrapfunctions.h'), templateData)
 
     def writeCMakeFile(self):
+        """Write CMake CMakeLists.txt file for this model."""
         sources = [ self.modelname + '_' + function + '.cpp ' if self.functionBodies[function] is not None else '' for function in self.functionBodies.keys() ]
         try:
             sources.remove('')
@@ -490,6 +577,7 @@ class Model:
                       os.path.join(self.model_path, 'CMakeLists.txt'), templateData)
 
     def writeSwigFiles(self):
+        """Write SWIG interface files for this model."""
         if not os.path.exists(self.model_swig_path):
             os.makedirs(self.model_swig_path)
         templateData = {'MODELNAME': self.modelname}
@@ -499,6 +587,16 @@ class Model:
                     os.path.join(self.model_swig_path, 'CMakeLists.txt'))
 
     def writeSym(self,symbols,variable,indentLevel):
+        """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.
+        
+        Args: 
+        symbols: vectors of symbolic terms
+        variable: name of the C++ array to assign to
+        indentLevel: indentation level (number of leading blanks)
+        
+        Returns: 
+        C++ code as list of lines"""
+
         lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
          if not math == 0 else '' for index, math in enumerate(symbols)]
 
@@ -508,8 +606,20 @@ class Model:
             pass
 
         return lines
-
+    
+    # TODO: rename, does not *write*
     def writeSparseSym(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
+        """Generate C++ code for assigning sparse symbolic matrix to a C++ array `variable`.
+     
+        Args: 
+        symbolList: vectors of symbolic terms
+        RowVals:
+        ColPtrs:
+        variable: name of the C++ array to assign to
+        indentLevel: indentation level (number of leading blanks)
+        
+        Returns: 
+        C++ code as list of lines"""
         lines = [
             ' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
             for index, math in enumerate(RowVals)]
@@ -521,21 +631,42 @@ class Model:
         return lines
 
 def applyTemplate(sourceFile,targetFile,templateData):
-    filein = open(sourceFile)
-    src = TemplateAmici(filein.read())
+    """Load source file, apply template substitution as provided in templateData and save as targetFile.
+    
+    Args:
+    sourceFile: relative or absolute path to template file
+    targetFile: relative or absolute path to output file
+    templateData: dictionary with template keywords to substitute (key is template veriable without TemplateAmici.delimiter)
+    """
+    with open(sourceFile) as filein:
+        src = TemplateAmici(filein.read())
     result = src.safe_substitute(templateData)
-    open(targetFile, 'w').write(result)
+    with open(targetFile, 'w') as fileout:
+        fileout.write(result)
 
 def getSymbols(prefix,length):
+    """Get symbolic matrix with symbols prefix0..prefix(length-1).
+    
+    Args:
+    prefix: variable name
+    length: number of symbolic variables + 1
+    """ 
     return sp.DenseMatrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
 
-def getSymbolicDiagonal(matrix):
-    assert matrix.cols == matrix.rows
-    diagonal = []
-    for index in range(0,matrix.cols):
-        diagonal.append(matrix[index,index])
 
+def getSymbolicDiagonal(matrix):
+    """Get symbolic matrix with diagonal of matrix `matrix`.
+    
+    Args:
+    matrix: Matrix from which to return the diagonal
+    Returns:
+    Symbolic matrix with the diagonal of `matrix`.
+    """
+    assert matrix.cols == matrix.rows
+    diagonal = [matrix[index,index] for index in range(matrix.cols)]
+    
     return sp.DenseMatrix(diagonal)
 
 class TemplateAmici(Template):
+    """Template format used in AMICI (see string.template for more details)."""
     delimiter = 'TPL_'
