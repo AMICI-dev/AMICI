@@ -11,10 +11,10 @@ dirname = os.path.split(os.path.abspath(__file__))[0]
 amici_path = os.path.split(dirname)[0]
 test_path = os.path.join(amici_path,'tests','sbml-semantic-test-cases','cases','semantic')
 
-def runTest(testId):
+
+def runTest(testId, logfile):
     try:
         current_test_path = os.path.join(test_path, testId)
-
 
         # settings
         settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
@@ -24,7 +24,8 @@ def runTest(testId):
                 if not line == '\n':
                     (key, val) = line.split(':')
                     settings[key] = val
-        ts = np.linspace(float(settings['start']),float(settings['start'])+float(settings['duration']),int(settings['steps'])+1)
+        ts = np.linspace(float(settings['start']), float(settings['start']) + float(settings['duration']),
+                         int(settings['steps']) + 1)
         atol = float(settings['absolute'])
         rtol = float(settings['relative'])
 
@@ -35,40 +36,45 @@ def runTest(testId):
 
         # model
         sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
-        wrapper = Model(sbmlFile,'SBMLTest' + testId)
+
+        wrapper = Model(sbmlFile, 'SBMLTest' + testId)
         wrapper.wrapModel()
-        sys.path.insert(0,os.path.join(wrapper.model_path,'build','swig'))
+
+
+        sys.path.insert(0, os.path.join(wrapper.model_path, 'build', 'swig'))
         mod = importlib.import_module(wrapper.modelname)
 
         model = mod.getModel()
         model.setTimepoints(mod.amici.DoubleVector(ts))
         solver = model.getSolver()
         solver.setMaxSteps(int(1e6))
-        solver.setRelativeTolerance(rtol/1000.0)
-        solver.setAbsoluteTolerance(atol/1000.0)
-        rdata = amici.runAmiciSimulation(solver.get(),None,model.get())
-        amountSpecies = settings['amount'].replace(' ','').replace('\n','').split(',')
-        simulated_x = np.array(rdata.x).reshape([len(ts),model.nx])
+        solver.setRelativeTolerance(rtol / 1000.0)
+        solver.setAbsoluteTolerance(atol / 1000.0)
+        rdata = amici.runAmiciSimulation(solver.get(), None, model.get())
+        amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
+        simulated_x = np.array(rdata.x).reshape([len(ts), model.nx])
         for species in amountSpecies:
-            volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,wrapper.compartmentVolume)
-            simulated_x[:, wrapper.speciesIndex[species]] = simulated_x[:, wrapper.speciesIndex[species]]*volume
+            volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,
+                                                                                wrapper.compartmentVolume)
+            simulated_x[:, wrapper.speciesIndex[species]] = simulated_x[:, wrapper.speciesIndex[species]] * volume
             pass
 
-
-        adev = abs(simulated_x-test_x)
+        adev = abs(simulated_x - test_x)
         adev[np.isnan(adev)] = True
-        rdev = abs((simulated_x-test_x)/test_x)
+        rdev = abs((simulated_x - test_x) / test_x)
         rdev[np.isnan(rdev)] = True
-        if(not np.all(np.logical_or(adev < atol, rdev < rtol))):
-            if(not np.all(adev<atol)):
+        if (not np.all(np.logical_or(adev < atol, rdev < rtol))):
+            if (not np.all(adev < atol)):
                 raise Exception('Absolute tolerance violated')
 
             if (not np.all(rdev < rtol)):
                 raise Exception('Relative tolerance violated')
 
-
-    except AssertionError:
-        pass
+    except Exception as err:
+        str = "Failed to wrap test " + testId + ": {0}".format(err)
+        print(str)
+        logfile.write(str + '\n')
+        return
 
 def getTestStr(testId):
     testStr = str(testId)
@@ -76,8 +82,10 @@ def getTestStr(testId):
     return testStr
 
 
-for testId in range(25,1781):
-    runTest(getTestStr(testId))
+for testId in range(1,1781):
+    with open("test.txt", "a") as logfile:
+        runTest(getTestStr(testId), logfile)
+
 
 #model = Model('/Users/F.Froehlich/Downloads/Speedy_v3_r403445_v1.sbml','speedy')
 #model.wrapModel()

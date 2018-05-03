@@ -181,3 +181,5 @@ python/.idea/workspace.xml
 *.pyc
 
 python/testSpeedy.py
+
+python/test.txt

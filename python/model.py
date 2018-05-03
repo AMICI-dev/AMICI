@@ -62,23 +62,33 @@ class Model:
 
 
     def __init__(self, SBMLFile, modelname):
-        self.SBMLreader = sbml.SBMLReader()
-        self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
+        self.SBMLReader = sbml.SBMLReader()
+        self.sbml_doc = self.SBMLReader.readSBML(SBMLFile)
         if (self.sbml_doc is None):
             raise Exception('Provided SBML file does not exit or is invalid!')
 
         # apply several model simplifications that make our life substantially easier
         convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
-        convertConfig.addOption('initialDefinition')
-        convertConfig.addOption('localParameters')
         status = self.sbml_doc.convert(convertConfig)
         if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise Exception('Could not apply model conversions!')
+            raise Exception('Could not flatten function defintions!')
+
+        convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
+        status = self.sbml_doc.convert(convertConfig)
+        if status != sbml.LIBSBML_OPERATION_SUCCESS:
+            raise Exception('Could not flatten initial assignments!')
+
+        convertConfig = sbml.SBMLLocalParameterConverter().getDefaultProperties()
+        status = self.sbml_doc.convert(convertConfig)
+        if status != sbml.LIBSBML_OPERATION_SUCCESS:
+            raise Exception('Could not flatten local parameters!')
 
         self.sbml = self.sbml_doc.getModel()
         if (self.sbml is None):
             raise Exception('Provided SBML file is invalid!')
 
+        self.SBMLWriter = sbml.SBMLWriter()
+        self.SBMLWriter.writeSBML(self.sbml_doc,SBMLFile.replace('.xml','_converted.xml'))
 
         self.modelname = modelname
         dirname, filename = os.path.split(os.path.abspath(__file__))
@@ -104,12 +114,18 @@ class Model:
         assert self.n_species > 0
 
     def processSBML(self):
+        self.checkSupport()
         self.processParameters()
         self.processSpecies()
         self.processReactions()
         self.processCompartments()
         self.processRules()
         self.processVolumeConversion()
+
+
+    def checkSupport(self):
+        if len(self.sbml.getListOfEvents()):
+            raise Exception('Events are currently not supported.')
 
 
     def processSpecies(self):
