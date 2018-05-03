@@ -566,7 +566,8 @@ class Model:
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model."""
-        sources = [ self.modelname + '_' + function + '.cpp ' if self.functionBodies[function] is not None else '' for function in self.functionBodies.keys() ]
+        sources = [ self.modelname + '_' + function + '.cpp ' if self.functionBodies[function] is not None else ''
+                    for function in self.functionBodies.keys() ]
         try:
             sources.remove('')
         except:
@@ -597,8 +598,8 @@ class Model:
         Returns: 
         C++ code as list of lines"""
 
-        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
-         if not math == 0 else '' for index, math in enumerate(symbols)]
+        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.printWithException(math) + ';'
+                if not math == 0 else '' for index, math in enumerate(symbols)]
 
         try:
             lines.remove('')
@@ -621,14 +622,20 @@ class Model:
         Returns: 
         C++ code as list of lines"""
         lines = [
-            ' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+            ' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + self.printWithException(math) + ';'
             for index, math in enumerate(RowVals)]
-        lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+        lines.extend([' ' * indentLevel + variable + '->indexptrs[' + str(index) + '] = ' + self.printWithException(math) + ';'
                       for index, math in enumerate(ColPtrs)])
-        lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + self.Codeprinter.doprint(math) + ';'
+        lines.extend([' ' * indentLevel + variable + '->data[' + str(index) + '] = ' + self.printWithException(math) + ';'
                       for index, math in enumerate(symbolList)])
 
         return lines
+
+    def printWithException(self,math):
+        try:
+            return self.Codeprinter.doprint(math)
+        except:
+            raise Exception('Encountered unsupported function in expression "' + str(math) + '"')
 
 def applyTemplate(sourceFile,targetFile,templateData):
     """Load source file, apply template substitution as provided in templateData and save as targetFile.
