@@ -262,6 +262,8 @@ class Model:
                                 for species_element in species]
         self.boundaryConditionSpecies = [species_element.getId() if species_element.getBoundaryCondition() else None
                                          for species_element in species]
+        self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits() for specie in species]
+
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
@@ -326,8 +328,7 @@ class Model:
                         elements[e.getSpecies()] = e.getStoichiometry()
                     elif e.element_name == 'speciesReference':
                         if e.isSetStoichiometry():
-                            elements[e.getSpecies()] = str(e.getStoichiometry()) + '/' \
-                                                    + str(self.sbml.getElementBySId(e.getSpecies()).getCompartment())
+                            elements[e.getSpecies()] = e.getStoichiometry()
                         else:
                             elements[e.getSpecies()] = e.getId()
 
@@ -410,12 +411,12 @@ class Model:
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
-        '''
-        self.fluxVector = self.fluxVector.subs(self.symbols['species']['sym'],
-                                                self.symbols['species']['sym'].mul_matrix(
-                                                    self.speciesCompartment.subs(self.compartmentSymbols,
-                                                             self.compartmentVolume)))
-        '''
+        for index, bool in enumerate(self.speciesHasOnlySubstanceUnits):
+            if bool:
+                self.fluxVector = self.fluxVector.subs(self.symbols['species']['sym'][index],
+                                                self.symbols['species']['sym'][index] * self.speciesCompartment[index]
+                                                            .subs(self.compartmentSymbols,
+                                                                  self.compartmentVolume))
 
 
     def processTime(self):
