@@ -234,8 +234,8 @@ class Model:
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
             raise Exception('Algebraic and rate rules currently not supported.')
 
-        if any([[not element.getStoichiometryMath() is None
-                for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())]
+        if any([any([not element.getStoichiometryMath() is None
+                for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
                 for reaction in self.sbml.getListOfReactions()]):
             raise Exception('Non-unity stoichiometry is currently not supported!')
 
