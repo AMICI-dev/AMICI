@@ -37,12 +37,15 @@ matrix:
         - brew update # without this homebrew can stumble over wrong ruby version
         - (brew install gcc || brew link --overwrite gcc) # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig
+        - brew upgrade python
         
 install:
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
+    - pip3 install --user --upgrade pip setuptools wheel
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
-    - pip3 install --user setuptools
     - ./scripts/buildAmici.sh
     - ./scripts/buildTests.sh
 
