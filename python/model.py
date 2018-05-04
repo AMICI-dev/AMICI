@@ -310,9 +310,9 @@ class Model:
         self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
         for reaction_index, reaction in enumerate(reactions):
-            reactants = {r.getSpecies(): r.getStoichiometry() if r.element_name == 'species' else r.getId()
+            reactants = {r.getSpecies(): r.getStoichiometry() if r.isSetStoichiometry() else r.getId()
                          for r in reaction.getListOfReactants()}
-            products = {p.getSpecies(): p.getStoichiometry() if p.element_name == 'species' else p.getId()
+            products = {p.getSpecies(): p.getStoichiometry() if p.isSetStoichiometry()  else p.getId()
                         for p in reaction.getListOfProducts()}
 
             for reactant in reactants.keys():
