@@ -205,6 +205,7 @@ class Model:
         """Generate AMICI C++ files for the model provided to the constructor."""
         self.processSBML()
         self.computeModelEquations()
+        self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode()
 
@@ -217,18 +218,19 @@ class Model:
         self.processCompartments()
         self.processRules()
         self.processVolumeConversion()
+        self.processTime()
         self.cleanReservedSymbols()
 
 
     def checkSupport(self):
         if len(self.sbml.getListOfSpecies()) == 0:
-            raise Exception('Models without species are currently not supported.')
+            raise Exception('Models without species are currently not supported!')
 
         if len(self.sbml.getListOfEvents()) > 0:
-            raise Exception('Events are currently not supported.')
+            raise Exception('Events are currently not supported!')
 
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
-            raise Exception('Algebraic and rate rules currently not supported.')
+            raise Exception('Algebraic and rate rules currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
                 for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
@@ -318,7 +320,8 @@ class Model:
                         sp.sympify(products[product])*self.speciesConversionFactor[self.speciesIndex[product]]/ \
                         self.speciesCompartment[self.speciesIndex[product]]
 
-            self.fluxVector[reaction_index] = sp.sympify(reaction.getKineticLaw().getFormula())
+            # usage of formulaToL3String ensures that we get "time" as time symbol
+            self.fluxVector[reaction_index] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))
             self.symbols['flux']['expression'][reaction_index] = sp.sympify('w' + str(reaction_index))
 
 
@@ -348,14 +351,16 @@ class Model:
                 isObservable = False
 
             if variable in specvars:
-                raise Exception('Species assignment rules are currently not supported')
+                raise Exception('Species assignment rules are currently not supported!')
 
             if variable in compartmentvars:
-                raise Exception('Compartment assignment rules are currently not supported')
+                raise Exception('Compartment assignment rules are currently not supported!')
 
             if variable in parametervars:
-                self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
-
+                try:
+                    self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
+                except:
+                    raise Exception('Non-float parameter assignment rules are currently not supported!')
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
                 isObservable = False
@@ -394,6 +399,19 @@ class Model:
                                                     self.speciesCompartment.subs(self.compartmentSymbols,
                                                              self.compartmentVolume)))
         '''
+
+    def processTime(self):
+
+        sbmlTimeSymbol = sp.sympify('time')
+        amiciTimeSymbol = sp.sympify('t')
+
+        # replace occurences of sbmlTimeSymbol by amiciTimeSymbol
+        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(sbmlTimeSymbol,
+                                                                   amiciTimeSymbol)
+        self.speciesInitial = self.speciesInitial.subs(sbmlTimeSymbol,
+                                                       amiciTimeSymbol)
+        self.fluxVector = self.fluxVector.subs(sbmlTimeSymbol,
+                                               amiciTimeSymbol)
         
     def cleanReservedSymbols(self):
         reservedSymbols = ['k','p']
@@ -527,10 +545,19 @@ class Model:
         self.functions['dJydsigma']['expression'] = self.functions['dJydsigma']['expression'].transpose()
 
 
+    def prepareModelFolder(self):
+
+        for file in os.listdir(self.model_path):
+            file_path = os.path.join(self.model_path, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+
+
     def generateCCode(self):
         """Create C++ code files for the model based on."""
         for name in self.symbols.keys():
-            self.writeIndexFiles(self.symbols[name]['expression'], self.symbols[name]['shortName'], name + '.h')
+            self.writeIndexFiles(name)
 
         for function in self.functions.keys():
             self.writeFunctionFile(function)
@@ -550,7 +577,7 @@ class Model:
 
 
 
-    def writeIndexFiles(self,Symbols,CVariableName,fileName):
+    def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
         
         Args:
@@ -559,9 +586,9 @@ class Model:
         fileName: filename without path
         """
         lines = []
-        [lines.append('#define ' + str(symbol) + ' ' + CVariableName + '[' + str(index) + ']')
-         for index, symbol in enumerate(Symbols)]
-        open(os.path.join(self.model_path,fileName), 'w').write('\n'.join(lines))
+        [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
+            for index, symbol in enumerate(self.symbols[name]['expression'])]
+        open(os.path.join(self.model_path,name + '.h'), 'w').write('\n'.join(lines))
 
 
     def writeFunctionFile(self,function):
@@ -750,7 +777,7 @@ class Model:
         try:
             return self.Codeprinter.doprint(math)
         except:
-            raise Exception('Encountered unsupported function in expression "' + str(math) + '"')
+            raise Exception('Encountered unsupported function in expression "' + str(math) + '"!')
 
 def applyTemplate(sourceFile,targetFile,templateData):
     """Load source file, apply template substitution as provided in templateData and save as targetFile.

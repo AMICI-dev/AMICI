@@ -98,8 +98,10 @@ def getTestStr(testId):
     253
     256
     259
+    600
+    803
 '''
-for testId in range(1,1782):
+for testId in range(853,1782):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 
