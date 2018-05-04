@@ -167,14 +167,15 @@ class Model:
         self.SBMLreader = sbml.SBMLReader()
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
 
-        if (self.sbml_doc is None):
-            raise Exception('Provided SBML file does not exit or is invalid!')
+        if (self.sbml_doc.getNumErrors() > 0):
+            raise Exception('Provided SBML file does not exists or is invalid!')
 
         # apply several model simplifications that make our life substantially easier
-        convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
-        status = self.sbml_doc.convert(convertConfig)
-        if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise Exception('Could not flatten function defintions!')
+        if len(self.sbml_doc.getModel().getListOfFunctionDefinitions())>0:
+            convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
+            status = self.sbml_doc.convert(convertConfig)
+            if status != sbml.LIBSBML_OPERATION_SUCCESS:
+                raise Exception('Could not flatten function definitions!')
 
         convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
         status = self.sbml_doc.convert(convertConfig)
@@ -187,11 +188,6 @@ class Model:
             raise Exception('Could not flatten local parameters!')
 
         self.sbml = self.sbml_doc.getModel()
-        if (self.sbml is None):
-            raise Exception('Provided SBML file is invalid!')
-
-        self.SBMLWriter = sbml.SBMLWriter()
-        self.SBMLWriter.writeSBML(self.sbml_doc,SBMLFile.replace('.xml','_converted.xml'))
 
    
 
@@ -237,6 +233,11 @@ class Model:
 
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
             raise Exception('Algebraic and rate rules currently not supported.')
+
+        if any([[not element.getStoichiometryMath() is None
+                for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())]
+                for reaction in self.sbml.getListOfReactions()]):
+            raise Exception('Non-unity stoichiometry is currently not supported!')
 
 
     def processSpecies(self):
@@ -384,11 +385,12 @@ class Model:
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
+        '''
         self.fluxVector = self.fluxVector.subs(self.symbols['species']['expression'],
                                                 self.symbols['species']['expression'].mul_matrix(
-                                                    self.speciesCompartment.applyfunc(lambda x: 1/x).
-                                                        subs(self.compartmentSymbols,
+                                                    self.speciesCompartment.subs(self.compartmentSymbols,
                                                              self.compartmentVolume)))
+        '''
         
     def cleanReservedSymbols(self):
         reservedSymbols = ['k','p']

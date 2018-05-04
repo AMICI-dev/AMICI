@@ -37,6 +37,14 @@ def runTest(testId, logfile):
         # model
         sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
 
+        # fallback l3v1
+        if not os.path.isfile(sbmlFile):
+            sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v1.xml')
+
+        # fallback l2v5
+        if not os.path.isfile(sbmlFile):
+            sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
+
         wrapper = Model(sbmlFile, 'SBMLTest' + testId)
         wrapper.wrapModel()
 
@@ -71,7 +79,7 @@ def runTest(testId, logfile):
                 raise Exception('Relative tolerance violated')
 
     except Exception as err:
-        str = "Failed to wrap test " + testId + ": {0}".format(err)
+        str = "Failed test " + testId + ": {0}".format(err)
         print(str)
         logfile.write(str + '\n')
         return
@@ -82,7 +90,7 @@ def getTestStr(testId):
     return testStr
 
 
-for testId in range(58,1781):
+for testId in range(121,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 
