@@ -210,7 +210,7 @@ class Model:
         """Sets the model name and adapts paths accordingly.
 
         Args:
-            modelName: name of the model/model directory
+        modelName: name of the model/model directory
         """
         self.modelName = modelName
         self.setPaths()
@@ -310,23 +310,32 @@ class Model:
         self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
         for reaction_index, reaction in enumerate(reactions):
-            reactants = {r.getSpecies(): r.getStoichiometry() if r.isSetStoichiometry() else r.getId()
-                         for r in reaction.getListOfReactants()}
-            products = {p.getSpecies(): p.getStoichiometry() if p.isSetStoichiometry()  else p.getId()
-                        for p in reaction.getListOfProducts()}
 
-            for reactant in reactants.keys():
-                if not (reactant in self.constantSpecies or reactant in self.boundaryConditionSpecies):
-                    self.stoichiometricMatrix[self.speciesIndex[reactant], reaction_index] -= \
-                        sp.sympify(reactants[reactant])*self.speciesConversionFactor[self.speciesIndex[reactant]]/ \
-                        self.speciesCompartment[self.speciesIndex[reactant]]
+            for type in ['reactant','product']:
+                if type == 'reactant':
+                    elementList = reaction.getListOfReactants()
+                    sign = -1.0
+                else:
+                    elementList = reaction.getListOfProducts()
+                    sign = +1.0
 
+                elements = {}
 
-            for product in products.keys():
-                if not (product in self.constantSpecies or product in self.boundaryConditionSpecies):
-                    self.stoichiometricMatrix[self.speciesIndex[product], reaction_index] += \
-                        sp.sympify(products[product])*self.speciesConversionFactor[self.speciesIndex[product]]/ \
-                        self.speciesCompartment[self.speciesIndex[product]]
+                for e in elementList:
+                    if e.element_name == 'species':
+                        elements[e.getSpecies()] = e.getStoichiometry()
+                    elif e.element_name == 'speciesReference':
+                        if e.isSetStoichiometry():
+                            elements[e.getSpecies()] = str(e.getStoichiometry()) + '/' \
+                                                    + str(self.sbml.getElementBySId(e.getSpecies()).getCompartment())
+                        else:
+                            elements[e.getSpecies()] = e.getId()
+
+                for element in elements.keys():
+                    if not (element in self.constantSpecies or element in self.boundaryConditionSpecies):
+                        self.stoichiometricMatrix[self.speciesIndex[element], reaction_index] += sign * \
+                            sp.sympify(elements[element])*self.speciesConversionFactor[self.speciesIndex[element]]/ \
+                            self.speciesCompartment[self.speciesIndex[element]]
 
             # usage of formulaToL3String ensures that we get "time" as time symbol
             self.fluxVector[reaction_index] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))

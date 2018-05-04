@@ -49,7 +49,7 @@ def runTest(testId, logfile):
         wrapper.wrapModel('SBMLTest' + testId)
 
 
-        sys.path.insert(0, os.path.join(wrapper.model_path, 'build', 'swig'))
+        sys.path.insert(0, os.path.join(wrapper.modelPath, 'build', 'swig'))
         mod = importlib.import_module(wrapper.modelName)
 
         model = mod.getModel()
