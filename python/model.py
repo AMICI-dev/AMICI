@@ -646,7 +646,7 @@ class Model:
             else:
                 lines += self.getSymLines(symbol, variableName, 4)
 
-        return lines
+        return [line for line in lines if line]
 
 
     def writeWrapfunctionsCPP(self):
