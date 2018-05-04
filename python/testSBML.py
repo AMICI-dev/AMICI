@@ -45,12 +45,12 @@ def runTest(testId, logfile):
         if not os.path.isfile(sbmlFile):
             sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
 
-        wrapper = Model(sbmlFile, 'SBMLTest' + testId)
-        wrapper.wrapModel()
+        wrapper = Model(sbmlFile)
+        wrapper.wrapModel('SBMLTest' + testId)
 
 
         sys.path.insert(0, os.path.join(wrapper.model_path, 'build', 'swig'))
-        mod = importlib.import_module(wrapper.modelname)
+        mod = importlib.import_module(wrapper.modelName)
 
         model = mod.getModel()
         model.setTimepoints(mod.amici.DoubleVector(ts))
@@ -101,7 +101,7 @@ def getTestStr(testId):
     600
     803
 '''
-for testId in range(970,1781):
+for testId in range(998,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 

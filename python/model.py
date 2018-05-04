@@ -21,11 +21,11 @@ class Model:
         sbml_doc: private?
         sbml: private?
         modelname:
-        amici_path:
-        amici_swig_path:
-        amici_src_path:
-        model_path:
-        model_swig_path:
+        amiciPath:
+        amiciSwigPath:
+        amiciSrcPath:
+        modelPath:
+        modelSwigPath:
         self.functionBodies:
     """
 
@@ -34,7 +34,7 @@ class Model:
 
 
     # TODO: move arguments to wrap model? 
-    def __init__(self, SBMLFile, modelname):
+    def __init__(self, SBMLFile):
         """Create a new Model instance.
         
         Arguments:
@@ -43,11 +43,12 @@ class Model:
         modelname: Name of Model to be generated
         """
         self.loadSBMLFile(SBMLFile)
-        self.modelname = modelname
-        
-        self.setPaths()
-        if not os.path.exists(self.model_path):
-            os.makedirs(self.model_path)
+
+        # TODO: move amici*path to amici module?
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        self.amiciPath = os.path.split(dirname)[0]
+        self.amiciSwigPath = os.path.join(self.amiciPath, 'swig')
+        self.amiciSrcPath = os.path.join(self.amiciPath, 'src')
 
         self.functionBodies = {} # TODO: "private" ?
         self.Codeprinter = CCodePrinter()
@@ -193,21 +194,28 @@ class Model:
 
     def setPaths(self):
         """Deduce paths input and output paths from script file name."""
-        # TODO: move amici_*_path to amici module?
-        dirname, filename = os.path.split(os.path.abspath(__file__))
-        self.amici_path = os.path.split(dirname)[0]
-        self.amici_swig_path = os.path.join(self.amici_path, 'swig')
-        self.amici_src_path = os.path.join(self.amici_path, 'src')
-        self.model_path = os.path.join(self.amici_path,'models', self.modelname)
-        self.model_swig_path = os.path.join(self.model_path, 'swig')
+        self.modelPath = os.path.join(self.amiciPath,'models', self.modelName)
+        self.modelSwigPath = os.path.join(self.modelPath, 'swig')
 
-    def wrapModel(self):
+    def wrapModel(self, modelName):
         """Generate AMICI C++ files for the model provided to the constructor."""
+        self.setName(modelName)
         self.processSBML()
         self.computeModelEquations()
         self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode()
+        
+    def setName(self, modelName):
+        """Sets the model name and adapts paths accordingly.
+
+        Args:
+            modelName: name of the model/model directory
+        """
+        self.modelName = modelName
+        self.setPaths()
+        if not os.path.exists(self.modelPath):
+            os.makedirs(self.modelPath)
 
     def processSBML(self):
         """Read parameters, species, reactions, and so on from SBML model"""
@@ -223,6 +231,7 @@ class Model:
 
 
     def checkSupport(self):
+        """Check whether all required SBML features are supported."""
         if len(self.sbml.getListOfSpecies()) == 0:
             raise Exception('Models without species are currently not supported!')
 
@@ -554,8 +563,8 @@ class Model:
 
     def prepareModelFolder(self):
 
-        for file in os.listdir(self.model_path):
-            file_path = os.path.join(self.model_path, file)
+        for file in os.listdir(self.modelPath):
+            file_path = os.path.join(self.modelPath, file)
             if os.path.isfile(file_path):
                 os.remove(file_path)
 
@@ -574,13 +583,13 @@ class Model:
         self.writeCMakeFile()
         self.writeSwigFiles()
 
-        shutil.copy(os.path.join(self.amici_src_path, 'main.template.cpp'),
-                    os.path.join(self.model_path, 'main.cpp'))
+        shutil.copy(os.path.join(self.amiciSrcPath, 'main.template.cpp'),
+                    os.path.join(self.modelPath, 'main.cpp'))
 
 
     def compileCCode(self):
         """Compile the generated model code"""
-        subprocess.call([os.path.join(self.amici_path, 'scripts', 'buildModel.sh'), self.modelname])
+        subprocess.call([os.path.join(self.amiciPath, 'scripts', 'buildModel.sh'), self.modelName])
 
 
 
@@ -595,7 +604,7 @@ class Model:
         lines = []
         [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
             for index, symbol in enumerate(self.symbols[name]['expression'])]
-        open(os.path.join(self.model_path,name + '.h'), 'w').write('\n'.join(lines))
+        open(os.path.join(self.modelPath,name + '.h'), 'w').write('\n'.join(lines))
 
 
     def writeFunctionFile(self,function):
@@ -628,7 +637,7 @@ class Model:
 
         lines.append('')
 
-        lines.append('void ' + function + '_' + self.modelname + signature + '{')
+        lines.append('void ' + function + '_' + self.modelName + signature + '{')
         
         # function body
         body = self.getFunctionBody(function)
@@ -636,7 +645,7 @@ class Model:
         lines += body
         lines.append('}')
         #if not body is None:
-        open(os.path.join(self.model_path, self.modelname + '_' + function + '.cpp'), 'w').write('\n'.join(lines))
+        open(os.path.join(self.modelPath, self.modelName + '_' + function + '.cpp'), 'w').write('\n'.join(lines))
 
 
     def getFunctionBody(self,function):
@@ -685,14 +694,14 @@ class Model:
 
     def writeWrapfunctionsCPP(self):
         """Write model-specific 'wrapper' file (wrapfunctions.cpp)."""
-        templateData = {'MODELNAME': self.modelname}
-        applyTemplate(os.path.join(self.amici_src_path, 'wrapfunctions.template.cpp'),
-                      os.path.join(self.model_path, 'wrapfunctions.cpp'), templateData)
+        templateData = {'MODELNAME': self.modelName}
+        applyTemplate(os.path.join(self.amiciSrcPath, 'wrapfunctions.template.cpp'),
+                      os.path.join(self.modelPath, 'wrapfunctions.cpp'), templateData)
 
 
     def writeWrapfunctionsHeader(self):
         """Write model-specific header file (wrapfunctions.h)."""
-        templateData = {'MODELNAME': str(self.modelname),
+        templateData = {'MODELNAME': str(self.modelName),
                         'NX': str(self.n_species),
                         'NXTRUE': str(self.n_species),
                         'NY': str(self.n_observables),
@@ -711,31 +720,31 @@ class Model:
                         'NK': '0',
                         'O2MODE': 'amici::AMICI_O2MODE_NONE',
                         'PARAMETERS': str(self.parameterValues)[1:-1]}
-        applyTemplate(os.path.join(self.amici_src_path, 'wrapfunctions.ODE_template.h'),
-                      os.path.join(self.model_path, 'wrapfunctions.h'), templateData)
+        applyTemplate(os.path.join(self.amiciSrcPath, 'wrapfunctions.ODE_template.h'),
+                      os.path.join(self.modelPath, 'wrapfunctions.h'), templateData)
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model."""
-        sources = [ self.modelname + '_' + function + '.cpp ' if self.functions[function]['body'] is not None else ''
+        sources = [self.modelName + '_' + function + '.cpp ' if self.functions[function]['body'] is not None else ''
                     for function in self.functions.keys() ]
         try:
             sources.remove('')
         except:
             pass
-        templateData = {'MODELNAME': self.modelname,
+        templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
-        applyTemplate(os.path.join(self.amici_src_path, 'CMakeLists.template.txt'),
-                      os.path.join(self.model_path, 'CMakeLists.txt'), templateData)
+        applyTemplate(os.path.join(self.amiciSrcPath, 'CMakeLists.template.txt'),
+                      os.path.join(self.modelPath, 'CMakeLists.txt'), templateData)
 
     def writeSwigFiles(self):
         """Write SWIG interface files for this model."""
-        if not os.path.exists(self.model_swig_path):
-            os.makedirs(self.model_swig_path)
-        templateData = {'MODELNAME': self.modelname}
-        applyTemplate(os.path.join(self.amici_swig_path, 'modelname.template.i'),
-                      os.path.join(self.model_swig_path, self.modelname + '.i'), templateData)
-        shutil.copy(os.path.join(self.amici_swig_path, 'CMakeLists_model.txt'),
-                    os.path.join(self.model_swig_path, 'CMakeLists.txt'))
+        if not os.path.exists(self.modelSwigPath):
+            os.makedirs(self.modelSwigPath)
+        templateData = {'MODELNAME': self.modelName}
+        applyTemplate(os.path.join(self.amiciSwigPath, 'modelname.template.i'),
+                      os.path.join(self.modelSwigPath, self.modelName + '.i'), templateData)
+        shutil.copy(os.path.join(self.amiciSwigPath, 'CMakeLists_model.txt'),
+                    os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
 
     def getSymLines(self, symbols, variable, indentLevel):
         """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.
