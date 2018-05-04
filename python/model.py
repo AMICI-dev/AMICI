@@ -204,16 +204,9 @@ class Model:
     def wrapModel(self):
         """Generate AMICI C++ files for the model provided to the constructor."""
         self.processSBML()
-        self.checkModelDimensions()
         self.computeModelEquations()
         self.generateCCode()
         self.compileCCode()
-
-
-    def checkModelDimensions(self):
-        """Ensure the model has species to simulate"""
-        assert self.n_species > 0
-
 
     def processSBML(self):
         """Read parameters, species, reactions, and so on from SBML model"""
@@ -228,7 +221,10 @@ class Model:
 
 
     def checkSupport(self):
-        if len(self.sbml.getListOfEvents()):
+        if len(self.sbml.getListOfSpecies()) == 0:
+            raise Exception('Models without species are currently not supported.')
+
+        if len(self.sbml.getListOfEvents()) > 0:
             raise Exception('Events are currently not supported.')
 
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):

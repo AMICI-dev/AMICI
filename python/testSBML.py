@@ -62,9 +62,10 @@ def runTest(testId, logfile):
         amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
         simulated_x = np.array(rdata.x).reshape([len(ts), model.nx])
         for species in amountSpecies:
-            volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,
-                                                                                wrapper.compartmentVolume)
-            simulated_x[:, wrapper.speciesIndex[species]] = simulated_x[:, wrapper.speciesIndex[species]] * volume
+            if not species == '':
+                volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,
+                                                                                        wrapper.compartmentVolume)
+                simulated_x[:, wrapper.speciesIndex[species]] = simulated_x[:, wrapper.speciesIndex[species]] * volume
             pass
 
         adev = abs(simulated_x - test_x)
@@ -89,8 +90,16 @@ def getTestStr(testId):
     testStr = '0'*(5-len(testStr)) + testStr
     return testStr
 
-
-for testId in range(150,1781):
+'''
+    currently failing due to https://github.com/symengine/symengine/issues/1444
+    65
+    121
+    250
+    253
+    256
+    259
+'''
+for testId in range(1,1782):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 
