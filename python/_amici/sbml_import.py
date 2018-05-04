@@ -10,10 +10,10 @@ import shutil
 import subprocess
 from symengine import symbols
 from string import Template
+from amici import amici_path
 
-
-class Model:
-    """The Model class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
+class SbmlImporter:
+    """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
     -----------
@@ -193,15 +193,12 @@ class Model:
 
     def setPaths(self):
         """Deduce paths input and output paths from script file name."""
-        # TODO: move amici_*_path to amici module?
-        dirname, filename = os.path.split(os.path.abspath(__file__))
-        self.amici_path = os.path.split(dirname)[0]
-        self.amici_swig_path = os.path.join(self.amici_path, 'swig')
-        self.amici_src_path = os.path.join(self.amici_path, 'src')
-        self.model_path = os.path.join(self.amici_path,'models', self.modelname)
+        self.amici_swig_path = os.path.join(amici_path, 'swig')
+        self.amici_src_path = os.path.join(amici_path, 'src')
+        self.model_path = os.path.join(amici_path,'models', self.modelname)
         self.model_swig_path = os.path.join(self.model_path, 'swig')
 
-    def wrapModel(self):
+    def sbml2amici(self):
         """Generate AMICI C++ files for the model provided to the constructor."""
         self.processSBML()
         self.computeModelEquations()
@@ -546,7 +543,7 @@ class Model:
 
     def compileCCode(self):
         """Compile the generated model code"""
-        subprocess.call([os.path.join(self.amici_path, 'scripts', 'buildModel.sh'), self.modelname])
+        subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelname])
 
 
 

@@ -3,11 +3,16 @@ from setuptools import dist, find_packages, setup
 setup(
     name='${PROJECT_NAME}',
     version='${PROJECT_VERSION}',
+    description='Advanced multi-language Interface to CVODES and IDAS',
+    url='https://github.com/ICB-DCM/AMICI',
     author='${AUTHORS}',
+    author_email='${AUTHOR_EMAIL}',
     #distclass=BinaryDistribution,
     packages=find_packages(),
+    install_requires=['symengine', 'python-libsbml'],
+    python_requires='>=3',
     package_data={
-        'amici': ['$<TARGET_FILE_NAME:_amici>'],
+        '': ['_amici.so'],
     },
     include_package_data=True,
     classifiers=[

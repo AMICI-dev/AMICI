@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-from model import Model
 import os
 import sys
 import importlib
@@ -45,8 +43,8 @@ def runTest(testId, logfile):
         if not os.path.isfile(sbmlFile):
             sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
 
-        wrapper = Model(sbmlFile, 'SBMLTest' + testId)
-        wrapper.wrapModel()
+        wrapper = amici.SbmlImporter(sbmlFile, 'SBMLTest' + testId)
+        wrapper.sbml2amici()
 
 
         sys.path.insert(0, os.path.join(wrapper.model_path, 'build', 'swig'))
