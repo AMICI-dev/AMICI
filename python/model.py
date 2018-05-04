@@ -276,6 +276,8 @@ class Model:
         self.symbols['parameter']['expression'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.symbols['parameter']['expression'])
+        self.parameterIndex = {parameter_element.getId(): parameter_index
+                             for parameter_index, parameter_element in enumerate(parameters)}
 
     def processCompartments(self):
         """Get compartment information, stoichiometric matrix and fluxes from SBML model."""
@@ -332,6 +334,8 @@ class Model:
         fluxvars = self.fluxVector.free_symbols
         specvars = self.symbols['species']['expression'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
+        compartmentvars = self.compartmentSymbols.free_symbols
+        parametervars = self.symbols['parameter']['expression'].free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
 
         observables = []
@@ -349,6 +353,12 @@ class Model:
 
             if variable in specvars:
                 raise Exception('Species assignment rules are currently not supported')
+
+            if variable in compartmentvars:
+                raise Exception('Compartment assignment rules are currently not supported')
+
+            if variable in parametervars:
+                self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
 
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
