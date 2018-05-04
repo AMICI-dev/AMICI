@@ -284,13 +284,7 @@ class Model:
         self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) if comp.isSetVolume()
                                                  else sp.sympify(1.0) for comp in compartments])
 
-        # replace occurences of compartment ids by the respective volume
-        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(self.compartmentSymbols,
-                                                                   self.compartmentVolume)
-        self.speciesInitial = self.speciesInitial.subs(self.compartmentSymbols,
-                                                       self.compartmentVolume)
-        self.fluxVector = self.fluxVector.subs(self.compartmentSymbols,
-                                               self.compartmentVolume)
+        self.replaceInAllExpressions(self.compartmentSymbols,self.compartmentVolume)
 
 
     def processReactions(self):
@@ -401,18 +395,29 @@ class Model:
         '''
 
     def processTime(self):
-
+        """Converts time_symbol into cpp variable."""
         sbmlTimeSymbol = sp.sympify('time')
         amiciTimeSymbol = sp.sympify('t')
 
+        self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
+
         # replace occurences of sbmlTimeSymbol by amiciTimeSymbol
-        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(sbmlTimeSymbol,
-                                                                   amiciTimeSymbol)
-        self.speciesInitial = self.speciesInitial.subs(sbmlTimeSymbol,
-                                                       amiciTimeSymbol)
-        self.fluxVector = self.fluxVector.subs(sbmlTimeSymbol,
-                                               amiciTimeSymbol)
-        
+
+
+
+    def replaceInAllExpressions(self,old,new):
+        """Replaces 'old' by 'new' in all symbolic expressions.
+
+        Args:
+        old: symbolic variables to be replaced
+        new: replacement symbolic variables
+
+        """
+        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(old,new)
+        self.speciesInitial = self.speciesInitial.subs(old,new)
+        self.fluxVector = self.fluxVector.subs(old,new)
+
+
     def cleanReservedSymbols(self):
         reservedSymbols = ['k','p']
         for str in reservedSymbols:
@@ -424,8 +429,6 @@ class Model:
             for symbol in self.symbols.keys():
                 if 'expression' in self.symbols[symbol].keys():
                     self.symbols[symbol]['expression'] = self.symbols[symbol]['expression'].subs(old_symbol,new_symbol)
-
-
 
 
     def getSparseSymbols(self,symbolName):
