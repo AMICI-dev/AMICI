@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from model import Model
+import traceback
 import os
 import sys
 import importlib
@@ -16,23 +17,9 @@ def runTest(testId, logfile):
     try:
         current_test_path = os.path.join(test_path, testId)
 
-        # settings
-        settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
-        settings = {}
-        with open(settingsFile) as f:
-            for line in f:
-                if not line == '\n':
-                    (key, val) = line.split(':')
-                    settings[key] = val
-        ts = np.linspace(float(settings['start']), float(settings['start']) + float(settings['duration']),
-                         int(settings['steps']) + 1)
-        atol = float(settings['absolute'])
-        rtol = float(settings['relative'])
-
         # results
         resultsFile = os.path.join(current_test_path, testId + '-results.csv')
         results = np.genfromtxt(resultsFile, delimiter=',')
-        test_x = results[1:, 1:]
 
         # model
         sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
@@ -48,6 +35,19 @@ def runTest(testId, logfile):
         wrapper = Model(sbmlFile)
         wrapper.wrapModel('SBMLTest' + testId)
 
+        # settings
+        settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
+        settings = {}
+        with open(settingsFile) as f:
+            for line in f:
+                if not line == '\n':
+                    (key, val) = line.split(':')
+                    settings[key] = val
+        ts = np.linspace(float(settings['start']), float(settings['start']) + float(settings['duration']),
+                         int(settings['steps']) + 1)
+        atol = float(settings['absolute'])
+        rtol = float(settings['relative'])
+
 
         sys.path.insert(0, os.path.join(wrapper.modelPath, 'build', 'swig'))
         mod = importlib.import_module(wrapper.modelName)
@@ -61,6 +61,8 @@ def runTest(testId, logfile):
         rdata = amici.runAmiciSimulation(solver.get(), None, model.get())
         amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
         simulated_x = np.array(rdata.x).reshape([len(ts), model.nx])
+        test_x = results[1:, [1+ wrapper.speciesIndex[variable]  for variable in settings['variables'].replace(' ', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
+
         for species in amountSpecies:
             if not species == '':
                 volume = wrapper.speciesCompartment[wrapper.speciesIndex[species]].subs(wrapper.compartmentSymbols,
@@ -82,6 +84,7 @@ def runTest(testId, logfile):
     except Exception as err:
         str = "Failed test " + testId + ": {0}".format(err)
         print(str)
+        traceback.print_exc(10)
         logfile.write(str + '\n')
         return
 
@@ -101,7 +104,7 @@ def getTestStr(testId):
     600
     803
 '''
-for testId in range(998,1781):
+for testId in range(1420,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 

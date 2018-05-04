@@ -235,6 +235,9 @@ class Model:
         if len(self.sbml.getListOfSpecies()) == 0:
             raise Exception('Models without species are currently not supported!')
 
+        if len(self.sbml.all_elements_from_plugins) > 0:
+            raise Exception('SBML extensions are currently not supported!')
+
         if len(self.sbml.getListOfEvents()) > 0:
             raise Exception('Events are currently not supported!')
 
@@ -311,36 +314,39 @@ class Model:
         self.fluxVector = sp.zeros(self.n_reactions, 1)
         self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
-        for reaction_index, reaction in enumerate(reactions):
+        for reactionIndex, reaction in enumerate(reactions):
 
-            for type in ['reactant','product']:
-                if type == 'reactant':
-                    elementList = reaction.getListOfReactants()
-                    sign = -1.0
-                else:
-                    elementList = reaction.getListOfProducts()
-                    sign = +1.0
-
+            for elementList, sign  in [(reaction.getListOfReactants(), -1.0),
+                                       (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
-
-                for e in elementList:
-                    if e.element_name == 'species':
-                        elements[e.getSpecies()] = e.getStoichiometry()
-                    elif e.element_name == 'speciesReference':
-                        if e.isSetStoichiometry():
-                            elements[e.getSpecies()] = e.getStoichiometry()
+                for index, element in enumerate(elementList):
+                    # we need the index here as we might have multiple elements for the same species
+                    elements[index] = {'species': element.getSpecies()}
+                    if element.isSetId():
+                        if element.getId() in [rule.getVariable() for rule in self.sbml.getListOfRules()]:
+                            elements[index]['stoichiometry'] = sp.sympify(element.getId())
                         else:
-                            elements[e.getSpecies()] = e.getId()
+                            # dont put the symbol if it wont get replaced by a rule
+                            elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                    else:
+                        elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
 
-                for element in elements.keys():
-                    if not (element in self.constantSpecies or element in self.boundaryConditionSpecies):
-                        self.stoichiometricMatrix[self.speciesIndex[element], reaction_index] += sign * \
-                            sp.sympify(elements[element])*self.speciesConversionFactor[self.speciesIndex[element]]/ \
-                            self.speciesCompartment[self.speciesIndex[element]]
+                for index in elements.keys():
+                    if not (elements[index]['species'] in self.constantSpecies
+                            or elements[index]['species'] in self.boundaryConditionSpecies):
+                        specieIndex = self.speciesIndex[elements[index]['species']]
+                        self.stoichiometricMatrix[specieIndex, reactionIndex] += sign * \
+                            elements[index]['stoichiometry'] * self.speciesConversionFactor[specieIndex]/ \
+                            self.speciesCompartment[specieIndex]
 
             # usage of formulaToL3String ensures that we get "time" as time symbol
-            self.fluxVector[reaction_index] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))
-            self.symbols['flux']['sym'][reaction_index] = sp.sympify('w' + str(reaction_index))
+            self.fluxVector[reactionIndex] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))
+            self.symbols['flux']['sym'][reactionIndex] = sp.sympify('w' + str(reactionIndex))
+            if any([str(symbol) in [reaction.getId() for reaction in reactions if reaction.isSetId()]
+                         for symbol in self.fluxVector[reactionIndex].free_symbols]):
+                raise Exception('Kinetic laws involving reaction ids are currently not supported!')
+
+
 
 
     def processRules(self):
@@ -436,19 +442,18 @@ class Model:
         new: replacement symbolic variables
 
         """
-        self.stoichiometricMatrix = self.stoichiometricMatrix.subs(old,new)
-        self.speciesInitial = self.speciesInitial.subs(old,new)
-        self.fluxVector = self.fluxVector.subs(old,new)
+        fields = ['observables', 'stoichiometricMatrix', 'fluxVector','speciesInitial']
+        for field in fields:
+            if field in dir(self):
+                self.__setattr__(field, self.__getattribute__(field).subs(old, new))
 
 
     def cleanReservedSymbols(self):
-        reservedSymbols = ['k','p']
+        reservedSymbols = ['k','p','y','w']
         for str in reservedSymbols:
             old_symbol = sp.sympify(str)
             new_symbol = sp.sympify('amici_' + str)
-            fields = ['observables','stoichiometricMatrix','compartmentSymbols','fluxVector']
-            for field in fields:
-                self.__setattr__(field,self.__getattribute__(field).subs(old_symbol,new_symbol))
+            self.replaceInAllExpressions(old_symbol, new_symbol)
             for symbol in self.symbols.keys():
                 if 'sym' in self.symbols[symbol].keys():
                     self.symbols[symbol]['sym'] = self.symbols[symbol]['sym'].subs(old_symbol,new_symbol)
