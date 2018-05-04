@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+<<<<<<< HEAD
 
 from model import Model
 import traceback
+=======
+>>>>>>> origin/feature_swig
 import os
 import sys
 import importlib
@@ -32,8 +35,8 @@ def runTest(testId, logfile):
         if not os.path.isfile(sbmlFile):
             sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
 
-        wrapper = Model(sbmlFile)
-        wrapper.wrapModel('SBMLTest' + testId)
+        wrapper = amici.SbmlImporter(sbmlFile)
+        wrapper.sbml2amici('SBMLTest' + testId)
 
         # settings
         settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
@@ -47,7 +50,6 @@ def runTest(testId, logfile):
                          int(settings['steps']) + 1)
         atol = float(settings['absolute'])
         rtol = float(settings['relative'])
-
 
         sys.path.insert(0, os.path.join(wrapper.modelPath, 'build', 'swig'))
         mod = importlib.import_module(wrapper.modelName)
@@ -107,7 +109,3 @@ def getTestStr(testId):
 for testId in range(1,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
-
-
-#model = Model('/Users/F.Froehlich/Downloads/Speedy_v3_r403445_v1.sbml','speedy')
-#model.wrapModel()

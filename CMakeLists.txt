@@ -100,7 +100,9 @@ endif()
 
 include(CMakeModules/clang-tools.cmake)
 
-set(AUTHORS "Fabian Fröhlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
+set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
+set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
+set(PROJECT_VERSION "0.0.0a0")
 
 # <Export cmake configuration>
 include(GenerateExportHeader)

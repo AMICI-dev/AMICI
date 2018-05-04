@@ -10,10 +10,10 @@ import shutil
 import subprocess
 from symengine import symbols
 from string import Template
+from amici import amici_path
 
-
-class Model:
-    """The Model class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
+class SbmlImporter:
+    """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
     -----------
@@ -197,8 +197,13 @@ class Model:
         self.modelPath = os.path.join(self.amiciPath,'models', self.modelName)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
 
-    def wrapModel(self, modelName):
+    def sbml2amici(self, modelName):
         """Generate AMICI C++ files for the model provided to the constructor."""
+        self.amici_swig_path = os.path.join(amici_path, 'swig')
+        self.amici_src_path = os.path.join(amici_path, 'src')
+        self.model_path = os.path.join(amici_path,'models', self.modelname)
+        self.model_swig_path = os.path.join(self.model_path, 'swig')
+        
         self.setName(modelName)
         self.processSBML()
         self.computeModelEquations()
@@ -626,9 +631,7 @@ class Model:
 
     def compileCCode(self):
         """Compile the generated model code"""
-        subprocess.call([os.path.join(self.amiciPath, 'scripts', 'buildModel.sh'), self.modelName])
-
-
+        subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelname])
 
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
@@ -726,7 +729,7 @@ class Model:
             else:
                 lines += self.getSymLines(symbol, variableName, 4)
 
-        return lines
+        return [line for line in lines if line]
 
 
     def writeWrapfunctionsCPP(self):
