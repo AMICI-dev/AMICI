@@ -42,6 +42,7 @@ install:
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
+    - pip3 install --user setuptools
     - ./scripts/buildAmici.sh
     - ./scripts/buildTests.sh
 
