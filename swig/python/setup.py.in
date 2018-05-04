@@ -1,32 +1,23 @@
-import setuptools.command.install
-import shutil
-from distutils.sysconfig import get_python_lib
+from setuptools import dist, find_packages, setup
 
-
-class CompiledLibInstall(setuptools.command.install.install):
-    """
-    Specialized install to install to python libs
-    """
-
-    def run(self):
-        """
-        Run method called by setup
-        :return:
-        """
-        # Get filenames from CMake variable
-        filenames = '${PYTHON_INSTALL_FILES}'.split(';')
-
-        # Directory to install to
-        install_dir = get_python_lib()
-
-        # Install files
-        [shutil.copy(filename, install_dir) for filename in filenames]
-
-
-if __name__ == '__main__':
-    setuptools.setup(
-        name='amici',
-        packages=['amici'],
-        cmdclass={'install': CompiledLibInstall}
-    )
-    
+setup(
+    name='${PROJECT_NAME}',
+    version='${PROJECT_VERSION}',
+    author='${AUTHORS}',
+    #distclass=BinaryDistribution,
+    packages=find_packages(),
+    package_data={
+        'amici': ['$<TARGET_FILE_NAME:_amici>'],
+    },
+    include_package_data=True,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS :: MacOS X',
+        'Programming Language :: Python',
+        'Programming Language :: C++',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+    ],
+)
