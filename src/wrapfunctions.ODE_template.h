@@ -49,27 +49,30 @@ public:
     /**
      * @brief Default constructor.
      */
-    Model_TPL_MODELNAME() : amici::Model_ODE(TPL_NX,
-                    TPL_NXTRUE,
-                    TPL_NY,
-                    TPL_NYTRUE,
-                    TPL_NZ,
-                    TPL_NZTRUE,
-                    TPL_NEVENT,
-                    TPL_NOBJECTIVE,
-                    TPL_NW,
-                    TPL_NDWDDX,
-                    TPL_NDWDP,
-                    TPL_NNZ,
-                    TPL_UBW,
-                    TPL_LBW,
-                    TPL_O2MODE,
-                    std::vector<realtype>{TPL_PARAMETERS},
-                    std::vector<realtype>(TPL_NK,1.0),
-                    std::vector<int>(),
-                    std::vector<realtype>(TPL_NX,0.0),
-                    std::vector<int>{})
-                    {}
+    Model_TPL_MODELNAME()
+        : amici::Model_ODE(
+              TPL_NX, // nx
+              TPL_NXTRUE, // nxtrue
+              TPL_NY, // ny
+              TPL_NYTRUE, // nytrue
+              TPL_NZ, // nz
+              TPL_NZTRUE, // nztrue
+              TPL_NEVENT, // nevent
+              TPL_NOBJECTIVE, // nobjective
+              TPL_NW, // nw
+              TPL_NDWDDX, // ndwddx
+              TPL_NDWDP, // ndwdp
+              TPL_NNZ, // nnz
+              TPL_UBW, // ubw
+              TPL_LBW, // lbw
+              TPL_O2MODE, // o2mode
+              std::vector<realtype>{TPL_PARAMETERS}, // dynamic parameters
+              std::vector<realtype>(TPL_NK,1.0), // fixedParameters
+              std::vector<int>{}, // plist
+              std::vector<realtype>(TPL_NX,0.0), // idlist
+              std::vector<int>{} // z2event
+              )
+    {}
 
     /**
      * @brief Clone this model instance.

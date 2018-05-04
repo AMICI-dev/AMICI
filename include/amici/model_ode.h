@@ -285,7 +285,7 @@ namespace amici {
         virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                               const int ip, const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
-        };
+        }
         
         /** model specific implementation of fsxdot
          * @param sxdot sensitivity rhs
@@ -305,7 +305,7 @@ namespace amici {
                             const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J,
                             const realtype *dxdotdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
-        };
+        }
     };
     
 } // namespace amici
