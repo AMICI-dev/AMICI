@@ -256,7 +256,7 @@ class Model:
         self.n_species = len(species)
         self.speciesIndex = {species_element.getId(): species_index
                              for species_index, species_element in enumerate(species)}
-        self.symbols['species']['expression'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+        self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
         self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
                                 for species_element in species]
@@ -268,7 +268,7 @@ class Model:
         self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
                                               sp.sympify(amounts[index])/self.speciesCompartment[index] if not
                                               math.isnan(amounts[index]) else
-                                              self.symbols['species']['expression'][index]
+                                              self.symbols['species']['sym'][index]
                                               for index, conc in enumerate(concentrations)])
 
         if self.sbml.isSetConversionFactor():
@@ -283,9 +283,9 @@ class Model:
     def processParameters(self):
         """Get parameter information from SBML model."""
         parameters = self.sbml.getListOfParameters()
-        self.symbols['parameter']['expression'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
+        self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
-        self.n_parameters = len(self.symbols['parameter']['expression'])
+        self.n_parameters = len(self.symbols['parameter']['sym'])
         self.parameterIndex = {parameter_element.getId(): parameter_index
                              for parameter_index, parameter_element in enumerate(parameters)}
 
@@ -307,7 +307,7 @@ class Model:
         # stoichiometric matrix
         self.stoichiometricMatrix = sp.zeros(self.n_species, self.n_reactions)
         self.fluxVector = sp.zeros(self.n_reactions, 1)
-        self.symbols['flux']['expression'] = sp.zeros(self.n_reactions, 1)
+        self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
         for reaction_index, reaction in enumerate(reactions):
             reactants = {r.getSpecies(): r.getStoichiometry() if r.element_name == 'species' else r.getId()
@@ -330,7 +330,7 @@ class Model:
 
             # usage of formulaToL3String ensures that we get "time" as time symbol
             self.fluxVector[reaction_index] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))
-            self.symbols['flux']['expression'][reaction_index] = sp.sympify('w' + str(reaction_index))
+            self.symbols['flux']['sym'][reaction_index] = sp.sympify('w' + str(reaction_index))
 
 
     def processRules(self):
@@ -339,10 +339,10 @@ class Model:
 
         rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
         fluxvars = self.fluxVector.free_symbols
-        specvars = self.symbols['species']['expression'].free_symbols
+        specvars = self.symbols['species']['sym'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
-        parametervars = self.symbols['parameter']['expression'].free_symbols
+        parametervars = self.symbols['parameter']['sym'].free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
 
         observables = []
@@ -391,19 +391,19 @@ class Model:
 
         if(len(observables)>0):
             self.observables = sp.DenseMatrix(observables)
-            self.symbols['observable']['expression'] = sp.DenseMatrix(observableSymbols)
+            self.symbols['observable']['sym'] = sp.DenseMatrix(observableSymbols)
             self.n_observables = len(observables)
         else:
-            self.observables = self.symbols['species']['expression']
-            self.symbols['observable']['expression'] = sp.DenseMatrix([sp.sympify('y' + str(index))
-                                                     for index in range(0,len(self.symbols['species']['expression']))])
-            self.n_observables = len(self.symbols['species']['expression'])
+            self.observables = self.symbols['species']['sym']
+            self.symbols['observable']['sym'] = sp.DenseMatrix([sp.sympify('y' + str(index))
+                                                     for index in range(0,len(self.symbols['species']['sym']))])
+            self.n_observables = len(self.symbols['species']['sym'])
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
         '''
-        self.fluxVector = self.fluxVector.subs(self.symbols['species']['expression'],
-                                                self.symbols['species']['expression'].mul_matrix(
+        self.fluxVector = self.fluxVector.subs(self.symbols['species']['sym'],
+                                                self.symbols['species']['sym'].mul_matrix(
                                                     self.speciesCompartment.subs(self.compartmentSymbols,
                                                              self.compartmentVolume)))
         '''
@@ -440,8 +440,8 @@ class Model:
             for field in fields:
                 self.__setattr__(field,self.__getattribute__(field).subs(old_symbol,new_symbol))
             for symbol in self.symbols.keys():
-                if 'expression' in self.symbols[symbol].keys():
-                    self.symbols[symbol]['expression'] = self.symbols[symbol]['expression'].subs(old_symbol,new_symbol)
+                if 'sym' in self.symbols[symbol].keys():
+                    self.symbols[symbol]['sym'] = self.symbols[symbol]['sym'].subs(old_symbol,new_symbol)
 
 
     def getSparseSymbols(self,symbolName):
@@ -457,7 +457,7 @@ class Model:
         symbolColPtrs:
         symbolRowVals:
         """
-        matrix = self.functions[symbolName]['expression']
+        matrix = self.functions[symbolName]['sym']
         symbolIndex = 0
         sparseMatrix = sp.zeros(matrix.rows,matrix.cols)
         symbolList = []
@@ -480,85 +480,105 @@ class Model:
 
     def computeModelEquations(self):
         """Perform symbolic computations required to populate functions in `self.functions`."""
+        
         # core
-        self.functions['xdot']['expression'] = self.stoichiometricMatrix * self.symbols['flux']['expression']
-
-        self.functions['w']['expression'] = self.fluxVector
-
-        self.functions['dwdx']['expression'] = self.fluxVector.jacobian(self.symbols['species']['expression'])
-        self.functions['dwdx']['sparseExpression'], self.symbols['dwdx']['expression'],\
-            self.functions['dwdx']['sparseList']  = self.getSparseSymbols('dwdx')[0:3]
-
-        self.functions['J']['expression'] = self.functions['xdot']['expression']\
-                                                .jacobian(self.symbols['species']['expression']) \
-                                            + self.stoichiometricMatrix * self.functions['dwdx']['sparseExpression']
-        self.symbols['vector']['expression'] = getSymbols('v',self.n_species)
-        self.functions['Jv']['expression'] = self.functions['J']['expression']*self.symbols['vector']['expression']
-        self.functions['JSparse']['expression'], self.symbols['JSparse']['expression'],\
-            self.functions['JSparse']['sparseList'], self.functions['JSparse']['colPtrs'],\
-            self.functions['JSparse']['rowVals'] = self.getSparseSymbols('J')
-
-        self.functions['x0']['expression'] = self.speciesInitial
-
-        self.functions['JDiag']['expression'] = getSymbolicDiagonal(self.functions['J']['expression'])
-
+        self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
+        self.computeModelEquationsLinearSolver()
+        self.computeModelEquationsObjectiveFunction()
+        
         # sensitivity
-        self.functions['dwdp']['expression'] = self.fluxVector.jacobian(self.symbols['parameter']['expression'])
-        self.functions['dwdp']['sparseExpression'], self.symbols['dwdp']['expression'],\
-            self.functions['dwdp']['sparseList'] = self.getSparseSymbols('dwdp')[0:3]
+        self.computeModelEquationsSensitivitesCore()
+        self.computeModelEquationsForwardSensitivites()
+        self.computeModelEquationsAdjointSensitivites()
+        
+        
+    def computeModelEquationsLinearSolver(self):
+        """Perform symbolic computations required for the use of various linear solvers."""
+        self.functions['w']['sym'] = self.fluxVector
+        self.functions['dwdx']['sym'] = self.fluxVector.jacobian(self.symbols['species']['sym'])
 
-        self.functions['dxdotdp']['expression'] = self.functions['xdot']['expression']\
-                                                      .jacobian(self.symbols['parameter']['expression'])\
+        self.functions['dwdx']['sparseSym'],\
+        self.symbols['dwdx']['sym'],\
+        self.functions['dwdx']['sparseList']  = self.getSparseSymbols('dwdx')[0:3]
+
+        self.functions['J']['sym'] = self.functions['xdot']['sym'].jacobian(self.symbols['species']['sym']) \
+                                        + self.stoichiometricMatrix * self.functions['dwdx']['sparseSym']
+        self.symbols['vector']['sym'] = getSymbols('v',self.n_species)
+        self.functions['Jv']['sym'] = self.functions['J']['sym']*self.symbols['vector']['sym']
+        
+        self.functions['JSparse']['sym'],\
+        self.symbols['JSparse']['sym'],\
+        self.functions['JSparse']['sparseList'],\
+        self.functions['JSparse']['colPtrs'],\
+        self.functions['JSparse']['rowVals'] = self.getSparseSymbols('J')
+
+        self.functions['x0']['sym'] = self.speciesInitial
+        self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
+
+
+    def computeModelEquationsObjectiveFunction(self):
+        """Perform symbolic computations required for objective function evaluation."""
+        self.functions['y']['sym'] = self.observables
+
+        self.symbols['sigma_y']['sym'] = sp.DenseMatrix([sp.sympify('sigma' + str(symbol))
+                                                                for symbol in self.symbols['observable']['sym']])
+        self.functions['sigma_y']['sym'] = sp.zeros(self.symbols['sigma_y']['sym'].cols,
+                                                           self.symbols['sigma_y']['sym'].rows)
+        self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol))
+                                                           for symbol in self.symbols['observable']['sym']])
+        self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
+                                    '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
+                                    for iy, symbol in enumerate(self.symbols['observable']['sym'])])
+        self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(self.symbols['observable']['sym'])
+        self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(self.symbols['sigma_y']['sym'])
+        self.functions['Jy']['sym'] = self.functions['Jy']['sym'].transpose()
+        self.functions['dJydy']['sym'] = self.functions['dJydy']['sym'].transpose()
+        self.functions['dJydsigma']['sym'] = self.functions['dJydsigma']['sym'].transpose()
+
+
+    def computeModelEquationsSensitivitesCore(self):
+        """Perform symbolic computations required for any sensitivity analysis."""
+        self.functions['dydp']['sym'] = self.functions['y']['sym']\
+                                                .jacobian(self.symbols['parameter']['sym'])
+        self.functions['dydx']['sym'] = self.functions['y']['sym']\
+                                                .jacobian(self.symbols['species']['sym'])
+        
+        self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
+
+        self.functions['dwdp']['sparseSym'],\
+        self.symbols['dwdp']['sym'],\
+        self.functions['dwdp']['sparseList'] = self.getSparseSymbols('dwdp')[0:3]
+
+        self.functions['dxdotdp']['sym'] = self.functions['xdot']['sym']\
+                                                      .jacobian(self.symbols['parameter']['sym'])\
                                                   + self.stoichiometricMatrix\
-                                                    * self.functions['dwdp']['sparseExpression']
-        self.symbols['dxdotdp']['expression'] = getSymbols('dxdotdp',self.n_species)
-        self.functions['sx0']['expression'] = self.speciesInitial.jacobian(self.symbols['parameter']['expression'])
+                                                    * self.functions['dwdp']['sparseSym']
+        self.symbols['dxdotdp']['sym'] = getSymbols('dxdotdp',self.n_species)
+        self.functions['sx0']['sym'] = self.speciesInitial.jacobian(self.symbols['parameter']['sym'])
 
-        # forward
-        self.symbols['sensitivity']['expression'] = getSymbols('sx',self.n_species)
-        self.functions['sxdot']['expression'] = self.functions['JSparse']['expression']\
-                                                * self.symbols['sensitivity']['expression'] \
-                                                + self.symbols['dxdotdp']['expression']
 
-        # adjoint
-        self.functions['JB']['expression'] = self.functions['J']['expression'].transpose()
-        self.symbols['vectorB']['expression'] = getSymbols('vB', self.n_species)
-        self.functions['JvB']['expression'] = self.functions['JB']['expression'] \
-                                              * self.symbols['vectorB']['expression']
-        self.functions['JSparseB']['expression'], self.symbols['JSparseB']['expression'],\
+    def computeModelEquationsForwardSensitivites(self):
+        """Perform symbolic computations required for forward sensitivity analysis."""
+        self.symbols['sensitivity']['sym'] = getSymbols('sx',self.n_species)
+        self.functions['sxdot']['sym'] = self.functions['JSparse']['sym']\
+                                                * self.symbols['sensitivity']['sym'] \
+                                                + self.symbols['dxdotdp']['sym']
+
+    def computeModelEquationsAdjointSensitivites(self):
+        """Perform symbolic computations required for adjoint sensitivity analysis."""
+        self.functions['JB']['sym'] = self.functions['J']['sym'].transpose()
+        self.symbols['vectorB']['sym'] = getSymbols('vB', self.n_species)
+        self.functions['JvB']['sym'] = self.functions['JB']['sym'] \
+                                              * self.symbols['vectorB']['sym']
+        self.functions['JSparseB']['sym'], self.symbols['JSparseB']['sym'],\
             self.functions['JSparseB']['sparseList'], self.functions['JSparseB']['colPtrs'],\
             self.functions['JSparseB']['rowVals'] = self.getSparseSymbols('JB')
 
-        self.symbols['adjoint']['expression'] = getSymbols('xB',self.n_species)
-        self.functions['xBdot']['expression'] = - self.functions['JB']['expression']\
-                                                  * self.symbols['adjoint']['expression']
-        self.functions['qBdot']['expression'] = - self.symbols['adjoint']['expression'].transpose()\
-                                                  * self.functions['dxdotdp']['expression']
-
-        # observables
-        self.functions['y']['expression'] = self.observables
-        self.functions['dydp']['expression'] = self.functions['y']['expression']\
-                                                .jacobian(self.symbols['parameter']['expression'])
-        self.functions['dydx']['expression'] = self.functions['y']['expression']\
-                                                .jacobian(self.symbols['species']['expression'])
-
-        # objective function
-        self.symbols['sigma_y']['expression'] = sp.DenseMatrix([sp.sympify('sigma' + str(symbol))
-                                                               for symbol in self.symbols['observable']['expression']])
-        self.functions['sigma_y']['expression'] = sp.zeros(self.symbols['sigma_y']['expression'].cols,
-                                                          self.symbols['sigma_y']['expression'].rows)
-        self.symbols['my']['expression'] = sp.DenseMatrix([sp.sympify('m' + str(symbol))
-                                                           for symbol in self.symbols['observable']['expression']])
-        self.functions['Jy']['expression'] = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
-                                    '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
-                                    for iy, symbol in enumerate(self.symbols['observable']['expression'])])
-        self.functions['dJydy']['expression'] = self.functions['Jy']['expression']\
-                                                .jacobian(self.symbols['observable']['expression'])
-        self.functions['dJydsigma']['expression'] = self.functions['Jy']['expression']\
-                                                        .jacobian(self.symbols['sigma_y']['expression'])
-        self.functions['Jy']['expression'] = self.functions['Jy']['expression'].transpose()
-        self.functions['dJydy']['expression'] = self.functions['dJydy']['expression'].transpose()
-        self.functions['dJydsigma']['expression'] = self.functions['dJydsigma']['expression'].transpose()
+        self.symbols['adjoint']['sym'] = getSymbols('xB',self.n_species)
+        self.functions['xBdot']['sym'] = - self.functions['JB']['sym']\
+                                                  * self.symbols['adjoint']['sym']
+        self.functions['qBdot']['sym'] = - self.symbols['adjoint']['sym'].transpose()\
+                                                  * self.functions['dxdotdp']['sym']
 
 
     def prepareModelFolder(self):
@@ -603,7 +623,7 @@ class Model:
         """
         lines = []
         [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
-            for index, symbol in enumerate(self.symbols[name]['expression'])]
+            for index, symbol in enumerate(self.symbols[name]['sym'])]
         open(os.path.join(self.modelPath,name + '.h'), 'w').write('\n'.join(lines))
 
 
@@ -663,7 +683,7 @@ class Model:
         if ('symbol' in self.functions[function].keys()):
             symbol = self.functions[function][self.functions[function]['symbol']]
         else:
-            symbol = self.functions[function]['expression']
+            symbol = self.functions[function]['sym']
         lines = []
 
 
@@ -710,7 +730,7 @@ class Model:
                         'NZTRUE': '0',
                         'NEVENT': '0',
                         'NOBJECTIVE': '1',
-                        'NW': str(len(self.symbols['flux']['expression'])),
+                        'NW': str(len(self.symbols['flux']['sym'])),
                         'NDWDDX': str(len(self.functions['dwdx']['sparseList'])),
                         'NDWDP': str(len(self.functions['dwdp']['sparseList'])),
                         'NNZ': str(len(self.functions['JSparse']['sparseList'])),
