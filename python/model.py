@@ -230,7 +230,10 @@ class Model:
             raise Exception('Events are currently not supported!')
 
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
-            raise Exception('Algebraic and rate rules currently not supported!')
+            raise Exception('Algebraic and rate rules are currently not supported!')
+
+        if any([reaction.isSetFast() for reaction in self.sbml.getListOfReactions()]):
+            raise Exception('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
                 for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
@@ -298,8 +301,10 @@ class Model:
         self.symbols['flux']['expression'] = sp.zeros(self.n_reactions, 1)
 
         for reaction_index, reaction in enumerate(reactions):
-            reactants = {r.getSpecies(): r.getStoichiometry() for r in reaction.getListOfReactants()}
-            products = {p.getSpecies(): p.getStoichiometry() for p in reaction.getListOfProducts()}
+            reactants = {r.getSpecies(): r.getStoichiometry() if r.element_name == 'species' else r.getId()
+                         for r in reaction.getListOfReactants()}
+            products = {p.getSpecies(): p.getStoichiometry() if p.element_name == 'species' else p.getId()
+                        for p in reaction.getListOfProducts()}
 
             for reactant in reactants.keys():
                 if not (reactant in self.constantSpecies or reactant in self.boundaryConditionSpecies):
@@ -394,14 +399,13 @@ class Model:
                                                              self.compartmentVolume)))
         '''
 
+
     def processTime(self):
         """Converts time_symbol into cpp variable."""
         sbmlTimeSymbol = sp.sympify('time')
         amiciTimeSymbol = sp.sympify('t')
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
-
-        # replace occurences of sbmlTimeSymbol by amiciTimeSymbol
 
 
 

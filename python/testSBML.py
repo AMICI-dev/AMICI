@@ -101,7 +101,7 @@ def getTestStr(testId):
     600
     803
 '''
-for testId in range(853,1781):
+for testId in range(970,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)
 
