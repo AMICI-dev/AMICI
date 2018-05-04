@@ -323,7 +323,7 @@ class Model:
                     # we need the index here as we might have multiple elements for the same species
                     elements[index] = {'species': element.getSpecies()}
                     if element.isSetId():
-                        if element.getId() in [rule.getVariable() for rule in self.sbml.getListOfRules()]:
+                        if element.getId() in getRuleVars(self.sbml.getListOfRules()):
                             elements[index]['stoichiometry'] = sp.sympify(element.getId())
                         else:
                             # dont put the symbol if it wont get replaced by a rule
@@ -353,7 +353,7 @@ class Model:
         """Process *Rules defined in the SBML model."""
         rules = self.sbml.getListOfRules()
 
-        rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
+        rulevars = getRuleVars(rules)
         fluxvars = self.fluxVector.free_symbols
         specvars = self.symbols['species']['sym'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
@@ -365,6 +365,8 @@ class Model:
         observableSymbols = []
         self.observableNames = []
         for rule in rules:
+            if rule.getFormula() == '':
+                continue
             variable = sp.sympify(rule.getVariable())
             formula = sp.sympify(rule.getFormula())
 
@@ -866,6 +868,9 @@ def getSymbolicDiagonal(matrix):
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
     
     return sp.DenseMatrix(diagonal)
+
+def getRuleVars(rules):
+    return sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules if rule.getFormula() != '']).free_symbols
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details)."""
