@@ -12,4 +12,4 @@ cd ${AMICI_PATH}/build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 
-python3 ${AMICI_PATH}/build/swig/python/setup.py install --user
+python3 ${AMICI_PATH}/build/swig/python/setup.py install --user --prefix=
