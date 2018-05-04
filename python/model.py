@@ -330,7 +330,7 @@ class Model:
 
         rulevars = sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules]).free_symbols
         fluxvars = self.fluxVector.free_symbols
-        initvars = self.speciesInitial.free_symbols
+        specvars = self.symbols['species']['expression'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
 
@@ -347,11 +347,8 @@ class Model:
                 self.stoichiometricMatrix = self.stoichiometricMatrix.subs(variable, formula)
                 isObservable = False
 
-            if variable in initvars:
-                self.speciesInitial = self.speciesInitial.subs(variable,
-                                                               formula.subs(self.symbols['species']['expression'],
-                                                                            self.speciesInitial))
-                isObservable = False
+            if variable in specvars:
+                raise Exception('Species assignment rules are currently not supported')
 
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
