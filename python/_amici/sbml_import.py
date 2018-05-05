@@ -12,6 +12,9 @@ from symengine import symbols
 from string import Template
 from .paths import amici_path
 
+class SBMLException(Exception):
+    pass
+
 class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
@@ -164,24 +167,24 @@ class SbmlImporter:
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
 
         if (self.sbml_doc.getNumErrors() > 0):
-            raise Exception('Provided SBML file does not exists or is invalid!')
+            raise SBMLException('Provided SBML file does not exists or is invalid!')
 
         # apply several model simplifications that make our life substantially easier
         if len(self.sbml_doc.getModel().getListOfFunctionDefinitions())>0:
             convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
             status = self.sbml_doc.convert(convertConfig)
             if status != sbml.LIBSBML_OPERATION_SUCCESS:
-                raise Exception('Could not flatten function definitions!')
+                raise SBMLException('Could not flatten function definitions!')
 
         convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
         status = self.sbml_doc.convert(convertConfig)
         if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise Exception('Could not flatten initial assignments!')
+            raise SBMLException('Could not flatten initial assignments!')
 
         convertConfig = sbml.SBMLLocalParameterConverter().getDefaultProperties()
         status = self.sbml_doc.convert(convertConfig)
         if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise Exception('Could not flatten local parameters!')
+            raise SBMLException('Could not flatten local parameters!')
 
         self.sbml = self.sbml_doc.getModel()
 
@@ -223,29 +226,30 @@ class SbmlImporter:
         self.processVolumeConversion()
         self.processTime()
         self.cleanReservedSymbols()
+        self.replaceSpecialConstants()
 
 
     def checkSupport(self):
         """Check whether all required SBML features are supported."""
         if len(self.sbml.getListOfSpecies()) == 0:
-            raise Exception('Models without species are currently not supported!')
+            raise SBMLException('Models without species are currently not supported!')
 
         if len(self.sbml.all_elements_from_plugins) > 0:
-            raise Exception('SBML extensions are currently not supported!')
+            raise SBMLException('SBML extensions are currently not supported!')
 
         if len(self.sbml.getListOfEvents()) > 0:
-            raise Exception('Events are currently not supported!')
+            raise SBMLException('Events are currently not supported!')
 
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
-            raise Exception('Algebraic and rate rules are currently not supported!')
+            raise SBMLException('Algebraic and rate rules are currently not supported!')
 
         if any([reaction.isSetFast() for reaction in self.sbml.getListOfReactions()]):
-            raise Exception('Fast reactions are currently not supported!')
+            raise SBMLException('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
                 for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
                 for reaction in self.sbml.getListOfReactions()]):
-            raise Exception('Non-unity stoichiometry is currently not supported!')
+            raise SBMLException('Non-unity stoichiometry is currently not supported!')
 
 
     def processSpecies(self):
@@ -318,7 +322,8 @@ class SbmlImporter:
                     # we need the index here as we might have multiple elements for the same species
                     elements[index] = {'species': element.getSpecies()}
                     if element.isSetId():
-                        if element.getId() in getRuleVars(self.sbml.getListOfRules()):
+                        if element.getId() in [rule.getVariable()
+                                               for rule in self.sbml.getListOfRules() if rule.getFormula() != '']:
                             elements[index]['stoichiometry'] = sp.sympify(element.getId())
                         else:
                             # dont put the symbol if it wont get replaced by a rule
@@ -335,13 +340,20 @@ class SbmlImporter:
                             self.speciesCompartment[specieIndex]
 
             # usage of formulaToL3String ensures that we get "time" as time symbol
-            self.fluxVector[reactionIndex] = sp.sympify(sbml.formulaToL3String(reaction.getKineticLaw().getMath()))
+            math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
+            try:
+                symMath = sp.sympify(math)
+            except:
+                raise SBMLException('Kinetic law "' + math + '" contains an unsupported expression!')
+            for r in reactions:
+                for element in list(r.getListOfReactants()) + list(r.getListOfProducts()):
+                    if element.isSetId() & element.isSetStoichiometry():
+                        symMath = symMath.subs(sp.sympify(element.getId()),sp.sympify(element.getStoichiometry()))
+            self.fluxVector[reactionIndex] = symMath
             self.symbols['flux']['sym'][reactionIndex] = sp.sympify('w' + str(reactionIndex))
             if any([str(symbol) in [reaction.getId() for reaction in reactions if reaction.isSetId()]
                          for symbol in self.fluxVector[reactionIndex].free_symbols]):
-                raise Exception('Kinetic laws involving reaction ids are currently not supported!')
-
-
+                raise SBMLException('Kinetic laws involving reaction ids are currently not supported!')
 
 
     def processRules(self):
@@ -372,16 +384,16 @@ class SbmlImporter:
                 isObservable = False
 
             if variable in specvars:
-                raise Exception('Species assignment rules are currently not supported!')
+                raise SBMLException('Species assignment rules are currently not supported!')
 
             if variable in compartmentvars:
-                raise Exception('Compartment assignment rules are currently not supported!')
+                raise SBMLException('Compartment assignment rules are currently not supported!')
 
             if variable in parametervars:
                 try:
                     self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
                 except:
-                    raise Exception('Non-float parameter assignment rules are currently not supported!')
+                    raise SBMLException('Non-float parameter assignment rules are currently not supported!')
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
                 isObservable = False
@@ -454,6 +466,18 @@ class SbmlImporter:
             for symbol in self.symbols.keys():
                 if 'sym' in self.symbols[symbol].keys():
                     self.symbols[symbol]['sym'] = self.symbols[symbol]['sym'].subs(old_symbol,new_symbol)
+
+    def replaceSpecialConstants(self):
+        constants = [(sp.sympify('avogadro'),sp.sympify('6.02214179*1e23')),]
+        for constant, value in constants:
+            # do not replace if any symbol is shadowing default definition
+            if not any([constant in self.symbols[symbol]['sym']
+                        for symbol in self.symbols.keys() if 'sym' in self.symbols[symbol].keys()]):
+                self.replaceInAllExpressions(constant, value)
+            else:
+                # yes sbml supports this but we wont, are you really expecting to be saved if you are trying to shoot
+                # yourself in the foot?
+                raise SBMLException('Ecountered currently unsupported element id ' + str(constant) + '!')
 
 
     def getSparseSymbols(self,symbolName):
@@ -823,7 +847,7 @@ class SbmlImporter:
         try:
             return self.Codeprinter.doprint(math)
         except:
-            raise Exception('Encountered unsupported function in expression "' + str(math) + '"!')
+            raise SBMLException('Encountered unsupported function in expression "' + str(math) + '"!')
 
 def applyTemplate(sourceFile,targetFile,templateData):
     """Load source file, apply template substitution as provided in templateData and save as targetFile.
