@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
-<<<<<<< HEAD
 
-from model import Model
 import traceback
-=======
->>>>>>> origin/feature_swig
 import os
 import sys
 import importlib
 import numpy as np
 import amici
 
-dirname = os.path.split(os.path.abspath(__file__))[0]
-amici_path = os.path.split(dirname)[0]
-test_path = os.path.join(amici_path,'tests','sbml-semantic-test-cases','cases','semantic')
-
+test_path = os.path.join(amici.amici_path,'tests','sbml-semantic-test-cases','cases','semantic')
 
 def runTest(testId, logfile):
     try:
@@ -63,7 +56,7 @@ def runTest(testId, logfile):
         rdata = amici.runAmiciSimulation(solver.get(), None, model.get())
         amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
         simulated_x = np.array(rdata.x).reshape([len(ts), model.nx])
-        test_x = results[1:, [1+ wrapper.speciesIndex[variable]  for variable in settings['variables'].replace(' ', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
+        test_x = results[1:, [1+ wrapper.speciesIndex[variable]  for variable in settings['variables'].replace(' ', '').replace('\n', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
 
         for species in amountSpecies:
             if not species == '':
@@ -83,9 +76,12 @@ def runTest(testId, logfile):
             if (not np.all(rdev < rtol)):
                 raise Exception('Relative tolerance violated')
 
+    except amici.SBMLException as err:
+        print("Did not run test " + testId + ": {0}".format(err))
+        pass
+
     except Exception as err:
         str = "Failed test " + testId + ": {0}".format(err)
-        print(str)
         traceback.print_exc(10)
         logfile.write(str + '\n')
         return
@@ -95,17 +91,6 @@ def getTestStr(testId):
     testStr = '0'*(5-len(testStr)) + testStr
     return testStr
 
-'''
-    currently failing due to https://github.com/symengine/symengine/issues/1444
-    65
-    121
-    250
-    253
-    256
-    259
-    600
-    803
-'''
-for testId in range(1,1781):
+for testId in range(1774,1781):
     with open("test.txt", "a") as logfile:
         runTest(getTestStr(testId), logfile)

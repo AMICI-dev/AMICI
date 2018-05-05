@@ -10,7 +10,7 @@ import shutil
 import subprocess
 from symengine import symbols
 from string import Template
-from amici import amici_path
+from .paths import amici_path
 
 class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
@@ -32,8 +32,6 @@ class SbmlImporter:
     # TODO: are units respected on sbml import? if not convert; at least throw if differ?
     # TODO: camelCase?
 
-
-    # TODO: move arguments to wrap model? 
     def __init__(self, SBMLFile):
         """Create a new Model instance.
         
@@ -44,11 +42,8 @@ class SbmlImporter:
         """
         self.loadSBMLFile(SBMLFile)
 
-        # TODO: move amici*path to amici module?
-        dirname, filename = os.path.split(os.path.abspath(__file__))
-        self.amiciPath = os.path.split(dirname)[0]
-        self.amiciSwigPath = os.path.join(self.amiciPath, 'swig')
-        self.amiciSrcPath = os.path.join(self.amiciPath, 'src')
+        self.amiciSwigPath = os.path.join(amici_path, 'swig')
+        self.amiciSrcPath = os.path.join(amici_path, 'src')
 
         self.functionBodies = {} # TODO: "private" ?
         self.Codeprinter = CCodePrinter()
@@ -190,27 +185,22 @@ class SbmlImporter:
 
         self.sbml = self.sbml_doc.getModel()
 
-   
+
 
     def setPaths(self):
         """Deduce paths input and output paths from script file name."""
-        self.modelPath = os.path.join(self.amiciPath,'models', self.modelName)
+        self.modelPath = os.path.join(amici_path,'models', self.modelName)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
 
     def sbml2amici(self, modelName):
         """Generate AMICI C++ files for the model provided to the constructor."""
-        self.amici_swig_path = os.path.join(amici_path, 'swig')
-        self.amici_src_path = os.path.join(amici_path, 'src')
-        self.model_path = os.path.join(amici_path,'models', self.modelname)
-        self.model_swig_path = os.path.join(self.model_path, 'swig')
-        
         self.setName(modelName)
         self.processSBML()
         self.computeModelEquations()
         self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode()
-        
+    
     def setName(self, modelName):
         """Sets the model name and adapts paths accordingly.
 
@@ -512,8 +502,8 @@ class SbmlImporter:
         self.computeModelEquationsSensitivitesCore()
         self.computeModelEquationsForwardSensitivites()
         self.computeModelEquationsAdjointSensitivites()
-        
-        
+    
+    
     def computeModelEquationsLinearSolver(self):
         """Perform symbolic computations required for the use of various linear solvers."""
         self.functions['w']['sym'] = self.fluxVector
@@ -631,14 +621,14 @@ class SbmlImporter:
 
     def compileCCode(self):
         """Compile the generated model code"""
-        subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelname])
+        subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelName])
 
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
         
         Args:
         Symbols: symbolic variables
-        CVariableName: Name of the C++ array the symbols  
+        CVariableName: Name of the C++ array the symbols
         fileName: filename without path
         """
         lines = []
@@ -789,12 +779,12 @@ class SbmlImporter:
     def getSymLines(self, symbols, variable, indentLevel):
         """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.
         
-        Args: 
+        Args:
         symbols: vectors of symbolic terms
         variable: name of the C++ array to assign to
         indentLevel: indentation level (number of leading blanks)
         
-        Returns: 
+        Returns:
         C++ code as list of lines"""
 
         lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.printWithException(math) + ';'
@@ -810,14 +800,14 @@ class SbmlImporter:
     def getSparseSymLines(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
         """Generate C++ code for assigning sparse symbolic matrix to a C++ array `variable`.
      
-        Args: 
+        Args:
         symbolList: vectors of symbolic terms
         RowVals: list of row indices of each nonzero entry (see CVODES SlsMat documentation for details)
         ColPtrs: list of indices of the first column entries (see CVODES SlsMat documentation for details)
         variable: name of the C++ array to assign to
         indentLevel: indentation level (number of leading blanks)
         
-        Returns: 
+        Returns:
         C++ code as list of lines"""
         lines = [
             ' ' * indentLevel + variable + '->indexvals[' + str(index) + '] = ' + self.printWithException(math) + ';'
@@ -855,7 +845,7 @@ def getSymbols(prefix,length):
     Args:
     prefix: variable name
     length: number of symbolic variables + 1
-    """ 
+    """
     return sp.DenseMatrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
 
 
@@ -878,3 +868,4 @@ def getRuleVars(rules):
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details)."""
     delimiter = 'TPL_'
+
