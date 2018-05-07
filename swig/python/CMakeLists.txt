@@ -58,7 +58,7 @@ CONFIGURE_FILE(paths.py.in ${CMAKE_CURRENT_BINARY_DIR}/amici/paths.py)
 # Copy further amici-python-module files to binary_dir
 add_custom_command(
         TARGET _amici POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/_amici ${CMAKE_CURRENT_BINARY_DIR}/amici
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/amici ${CMAKE_CURRENT_BINARY_DIR}/amici
         COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/README.md ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
