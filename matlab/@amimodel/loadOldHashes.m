@@ -5,7 +5,7 @@ function HTable = loadOldHashes(this)
     %  HTable: struct with hashes of symbolic definition from the previous
     %  compilation @type struct
     
-    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
+    [wrap_path,~,~]=fileparts(fileparts(which('amiwrap.m')));
     try
         load(fullfile(wrap_path,'models',this.modelname,['hashes.mat']))
         try

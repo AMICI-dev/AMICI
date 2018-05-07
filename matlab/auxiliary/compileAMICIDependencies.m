@@ -1,13 +1,13 @@
-function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectFolder, o_suffix, COPT, DEBUG)
+function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, o_suffix, COPT, DEBUG)
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
 
-    sundials_path = fullfile(wrap_path,'sundials');
+    sundials_path = fullfile(dependencyPath,'sundials');
     sundials_ver = '2.7.0';
     
-    ssparse_path = fullfile(wrap_path,'SuiteSparse');
+    ssparse_path = fullfile(dependencyPath,'SuiteSparse');
     ssparse_ver = '4.5.3';
     
-    lapack_path = fullfile(wrap_path,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
+    lapack_path = fullfile(dependencyPath,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
    
     
@@ -26,7 +26,7 @@ function [objectsstr, includesstr] = compileAMICIDependencies(wrap_path, objectF
         objectsstr = strcat(objectsstr,' "',fullfile(objectFolder,objects_ssparse{j}),'"');
     end
 
-    includesstr = getIncludeString(wrap_path, sundials_path, ssparse_path);
+    includesstr = getIncludeString(dependencyPath, sundials_path, ssparse_path);
     
     % collect files that need to be recompiled
     sources_sundials = getSourcesSundials();

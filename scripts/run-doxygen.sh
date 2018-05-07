@@ -24,41 +24,42 @@ if [ ! -d "mtocpp-master" ]; then
 fi
 
 cd ${AMICI_PATH}
-
+MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
 # generate filter
-echo "$AMICI_PATH/ThirdParty/mtocpp-master/build/mtocpp \$1 $AMICI_PATH/mtoc/config/mtocpp.conf" > ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
+echo "$AMICI_PATH/ThirdParty/mtocpp-master/build/mtocpp \$1 ${MTOC_CONFIG_PATH}/mtocpp.conf" > ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
-chmod +x ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
+chmod +x ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 # generate doxyfile
-cp ${AMICI_PATH}/mtoc/config/Doxyfile.template ${AMICI_PATH}/mtoc/config/Doxyfile
+DOXYFILE=${MTOC_CONFIG_PATH}/Doxyfile
+cp ${MTOC_CONFIG_PATH}/Doxyfile.template ${DOXYFILE}
 
-sed -i -e "s#_OutputDir_#$AMICI_PATH/doc#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_SourceDir_#$AMICI_PATH#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_ProjectName_#AMICI#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_ProjectDescription_#Advanced Matlab Interface for CVODES and IDAS#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_ProjectLogo_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_ProjectVersion_##g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_MTOCFILTER_#$AMICI_PATH/mtoc/config/mtocpp_filter.sh#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_LatexExtras_#$AMICI_PATH/mtoc/config/latexextras#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_GenLatex_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#_HaveDot_#YES#g" ${AMICI_PATH}/mtoc/config/Doxyfile
-sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =$AMICI_PATH/mtoc/warnings.log#g" ${AMICI_PATH}/mtoc/config/Doxyfile
+sed -i -e "s#_OutputDir_#$AMICI_PATH/doc#g" ${DOXYFILE}
+sed -i -e "s#_SourceDir_#$AMICI_PATH#g" ${DOXYFILE}
+sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${DOXYFILE}
+sed -i -e "s#_ProjectName_#AMICI#g" ${DOXYFILE}
+sed -i -e "s#_ProjectDescription_#Advanced Matlab Interface for CVODES and IDAS#g" ${DOXYFILE}
+sed -i -e "s#_ProjectLogo_##g" ${DOXYFILE}
+sed -i -e "s#_ProjectVersion_##g" ${DOXYFILE}
+sed -i -e "s#_MTOCFILTER_#${MTOC_CONFIG_PATH}/mtocpp_filter.sh#g" ${DOXYFILE}
+sed -i -e "s#_LatexExtras_#${MTOC_CONFIG_PATH}/latexextras#g" ${DOXYFILE}
+sed -i -e "s#_GenLatex_#YES#g" ${DOXYFILE}
+sed -i -e "s#_HaveDot_#YES#g" ${DOXYFILE}
+sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =$AMICI_PATH/mtoc/warnings.log#g" ${DOXYFILE}
 
 # generate latexextras
 
-cp ${AMICI_PATH}/mtoc/config/latexextras.template ${AMICI_PATH}/mtoc/config/latexextras.sty
-sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${AMICI_PATH}/mtoc/config/latexextras.sty
+cp ${MTOC_CONFIG_PATH}/latexextras.template ${MTOC_CONFIG_PATH}/latexextras.sty
+sed -i -e "s#_ConfDir_#$AMICI_PATH/mtoc/config#g" ${MTOC_CONFIG_PATH}/latexextras.sty
 
-doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
-doxygen "$AMICI_PATH/mtoc/config/Doxyfile"
+doxygen "${DOXYFILE}"
+doxygen "${DOXYFILE}"
 
 
 #cleanup
 #rm ${AMICI_PATH}/mtoc/config/latexextras.sty
-rm ${AMICI_PATH}/mtoc/config/Doxyfile
-rm ${AMICI_PATH}/mtoc/config/mtocpp_filter.sh
+rm ${DOXYFILE}
+rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 # check if warnings log was created
 if [ -f ${AMICI_PATH}/mtoc/warnings.log  ]; then

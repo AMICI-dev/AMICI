@@ -241,14 +241,14 @@ function generateCMakeFile(this)
     t.add('TPL_MODELNAME', this.modelname);
     t.add('TPL_SOURCES', sourceStr);
     CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
-    CMakeTemplateFileName = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src' , 'CMakeLists.template.txt');
+    CMakeTemplateFileName = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src' , 'CMakeLists.template.txt');
     t.replace(CMakeTemplateFileName, CMakeFileName);
 end
 
 function generateSwigInterfaceFiles(this)
     
     modelSwigDir = fullfile(this.wrap_path,'models',this.modelname,'swig');
-    amiciSwigDir = fullfile(this.wrap_path,'swig');
+    amiciSwigDir = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))),'swig');
     mkdir(modelSwigDir)
     
     %interface file
@@ -269,7 +269,7 @@ end
     
 
 function generateMainC(this)
-    mainFileSource = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'src/main.template.cpp');
+    mainFileSource = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src/main.template.cpp');
     mainFileDestination = fullfile(this.wrap_path,'models',this.modelname,'main.cpp');
     copyfile(mainFileSource, mainFileDestination);
 end

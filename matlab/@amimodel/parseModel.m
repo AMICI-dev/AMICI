@@ -79,11 +79,11 @@ codegen_amifun = {'gccode','getArgs','getCVar',...
     'getSensiFlag','getSyms','writeCcode',...
     'writeCcode_sensi'};
 for ifile = 1:length(codegen_amifun)
-    this.HTable(1).(codegen_amifun{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amifun',[codegen_amifun{ifile} '.m']),'File');
+    this.HTable(1).(codegen_amifun{ifile}) = CalcMD5(fullfile(this.wrap_path,'matlab','@amifun',[codegen_amifun{ifile} '.m']),'File');
 end
 codegen_amimodel = {'generateC','makeSyms','makeEvents'};
 for ifile = 1:length(codegen_amimodel)
-    this.HTable(1).(codegen_amimodel{ifile}) = CalcMD5(fullfile(this.wrap_path,'@amimodel',[codegen_amimodel{ifile} '.m']),'File');
+    this.HTable(1).(codegen_amimodel{ifile}) = CalcMD5(fullfile(this.wrap_path,'matlab','@amimodel',[codegen_amimodel{ifile} '.m']),'File');
 end
 if(not(this.recompile))
     this.recompile = not(strcmp(this.HTable(1).x,HTable.x));

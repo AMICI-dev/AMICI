@@ -9,7 +9,7 @@ function getFun(this,HTable,funstr)
     % Return values:
     %  void
     
-    [wrap_path,~,~]=fileparts(which('amiwrap.m'));
+    [wrap_path,~,~]=fileparts(fileparts(which('amiwrap.m')));
     
     fun = amifun(funstr,this);
     

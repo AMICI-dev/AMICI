@@ -65,23 +65,25 @@ function amiwrap( varargin )
     
     %% 
     % computations
-    wrap_path=fileparts(mfilename('fullpath'));
-    addpath(genpath(fullfile(wrap_path,'auxiliary')));
-    addpath(fullfile(wrap_path,'symbolic'));
+    matlabRootPath=fileparts(mfilename('fullpath'));
+    amiciRootPath=fileparts(matlabRootPath);
+    
+    addpath(genpath(fullfile(matlabRootPath,'auxiliary')));
+    addpath(fullfile(matlabRootPath,'symbolic'));
     
     % compile CalcMD5 if necessary
     try
         CalcMD5('TEST','char','hex');
     catch
         try
-            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            addpath(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
             CalcMD5('TEST','char','hex');
         catch
             disp('CalcMD5 has not been compiled yet. Compiling now!')
             tmpdir = pwd;
-            cd(fullfile(wrap_path,'auxiliary','CalcMD5'))
-            mex(fullfile(wrap_path,'auxiliary','CalcMD5','CalcMD5.c'))
-            addpath(fullfile(wrap_path,'auxiliary','CalcMD5'))
+            cd(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
+            mex(fullfile(matlabRootPath,'auxiliary','CalcMD5','CalcMD5.c'))
+            addpath(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
             cd(tmpdir);
         end
     end
@@ -97,18 +99,18 @@ function amiwrap( varargin )
         model_hash = [];
     end
     
-    commit_hash = getCommitHash(wrap_path);
+    commit_hash = getCommitHash(amiciRootPath);
     
-    if(~exist(fullfile(wrap_path,'models',modelname),'dir'))
-        mkdir(fullfile(wrap_path,'models',modelname));
+    if(~exist(fullfile(amiciRootPath,'models',modelname),'dir'))
+        mkdir(fullfile(amiciRootPath,'models',modelname));
     end
-    addpath(fullfile(wrap_path,'models',modelname));
+    addpath(fullfile(amiciRootPath,'models',modelname));
     if(exist([commit_hash '_' model_hash '.mat'],'file')==2);
         load([commit_hash '_' model_hash '.mat']);
         % update modelname according to this function call
         model.updateModelName(modelname);
         % update wrap_path to this function call
-        model.updateWrapPath(wrap_path);
+        model.updateWrapPath(amiciRootPath);
     end
     
     if(~exist('model','var'))
@@ -117,7 +119,7 @@ function amiwrap( varargin )
         
 
         if(~isempty(model_hash) && ~isempty(commit_hash))
-            save(fullfile(wrap_path,'models',modelname,[commit_hash '_' model_hash]),'model')
+            save(fullfile(amiciRootPath,'models',modelname,[commit_hash '_' model_hash]),'model')
         end
     end
     
@@ -131,19 +133,19 @@ function amiwrap( varargin )
     end
     
     if(~isempty(o2string))
-        o2_hash = CalcMD5(fullfile(wrap_path,'@amimodel',['augment' o2string '.m']),'File');
+        o2_hash = CalcMD5(fullfile(matlabRootPath,'@amimodel',['augment' o2string '.m']),'File');
         try
-            if(~exist(fullfile(wrap_path,'models',[modelname '_' o2string]),'dir'))
-                mkdir(fullfile(wrap_path,'models',[modelname '_' o2string]));
+            if(~exist(fullfile(amiciRootPath,'models',[modelname '_' o2string]),'dir'))
+                mkdir(fullfile(amiciRootPath,'models',[modelname '_' o2string]));
             end
-           addpath(fullfile(wrap_path,'models',[modelname '_' o2string])); 
+           addpath(fullfile(amiciRootPath,'models',[modelname '_' o2string])); 
         end
         if(exist([commit_hash '_' model_hash '_' o2_hash '.mat'],'file')==2);
             load([commit_hash '_' model_hash '_' o2_hash '.mat']);
             % update modelname according to this function call
             modelo2.updateModelName([modelname '_' o2string]);
             % update wrap_path to this function call
-            modelo2.updateWrapPath(wrap_path);
+            modelo2.updateWrapPath(amiciRootPath);
         end
         if(~exist('modelo2','var'))
             disp('Augmenting to second order ...')
@@ -151,7 +153,7 @@ function amiwrap( varargin )
             
             
             if(~isempty(model_hash) && ~isempty(commit_hash))
-                save(fullfile(wrap_path,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2_hash]),'modelo2')
+                save(fullfile(amiciRootPath,'models',[modelname '_' o2string],[commit_hash '_' model_hash '_' o2_hash]),'modelo2')
             end
         end
     end
@@ -188,22 +190,22 @@ function amiwrap( varargin )
         clear(['simulate_' modelname ]);
         clear(['ami_' modelname ]);
         clear(['ami_' modelname o2string]);
-        movefile(fullfile(wrap_path,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']));
-        movefile(fullfile(wrap_path,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]));
+        movefile(fullfile(amiciRootPath,'models',modelname,['simulate_' modelname '.m']),fullfile(tdir,['simulate_' modelname '.m']));
+        movefile(fullfile(amiciRootPath,'models',modelname,['ami_' modelname '.' mexext]),fullfile(tdir,['ami_' modelname '.' mexext]));
         % make files available in the path
         tmp = which(fullfile(tdir,['simulate_' modelname '.m']));
         tmp = which(fullfile(tdir,['ami_' modelname '.' mexext]));
         for fun = model.mfuns
-            copyfile(fullfile(wrap_path,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']));
+            copyfile(fullfile(amiciRootPath,'models',modelname,[fun{1} '_' modelname '.m']),fullfile(tdir,[fun{1} '_' modelname '.m']));
             tmp = which(fullfile(tdir,[fun{1} '_' modelname '.m']));
         end
         % clear .m and .mex files from memory
         if(~isempty(o2string))
-            movefile(fullfile(wrap_path,'models',[modelname '_' o2string],[ 'ami_' modelname '_' o2string '.' mexext]),fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
+            movefile(fullfile(amiciRootPath,'models',[modelname '_' o2string],[ 'ami_' modelname '_' o2string '.' mexext]),fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
             tmp = which(fullfile(tdir,['ami_' modelname '_' o2string '.' mexext]));
         end
     else
-        addpath(fullfile(wrap_path,'models',modelname));
+        addpath(fullfile(amiciRootPath,'models',modelname));
     end
     warning(warningreset);
 end

@@ -149,11 +149,11 @@ tests/sbml-test-suite/
 
 tests/sedml-test-suite/
 
-mtoc/config/latexextras.sty-e
+matlab/mtoc/config/latexextras.sty-e
 
-mtoc/config/latexextras.sty
+matlab/mtoc/config/latexextras.sty
 
-mtoc/config/Doxyfile-e
+matlab/mtoc/config/Doxyfile-e
 
 .project
 
