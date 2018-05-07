@@ -27,7 +27,7 @@ add_definitions(-DAMICI_WITHOUT_MATLAB)
 
 set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
 set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
-set(CMAKE_MODULE_PATH ${AMICI_DIR}/CMakeModules)
+set(CMAKE_MODULE_PATH ${AMICI_DIR}/cmake)
 
 find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 
@@ -98,7 +98,7 @@ if($ENV{ENABLE_GCOV_COVERAGE})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
 endif()
 
-include(CMakeModules/clang-tools.cmake)
+include(clang-tools)
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
@@ -118,7 +118,7 @@ export(EXPORT AmiciTargets
   NAMESPACE Upstream::
 )
 get_property(AmiciConfigIncludes DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-configure_file(CMakeModules/AmiciConfig.cmake
+configure_file(cmake/AmiciConfig.cmake
   "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
   @ONLY
 )
