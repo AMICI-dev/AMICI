@@ -25,8 +25,8 @@ endforeach(FLAG)
 
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
-set(SUITESPARSE_DIR "${AMICI_DIR}/SuiteSparse/")
-set(SUNDIALS_LIB_DIR "${AMICI_DIR}/sundials/build/lib")
+set(SUITESPARSE_DIR "${AMICI_DIR}/ThirdParty/SuiteSparse/")
+set(SUNDIALS_LIB_DIR "${AMICI_DIR}/ThirdParty/sundials/build/lib")
 set(CMAKE_MODULE_PATH ${AMICI_DIR}/cmake)
 
 find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
@@ -46,8 +46,8 @@ endif()
 
 include_directories("${AMICI_DIR}/include/")
 include_directories("${HDF5_INCLUDE_DIRS}")
-include_directories("${AMICI_DIR}/sundials/include")
-include_directories("${AMICI_DIR}/sundials/src")
+include_directories("${AMICI_DIR}/ThirdParty/sundials/include")
+include_directories("${AMICI_DIR}/ThirdParty/sundials/src")
 include_directories("${SUITESPARSE_DIR}/include")
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")

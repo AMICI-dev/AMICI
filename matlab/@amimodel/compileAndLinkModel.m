@@ -65,7 +65,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     end
     
     %% Third party libraries
-    dependencyPath = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))));
+    dependencyPath = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'ThirdParty');
     [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, objectFileSuffix, COPT, DEBUG);
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    

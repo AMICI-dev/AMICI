@@ -26,7 +26,7 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
         objectsstr = strcat(objectsstr,' "',fullfile(objectFolder,objects_ssparse{j}),'"');
     end
 
-    includesstr = getIncludeString(dependencyPath, sundials_path, ssparse_path);
+    includesstr = getIncludeString(fullfile(fileparts(dependencyPath)), sundials_path, ssparse_path);
     
     % collect files that need to be recompiled
     sources_sundials = getSourcesSundials();
@@ -58,12 +58,12 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
     fclose(fid); 
 end
 
-function includesstr = getIncludeString(wrap_path, sundials_path, ssparse_path)
+function includesstr = getIncludeString(amici_root_path, sundials_path, ssparse_path)
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'src'), '"');
-    includesstr = strcat(includesstr,' -I"', fullfile(wrap_path, 'include'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'src'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'KLU','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'AMD','Include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(ssparse_path, 'COLAMD','Include'), '"');

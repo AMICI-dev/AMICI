@@ -7,8 +7,8 @@ set -e
 AMICI_PATH="`dirname \"$BASH_SOURCE\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
-SUITESPARSE_ROOT="${AMICI_PATH}/SuiteSparse"
-SUNDIALS_BUILD_PATH="${AMICI_PATH}/sundials/build/"
+SUITESPARSE_ROOT="${AMICI_PATH}/ThirdParty/SuiteSparse"
+SUNDIALS_BUILD_PATH="${AMICI_PATH}/ThirdParty/sundials/build/"
 
 mkdir -p ${SUNDIALS_BUILD_PATH}
 cd ${SUNDIALS_BUILD_PATH}
