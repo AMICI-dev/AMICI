@@ -62,12 +62,12 @@ rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 # check if warnings log was created
-if [ -f ${AMICI_PATH}/mtoc/warnings.log  ]; then
+if [ -f ${AMICI_PATH}/matlab/mtoc/warnings.log  ]; then
     # check if warnings log is empty
-if [ -s ${AMICI_PATH}/mtoc/warnings.log ]; then
+if [ -s ${AMICI_PATH}/matlab/mtoc/warnings.log ]; then
         echo "DOXYGEN failed:"
-        cat ${AMICI_PATH}/mtoc/warnings.log
-        rm ${AMICI_PATH}/mtoc/warnings.log
+        cat ${AMICI_PATH}/matlab/mtoc/warnings.log
+        rm ${AMICI_PATH}/matlab/mtoc/warnings.log
         exit 1
     else
         exit 0
