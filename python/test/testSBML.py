@@ -7,7 +7,8 @@ import importlib
 import numpy as np
 import amici
 
-test_path = os.path.join(amici.amici_path,'tests','sbml-semantic-test-cases','cases','semantic')
+# directory with sbml semantic test cases
+test_path = os.path.join(os.path.dirname(__file__), 'sbml-semantic-test-cases', 'cases', 'semantic')
 
 def runTest(testId, logfile):
     try:

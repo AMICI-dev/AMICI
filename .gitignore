@@ -155,6 +155,8 @@ matlab/mtoc/config/latexextras.sty
 
 matlab/mtoc/config/Doxyfile-e
 
+.directory
+
 .project
 
 .pydevproject

@@ -10,7 +10,7 @@ import shutil
 import subprocess
 from symengine import symbols
 from string import Template
-from .paths import amici_path
+from amici import amici_path
 
 class SBMLException(Exception):
     pass

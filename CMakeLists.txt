@@ -129,3 +129,4 @@ export(PACKAGE Amici)
 
 # build interfaces for other languages
 add_subdirectory(swig)
+add_subdirectory(python)
