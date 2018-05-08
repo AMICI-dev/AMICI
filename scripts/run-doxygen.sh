@@ -39,7 +39,7 @@ sed -i -e "s#_OutputDir_#$AMICI_PATH/doc#g" ${DOXYFILE}
 sed -i -e "s#_SourceDir_#$AMICI_PATH#g" ${DOXYFILE}
 sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${DOXYFILE}
 sed -i -e "s#_ProjectName_#AMICI#g" ${DOXYFILE}
-sed -i -e "s#_ProjectDescription_#Advanced Matlab Interface for CVODES and IDAS#g" ${DOXYFILE}
+sed -i -e "s#_ProjectDescription_#Advanced Multilanguage Interface for CVODES and IDAS#g" ${DOXYFILE}
 sed -i -e "s#_ProjectLogo_##g" ${DOXYFILE}
 sed -i -e "s#_ProjectVersion_##g" ${DOXYFILE}
 sed -i -e "s#_MTOCFILTER_#${MTOC_CONFIG_PATH}/mtocpp_filter.sh#g" ${DOXYFILE}

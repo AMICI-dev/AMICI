@@ -690,9 +690,9 @@ EXCLUDE_SYMLINKS       = YES
 
 EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/tests/*" \
-			 "_SourceDir_/scripts/*" \
+			 		     "_SourceDir_/scripts/*" \
                          "_SourceDir_/ThirdParty/*" \
-                         "_SourceDir_/examples/*" \
+                         "_SourceDir_/matlab/examples/*" \
                          "_SourceDir_/matlab/mtoc/*" \
                          "_SourceDir_/matlab/auxiliary/*" \
                          "_SourceDir_/build"
