@@ -8,7 +8,7 @@ CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 
 # add targets for installation and package generation
 add_custom_target(install-python
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --user)
+    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --prefix= --user)
 
 add_custom_target(python-wheel
     COMMAND ${PYTHON_EXECUTABLE} setup.py bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR}

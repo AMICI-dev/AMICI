@@ -48,7 +48,7 @@ install:
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
-    - ./scripts/buildAmici.sh
+    - ./scripts/buildAmici.sh || ls -R build/
     - ./scripts/buildTests.sh
 
 script:  
