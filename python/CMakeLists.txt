@@ -6,6 +6,14 @@ SET(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 #CONFIGURE_FILE(paths.py.in ${CMAKE_CURRENT_BINARY_DIR}/amici/paths.py)
 
+# add targets for installation and package generation
+add_custom_target(install-python
+    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --user)
+
+add_custom_target(python-wheel
+    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR})
+
+
 # Copy further amici-python-module files to binary_dir
 add_custom_command(
         TARGET python-wheel PRE_BUILD
@@ -28,9 +36,3 @@ add_custom_command(
 )
 #TODO: blas ?
 
-# add targets for installation and package generation
-add_custom_target(install-python
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --user)
-
-add_custom_target(python-wheel
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR})
