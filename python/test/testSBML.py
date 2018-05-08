@@ -19,33 +19,19 @@ def runTest(testId, logfile):
         results = np.genfromtxt(resultsFile, delimiter=',')
 
         # model
-        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
-
-        # fallback l3v1
-        if not os.path.isfile(sbmlFile):
-            sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v1.xml')
-
-        # fallback l2v5
-        if not os.path.isfile(sbmlFile):
-            sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
+        sbmlFile = findModelFile(current_test_path, testId)
 
         wrapper = amici.SbmlImporter(sbmlFile)
         wrapper.sbml2amici('SBMLTest' + testId)
 
         # settings
-        settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
-        settings = {}
-        with open(settingsFile) as f:
-            for line in f:
-                if not line == '\n':
-                    (key, val) = line.split(':')
-                    settings[key] = val
+        settings = readSettingsFile(current_test_path, testId)
         ts = np.linspace(float(settings['start']), float(settings['start']) + float(settings['duration']),
                          int(settings['steps']) + 1)
         atol = float(settings['absolute'])
         rtol = float(settings['relative'])
 
-        sys.path.insert(0, os.path.join(wrapper.modelPath, 'build', 'swig'))
+        sys.path.insert(0, wrapper.modelPath)
         mod = importlib.import_module(wrapper.modelName)
 
         model = mod.getModel()
@@ -86,6 +72,30 @@ def runTest(testId, logfile):
         traceback.print_exc(10)
         logfile.write(str + '\n')
         return
+
+def findModelFile(current_test_path, testId):
+    sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
+
+    # fallback l3v1
+    if not os.path.isfile(sbmlFile):
+        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v1.xml')
+
+    # fallback l2v5
+    if not os.path.isfile(sbmlFile):
+        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
+        
+    return sbmlFile
+
+def readSettingsFile(current_test_path, testId):
+    settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
+    settings = {}
+    with open(settingsFile) as f:
+        for line in f:
+            if not line == '\n':
+                (key, val) = line.split(':')
+                settings[key] = val
+    return settings
+
 
 def getTestStr(testId):
     testStr = str(testId)
