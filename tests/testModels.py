@@ -6,6 +6,7 @@ import amici
 import unittest
 import importlib
 import os
+import re
 import numpy as np
 
 class TestAmiciPregeneratedModel(unittest.TestCase):
@@ -22,13 +23,17 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
         expectedResults = h5py.File(self.expectedResultsFile, 'r')
 
         for subTest in expectedResults.keys():
-            sys.path.insert(0, os.path.join(amici.amici_path, 'models', subTest, 'build', 'swig'))
-            testModelModule = importlib.import_module(subTest)
-            self.model = testModelModule.getModel()
-            self.solver = self.model.getSolver()
-
             for case in list(expectedResults[subTest].keys()):
-                with self.subTest(modelName=subTest, caseName=case):
+                if re.search('^sensi2',case) != None:
+                    modelName = subTest + '_o2'
+                else:
+                    modelName = subTest
+
+                with self.subTest(modelName=modelName, caseName=case):
+                    sys.path.insert(0, os.path.join(amici.amici_path, 'models', modelName, 'build', 'swig'))
+                    testModelModule = importlib.import_module(modelName)
+                    self.model = testModelModule.getModel()
+                    self.solver = self.model.getSolver()
                     amici.readModelDataFromHDF5(self.expectedResultsFile,
                                                 self.model.get(),
                                                 "/" + subTest + "/" + case + "/options")
@@ -72,7 +77,10 @@ def checkResults(rdata, field, expected, atol=1e-9, rtol=1e-4):
     rdev = abs((result-expected))/(abs(expected)+rtol)
 
     if np.any(np.isnan(expected)):
-        assert all(np.isnan(result[np.isnan(expected)]))
+        if len(expected) > 1 :
+            assert all(np.isnan(result[np.isnan(expected)]))
+        else: # subindexing fails for scalars
+            assert np.isnan(result)
         adev = adev[~np.isnan(expected)]
         rdev = rdev[~np.isnan(expected)]
 
