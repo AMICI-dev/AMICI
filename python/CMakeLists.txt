@@ -7,9 +7,8 @@ CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 #CONFIGURE_FILE(paths.py.in ${CMAKE_CURRENT_BINARY_DIR}/amici/paths.py)
 
 # Copy further amici-python-module files to binary_dir
-#add_custom_command(
-#        TARGET python-wheel PRE_BUILD
-execute_process(
+add_custom_command(
+        TARGET python-wheel PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/amici ${CMAKE_CURRENT_BINARY_DIR}/amici
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/amici/src
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/amici/include
