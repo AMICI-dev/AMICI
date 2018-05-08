@@ -11,7 +11,8 @@ add_custom_target(install-python
     COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --user)
 
 add_custom_target(python-wheel
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR})
+    COMMAND ${PYTHON_EXECUTABLE} setup.py bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amici)
 
 
 # Copy further amici-python-module files to binary_dir
