@@ -1,5 +1,5 @@
 %module TPL_MODELNAME
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

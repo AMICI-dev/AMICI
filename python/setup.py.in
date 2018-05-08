@@ -1,7 +1,21 @@
 from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
+import os 
 
+def getAmiciBaseSources():
+    """Get list of source files for the amici base library"""
+    import glob
+    import re
+    amiciBaseSources = glob.glob('amici/src/*.cpp')
+    amiciBaseSources = [src for src in amiciBaseSources if not re.search(r'(matlab)|(\.template\.)', src)]
+    return amiciBaseSources
+
+"""TODO
+amici/include/amici/solver.h:576: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
+amici/include/amici/solver_cvodes.h:168: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
+amici/include/amici/model.h:763: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
+"""
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
 cfg_vars = sysconfig.get_config_vars()
@@ -16,17 +30,44 @@ h5pkgcfg = pkgconfig.parse("hdf5")
 
 # Build shared object
 amici_module = Extension('amici/_amici',
-                         sources=['amici/swig/amici.i',
+                         sources=['amici/swig/amici.i', 
                                   ],
                          include_dirs=['amici/include',
                                        'amici/ThirdParty/SuiteSparse/include',
                                        'amici/ThirdParty/sundials/include',
                                        'amici/ThirdParty/sundials/src',
                                        *h5pkgcfg['include_dirs']], # NOTE: requires that pkgconfig knows about hdf5
-                         library_dirs=h5pkgcfg['library_dirs'],
-                         swig_opts=['-c++', '-modern', '-Iamici/include/']
+                         libraries=['amici',
+                                    'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5',
+                                    'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
+                                    'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
+                             ],
+                         library_dirs=[
+                             *h5pkgcfg['library_dirs'],
+                             'amici/libs/',
+                                       ],
+                         swig_opts=['-c++', '-modern', '-v', '-Iamici/include/', '-outdir', 'amici/'],
+                         extra_link_args=['${BLAS_LIBRARIES}']
                          )
-
+"""
+libamici = Extension('amici/amici',
+                         sources=[ 
+                                  *getAmiciBaseSources(),
+                                  ],
+                         include_dirs=['amici/include',
+                                       'amici/ThirdParty/SuiteSparse/include',
+                                       'amici/ThirdParty/sundials/include',
+                                       'amici/ThirdParty/sundials/src',
+                                       *h5pkgcfg['include_dirs']], # NOTE: requires that pkgconfig knows about hdf5
+                         libraries=[
+                             ## TODO
+                             #sundials suitesparse, hdf amici
+                             ],
+                         library_dirs=h5pkgcfg['library_dirs'],
+                         extra_link_args=['-static'],
+                         extra_compile_args=['-fPIC']
+                         )
+"""
 # Install
 setup(
     name='${PROJECT_NAME}',
@@ -36,17 +77,19 @@ setup(
     author='${AUTHORS}',
     author_email='${AUTHOR_EMAIL}',
     license = 'BSD',
-    ext_modules=[amici_module],
+    ext_modules=[amici_module,],
     packages=find_packages(),
     install_requires=['symengine', 'python-libsbml', 'h5py'],
     python_requires='>=3',
     package_data={
-        'amici': ['include/', 
+        'amici': ['include/amici/*', 
                   'src/*template*',
-                  'swig/amici.py',
-                  'swig/modelname.template.i',
-                  'swig//CMakeLists_model.txt',
-                  'ThirdParty'], # TODO select only relevant files
+                  'swig/*',
+                  'libs/*',
+                  'amici.py',
+                  'setup.py.template',
+                  'ThirdParty/sundials/include/*/*',
+                  'ThirdParty/SuiteSparse/include/*'], # TODO select only relevant files
     },
     include_package_data=True,
     classifiers=[

@@ -2,15 +2,17 @@
 
 import symengine as sp
 from symengine.printing import CCodePrinter
+from symengine import symbols
 import libsbml as sbml
 import os
 import re
 import math
 import shutil
 import subprocess
-from symengine import symbols
+import sys
 from string import Template
-from . import amici_path, amiciSwigPath, amiciSrcPath
+
+from . import amici_path, amiciSwigPath, amiciSrcPath, amiciModulePath
 
 class SBMLException(Exception):
     pass
@@ -651,6 +653,7 @@ class SbmlImporter:
         self.writeWrapfunctionsHeader()
         self.writeCMakeFile()
         self.writeSwigFiles()
+        self.writeModuleSetup()
 
         shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
                     os.path.join(self.modelPath, 'main.cpp'))
@@ -658,8 +661,18 @@ class SbmlImporter:
 
     def compileCCode(self):
         """Compile the generated model code"""
-        subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelName])
+        #subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelName])
 
+        moduleDir = self.modelPath
+        oldCwd = os.getcwd()
+        os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
+        from distutils.core import run_setup
+        run_setup('%s/setup.py' % moduleDir,
+                  script_args=["build_ext", 
+                               '--build-lib=%s' % moduleDir, 
+                               ])
+        os.chdir(oldCwd)
+        
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
         
@@ -812,6 +825,21 @@ class SbmlImporter:
                       os.path.join(self.modelSwigPath, self.modelName + '.i'), templateData)
         shutil.copy(os.path.join(amiciSwigPath, 'CMakeLists_model.txt'),
                     os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
+
+    def writeModuleSetup(self):
+        """Create a distutils setup.py file for compile the model module."""
+        
+        templateData = {'MODELNAME': self.modelName,
+                        'VERSION': '0.1.0'}
+        applyTemplate(os.path.join(amiciModulePath, 'setup.template.py'),
+                      os.path.join(self.modelPath, 'setup.py'), templateData)
+        
+        # write __init__.py for the model module
+        if not os.path.exists(os.path.join(self.modelPath, self.modelName)):
+            os.makedirs(os.path.join(self.modelPath, self.modelName))
+ 
+        applyTemplate(os.path.join(amiciModulePath, '__init__.template.py'),
+                      os.path.join(self.modelPath, self.modelName, '__init__.py'), templateData)
 
     def getSymLines(self, symbols, variable, indentLevel):
         """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.

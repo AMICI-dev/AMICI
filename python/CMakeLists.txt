@@ -16,21 +16,22 @@ execute_process(
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/swig ${CMAKE_CURRENT_BINARY_DIR}/amici/swig
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/ThirdParty ${CMAKE_CURRENT_BINARY_DIR}/amici/ThirdParty
         COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/README.md ${CMAKE_CURRENT_BINARY_DIR}/
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/libamici.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/sundials/build/lib/libsundials_nvecserial.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/sundials/build/lib/libsundials_cvodes.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/sundials/build/lib/libsundials_idas.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/KLU/Lib/libklu.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/COLAMD/Lib/libcolamd.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/BTF/Lib/libbtf.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/AMD/Lib/libamd.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/SuiteSparse_config/libsuitesparseconfig.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
 )
+#TODO: blas ?
 
 # add targets for installation and package generation
 add_custom_target(install-python
-    #DEPENDS _amici
     COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --user)
 
-add_custom_target(python-bdist
-    #DEPENDS _amici
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist)
-
-add_custom_target(python-sdist
-    #DEPENDS _amici
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} sdist)
-
 add_custom_target(python-wheel
-    #DEPENDS _amici
-    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist_wheel)
+    COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR})
