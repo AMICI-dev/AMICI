@@ -42,7 +42,7 @@ matrix:
 install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
-    - pip3 install --user --upgrade pip setuptools wheel
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
