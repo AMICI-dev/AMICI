@@ -14,6 +14,8 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
     '''
     TestCase class for tests that were pregenerated using the the matlab code generation routines and cmake
     build routines
+    
+    NOTE: requires having run scripts/buildTests.sh before to build the python modules for the test models
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
@@ -32,7 +34,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
                 with self.subTest(modelName=modelName, caseName=case):
                     print('running subTest modelName = ' + modelName + ', caseName = ' + case)
-                    sys.path.insert(0, os.path.join(amici.amici_path, 'models', modelName, 'build', 'swig'))
+                    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'models', modelName, 'build', 'swig'))
                     testModelModule = importlib.import_module(modelName)
                     self.model = testModelModule.getModel()
                     self.solver = self.model.getSolver()
@@ -55,7 +57,6 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
-
 
 
 
@@ -147,22 +148,15 @@ def getFieldAsNumPyArray(rdata,field):
                       }
     if field in fieldDimensions.keys():
         if len(fieldDimensions[field]) == 1:
-            return np.array(rdata.__getattr__(field))
+            return np.array(getattr(rdata, field))
         else:
-            return np.array(rdata.__getattr__(field)).reshape(fieldDimensions[field])
+            return np.array(getattr(rdata, field)).reshape(fieldDimensions[field])
 
     else:
-        return float(rdata.__getattr__(field))
+        return float(getattr(rdata, field))
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciPregeneratedModel())
     unittest.main()
-
-
-
-
-
-
-
-
+    
