@@ -115,7 +115,7 @@ void ReturnData::invalidate(const realtype t) {
         for (int ix = 0; ix < nx; ix++)
             x.at(ix + nx * it) = getNaN();
         for (int iy = 0; iy < ny; iy++)
-            y.at(ix + ny * it) = getNaN();
+            y.at(iy + ny * it) = getNaN();
     }
 
     if (sx.size()) {
