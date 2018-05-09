@@ -71,9 +71,10 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
 
             model->fsdx0();
             
-            if (sensi_meth == AMICI_SENSI_FSA) {
+            auto plist = model->getParameterList();
+            
+            if (sensi_meth == AMICI_SENSI_FSA && plist.size() > 0) {
                 /* Set sensitivity analysis optional inputs */
-                auto plist = model->getParameterList();
                 auto par = model->getUnscaledParameters();
 
                 /* Activate sensitivity calculations */
