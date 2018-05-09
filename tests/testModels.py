@@ -16,7 +16,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
     build routines
     '''
 
-    expectedResultsFile = os.path.join(amici.amici_path,'tests','cpputest','expectedResults.h5')
+    expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
 
     def runTest(self):
 
