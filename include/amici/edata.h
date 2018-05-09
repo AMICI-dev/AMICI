@@ -15,13 +15,42 @@ class ExpData {
   public:
     /** default constructor */
     ExpData();
+    /**
+     * @brief ExpData
+     * @param nytrue
+     * @param nztrue
+     * @param nt
+     * @param nmaxevent
+     */
+    ExpData(int nytrue, int nztrue, int nt, int nmaxevent);
+    /**
+     * @brief ExpData
+     * @param nytrue
+     * @param nztrue
+     * @param nt
+     * @param nmaxevent
+     * @param my
+     * @param sigmay
+     * @param mz
+     * @param sigmaz
+     */
+    ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+            std::vector<realtype> const& my,
+            std::vector<realtype> const& sigmay,
+            std::vector<realtype> const& mz,
+            std::vector<realtype> const& sigmaz);
+    /**
+     * constructor that initializes with Model
+     *
+     * @param model pointer to model specification object @type Model
+     */
     ExpData(const Model &model);
 
     /**
-     * @brief ExpData is currently not copyable
+     * @brief Copy constructor
      * @param other object to copy from
      */
-    ExpData (const ExpData &other) = delete;
+    ExpData (const ExpData &other);
 
     void setObservedData(const double *observedData);
     void setObservedDataStdDev(const double *observedDataStdDev);
