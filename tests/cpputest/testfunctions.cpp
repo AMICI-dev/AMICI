@@ -42,8 +42,7 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
     // simulate & verify
     auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
-    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
-
+    
     // write
     // delete destination group
     H5::H5File in(hdffileOptions, H5F_ACC_RDONLY);
@@ -61,6 +60,7 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
     hdf5::writeReturnData(*rdata, out, writePath);
 
     // verify
+    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
     //remove(hdffilewrite.c_str());
 }
