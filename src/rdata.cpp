@@ -113,16 +113,16 @@ void ReturnData::invalidate(const realtype t) {
     
     for (int it = it_start; it < nt; it++){
         for (int ix = 0; ix < nx; ix++)
-            x.at(ix * nt + it) = getNaN();
+            x.at(ix + nx * it) = getNaN();
         for (int iy = 0; iy < ny; iy++)
-            y.at(iy * nt + it) = getNaN();
+            y.at(ix + ny * it) = getNaN();
     }
 
     if (sx.size()) {
         for (int it = it_start; it < nt; it++){
             for (int ip = 0; ip < nplist; ip++) {
                 for (int ix = 0; ix < nx; ix++)
-                    sx.at((ip*nx + ix) * nt + it) = getNaN();
+                    sx.at(ix + nx*(ip + it*nplist)) = getNaN();
             }
         }
     }
@@ -130,7 +130,7 @@ void ReturnData::invalidate(const realtype t) {
         for (int it = it_start; it < nt; it++){
             for (int ip = 0; ip < nplist; ip++) {
                 for (int iy = 0; iy < ny; iy++)
-                    sy.at((ip*ny + iy) * nt + it) = getNaN();
+                    sy.at(iy + ny*(ip + it*nplist)) = getNaN();
             }
         }
     }
@@ -200,23 +200,20 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                 for (int ip = 0; ip < nplist; ++ip)
                     for (int ix = 0; ix < nxtrue; ++ix)
                         for (int it = 0; it < nt; ++it)
-                            sx.at((ip * nxtrue + ix) * nt + it) =
-                                x.at((nxtrue + ip * nxtrue + ix) * nt +
-                                  it);
+                            sx.at(ix + nxtrue*(ip + it*nplist)) =
+                                x.at(it * nx + nxtrue + ip * nxtrue + ix);
 
                 for (int ip = 0; ip < nplist; ++ip)
                     for (int iy = 0; iy < nytrue; ++iy)
                         for (int it = 0; it < nt; ++it)
-                            sy.at((ip * nytrue + iy) * nt + it) =
-                                y.at((nytrue + ip * nytrue + iy) * nt +
-                                  it);
+                            sy.at(iy + nytrue*(ip + it*nplist)) =
+                                y.at(it * ny + nytrue + ip * nytrue + iy);
 
                 for (int ip = 0; ip < nplist; ++ip)
                     for (int iz = 0; iz < nztrue; ++iz)
                         for (int it = 0; it < nt; ++it)
-                            sz.at((ip * nztrue + iz) * nt + it) =
-                                z.at((nztrue + ip * nztrue + iz) * nt +
-                                  it);
+                            sz.at(iz + nztrue*(ip + it*nplist)) =
+                                z.at(it * nz + nztrue + ip * nztrue + iz);
             }
         }
 
