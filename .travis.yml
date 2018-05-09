@@ -48,7 +48,7 @@ install:
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
-    - ./scripts/buildAmici.sh || ls -R build/
+    - ./scripts/buildAmici.sh
     - ./scripts/buildTests.sh
 
 script:  
@@ -57,6 +57,9 @@ script:
     - ./scripts/run-python_unittest.sh
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
+
+after_failure:
+    - ls -alR
 
 notifications:
   webhooks: 
