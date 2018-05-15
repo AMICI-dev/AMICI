@@ -9,7 +9,7 @@ namespace amici {
 
 class Model;
 
-/** @brief struct that carries all information about experimental data */
+/** @brief ExpData carries all information about experimental or condition-specific data */
 class ExpData {
 
   public:
@@ -78,6 +78,11 @@ class ExpData {
     const int nt;
     /** maximal number of event occurences */
     const int nmaxevent;
+
+    /** condition-specific parameters */
+    std::vector<realtype> fixedParameters;
+    /** condition-specific parameters for pre-equilibration */
+    std::vector<realtype> fixedParametersPreequilibration;
 };
 
 } // namespace amici

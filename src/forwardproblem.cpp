@@ -99,9 +99,21 @@ void ForwardProblem::workForwardProblem() {
 
     /* if preequilibration is necessary, start Newton solver */
     if (solver->getNewtonPreequilibration()) {
+        // Are there dedicated preequilibration parameters provided?
+        if(edata->fixedParametersPreequilibration.size()) {
+            if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
+                throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
+                                   model->nk(), edata->fixedParametersPreequilibration.size());
+            model->setFixedParameters(edata->fixedParametersPreequilibration);
+        } else if(edata->fixedParameters.size()) {
+            if(edata->fixedParameters.size() != (unsigned) model->nk())
+                throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                                   model->nk(), edata->fixedParameters.size());
+            model->setFixedParameters(edata->fixedParameters);
+        }
+
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-        sstate.workSteadyStateProblem(rdata,
-                                       solver, model, -1);
+        sstate.workSteadyStateProblem(rdata, solver, model, -1);
     } else {
         for (int ix = 0; ix < model->nx; ix++) {
             rdata->x0[ix] = x[ix];
@@ -111,6 +123,15 @@ void ForwardProblem::workForwardProblem() {
                     rdata->sx0[ip*model->nx + ix] = sx.at(ix,ip);
             }
         }
+    }
+
+    if(edata->fixedParameters.size()) {
+        // fixed parameter in model are superseded by those provided in edata
+        // Note: this changes those parameters of `model` permanently
+        if(edata->fixedParameters.size() != (unsigned) model->nk())
+            throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                               model->nk(), edata->fixedParameters.size());
+        model->setFixedParameters(edata->fixedParameters);
     }
 
     /* loop over timepoints */
