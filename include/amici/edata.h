@@ -15,6 +15,7 @@ class ExpData {
   public:
     /** default constructor */
     ExpData();
+
     /**
      * @brief ExpData
      * @param nytrue
@@ -23,6 +24,7 @@ class ExpData {
      * @param nmaxevent
      */
     ExpData(int nytrue, int nztrue, int nt, int nmaxevent);
+
     /**
      * @brief ExpData
      * @param nytrue
@@ -39,6 +41,7 @@ class ExpData {
             std::vector<realtype> const& sigmay,
             std::vector<realtype> const& mz,
             std::vector<realtype> const& sigmaz);
+
     /**
      * constructor that initializes with Model
      *
@@ -79,12 +82,12 @@ class ExpData {
     /** maximal number of event occurences */
     const int nmaxevent;
 
-    /** condition-specific parameters */
+    /** condition-specific parameters of size Model::nk() or empty */
     std::vector<realtype> fixedParameters;
-    /** condition-specific parameters for pre-equilibration */
+    /** condition-specific parameters for pre-equilibration of size Model::nk() or empty */
     std::vector<realtype> fixedParametersPreequilibration;
 };
 
 } // namespace amici
 
-#endif /* _MY_EDATA */
+#endif /* AMICI_EDATA_H */
