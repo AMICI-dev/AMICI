@@ -95,12 +95,14 @@ void ForwardProblem::workForwardProblem() {
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */
+    std::vector<realtype> originalFixedParameters;
     if (solver->getNewtonPreequilibration()) {
         // Are there dedicated preequilibration parameters provided?
         if(edata && edata->fixedParametersPreequilibration.size()) {
             if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
                                    model->nk(), edata->fixedParametersPreequilibration.size());
+            originalFixedParameters = model->getFixedParameters();
             model->setFixedParameters(edata->fixedParametersPreequilibration);
         } else if(edata && edata->fixedParameters.size()) {
             if(edata->fixedParameters.size() != (unsigned) model->nk())
@@ -129,6 +131,8 @@ void ForwardProblem::workForwardProblem() {
             throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
                                model->nk(), edata->fixedParameters.size());
         model->setFixedParameters(edata->fixedParameters);
+    } else if (edata && solver->getNewtonPreequilibration() && originalFixedParameters.size()) {
+        model->setFixedParameters(originalFixedParameters);
     }
 
     /* loop over timepoints */
