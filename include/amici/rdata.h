@@ -31,6 +31,11 @@ class ReturnData {
 
     ReturnData(Solver const& solver, const Model *model);
 
+    /**
+     * @brief initializeObjectiveFunction
+     */
+    void initializeObjectiveFunction();
+
     void invalidate(const realtype t);
     void invalidateLLH();
 

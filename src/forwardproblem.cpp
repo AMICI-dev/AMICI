@@ -86,22 +86,35 @@ void ForwardProblem::workForwardProblem() {
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
-    /* initialise objective function values */
+
     if(edata){
-        rdata->llh = 0.0;
-        rdata->chi2 = 0.0;
-        std::fill(rdata->sllh.begin(),rdata->sllh.end(), 0.0);
-        std::fill(rdata->s2llh.begin(),rdata->s2llh.end(), 0.0);
+        rdata->initializeObjectiveFunction();
     }
     
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */
+    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
     if (solver->getNewtonPreequilibration()) {
+        if(edata && edata->fixedParametersPreequilibration.size()) {
+            // Are there dedicated preequilibration parameters provided?
+            if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
+                throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
+                                   model->nk(), edata->fixedParametersPreequilibration.size());
+            originalFixedParameters = model->getFixedParameters();
+            model->setFixedParameters(edata->fixedParametersPreequilibration);
+        } else if(edata && edata->fixedParameters.size()) {
+            // ... or other condition parameters?
+            if(edata->fixedParameters.size() != (unsigned) model->nk())
+                throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                                   model->nk(), edata->fixedParameters.size());
+            model->setFixedParameters(edata->fixedParameters);
+        }
+
+        // pre-equilibrate
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-        sstate.workSteadyStateProblem(rdata,
-                                       solver, model, -1);
+        sstate.workSteadyStateProblem(rdata, solver, model, -1);
     } else {
         for (int ix = 0; ix < model->nx; ix++) {
             rdata->x0[ix] = x[ix];
@@ -111,6 +124,18 @@ void ForwardProblem::workForwardProblem() {
                     rdata->sx0[ip*model->nx + ix] = sx.at(ix,ip);
             }
         }
+    }
+
+    if(edata && edata->fixedParameters.size()) {
+        // fixed parameter in model are superseded by those provided in edata
+        // Note: this changes those parameters of `model` permanently
+        if(edata->fixedParameters.size() != (unsigned) model->nk())
+            throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                               model->nk(), edata->fixedParameters.size());
+        model->setFixedParameters(edata->fixedParameters);
+    } else if (originalFixedParameters.size()) {
+        // Restore original parameters if only preequilibration parameters but no regular condition parameters have been provided
+        model->setFixedParameters(originalFixedParameters);
     }
 
     /* loop over timepoints */

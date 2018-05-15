@@ -268,6 +268,21 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
         
     }
+
+    // preequilibration condition parameters
+    if (mxArray *dataPreeq = mxGetProperty(prhs[RHS_DATA], 0, "conditionPreequilibration")) {
+        int m = (int)mxGetM(dataPreeq);
+        int n = (int)mxGetN(dataPreeq);
+        if(m * n > 0) {
+            if (m * n != model.nk() || (m != 1 && n != 1)) {
+                throw AmiException("Number of preequilibration parameters (%dx%d) does "
+                                   "not match model (%d)", m, n, model.nk());
+            }
+            edata->fixedParametersPreequilibration =
+                    std::vector<realtype>(mxGetPr(dataPreeq), mxGetPr(dataPreeq) + m * n);
+        }
+    }
+
     return edata;
 }
 

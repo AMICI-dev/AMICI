@@ -29,6 +29,7 @@ options.sensi_meth = 'adjoint';
 options.maxsteps = 1e4;
 options.rtol = 1e-12;
 options.atol = 1e-12;
+
 % load mex into memory
 [~] = which('simulate_model_adjoint'); % fix for inaccessability problems
 sol = simulate_model_adjoint(t,log10(p),k,D,options);
