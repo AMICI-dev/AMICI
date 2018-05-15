@@ -98,19 +98,16 @@ void ForwardProblem::workForwardProblem() {
     if (solver->getNewtonPreequilibration()) {
         // Are there dedicated preequilibration parameters provided?
         if(edata && edata->fixedParametersPreequilibration.size()) {
-            warnMsgIdAndTxt("asdf", "sefsdf");
             if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
                                    model->nk(), edata->fixedParametersPreequilibration.size());
             model->setFixedParameters(edata->fixedParametersPreequilibration);
         } else if(edata && edata->fixedParameters.size()) {
-            warnMsgIdAndTxt("asdf", "sefsdf");
             if(edata->fixedParameters.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
                                    model->nk(), edata->fixedParameters.size());
             model->setFixedParameters(edata->fixedParameters);
         }
-        warnMsgIdAndTxt("asdf", "sefsdf");
 
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
         sstate.workSteadyStateProblem(rdata, solver, model, -1);
