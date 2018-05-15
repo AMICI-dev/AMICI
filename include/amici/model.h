@@ -932,7 +932,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        /** model specific implementation of fdzdp
+        /** model specific implementation of fdrzdp
          * @param drzdp partial derivative of root output rz w.r.t. model parameters p
          * @param ie event index
          * @param t current time
@@ -1013,7 +1013,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        /** model specific implementation of fdeltasx
+        /** model specific implementation of fdeltaqB
          * @param deltaqB sensitivity update
          * @param t current time
          * @param x current state
@@ -1204,7 +1204,7 @@ namespace amici {
          * @param h heavyside vector
          */
         virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p,
-                        const realtype *k, const realtype *h) {};
+                        const realtype *k, const realtype *h) {}
         
         /** model specific implementation of dwdp
          * @param dwdp Recurring terms in xdot, parameter derivative
@@ -1216,7 +1216,7 @@ namespace amici {
          * @param w vector with helper variables
          */
         virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {};
+                           const realtype *k, const realtype *h, const realtype *w) {}
         
         /** model specific implementation of dwdx
          * @param dwdx Recurring terms in xdot, state derivative
@@ -1228,7 +1228,7 @@ namespace amici {
          * @param w vector with helper variables
          */
         virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {};
+                           const realtype *k, const realtype *h, const realtype *w) {}
         
         void getmy(const int it, const ExpData *edata);
         
