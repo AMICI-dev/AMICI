@@ -95,22 +95,24 @@ void ForwardProblem::workForwardProblem() {
     realtype tlastroot = 0; /* storage for last found root */
 
     /* if preequilibration is necessary, start Newton solver */
-    std::vector<realtype> originalFixedParameters;
+    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
     if (solver->getNewtonPreequilibration()) {
-        // Are there dedicated preequilibration parameters provided?
         if(edata && edata->fixedParametersPreequilibration.size()) {
+            // Are there dedicated preequilibration parameters provided?
             if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
                                    model->nk(), edata->fixedParametersPreequilibration.size());
             originalFixedParameters = model->getFixedParameters();
             model->setFixedParameters(edata->fixedParametersPreequilibration);
         } else if(edata && edata->fixedParameters.size()) {
+            // ... or other condition parameters?
             if(edata->fixedParameters.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
                                    model->nk(), edata->fixedParameters.size());
             model->setFixedParameters(edata->fixedParameters);
         }
 
+        // pre-equilibrate
         SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
         sstate.workSteadyStateProblem(rdata, solver, model, -1);
     } else {
@@ -131,7 +133,8 @@ void ForwardProblem::workForwardProblem() {
             throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
                                model->nk(), edata->fixedParameters.size());
         model->setFixedParameters(edata->fixedParameters);
-    } else if (edata && solver->getNewtonPreequilibration() && originalFixedParameters.size()) {
+    } else if (originalFixedParameters.size()) {
+        // Restore original parameters if only preequilibration parameters but no regular condition parameters have been provided
         model->setFixedParameters(originalFixedParameters);
     }
 
