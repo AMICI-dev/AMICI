@@ -304,4 +304,12 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     return;
 }
 
+void ReturnData::initializeObjectiveFunction()
+{
+    llh = 0.0;
+    chi2 = 0.0;
+    std::fill(sllh.begin(),sllh.end(), 0.0);
+    std::fill(s2llh.begin(),s2llh.end(), 0.0);
+}
+
 } // namespace amici

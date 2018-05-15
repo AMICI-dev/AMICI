@@ -32,6 +32,8 @@ classdef amidata < handle
         Sigma_Z = double.empty();
         % experimental condition
         condition = double.empty();
+        % experimental condition for preequilibration
+        conditionPreequilibration = double.empty();
     end
     
     methods
@@ -50,7 +52,7 @@ classdef amidata < handle
             %                 Z [ne,nz]
             %                 Sigma_Z [ne,nz]
             %                 condition [nk,1]
-            %                 
+            %                 conditionPreequilibration [nk,1]
             %                 if some fields are missing the function will try
             %                 to initialise them with NaNs with consistent
             %                 dimensions
@@ -115,6 +117,10 @@ classdef amidata < handle
                 else
                     D.nk = 0;
                 end
+                if(isfield(varargin{1},'conditionPreequilibration'))
+                    assert(D.nk == numel(varargin{1}.conditionPreequilibration));
+                    D.conditionPreequilibration = varargin{1}.conditionPreequilibration;
+                end
             elseif(nargin == 5)
                 D.nt = varargin{1};
                 D.ny = varargin{2};
@@ -167,6 +173,13 @@ classdef amidata < handle
             assert(ismatrix(value),'AMICI:amimodel:condition:ndims','condition must be a two dimensional matrix!')
             assert(numel(value)==this.nk,'AMICI:amimodel:condition:ndims',['condition must have ' num2str(this.nk) ' (D.nk) elements!'])
             this.condition = double(value(:));
+        end
+        
+        function set.conditionPreequilibration(this,value)
+            assert(isnumeric(value),'AMICI:amimodel:condition:numeric','condition must have a numeric value!')
+            assert(ismatrix(value),'AMICI:amimodel:condition:ndims','condition must be a two dimensional matrix!')
+            assert(numel(value)==this.nk,'AMICI:amimodel:condition:ndims',['condition must have ' num2str(this.nk) ' (D.nk) elements!'])
+            this.conditionPreequilibration = double(value(:));
         end
         
         function set.Y(this,value)
