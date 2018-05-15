@@ -52,17 +52,6 @@ class ExpData {
      */
     ExpData (const ExpData &other);
 
-    /**
-     * @brief initializeObjectiveFunction
-     */
-    void initializeObjectiveFunction()
-    {
-        llh = 0.0;
-        chi2 = 0.0;
-        std::fill(sllh.begin(),sllh.end(), 0.0);
-        std::fill(s2llh.begin(),s2llh.end(), 0.0);
-    }
-
     void setObservedData(const double *observedData);
     void setObservedDataStdDev(const double *observedDataStdDev);
     void setObservedEvents(const double *observedEvents);
