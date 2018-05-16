@@ -17,7 +17,7 @@ if [ ! -d "mtocpp-master" ]; then
     fi
     unzip mtocpp-master.zip
     mkdir ./mtocpp-master/build
-    cd ./mtocpp-master/build && cmake .. && make
+    cd ./mtocpp-master/build && cmake .. && make mtocpp mtocpp_post
     if [ $? -ne 0 ] ; then
         exit 1
     fi

@@ -96,7 +96,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # Create targets to make the sources show up in IDEs for convenience
 add_custom_target(matlabInterface SOURCES src/interface_matlab.cpp src/returndata_matlab.cpp)
-add_custom_target(fileTemplates SOURCES src/CMakeLists.template.txt src/main.template.cpp)
+add_custom_target(fileTemplates SOURCES src/CMakeLists.template.txt src/main.template.cpp src/wrapfunctions.ODE_template.h src/wrapfunctions.template.cpp)
 
 if($ENV{ENABLE_GCOV_COVERAGE})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")

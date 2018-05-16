@@ -690,11 +690,12 @@ EXCLUDE_SYMLINKS       = YES
 
 EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/tests/*" \
-			 		     "_SourceDir_/scripts/*" \
+                         "_SourceDir_/scripts/*" \
                          "_SourceDir_/ThirdParty/*" \
                          "_SourceDir_/matlab/examples/*" \
                          "_SourceDir_/matlab/mtoc/*" \
                          "_SourceDir_/matlab/auxiliary/*" \
+                         "_SourceDir_/python/test/*" \
                          "_SourceDir_/build"
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
