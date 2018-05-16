@@ -6,11 +6,11 @@ SET(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 
 # Copy further amici-python-module files to binary_dir
-add_custom_command(
-    DEPENDS ${PROJECT_SOURCE_DIR}
-    OUTPUT python_module_files.stamp
+add_custom_target(python-module-files
+    DEPENDS always_rebuild
     COMMENT "Preparing python module directory"
-    COMMAND ${CMAKE_COMMAND} -E touch python_module_files.stamp
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/amici ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/amici/src
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/amici/include
@@ -28,11 +28,10 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/AMD/Lib/libamd.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/ThirdParty/SuiteSparse/SuiteSparse_config/libsuitesparseconfig.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
     )
-#TODO: blas ?
 
 add_custom_target(install-python
     COMMENT "Installing AMICI base python package"
-    DEPENDS python_module_files.stamp
+    DEPENDS python-module-files
     COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY_OUT} install --prefix= --user)
 
 
@@ -42,7 +41,12 @@ add_custom_target(install-python
 # build_py stage
 add_custom_target(python-wheel
     COMMENT "Creating wheel for AMICI base python package"
-    DEPENDS python_module_files.stamp
+    DEPENDS python-module-files
     COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext
     COMMAND ${PYTHON_EXECUTABLE} setup.py bdist_wheel --dist-dir=${CMAKE_CURRENT_BINARY_DIR}
 )
+
+add_custom_command(
+    OUTPUT always_rebuild
+    COMMAND cmake -E echo
+    )
