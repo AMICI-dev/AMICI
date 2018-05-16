@@ -548,7 +548,7 @@ void ForwardProblem::getDataOutput(int it) {
     model->fsigma_y(it, edata, rdata);
     model->fJy(it, rdata, edata);
     
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && model->nplist() > 0) {
         prepDataSensis(it);
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
             getDataSensisFSA(it);
