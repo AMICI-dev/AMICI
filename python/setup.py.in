@@ -28,6 +28,10 @@ for key, value in cfg_vars.items():
 import pkgconfig
 h5pkgcfg = pkgconfig.parse("hdf5")
 
+cxx_flags = ['-std=c++0x']
+if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
+    cxx_flags.extend(['-g' '-O0'  '--coverage'])
+
 # Build shared object
 amici_module = Extension('amici/_amici',
                          sources=['amici/swig/amici.i', 
@@ -48,7 +52,7 @@ amici_module = Extension('amici/_amici',
                                        ],
                          swig_opts=['-c++', '-modern', '-v', '-Iamici/include/', '-outdir', 'amici/'],
                          extra_link_args=['${BLAS_LIBRARIES}'],
-                         extra_compile_args=['-std=c++0x']
+                         extra_compile_args=cxx_flags
                          )
 """
 libamici = Extension('amici/amici',

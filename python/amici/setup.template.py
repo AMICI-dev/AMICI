@@ -31,6 +31,9 @@ def getAmiciLibs():
 import pkgconfig
 h5pkgcfg = pkgconfig.parse("hdf5")
 
+cxx_flags = ['-std=c++0x']
+if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
+    cxx_flags.extend(['-g' '-O0'  '--coverage'])
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
@@ -55,7 +58,8 @@ model_module = Extension('TPL_MODELNAME/_TPL_MODELNAME',
                              os.path.join(amici_path, 'libs')],
                          swig_opts=['-c++', '-modern', '-outdir', 'TPL_MODELNAME',
                                     '-I%s' % os.path.join(amici_path, 'swig'),
-                                    '-I%s' % os.path.join(amici_path, 'include'),]
+                                    '-I%s' % os.path.join(amici_path, 'include'),],
+                         extra_compile_args=cxx_flags
                          )
 
 # Install
