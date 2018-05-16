@@ -1,5 +1,19 @@
 """The AMICI Python module
 
+The AMICI Python module provides functionality for importing SBML models and turning them into C++ Python extensions.
+
+Getting started:
+```
+# creating a extension module for an SBML model:
+import amici
+amiSbml = amici.SbmlImporter('mymodel.sbml')
+amiSbml.sbml2amici('modelName', 'outputDirectory')
+
+# using the created module (set python path)
+import modelName
+help(modelName)
+```
+
 Attributes:
 -----------
     amici_path: absolute root path of the amici repository

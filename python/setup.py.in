@@ -16,6 +16,7 @@ amici/include/amici/solver.h:576: Warning 503: Can't wrap 'operator ==' unless r
 amici/include/amici/solver_cvodes.h:168: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
 amici/include/amici/model.h:763: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
 """
+
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
 cfg_vars = sysconfig.get_config_vars()
@@ -26,7 +27,6 @@ for key, value in cfg_vars.items():
 # Find HDF5 include dir
 import pkgconfig
 h5pkgcfg = pkgconfig.parse("hdf5")
-
 
 # Build shared object
 amici_module = Extension('amici/_amici',
@@ -92,6 +92,7 @@ setup(
                   'ThirdParty/sundials/include/*/*',
                   'ThirdParty/SuiteSparse/include/*'], # TODO select only relevant files
     },
+    zip_safe = False,
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
