@@ -258,7 +258,7 @@ class SbmlImporter:
         if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Algebraic and rate rules are currently not supported!')
 
-        if any([reaction.isSetFast() for reaction in self.sbml.getListOfReactions()]):
+        if any([reaction.getFast() for reaction in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
