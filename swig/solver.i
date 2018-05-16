@@ -6,5 +6,7 @@
 using namespace amici;
 %}
 
+%rename(equals) operator==;
+
 // Process symbols in header
 %include "amici/solver.h"

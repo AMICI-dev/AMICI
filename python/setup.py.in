@@ -11,12 +11,6 @@ def getAmiciBaseSources():
     amiciBaseSources = [src for src in amiciBaseSources if not re.search(r'(matlab)|(\.template\.)', src)]
     return amiciBaseSources
 
-"""TODO
-amici/include/amici/solver.h:576: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
-amici/include/amici/solver_cvodes.h:168: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
-amici/include/amici/model.h:763: Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
-"""
-
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
 cfg_vars = sysconfig.get_config_vars()
