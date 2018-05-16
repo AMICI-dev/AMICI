@@ -30,7 +30,7 @@ h5pkgcfg = pkgconfig.parse("hdf5")
 
 cxx_flags = ['-std=c++0x']
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    cxx_flags.extend(['-g' '-O0'  '--coverage'])
+    cxx_flags.extend(['-g', '-O0',  '--coverage'])
 
 # Build shared object
 amici_module = Extension('amici/_amici',

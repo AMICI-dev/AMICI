@@ -33,7 +33,7 @@ h5pkgcfg = pkgconfig.parse("hdf5")
 
 cxx_flags = ['-std=c++0x']
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    cxx_flags.extend(['-g' '-O0'  '--coverage'])
+    cxx_flags.extend(['-g', '-O0',  '--coverage'])
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
