@@ -14,19 +14,12 @@ def getModelSources():
 
 def getAmiciLibs():
     """Get list of libraries for the amici base library"""
-    ''' TODO: scrambles order
-    import glob
-    import re
-    amiciLibs = glob.glob('%s/libs/*.a' % amici_path)
-    amiciLibs = [ os.path.basename(lib)[3:-2] for lib in amiciLibs ]
-    print(amiciLibs)
-    return amiciLibs
-    ''' 
     return ['amici',
-                                    'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5',
-                                    'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
-                                    'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
-                             ]
+            'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5',
+            'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
+            'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
+            ]
+
 # Find HDF5
 import pkgconfig
 h5pkgcfg = pkgconfig.parse("hdf5")
