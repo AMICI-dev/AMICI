@@ -50,25 +50,7 @@ amici_module = Extension('amici/_amici',
                          extra_compile_args=cxx_flags,
                          extra_link_args=linker_flags
                          )
-"""
-libamici = Extension('amici/amici',
-                         sources=[ 
-                                  *getAmiciBaseSources(),
-                                  ],
-                         include_dirs=['amici/include',
-                                       'amici/ThirdParty/SuiteSparse/include',
-                                       'amici/ThirdParty/sundials/include',
-                                       'amici/ThirdParty/sundials/src',
-                                       *h5pkgcfg['include_dirs']], # NOTE: requires that pkgconfig knows about hdf5
-                         libraries=[
-                             ## TODO
-                             #sundials suitesparse, hdf amici
-                             ],
-                         library_dirs=h5pkgcfg['library_dirs'],
-                         extra_link_args=['-static'],
-                         extra_compile_args=['-fPIC']
-                         )
-"""
+
 # Install
 setup(
     name='${PROJECT_NAME}',
@@ -90,7 +72,7 @@ setup(
                   'amici.py',
                   'setup.py.template',
                   'ThirdParty/sundials/include/*/*',
-                  'ThirdParty/SuiteSparse/include/*'], # TODO select only relevant files
+                  'ThirdParty/SuiteSparse/include/*'],
     },
     zip_safe = False,
     include_package_data=True,
