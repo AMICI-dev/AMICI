@@ -667,7 +667,7 @@ class SbmlImporter:
         oldCwd = os.getcwd()
         os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
         from distutils.core import run_setup
-        run_setup('%s/setup.py' % moduleDir,
+        run_setup('setup.py',
                   script_args=["build_ext", 
                                '--build-lib=%s' % moduleDir, 
                                ])

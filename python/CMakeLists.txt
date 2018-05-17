@@ -5,6 +5,8 @@ SET(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in)
 SET(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
 
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/python/amici/setup.template.py ${CMAKE_CURRENT_BINARY_DIR}/setup.template.py)
+
 # Copy further amici-python-module files to binary_dir
 add_custom_target(python-module-files
     DEPENDS always_rebuild
@@ -16,6 +18,7 @@ add_custom_target(python-module-files
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/amici/include
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/swig ${CMAKE_CURRENT_BINARY_DIR}/amici/swig
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/ThirdParty ${CMAKE_CURRENT_BINARY_DIR}/amici/ThirdParty
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/setup.template.py ${CMAKE_CURRENT_BINARY_DIR}/amici/setup.template.py
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/README.md ${CMAKE_CURRENT_BINARY_DIR}/
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/libamici.a" ${CMAKE_CURRENT_BINARY_DIR}/amici/libs/
