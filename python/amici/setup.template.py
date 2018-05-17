@@ -4,6 +4,8 @@ from distutils import sysconfig
 import os
 from amici import amici_path
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 def getModelSources():
     """Get list of source files for the amici base library"""
     import glob
@@ -73,6 +75,7 @@ setup(
     python_requires='>=3',
     package_data={
     },
+    zip_safe = False,
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',

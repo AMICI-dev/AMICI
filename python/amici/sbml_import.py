@@ -185,7 +185,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None):
+    def sbml2amici(self, modelName, output_dir=None, observables=None):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Args:
@@ -193,10 +193,11 @@ class SbmlImporter:
         modelName: name of the model/model directory
         output_dir: see sbml_import.setPaths()
         """
+        
         self.setName(modelName)
         self.setPaths(output_dir)
         self.processSBML()
-        self.computeModelEquations()
+        self.computeModelEquations(observables)
         self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode()
@@ -222,7 +223,7 @@ class SbmlImporter:
         if not output_dir:
             output_dir = '%s/amici-%s' % (os.getcwd(), self.modelName)
         
-        self.modelPath = output_dir
+        self.modelPath = os.path.abspath(output_dir)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
         
         for dir in [self.modelPath, self.modelSwigPath]:
@@ -383,20 +384,14 @@ class SbmlImporter:
         parametervars = self.symbols['parameter']['sym'].free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
 
-        observables = []
-        observableSymbols = []
-        self.observableNames = []
         for rule in rules:
             if rule.getFormula() == '':
                 continue
             variable = sp.sympify(rule.getVariable())
             formula = sp.sympify(rule.getFormula())
 
-            isObservable = True
-
             if variable in stoichvars:
                 self.stoichiometricMatrix = self.stoichiometricMatrix.subs(variable, formula)
-                isObservable = False
 
             if variable in specvars:
                 raise SBMLException('Species assignment rules are currently not supported!')
@@ -409,35 +404,18 @@ class SbmlImporter:
                     self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
                 except:
                     raise SBMLException('Non-float parameter assignment rules are currently not supported!')
+            
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
-                isObservable = False
 
             if variable in volumevars:
                 self.compartmentVolume = self.compartmentVolume.subs(variable, formula)
-                isObservable = False
 
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(nested_rule.getFormula())
                     nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
-                isObservable = False
-
-            if isObservable:
-                observables.append(formula)
-                observableSymbols.append(sp.sympify('y' + str(len(observableSymbols))))
-                self.observableNames.append(str(variable))
-
-        if(len(observables)>0):
-            self.observables = sp.DenseMatrix(observables)
-            self.symbols['observable']['sym'] = sp.DenseMatrix(observableSymbols)
-            self.n_observables = len(observables)
-        else:
-            self.observables = self.symbols['species']['sym']
-            self.symbols['observable']['sym'] = sp.DenseMatrix([sp.sympify('y' + str(index))
-                                                     for index in range(0,len(self.symbols['species']['sym']))])
-            self.n_observables = len(self.symbols['species']['sym'])
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume."""
@@ -529,13 +507,13 @@ class SbmlImporter:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    def computeModelEquations(self):
+    def computeModelEquations(self, observables=None):
         """Perform symbolic computations required to populate functions in `self.functions`."""
         
         # core
         self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
         self.computeModelEquationsLinearSolver()
-        self.computeModelEquationsObjectiveFunction()
+        self.computeModelEquationsObjectiveFunction(observables)
         
         # sensitivity
         self.computeModelEquationsSensitivitesCore()
@@ -567,8 +545,24 @@ class SbmlImporter:
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
-    def computeModelEquationsObjectiveFunction(self):
-        """Perform symbolic computations required for objective function evaluation."""
+    def computeModelEquationsObjectiveFunction(self, observables=None):
+        """Perform symbolic computations required for objective function evaluation.
+        
+        Args:
+        observables: dictionary(observableName:formulaString) to be added to the model
+        """
+        
+        # add user-provided observables or make all species observable
+        if(observables):
+            self.observables = sp.DenseMatrix(observables.values())
+            self.symbols['observable']['sym'] = sp.DenseMatrix(observables.keys())
+            self.n_observables = len(observables)
+        else:
+            self.observables = self.symbols['species']['sym']
+            self.symbols['observable']['sym'] = sp.DenseMatrix([sp.sympify('y' + str(index))
+                                                     for index in range(0,len(self.symbols['species']['sym']))])
+            self.n_observables = len(self.symbols['species']['sym'])
+        
         self.functions['y']['sym'] = self.observables
 
         self.symbols['sigma_y']['sym'] = sp.DenseMatrix([sp.sympify('sigma' + str(symbol))
@@ -661,10 +655,10 @@ class SbmlImporter:
 
     def compileCCode(self):
         """Compile the generated model code"""
-        #subprocess.call([os.path.join(amici_path, 'scripts', 'buildModel.sh'), self.modelName])
-
+        
         moduleDir = self.modelPath
         oldCwd = os.getcwd()
+        print(moduleDir)
         os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
         from distutils.core import run_setup
         run_setup('setup.py',
@@ -934,3 +928,21 @@ class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details)."""
     delimiter = 'TPL_'
 
+
+def assignmentRules2observables(sbml, filter = lambda *_: True):
+    """Turn assignment rules into observables.
+    
+    Args:
+    sbml: an sbml Model instance
+    filter: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable"""
+    observables = {}
+    for p in sbml.getListOfParameters():
+        parameterId = p.getId()
+        if filter(parameterId):
+            observables[parameterId] = sbml.getAssignmentRuleByVariable(parameterId).getFormula()
+    
+    for parameterId in observables:       
+        sbml.removeRuleByVariable(parameterId)
+        sbml.removeParameter(parameterId)
+
+    return observables
