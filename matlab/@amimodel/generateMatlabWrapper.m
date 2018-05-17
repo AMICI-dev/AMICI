@@ -3,8 +3,19 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     % generateMatlabWrapper generates the matlab wrapper for the compiled C files.
     %
     % Parameters:
+    %  nx: number of states
+    %  ny: number of observables
+    %  np: number of parameters
+    %  nk: number of fixed parameters
+    %  nz: number of events
+    %  o2flag: o2flag
     %  amimodelo2: this struct must contain all necessary symbolic
     %  definitions for second order sensivities @type amimodel
+    %  wrapperFilename: output filename
+    %  modelname: name of the model
+    %  pscale: default parameter scaling
+    %  forward: has forward sensitivity equations
+    %  adjoint: has adjoint sensitivity equations
     %
     % Return values:
     %  void
