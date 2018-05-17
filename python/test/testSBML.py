@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Run SBML Test Suite and verify simulation results [https://github.com/sbmlteam/sbml-test-suite/releases]"""
 import traceback
 import os
 import sys
@@ -74,6 +74,7 @@ def runTest(testId, logfile):
         return
 
 def findModelFile(current_test_path, testId):
+    """Find model file for the given test (guess filename extension)"""
     sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
 
     # fallback l3v1
@@ -87,6 +88,7 @@ def findModelFile(current_test_path, testId):
     return sbmlFile
 
 def readSettingsFile(current_test_path, testId):
+    """Read settings for the given test"""
     settingsFile = os.path.join(current_test_path, testId + '-settings.txt')
     settings = {}
     with open(settingsFile) as f:
@@ -102,6 +104,10 @@ def getTestStr(testId):
     testStr = '0'*(5-len(testStr)) + testStr
     return testStr
 
-for testId in range(1774,1781):
-    with open("test.txt", "a") as logfile:
-        runTest(getTestStr(testId), logfile)
+def main():
+    for testId in range(1774,1781):
+        with open("test.txt", "a") as logfile:
+            runTest(getTestStr(testId), logfile)
+
+if __name__ == '__main__':
+    main()

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Example model for sbml import and python interface test.
+Example using [model_steadystate_scaled.sbml] model to demonstrate and test SBML import and Amici Python interface.
 
-
-# to use python-generated model in matlab, run:
-amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], [])
-amimodel.generateMatlabWrapper(3, 6, 8, 1, 0, 0, [], [ modelDir '/simulate_test.m'], modelName, 'lin', 1, 1)
+To use python-generated model in matlab, run:
+```
+modelName = '';
+modelDir = '';
+amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], []);
+amimodel.generateMatlabWrapper(3, 6, 8, 1, 0, 0, [], [ modelDir '/simulate_test.m'], modelName, 'lin', 1, 1);
+```
 """
 
 import amici
@@ -19,6 +22,7 @@ import matplotlib.pyplot as plt
 os.chdir(os.path.dirname(__file__))
 
 def createModule():
+    """Create Python module from SBML model"""
     sbmlImporter = amici.SbmlImporter('model_steadystate_scaled.sbml')
     sbml = sbmlImporter.sbml
     

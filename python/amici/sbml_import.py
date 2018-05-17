@@ -207,7 +207,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables=None, constantParameters=None, sigmas=None):
+    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Args:
@@ -253,7 +253,7 @@ class SbmlImporter:
                 os.makedirs(dir)
         
     
-    def processSBML(self, constantParameters=None):
+    def processSBML(self, constantParameters=[]):
         """Read parameters, species, reactions, and so on from SBML model"""
         self.checkSupport()
         self.processParameters(constantParameters)
@@ -322,7 +322,7 @@ class SbmlImporter:
                                                        for specie in species])
 
 
-    def processParameters(self, constantParameters=None):
+    def processParameters(self, constantParameters=[]):
         """Get parameter information from SBML model."""
         
         fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
@@ -539,7 +539,7 @@ class SbmlImporter:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    def computeModelEquations(self, observables=None, sigmas=None):
+    def computeModelEquations(self, observables={}, sigmas={}):
         """Perform symbolic computations required to populate functions in `self.functions`."""
         
         # core
@@ -577,7 +577,7 @@ class SbmlImporter:
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
-    def computeModelEquationsObjectiveFunction(self, observables=None, sigmas=None):
+    def computeModelEquationsObjectiveFunction(self, observables={}, sigmas={}):
         """Perform symbolic computations required for objective function evaluation.
         
         Args:
