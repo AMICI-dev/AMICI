@@ -67,7 +67,7 @@ public:
               TPL_LBW, // lbw
               TPL_O2MODE, // o2mode
               std::vector<realtype>{TPL_PARAMETERS}, // dynamic parameters
-              std::vector<realtype>(TPL_NK,1.0), // fixedParameters
+              std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
               std::vector<int>{}, // plist
               std::vector<realtype>(TPL_NX,0.0), // idlist
               std::vector<int>{} // z2event

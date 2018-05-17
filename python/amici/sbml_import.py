@@ -22,13 +22,34 @@ class SbmlImporter:
     
     Attributes:
     -----------
-    SBMLreader = sbml.SBMLReader()
-        sbml_doc: private?
-        sbml: private?
-        modelname:
-        modelPath:
-        self.modelSwigPath:
-        self.functionBodies:
+    functionBodies:
+    Codeprinter:
+    functions:
+    symbols:
+    SBMLreader:
+    sbml_doc:
+    sbml:
+    modelName:
+    modelPath:
+    modelSwigPath:
+    n_species
+    speciesIndex
+    speciesCompartment
+    constantSpecies
+    boundaryConditionSpecies
+    speciesHasOnlySubstanceUnits
+    speciesInitial
+    speciesConversionFactor
+    parameterValues
+    n_parameter
+    parameterIndex
+    compartmentSymbols
+    compartmentVolume
+    n_reactions
+    stoichiometricMatrix
+    fluxVector
+    observables
+    n_observables
     """
 
     # TODO: are units respected on sbml import? if not convert; at least throw if differ?
@@ -145,6 +166,7 @@ class SbmlImporter:
             'vector': {'shortName': 'v'},
             'vectorB': {'shortName': 'vB'},
             'parameter': {'shortName': 'p'},
+            'fixed_parameter': {'shortName': 'k'},
             'observable': {'shortName': 'y'},
             'adjoint': {'shortName': 'xB'},
             'flux': {'shortName': 'w'},
@@ -185,7 +207,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables=None):
+    def sbml2amici(self, modelName, output_dir=None, observables=None, constantParameters=None):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Args:
@@ -196,7 +218,7 @@ class SbmlImporter:
         
         self.setName(modelName)
         self.setPaths(output_dir)
-        self.processSBML()
+        self.processSBML(constantParameters)
         self.computeModelEquations(observables)
         self.prepareModelFolder()
         self.generateCCode()
@@ -231,10 +253,10 @@ class SbmlImporter:
                 os.makedirs(dir)
         
     
-    def processSBML(self):
+    def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model"""
         self.checkSupport()
-        self.processParameters()
+        self.processParameters(constantParameters)
         self.processSpecies()
         self.processReactions()
         self.processCompartments()
@@ -300,15 +322,25 @@ class SbmlImporter:
                                                        for specie in species])
 
 
-    def processParameters(self):
+    def processParameters(self, constantParameters=None):
         """Get parameter information from SBML model."""
-        parameters = self.sbml.getListOfParameters()
+        
+        fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
+        parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
+        
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.symbols['parameter']['sym'])
         self.parameterIndex = {parameter_element.getId(): parameter_index
                              for parameter_index, parameter_element in enumerate(parameters)}
 
+        self.symbols['fixed_parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in fixedParameters])
+        self.fixedParameterValues = [par.getValue() for par in fixedParameters]
+        self.n_fixed_parameters = len(self.symbols['fixed_parameter']['sym'])
+        self.fixedParameterIndex = {parameter_element.getId(): parameter_index
+                             for parameter_index, parameter_element in enumerate(fixedParameters)}
+        
+        
     def processCompartments(self):
         """Get compartment information, stoichiometric matrix and fluxes from SBML model."""
         compartments = self.sbml.getListOfCompartments()
@@ -444,7 +476,7 @@ class SbmlImporter:
         new: replacement symbolic variables
 
         """
-        fields = ['observables', 'stoichiometricMatrix', 'fluxVector','speciesInitial']
+        fields = ['observables', 'stoichiometricMatrix', 'fluxVector', 'speciesInitial']
         for field in fields:
             if field in dir(self):
                 self.__setattr__(field, self.__getattribute__(field).subs(old, new))
@@ -790,9 +822,10 @@ class SbmlImporter:
                         'UBW': str(self.n_species),
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
-                        'NK': '0',
+                        'NK': str(self.n_fixed_parameters),
                         'O2MODE': 'amici::AMICI_O2MODE_NONE',
-                        'PARAMETERS': str(self.parameterValues)[1:-1]}
+                        'PARAMETERS': str(self.parameterValues)[1:-1],
+                        'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1]}
         applyTemplate(os.path.join(amiciSrcPath, 'wrapfunctions.ODE_template.h'),
                       os.path.join(self.modelPath, 'wrapfunctions.h'), templateData)
 
