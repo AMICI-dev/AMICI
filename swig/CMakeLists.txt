@@ -6,6 +6,7 @@ find_package(SWIG REQUIRED 3)
 include(${SWIG_USE_FILE})
 
 set(AMICI_INTERFACE_LIST
+    ${AMICI_DIR}/swig/amici.i
     ${AMICI_DIR}/swig/edata.i
     ${AMICI_DIR}/swig/rdata.i
     ${AMICI_DIR}/swig/model.i

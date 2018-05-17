@@ -24,6 +24,6 @@ import test as modelModule
 model = modelModule.getModel()
 model.setTimepoints(modelModule.amici.DoubleVector([0.0, 1, 2, 100])) 
 solver = model.getSolver()
-rdata = amici.runAmiciSimulation(solver, model)
+rdata = amici.runAmiciSimulation(model, solver)
 
-print(dir(rdata))
+print(rdata)

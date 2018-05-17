@@ -45,13 +45,13 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                                  self.solver.get(),
                                                  "/" + subTest + "/" + case + "/options")
 
+                    edata = None
                     if 'data' in expectedResults[subTest][case].keys():
                         edata = amici.readSimulationExpData(self.expectedResultsFile,
                                                             "/" + subTest + "/" + case + "/data",
                                                             self.model.get())
-                        rdata = amici.runAmiciSimulation(self.solver.get(), edata.get(), self.model.get())
-                    else:
-                        rdata = amici.runAmiciSimulation(self.solver.get(), None, self.model.get())
+                    rdata = amici.runAmiciSimulation(self.model, self.solver, edata)
+                    
 
                     if modelName == 'model_neuron_o2':
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
@@ -63,7 +63,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 def verifySimulationResults(rdata,expectedResults,atol=1e-8,rtol=1e-4):
 
     if expectedResults.attrs['status'][0] != 0:
-        assert rdata.status == expectedResults.attrs['status'][0]
+        assert rdata['status'] == expectedResults.attrs['status'][0]
         return
 
     for field in expectedResults.keys():
@@ -81,7 +81,7 @@ def verifySimulationResults(rdata,expectedResults,atol=1e-8,rtol=1e-4):
 
 
 def checkResults(rdata, field, expected, atol, rtol):
-    result = getFieldAsNumPyArray(rdata, field)
+    result = rdata[field]
     adev = abs(result-expected)
     rdev = abs((result-expected))/(abs(expected)+rtol)
 
@@ -105,55 +105,6 @@ def checkResults(rdata, field, expected, atol, rtol):
         assert np.all(np.logical_or(rdev <= rtol,adev <= atol))
 
 
-
-def getFieldAsNumPyArray(rdata,field):
-
-    if field == 't':
-        field = 'ts'
-
-    fieldDimensions = {'ts': [rdata.nt],
-                       'x': [rdata.nt, rdata.nx],
-                       'x0': [rdata.nx],
-                       'sx': [rdata.nt, rdata.nplist, rdata.nx],
-                       'sx0': [rdata.nx, rdata.nplist],
-                       # observables
-                       'y': [rdata.nt, rdata.ny],
-                       'sigmay': [rdata.nt, rdata.ny],
-                       'sy': [rdata.nt, rdata.nplist, rdata.ny],
-                       'ssigmay': [rdata.nt, rdata.nplist, rdata.ny],
-                       # event observables
-                       'z': [rdata.nmaxevent, rdata.nz],
-                       'rz': [rdata.nmaxevent, rdata.nz],
-                       'sigmaz': [rdata.nmaxevent, rdata.nz],
-                       'sz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-                       'srz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-                       'ssigmaz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-                       # objective function
-                       'sllh': [rdata.nplist],
-                       's2llh': [rdata.np, rdata.nplist],
-                       # diagnosis
-                       'J': [rdata.nx,rdata.nx],
-                       'xdot': [rdata.nx],
-                       'newton_numlinsteps': [rdata.newton_maxsteps, 2],
-                       'newton_numsteps': [1, 2],
-                       'numsteps': [rdata.nt],
-                       'numrhsevals': [rdata.nt],
-                       'numerrtestfails': [rdata.nt],
-                       'numnonlinsolvconvfails': [rdata.nt],
-                       'order': [rdata.nt],
-                       'numstepsB': [rdata.nt],
-                       'numrhsevalsB': [rdata.nt],
-                       'numerrtestfailsB': [rdata.nt],
-                       'numnonlinsolvconvfailsB': [rdata.nt],
-                      }
-    if field in fieldDimensions.keys():
-        if len(fieldDimensions[field]) == 1:
-            return np.array(getattr(rdata, field))
-        else:
-            return np.array(getattr(rdata, field)).reshape(fieldDimensions[field])
-
-    else:
-        return float(getattr(rdata, field))
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()

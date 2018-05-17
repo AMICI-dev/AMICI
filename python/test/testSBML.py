@@ -40,9 +40,9 @@ def runTest(testId, logfile):
         solver.setMaxSteps(int(1e6))
         solver.setRelativeTolerance(rtol / 1000.0)
         solver.setAbsoluteTolerance(atol / 1000.0)
-        rdata = amici.runAmiciSimulation(solver.get(), None, model.get())
+        rdata = amici.runAmiciSimulation(model, solver)
         amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
-        simulated_x = np.array(rdata.x).reshape([len(ts), model.nx])
+        simulated_x = rdata['x']
         test_x = results[1:, [1+ wrapper.speciesIndex[variable]  for variable in settings['variables'].replace(' ', '').replace('\n', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
 
         for species in amountSpecies:

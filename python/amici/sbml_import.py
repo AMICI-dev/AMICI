@@ -658,7 +658,6 @@ class SbmlImporter:
         
         moduleDir = self.modelPath
         oldCwd = os.getcwd()
-        print(moduleDir)
         os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
         from distutils.core import run_setup
         run_setup('setup.py',
@@ -946,3 +945,4 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
         sbml.removeParameter(parameterId)
 
     return observables
+
