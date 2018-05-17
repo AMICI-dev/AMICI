@@ -583,36 +583,34 @@ class SbmlImporter:
         Args:
         observables: dictionary(observableName:formulaString) to be added to the model
         """
+        speciesSyms = self.symbols['species']['sym']
         
         # add user-provided observables or make all species observable
         if(observables):
             self.observables = sp.DenseMatrix(observables.values())
-            self.symbols['observable']['sym'] = sp.DenseMatrix(observables.keys())
+            observableSyms = sp.DenseMatrix(observables.keys())
             self.n_observables = len(observables)
         else:
-            self.observables = self.symbols['species']['sym']
-            self.symbols['observable']['sym'] = sp.DenseMatrix([sp.sympify('y' + str(index))
-                                                     for index in range(0,len(self.symbols['species']['sym']))])
-            self.n_observables = len(self.symbols['species']['sym'])
-        
+            self.observables = speciesSyms
+            observableSyms = sp.DenseMatrix([sp.sympify('y' + str(index)) for index in range(0,len(speciesSyms))])
+            self.n_observables = len(speciesSyms)
         self.functions['y']['sym'] = self.observables
-
-        self.symbols['sigma_y']['sym'] = sp.DenseMatrix([sp.sympify('sigma' + str(symbol))
-                                                                for symbol in self.symbols['observable']['sym']])
-        self.functions['sigma_y']['sym'] = sp.zeros(self.symbols['sigma_y']['sym'].cols,
-                                                           self.symbols['sigma_y']['sym'].rows)
-        self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol))
-                                                           for symbol in self.symbols['observable']['sym']])
-        self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify('0.5*sqrt(2*pi*sigma' + str(symbol) + '**2) ' +
-                                    '+ 0.5*((' + str(symbol) + '-m' + str(symbol) + ')/sigma' + str(symbol) + ')**2')
-                                    for iy, symbol in enumerate(self.symbols['observable']['sym'])])
-        self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(self.symbols['observable']['sym'])
-        self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(self.symbols['sigma_y']['sym'])
+        sigmaYSyms = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in observableSyms])
+        self.functions['sigma_y']['sym'] = sp.ones(sigmaYSyms.cols, sigmaYSyms.rows)
+        self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in observableSyms])
+        
+        loglikelihoodString = lambda strSymbol: '0.5*sqrt(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=symbol)
+        self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify(loglikelihoodString(str(symbol))) for symbol in observableSyms])
+        self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(observableSyms)
+        self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms)
         self.functions['Jy']['sym'] = self.functions['Jy']['sym'].transpose()
         self.functions['dJydy']['sym'] = self.functions['dJydy']['sym'].transpose()
         self.functions['dJydsigma']['sym'] = self.functions['dJydsigma']['sym'].transpose()
 
-
+        self.symbols['observable']['sym'] = observableSyms
+        self.symbols['sigma_y']['sym'] = sigmaYSyms
+        
+        
     def computeModelEquationsSensitivitesCore(self):
         """Perform symbolic computations required for any sensitivity analysis."""
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
