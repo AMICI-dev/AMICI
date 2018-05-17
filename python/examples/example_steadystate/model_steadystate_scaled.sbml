@@ -42,6 +42,8 @@
       <parameter id="observable_x1_scaled" value="1" constant="true"/>
       <parameter id="offset_x2" value="1" constant="true"/>
       <parameter id="observable_x2_offsetted" value="1" constant="true"/>
+      <parameter id="observable_x1withsigma_sigma" value="1" constant="true"/>
+      <parameter id="observable_x1withsigma" value="1" constant="true"/>
     </listOfParameters>
     <listOfRules>
       <assignmentRule variable="observable_x1">
@@ -75,6 +77,11 @@
             <ci> offset_x2 </ci>
             <ci> x2 </ci>
           </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x1withsigma">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> x1 </ci>
         </math>
       </assignmentRule>
     </listOfRules>

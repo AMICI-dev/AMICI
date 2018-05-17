@@ -207,7 +207,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables=None, constantParameters=None):
+    def sbml2amici(self, modelName, output_dir=None, observables=None, constantParameters=None, sigmas=None):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Args:
@@ -219,7 +219,7 @@ class SbmlImporter:
         self.setName(modelName)
         self.setPaths(output_dir)
         self.processSBML(constantParameters)
-        self.computeModelEquations(observables)
+        self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode()
@@ -539,13 +539,13 @@ class SbmlImporter:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    def computeModelEquations(self, observables=None):
+    def computeModelEquations(self, observables=None, sigmas=None):
         """Perform symbolic computations required to populate functions in `self.functions`."""
         
         # core
         self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
         self.computeModelEquationsLinearSolver()
-        self.computeModelEquationsObjectiveFunction(observables)
+        self.computeModelEquationsObjectiveFunction(observables, sigmas)
         
         # sensitivity
         self.computeModelEquationsSensitivitesCore()
@@ -577,11 +577,12 @@ class SbmlImporter:
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
-    def computeModelEquationsObjectiveFunction(self, observables=None):
+    def computeModelEquationsObjectiveFunction(self, observables=None, sigmas=None):
         """Perform symbolic computations required for objective function evaluation.
         
         Args:
         observables: dictionary(observableName:formulaString) to be added to the model
+        sigmas: dictionary(observableName: sigma value or (existing) parameter name)
         """
         speciesSyms = self.symbols['species']['sym']
         
@@ -597,9 +598,15 @@ class SbmlImporter:
         self.functions['y']['sym'] = self.observables
         sigmaYSyms = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in observableSyms])
         self.functions['sigma_y']['sym'] = sp.ones(sigmaYSyms.cols, sigmaYSyms.rows)
+        
+        # set user-provided sigmas
+        for iy, obsName in enumerate(observables):
+            if obsName in sigmas:
+                self.functions['sigma_y']['sym'][iy] = sigmas[obsName]            
+        
         self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in observableSyms])
         
-        loglikelihoodString = lambda strSymbol: '0.5*sqrt(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=symbol)
+        loglikelihoodString = lambda strSymbol: '0.5*sqrt(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=strSymbol)
         self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify(loglikelihoodString(str(symbol))) for symbol in observableSyms])
         self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(observableSyms)
         self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms)

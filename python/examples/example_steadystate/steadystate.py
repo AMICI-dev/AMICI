@@ -5,7 +5,7 @@ Example model for sbml import and python interface test.
 
 # to use python-generated model in matlab, run:
 amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], [])
-amimodel.generateMatlabWrapper(3, 5, 7, 1, 0, 0, [], [ modelDir '/simulate_test.m'], modelName, 'lin', 1, 1)
+amimodel.generateMatlabWrapper(3, 6, 8, 1, 0, 0, [], [ modelDir '/simulate_test.m'], modelName, 'lin', 1, 1)
 """
 
 import amici
@@ -22,13 +22,15 @@ def createModule():
     sbmlImporter = amici.SbmlImporter('model_steadystate_scaled.sbml')
     sbml = sbmlImporter.sbml
     
-    observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: variableId.startswith('observable_'))
+    observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: 
+                                                    variableId.startswith('observable_') and not variableId.endswith('_sigma'))
     
     print(observables)
     
     sbmlImporter.sbml2amici('test', 'test', 
                             observables=observables,
-                            constantParameters=['k4'])
+                            constantParameters=['k4'],
+                            sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
 def plotStateTrajectories(rdata):
     for ix in range(rdata['x'].shape[1]):
