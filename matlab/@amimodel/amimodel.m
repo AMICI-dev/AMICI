@@ -262,7 +262,9 @@ classdef amimodel < handle
     end
     
     methods(Static)
-        compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, funs, cfun, adjoint)
+        compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, cfun)
+        
+        generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFilename, modelname, pscale, forward, adjoint)
     end
 
 end

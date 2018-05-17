@@ -1,5 +1,5 @@
 %module model_steadystate
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

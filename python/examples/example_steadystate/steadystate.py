@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+Example model for sbml import and python interface test.
+
+
+# to use python-generated model in matlab, run:
+amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], [])
+amimodel.generateMatlabWrapper(3, 5, 7, 1, 0, 0, [], [ modelDir '/simulate_test.m'], modelName, 'lin', 1, 1)
+"""
+
 import amici
 
 import os

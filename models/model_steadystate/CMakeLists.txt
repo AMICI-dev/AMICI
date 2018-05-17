@@ -71,6 +71,3 @@ endif()
 ## SWIG
 
 add_subdirectory(swig)
-
-
-

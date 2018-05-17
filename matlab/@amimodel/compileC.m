@@ -4,5 +4,5 @@ function compileC(this)
     % Return values:
 	%  void
 	
-    amimodel.compileAndLinkModel(this.modelname, this.wrap_path, this.recompile, this.coptim, this.debug, this.funs, this.cfun, this.adjoint);
+    amimodel.compileAndLinkModel(this.modelname, fullfile(this.wrap_path,'models',this.modelname), this.coptim, this.debug, this.funs, this.cfun);
 end        

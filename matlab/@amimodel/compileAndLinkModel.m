@@ -1,4 +1,4 @@
-function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, funs, cfun, adjoint)
+function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, cfun)
     % compileAndLinkModel compiles the mex simulation file.
     % It does not check if the model files have changed since generating 
     % C++ code or whether all files are still present. 
@@ -7,15 +7,12 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % 
     % Parameters:
     %  modelname: name of the model as specified for amiwrap()
-    %  wrap_path: AMICI path
-    %  recompile: flag indicating whether all source files should be
-    %  recompiled
+    %  modelSourceFolder: path to model source directory
     %  coptim: optimization flags
     %  debug: enable debugging
     %  funs: array with names of the model functions, will be guessed 
     %   from source files if left empty 
     %  cfun: struct indicating which files should be recompiled
-    %  adjoint: flag indicating whether adjoint sensitivies are enabled
     %
     % Return values:
     %  void
@@ -23,7 +20,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     % if no list provided, try to determine relevant files from model
     % folder
     if(isempty(funs))
-        ls = dir(fullfile(wrap_path, 'models', modelname, [modelname '_*.cpp']));
+        ls = dir(fullfile(modelSourceFolder, [modelname '_*.cpp']));
         ls = {ls.name};
         % extract funs from filename (strip of modelname_ and .cpp
         funs = cellfun(@(x) x((length(modelname)+2):(length(x)-4)), ls, 'UniformOutput', false);
@@ -33,10 +30,7 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     if(ispc)
         objectFileSuffix = '.obj';
     end
-    
-    amiciSourcePath = fullfile(wrap_path,'src');
-    modelSourceFolder = fullfile(wrap_path,'models',modelname);
-    
+       
     % compile flags
     COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
     if(debug)
@@ -47,8 +41,9 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     end
     
     compilerVersion = getCompilerVersionString();
-    baseObjectFolder = fullfile(wrap_path,'models',mexext,version('-release'),compilerVersion);
-    baseModelObjectFolder = fullfile(wrap_path,'models',modelname,version('-release'),compilerVersion);
+    amiciRootPath = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+    baseObjectFolder = fullfile(amiciRootPath,'models',mexext,version('-release'),compilerVersion);
+    baseModelObjectFolder = fullfile(modelSourceFolder,version('-release'),compilerVersion);
     if(debug)
         objectFolder = fullfile(baseObjectFolder, 'debug');
         modelObjectFolder = fullfile(baseModelObjectFolder, 'debug');
@@ -65,12 +60,12 @@ function compileAndLinkModel(modelname, wrap_path, recompile, coptim, debug, fun
     end
     
     %% Third party libraries
-    dependencyPath = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'ThirdParty');
+    dependencyPath = fullfile(amiciRootPath, 'ThirdParty');
     [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, objectFileSuffix, COPT, DEBUG);
     includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
    
     %% Recompile AMICI base files if necessary
-    [objectStrAmici] = compileAmiciBase(wrap_path, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
+    [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
     objectsstr = [objectsstr, objectStrAmici];
 
     %% Model-specific files
