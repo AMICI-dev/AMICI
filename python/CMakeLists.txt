@@ -1,6 +1,7 @@
 find_package(PythonInterp 3.6 REQUIRED)
 
 # Configure setup.py and copy to output directory
+set(AMICI_VERSION "@AMICI_VERSION@") # to be replaced later
 SET(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in)
 SET(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY_OUT})
@@ -11,6 +12,9 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/python/amici/setup.template.py ${CMAKE_CURR
 add_custom_target(python-module-files
     DEPENDS always_rebuild
     COMMENT "Preparing python module directory"
+    COMMAND ${CMAKE_COMMAND} -D SRC=${CMAKE_CURRENT_BINARY_DIR}/setup.py
+                             -D DST=${CMAKE_CURRENT_BINARY_DIR}/setup.py
+                             -P ${PROJECT_SOURCE_DIR}/cmake/version.cmake
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/amici ${CMAKE_CURRENT_BINARY_DIR}/amici

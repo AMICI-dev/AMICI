@@ -23,6 +23,13 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
+add_custom_target(
+    version ALL
+    ${CMAKE_COMMAND} -D SRC=${CMAKE_CURRENT_SOURCE_DIR}/include/amici/version.in.h
+                     -D DST=${CMAKE_BINARY_DIR}/version.h
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.cmake
+)
+
 add_definitions(-DAMICI_WITHOUT_MATLAB)
 
 set(SUITESPARSE_DIR "${AMICI_DIR}/ThirdParty/SuiteSparse/")
@@ -106,7 +113,6 @@ include(clang-tools)
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
-set(PROJECT_VERSION "0.0.0a0")
 
 # <Export cmake configuration>
 include(GenerateExportHeader)

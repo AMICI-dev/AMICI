@@ -12,4 +12,4 @@ cd ${AMICI_PATH}/build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 make python-wheel
-pip3 install --user --prefix= ${AMICI_PATH}/build/python/amici-*.whl
+pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`

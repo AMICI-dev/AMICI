@@ -2,6 +2,7 @@ from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
 import os 
+import re
 
 def getAmiciBaseSources():
     """Get list of source files for the amici base library"""
@@ -54,7 +55,7 @@ amici_module = Extension('amici/_amici',
 # Install
 setup(
     name='${PROJECT_NAME}',
-    version='${PROJECT_VERSION}',
+    version=re.sub(r'v([^-]+)-([^-]+)-(.*)', r'\1.\2+\3',  '${AMICI_VERSION}').replace('-','.'),
     description='Advanced multi-language Interface to CVODES and IDAS',
     url='https://github.com/ICB-DCM/AMICI',
     author='${AUTHORS}',
