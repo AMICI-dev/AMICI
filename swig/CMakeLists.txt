@@ -6,16 +6,16 @@ find_package(SWIG REQUIRED 3)
 include(${SWIG_USE_FILE})
 
 set(AMICI_INTERFACE_LIST
-    ${AMICI_DIR}/swig/amici.i
-    ${AMICI_DIR}/swig/edata.i
-    ${AMICI_DIR}/swig/rdata.i
-    ${AMICI_DIR}/swig/model.i
-    ${AMICI_DIR}/swig/model_ode.i
-    ${AMICI_DIR}/swig/model_dae.i
-    ${AMICI_DIR}/swig/solver.i
-    ${AMICI_DIR}/swig/solver_cvodes.i
-    ${AMICI_DIR}/swig/solver_idas.i
-    ${AMICI_DIR}/swig/std_unique_ptr.i
+    ${CMAKE_CURRENT_LIST_DIR}/amici.i
+    ${CMAKE_CURRENT_LIST_DIR}/edata.i
+    ${CMAKE_CURRENT_LIST_DIR}/rdata.i
+    ${CMAKE_CURRENT_LIST_DIR}/model.i
+    ${CMAKE_CURRENT_LIST_DIR}/model_ode.i
+    ${CMAKE_CURRENT_LIST_DIR}/model_dae.i
+    ${CMAKE_CURRENT_LIST_DIR}/solver.i
+    ${CMAKE_CURRENT_LIST_DIR}/solver_cvodes.i
+    ${CMAKE_CURRENT_LIST_DIR}/solver_idas.i
+    ${CMAKE_CURRENT_LIST_DIR}/std_unique_ptr.i
 )
 
 # Add target to show files in IDE
