@@ -32,6 +32,7 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/AMD/Lib/libamd${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
+
 set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib")
 set(SUNDIALS_LIBRARIES ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_cvodes${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -54,9 +55,9 @@ endif()
 
 # Add target to create version file
 add_custom_target(
-    version ALL
+    version
     ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/include/amici/version.in.h
-    -D DST=${CMAKE_BINARY_DIR}/version.h
+    -D DST=${CMAKE_BINARY_DIR}/include/amici/version.h
     -P ${CMAKE_SOURCE_DIR}/cmake/configureVersion.cmake
     )
 
@@ -83,11 +84,18 @@ set(AMICI_SRC_LIST
     )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include/)
-target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SUNDIALS_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SUITESPARSE_INCLUDE_DIRS})
+add_dependencies(${PROJECT_NAME} version)
+file(GLOB PUBLIC_HEADERS include/amici/*.h)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
+target_include_directories(${PROJECT_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+    PUBLIC swig
+    PUBLIC ${SUNDIALS_INCLUDE_DIRS}
+    PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
+    PUBLIC ${HDF5_INCLUDE_DIRS}
+    )
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
     target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
@@ -114,15 +122,15 @@ set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
 
 # <Export cmake configuration>
-install(TARGETS ${PROJECT_NAME}
-    EXPORT AmiciTargets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-    )
-export(EXPORT AmiciTargets
-    FILE "${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake"
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/amici
+)
+export(EXPORT AmiciTargets FILE AmiciTargets.cmake
     NAMESPACE Upstream::
     )
 get_property(AmiciConfigIncludes DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
@@ -137,7 +145,7 @@ write_basic_package_version_file(AmiciConfigVersion.cmake COMPATIBILITY ExactVer
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
-    DESTINATION lib/amici/cmake )
+    DESTINATION share/Amici/cmake )
 # Register package
 export(PACKAGE Amici)
 # </Export cmake configuration>

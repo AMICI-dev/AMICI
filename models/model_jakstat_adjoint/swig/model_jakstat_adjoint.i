@@ -1,5 +1,5 @@
 %module model_jakstat_adjoint
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

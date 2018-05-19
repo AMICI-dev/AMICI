@@ -1,5 +1,5 @@
 %module model_dirac
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

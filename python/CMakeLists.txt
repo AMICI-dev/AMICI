@@ -14,7 +14,7 @@ add_custom_target(python-module-files
     COMMENT "Preparing python module directory"
     COMMAND ${CMAKE_COMMAND} -D SRC=${CMAKE_CURRENT_BINARY_DIR}/setup.py
                              -D DST=${CMAKE_CURRENT_BINARY_DIR}/setup.py
-                                -P ${PROJECT_SOURCE_DIR}/cmake/version.cmake
+                                -P ${PROJECT_SOURCE_DIR}/cmake/configureVersion.cmake
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/amici
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/python/amici ${CMAKE_CURRENT_BINARY_DIR}/amici

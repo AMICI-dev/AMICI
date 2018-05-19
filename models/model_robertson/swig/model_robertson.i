@@ -1,5 +1,5 @@
 %module model_robertson
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

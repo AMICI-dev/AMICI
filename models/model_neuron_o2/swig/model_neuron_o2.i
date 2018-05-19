@@ -1,5 +1,5 @@
 %module model_neuron_o2
-%import ../../swig/amici.i
+%import amici.i
 // Add necessary symbols to generated header
 
 %{

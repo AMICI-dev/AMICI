@@ -18,12 +18,8 @@ foreach(FLAG ${MY_CXX_FLAGS})
 endforeach(FLAG)
 
 find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
-get_property(AmiciConfigIncludes TARGET Upstream::amici PROPERTY INCLUDE_DIRECTORIES)
 
-set(MODEL_DIR "${Amici_DIR}/../models/model_neuron")
-
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories(${AmiciConfigIncludes})
+set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_J.cpp
 ${MODEL_DIR}/model_neuron_JB.cpp
@@ -67,19 +63,21 @@ ${MODEL_DIR}/model_neuron_z.cpp
 
 ${MODEL_DIR}/wrapfunctions.cpp
 )
-    
+
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
+add_library(model ALIAS ${PROJECT_NAME})
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
     
-target_link_libraries(
-    ${PROJECT_NAME}
-    Upstream::amici
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC Upstream::amici
 )
 
 set(SRC_LIST_EXE main.cpp)
 
 add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
     
-target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME} Upstream::amici)
+target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 
 if($ENV{ENABLE_GCOV_COVERAGE})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
@@ -88,6 +86,3 @@ endif()
 ## SWIG
 
 add_subdirectory(swig)
-
-
-
