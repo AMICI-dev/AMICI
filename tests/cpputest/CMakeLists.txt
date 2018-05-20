@@ -1,43 +1,67 @@
 project(amiciIntegrationTests)
-
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_BUILD_TYPE Debug)
+find_package(CppUTest REQUIRED)
 
-find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
-get_property(AmiciConfigIncludes TARGET Upstream::amici PROPERTY INCLUDE_DIRECTORIES)
-set(AMICI_DIR ${Amici_DIR}/..)
+# models depend on Upstream::amici
+add_library(Upstream::amici ALIAS amici)
 
-set(CPPUTEST_DIR "${AMICI_DIR}/ThirdParty/cpputest-3.8/" CACHE PATH "cppUTest root directory")
-set(CPPUTEST_INCLUDE_DIR "${CPPUTEST_DIR}/include" CACHE PATH "cppUTest include directory")
-set(CPPUTEST_LIBRARY "${CPPUTEST_DIR}/lib/libCppUTest.a" "${CPPUTEST_DIR}/lib/libCppUTestExt.a"  CACHE PATH "cppUTest libraries")
-
+# CppUTest includes for memory leak detector
 set(CMAKE_CXX_FLAGS_OLD "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include ${CPPUTEST_INCLUDE_DIR}/CppUTest/MemoryLeakDetectorNewMacros.h")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include CppUTest/MemoryLeakDetectorNewMacros.h")
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories(${AmiciConfigIncludes})
-include_directories(${CPPUTEST_INCLUDE_DIR})
+# Amici testing library
+add_library(amici-testing testfunctions.cpp)
+target_compile_definitions(amici-testing
+    PUBLIC NEW_OPTION_FILE="${CMAKE_CURRENT_SOURCE_DIR}/testOptions.h5"
+    PUBLIC HDFFILE="${CMAKE_CURRENT_SOURCE_DIR}/expectedResults.h5"
+    PUBLIC HDFFILEWRITE="${CMAKE_CURRENT_SOURCE_DIR}/writeResults.h5"
+    )
+target_include_directories(amici-testing
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC ${CppUTest_INCLUDE_DIRS}
+    )
+target_link_libraries(amici-testing
+    PUBLIC Upstream::amici
+    PUBLIC ${CppUTest_LIBRARIES}
+    )
 
-if(APPLE)
-    set(SHARED_OBJECT_EXTENSION .dylib)
-else()
-    set(SHARED_OBJECT_EXTENSION .so)
-endif()
-
-enable_testing()
+# Names of models for which tests are to be run
+set(TEST_MODELS
+    dirac
+    steadystate
+    jakstat_adjoint
+    jakstat_adjoint_o2
+    neuron neuron_o2
+    events
+    nested_events
+    robertson
+    )
 
 add_subdirectory(unittests)
-add_subdirectory(dirac)
-add_subdirectory(events)
-add_subdirectory(nested_events)
-add_subdirectory(steadystate)
-add_subdirectory(jakstat_adjoint)
-add_subdirectory(neuron)
-add_subdirectory(robertson)
-add_subdirectory(jakstat_adjoint_o2)
-add_subdirectory(neuron_o2)
 
-if($ENV{ENABLE_GCOV_COVERAGE})
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
-endif()
+include(ExternalProject)
+
+foreach(MODEL IN ITEMS ${TEST_MODELS})
+    # Build model
+    ExternalProject_Add(external_model_${MODEL}
+        PREFIX            ""
+        SOURCE_DIR        "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/"
+        INSTALL_COMMAND   ""
+        TEST_COMMAND      ""
+        DEPENDS amici
+        )
+    # Rebuild if amici files are updated
+    ExternalProject_Add_StepDependencies(external_model_${MODEL} build amici)
+
+    add_library(model_${MODEL} STATIC IMPORTED)
+    set_target_properties(model_${MODEL}
+        PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/"
+        IMPORTED_LOCATION
+        "${CMAKE_CURRENT_BINARY_DIR}/external_model_${MODEL}-prefix/src/external_model_${MODEL}-build/${CMAKE_STATIC_LIBRARY_PREFIX}model_${MODEL}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        )
+    # Build tests for this model
+    add_subdirectory(${MODEL})
+endforeach()

@@ -11,17 +11,18 @@
 #endif
 #include <string>
 #include <sstream>    // make std::ostringstream available (needs to come before TestHarness.h)
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
+#include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
 
 namespace amici {
 
 class ReturnData;
 class ExpData;
 
-#define NEW_OPTION_FILE "../../testOptions.h5"
-#define HDFFILE "../../expectedResults.h5"
-#define HDFFILEWRITE "../../writeResults.h5"
+#if !defined(NEW_OPTION_FILE) || !defined(HDFFILE) || !defined(HDFFILEWRITE)
+# error "Must define NEW_OPTION_FILE HDFFILE HDFFILEWRITE"
+#endif
+
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
 

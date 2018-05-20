@@ -49,7 +49,6 @@ install:
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
     - ./scripts/buildAmici.sh
-    - ./scripts/buildTests.sh
 
 script:  
     - ./scripts/run-cpputest.sh

@@ -8,7 +8,7 @@ if [ -f ${AMICI_PATH}/scripts/env.sh ]; then
 fi
 
 # run tests
-cd ${AMICI_PATH}/tests/cpputest/build
+cd ${AMICI_PATH}/build
 
 ctest -V
 mv ${AMICI_PATH}/tests/cpputest/writeResults.h5 ${AMICI_PATH}/tests/cpputest/writeResults.h5.bak

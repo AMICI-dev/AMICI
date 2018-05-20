@@ -99,7 +99,7 @@ void checkEqualArray(std::vector<double> const& expected, std::vector<double> co
                      double atol, double rtol, std::string const& name) {
     CHECK_EQUAL(expected.size(), actual.size());
 
-    for(int i = 0; i < expected.size(); ++i)
+    for(int i = 0; (unsigned) i < expected.size(); ++i)
     {
         bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i, name.c_str());
         CHECK_TRUE(withinTol);

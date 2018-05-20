@@ -17,5 +17,12 @@ if [ ! -d "cpputest-master" ]; then
         wget -O cpputest-master.zip https://codeload.github.com/cpputest/cpputest/zip/master
     fi
     unzip cpputest-master.zip
-    cd cpputest-master/ && ./autogen.sh && ./configure && make
+    #cd cpputest-master/ && ./autogen.sh && ./configure && make
 fi
+
+cd cpputest-master
+mkdir -p build
+cd build
+cmake -DTESTS=OFF -DBUILD_TESTING=OFF -DC++11=ON ..
+make -j4
+

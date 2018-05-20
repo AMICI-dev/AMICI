@@ -47,3 +47,18 @@ endif()
 ## SWIG
 
 add_subdirectory(swig)
+
+# <Export cmake configuration>
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+export(EXPORT ${PROJECT_NAME}Targets FILE ${PROJECT_NAME}Config.cmake
+    NAMESPACE Upstream::
+    )
+# </Export cmake configuration>
+

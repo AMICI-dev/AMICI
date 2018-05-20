@@ -133,8 +133,6 @@ install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
 export(EXPORT AmiciTargets FILE AmiciTargets.cmake
     NAMESPACE Upstream::
     )
-get_property(AmiciConfigIncludes DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-list(APPEND AmiciConfigIncludes ${CMAKE_CURRENT_SOURCE_DIR}/swig/)
 configure_file(cmake/AmiciConfig.cmake
     "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
     @ONLY
@@ -154,3 +152,10 @@ export(PACKAGE Amici)
 # build interfaces for other languages
 add_subdirectory(swig)
 add_subdirectory(python)
+
+option(BUILD_TESTS "Build integration tests?" ON)
+if(BUILD_TESTS)
+    enable_testing()
+
+    add_subdirectory(tests/cpputest)
+endif()
