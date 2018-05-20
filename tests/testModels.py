@@ -34,7 +34,10 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
                 with self.subTest(modelName=modelName, caseName=case):
                     print('running subTest modelName = ' + modelName + ', caseName = ' + case)
-                    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'models', modelName, 'build', 'swig'))
+                    modelSwigFolder = os.path.join(os.path.dirname(__file__), '..', 'build', 'tests', 
+                                                   'cpputest', 'external_' + modelName + '-prefix', 
+                                                   'src', 'external_' + modelName + '-build', 'swig')
+                    sys.path.insert(0, modelSwigFolder)
                     testModelModule = importlib.import_module(modelName)
                     self.model = testModelModule.getModel()
                     self.solver = self.model.getSolver()
