@@ -6,7 +6,7 @@ function wrapTestModels()
 %  void
     
     amiciPath = fileparts(mfilename('fullpath'));
-    amiciPath = [amiciPath '/../..'];
+    amiciPath = [amiciPath '/../../matlab'];
     
     %% EXAMPLE STEADYSTATE
     

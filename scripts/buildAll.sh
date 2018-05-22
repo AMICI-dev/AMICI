@@ -11,4 +11,3 @@ ${SCRIPT_PATH}/buildSuiteSparse.sh
 ${SCRIPT_PATH}/buildSundials.sh
 ${SCRIPT_PATH}/buildCpputest.sh
 ${SCRIPT_PATH}/buildAmici.sh
-${SCRIPT_PATH}/buildTests.sh

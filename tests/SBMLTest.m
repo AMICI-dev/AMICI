@@ -3,7 +3,7 @@ exedir = fileparts(mfilename('fullpath'));
 cd(exedir);
 fid = fopen(['./SBMLTest_log_' date '.txt'],'w+');
 
-for iTest = 1:1529
+for iTest = 21:1529
     cd(exedir);
     testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
     if(~exist(fullfile(pwd,'SBMLresults',[testid '-results.csv'])))
@@ -23,8 +23,8 @@ cd(fileparts(mfilename('fullpath')))
 curdir = pwd;
 testid = [repmat('0',1,4-floor(log10(iTest))),num2str(iTest)];
 disp([' =================== ' testid ' =================== ']);
-if(exist(fullfile(pwd,'sbml-test-suite','cases','semantic',testid),'dir'))
-    cd(fullfile(pwd,'sbml-test-suite','cases','semantic',testid))
+if(exist(fullfile(pwd,'sbml-semantic-test-cases','cases','semantic',testid),'dir'))
+    cd(fullfile(pwd,'sbml-semantic-test-cases','cases','semantic',testid))
     try
         if(exist(fullfile(pwd,[testid '-sbml-l3v1.xml']),'file'))
             SBML2AMICI([testid '-sbml-l3v1'],['SBMLTEST_' testid])

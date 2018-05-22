@@ -1,7 +1,7 @@
 About AMICI
 ==========
 
-AMICI provides a MATLAB interface for the SUNDIALS solvers CVODES (for ordinary differential equations) and IDAS (for algebraic differential equations). AMICI allows the user to specify differential equation models in terms of symbolic variables in MATLAB and automatically compiles such models as .mex simulation files. In contrast to the SUNDIALSTB interface, all necessary functions are transformed into native C code, which allows for a significantly faster compilation. Beyond forward integration, the compiled simulation file also allows for forward sensitivity analysis, steady state sensitivity analysis and adjoint sensitivity analysis for likelihood based output functions.
+AMICI provides a multilanguage interface for the SUNDIALS solvers CVODES (for ordinary differential equations) and IDAS (for algebraic differential equations). AMICI allows the user to read differential equation models specified as SBML and automatically compiles such models as .mex simulation fiels, c++ executables and python modules. In contrast to the SUNDIALSTB interface, all necessary functions are transformed into native C++ code, which allows for a significantly faster simulation. Beyond forward integration, the compiled simulation file also allows for forward sensitivity analysis, steady state sensitivity analysis and adjoint sensitivity analysis for likelihood based output functions.
 
 The interface was designed to provide routines for efficient gradient computation in parameter estimation of biochemical reaction models but is also applicable to a wider range of differential equation constrained optimization problems.
 
@@ -9,7 +9,6 @@ Current build status
 ====================
 
 Linux/Mac: [![TravisCI](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/ob315laj1i6i3om3?svg=true)](https://ci.appveyor.com/project/FFroehlich/amici)
 Coverage: [![Coverage Status](https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=master)](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
 
 FAQ

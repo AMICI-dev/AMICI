@@ -22,6 +22,13 @@ void simulateVerifyWrite(std::string path, double atol, double rtol)
     simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, atol, rtol);
 }
 
+void simulateWithDefaultOptions() {
+    using namespace amici;
+    auto model = getModel();
+    auto solver = model->getSolver();
+    std::unique_ptr<const ExpData> edata;
+    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+}
 
 void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults, const std::string hdffilewrite, std::string path, double atol, double rtol)
 {
@@ -92,7 +99,7 @@ void checkEqualArray(std::vector<double> const& expected, std::vector<double> co
                      double atol, double rtol, std::string const& name) {
     CHECK_EQUAL(expected.size(), actual.size());
 
-    for(int i = 0; i < expected.size(); ++i)
+    for(int i = 0; (unsigned) i < expected.size(); ++i)
     {
         bool withinTol = withinTolerance(expected[i], actual[i], atol, rtol, i, name.c_str());
         CHECK_TRUE(withinTol);

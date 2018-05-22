@@ -149,11 +149,13 @@ tests/sbml-test-suite/
 
 tests/sedml-test-suite/
 
-mtoc/config/latexextras.sty-e
+matlab/mtoc/config/latexextras.sty-e
 
-mtoc/config/latexextras.sty
+matlab/mtoc/config/latexextras.sty
 
-mtoc/config/Doxyfile-e
+matlab/mtoc/config/Doxyfile-e
+
+.directory
 
 .project
 
@@ -167,3 +169,19 @@ __pycache__
 
 tests/cpputest/writeResults.h5
 tests/cpputest/writeResults.h5.bak
+
+tests/sbml-semantic-test-cases/*
+
+python/.idea/misc.xml
+
+python/.idea/modules.xml
+
+python/.idea/python.iml
+
+python/.idea/workspace.xml
+
+*.pyc
+
+python/testSpeedy.py
+
+python/test.txt
