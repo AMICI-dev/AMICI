@@ -14,8 +14,9 @@ function this = gccode(this,model,fid)
         
         % replace unknown partial derivatives
         if(model.maxflag)
-            this.sym = subs(this.sym,sym('D([1], max)'),sym('D1max'));
-            this.sym = subs(this.sym,sym('D([2], max)'),sym('D2max'));
+            this.sym = subs(this.sym,sym('D([1], am_max)'),sym('D1max'));
+            this.sym = subs(this.sym,sym('D([2], am_max)'),sym('D2max'));
+            this.sym = subs(this.sym,sym('am_max'),sym('max'));
         end
         
         % If we have spline, we need to parse them to get derivatives

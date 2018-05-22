@@ -7,5 +7,5 @@ function fun = am_max(a, b)
 %
 % Return values:
 %  fun: maximum of a and b
-fun = sym(['max(' char(sym(a)) ',' char(sym(b)) ',0.0)']);
+fun = sym(['am_max(' char(sym(a)) ',' char(sym(b)) ',0.0)']);
 end
