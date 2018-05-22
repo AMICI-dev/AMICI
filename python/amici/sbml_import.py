@@ -52,9 +52,6 @@ class SbmlImporter:
     n_observables
     """
 
-    # TODO: are units respected on sbml import? if not convert; at least throw if differ?
-    # TODO: camelCase?
-
     def __init__(self, SBMLFile):
         """Create a new Model instance.
         
@@ -65,7 +62,7 @@ class SbmlImporter:
         """
         self.loadSBMLFile(SBMLFile)
 
-        self.functionBodies = {} # TODO: "private" ?
+        self.functionBodies = {}
         self.Codeprinter = CCodePrinter()
 
         """Signatures and properties of generated model functions (see include/amici/model.h for details)."""
