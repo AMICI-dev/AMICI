@@ -559,7 +559,7 @@ this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,condition_sym,conditions);
 makeSubs(this,compartments_sym,this.compartment);
-makeSubs(this,stoichsymbols,stoichmath);
+%makeSubs(this,stoichsymbols,stoichmath);
 makeSubs(this,reactionsymbols,this.flux);
 
 % set initial assignments
