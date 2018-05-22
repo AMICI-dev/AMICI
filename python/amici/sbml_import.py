@@ -22,34 +22,33 @@ class SbmlImporter:
     
     Attributes:
     -----------
-    functionBodies:
-    Codeprinter:
-    functions:
-    symbols:
-    SBMLreader:
-    sbml_doc:
-    sbml:
-    modelName:
-    modelPath:
-    modelSwigPath:
-    n_species
-    speciesIndex
-    speciesCompartment
-    constantSpecies
-    boundaryConditionSpecies
-    speciesHasOnlySubstanceUnits
-    speciesInitial
-    speciesConversionFactor
-    parameterValues
-    n_parameter
-    parameterIndex
-    compartmentSymbols
-    compartmentVolume
-    n_reactions
-    stoichiometricMatrix
-    fluxVector
-    observables
-    n_observables
+    Codeprinter: codeprinter that allows 
+    functions: dict carrying function specific definitions
+    symbols: symbolic definitions 
+    SBMLreader: the libSBML sbml reader [!not storing this will result in a segfault!]
+    sbml_doc: document carrying the sbml defintion [!not storing this will result in a segfault!]
+    sbml: sbml definition [!not storing this will result in a segfault!]
+    modelName: name of the model that will be used for compilation
+    modelPath: path to the generated model specific files
+    modelSwigPath: path to the generated swig files
+    n_species: number of species
+    speciesIndex: dict that maps species names to indices
+    speciesCompartment: array of compartment for each species
+    constantSpecies: ids of species that are marked as constant
+    boundaryConditionSpecies: ids of species that are marked as boundary condition
+    speciesHasOnlySubstanceUnits: array of flags indicating whether a species has only substance units
+    speciesInitial: array of initial concentrations
+    speciesConversionFactor: array of conversion factors for every
+    parameterValues: array of parameter values
+    n_parameter: number of parameters
+    parameterIndex: dict that maps parameter names to indices
+    compartmentSymbols: array of compartment ids
+    compartmentVolume: array of compartment volumes
+    n_reactions: number of reactions
+    stoichiometricMatrix: stoichiometrix matrix of the model
+    fluxVector: vector of reaction kinetic laws 
+    observables: array of observable definitions
+    n_observables: number of observables
     """
 
     def __init__(self, SBMLFile):
@@ -62,7 +61,6 @@ class SbmlImporter:
         """
         self.loadSBMLFile(SBMLFile)
 
-        self.functionBodies = {}
         self.Codeprinter = CCodePrinter()
 
         """Signatures and properties of generated model functions (see include/amici/model.h for details)."""

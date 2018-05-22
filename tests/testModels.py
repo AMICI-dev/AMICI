@@ -8,7 +8,6 @@ import importlib
 import os
 import re
 import numpy as np
-import pdb
 
 class TestAmiciPregeneratedModel(unittest.TestCase):
     '''
@@ -21,8 +20,10 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
 
     def runTest(self):
-
-
+        '''
+        test runner routine that loads data expectedResults.h5 hdf file and runs individual models/settings
+        as subTests
+        '''
         expectedResults = h5py.File(self.expectedResultsFile, 'r')
 
         for subTest in expectedResults.keys():
@@ -64,6 +65,16 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
 
 def verifySimulationResults(rdata,expectedResults,atol=1e-8,rtol=1e-4):
+    '''
+    compares all fields of the simulation results in rdata against the expectedResults using the provided
+    tolerances
+    
+    Args:
+    rdata: simulation results as returned by amici.runAmiciSimulation
+    expectedResults: stored test results 
+    atol: absolute tolerance
+    rtol: relative tolerance
+    '''
 
     if expectedResults.attrs['status'][0] != 0:
         assert rdata['status'] == expectedResults.attrs['status'][0]
@@ -84,6 +95,17 @@ def verifySimulationResults(rdata,expectedResults,atol=1e-8,rtol=1e-4):
 
 
 def checkResults(rdata, field, expected, atol, rtol):
+    '''
+    checks whether rdata[field] agrees with expected according to provided tolerances
+    
+    Args:
+    rdata: simulation results as returned by amici.runAmiciSimulation
+    field: name of the field to check
+    expected: expected test results 
+    atol: absolute tolerance
+    rtol: relative tolerance
+    '''
+
     result = rdata[field]
     adev = abs(result-expected)
     rdev = abs((result-expected))/(abs(expected)+rtol)
