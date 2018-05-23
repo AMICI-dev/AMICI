@@ -251,7 +251,9 @@ function generateSwigInterfaceFiles(this)
     
     modelSwigDir = fullfile(this.wrap_path,'models',this.modelname,'swig');
     amiciSwigDir = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))),'swig');
-    mkdir(modelSwigDir)
+    if(~exist(modelSwigDir,'dir'))
+        mkdir(modelSwigDir)
+    end
     
     %interface file
     t = template();
