@@ -13,7 +13,7 @@ function makeSyms( this )
 if(~isfield(this.sym,'xdot'))
     if(isfield(this.sym,'f'))
         try
-            this.sym.xdot = sym(this.sym.f(:));
+            this.sym.xdot = betterSym(this.sym.f(:));
             this.sym = rmfield(this.sym,'f');
         catch
             error('Could not transform model.sym.f into a symbolic variable, please check the definition!')
@@ -28,7 +28,11 @@ else
         end
     else
         try
-            this.sym.xdot = sym(this.sym.xdot(:));
+            if(~isa(this.sym.xdot(:),'sym'))
+                this.sym.xdot = betterSym(this.sym.xdot(:));
+            else
+                this.sym.xdot = this.sym.xdot(:);
+            end
         catch
             error('Could not transform model.sym.xdot into a symbolic variable, please check the definition!')
         end
@@ -61,7 +65,11 @@ if(~isfield(this.sym,'x0'))
     error('Model this is missing the definition of the vector of initial conditions x0 (.sym.x0)!')
 else
     try
-        this.sym.x0 = sym(this.sym.x0(:));
+        if(~isa(this.sym.x0(:),'sym'))
+            this.sym.x0 = betterSym(this.sym.x0(:));
+        else
+            this.sym.x0 = this.sym.x0(:);
+        end
     catch
         error('Could not transform model.sym.x0 into a symbolic variable, please check the definition!')
     end
@@ -118,7 +126,7 @@ end
 if(~isfield(this.sym,'Jy'))
     this.sym.Jy = sym(zeros(numel(this.sym.y),1));
     for iy = 1:length(this.sym.y)
-        this.sym.Jy(iy) = sym(['0.5*log(2*pi*sigma_y_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sigma_y_' num2str(iy-1) ')^2']);
+        this.sym.Jy(iy) = betterSym(['0.5*log(2*pi*sigma_y_' num2str(iy-1) '^2) + 0.5*((y_' num2str(iy-1) '-my_' num2str(iy-1) ')/sigma_y_' num2str(iy-1) ')^2']);
     end
 end
 

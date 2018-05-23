@@ -250,14 +250,14 @@ if(length({model.reaction.id})>0)
     
     reactants = cellfun(@(x) {x.species},{model.reaction.reactant},'UniformOutput',false);
     % species index of the reactant
-    reactant_sidx = double(subs(cat(2,reactants{:}),species_sym,species_idx));
+    reactant_sidx = double(subs(sym(cat(2,reactants{:})),species_sym,species_idx));
     % reaction index
     tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],reactants,'UniformOutput',false)));
     wreact = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],reactants,'UniformOutput',false));
     reactant_ridx = tmp(logical(wreact));
     products = cellfun(@(x) {x.species},{model.reaction.product},'UniformOutput',false);
     % species index of the product
-    product_sidx = double(subs(cat(2,products{:}),species_sym,species_idx));
+    product_sidx = double(subs(sym(cat(2,products{:})),species_sym,species_idx));
     % reaction index
     tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],products,'UniformOutput',false)));
     wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
@@ -559,7 +559,7 @@ this.bolus(any([cond_idx;const_idx;bound_idx]),:) = [];
 makeSubs(this,boundary_sym,boundaries);
 makeSubs(this,condition_sym,conditions);
 makeSubs(this,compartments_sym,this.compartment);
-makeSubs(this,stoichsymbols,stoichmath);
+%makeSubs(this,stoichsymbols,stoichmath);
 makeSubs(this,reactionsymbols,this.flux);
 
 % set initial assignments
@@ -683,8 +683,13 @@ end
 
 function csym = cleanedsym(str)
 if(nargin>0)
-csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
-csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
+    matVer = ver('MATLAB');
+    if(str2double(matVer.Version)>=9.4)
+        csym = str2sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+    else
+        csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+    end
+    csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
 else
     csym = sym(0);
 end

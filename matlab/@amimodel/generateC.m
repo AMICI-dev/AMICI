@@ -40,6 +40,8 @@ for ifun = this.funs
             fprintf(fid,'typedef amici::realtype realtype;\n');
             fprintf(fid,'#include <cmath> \n');
             fprintf(fid,'\n');
+            fprintf(fid,'using namespace amici;\n');
+            fprintf(fid,'\n');
             
             % function definition
             fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
@@ -249,7 +251,9 @@ function generateSwigInterfaceFiles(this)
     
     modelSwigDir = fullfile(this.wrap_path,'models',this.modelname,'swig');
     amiciSwigDir = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))),'swig');
-    mkdir(modelSwigDir)
+    if(~exist(modelSwigDir,'dir'))
+        mkdir(modelSwigDir)
+    end
     
     %interface file
     t = template();

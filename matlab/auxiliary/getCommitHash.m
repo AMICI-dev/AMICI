@@ -11,7 +11,7 @@ function [ commit_hash,branch,url ] = getCommitHash( wrap_path )
     %  url: employed remote origin @type char
     
     try
-        fid = fopen(fullfile(wrap_path,'.git','FETCH_HEAD'));
+        fid = fopen(fullfile(wrap_path,'..','.git','FETCH_HEAD'));
         str = fgetl(fid);
         fclose(fid);
         if(str~=-1)

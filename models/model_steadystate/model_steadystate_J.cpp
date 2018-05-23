@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void J_model_steadystate(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   J[0+0*3] = -p[1]*x[1]-p[0]*dwdx[0]*2.0;
   J[0+1*3] = p[2]*2.0-p[1]*x[0];

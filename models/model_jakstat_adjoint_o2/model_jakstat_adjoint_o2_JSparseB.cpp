@@ -5,6 +5,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void JSparseB_model_jakstat_adjoint_o2(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JSparseB->indexvals[0] = 0;
   JSparseB->indexvals[1] = 8;

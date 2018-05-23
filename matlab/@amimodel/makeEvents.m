@@ -52,7 +52,7 @@ end
 utriggers = unique(triggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
-    trigger{ievent} = sym(utriggers{itrigger});
+    trigger{ievent} = betterSym(utriggers{itrigger});
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end
@@ -147,8 +147,8 @@ if(nevent>0)
                 % remove the heaviside function and replace by h
                 % variable which is updated upon event occurrence in the
                 % solver
-                symvariable = subs(symvariable,heaviside( trigger{ievent}),sym(['h_'        num2str(ievent-1)]));
-                symvariable = subs(symvariable,heaviside(-trigger{ievent}),sym(['(1-h_' num2str(ievent-1) ')']));
+                symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['h_'        num2str(ievent-1)]));
+                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
@@ -203,7 +203,7 @@ if(nevent>0)
                 symchar = strrep(symchar,str_arg_h,['(1-h_' num2str(jevent-1) ')']);
                 % set hflag
             end
-            trigger{ievent} = sym(symchar);
+            trigger{ievent} = betterSym(symchar);
         end
     end
     
@@ -269,7 +269,7 @@ end
 if(~isfield(this.sym,'Jz'))
     this.sym.Jz = sym(zeros(length([this.event.z]),1));
     for iz = 1:length([this.event.z])
-        this.sym.Jz(iz) = sym(['0.5*log(2*pi*sigma_z_' num2str(iz-1) '^2) + 0.5*((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
+        this.sym.Jz(iz) = betterSym(['0.5*log(2*pi*sigma_z_' num2str(iz-1) '^2) + 0.5*((z_' num2str(iz-1) '-mz_' num2str(iz-1) ')/sigma_z_' num2str(iz-1) ')^2']);
     end
 end
 
