@@ -101,11 +101,7 @@ this.state = species_sym;
 nx = length(this.state);
 
 % extract corresponding volumes
-if verLessThan('matlab','R2017b')
-    compartments = sym(sanitizeString({model.species.compartment}));
-else
-    compartments = str2sym(sanitizeString({model.species.compartment}));
-end
+compartments = betterSym(sanitizeString({model.species.compartment}));
 this.volume = subs(compartments(:),sym({model.compartment.id}),this.compartment);
 if(any(arrayfun(@(x) ~isempty(regexp(char(x),'[\w]+\(')),this.volume)))
     error('Functions in volume definitions is currently not supported.')
@@ -449,18 +445,10 @@ if(model.SBML_level>=3)
 end
     
 try
-    if verLessThan('matlab','R2017b')
-        tmp = cellfun(@(x) sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
-    else
-        tmp = cellfun(@(x) str2sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
-    end
+    tmp = cellfun(@(x) betterSym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
 catch
-    if verLessThan('matlab','R2017b')
-        tmp = cellfun(@(x) sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
-    else
-        tmp = cellfun(@(x) str2sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
-    end
+    tmp = cellfun(@(x) betterSym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
     this.trigger = [tmp{:}];
 end
 this.trigger = this.trigger(:);
@@ -698,11 +686,7 @@ end
 
 function csym = cleanedsym(str)
 if(nargin>0)
-if verLessThan('matlab','R2017b')
-    csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
-else
-    csym = str2sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
-end
+csym = betterSym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
 csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
 else
     csym = sym(0);
