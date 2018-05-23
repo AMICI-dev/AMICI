@@ -101,7 +101,11 @@ this.state = species_sym;
 nx = length(this.state);
 
 % extract corresponding volumes
-compartments = sym(sanitizeString({model.species.compartment}));
+if verLessThan('matlab','R2017b')
+    compartments = sym(sanitizeString({model.species.compartment}));
+else
+    compartments = str2sym(sanitizeString({model.species.compartment}));
+end
 this.volume = subs(compartments(:),sym({model.compartment.id}),this.compartment);
 if(any(arrayfun(@(x) ~isempty(regexp(char(x),'[\w]+\(')),this.volume)))
     error('Functions in volume definitions is currently not supported.')
@@ -250,14 +254,17 @@ if(length({model.reaction.id})>0)
     
     reactants = cellfun(@(x) {x.species},{model.reaction.reactant},'UniformOutput',false);
     % species index of the reactant
-    reactant_sidx = double(subs(cat(2,reactants{:}),species_sym,species_idx));
+%     reactant_sidx =
+%     double(subs(cat(2,reactants{:}),species_sym,species_idx));
+    reactant_sidx = double(subs(cat(2,sym(reactants)),species_sym,species_idx));
     % reaction index
     tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],reactants,'UniformOutput',false)));
     wreact = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],reactants,'UniformOutput',false));
     reactant_ridx = tmp(logical(wreact));
     products = cellfun(@(x) {x.species},{model.reaction.product},'UniformOutput',false);
     % species index of the product
-    product_sidx = double(subs(cat(2,products{:}),species_sym,species_idx));
+%     product_sidx = double(subs(cat(2,products{:}),species_sym,species_idx));
+    product_sidx = double(subs(cat(2,sym(products)),species_sym,species_idx));
     % reaction index
     tmp = cumsum(cell2mat(cellfun(@(x) [ones(1,1),zeros(1,max(length(x)-1,0))],products,'UniformOutput',false)));
     wprod = cell2mat(cellfun(@(x) [ones(1,length(x)),zeros(1,isempty(x))],products,'UniformOutput',false));
@@ -442,10 +449,18 @@ if(model.SBML_level>=3)
 end
     
 try
-    tmp = cellfun(@(x) sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
+    if verLessThan('matlab','R2017b')
+        tmp = cellfun(@(x) sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
+    else
+        tmp = cellfun(@(x) str2sym(sanitizeString(x)),{model.event.trigger},'UniformOutput',false);
+    end
     this.trigger = [tmp{:}];
 catch
-    tmp = cellfun(@(x) sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
+    if verLessThan('matlab','R2017b')
+        tmp = cellfun(@(x) sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
+    else
+        tmp = cellfun(@(x) str2sym(sanitizeString(x.math)),{model.event.trigger},'UniformOutput',false);
+    end
     this.trigger = [tmp{:}];
 end
 this.trigger = this.trigger(:);
@@ -683,7 +698,11 @@ end
 
 function csym = cleanedsym(str)
 if(nargin>0)
-csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+if verLessThan('matlab','R2017b')
+    csym = sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+else
+    csym = str2sym(sanitizeString(strrep(str,'time','__time_internal_amici__')));
+end
 csym = subs(csym,sym('__time_internal_amici__'),sym('time'));
 else
     csym = sym(0);
