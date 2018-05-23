@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void z_model_events(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
     switch(ie) { 
         case 0: {

@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void dJydy_model_dirac(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) {
 switch(iy){
     case 0:

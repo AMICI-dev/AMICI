@@ -30,6 +30,8 @@ else
         try
             if(~isa(this.sym.xdot(:),'sym'))
                 this.sym.xdot = betterSym(this.sym.xdot(:));
+            else
+                this.sym.xdot = this.sym.xdot(:);
             end
         catch
             error('Could not transform model.sym.xdot into a symbolic variable, please check the definition!')
@@ -65,6 +67,8 @@ else
     try
         if(~isa(this.sym.x0(:),'sym'))
             this.sym.x0 = betterSym(this.sym.x0(:));
+        else
+            this.sym.x0 = this.sym.x0(:);
         end
     catch
         error('Could not transform model.sym.x0 into a symbolic variable, please check the definition!')

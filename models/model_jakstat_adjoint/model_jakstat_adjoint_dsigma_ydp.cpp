@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void dsigma_ydp_model_jakstat_adjoint(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
 switch (ip) {
   case 14: {

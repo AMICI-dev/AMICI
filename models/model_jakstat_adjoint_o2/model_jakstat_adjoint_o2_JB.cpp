@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void JB_model_jakstat_adjoint_o2(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JB[0+0*162] = k[0]*p[0]*w[0]*w[2];
   JB[0+1*162] = -p[0]*w[0];
