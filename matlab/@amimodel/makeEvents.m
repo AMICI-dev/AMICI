@@ -52,7 +52,7 @@ end
 utriggers = unique(triggers);
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
-    trigger{ievent} = sym(utriggers{itrigger});
+    trigger{ievent} = betterSym(utriggers{itrigger});
     bolus{ievent} = sym(zeros(nx,1));
     z{ievent} = sym.empty([0,0]);
 end

@@ -28,7 +28,9 @@ else
         end
     else
         try
-            this.sym.xdot = betterSym(this.sym.xdot(:));
+            if(~isa(this.sym.xdot(:),'sym'))
+                this.sym.xdot = betterSym(this.sym.xdot(:));
+            end
         catch
             error('Could not transform model.sym.xdot into a symbolic variable, please check the definition!')
         end
@@ -61,7 +63,9 @@ if(~isfield(this.sym,'x0'))
     error('Model this is missing the definition of the vector of initial conditions x0 (.sym.x0)!')
 else
     try
-        this.sym.x0 = betterSym(this.sym.x0(:));
+        if(~isa(this.sym.x0(:),'sym'))
+            this.sym.x0 = betterSym(this.sym.x0(:));
+        end
     catch
         error('Could not transform model.sym.x0 into a symbolic variable, please check the definition!')
     end
