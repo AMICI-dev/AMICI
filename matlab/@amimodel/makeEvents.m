@@ -41,15 +41,13 @@ for ix = 1:nx
             idx_end = find(brl(idx_start(iocc):end)-brl(idx_start(iocc))==-1,1,'first');
             arg = tmp_str((idx_start(iocc)+1):(idx_start(iocc)+idx_end-2));
             triggers{end+1} = arg;
-            if(ismember(idx_start(iocc),strfind(tmp_str,'dirac') + 5))
-                triggers{end+1} = ['-(' arg ')']; % for dirac we need both +to- and -to+ transitions
-            end
+            triggers{end+1} = ['-(' arg ')']; % for dirac we need both +to- and -to+ transitions
         end
     end
 end
 
 % select the unique ones
-utriggers = unique(triggers);
+utriggers = unique(arrayfun(@char,betterSym(triggers),'UniformOutput',false));
 for itrigger = 1:length(utriggers)
     ievent = ievent + 1;
     trigger{ievent} = betterSym(utriggers{itrigger});
@@ -151,7 +149,7 @@ if(nevent>0)
                 % h variables only change for one sign change but heaviside
                 % needs updating for both, thus we should 
                 symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['(h_' num2str(ievent-1) ' + 1 - h_' num2str(find(-trigger{ievent} == trigger)-1)  ')']));
-                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ' + h_' num2str(find(trigger{ievent} == trigger)-1) ')']));
+                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ' + h_' num2str(find(-trigger{ievent} == trigger)-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
