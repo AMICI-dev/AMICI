@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void drzdx_model_neuron_o2(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
   drzdx[0+0*5] = 1.0;
   drzdx[1+2*5] = 1.0;

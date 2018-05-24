@@ -4,6 +4,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void J_model_neuron_o2(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   J[0+0*10] = x[0]*(2.0/2.5E1)+5.0;
   J[0+1*10] = -1.0;
