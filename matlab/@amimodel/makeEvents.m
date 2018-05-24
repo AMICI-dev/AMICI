@@ -147,8 +147,11 @@ if(nevent>0)
                 % remove the heaviside function and replace by h
                 % variable which is updated upon event occurrence in the
                 % solver
-                symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['h_'        num2str(ievent-1)]));
-                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ')']));
+                
+                % h variables only change for one sign change but heaviside
+                % needs updating for both, thus we should 
+                symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['(h_' num2str(ievent-1) ' + 1 - h_' num2str(find(-trigger{ievent} == trigger)-1)  ')']));
+                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ' + h_' num2str(find(trigger{ievent} == trigger)-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
