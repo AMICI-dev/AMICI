@@ -148,32 +148,21 @@ if(nevent>0)
                 
                 % h variables only change for one sign change but heaviside
                 % needs updating for both, thus we should 
-                symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['(h_' num2str(ievent-1) ' + 1 - h_' num2str(find(-trigger{ievent} == trigger)-1)  ')']));
-                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ' + h_' num2str(find(-trigger{ievent} == trigger)-1) ')']));
+                symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['h_' num2str(ievent-1)']));
+                symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ')']));
                 % set hflag
                 
                 % we can check whether dividing cfp(2) by
                 % trigger{ievent} reduced the length of the symbolic
                 % expression. If it does, this suggests that
                 % trigger{ievent} is a factor of cfp(2), which will be
-                % the case for min/max functions. in that case we do
-                % not need a hflag as there is no discontinuity in the
-                % right hand side. This is not a perfect fix, in the
-                % long run one should maybe go back to the old syntax for
-                % am_max and am_min?
-                try
-                    [cfp,tfp] = coeffs(symvariable,sym(['h_' num2str(ievent-1) ]));
-                    if(any(double(tfp==sym(['h_' num2str(ievent-1)]))))
-                        if(length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)])))/trigger{ievent}))<length(char(cfp(logical(tfp==sym(['h_' num2str(ievent-1)]))))))
-                            hflags(ix,ievent) = 0;
-                        else
-                            hflags(ix,ievent) = 1;
-                        end
-                    else
-                        hflags(ix,ievent) = 0;
-                    end
-                catch
+                if(or(...
+                    ismember(sym(['h_' num2str(ievent-1)']),symvar(symvariable)),...
+                    ismember(sym(['h_' num2str(find(-trigger{ievent}==trigger)-1)']),symvar(symvariable))...
+                    ))
                     hflags(ix,ievent) = 1;
+                else
+                    hflags(ix,ievent) = 0;
                 end
             end
         end
