@@ -462,7 +462,7 @@ classdef MatlabDocMaker
                         fprintf('compiling LaTeX output...');
                         cd(latexdir);
                         
-                        [wrap_path,~,~] = fileparts(which('amiwrap.m'));
+                        [wrap_path,~,~] = fileparts(fileparts(which('amiwrap.m')));
                         
                         fid = fopen(fullfile(wrap_path,'doc','latex','refman.tex'),'r');
                         i = 1;

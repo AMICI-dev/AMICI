@@ -14,4 +14,11 @@
  *
  *- Lead Programmer
  *
+ * @section md Daniel Weindl
+ *
+ *- Co-Developer
+ *
+ * @section md Paul Stapor
+ *
+ *- Co-Developer
 
