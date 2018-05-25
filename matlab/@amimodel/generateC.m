@@ -180,6 +180,7 @@ initstr = num2str(transpose(this.z2event), '%d, ');
 fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
 fprintf(fid,['                    {};\n\n']);
 fprintf(fid,['    virtual amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
+fprintf(fid,['    const  char* getAmiciVersion() const { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 
 for ifun = this.funs
     fprintf(fid,['    virtual void f' ifun{1} this.fun.(ifun{1}).argstr ' override {\n']);
