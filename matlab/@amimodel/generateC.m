@@ -113,8 +113,6 @@ fprintf(fid,'namespace amici {\nclass Solver;\n}\n');
 fprintf(fid,'\n');
 fprintf(fid,'\n');
 
-fprintf(fid,'#define pi M_PI\n');
-fprintf(fid,'\n');
 fprintf(fid,'#ifdef __cplusplus\n#define EXTERNC extern "C"\n#else\n#define EXTERNC\n#endif\n');
 fprintf(fid,'\n');
 fprintf(fid,'std::unique_ptr<amici::Model> getModel();\n');
