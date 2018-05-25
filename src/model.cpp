@@ -31,7 +31,8 @@ void Model::fsy(const int it, ReturnData *rdata) {
 
 /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
  * total derivative
- * @param nroots event index
+ * @param nroots number of events for event index
+ * @param ie event index
  * @param rdata pointer to return data instance
  */
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
