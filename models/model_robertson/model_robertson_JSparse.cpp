@@ -5,6 +5,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void JSparse_model_robertson(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) {
   JSparse->indexvals[0] = 0;
   JSparse->indexvals[1] = 1;

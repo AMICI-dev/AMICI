@@ -5,6 +5,8 @@
 typedef amici::realtype realtype;
 #include <cmath> 
 
+using namespace amici;
+
 void JSparse_model_neuron(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   JSparse->indexvals[0] = 0;
   JSparse->indexvals[1] = 1;
