@@ -184,7 +184,6 @@ namespace amici {
               x0data(other.x0data),
               sx0data(other.sx0data),
               ts(other.ts),
-              qpositivex(other.qpositivex),
               nmaxevent(other.nmaxevent),
               pscale(other.pscale),
               tstart(other.tstart)
@@ -463,25 +462,6 @@ namespace amici {
             this->pscale = pscale;
             unscaledParameters.resize(originalParameters.size());
             unscaleParameters(unscaledParameters.data());
-        }
-
-
-        /**
-         * @brief getPositivityFlag
-         * @return
-         */
-        std::vector<int> getPositivityFlag() const {
-            return qpositivex;
-        }
-
-        /**
-         * @brief setPositivityFlag
-         * @param qpositivex
-         */
-        void setPositivityFlag(std::vector<int> const& qpositivex) {
-            if(qpositivex.size() != (unsigned) this->nx)
-                throw AmiException("Dimension mismatch. Size of qpositivex does not match number of states.");
-            this->qpositivex = qpositivex;
         }
 
         /**
@@ -1315,9 +1295,6 @@ namespace amici {
 
         /** timepoints (size nt) */
         std::vector<realtype>ts;
-
-        /** positivity flag (size nx) */
-        std::vector<int>qpositivex;
 
         /** maximal number of events to track */
         int nmaxevent = 10;

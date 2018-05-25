@@ -21,8 +21,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         maxstepsB = 0;
         % index of parameters for which the sensitivities are computed
         sens_ind = double.empty();
-        % index of states for which positivity should be enforced
-        qpositivex = double.empty();
         % starting time of the simulation
         tstart = 0;
         % linear multistep method.

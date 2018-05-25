@@ -952,7 +952,6 @@ bool operator ==(const Model &a, const Model &b)
             && (a.x0data == b.x0data)
             && (a.sx0data == b.sx0data)
             && (a.ts == b.ts)
-            && (a.qpositivex == b.qpositivex)
             && (a.nmaxevent == b.nmaxevent)
             && (a.pscale == b.pscale)
             && (a.tstart == b.tstart);
