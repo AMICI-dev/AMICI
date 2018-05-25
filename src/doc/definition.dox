@@ -1,11 +1,11 @@
 /**
- @page def_simu Model Definition & Simulation
+ @page def_simu_matlab Model Definition & Simulation (MATLAB)
  
  In the following we will give a detailed overview how to specify models in AMIWRAP and how to call the generated simulation files.
  
  @section definition Model Definition
  
- This guide will guide the user on how to specify models in MATLAB. For example implementations see the examples in the example directory.
+ This guide will guide the user on how to specify models in MATLAB. For example implementations see the examples in the matlab/examples directory.
  
  @subsection header Header
  
@@ -17,18 +17,18 @@
  
  Set the options by specifying the respective field of the modelstruct
  
- @code model.(fieldname) = (value) @endcode
+ @code model.(fieldname) = value @endcode
  
  The options specify default options for simulation, parametrisation and compilation. All of these options are optional.
  
- | field      | description                              | default
- |------------|------------------------------------------|---------
- | .param     | parametrisation 'log'/'log10'/'lin'      | 'lin'
- | .debug     | flag to compile with debug symbols       | false
- | .forward   | flag to activate forward sensitivities   | true
- | .adjoint   | flag to activate adjoint sensitivities   | true
+ | field      | description                                 | default
+ |------------|---------------------------------------------|---------
+ | .param     | default parametrisation 'log'/'log10'/'lin' | 'lin'
+ | .debug     | flag to compile with debug symbols          | false
+ | .forward   | flag to activate forward sensitivities      | true
+ | .adjoint   | flag to activate adjoint sensitivities      | true
  
- When set to true, the fields 'noforward' and 'noadjoint' will speed up the time required to compile the model but also disable the respective sensitivity computation.
+ When set to false, the fields 'forward' and 'adjoint' will speed up the time required to compile the model but also disable the respective sensitivity computation.
  
  @subsection states States
  
@@ -38,7 +38,7 @@
  
  Create the state vector containing all states:
  
- @code x = [ state1 state2 state3 ]; @endcode
+ @code model.sym.x = [ state1 state2 state3 ]; @endcode
  
  @subsection parameters Parameters
  
@@ -49,7 +49,7 @@
  
  Create the parameters vector
  
- @code p = [ param1 param2 param3 param4 param5 param6 ]; @endcode
+ @code model.sym.p = [ param1 param2 param3 param4 param5 param6 ]; @endcode
  
  @subsection constants Constants
  
@@ -60,7 +60,7 @@
  
  Create the parameters vector
  
- @code k = [ const1 const2 ]; @endcode
+ @code model.sym.k = [ const1 const2 ]; @endcode
  
  @subsection rhs Differential Equation
  
@@ -71,17 +71,17 @@
  Specify the right hand side of the differential equation f or xdot
  
  @code
- xdot(1) = [ const1 - param1*state1 ];
- xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
- xdot(3) = [ param4*state2 ];
+ model.syms.xdot(1) = [ const1 - param1*state1 ];
+ model.syms.xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ model.syms.xdot(3) = [ param4*state2 ];
  @endcode
  
  or
  
  @code
- f(1) = [ const1 - param1*state1 ];
- f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
- f(3) = [ param4*state2 ];
+ model.syms.f(1) = [ const1 - param1*state1 ];
+ model.syms.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+ model.syms.f(3) = [ param4*state2 ];
  @endcode
  
  The specification of f or xdot may depend on @ref states, @ref parameters and @ref constants.
@@ -89,7 +89,7 @@
  For DAEs also specify the mass matrix.
  
  @code
- M = [1, 0, 0;...
+ model.syms.M = [1, 0, 0;...
  0, 1, 0;...
  0, 0, 0];
  @endcode
@@ -107,15 +107,15 @@
  
  Specify the initial conditions. These may depend on @ref parameters on @ref constants and must have the same size as x.
  
- @code x0 = [ param4, 0, 0 ]; @endcode
+ @code model.syms.x0 = [ param4, 0, 0 ]; @endcode
  
  @subsection observables Observables
  
  Specify the observables. These may depend on @ref parameters and @ref constants.
  
  @code
- y(1) = state1 + state2;
- y(2) = state3 - state2;
+ model.syms.y(1) = state1 + state2;
+ model.syms.y(2) = state3 - state2;
  @endcode
  
  In the definition of the observable you can use certain symbolic functions. For a full list of available functions see symbolic_functions.c.
@@ -125,7 +125,7 @@
  
  Specifying events is optional. Events are specified in terms of a trigger function, a bolus fuction and an output function. The roots of the trigger function defines the occurences of the event. The bolus function defines the change in the state on event occurences. The output function defines the expression which is evaluated and reported by the simulation routine on every event occurence. The user can create events by constructing a vector of objects of the class @ref amievent.
  
- @code event(1) = amievent(state1 - state2,0,[]); @endcode
+ @code model.syms.event(1) = amievent(state1 - state2,0,[]); @endcode
  
  Events may depend on @ref states, @ref parameters and @ref constants but <b>not</b> on @ref observables
  
@@ -135,33 +135,17 @@
  
  Standard deviaton for observable data is denoted by sigma_y
  
- @code sigma_y(1) = param5; @endcode
+ @code model.syms.sigma_y(1) = param5; @endcode
  
  Standard deviaton for event data is denoted by sigma_y
  
- @code sigma_t(1) = param6; @endcode
+ @code model.syms.sigma_t(1) = param6; @endcode
  
  Both sigma_y and sigma_t can either be a scalar or of the same dimension as the @ref observables / @ref events function.
  They can depend on time and @ref parameters but must not depend on the @ref states or @ref observables. The values provided in sigma_y and sigma_t will only be used if the value in Sigma_Y or Sigma_T in the user-provided data struct is NaN. See @ref simulation for details.
  
- @subsection attach Attach to Model Struct
+ @subsection objective_function Standard Deviation
  
- Eventually all symbolic expressions need to be attached to the model struct.
- 
- @code
- model.sym.x = x;
- model.sym.k = k;
- model.sym.event = event;
- model.sym.xdot = xdot;
- % or
- model.sym.f = f;
- model.sym.M = M; %only for DAEs
- model.sym.p = p;
- model.sym.x0 = x0;
- model.sym.y = y;
- model.sym.sigma_y = sigma_y;
- model.sym.sigma_t = sigma_t;
- @endcode
  
  @section compilation Model Compilation
  
@@ -186,7 +170,7 @@
  
  @sa amiwrap()
  
- @section simulation Model Simulation
+ @section simulation Model Simulation (MATLAB)
  
  After the call to amiwrap() two files will be placed in the specified directory. One is a am_<i>modelname</i>.mex and the other is simulate_<i>modelname</i>.m. The mex file should never be called directly. Instead the MATLAB script, which acts as a wrapper around the .mex simulation file should be used.
  
