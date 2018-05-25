@@ -11,15 +11,20 @@ switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 1: {
-  stau[0] = sx[0]/(p[4]*x[0]-h[1]*p[3]*x[0]);
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 2: {
+
+        } break;
+
+        case 3: {
 
         } break;
 
@@ -30,15 +35,20 @@ switch (ip) {
   case 1: {
     switch(ie) { 
         case 0: {
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 1: {
-  stau[0] = sx[0]/(p[4]*x[0]-h[1]*p[3]*x[0]);
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 2: {
+
+        } break;
+
+        case 3: {
 
         } break;
 
@@ -49,16 +59,21 @@ switch (ip) {
   case 2: {
     switch(ie) { 
         case 0: {
-  stau[0] = 1.0;
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 1: {
-  stau[0] = sx[0]/(p[4]*x[0]-h[1]*p[3]*x[0]);
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 2: {
+  stau[0] = 1.0;
+
+        } break;
+
+        case 3: {
   stau[0] = 1.0;
 
         } break;
@@ -70,15 +85,20 @@ switch (ip) {
   case 3: {
     switch(ie) { 
         case 0: {
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 1: {
-  stau[0] = sx[0]/(p[4]*x[0]-h[1]*p[3]*x[0]);
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 2: {
+
+        } break;
+
+        case 3: {
 
         } break;
 
@@ -89,15 +109,20 @@ switch (ip) {
   case 4: {
     switch(ie) { 
         case 0: {
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 1: {
-  stau[0] = sx[0]/(p[4]*x[0]-h[1]*p[3]*x[0]);
+  stau[0] = sx[0]/(p[4]*x[0]+p[3]*x[0]*(h[0]-1.0));
 
         } break;
 
         case 2: {
+
+        } break;
+
+        case 3: {
 
         } break;
 

@@ -25,6 +25,11 @@ switch (ip) {
 
               } break;
 
+              case 3: {
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+
+              } break;
+
               } 
 
   } break;
@@ -32,7 +37,7 @@ switch (ip) {
   case 1: {
               switch(ie) { 
               case 0: {
-  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0])+1.0;
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
 
               } break;
 
@@ -42,6 +47,11 @@ switch (ip) {
               } break;
 
               case 2: {
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0])+1.0;
+
+              } break;
+
+              case 3: {
   deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0])+1.0;
 
               } break;
@@ -67,6 +77,11 @@ switch (ip) {
 
               } break;
 
+              case 3: {
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+
+              } break;
+
               } 
 
   } break;
@@ -88,6 +103,11 @@ switch (ip) {
 
               } break;
 
+              case 3: {
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+
+              } break;
+
               } 
 
   } break;
@@ -105,6 +125,11 @@ switch (ip) {
               } break;
 
               case 2: {
+  deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
+
+              } break;
+
+              case 3: {
   deltasx[0] = -stau[0]*(xdot[0]-xdot_old[0]);
 
               } break;
