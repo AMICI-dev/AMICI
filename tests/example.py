@@ -50,11 +50,9 @@ class AmiciExample:
             'maxsteps' : 1e4,
             'newton_maxlinsteps': 100,
             'newton_maxsteps' : 40,
-            # newton_precon ununsed
             'newton_preeq' : 0,
             'nmaxevent' : 10,
             'ordering' : 0,
-            # 'qpositivex'
             'rtol' : 1e-8,
             'sens_ind' : [],
             'sensi': 0,
