@@ -6,11 +6,6 @@
 AMICI_PATH="`dirname \"$0\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
-# read environment variables put there by build script
-if [ -f ${AMICI_PATH}/scripts/env.sh ]; then
-    . ${AMICI_PATH}/scripts/env.sh
-fi
-
 cd ${AMICI_PATH}
 
 cppcheck -i${AMICI_PATH}/src/doc ${AMICI_PATH}/src 2> cppcheck.txt
