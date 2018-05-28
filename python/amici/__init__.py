@@ -14,8 +14,7 @@ import modelName
 help(modelName)
 ```
 
-Attributes:
------------
+Instance Attributes:
     amici_path: absolute root path of the amici repository
     amiciSwigPath: absolute path of the amici swig directory
     amiciSrcPath: absolute path of the amici source directory

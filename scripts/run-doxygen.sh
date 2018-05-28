@@ -23,6 +23,11 @@ if [ ! -d "mtocpp-master" ]; then
     fi
 fi
 
+# make py_filter available
+PATH=${AMICI_PATH}/scripts:$PATH
+
+echo $PATH
+
 cd ${AMICI_PATH}
 MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
 # generate filter
@@ -54,13 +59,19 @@ cp ${MTOC_CONFIG_PATH}/latexextras.template ${MTOC_CONFIG_PATH}/latexextras.sty
 sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${MTOC_CONFIG_PATH}/latexextras.sty
 
 doxygen "${DOXYFILE}"
-doxygen "${DOXYFILE}"
-
 
 #cleanup
 #rm ${AMICI_PATH}/mtoc/config/latexextras.sty
 rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
+
+cd ${AMICI_PATH}/doc/latex
+{
+make
+mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
+} || {
+    print "skipping tex compilation"
+}
 
 # check if warnings log was created
 if [ -f ${DOXY_WARNING_FILE}  ]; then
@@ -77,8 +88,5 @@ else
     exit 1
 fi
 
-#$AMICI_PATH/ThirdParty/mtocpp-master/build/mtocpp_post "$AMICI_PATH/doc"
 
-#cd ${AMICI_PATH}/doc/latex
-#make
-#mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
+

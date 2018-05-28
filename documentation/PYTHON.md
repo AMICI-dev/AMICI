@@ -13,7 +13,7 @@ First, import an sbml file using the `SbmlImporter` class:
     import amici
     sbmlImporter = amici.SbmlImporter('model_steadystate_scaled.sbml')
     
-the sbml document as imported by [libsbml](url) is available as 
+the sbml document as imported by [libSBML](http://sbml.org/Software/libSBML) is available as 
 
     sbml = sbmlImporter.sbml
 
