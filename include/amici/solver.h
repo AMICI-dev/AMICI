@@ -55,7 +55,6 @@ class Solver {
         newton_maxsteps = other.newton_maxsteps;
         newton_maxlinsteps = other.newton_maxlinsteps;
         newton_preeq = other.newton_preeq;
-        newton_precon = other.newton_precon;
         ism = other.ism;
         sensi_meth = other.sensi_meth;
         linsol = other.linsol;
@@ -285,23 +284,6 @@ class Solver {
         this->newton_preeq = newton_preeq;
     }
 
-    /**
-     * @brief getNewtonPreconditioner
-     * @return
-     */
-    int getNewtonPreconditioner() const {
-        return newton_precon;
-    }
-
-    /**
-     * @brief setNewtonPreconditioner
-     * @param newton_precon
-     */
-    void setNewtonPreconditioner(int newton_precon) {
-        if(newton_precon != 1)
-            throw AmiException("Only preconditioner 1 is supported.");
-        this->newton_precon = newton_precon;
-    }
 
     /**
      * @brief getNewtonMaxLinearSteps
@@ -1112,10 +1094,6 @@ private:
 
     /** Preequilibration of model via Newton solver? */
     bool newton_preeq = false;
-
-    /** Which preconditioner is to be used in the case of iterative linear
-     * Newton solvers */
-    int newton_precon = 1;
 
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */

@@ -425,10 +425,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
         solver.setNewtonPreequilibration(getIntScalarAttribute(file, datasetPath, "newton_preeq"));
     }
 
-    if(attributeExists(file, datasetPath, "newton_precon")) {
-        solver.setNewtonPreconditioner(getIntScalarAttribute(file, datasetPath, "newton_precon"));
-    }
-
     if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
         solver.setNewtonMaxLinearSteps(getIntScalarAttribute(file, datasetPath, "newton_maxlinsteps"));
     }
@@ -473,11 +469,6 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(attributeExists(file, datasetPath, "nmaxevent")) {
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent"));
-    }
-
-    if(locationExists(file, datasetPath + "/qpositivex")) {
-        auto qPosX = getIntDataset1D(file, datasetPath + "/qpositivex");
-        model.setPositivityFlag(qPosX);
     }
 
     if(locationExists(file, datasetPath + "/theta")) {

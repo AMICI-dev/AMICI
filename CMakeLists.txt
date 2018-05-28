@@ -145,13 +145,24 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
     DESTINATION share/Amici/cmake )
 # Register package
-export(PACKAGE Amici)
+
+option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
+if(EXPORT_PACKAGE)
+    export(PACKAGE Amici)
+endif()
 # </Export cmake configuration>
 
 
 # build interfaces for other languages
-add_subdirectory(swig)
-add_subdirectory(python)
+option(ENABLE_SWIG "Build AMICI swig library?" ON)
+if(ENABLE_SWIG)
+    add_subdirectory(swig)
+endif()
+
+option(ENABLE_PYTHON "Create Python module?" ON)
+if(ENABLE_PYTHON)
+    add_subdirectory(python)
+endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
 if(BUILD_TESTS)

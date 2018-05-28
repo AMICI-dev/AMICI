@@ -1,7 +1,5 @@
-.language: cpp
+language: generic
 sudo: false
-
-dist: trusty
 
 branches:
   only:
@@ -10,7 +8,8 @@ branches:
 
 matrix:
   include: 
-    - os: linux  
+    - os: linux
+      dist: xenial
       compiler: gcc
       addons:
         apt:
@@ -32,15 +31,17 @@ matrix:
       after_success: 
         - ./scripts/run-coveralls.sh
     - os: osx
+      osx_image: xcode9.3
       compiler: clang
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
-        - (brew install gcc || brew link --overwrite gcc) # fix linker warning regarding /usr/local/include/c++
+        - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig
         - brew upgrade python
         
 install:
     # Python distutils only looks for `swig` and does not find `swig3.0`
+    - export BASE_DIR=`pwd`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
@@ -53,7 +54,7 @@ install:
 script:  
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
-    - ./scripts/run-python_unittest.sh
+    - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
