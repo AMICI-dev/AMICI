@@ -51,9 +51,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         x0 = double.empty();
         % custom initial sensitivity
         sx0 = double.empty();
-        % newton solver: preconditioning method
-        % (0 = none, 1 = diagonal, 2 = incomplete LU)
-        newton_precon = 1;
         % newton solver: maximum newton steps
         newton_maxsteps = 40;
         % newton solver: maximum linear steps
@@ -238,14 +235,7 @@ classdef amioption < matlab.mixin.CustomDisplay
             end
             this.pscale = value;
         end
-        
-        function this = set.newton_precon(this,value)
-            assert(isnumeric(value),'The option newton_precon must have a numeric value!')
-            assert(floor(value)==value,'The option newton_precon must be an integer!')
-            assert(value<=2,'Only 0, 1, and 2 are valid options for ns_precon!')
-            this.newton_precon = value;
-        end
-        
+                
         function this = set.newton_maxsteps(this,value)
             assert(isnumeric(value),'The option newtons_maxsteps must have a numeric value!')
             assert(floor(value)==value,'The option newton_maxsteps must be an integer!')
@@ -261,8 +251,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         function this = set.newton_preeq(this,value)
             if(isnumeric(value))
                 assert(floor(value)==value,'The option newton_preeq must be a logical!')
-                assert(value<=1,'Only 0 and 1 are valid options for preequil!')
-                assert(value>=0,'Only 0 and 1 are valid options for preequil!')
+                assert(value<=1,'Only 0 and 1 are valid options for newton_preeq!')
+                assert(value>=0,'Only 0 and 1 are valid options for newton_preeq!')
             else
                 assert(islogical(value),'The option newton_preeq must have a logical value!')
             end

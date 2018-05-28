@@ -363,10 +363,6 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
             solver.setNewtonPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
         }
 
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon")) {
-            solver.setNewtonPreconditioner(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_precon"))));
-        }
-
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
             solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
         }
