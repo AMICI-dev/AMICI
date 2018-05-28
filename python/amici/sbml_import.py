@@ -185,6 +185,7 @@ class SbmlImporter:
         """Parse the provided SBML file.
         
         Arguments:
+            SBMLFile: path to SBML file
 
         Returns:
 
@@ -377,7 +378,7 @@ class SbmlImporter:
         """Get parameter information from SBML model.
         
         Arguments:
-
+            constantParameters: list of SBML Ids identifying constant parameters
         Returns:
 
         Raises:
@@ -630,7 +631,7 @@ class SbmlImporter:
         """Create sparse symbolic matrix.
         
         Arguments:
-            symbolName:
+            symbolName: name of the function
         
         Returns:
             sparseMatrix: sparse matrix containing symbolic entries
