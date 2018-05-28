@@ -69,7 +69,7 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
 }
 
 
-void createGroup(H5::H5File &file,
+void createGroup(H5::H5File const& file,
                  std::string const& groupPath,
                  bool recursively) {
 
@@ -122,7 +122,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     return edata;
 }
 
-void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::string &hdf5Location)
+void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)
 {
 
     if(!locationExists(file, hdf5Location))
@@ -200,7 +200,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File &file, const std::strin
 }
 
 void writeReturnDataDiagnosis(const ReturnData &rdata,
-                              H5::H5File& file,
+                              H5::H5File const& file,
                               const std::string& hdf5Location) {
 
     if(!locationExists(file, hdf5Location))
@@ -302,7 +302,7 @@ int getIntScalarAttribute(H5::H5File const& file,
 }
 
 
-void createAndWriteInt1DDataset(H5::H5File& file,
+void createAndWriteInt1DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const int *buffer, hsize_t m) {
     H5::DataSpace dataspace(1, &m);
@@ -310,13 +310,13 @@ void createAndWriteInt1DDataset(H5::H5File& file,
     dataset.write(buffer, H5::PredType::NATIVE_INT);
 }
 
-void createAndWriteInt1DDataset(H5::H5File& file,
+void createAndWriteInt1DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                 std::vector<int> const& buffer) {
     createAndWriteInt1DDataset(file, datasetName, buffer.data(), buffer.size());
 }
 
-void createAndWriteDouble1DDataset(H5::H5File& file,
+void createAndWriteDouble1DDataset(const H5::H5File &file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m) {
     H5::DataSpace dataspace(1, &m);
@@ -324,7 +324,7 @@ void createAndWriteDouble1DDataset(H5::H5File& file,
     dataset.write(buffer, H5::PredType::NATIVE_DOUBLE);
 }
 
-void createAndWriteDouble2DDataset(H5::H5File& file,
+void createAndWriteDouble2DDataset(const H5::H5File &file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n) {
@@ -334,7 +334,7 @@ void createAndWriteDouble2DDataset(H5::H5File& file,
     dataset.write(buffer, H5::PredType::NATIVE_DOUBLE);
 }
 
-void createAndWriteInt2DDataset(H5::H5File& file,
+void createAndWriteInt2DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const int *buffer, hsize_t m,
                                      hsize_t n) {
@@ -344,7 +344,7 @@ void createAndWriteInt2DDataset(H5::H5File& file,
     dataset.write(buffer, H5::PredType::NATIVE_INT);
 }
 
-void createAndWriteDouble3DDataset(H5::H5File& file,
+void createAndWriteDouble3DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n, hsize_t o) {
