@@ -1,7 +1,16 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
+#include <cmath>
 
 namespace amici {
+
+#define _USE_MATH_DEFINES
+#ifndef M_PI
+constexpr double pi = M_PI;
+#else
+/** MS definition of PI and other constants */
+constexpr double pi = 3.14159265358979323846;
+#endif
 
 // clang-format off
 

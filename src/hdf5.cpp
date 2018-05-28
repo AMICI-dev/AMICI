@@ -475,11 +475,6 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent"));
     }
 
-    if(locationExists(file, datasetPath + "/qpositivex")) {
-        auto qPosX = getIntDataset1D(file, datasetPath + "/qpositivex");
-        model.setPositivityFlag(qPosX);
-    }
-
     if(locationExists(file, datasetPath + "/theta")) {
         model.setParameters(getDoubleDataset1D(file, datasetPath + "/theta"));
     }

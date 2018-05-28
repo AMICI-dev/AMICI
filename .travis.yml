@@ -35,7 +35,7 @@ matrix:
       compiler: clang
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
-        - (brew install gcc || brew link --overwrite gcc) # fix linker warning regarding /usr/local/include/c++
+        - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig
         - brew upgrade python
         
