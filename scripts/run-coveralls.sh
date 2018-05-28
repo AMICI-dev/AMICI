@@ -4,14 +4,9 @@
 AMICI_PATH="`dirname \"$0\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
-# read environment variables put there by build script
-if [ -f ${AMICI_PATH}/scripts/env.sh ]; then
-    . ${AMICI_PATH}/scripts/env.sh
-fi
-
 lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH} --zerocounters -q
 
-cd ${AMICI_PATH}/tests/cpputest/build
+cd ${AMICI_PATH}/build
 ctest -V
 rm ${AMICI_PATH}/tests/cpputest/writeResults.h5
 cd ${AMICI_PATH}
