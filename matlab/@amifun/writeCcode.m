@@ -22,7 +22,7 @@ elseif(strcmp(this.funstr,'JSparseB'))
     tmpfun = this;
     tmpfun.sym = model.fun.JB.sym(model.sparseidxB);
     tmpfun.gccode(model,fid);
-elseif(ismember(this.funstr,{'z','sz','srz'}))
+elseif(ismember(this.funstr,{'rz','z','sz','srz'}))
     if(any(nonzero))
         fprintf(fid,'    switch(ie) { \n');
         for ievent=1:nevent

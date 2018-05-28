@@ -11,6 +11,6 @@ void JSparseB_model_nested_events(SlsMat JSparseB, const realtype t, const realt
   JSparseB->indexvals[0] = 0;
   JSparseB->indexptrs[0] = 0;
   JSparseB->indexptrs[1] = 1;
-  JSparseB->data[0] = p[4]-h[1]*p[3];
+  JSparseB->data[0] = p[4]+p[3]*(h[0]-1.0);
 }
 

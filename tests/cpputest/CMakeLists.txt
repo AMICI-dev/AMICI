@@ -49,6 +49,7 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
         SOURCE_DIR        "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/"
         INSTALL_COMMAND   ""
         TEST_COMMAND      ""
+        BUILD_ALWAYS      1
         DEPENDS amici
         )
     # Rebuild if amici files are updated

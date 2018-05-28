@@ -80,7 +80,7 @@ void readModelDataFromHDF5(H5::H5File const&file, Model& model, std::string cons
   */
 
 void writeReturnData(const ReturnData &rdata,
-                     H5::H5File& file,
+                     H5::H5File const& file,
                      const std::string& hdf5Location);
 
 void writeReturnData(const ReturnData &rdata,
@@ -88,7 +88,7 @@ void writeReturnData(const ReturnData &rdata,
                      const std::string& hdf5Location);
 
 void writeReturnDataDiagnosis(const ReturnData &rdata,
-                     H5::H5File& file,
+                     H5::H5File const& file,
                      const std::string& hdf5Location);
 
 /**
@@ -97,7 +97,7 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
  * @param groupPath
  * @param recursively
  */
-void createGroup(H5::H5File& file,
+void createGroup(const H5::H5File &file,
                  std::string const& groupPath,
                  bool recursively = true);
 
@@ -131,34 +131,34 @@ bool attributeExists(H5::H5Object const& object,
                      const std::string &attributeName);
 
 
-void createAndWriteInt1DDataset(H5::H5File& file,
+void createAndWriteInt1DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const int *buffer, hsize_t m);
 
-void createAndWriteInt1DDataset(H5::H5File& file,
+void createAndWriteInt1DDataset(H5::H5File const& file,
                                 std::string const& datasetName,
                                 std::vector<int> const& buffer);
 
-void createAndWriteInt2DDataset(H5::H5File& file,
+void createAndWriteInt2DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const int *buffer, hsize_t m,
                                      hsize_t n);
 
-void createAndWriteDouble1DDataset(H5::H5File& file,
+void createAndWriteDouble1DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m);
 
-void createAndWriteDouble2DDataset(H5::H5File& file,
+void createAndWriteDouble2DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n);
 
-void createAndWriteDouble3DDataset(H5::H5File& file,
+void createAndWriteDouble3DDataset(H5::H5File const& file,
                                      std::string const& datasetName,
                                      const double *buffer, hsize_t m,
                                      hsize_t n, hsize_t o);
 
-double getDoubleScalarAttribute(const H5::H5File &file,
+double getDoubleScalarAttribute(const H5::H5File& file,
                                 const std::string &optionsObject,
                                 const std::string &attributeName);
 

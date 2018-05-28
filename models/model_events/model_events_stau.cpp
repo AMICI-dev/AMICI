@@ -11,12 +11,12 @@ switch (ip) {
   case 0: {
     switch(ie) { 
         case 0: {
-  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = -(sx[1]-sx[2])/(h[2]+x[2]-p[2]*x[1]+p[1]*x[0]*exp(t*(-1.0/1.0E1))-1.0);
 
         } break;
 
         case 1: {
-  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
+  stau[0] = -(sx[0]-sx[2])/(h[2]+x[2]+p[0]*x[0]*(h[3]-1.0)-1.0);
 
         } break;
 
@@ -25,6 +25,14 @@ switch (ip) {
         } break;
 
         case 3: {
+
+        } break;
+
+        case 4: {
+
+        } break;
+
+        case 5: {
 
         } break;
 
@@ -35,12 +43,12 @@ switch (ip) {
   case 1: {
     switch(ie) { 
         case 0: {
-  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = -(sx[1]-sx[2])/(h[2]+x[2]-p[2]*x[1]+p[1]*x[0]*exp(t*(-1.0/1.0E1))-1.0);
 
         } break;
 
         case 1: {
-  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
+  stau[0] = -(sx[0]-sx[2])/(h[2]+x[2]+p[0]*x[0]*(h[3]-1.0)-1.0);
 
         } break;
 
@@ -49,6 +57,14 @@ switch (ip) {
         } break;
 
         case 3: {
+
+        } break;
+
+        case 4: {
+
+        } break;
+
+        case 5: {
 
         } break;
 
@@ -59,12 +75,12 @@ switch (ip) {
   case 2: {
     switch(ie) { 
         case 0: {
-  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = -(sx[1]-sx[2])/(h[2]+x[2]-p[2]*x[1]+p[1]*x[0]*exp(t*(-1.0/1.0E1))-1.0);
 
         } break;
 
         case 1: {
-  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
+  stau[0] = -(sx[0]-sx[2])/(h[2]+x[2]+p[0]*x[0]*(h[3]-1.0)-1.0);
 
         } break;
 
@@ -73,6 +89,14 @@ switch (ip) {
         } break;
 
         case 3: {
+
+        } break;
+
+        case 4: {
+
+        } break;
+
+        case 5: {
 
         } break;
 
@@ -83,12 +107,12 @@ switch (ip) {
   case 3: {
     switch(ie) { 
         case 0: {
-  stau[0] = (sx[1]-sx[2])/(h[2]-x[2]+p[2]*x[1]-p[1]*x[0]*exp(t*(-1.0/1.0E1)));
+  stau[0] = -(sx[1]-sx[2])/(h[2]+x[2]-p[2]*x[1]+p[1]*x[0]*exp(t*(-1.0/1.0E1))-1.0);
 
         } break;
 
         case 1: {
-  stau[0] = (sx[0]-sx[2])/(h[2]-x[2]+h[3]*p[0]*x[0]);
+  stau[0] = -(sx[0]-sx[2])/(h[2]+x[2]+p[0]*x[0]*(h[3]-1.0)-1.0);
 
         } break;
 
@@ -97,6 +121,15 @@ switch (ip) {
         } break;
 
         case 3: {
+  stau[0] = 1.0;
+
+        } break;
+
+        case 4: {
+
+        } break;
+
+        case 5: {
   stau[0] = 1.0;
 
         } break;

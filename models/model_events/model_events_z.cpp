@@ -26,6 +26,14 @@ void z_model_events(double *z, const int ie, const realtype t, const realtype *x
 
         } break;
 
+        case 4: {
+
+        } break;
+
+        case 5: {
+
+        } break;
+
     } 
 }
 
