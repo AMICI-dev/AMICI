@@ -7,8 +7,10 @@ The interface was designed to provide routines for efficient gradient computatio
 
 ## Current build status
 
-Linux/Mac: [![TravisCI](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
-Coverage: [![Coverage Status](https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=master)](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
+Linux/Mac: [![TravisCI][TravisBade]](https://travis-ci.org/ICB-DCM/AMICI)
+[TravisBadge]: https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master
+Coverage: [![Coverage Status]](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
+[CoverageBadge]:https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=master
 
 
 
