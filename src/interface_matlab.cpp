@@ -18,14 +18,6 @@
 #include <cstring>
 #include <memory>
 
-/** MS definition of PI and other constants */
-#define _USE_MATH_DEFINES
-#include <cmath>
-#ifndef M_PI
-/** define PI if we still have no definition */
-#define M_PI 3.14159265358979323846
-#endif
-
 namespace amici {
     
     int dbl2int(const double x);
@@ -398,14 +390,6 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             } else {
                 throw AmiException("Provided pscale has invalid dimensions!");
             }
-        }
-
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex")) {
-            mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "qpositivex");
-            int len = (int)mxGetM(a) * mxGetN(a);
-            if(mxGetM(a) != 1 && mxGetN(a) != 1)
-                throw AmiException("Provided qpositivex has invalid dimensions!");
-            model.setPositivityFlag(std::vector<int>((double *)mxGetData(a),(double *)mxGetData(a)+len));
         }
     }
 

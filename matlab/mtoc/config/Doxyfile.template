@@ -673,6 +673,7 @@ EXCLUDE                = "README.md" \
                          "src/solver_cvodes.cpp" \
                          "src/solver_idas.cpp" \
                          "src/wrapfunctions.ODE_template.h" \
+                         "src/model_header.ODE_template.h" \
                          "include/amici/solver_cvodes.h" \
                          "include/amici/solver_idas.h"
 
