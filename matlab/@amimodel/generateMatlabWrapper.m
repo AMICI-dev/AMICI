@@ -107,7 +107,6 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         '%%    .stldet   ... flag for stability limit detection. this should be turned on for stiff problems.\n'...
         '%%        0: OFF\n'...
         '%%        1: ON (DEFAULT)\n'...
-        '%%    .qPositiveX   ... vector of 0 or 1 of same dimension as state vector. 1 enforces positivity of states.\n'...
         '%%    .sensi_meth   ... method for sensitivity analysis.\n'...
         '%%        ''forward'': forward sensitivity analysis (DEFAULT)\n'...
         '%%        ''adjoint'': adjoint sensitivity analysis \n'...
@@ -266,15 +265,6 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     else
         fprintf(fid,['nxfull = ' num2str(nx) ';\n']);
     end
-    fprintf(fid,['if(isempty(options_ami.qpositivex))\n']);
-    fprintf(fid,['    options_ami.qpositivex = zeros(nxfull,1);\n']);
-    fprintf(fid,['else\n']);
-    fprintf(fid,['    if(numel(options_ami.qpositivex)>=nxfull)\n']);
-    fprintf(fid,['        options_ami.qpositivex = options_ami.qpositivex(:);\n']);
-    fprintf(fid,['    else\n']);
-    fprintf(fid,['        error([''Number of elements in options_ami.qpositivex does not match number of states '' num2str(nxfull) ]);\n']);
-    fprintf(fid,['    end\n']);
-    fprintf(fid,['end\n']);
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
     fprintf(fid,['if(nargin>=4)\n']);
     fprintf(fid,['    if(isempty(varargin{4}));\n']);

@@ -677,6 +677,7 @@ class SbmlImporter:
 
         self.writeWrapfunctionsCPP()
         self.writeWrapfunctionsHeader()
+        self.writeModelHeader()
         self.writeCMakeFile()
         self.writeSwigFiles()
         self.writeModuleSetup()
@@ -806,6 +807,12 @@ class SbmlImporter:
 
     def writeWrapfunctionsHeader(self):
         """Write model-specific header file (wrapfunctions.h)."""
+        templateData = {'MODELNAME': str(self.modelName)}
+        applyTemplate(os.path.join(amiciSrcPath, 'wrapfunctions.ODE_template.h'),
+                      os.path.join(self.modelPath, 'wrapfunctions.h'), templateData)
+
+    def writeModelHeader(self):
+        """Write model-specific header file (MODELNAME.h)."""
         templateData = {'MODELNAME': str(self.modelName),
                         'NX': str(self.n_species),
                         'NXTRUE': str(self.n_species),
@@ -826,8 +833,8 @@ class SbmlImporter:
                         'O2MODE': 'amici::AMICI_O2MODE_NONE',
                         'PARAMETERS': str(self.parameterValues)[1:-1],
                         'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1]}
-        applyTemplate(os.path.join(amiciSrcPath, 'wrapfunctions.ODE_template.h'),
-                      os.path.join(self.modelPath, 'wrapfunctions.h'), templateData)
+        applyTemplate(os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
+                      os.path.join(self.modelPath, str(self.modelName) + '.h'), templateData)
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model."""
