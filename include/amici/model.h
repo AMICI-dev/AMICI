@@ -365,7 +365,7 @@ namespace amici {
         // Generic implementations
         void fsy(const int it, ReturnData *rdata);
         
-        void fsz_tf(const int ie, ReturnData *rdata);
+        void fsz_tf(const int *nroots, const int ie, ReturnData *rdata);
         
         void fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rdata);
         

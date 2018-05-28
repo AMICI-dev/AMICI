@@ -645,12 +645,12 @@ function [this,model] = getSyms(this,model)
             this = makeStrSymsFull(this);
             
         case 'rz'
-            this.sym = zeros(size(model.fun.z.sym));
+            this.sym = sym(zeros(size(model.fun.z.sym)));
             if(isfield(model.sym,'rz'))
                 this.sym = model.sym.rz;
             else
                 for iz = 1:length(model.z2event)
-                    this.sym = model.fun.root.sym(model.z2event(iz));
+                    this.sym(iz) = model.fun.root.sym(model.z2event(iz));
                 end
             end
             this = unifySyms(this,model);
