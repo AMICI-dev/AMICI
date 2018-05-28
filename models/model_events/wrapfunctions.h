@@ -5,5 +5,4 @@
 
 std::unique_ptr<amici::Model> getModel();
 
-
 #endif /* _amici_wrapfunctions_h */
