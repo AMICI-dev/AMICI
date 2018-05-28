@@ -45,8 +45,11 @@ if($ENV{ENABLE_GCOV_COVERAGE})
 endif()
 
 ## SWIG
+option(ENABLE_SWIG "Build swig/python library?" ON)
+if(ENABLE_SWIG)
+    add_subdirectory(swig)
+endif()
 
-add_subdirectory(swig)
 
 # <Export cmake configuration>
 include(GNUInstallDirs)
