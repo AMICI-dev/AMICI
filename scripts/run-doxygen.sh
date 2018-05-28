@@ -4,11 +4,6 @@
 AMICI_PATH="`dirname \"$0\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
-# read environment variables put there by build script
-if [ -f ${AMICI_PATH}/scripts/env.sh ]; then
-    . ${AMICI_PATH}/scripts/env.sh
-fi
-
 # build mtocpp
 cd ${AMICI_PATH}/ThirdParty
 if [ ! -d "mtocpp-master" ]; then

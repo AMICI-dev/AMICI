@@ -425,10 +425,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
         solver.setNewtonPreequilibration(getIntScalarAttribute(file, datasetPath, "newton_preeq"));
     }
 
-    if(attributeExists(file, datasetPath, "newton_precon")) {
-        solver.setNewtonPreconditioner(getIntScalarAttribute(file, datasetPath, "newton_precon"));
-    }
-
     if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
         solver.setNewtonMaxLinearSteps(getIntScalarAttribute(file, datasetPath, "newton_maxlinsteps"));
     }

@@ -41,6 +41,7 @@ matrix:
         
 install:
     # Python distutils only looks for `swig` and does not find `swig3.0`
+    - export BASE_DIR=`pwd`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
@@ -53,7 +54,7 @@ install:
 script:  
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
-    - ./scripts/run-python_unittest.sh
+    - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
