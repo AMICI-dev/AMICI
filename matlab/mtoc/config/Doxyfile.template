@@ -1774,7 +1774,15 @@ HAVE_DOT               = _HaveDot_
 EXTENSION_MAPPING = .m=C++
 
 # input is configured by MatlabDocMaker
-INPUT             = "_SourceDir_" "_ConfDir_"
+INPUT             = "_SourceDir_/README.md"
+INPUT            += "_SourceDir_/LICENSE.md"
+INPUT            += "_SourceDir_/CONTRIBUTING.md"
+INPUT            += "_SourceDir_/INSTALL.md"
+INPUT            += "_SourceDir_/documentation/PYTHON.md"
+INPUT            += "_SourceDir_/documentation/MATLAB.md"
+INPUT            += "_SourceDir_/documentation/CPP.md"
+INPUT            += "_SourceDir_/documentation/FAQ.md"
+INPUT            += "_SourceDir_"
 
 # doxygen bothers to look at .m files at all
 FILE_PATTERNS     = *.m \

@@ -20,12 +20,12 @@ Set the options by specifying the respective field of the modelstruct
 
 The options specify default options for simulation, parametrisation and compilation. All of these options are optional.
 
-| field            | description                                                          | default
-|------------|-----------------------------------------------|---------
-| .param      | default parametrisation 'log'/'log10'/'lin' | 'lin'
-| .debug      | flag to compile with debug symbols             | false
-| .forward    | flag to activate forward sensitivities        | true
-| .adjoint     | flag to activate adjoint sensitivities        | true
+| field            | description                                               | default
+|--------------|-----------------------------------------------|---------
+| .param       | default parametrisation 'log'/'log10'/'lin' | 'lin'
+| .debug       | flag to compile with debug symbols        | false
+| .forward     | flag to activate forward sensitivities         | true
+| .adjoint      | flag to activate adjoint sensitivities           | true
 
 When set to false, the fields 'forward' and 'adjoint' will speed up the time required to compile the model but also disable the respective sensitivity computation.
 
@@ -79,7 +79,7 @@ or
     model.syms.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
     model.syms.f(3) = [ param4*state2 ];
 
-The specification of `f` or `xdot` may depend on {##states}, {##Parameters} and {##Constants}.
+The specification of `f` or `xdot` may depend on states, parameters and constants.
 
 For DAEs also specify the mass matrix.
 
@@ -98,13 +98,13 @@ Dirac functions can be used to cause a jump in the respective states at the spec
 
 ### Initial Conditions
 
-Specify the initial conditions. These may depend on {##Parameters} on {##Constants} and must have the same size as `x`.
+Specify the initial conditions. These may depend on parameters on constants and must have the same size as `x`.
 
     model.syms.x0 = [ param4, 0, 0 ];
 
 ### Observables
 
-Specify the observables. These may depend on {##Parameters} and {##Constants}.
+Specify the observables. These may depend on parameters and constants.
 
     model.syms.y(1) = state1 + state2;
     model.syms.y(2) = state3 - state2;
@@ -118,11 +118,11 @@ Specifying events is optional. Events are specified in terms of a trigger functi
 
     model.syms.event(1) = amievent(state1 - state2,0,[]);
 
-Events may depend on {##states}, {##Parameters} and {##Constants} but __not__ on {##Observables}
+Events may depend on states, parameters and constants but __not__ on observables
 
 ### Standard Deviation
 
-Specifying of standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for {##Observables} and {##Events}.
+Specifying of standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for observables and events.
 
 Standard deviaton for observable data is denoted by sigma_y
 
@@ -132,8 +132,8 @@ Standard deviaton for event data is denoted by sigma_t
 
     model.syms.sigma_t(1) = param6;
 
-Both `sigma_y` and `sigma_t` can either be a scalar or of the same dimension as the {##Observables} / {##Events} function.
-They can depend on time and {##Parameters} but must not depend on the {##states} or {##Observables}. The values provided in `sigma_y` and `sigma_t` will only be used if the value in `D.Sigma_Y` or `D.Sigma_T` in the user-provided data struct is `NaN`. See {##Simulation} for details.
+Both `sigma_y` and `sigma_t` can either be a scalar or of the same dimension as the observables / events function.
+They can depend on time and parameters but must not depend on the states or observables. The values provided in `sigma_y` and `sigma_t` will only be used if the value in `D.Sigma_Y` or `D.Sigma_T` in the user-provided data struct is `NaN`. See simulation for details.
 
 ### Objective Function
 
