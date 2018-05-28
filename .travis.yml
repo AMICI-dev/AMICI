@@ -54,7 +54,7 @@ install:
 script:  
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
-    - cd $BASE_DIR/build && ./scripts/run-python_unittest.sh && cd $BASE_DIR
+    - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
 
