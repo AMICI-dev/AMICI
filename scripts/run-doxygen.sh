@@ -60,13 +60,9 @@ doxygen "${DOXYFILE}"
 rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
-if ! [[ -z "${TRAVIS_OS_NAME}" ]]; then
-    cd ${AMICI_PATH}/doc
-    #pdflatex _formulas.tex
-    #cd tex
-    #make
-    #mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
-fi
+cd ${AMICI_PATH}/doc/latex
+make
+mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 
 # check if warnings log was created
