@@ -186,7 +186,7 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
     
     double *array = initAndAttachArray(matlabStruct, fieldName, dim);
     
-    array[0] = static_cast<double>(fielddata);
+    array[0] = static_cast<double>(fieldData);
 }
 
 template<typename T>
