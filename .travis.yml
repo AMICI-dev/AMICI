@@ -14,7 +14,7 @@ matrix:
       addons:
         apt:
           packages:
-            - libhdf5-serial-dev
+            - libhdf5-dev
             - zlib1g-dev
             - libatlas-base-dev
             - valgrind
