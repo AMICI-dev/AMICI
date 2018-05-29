@@ -13,6 +13,7 @@ matrix:
       compiler: gcc
       addons:
         apt:
+          update: true
           packages:
             - libhdf5-dev
             - libhdf5-cpp-100 
