@@ -39,7 +39,7 @@ standard deviations can be specified as dictionaries ...
 
 ## Model Compilation
 
-to compile the sbml as python module, the user has to call the `amici.sbml_import.SbmlImporter` method `amici.sbml_import.SbmlImporter.sbml2amici`, passing all the previously defined model specifications
+to compile the sbml as python module, the user has to call the method `amici.sbml_import.SbmlImporter.sbml2amici`, passing all the previously defined model specifications
 
     sbmlImporter.sbml2amici('test', 'test', 
                             observables=observables,
@@ -62,7 +62,7 @@ to obtain a model instance call the `getModel()` method. This model instance wil
 
     model = modelModule.getModel()
 
-then pass the simulation timepoints as `amici.DoubleVector` to `Model.setTimepoints`
+then pass the simulation timepoints as `amici.DoubleVector` to `amici.Model.setTimepoints`
 
     model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
     

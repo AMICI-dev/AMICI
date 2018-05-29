@@ -3,7 +3,7 @@
 The @ref python_interface and @ref matlab_interface can translate the model definition into C++ code, which is then compiled into a .mex file or a python module. Advanced users can also use this code within stand-alone C/C++ application for use in other environments (e.g. on high performance computing systems). This section will give a short overview over the generated files and provide a brief introduction of how this code can be included in other applications.
 
 ## Generated model files
-amiwrap.m usually write the model source files to ${AMICI_ROOT_DIR}/models/${MODEL_NAME} by default. 
+`amiwrap.m` and `amici.SbmlImporter.sbml2amici` write the model source files to ${AMICI_ROOT_DIR}/models/${MODEL_NAME} by default. 
 The content of a model source directory might look something like this (given `MODEL_NAME=model_steadystate`): 
 
 ```
@@ -17,8 +17,6 @@ wrapfunctions.cpp
 wrapfunctions.h 
 model_steadystate.h 
 ```
-
-Only `*.cpp` and `*.h` files will be needed for the model; `*.o` and `*.md5` are not required. 
 
 ## Running a simulation
 
