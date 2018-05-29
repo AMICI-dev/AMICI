@@ -60,7 +60,7 @@ doxygen "${DOXYFILE}"
 rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
-if ! [[ -z "${TRAVIS}" ]]; then
+if ! [[ -z "${TRAVIS_OS_NAME}" ]]; then
     cd ${AMICI_PATH}/doc/latex
     make
     mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
