@@ -60,13 +60,12 @@ doxygen "${DOXYFILE}"
 rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
-cd ${AMICI_PATH}/doc/latex
-{
-make
-mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
-} || {
-    print "skipping tex compilation"
-}
+if ! [[ -z "${TRAVIS}" ]]; then
+    cd ${AMICI_PATH}/doc/latex
+    make
+    mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
+fi
+
 
 # check if warnings log was created
 if [ -f ${DOXY_WARNING_FILE}  ]; then
