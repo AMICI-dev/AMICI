@@ -1775,6 +1775,7 @@ EXTENSION_MAPPING = .m=C++
 
 # input is configured by MatlabDocMaker
 INPUT             = "_SourceDir_/README.md"
+USE_MDFILE_AS_MAINPAGE = "_SourceDir_/README.md"
 INPUT            += "_SourceDir_/LICENSE.md"
 INPUT            += "_SourceDir_/CONTRIBUTING.md"
 INPUT            += "_SourceDir_/INSTALL.md"
