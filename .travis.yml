@@ -9,7 +9,7 @@ branches:
 matrix:
   include: 
     - os: linux
-      dist: artful
+      dist: xenial
       compiler: gcc
 #      addons:
 #        apt:
@@ -31,6 +31,7 @@ matrix:
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
+        - sudo add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu/ artful main universe"
         - sudo apt-get update
         - sudo apt-get install libhdf5-dev libhdf5-cpp-100 libhdf5-100 zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
       after_success: 
