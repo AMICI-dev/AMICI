@@ -159,6 +159,14 @@ namespace amici {
 
 template <typename T>
 char *serializeToChar(T const& data, int *size) {
+    /**
+     * @brief Serialize object to char array
+     *
+     * @param data input object
+     * @param size maximum char length
+
+     * @return The object serialized as char
+     */
     std::string serialized;
     ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
@@ -176,15 +184,18 @@ char *serializeToChar(T const& data, int *size) {
     return charBuffer;
 }
 
-/**
- * @brief Deserialize object that has been serialized using serializeToChar
- * @param buffer
- * @param size
- * @return The deserialized object
- */
+
 
 template <typename T>
 T deserializeFromChar(const char *buffer, int size) {
+    /**
+     * @brief Deserialize object that has been serialized using serializeToChar
+     *
+     * @param buffer serialized object
+     * @param size length of buffer
+     *
+     * @return The deserialized object
+     */
     ::boost::iostreams::basic_array_source<char> device(buffer, size);
     ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
         device);
@@ -198,6 +209,13 @@ T deserializeFromChar(const char *buffer, int size) {
 
 template <typename T>
 std::string serializeToString(T const& data) {
+    /**
+     * @brief Serialize object to string
+     *
+     * @param data input object
+
+     * @return The object serialized as string
+     */
     std::string serialized;
     ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
     ::boost::iostreams::stream<
@@ -212,6 +230,13 @@ std::string serializeToString(T const& data) {
 
 template <typename T>
 std::vector<char> serializeToStdVec(T const& data) {
+    /**
+     * @brief Serialize object to std::vector<char>
+     *
+     * @param data input object
+
+     * @return The object serialized as std::vector<char>
+     */
     std::string serialized;
     ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
@@ -227,6 +252,13 @@ std::vector<char> serializeToStdVec(T const& data) {
 
 template <typename T>
 T deserializeFromString(std::string const& serialized) {
+    /**
+     * @brief Deserialize object that has been serialized using serializeToString
+     *
+     * @param serialized serialized object
+     *
+     * @return The deserialized object
+     */
     ::boost::iostreams::basic_array_source<char> device(serialized.data(),
                                                       serialized.size());
     ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(

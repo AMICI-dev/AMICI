@@ -16,7 +16,7 @@ namespace amici {
     class IDASolver;
     
     /**
-     * @brief The Model class represents an AMICI ODE model.
+     * @brief The Model class represents an AMICI DAE model.
      * The model does not contain any data, but represents the state
      * of the model at a specific time t. The states must not always be
      * in sync, but may be updated asynchroneously. 

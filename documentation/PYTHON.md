@@ -1,4 +1,4 @@
-# Python Interface {#python}
+# Python Interface {#python_interface}
 
 In the following we will give a detailed overview how to specify models in  Python and how to call the generated simulation files.
 
@@ -8,7 +8,7 @@ This guide will guide the user on how specify models in Python using SBML. For e
 
 ### SBML input
 
-First, import an sbml file using the `SbmlImporter` class:
+First, import an sbml file using the `amici.sbml_import.SbmlImporter` class:
 
     import amici
     sbmlImporter = amici.SbmlImporter('model_steadystate_scaled.sbml')
@@ -39,7 +39,7 @@ standard deviations can be specified as dictionaries ...
 
 ## Model Compilation
 
-to compile the sbml as python module, the user has to call the `SbmlImporter` method `sbml2amici`, passing all the previously defined model specifications
+to compile the sbml as python module, the user has to call the `amici.sbml_import.SbmlImporter` method `amici.sbml_import.SbmlImporter.sbml2amici`, passing all the previously defined model specifications
 
     sbmlImporter.sbml2amici('test', 'test', 
                             observables=observables,
@@ -62,7 +62,7 @@ to obtain a model instance call the `getModel()` method. This model instance wil
 
     model = modelModule.getModel()
 
-then pass the simulation timepoints as `amici.DoubleVector` to `model.setTimepoints`
+then pass the simulation timepoints as `amici.DoubleVector` to `Model.setTimepoints`
 
     model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
     
@@ -70,6 +70,6 @@ for simulation we need to generate a solver instance
 
     solver = model.getSolver()
     
-the model simulation can now be carried out using 
+the model simulation can now be carried out using `amici.runAmiciSimulation`
     
     rdata = amici.runAmiciSimulation(model, solver)

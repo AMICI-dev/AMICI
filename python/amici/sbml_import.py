@@ -1,3 +1,6 @@
+""" @package amici.sbml_import The python sbml import module for python 
+
+"""
 #!/usr/bin/env python3
 
 import symengine as sp
@@ -1246,7 +1249,7 @@ def getSymbols(prefix,length):
 def getSymbolicDiagonal(matrix):
     """Get symbolic matrix with diagonal of matrix `matrix`.
     
-    Args:
+    Arguments:
         matrix: Matrix from which to return the diagonal
 
     Returns:
@@ -1263,6 +1266,17 @@ def getSymbolicDiagonal(matrix):
     return sp.DenseMatrix(diagonal)
 
 def getRuleVars(rules):
+    """Extract free symbols in SBML rule formulas.
+    
+    Argumentss:
+        rules: list of rules
+
+    Returns:
+        Vector of free symbolic variables in the formulas all provided rules
+    
+    Raises:
+
+    """
     return sp.DenseMatrix([sp.sympify(rule.getFormula()) for rule in rules if rule.getFormula() != '']).free_symbols
 
 class TemplateAmici(Template):

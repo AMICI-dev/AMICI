@@ -33,6 +33,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
 /**
  * setupReturnData initialises the return data struct
  * @param[in] plhs user input @type mxArray
+ * @param[in] nlhs number of elements in plhs @type mxArray
  * @return rdata: return data struct @type *ReturnData
  */
 ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);

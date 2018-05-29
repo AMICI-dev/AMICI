@@ -1,8 +1,8 @@
-# MATLAB Interface {#matlab}
+# MATLAB Interface {#matlab_interface}
 
 In the following we will give a detailed overview how to specify models in MATLAB and how to call the generated simulation files.
 
-## Model Definition
+## Model Definition 
 
 This guide will guide the user on how to specify models in MATLAB. For example implementations see the examples in the matlab/examples directory.
 
@@ -20,12 +20,12 @@ Set the options by specifying the respective field of the modelstruct
 
 The options specify default options for simulation, parametrisation and compilation. All of these options are optional.
 
-| field            | description                                               | default
+| field        | description                                   | default
 |--------------|-----------------------------------------------|---------
-| .param       | default parametrisation 'log'/'log10'/'lin' | 'lin'
-| .debug       | flag to compile with debug symbols        | false
-| .forward     | flag to activate forward sensitivities         | true
-| .adjoint      | flag to activate adjoint sensitivities           | true
+| .param       | default parametrisation 'log'/'log10'/'lin'   | 'lin'
+| .debug       | flag to compile with debug symbols            | false
+| .forward     | flag to activate forward sensitivities        | true
+| .adjoint     | flag to activate adjoint sensitivities        | true
 
 When set to false, the fields 'forward' and 'adjoint' will speed up the time required to compile the model but also disable the respective sensitivity computation.
 
@@ -149,7 +149,7 @@ AMICI can also import SBML models using the command `SBML2AMICI`. This will gene
 
 ## Model Compilation
 
-The model can then be compiled by calling amiwrap:
+The model can then be compiled by calling `amiwrap.m`:
 
     amiwrap(modelname,'example_model_syms',dir,o2flag)
 
@@ -202,18 +202,6 @@ The integration status will be indicated by the flag `status` . Negative values 
 
 ### Forward Sensitivities
 
-Define a time vector:
-
-    t = linspace(0,10,100)
-
-Generate a parameter vector:
-
-    theta = ones(6,1);
-
-Generate a constants vector:
-
-    kappa = ones(2,1);
-
 Set the sensitivity computation to forward sensitivities and Integrate:
 
     options.sensi = 1;
@@ -230,14 +218,6 @@ The integration status will be indicated by the status flag. Negative values ind
 
 ### Adjoint Sensitivities
 
-Define a time vector:
-
-    t = linspace(0,10,100)
-
-Generate a parameter vector:
-
-    theta = ones(6,1);
-
 Set the sensitivity computation to adjoint sensitivities:
 
     options.sensi = 1;
@@ -250,11 +230,7 @@ Define Experimental Data:
     D.T = ones(1,1);
     D.Sigma_T = NaN;
 
-The `NaN` values in `Sigma_Y` and `Sigma_T` will be replaced by the specification in {## standard deviation}. Data points with `NaN` value will be completely ignored.
-
-Generate a constants vector:
-
-    kappa = ones(2,1);
+The `NaN` values in `Sigma_Y` and `Sigma_T` will be replaced by the specification in `model.syms.sigma_y` and `model.syms.sigma_t`. Data points with `NaN` value will be completely ignored.
 
 Integrate:
 
@@ -271,14 +247,6 @@ In the current implementation this formulation does not allow for conservation l
 Set the final timepoint as infinity, this will indicate the solver to compute the steadystate:
 
     t = Inf;
-
-Generate a parameter vector:
-
-    theta = ones(6,1);
-
-Generate a constants vector:
-
-    kappa = ones(2,1);
 
 Set the sensitivity computation to steady state sensitivities:
 
