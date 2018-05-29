@@ -37,13 +37,11 @@ For a list of supported compilers we refer to the mathworks documentation: [math
 
 ###  Python
 
-To use AMICI from Python, run the  
+To use AMICI from Python, install the module using pip  
 
-    ./scripts/buildSundials.sh
-    ./scripts/buildSuitesparse.sh
-    ./scripts/buildAmici.sh
+    pip3 install amici
     
-scripts to compile amici and generate the python module. After successful execution of the script, amici is available as system wide module and can be imported via
+You can now import it as python module:
 
     import amici
 
