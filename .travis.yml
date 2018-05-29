@@ -11,29 +11,29 @@ matrix:
     - os: linux
       dist: xenial
       compiler: gcc
-#      addons:
-#        apt:
-#          update: true
-#          packages:
-#            - libhdf5-dev
-#            - libhdf5-cpp-100 
-#            - libhdf5-100
-#            - zlib1g-dev
-#            - libatlas-base-dev
-#            - valgrind
-#            - lcov
-#            - graphviz
-#            - doxygen
-#            - doxygen-latex
-#            - cppcheck
-#            - swig3.0
-#            - libboost-serialization-dev
+      addons:
+        apt:
+          update: true
+          packages:
+            - libhdf5-dev
+            - libhdf5-cpp-100 
+            - libhdf5-100
+            - zlib1g-dev
+            - libatlas-base-dev
+            - valgrind
+            - lcov
+            - graphviz
+            - doxygen
+            - doxygen-latex
+            - cppcheck
+            - swig3.0
+            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
-        - sudo add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu/ artful main universe"
-        - sudo apt-get update
-        - sudo apt-get install libhdf5-dev libhdf5-cpp-100 libhdf5-100 zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
+#        - sudo add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu/ artful main universe"
+#        - sudo apt-get update
+#        - sudo apt-get install libhdf5-dev libhdf5-cpp-100 libhdf5-100 zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
       after_success: 
         - ./scripts/run-coveralls.sh
     - os: osx
@@ -62,7 +62,7 @@ script:
     - ./scripts/run-cppcheck.sh
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
 
 after_failure:
     - ls -alR
