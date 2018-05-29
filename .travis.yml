@@ -1,5 +1,5 @@
 language: generic
-sudo: false
+sudo: true
 
 branches:
   only:
@@ -11,26 +11,27 @@ matrix:
     - os: linux
       dist: ubuntu-artful
       compiler: gcc
-      addons:
-        apt:
-          update: true
-          packages:
-            - libhdf5-dev
-            - libhdf5-cpp-100 
-            - libhdf5-100
-            - zlib1g-dev
-            - libatlas-base-dev
-            - valgrind
-            - lcov
-            - graphviz
-            - doxygen
-            - doxygen-latex
-            - cppcheck
-            - swig3.0
-            - libboost-serialization-dev
+#      addons:
+#        apt:
+#          update: true
+#          packages:
+#            - libhdf5-dev
+#            - libhdf5-cpp-100 
+#            - libhdf5-100
+#            - zlib1g-dev
+#            - libatlas-base-dev
+#            - valgrind
+#            - lcov
+#            - graphviz
+#            - doxygen
+#            - doxygen-latex
+#            - cppcheck
+#            - swig3.0
+#            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
+        - sudo apt-get install libhdf5-dev libhdf5-cpp-100 libhdf5-100 zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
       after_success: 
         - ./scripts/run-coveralls.sh
     - os: osx
