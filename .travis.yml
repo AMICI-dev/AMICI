@@ -9,7 +9,7 @@ branches:
 matrix:
   include: 
     - os: linux
-      dist: ubuntu-artful
+      dist: artful
       compiler: gcc
 #      addons:
 #        apt:
