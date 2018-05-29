@@ -15,9 +15,7 @@ matrix:
         apt:
           update: true
           packages:
-            - libhdf5-dev
-            - libhdf5-cpp-100 
-            - libhdf5-100
+            - libhdf5-serial-dev
             - zlib1g-dev
             - libatlas-base-dev
             - valgrind
@@ -31,9 +29,6 @@ matrix:
       env: ENABLE_GCOV_COVERAGE=TRUE
       before_install: 
         - gem install coveralls-lcov
-#        - sudo add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu/ artful main universe"
-#        - sudo apt-get update
-#        - sudo apt-get install libhdf5-dev libhdf5-cpp-100 libhdf5-100 zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
       after_success: 
         - ./scripts/run-coveralls.sh
     - os: osx
@@ -42,7 +37,7 @@ matrix:
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - brew install hdf5 cppcheck swig
+        - brew install hdf5 cppcheck swig doxygen
         - brew upgrade python
         
 install:
