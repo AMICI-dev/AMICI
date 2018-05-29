@@ -1,4 +1,5 @@
-""" @package amici The AMICI Python module
+""" @package amici 
+The AMICI Python module (in doxygen this will also contain documentation about the C++ library)
 
 The AMICI Python module provides functionality for importing SBML models and turning them into C++ Python extensions.
 
