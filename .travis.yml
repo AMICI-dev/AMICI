@@ -46,6 +46,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.6/bin:$PATH
     - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
