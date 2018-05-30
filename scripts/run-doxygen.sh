@@ -53,6 +53,8 @@ sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =${DOXY_WARNING_FILE}#g" ${DO
 cp ${MTOC_CONFIG_PATH}/latexextras.template ${MTOC_CONFIG_PATH}/latexextras.sty
 sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${MTOC_CONFIG_PATH}/latexextras.sty
 
+export PATH=/Library/TeX/texbin:$PATH
+
 doxygen "${DOXYFILE}"
 
 #cleanup
@@ -62,7 +64,6 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 cd ${AMICI_PATH}/doc/latex
 
-export PATH=/Library/TeX/texbin:$PATH
 make 
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
@@ -81,6 +82,3 @@ if [ -f ${DOXY_WARNING_FILE}  ]; then
 else
     exit 1
 fi
-
-
-
