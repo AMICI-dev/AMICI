@@ -185,3 +185,5 @@ python/.idea/workspace.xml
 python/testSpeedy.py
 
 python/test.txt
+
+tests/test/*
