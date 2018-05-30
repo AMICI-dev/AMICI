@@ -13,4 +13,3 @@
 \setcounter{tocdepth}{2}
 
 %\uchyph=0
-\renewcommand{\+}{}
