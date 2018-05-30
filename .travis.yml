@@ -37,7 +37,7 @@ matrix:
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - brew install hdf5 cppcheck swig doxygen ragel
+        - brew install hdf5 cppcheck swig doxygen ragel dot homebrew/cask/basictex
         - brew upgrade python
         
 install:
