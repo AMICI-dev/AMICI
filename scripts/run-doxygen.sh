@@ -63,10 +63,8 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 cd ${AMICI_PATH}/doc/latex
 
 export PATH=/Library/TeX/texbin:$PATH
-ls /Library/TeX/texbin
-dvips -v
-pdflatex -v
 make 
+cat refman.log
 mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 
