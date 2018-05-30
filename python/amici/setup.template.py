@@ -16,10 +16,10 @@ def getModelSources():
 
 def getAmiciLibs():
     """Get list of libraries for the amici base library"""
-    return ['amici',
-            'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5',
-            'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
-            'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
+    return ['amici', 
+            'sundials', 'suitesparse'
+            #'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
+            #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
             ]
 
 # Find HDF5
@@ -27,10 +27,17 @@ import pkgconfig
 h5pkgcfg = pkgconfig.parse("hdf5")
 
 cxx_flags = ['-std=c++0x']
-linker_flags = ['${BLAS_LIBRARIES}']
+#linker_flags = ['${BLAS_LIBRARIES}']
+linker_flags = []
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
     cxx_flags.extend(['-g', '-O0',  '--coverage'])
     linker_flags.append('--coverage')
+
+libraries = ['cblas',# TODO generic BLAS
+             'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'] 
+sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
+libraries.extend(getAmiciLibs())
+    
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
@@ -42,14 +49,14 @@ for key, value in cfg_vars.items():
 
 # Build shared object
 model_module = Extension('TPL_MODELNAME/_TPL_MODELNAME',
-                         sources=['swig/TPL_MODELNAME.i', *getModelSources()],
+                         sources=sources,
                          include_dirs=[os.getcwd(),
                                        os.path.join(amici_path, 'include'), 
                                        os.path.join(amici_path, 'ThirdParty/sundials/include'),
                                        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
                                        *h5pkgcfg['include_dirs']
                                        ],
-                         libraries = [*getAmiciLibs(), 'cblas'], # TODO generic BLAS
+                         libraries = libraries,
                          library_dirs=[
                              *h5pkgcfg['library_dirs'],
                              os.path.join(amici_path, 'libs')],
