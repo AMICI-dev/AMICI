@@ -64,7 +64,7 @@ cd ${AMICI_PATH}/doc/latex
 
 export PATH=/Library/TeX/texbin:$PATH
 make 
-mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
+cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 
 # check if warnings log was created
