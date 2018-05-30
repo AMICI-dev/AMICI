@@ -10,7 +10,7 @@ set -e
 
 # run tests
 if [ ! -d "tests/sbml-test-suite" ]; then
-	git clone http://github.com/sbmlteam/sbml-test-suite
+	git clone --depth=1 http://github.com/sbmlteam/sbml-test-suite
 	mv -f ./sbml-test-suite ./tests/sbml-test-suite
 fi
 
