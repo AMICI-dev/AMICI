@@ -64,7 +64,6 @@ cd ${AMICI_PATH}/doc/latex
 
 export PATH=/Library/TeX/texbin:$PATH
 make 
-cat refman.log
 mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 
