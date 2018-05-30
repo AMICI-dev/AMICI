@@ -31,7 +31,7 @@ A scaffold for a standalone simulation program is generated in `main.cpp` in the
 
 The complete AMICI API is available through `amici.h`; this is the only header file that needs to be included.  `hdf5.h` provides some functions for reading and writing [HDF5](https://support.hdfgroup.org/) files). 
 
-You need to compile and link `${AMICI_ROOT_DIR}/models/${MODEL_NAME}/*.cpp`,  `${AMICI_ROOT_DIR}/src/*.cpp`, the SUNDIALS and the SUITESPARSE library.
+You need to compile and link `${AMICI_ROOT_DIR}/models/${MODEL_NAME}/*.cpp`,  `${AMICI_ROOT_DIR}/src/*.cpp`, the SUNDIALS and the SUITESPARSE library, or use the CMake package configuration from the build directory which tells CMake about all AMICI dependencies.
 
 Along with `main.cpp`, a [CMake](https://cmake.org/) file (`CMakeLists.txt`) will be generated automatically. The CMake file shows the abovementioned library dependencies. These files provide a scaffold for a standalone simulation program. The required numerical libraries are shipped with AMICI. To compile them, run `${AMICI_ROOT_DIR}/scripts/run-tests.sh` once. HDF5 libraries and header files need to be installed separately. 
 More information on how to run the compiled program is provided in `main.cpp`.

@@ -24,7 +24,7 @@ class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
-        Codeprinter: codeprinter that allows 
+        Codeprinter: codeprinter that allows export of symbolic variables as C++ code
         functions: dict carrying function specific definitions
         symbols: symbolic definitions 
         SBMLreader: the libSBML sbml reader [!not storing this will result in a segfault!]

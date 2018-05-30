@@ -4,7 +4,7 @@ In the following we will give a detailed overview how to specify models in  Pyth
 
 ## Model Definition
 
-This guide will guide the user on how specify models in Python using SBML. For example implementations see the examples in the python/examples directory.
+This guide will guide the user on how to specify models in Python using SBML. For example implementations see the examples in the python/examples directory.
 
 ### SBML input
 
@@ -50,7 +50,6 @@ to compile the sbml as python module, the user has to call the method `amici.sbm
 
 currently the model folder has to be manually added to the python path
     
-    import os
     import sys
     sys.path.insert(0, 'test')
     

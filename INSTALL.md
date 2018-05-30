@@ -34,6 +34,7 @@ For the compilation of .mex files, MATLAB needs to be configured with a working 
     mex -setup c
 
 For a list of supported compilers we refer to the mathworks documentation: [mathworks.com](http://mathworks.com/support/compilers/R2017a/index.html)
+Note that Microsoft Visual Studio compilers are currently not supported.
 
 ###  Python
 
@@ -57,11 +58,17 @@ script to compile amici libary. The static library file can then be linked from
 
     ./build/libamici.a
  
+In CMake-based packages, amici can be linked via
+
+    find_package(Amici)
+
 ## Dependencies
 
-The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via `amiwrap(...)`, but not for execution of precompiled models.
+The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via `amiwrap(...)`, but not for execution of precompiled models. Currently MATLAB R2018a or newer is not supported (see https://github.com/ICB-DCM/AMICI/issues/307)
 
-The Python and C++ interfaces require `cmake` and `cblas` to be installed.
+The Python interface requires Python 3.6 or newer and `cblas` library to be installed. Windows installations via pip are currently not supported, but users may try to install amici using the build scripts provided for the C++ interface (these will by default automatically install the python module).
+
+The C++ interface requires `cmake` and `cblas` to be installed.
 
 The tools SUNDIALS and SuiteSparse shipped with AMICI do __not__ require explicit installation.
 

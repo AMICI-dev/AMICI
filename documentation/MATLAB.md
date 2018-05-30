@@ -69,21 +69,21 @@ For time-dependent differential equations you can specify a symbolic variable fo
 
 Specify the right hand side of the differential equation `f` or `xdot`
 
-    model.syms.xdot(1) = [ const1 - param1*state1 ];
-    model.syms.xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
-    model.syms.xdot(3) = [ param4*state2 ];
+    model.sym.xdot(1) = [ const1 - param1*state1 ];
+    model.sym.xdot(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+    model.sym.xdot(3) = [ param4*state2 ];
 
 or
 
-    model.syms.f(1) = [ const1 - param1*state1 ];
-    model.syms.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
-    model.syms.f(3) = [ param4*state2 ];
+    model.sym.f(1) = [ const1 - param1*state1 ];
+    model.sym.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
+    model.sym.f(3) = [ param4*state2 ];
 
 The specification of `f` or `xdot` may depend on states, parameters and constants.
 
 For DAEs also specify the mass matrix.
 
-    model.syms.M = [1, 0, 0;...
+    model.sym.M = [1, 0, 0;...
                     0, 1, 0;...
                     0, 0, 0];
 
@@ -100,14 +100,14 @@ Dirac functions can be used to cause a jump in the respective states at the spec
 
 Specify the initial conditions. These may depend on parameters on constants and must have the same size as `x`.
 
-    model.syms.x0 = [ param4, 0, 0 ];
+    model.sym.x0 = [ param4, 0, 0 ];
 
 ### Observables
 
 Specify the observables. These may depend on parameters and constants.
 
-    model.syms.y(1) = state1 + state2;
-    model.syms.y(2) = state3 - state2;
+    model.sym.y(1) = state1 + state2;
+    model.sym.y(2) = state3 - state2;
 
 In the definition of the observable you can use certain symbolic functions. For a full list of available functions see `src/symbolic_functions.cpp`.
 Dirac functions in observables will have no effect.
@@ -116,32 +116,38 @@ Dirac functions in observables will have no effect.
 
 Specifying events is optional. Events are specified in terms of a trigger function, a bolus fuction and an output function. The roots of the trigger function defines the occurences of the event. The bolus function defines the change in the state on event occurences. The output function defines the expression which is evaluated and reported by the simulation routine on every event occurence. The user can create events by constructing a vector of objects of the class @ref amievent.
 
-    model.syms.event(1) = amievent(state1 - state2,0,[]);
+    model.sym.event(1) = amievent(state1 - state2,0,[]);
 
-Events may depend on states, parameters and constants but __not__ on observables
+Events may depend on states, parameters and constants but __not__ on observables.
+
+For more details about event support see https://doi.org/10.1093/bioinformatics/btw764 
 
 ### Standard Deviation
 
-Specifying of standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for observables and events.
+Specifying standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for observables and events.
 
 Standard deviaton for observable data is denoted by sigma_y
 
-    model.syms.sigma_y(1) = param5;
+    model.sym.sigma_y(1) = param5;
 
 Standard deviaton for event data is denoted by sigma_t
 
-    model.syms.sigma_t(1) = param6;
+    model.sym.sigma_t(1) = param6;
 
 Both `sigma_y` and `sigma_t` can either be a scalar or of the same dimension as the observables / events function.
 They can depend on time and parameters but must not depend on the states or observables. The values provided in `sigma_y` and `sigma_t` will only be used if the value in `D.Sigma_Y` or `D.Sigma_T` in the user-provided data struct is `NaN`. See simulation for details.
 
 ### Objective Function
 
-By default, AMICI assume a normal noise model and use the corresponding negative log-likelihood 
+By default, AMICI assumes a normal noise model and uses the corresponding negative log-likelihood 
 
     J = 1/2*sum(((y_i(t)-my_ti)/sigma_y_i)^2 + log(2*pi*sigma_y^2)
 
-as objective function.
+as objective function. A user provided objective function can be specified in
+
+    model.sym.Jy
+
+As reference see the default specification of `this.sym.Jy` in `amimodel.makeSyms`.
 
 ### SBML
 
@@ -153,8 +159,8 @@ The model can then be compiled by calling `amiwrap.m`:
 
     amiwrap(modelname,'example_model_syms',dir,o2flag)
 
-Here modelname should be a string defining the modelname, dir should be a string containing the path to the directory in which simulation files should be placed and `o2flag` is a flag indicating whether second order sensitivities should also be compiled.
-The user should make sure that the previously defined function 'example_model_syms' is in the user path. Alternatively, the user can also call the function 'example_model_syms'
+Here `modelname` should be a string defining the name of the model, `dir` should be a string containing the path to the directory in which simulation files should be placed and `o2flag` is a flag indicating whether second order sensitivities should also be compiled.
+The user should make sure that the previously defined function `'example_model_syms'` is in the user path. Alternatively, the user can also call the function `'example_model_syms'`
 
     [model] = example_model_syms()
 
@@ -192,9 +198,9 @@ Integrate:
     sol = simulate_modelname(t,theta,kappa,[],options)
 
 
-The integration status will be indicated by the sol.status flag. Negative values indicated failed integration. The states will then be available as sol.x. The observables will then be available as `sol.y`. The event outputs will then be available as `sol.z`. If no event occured there will be an event at the end of the considered interval with the final value of the root function is stored in `sol.rz`.
+The integration status will be indicated by the `sol.status` flag. Negative values indicated failed integration. The states will then be available as sol.x. The observables will then be available as `sol.y`. The event outputs will then be available as `sol.z`. If no event occured there will be an event at the end of the considered interval with the final value of the root function is stored in `sol.rz`.
 
-Alternatively the integration call also be called via
+Alternatively the integration can also be called via
 
     [status,t,x,y] = simulate_modelname(t,theta,kappa,[],options)
 
@@ -202,19 +208,19 @@ The integration status will be indicated by the flag `status` . Negative values 
 
 ### Forward Sensitivities
 
-Set the sensitivity computation to forward sensitivities and Integrate:
+Set the sensitivity computation to forward sensitivities and integrate:
 
     options.sensi = 1;
     options.sensi_meth = 'forward;
     sol = simulate_modelname(t,theta,kappa,[],options)
 
-The integration status will be indicated by the `sol.status` flag. Negative values indicated failed integration. The states will then be available as `sol.x`, with the derivative with respect to the parameters in `sol.sx`. The observables will then be available as `sol.y`, with the derivative with respect to the parameters in `sol.sy`. The event outputs will then be available as `sol.z`, with the derivative with respect to the parameters in `sol.sz`. If no event occured there will be an event at the end of the considered interval with the final value of the root function stored in `sol.rz`, with the derivative with respect to the parameters in `sol.srz`.
+The integration status will be indicated by the `sol.status` flag. Negative values indicate failed integration. The states will be available as `sol.x`, with the derivative with respect to the parameters in `sol.sx`. The observables will be available as `sol.y`, with the derivative with respect to the parameters in `sol.sy`. The event outputs will be available as `sol.z`, with the derivative with respect to the parameters in `sol.sz`. If no event occured there will be an event at the end of the considered interval with the final value of the root function stored in `sol.rz`, with the derivative with respect to the parameters in `sol.srz`.
 
-Alternatively the integration call also be called via
+Alternatively the integration can also be called via
 
     [status,t,x,y,sx,sy] = simulate_modelname(t,theta,kappa,[],options)
 
-The integration status will be indicated by the status flag. Negative values indicated failed integration. The states will then be available as `x`, with derivative with respect to the parameters in `sx`. The observables will then be available as `y`, with derivative with respect to the parameters in `sy`. No event output will be given.
+The integration status will be indicated by the status flag. Negative values indicate failed integration. The states will then be available as `x`, with derivative with respect to the parameters in `sx`. The observables will then be available as `y`, with derivative with respect to the parameters in `sy`. No event output will be given.
 
 ### Adjoint Sensitivities
 
@@ -230,13 +236,13 @@ Define Experimental Data:
     D.T = ones(1,1);
     D.Sigma_T = NaN;
 
-The `NaN` values in `Sigma_Y` and `Sigma_T` will be replaced by the specification in `model.syms.sigma_y` and `model.syms.sigma_t`. Data points with `NaN` value will be completely ignored.
+The `NaN` values in `Sigma_Y` and `Sigma_T` will be replaced by the specification in `model.sym.sigma_y` and `model.sym.sigma_t`. Data points with `NaN` value will be completely ignored.
 
 Integrate:
 
     sol = simulate_modelname(t,theta,kappa,D,options)
 
-The integration status will be indicated by the sol.status flag. Negative values indicated failed integration. The log-likelihood will then be available as `sol.llh` and the derivative with respect to the parameters in `sol.sllh`. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.
+The integration status will be indicated by the sol.status flag. Negative values indicate failed integration. The log-likelihood will then be available as `sol.llh` and the derivative with respect to the parameters in `sol.sllh`. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.
 
 ### Steady State Sensitivities
 

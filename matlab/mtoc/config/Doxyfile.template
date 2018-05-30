@@ -885,7 +885,7 @@ HTML_STYLESHEET        = "_ConfDir_/customdoxygen.css"
 # the files will be copied as-is; there are no commands or markers available.
 
 HTML_EXTRA_FILES       = 
-l
+
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output.
 # Doxygen will adjust the colors in the stylesheet and background images
 # according to this color. Hue is specified as an angle on a colorwheel,

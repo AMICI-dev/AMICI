@@ -55,7 +55,7 @@ typedef enum {
     AMICI_BLAS_ColMajor = 102
 } AMICI_BLAS_LAYOUT;
 
-/** BLAS Matrix Transposion, affects dgemm and gemv calls */
+/** BLAS Matrix Transposition, affects dgemm and gemv calls */
 typedef enum {
     AMICI_BLAS_NoTrans = 111,
     AMICI_BLAS_Trans = 112,
