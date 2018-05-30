@@ -8,7 +8,7 @@ import numpy as np
 import amici
 
 # directory with sbml semantic test cases
-test_path = os.path.join(os.path.dirname(__file__), 'sbml-semantic-test-cases', 'cases', 'semantic')
+test_path = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases', 'semantic')
 
 def runTest(testId, logfile):
     try:
@@ -22,7 +22,11 @@ def runTest(testId, logfile):
         sbmlFile = findModelFile(current_test_path, testId)
 
         wrapper = amici.SbmlImporter(sbmlFile)
-        wrapper.sbml2amici('SBMLTest' + testId)
+
+        modelDir = os.path.join(os.path.dirname(__file__),'SBMLTestModels',testId)
+        if not os.path.exists(modelDir):
+            os.makedirs(modelDir)
+        wrapper.sbml2amici('SBMLTest' + testId, output_dir=modelDir)
 
         # settings
         settings = readSettingsFile(current_test_path, testId)
@@ -105,8 +109,8 @@ def getTestStr(testId):
     return testStr
 
 def main():
-    for testId in range(1774,1781):
-        with open("test.txt", "a") as logfile:
+    for testId in range(1,1781):
+        with open("test.txt", "w") as logfile:
             runTest(getTestStr(testId), logfile)
 
 if __name__ == '__main__':
