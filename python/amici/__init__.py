@@ -21,6 +21,7 @@ Attributes:
     amiciSwigPath: absolute path of the amici swig directory
     amiciSrcPath: absolute path of the amici source directory
     amiciModulePath: absolute root path of the amici module
+    hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
 """
 
 import os
@@ -29,9 +30,15 @@ import numpy as np
 # If this file is inside the amici package, import swig interface,
 # otherwise we are inside the git repository, then don't
 dirname = os.path.dirname(__file__)
+hdf5_enabled = False
 if os.path.isfile(os.path.join(dirname, 'amici.py')):
-    import amici
-    from .amici import *
+    try:
+        from . import amici
+        from .amici import *
+        hdf5_enabled = True
+    except AttributeError:
+        from . import amici_without_hdf5 as amici
+        from .amici_without_hdf5 import *
 
 # determine package installation path, or, if used directly from git
 # repository, get repository root
