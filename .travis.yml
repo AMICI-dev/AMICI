@@ -61,10 +61,10 @@ install:
     - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
-    - echo 'travis_fold:start:buildCpputest'
+    - echo -n 'travis_fold:start:buildCpputest\\r'
     - ./scripts/buildCpputest.sh
     - echo 'travis_fold:end:buildCpputest'
-    - echo 'travis_fold:start:buildAmici'
+    - echo -n 'travis_fold:start:buildAmici\\r'
     - ./scripts/buildAmici.sh
     - echo 'travis_fold:end:buildAmici'
 
