@@ -125,13 +125,17 @@ class my_sdist(sdist):
     """
 
     def run(self):
-        """Setuptools entry-point"""
+        """Setuptools entry-point
+
+        Returns: None"""
         self.runSwig()
         self.saveGitVersion()
         sdist.run(self)
 
     def runSwig(self):
-        """Run swig"""
+        """Run swig
+
+        Returns: None"""
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
             swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
@@ -159,7 +163,9 @@ class my_sdist(sdist):
         """Create file with extended version string
 
         This requires git. We assume that whoever creates the sdist will work inside
-        a valid git repository."""
+        a valid git repository.
+
+        Returns: None"""
         f = open("amici/version.txt", "w")
         sp = subprocess.run(['git', 'describe',
                              '--abbrev=4', '--dirty=-dirty',
@@ -223,9 +229,9 @@ def main():
         },
         zip_safe=False,
         include_package_data=True,
-        exclude_package_data={'': ['README.txt'],
-                              # 'amici': ['src/*']
-                              },
+        exclude_package_data={
+            '': ['README.txt'],
+        },
         test_suite="tests",
         classifiers=[
             'Development Status :: 3 - Alpha',
