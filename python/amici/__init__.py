@@ -25,7 +25,6 @@ Attributes:
 import os
 import numpy as np
 
-
 def setAmiciPaths():
     """Set module-wide paths to components of the AMICI distribution"""
 
@@ -46,9 +45,15 @@ def setAmiciPaths():
 # If this file is inside the amici package, import swig interface,
 # otherwise we are inside the git repository, then don't
 dirname = os.path.dirname(__file__)
+hdf5_enabled = False
 if os.path.isfile(os.path.join(dirname, 'amici.py')):
-    import amici
-    from .amici import *
+    try:
+        from . import amici
+        from .amici import *
+        hdf5_enabled = True
+    except AttributeError:
+        from . import amici_without_hdf5 as amici
+        from .amici_without_hdf5 import *
 
 setAmiciPaths()
 

@@ -100,14 +100,19 @@ def getSuiteSparseSources():
     return [os.path.join('amici', 'ThirdParty', 'SuiteSparse', src) for src in srcs]
 
 
-def getAmiciBaseSources():
+def getAmiciBaseSources(withHDF5=True):
     """Get list of source files for the amici base library
 
-    TODO: Add argument: enableHDF5=True to allow build in the absence of HDF5 lib
+    Arguments:
+        withHDF5: compile with HDF5 support
     """
-    amiciBaseSources = glob.glob('amici/src/*.cpp')
+    amiciBaseSources = glob.glob('amici{s}src{s}*.cpp'.format(s=os.sep))
     amiciBaseSources = [src for src in amiciBaseSources if not re.search(
         r'(matlab)|(\.template\.)', src)]
+    
+    if not withHDF5:
+        amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
+    
     return amiciBaseSources
 
 
@@ -163,7 +168,9 @@ def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None):
     """
 
     libamici = ('amici', {
-        'sources': getAmiciBaseSources(),
+        'sources': getAmiciBaseSources(
+            withHDF5=(h5pkgcfg and 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs'])
+            ),
         'include_dirs': ['amici/include',
                          'amici/ThirdParty/SuiteSparse/KLU/Include/',
                          'amici/ThirdParty/SuiteSparse/AMD/Include/',

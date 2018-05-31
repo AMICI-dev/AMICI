@@ -9,6 +9,7 @@ typedef double realtype;
 wrap_unique_ptr(SolverPtr, amici::Solver)
 wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
+wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 %include edata.i
 %include rdata.i
@@ -19,8 +20,10 @@ wrap_unique_ptr(ModelPtr, amici::Model)
 %include model.i
 %include model_ode.i
 %include model_dae.i
-%include hdf5.i
 
+#ifndef AMICI_SWIG_WITHOUT_HDF5
+%include hdf5.i
+#endif
 
 // Add necessary symbols to generated header
 %{
