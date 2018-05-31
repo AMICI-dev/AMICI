@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+Generate coverage reports for the testModels and testSBML scripts
+exported format is cobertura xml
+"""
+
 import coverage
 import unittest
 import os
@@ -9,13 +14,14 @@ import amici
 import testModels
 import testSBML
 
+# only consider amici module and ignore the swig generated amici.py
 cov = coverage.Coverage(source=['amici'],omit=['*/amici.py'])
 
+# ignore code blocks containing import statements
 cov.exclude('import')
 cov.start()
 
-print(testModels.TestAmiciPregeneratedModel())
-
+# build the testSuite from testModels and testSBML
 suite = unittest.TestSuite()
 suite.addTest(testModels.TestAmiciPregeneratedModel())
 suite.addTest(testSBML.TestAmiciSBMLModel())

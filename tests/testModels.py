@@ -126,8 +126,7 @@ def checkResults(rdata, field, expected, atol, rtol):
         adev = adev[~np.isinf(expected)]
         rdev = rdev[~np.isinf(expected)]
 
-    if not np.all(np.logical_or(rdev <= rtol, adev <= atol)):
-        assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
+    assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
 
