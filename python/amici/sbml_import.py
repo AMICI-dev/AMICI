@@ -882,27 +882,37 @@ class SbmlImporter:
                     os.path.join(self.modelPath, 'main.cpp'))
 
 
-    def compileCCode(self):
+    def compileCCode(self, verbose=False):
         """Compile the generated model code
         
         Arguments:
-
+            verbose: Make model compilation verbose
         Returns:
 
         Raises:
 
         """
-        
+
+        # setup.py assumes it is run from within the model dir
         moduleDir = self.modelPath
         oldCwd = os.getcwd()
-        os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
+        os.chdir(moduleDir)
+        
+        script_args = []
+        
+        if verbose:
+            script_args.append('--verbose')
+        else:
+            script_args.append('--quiet')
+        
+        script_args.extend(['build_ext', '--build-lib=%s' % moduleDir])
+                       
         from distutils.core import run_setup
         run_setup('setup.py',
-                  script_args=["build_ext", 
-                               '--build-lib=%s' % moduleDir, 
-                               ])
-        os.chdir(oldCwd)
+                  script_args=script_args)
         
+        os.chdir(oldCwd)
+
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
         
