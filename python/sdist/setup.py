@@ -90,7 +90,11 @@ class my_build_ext(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
     def run(self):
-        """Copy the generated clibs to the extensions folder to be included in the wheel"""
+        """Copy the generated clibs to the extensions folder to be included in the wheel
+        
+        Returns:
+        
+        """
 
         if not self.dry_run:  # --dry-run
             if self.distribution.has_c_libraries():
@@ -127,7 +131,9 @@ class my_sdist(sdist):
     def run(self):
         """Setuptools entry-point
 
-        Returns: None"""
+        Returns:
+            
+        """
         self.runSwig()
         self.saveGitVersion()
         sdist.run(self)
@@ -135,7 +141,9 @@ class my_sdist(sdist):
     def runSwig(self):
         """Run swig
 
-        Returns: None"""
+        Returns:
+        
+        """
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
             swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
@@ -165,7 +173,9 @@ class my_sdist(sdist):
         This requires git. We assume that whoever creates the sdist will work inside
         a valid git repository.
 
-        Returns: None"""
+        Returns:
+        
+        """
         f = open("amici/version.txt", "w")
         sp = subprocess.run(['git', 'describe',
                              '--abbrev=4', '--dirty=-dirty',
