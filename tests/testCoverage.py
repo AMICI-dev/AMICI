@@ -23,4 +23,4 @@ testRunner = unittest.TextTestRunner(verbosity=0)
 testRunner.run(suite)
 
 cov.stop()
-cov.save()
+cov.xml_report(outfile='coverage_py.xml')
