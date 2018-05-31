@@ -1,5 +1,5 @@
 language: generic
-sudo: true
+sudo: false
 
 branches:
   only:
@@ -27,10 +27,10 @@ matrix:
             - swig3.0
             - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
-      before_install: 
-        - gem install coveralls-lcov
       after_success: 
-        - ./scripts/run-coveralls.sh
+        - ./scripts/run-codecov.sh
+        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -X fix -cF python
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -cF cpp
     - os: osx
       osx_image: xcode9.3
       compiler: clang
@@ -58,7 +58,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.6/bin:$PATH; fi
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy coverage
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
