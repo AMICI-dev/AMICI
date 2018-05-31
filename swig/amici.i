@@ -33,6 +33,7 @@ using namespace amici;
 
 // Process symbols in header
 %include "amici/amici.h"
+%include "amici/defines.h"
 
 namespace std
 {
