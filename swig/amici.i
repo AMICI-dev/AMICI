@@ -11,6 +11,10 @@ wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
 wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
+// Include before any other header which uses enums defined there
+%include "amici/defines.h"
+
+
 %include edata.i
 %include rdata.i
 
@@ -33,7 +37,6 @@ using namespace amici;
 
 // Process symbols in header
 %include "amici/amici.h"
-%include "amici/defines.h"
 
 namespace std
 {
