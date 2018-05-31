@@ -222,7 +222,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}):
+    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -231,6 +231,7 @@ class SbmlImporter:
             observables: dictionary(observableName:formulaString) to be added to the model
             sigmas: dictionary(observableName: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
+            verbose: more verbose output if True
         Returns:
 
         Raises:
@@ -243,7 +244,7 @@ class SbmlImporter:
         self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
         self.generateCCode()
-        self.compileCCode()
+        self.compileCCode(verbose)
     
     
     def setName(self, modelName):
