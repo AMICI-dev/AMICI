@@ -85,9 +85,6 @@ void processReturnData(amici::ReturnData *rdata, amici::Model *model) {
 void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     // Print of some the simulation results
 
-    printf("Timepoints (tsdata): ");
-    amici::printArray(rdata->ts.data(), model->nt());
-
     printf("\n\nStates (xdata):\n");
     for (int i = 0; i < model->nx; ++i) {
         for (int j = 0; j < model->nt(); ++j)

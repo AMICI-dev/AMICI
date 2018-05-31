@@ -18,6 +18,11 @@ if [ ! -d "mtocpp-master" ]; then
     fi
 fi
 
+# make py_filter available
+PATH=${AMICI_PATH}/scripts:$PATH
+
+echo $PATH
+
 cd ${AMICI_PATH}
 MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
 # generate filter
@@ -48,14 +53,23 @@ sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =${DOXY_WARNING_FILE}#g" ${DO
 cp ${MTOC_CONFIG_PATH}/latexextras.template ${MTOC_CONFIG_PATH}/latexextras.sty
 sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${MTOC_CONFIG_PATH}/latexextras.sty
 
-doxygen "${DOXYFILE}"
-doxygen "${DOXYFILE}"
+export PATH=/Library/TeX/texbin:$PATH
 
+doxygen "${DOXYFILE}"
 
 #cleanup
 #rm ${AMICI_PATH}/mtoc/config/latexextras.sty
 rm ${DOXYFILE}
 rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
+
+cd ${AMICI_PATH}/doc/latex
+
+make 
+cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
+
+# suppress doxygen warnings about status badges
+grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # check if warnings log was created
 if [ -f ${DOXY_WARNING_FILE}  ]; then
@@ -63,7 +77,7 @@ if [ -f ${DOXY_WARNING_FILE}  ]; then
     if [ -s ${DOXY_WARNING_FILE} ]; then
         echo "DOXYGEN failed:"
         cat ${DOXY_WARNING_FILE}
-        rm ${DOXY_WARNING_FILE}
+        #rm ${DOXY_WARNING_FILE}
         exit 1
     else
         exit 0
@@ -71,9 +85,3 @@ if [ -f ${DOXY_WARNING_FILE}  ]; then
 else
     exit 1
 fi
-
-#$AMICI_PATH/ThirdParty/mtocpp-master/build/mtocpp_post "$AMICI_PATH/doc"
-
-#cd ${AMICI_PATH}/doc/latex
-#make
-#mv ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf

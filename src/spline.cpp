@@ -12,8 +12,10 @@ namespace amici {
 /*                                              */
 /************************************************/
 
-/**
 
+int spline(int n, int end1, int end2, double slope1, double slope2, double x[],
+           double y[], double b[], double c[], double d[])
+    /**
    Evaluate the coefficients b[i], c[i], d[i], i = 0, 1, .. n-1 for
    a cubic interpolating spline
 
@@ -60,8 +62,6 @@ namespace amici {
        c[n-1] and d[n-1] are set to continue the last segment
        past x[n-1].
 */
-int spline(int n, int end1, int end2, double slope1, double slope2, double x[],
-           double y[], double b[], double c[], double d[])
 
 { /* begin procedure spline() */
 
@@ -167,7 +167,7 @@ LeaveSpline:
 } /* end of spline() */
 
 /**
-  Evaluate the cubic spline function
+  @brief Evaluate the cubic spline function
 
   S(xx) = y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
   where w = u - x[i]

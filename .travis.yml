@@ -1,7 +1,5 @@
-.language: cpp
-sudo: false
-
-dist: trusty
+language: generic
+sudo: true
 
 branches:
   only:
@@ -10,10 +8,12 @@ branches:
 
 matrix:
   include: 
-    - os: linux  
+    - os: linux
+      dist: xenial
       compiler: gcc
       addons:
         apt:
+          update: true
           packages:
             - libhdf5-serial-dev
             - zlib1g-dev
@@ -32,12 +32,24 @@ matrix:
       after_success: 
         - ./scripts/run-coveralls.sh
     - os: osx
+      osx_image: xcode9.3
       compiler: clang
       before_install: 
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - brew install hdf5 cppcheck swig
+        - brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
         - brew upgrade python
+      after_success: 
+        - cd $BASE_DIR # cd to base dir for correct relative pah in deploy
+      deploy:
+        provider: pages
+        local-dir: doc
+        skip-cleanup: true
+        github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+        keep-history: false
+        verbose: true
+        on:
+          branch: master
         
 install:
     # Python distutils only looks for `swig` and does not find `swig3.0`
@@ -45,7 +57,8 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.6/bin:$PATH; fi
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
@@ -56,7 +69,8 @@ script:
     - ./scripts/run-cppcheck.sh
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
     - ls -alR
