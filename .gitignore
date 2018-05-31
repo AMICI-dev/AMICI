@@ -149,6 +149,8 @@ tests/sbml-test-suite/
 
 tests/sedml-test-suite/
 
+tests/SBMLTestModels/
+
 matlab/mtoc/config/latexextras.sty-e
 
 matlab/mtoc/config/latexextras.sty
@@ -170,7 +172,7 @@ __pycache__
 tests/cpputest/writeResults.h5
 tests/cpputest/writeResults.h5.bak
 
-tests/sbml-semantic-test-cases/*
+tests/sbml-test-suite/*
 
 python/.idea/misc.xml
 

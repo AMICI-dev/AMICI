@@ -68,6 +68,7 @@ script:
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
     - ls -alR
