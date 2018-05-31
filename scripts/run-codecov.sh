@@ -1,5 +1,5 @@
 #!/bin/bash
-# Check code coverage via coveralls
+# Check code coverage via codecov
 
 AMICI_PATH="`dirname \"$0\"`"
 AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
@@ -13,5 +13,6 @@ cd ${AMICI_PATH}
 
 lcov --compat-libtool --no-external --directory ${AMICI_PATH}/build/CMakeFiles/amici.dir/src --base-directory ${AMICI_PATH} --capture --output-file coverage.info
 
-coveralls-lcov coverage.info
+python3 ./tests/testCoverage.py
 
+rm -rf ./test

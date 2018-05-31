@@ -14,7 +14,7 @@ if [ ! -d "tests/sbml-test-suite" ]; then
 	mv -f ./sbml-test-suite ./tests/sbml-test-suite
 fi
 
-python3 ./tests/testSBML.py
+python3 ./tests/testSBMLSuite.py
 
 cat ./test.txt
 rm ./test.txt

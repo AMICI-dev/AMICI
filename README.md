@@ -8,8 +8,6 @@ The interface was designed to provide routines for efficient gradient computatio
 ## Current build status
 
 [![Build Status](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
-
-[![Coverage Status](https://coveralls.io/repos/github/ICB-DCM/AMICI/badge.svg?branch=master)](https://coveralls.io/github/ICB-DCM/AMICI?branch=master)
-
+[![CodeCov](https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg)](https://codecov.io/gh/ICB-DCM/AMICI)
 
 

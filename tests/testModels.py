@@ -64,16 +64,16 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
 
 
-def verifySimulationResults(rdata,expectedResults,atol=1e-8,rtol=1e-4):
+def verifySimulationResults(rdata, expectedResults, atol=1e-8, rtol=1e-4):
     '''
     compares all fields of the simulation results in rdata against the expectedResults using the provided
     tolerances
     
-    Args:
-    rdata: simulation results as returned by amici.runAmiciSimulation
-    expectedResults: stored test results 
-    atol: absolute tolerance
-    rtol: relative tolerance
+    Arguments:
+        rdata: simulation results as returned by amici.runAmiciSimulation
+        expectedResults: stored test results 
+        atol: absolute tolerance
+        rtol: relative tolerance
     '''
 
     if expectedResults.attrs['status'][0] != 0:
@@ -98,12 +98,12 @@ def checkResults(rdata, field, expected, atol, rtol):
     '''
     checks whether rdata[field] agrees with expected according to provided tolerances
     
-    Args:
-    rdata: simulation results as returned by amici.runAmiciSimulation
-    field: name of the field to check
-    expected: expected test results 
-    atol: absolute tolerance
-    rtol: relative tolerance
+    Arguments:
+        rdata: simulation results as returned by amici.runAmiciSimulation
+        field: name of the field to check
+        expected: expected test results 
+        atol: absolute tolerance
+        rtol: relative tolerance
     '''
 
     result = rdata[field]
@@ -126,8 +126,7 @@ def checkResults(rdata, field, expected, atol, rtol):
         adev = adev[~np.isinf(expected)]
         rdev = rdev[~np.isinf(expected)]
 
-    if not np.all(np.logical_or(rdev <= rtol,adev <= atol)):
-        assert np.all(np.logical_or(rdev <= rtol,adev <= atol))
+    assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
 
