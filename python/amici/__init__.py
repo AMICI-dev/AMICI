@@ -69,8 +69,6 @@ def runAmiciSimulation(model, solver, edata=None):
     Raises:
         
     """
-    if edata:
-        edata = edata.get()
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
