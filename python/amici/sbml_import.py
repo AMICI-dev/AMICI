@@ -918,7 +918,9 @@ class SbmlImporter:
         lines = []
         [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
             for index, symbol in enumerate(self.symbols[name]['sym'])]
-        open(os.path.join(self.modelPath,name + '.h'), 'w').write('\n'.join(lines))
+        
+        with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
+            fileout.write('\n'.join(lines))
 
 
     def writeFunctionFile(self,function):
@@ -966,7 +968,8 @@ class SbmlImporter:
         lines += body
         lines.append('}')
         #if not body is None:
-        open(os.path.join(self.modelPath, self.modelName + '_' + function + '.cpp'), 'w').write('\n'.join(lines))
+        with open(os.path.join(self.modelPath, self.modelName + '_' + function + '.cpp'), 'w') as fileout:
+            fileout.write('\n'.join(lines))
 
 
     def getFunctionBody(self,function):
