@@ -127,6 +127,7 @@ class my_sdist(sdist):
     def run(self):
         """Setuptools entry-point"""
         self.runSwig()
+        self.saveGitVersion()
         sdist.run(self)
 
     def runSwig(self):
@@ -154,6 +155,18 @@ class my_sdist(sdist):
                                  'amici/swig/amici.i'])
             assert(sp.returncode == 0)
 
+    def saveGitVersion(self):
+        """Create file with extended version string
+
+        This requires git. We assume that whoever creates the sdist will work inside
+        a valid git repository."""
+        f = open("amici/version.txt", "w")
+        sp = subprocess.run(['git', 'describe',
+                             '--abbrev=4', '--dirty=-dirty',
+                             '--always', '--tags'],
+                            stdout=f)
+        assert(sp.returncode == 0)
+
 
 # Readme as long package description to go on PyPi
 # (https://pypi.org/project/amici/)
@@ -164,17 +177,6 @@ with open("README.md", "r") as fh:
 def getPackageVersion():
     return '0.6a13'
 
-
-def getGitVersion():
-    f = open("amici/version.txt", "w")
-    sp = subprocess.run(['git', 'describe',
-                         '--abbrev=4', '--dirty=-dirty',
-                         '--always', '--tags'],
-                        stdout=f)
-    assert(sp.returncode == 0)
-
-    # return sp.stdout.strip()
-getGitVersion()
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
