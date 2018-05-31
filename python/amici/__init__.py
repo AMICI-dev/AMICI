@@ -69,7 +69,6 @@ def runAmiciSimulation(model, solver, edata=None):
     Raises:
         
     """
-    print( edata.__class__.__name__)
     if edata and edata.__class__.__name__ == 'ExpDataPtr':
         edata = edata.get()
 
