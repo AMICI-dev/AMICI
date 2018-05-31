@@ -5,7 +5,7 @@
 namespace amici {
 
 #define _USE_MATH_DEFINES
-#ifndef M_PI
+#ifdef M_PI
 constexpr double pi = M_PI;
 #else
 /** MS definition of PI and other constants */
