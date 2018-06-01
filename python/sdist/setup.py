@@ -28,9 +28,22 @@ import shutil
 
 # Extra compiler flags
 cxx_flags = []
-# TODO: more flexible blas
-amici_module_linker_flags = ['-lcblas']
+amici_module_linker_flags = []
 define_macros = []
+
+# Find cblas
+blaspkgcfg = {'include_dirs': [],
+              'library_dirs': [],
+              'libraries': [],
+              'define_macros': []
+              }
+if 'BLAS_INCDIR' in os.environ:
+    blaspkgcfg['include_dirs'].extend(os.environ['BLAS_INCDIR'].split(' '))
+
+if 'BLAS_LIB' in os.environ:
+    amici_module_linker_flags.extend(os.environ['BLAS_LIB'].split(' '))
+else:
+    amici_module_linker_flags.append('-lcblas')
 
 # Find HDF5 include dir and libs
 if pkgconfig.exists('hdf5'):
@@ -59,7 +72,7 @@ if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] =
     amici_module_linker_flags.append('--coverage')
 
 libamici = setup_clibs.getLibAmici(
-    h5pkgcfg=h5pkgcfg, extra_compiler_flags=cxx_flags)
+    h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
 libsundials = setup_clibs.getLibSundials(extra_compiler_flags=cxx_flags)
 libsuitesparse = setup_clibs.getLibSuiteSparse(extra_compiler_flags=cxx_flags)
 
@@ -91,9 +104,9 @@ class my_build_ext(build_ext):
 
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in the wheel
-        
+
         Returns:
-        
+
         """
 
         if not self.dry_run:  # --dry-run
@@ -132,7 +145,7 @@ class my_sdist(sdist):
         """Setuptools entry-point
 
         Returns:
-            
+
         """
         self.runSwig()
         self.saveGitVersion()
@@ -142,7 +155,7 @@ class my_sdist(sdist):
         """Run swig
 
         Returns:
-        
+
         """
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
@@ -174,7 +187,7 @@ class my_sdist(sdist):
         a valid git repository.
 
         Returns:
-        
+
         """
         f = open("amici/version.txt", "w")
         sp = subprocess.run(['git', 'describe',
@@ -191,7 +204,7 @@ with open("README.md", "r") as fh:
 
 
 def getPackageVersion():
-    return '0.6a13'
+    return '0.6a14'
 
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for

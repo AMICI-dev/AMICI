@@ -160,11 +160,13 @@ def getLibSuiteSparse(extra_compiler_flags=[]):
     return libsuitesparse
 
 
-def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None):
+def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None, blaspkgcfg=None):
     """Get AMICI core library build info for setuptools
 
     Arguments:
         extra_compiler_flags: Extra compiler flags
+        h5pkgcfg:  hdf5 package info
+        blaspkgcfg: blas package info
     """
 
     libamici = ('amici', {
@@ -186,5 +188,8 @@ def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None):
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
         libamici[1]['include_dirs'].extend(h5pkgcfg['include_dirs'])
+
+    if blaspkgcfg and 'include_dirs' in blaspkgcfg:
+        libamici[1]['include_dirs'].extend(blaspkgcfg['include_dirs'])
 
     return libamici
