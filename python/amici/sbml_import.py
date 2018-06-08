@@ -133,7 +133,9 @@ class SbmlImporter:
                              ' const realtype *k, const realtype *h)'},
             'dydp': {
                 'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h)'},
+                             ' const realtype *k, const realtype *h, const int ip)',
+                'sensitivity': True},
+
             'qBdot': {
                 'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
