@@ -121,7 +121,7 @@ def checkGradient(model, solver, edata):
         res = rdata['s%s' % symbol]
         if not isinstance(res, float):
             if len(res.shape) == 3:
-                res = np.sum(res, axis=(0, 1))
+                res = np.sum(res, axis=(0, 2))
         return res
     
     p = np.array(model.getParameters())
