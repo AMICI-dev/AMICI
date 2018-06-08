@@ -2,8 +2,7 @@
 
 typedef double realtype;
 
-%include <std_string.i>
-%include <std_vector.i>
+%include <stl.i>
 
 %include std_unique_ptr.i
 wrap_unique_ptr(SolverPtr, amici::Solver)
@@ -38,8 +37,7 @@ using namespace amici;
 // Process symbols in header
 %include "amici/amici.h"
 
-namespace std
-{
-    %template(DoubleVector) vector<realtype>;
-    %template(IntVector) vector<int>;
-}
+// Expose vectors
+%template(DoubleVector) std::vector<realtype>;
+%template(IntVector) std::vector<int>;
+%template(ParameterScalingVector) std::vector<amici::AMICI_parameter_scaling>;
