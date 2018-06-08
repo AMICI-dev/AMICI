@@ -896,12 +896,10 @@ class SbmlImporter:
 
         """
 
-        # setup.py assumes it is run from within the model dir
+        # setup.py assumes it is run from within the model directory
         moduleDir = self.modelPath
-        oldCwd = os.getcwd()
-        os.chdir(moduleDir)
-        
-        script_args = []
+
+        script_args = [sys.executable, '%s%ssetup.py' % (moduleDir, os.sep)]
         
         if verbose:
             script_args.append('--verbose')
@@ -909,13 +907,22 @@ class SbmlImporter:
             script_args.append('--quiet')
         
         script_args.extend(['build_ext', '--build-lib=%s' % moduleDir])
-                       
-        from distutils.core import run_setup
-        run_setup('setup.py',
-                  script_args=script_args)
-        
-        os.chdir(oldCwd)
 
+        # distutils.core.run_setup looks nicer, but does not let us check the
+        # result easily
+        try:
+            result = subprocess.run(script_args,
+                                    cwd=moduleDir,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    check=True)
+        except subprocess.CalledProcessError as e:
+            print(e.output.decode('utf-8'))
+            raise
+                    
+        if verbose:
+            print(result.stdout.decode('utf-8'))
+        
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
         
