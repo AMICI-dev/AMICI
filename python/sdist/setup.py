@@ -158,7 +158,6 @@ class my_sdist(sdist):
         Returns:
 
         """
-        # TODO: find swig first: swig3.0, swig, ... check setuptools
         
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without

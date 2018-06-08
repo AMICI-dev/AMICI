@@ -103,15 +103,23 @@ def getSuiteSparseSources():
 def getAmiciBaseSources(withHDF5=True):
     """Get list of source files for the amici base library
 
+    Expects that we are inside $AMICI_ROOT/python/sdist
+    
     Arguments:
         withHDF5: compile with HDF5 support
     """
+    
     amiciBaseSources = glob.glob('amici{s}src{s}*.cpp'.format(s=os.sep))
     amiciBaseSources = [src for src in amiciBaseSources if not re.search(
         r'(matlab)|(\.template\.)', src)]
     
     if not withHDF5:
-        amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
+        try:
+            # sometimes this fails for unknwon reasons...
+            amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
+        except ValueError:
+            print('Warning: could not find %s in %s' % ('amici{s}src{s}hdf5.cpp'.format(s=os.sep), 
+                                                        amiciBaseSources)) 
     
     return amiciBaseSources
 
