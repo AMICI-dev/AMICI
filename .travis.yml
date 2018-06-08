@@ -67,7 +67,7 @@ install:
 script:  
     - cd $BASE_DIR/python/sdist
     - python3 setup.py sdist --dist-dir=$BASE_DIR/build/python/
-    - pip3 install $BASE_DIR/build/python/amici-*.tar.gz --verbose
+    - python3 -m pip install $BASE_DIR/build/python/amici-*.tar.gz --verbose
     - cd $BASE_DIR
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
