@@ -58,7 +58,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.6/bin:$PATH; fi
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy coverage
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy coverage scipy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
