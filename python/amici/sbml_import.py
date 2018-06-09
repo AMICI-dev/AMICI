@@ -785,7 +785,7 @@ class SbmlImporter:
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['species']['sym'])
+                                                .jacobian(self.symbols['species']['sym']).tranpose()
         
         self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
 
