@@ -103,15 +103,23 @@ def getSuiteSparseSources():
 def getAmiciBaseSources(withHDF5=True):
     """Get list of source files for the amici base library
 
+    Expects that we are inside $AMICI_ROOT/python/sdist
+    
     Arguments:
         withHDF5: compile with HDF5 support
     """
+    
     amiciBaseSources = glob.glob('amici{s}src{s}*.cpp'.format(s=os.sep))
     amiciBaseSources = [src for src in amiciBaseSources if not re.search(
         r'(matlab)|(\.template\.)', src)]
     
     if not withHDF5:
-        amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
+        try:
+            # sometimes this fails for unknwon reasons...
+            amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
+        except ValueError:
+            print('Warning: could not find %s in %s' % ('amici{s}src{s}hdf5.cpp'.format(s=os.sep), 
+                                                        amiciBaseSources)) 
     
     return amiciBaseSources
 
@@ -160,11 +168,13 @@ def getLibSuiteSparse(extra_compiler_flags=[]):
     return libsuitesparse
 
 
-def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None):
+def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None, blaspkgcfg=None):
     """Get AMICI core library build info for setuptools
 
     Arguments:
         extra_compiler_flags: Extra compiler flags
+        h5pkgcfg:  hdf5 package info
+        blaspkgcfg: blas package info
     """
 
     libamici = ('amici', {
@@ -186,5 +196,8 @@ def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None):
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
         libamici[1]['include_dirs'].extend(h5pkgcfg['include_dirs'])
+
+    if blaspkgcfg and 'include_dirs' in blaspkgcfg:
+        libamici[1]['include_dirs'].extend(blaspkgcfg['include_dirs'])
 
     return libamici

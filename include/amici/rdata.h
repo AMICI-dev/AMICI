@@ -83,7 +83,7 @@ class ReturnData {
     /** state (dimension: nt x nx, row-major) */
     std::vector<realtype> x;
 
-    /** parameter derivative of state (dimension: nt x nx x nplist,
+    /** parameter derivative of state (dimension: nt x nplist x nx,
      * row-major) */
     std::vector<realtype> sx;
 
@@ -93,12 +93,12 @@ class ReturnData {
     /** observable standard deviation (dimension: nt x ny, row-major) */
     std::vector<realtype> sigmay;
 
-    /** parameter derivative of observable (dimension: nt x ny x nplist,
+    /** parameter derivative of observable (dimension: nt x nplist x ny,
      * row-major) */
     std::vector<realtype> sy;
 
     /** parameter derivative of observable standard deviation (dimension: nt x
-     * ny x nplist, row-major) */
+     * nplist x ny, row-major) */
     std::vector<realtype> ssigmay;
     
     /** observable (dimension: nt x ny, row-major) */

@@ -2,14 +2,17 @@
 
 typedef double realtype;
 
-%include <std_string.i>
-%include <std_vector.i>
+%include <stl.i>
 
 %include std_unique_ptr.i
 wrap_unique_ptr(SolverPtr, amici::Solver)
 wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
 wrap_unique_ptr(ExpDataPtr, amici::ExpData)
+
+// Include before any other header which uses enums defined there
+%include "amici/defines.h"
+
 
 %include edata.i
 %include rdata.i
@@ -34,8 +37,7 @@ using namespace amici;
 // Process symbols in header
 %include "amici/amici.h"
 
-namespace std
-{
-    %template(DoubleVector) vector<realtype>;
-    %template(IntVector) vector<int>;
-}
+// Expose vectors
+%template(DoubleVector) std::vector<realtype>;
+%template(IntVector) std::vector<int>;
+%template(ParameterScalingVector) std::vector<amici::AMICI_parameter_scaling>;

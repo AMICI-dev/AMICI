@@ -29,6 +29,7 @@ extern void dwdp_TPL_MODELNAME(realtype *dwdp, const realtype t, const realtype 
 extern void dwdx_TPL_MODELNAME(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdp_TPL_MODELNAME(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydx_TPL_MODELNAME(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void dydp_TPL_MODELNAME(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
 extern void qBdot_TPL_MODELNAME(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp);
 extern void sigma_y_TPL_MODELNAME(double *sigmay, const realtype t, const realtype *p, const realtype *k);
 extern void sxdot_TPL_MODELNAME(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp);
@@ -440,18 +441,6 @@ public:
         dxdotdp_TPL_MODELNAME(dxdotdp, t, x, p, k, h, ip, w, dwdp);
     }
 
-    /** model specific implementation of fdydp
-     * @param dydp partial derivative of observables y w.r.t. model parameters p
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heavyside vector
-     * @param ip parameter index w.r.t. which the derivative is requested
-     **/
-    virtual void fdydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
-    }
-
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x
      * @param t current time
@@ -462,6 +451,19 @@ public:
      **/
     virtual void fdydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
         dydx_TPL_MODELNAME(dydx, t, x, p, k, h);
+    }
+
+    /** model specific implementation of fdydp
+     * @param dydp partial derivative of observables y w.r.t. model parameters p
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h heavyside vector
+     * @param ip parameter index w.r.t. which the derivative is requested
+     **/
+    virtual void fdydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
+        dydp_TPL_MODELNAME(dydp, t, x, p, k, h, ip);
     }
 
     /** model specific implementation of fdzdp

@@ -133,7 +133,9 @@ class SbmlImporter:
                              ' const realtype *k, const realtype *h)'},
             'dydp': {
                 'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h)'},
+                             ' const realtype *k, const realtype *h, const int ip)',
+                'sensitivity': True},
+
             'qBdot': {
                 'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
@@ -222,7 +224,7 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}):
+    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -231,6 +233,7 @@ class SbmlImporter:
             observables: dictionary(observableName:formulaString) to be added to the model
             sigmas: dictionary(observableName: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
+            verbose: more verbose output if True
         Returns:
 
         Raises:
@@ -243,7 +246,7 @@ class SbmlImporter:
         self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
         self.generateCCode()
-        self.compileCCode()
+        self.compileCCode(verbose)
     
     
     def setName(self, modelName):
@@ -757,7 +760,7 @@ class SbmlImporter:
         
         self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in observableSyms])
         
-        loglikelihoodString = lambda strSymbol: '0.5*sqrt(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=strSymbol)
+        loglikelihoodString = lambda strSymbol: '0.5*log(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=strSymbol)
         self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify(loglikelihoodString(str(symbol))) for symbol in observableSyms])
         self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(observableSyms)
         self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms)
@@ -782,7 +785,7 @@ class SbmlImporter:
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['species']['sym'])
+                                                .jacobian(self.symbols['species']['sym']).transpose()
         
         self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
 
@@ -882,26 +885,43 @@ class SbmlImporter:
                     os.path.join(self.modelPath, 'main.cpp'))
 
 
-    def compileCCode(self):
+    def compileCCode(self, verbose=False):
         """Compile the generated model code
         
         Arguments:
-
+            verbose: Make model compilation verbose
         Returns:
 
         Raises:
 
         """
-        
+
+        # setup.py assumes it is run from within the model directory
         moduleDir = self.modelPath
-        oldCwd = os.getcwd()
-        os.chdir(moduleDir) # setup.py assumes it is run from within the model dir
-        from distutils.core import run_setup
-        run_setup('setup.py',
-                  script_args=["build_ext", 
-                               '--build-lib=%s' % moduleDir, 
-                               ])
-        os.chdir(oldCwd)
+
+        script_args = [sys.executable, '%s%ssetup.py' % (moduleDir, os.sep)]
+        
+        if verbose:
+            script_args.append('--verbose')
+        else:
+            script_args.append('--quiet')
+        
+        script_args.extend(['build_ext', '--build-lib=%s' % moduleDir])
+
+        # distutils.core.run_setup looks nicer, but does not let us check the
+        # result easily
+        try:
+            result = subprocess.run(script_args,
+                                    cwd=moduleDir,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    check=True)
+        except subprocess.CalledProcessError as e:
+            print(e.output.decode('utf-8'))
+            raise
+                    
+        if verbose:
+            print(result.stdout.decode('utf-8'))
         
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.

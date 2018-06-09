@@ -58,13 +58,17 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv versions; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.6/bin:$PATH; fi
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy coverage
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy coverage scipy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
     - ./scripts/buildAmici.sh
 
 script:  
+    - cd $BASE_DIR/python/sdist
+    - python3 setup.py sdist --dist-dir=$BASE_DIR/build/python/
+    - python3 -m pip install $BASE_DIR/build/python/amici-*.tar.gz --verbose
+    - cd $BASE_DIR
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR

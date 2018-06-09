@@ -69,8 +69,9 @@ def runAmiciSimulation(model, solver, edata=None):
     Raises:
         
     """
-    if edata:
+    if edata and edata.__class__.__name__ == 'ExpDataPtr':
         edata = edata.get()
+
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
