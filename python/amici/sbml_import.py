@@ -135,7 +135,10 @@ class SbmlImporter:
                 'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip)',
                 'sensitivity': True},
-
+            'dsigmaydp': {
+                'signature': '(double *dsigmaydp, const realtype t, const realtype *p,'
+                             ' const realtype *k, const int ip)',
+                'sensitivity': True},
             'qBdot': {
                 'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
@@ -751,7 +754,7 @@ class SbmlImporter:
             self.n_observables = len(speciesSyms)
         self.functions['y']['sym'] = self.observables
         sigmaYSyms = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in observableSyms])
-        self.functions['sigma_y']['sym'] = sp.ones(sigmaYSyms.cols, sigmaYSyms.rows)
+        self.functions['sigma_y']['sym'] = sp.DenseMatrix([1.0] * len(observableSyms))
         
         # set user-provided sigmas
         for iy, obsName in enumerate(observables):
@@ -762,12 +765,10 @@ class SbmlImporter:
         
         loglikelihoodString = lambda strSymbol: '0.5*log(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=strSymbol)
         self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify(loglikelihoodString(str(symbol))) for symbol in observableSyms])
-        self.functions['dJydy']['sym'] = self.functions['Jy']['sym'].jacobian(observableSyms)
-        self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms)
-        self.functions['Jy']['sym'] = self.functions['Jy']['sym'].transpose()
-        self.functions['dJydy']['sym'] = self.functions['dJydy']['sym'].transpose()
-        self.functions['dJydsigma']['sym'] = self.functions['dJydsigma']['sym'].transpose()
-
+        self.functions['dJydy']['sym']     = self.functions['Jy']['sym'].jacobian(observableSyms).transpose()
+        self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms).transpose()
+        self.functions['Jy']['sym']        = self.functions['Jy']['sym'].transpose()
+        
         self.symbols['observable']['sym'] = observableSyms
         self.symbols['sigma_y']['sym'] = sigmaYSyms
         
@@ -783,6 +784,8 @@ class SbmlImporter:
 
         """
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
+                                                .jacobian(self.symbols['parameter']['sym'])
+        self.functions['dsigmaydp']['sym'] = self.functions['sigma_y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['species']['sym']).transpose()

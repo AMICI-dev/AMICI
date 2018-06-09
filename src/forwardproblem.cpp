@@ -579,7 +579,7 @@ void ForwardProblem::prepDataSensis(int it) {
             }
         }
         for (int ip = 0; ip < model->nplist(); ip++) {
-            rdata->ssigmay[it + rdata->nt * (ip * model->ny + iy)] =
+            rdata->ssigmay[it * model->nplist() * model->ny + ip * model->ny + iy] =
                 model->dsigmaydp[ip * model->ny + iy];
         }
     }
