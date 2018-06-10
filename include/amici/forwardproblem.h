@@ -213,7 +213,7 @@ class ForwardProblem {
     realtype t;
     
     /** array of flags indicating which root has beend found.
-     *  array of length nr with the indices of the user functions gi found to
+     *  array of length nr (ne) with the indices of the user functions gi found to
      * have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
     std::vector<int> rootsfound;
