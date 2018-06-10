@@ -74,8 +74,8 @@ void Model::fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rd
     }
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
- * parameters
+/** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+ * parameters for the given timepoint. Add result to respective fields in rdata.
  * @param it timepoint index
  * @param edata pointer to experimental data instance
  * @param rdata pointer to return data instance
@@ -83,24 +83,32 @@ void Model::fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rd
 void Model::fdJydp(const int it, const ExpData *edata,
                    ReturnData *rdata) {
 
-    // dJydy         nytrue x nJ x ny
-    // dydp          ny x nplist()
-    // dJydp         nJ x nplist()
+    // dJydy         nJ x nytrue x ny
+    // dydp          nplist * ny
+    // dJydp         nplist x nJ
+    // dJydsigma
+
     getmy(it,edata);
     std::fill(dJydp.begin(), dJydp.end(), 0.0);
+
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
 
+        // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, nplist(), ny, 1.0, &dJydy.at(iyt*nJ*ny), nJ, dydp.data(), ny,
+                    nJ, nplist(), ny,
+                    1.0, &dJydy.at(iyt*nJ*ny), nJ,
+                    dydp.data(), ny,
                     1.0, dJydp.data(), nJ);
 
+        // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, nplist(), ny, 1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
-                    dsigmaydp.data(), ny, 1.0, dJydp.data(), nJ);
+                    nJ, nplist(), ny,
+                    1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
+                    dsigmaydp.data(), ny,
+                    1.0, dJydp.data(), nJ);
     }
-
 
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
         return;
@@ -604,9 +612,9 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
 }
 
 /** Observables / measurements
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     */
+  * @param it timepoint index
+  * @param rdata pointer to return data instance
+  */
 void Model::fy(int it, ReturnData *rdata) {
     fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
@@ -617,8 +625,16 @@ void Model::fy(int it, ReturnData *rdata) {
      */
 void Model::fdydp(const int it, ReturnData *rdata) {
     std::fill(dydp.begin(),dydp.end(),0.0);
+
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fdydp(&dydp.at(ip*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
+        // get dydp slice (ny) for current time and parameter
+        fdydp(&dydp.at(ip*ny),
+              rdata->ts.at(it),
+              getx(it,rdata),
+              unscaledParameters.data(),
+              fixedParameters.data(),
+              h.data(),
+              plist_.at(ip));
     }
 }
 
@@ -812,18 +828,26 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata) {
-    std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_ydp(&dsigmaydp.at(ip*ny),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+    std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
 
+    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+        // get dsigmaydp slice (ny) for current timepoint and parameter
+        fdsigma_ydp(&dsigmaydp.at(ip*ny),
+                    rdata->ts.at(it),
+                    unscaledParameters.data(),
+                    fixedParameters.data(),
+                    plist_.at(ip));
+
+    // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp to zero
     for (int iy = 0; iy < nytrue; iy++) {
         if (!isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
             for (int ip = 0; ip < nplist(); ip++) {
-                dsigmaydp[ip * ny + iy] = 0;
+                dsigmaydp[ip * ny + iy] = 0.0;
             }
         }
     }
 
+    // copy dsigmaydp slice for current timepoint
     std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
 }
 
@@ -919,11 +943,20 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
      */
 void Model::fdJydy(const int it, const ReturnData *rdata,
                    const ExpData *edata) {
+    // load measurements to my
     getmy(it,edata);
     std::fill(dJydy.begin(),dJydy.end(),0.0);
+
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydy(&dJydy.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
+            // get dJydy slice (ny) for current timepoint and observable
+            fdJydy(&dJydy.at(iytrue*ny*nJ),
+                   iytrue,
+                   unscaledParameters.data(),
+                   fixedParameters.data(),
+                   gety(it,rdata),
+                   sigmay.data(),
+                   my.data());
         }
     }
 }
@@ -936,11 +969,20 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
      */
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        const ExpData *edata) {
-    getmy(it,edata);
+    // load measurements to my
+    getmy(it, edata);
     std::fill(dJydsigma.begin(),dJydsigma.end(),0.0);
+
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
+            // get dJydsigma slice (ny) for current timepoint and observable
+            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),
+                       iytrue,
+                       unscaledParameters.data(),
+                       fixedParameters.data(),
+                       gety(it,rdata),
+                       sigmay.data(),
+                       my.data());
         }
     }
 }
