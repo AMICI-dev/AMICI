@@ -143,7 +143,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_sigma_y_([0-9]+)','sigmay[$1]');
             cstr = regexprep(cstr,'var_sigma_z_([0-9]+)','sigmaz[$1]');
             cstr = regexprep(cstr,'var_dsigma_zdp_([0-9]+)',['dsigmazdp[ip*' num2str(model.nz) ' + $1]']);
-            cstr = regexprep(cstr,'var_dsigma_ydp_([0-9]+)',['dsigmaydp[ip*' num2str(model.ny) ' + $1]']);
+            cstr = regexprep(cstr,'var_dsigma_ydp_([0-9]+)',['dsigmaydp[$1]']);
             
             cstr = regexprep(cstr,'var_dsdydp_([0-9]+)',['dsigmaydp[ip*' num2str(model.ny) ' + $1]']);
             cstr = regexprep(cstr,'var_dsdzdp_([0-9]+)',['dsigmazdp[ip*' num2str(model.nz) ' + $1]']);
