@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8) # swig_add_library
 
 # Find Python interpreter, libs and headers
 find_package(PythonInterp 3.6 REQUIRED)# TODO to setup.py
-find_package(PythonLibs REQUIRED)
+find_package(PythonLibs 3.6 REQUIRED)
 include_directories(
     ${PYTHON_INCLUDE_PATH}
     ${CMAKE_SOURCE_DIR}/include
