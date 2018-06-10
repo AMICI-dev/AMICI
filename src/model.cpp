@@ -8,18 +8,14 @@
 
 namespace amici {
 
-/** Sensitivity of measurements y, total derivative
+/** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
  * @param it timepoint index
  * @param rdata pointer to return data instance
  */
 void Model::fsy(const int it, ReturnData *rdata) {
-    // Compute sy = dydx * sx + dydp
-    for (int ip = 0; ip < nplist(); ++ip) {
-        for (int iy = 0; iy < ny; ++iy)
-            // copy dydp to sy
-            rdata->sy.at((it*nplist()+ip)*ny+iy) =
-                    dydp.at(iy + ip * ny);
-    }
+    // copy dydp for current time to sy
+    std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
+
     // compute sy = 1.0*dydx*sx + 1.0*sy
     // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
     //        M  K          K  N              M  N
@@ -91,7 +87,7 @@ void Model::fdJydp(const int it, const ExpData *edata,
     // dydp          ny x nplist()
     // dJydp         nJ x nplist()
     getmy(it,edata);
-    fill(dJydp.begin(),dJydp.end(),0.0);
+    std::fill(dJydp.begin(), dJydp.end(), 0.0);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
@@ -556,7 +552,7 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
 void Model::fdsigma_ydp(const int it, const ReturnData *rdata) {
     std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_ydp(dsigmaydp.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fdsigma_ydp(&dsigmaydp.at(ip*ny),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
 /** Standard deviation of events
@@ -588,6 +584,7 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
 void Model::fdsigma_zdp(const realtype t) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+        // TODO dsigmazdp.data() or slice?
         fdsigma_zdp(dsigmazdp.data(),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
@@ -779,13 +776,9 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
      */
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
-        for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = static_cast<realtype>(edata->my[it*edata->nytrue + iytrue]);
-        }
+        std::copy_n(&edata->my[it*edata->nytrue], nytrue, my.begin());
     } else {
-        for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = getNaN();
-        }
+        std::fill(my.begin(), my.end(), getNaN());
     }
 }
 
@@ -832,13 +825,9 @@ realtype Model::gett(const int it, const ReturnData *rdata) const {
      */
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
-        for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots*edata->nztrue + iztrue]);
-        }
+        std::copy_n(&edata->mz[nroots*edata->nztrue], nztrue, mz.begin());
     } else {
-        for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = getNaN();
-        }
+        std::fill(mz.begin(), mz.end(), getNaN());
     }
 }
 

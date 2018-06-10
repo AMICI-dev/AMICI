@@ -631,67 +631,6 @@ namespace amici {
             initializeVectors();
         }
 
-        /** number of states */
-        const int nx;
-        /** number of states in the unaugmented system */
-        const int nxtrue;
-        /** number of observables */
-        const int ny;
-        /** number of observables in the unaugmented system */
-        const int nytrue;
-        /** number of event outputs */
-        const int nz;
-        /** number of event outputs in the unaugmented system */
-        const int nztrue;
-        /** number of events */
-        const int ne;
-        /** number of common expressions */
-        const int nw;
-        /** number of derivatives of common expressions wrt x */
-        const int ndwdx;
-        /** number of derivatives of common expressions wrt p */
-        const int ndwdp;
-        /** number of nonzero entries in jacobian */
-        const int nnz;
-        /** dimension of the augmented objective function for 2nd order ASA */
-        const int nJ;
-        /** upper bandwith of the jacobian */
-        const int ubw;
-        /** lower bandwith of the jacobian */
-        const int lbw;
-        /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
-         * directional or full second order derivative will be computed */
-        const AMICI_o2mode o2mode;
-        /** index indicating to which event an event output belongs */
-        const std::vector<int> z2event;
-        /** flag array for DAE equations */
-        const std::vector<realtype> idlist;
-        
-        /** data standard deviation */
-        std::vector<realtype> sigmay;
-        /** parameter derivative of data standard deviation */
-        std::vector<realtype> dsigmaydp;
-        /** event standard deviation */
-        std::vector<realtype> sigmaz;
-        /** parameter derivative of event standard deviation */
-        std::vector<realtype> dsigmazdp;
-        /** parameter derivative of data likelihood */
-        std::vector<realtype> dJydp;
-        /** parameter derivative of event likelihood */
-        std::vector<realtype> dJzdp;
-        
-        /** change in x */
-        std::vector<realtype> deltax;
-        /** change in sx */
-        std::vector<realtype> deltasx;
-        /** change in xB */
-        std::vector<realtype> deltaxB;
-        /** change in qB */
-        std::vector<realtype> deltaqB;
-        
-        /** tempory storage of dxdotdp data across functions */
-        std::vector<realtype> dxdotdp;
-        
         void fw(const realtype t, const N_Vector x);
 
         void fdwdp(const realtype t, const N_Vector x);
@@ -753,6 +692,70 @@ namespace amici {
          * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
          */
         int checkFinite(const int N,const realtype *array, const char* fun) const;
+
+
+
+        /** number of states */
+        const int nx;
+        /** number of states in the unaugmented system */
+        const int nxtrue;
+        /** number of observables */
+        const int ny;
+        /** number of observables in the unaugmented system */
+        const int nytrue;
+        /** number of event outputs */
+        const int nz;
+        /** number of event outputs in the unaugmented system */
+        const int nztrue;
+        /** number of events */
+        const int ne;
+        /** number of common expressions */
+        const int nw;
+        /** number of derivatives of common expressions wrt x */
+        const int ndwdx;
+        /** number of derivatives of common expressions wrt p */
+        const int ndwdp;
+        /** number of nonzero entries in jacobian */
+        const int nnz;
+        /** dimension of the augmented objective function for 2nd order ASA */
+        const int nJ;
+        /** upper bandwith of the jacobian */
+        const int ubw;
+        /** lower bandwith of the jacobian */
+        const int lbw;
+        /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
+         * directional or full second order derivative will be computed */
+        const AMICI_o2mode o2mode;
+        /** index indicating to which event an event output belongs */
+        const std::vector<int> z2event;
+        /** flag array for DAE equations */
+        const std::vector<realtype> idlist;
+
+        /** data standard deviation for current timepoint (dimension: ny) */
+        std::vector<realtype> sigmay;
+        /** parameter derivative of data standard deviation (dimension: nplist x ny, row-major) */
+        std::vector<realtype> dsigmaydp;
+        /** event standard deviation (dimension: nz) */
+        std::vector<realtype> sigmaz;
+        /** parameter derivative of event standard deviation  (dimension: nplist x nz, row-major) */
+        std::vector<realtype> dsigmazdp;
+        /** parameter derivative of data likelihood (dimension: nplist x nJ, row-major) */
+        std::vector<realtype> dJydp;
+        /** parameter derivative of event likelihood (dimension: nplist x nJ, row-major) */
+        std::vector<realtype> dJzdp;
+
+        /** change in x (dimension: nx) */
+        std::vector<realtype> deltax;
+        /** change in sx (dimension: nplist x nx, row-major) */
+        std::vector<realtype> deltasx;
+        /** change in xB (dimension: nJ x nxtrue, row-major) */
+        std::vector<realtype> deltaxB;
+        /** change in qB (dimension: nJ x nplist, row-major) */
+        std::vector<realtype> deltaqB;
+
+        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx, row-major) */
+        std::vector<realtype> dxdotdp;
+
 
     protected:
         
@@ -1232,65 +1235,67 @@ namespace amici {
         /** Jacobian */
         SlsMat J = nullptr;
         
-        /** current observable */
+        /** current observable (dimension: nytrue) */
         std::vector<realtype> my;
-        /** current event measurement */
+        /** current event measurement (dimension: nztrue) */
         std::vector<realtype> mz;
-        /** observable derivative of data likelihood */
+        /** observable derivative of data likelihood (dimension nJ x nytrue x ny, ordering = ?) */
         std::vector<realtype> dJydy;
-        /** observable sigma derivative of data likelihood */
+        /** observable sigma derivative of data likelihood (dimension nJ x nytrue x ny, ordering = ?) */
         std::vector<realtype> dJydsigma;
-        /** event ouput derivative of event likelihood */
+
+        /** event ouput derivative of event likelihood (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJzdz;
-        /** event sigma derivative of event likelihood */
+        /** event sigma derivative of event likelihood (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJzdsigma;
-        /** event ouput derivative of event likelihood at final timepoint */
+        /** event ouput derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdz;
-        /** event sigma derivative of event likelihood at final timepoint */
+        /** event sigma derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdsigma;
-        /** state derivative of event output */
+        /** state derivative of event output (dimension: nz * nx, ordering = ?) */
         std::vector<realtype> dzdx;
-        /** parameter derivative of event output */
+        /** parameter derivative of event output (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> dzdp;
-        /** state derivative of event timepoint */
+        /** state derivative of event timepoint (dimension: nz * nx, ordering = ?) */
         std::vector<realtype> drzdx;
-        /** parameter derivative of event timepoint */
+        /** parameter derivative of event timepoint (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> drzdp;
-        /** parameter derivative of observable */
+        /** parameter derivative of observable (dimension: nplist * ny, row-major) */
         std::vector<realtype> dydp;
-        /** state derivative of observable */
+
+        /** state derivative of observable (dimension: ny * nx, ordering = ?) */
         std::vector<realtype> dydx;
-        /** tempory storage of w data across functions */
+        /** tempory storage of w data across functions (dimension: nw) */
         std::vector<realtype> w;
-        /** tempory storage of dwdx data across functions */
+        /** tempory storage of sparse dwdx data across functions (dimension: ndwdx) */
         std::vector<realtype> dwdx;
-        /** tempory storage of dwdp data across functions */
+        /** tempory storage of sparse dwdp data across functions (dimension: ndwdp) */
         std::vector<realtype> dwdp;
-        /** tempory storage of M data across functions */
+        /** tempory storage of M data across functions (dimension: nx) */
         std::vector<realtype> M;
-        /** tempory storage of stau data across functions */
+        /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
         
         /** flag indicating whether a certain heaviside function should be active or
-         not */
+         not (dimension: ne) */
         std::vector<realtype> h;
 
-        /** unscaled parameters */
+        /** unscaled parameters (dimension: np) */
         std::vector<realtype> unscaledParameters;
 
         /** orignal user-provided, possibly scaled parameter array (size np) */
         std::vector<realtype>originalParameters;
 
-        /** constants */
+        /** constants (dimension: nk) */
         std::vector<realtype> fixedParameters;
 
-        /** indexes of parameters wrt to which sensitivities are computed */
+        /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
         std::vector<int> plist_;
 
         /** state initialisation (size nx) */
         std::vector<double>x0data;
 
-        /** sensitivity initialisation (size nx * nplist) */
+        /** sensitivity initialisation (size nx * nplist, ordering = ?) */
         std::vector<realtype>sx0data;
 
         /** timepoints (size nt) */
@@ -1299,7 +1304,7 @@ namespace amici {
         /** maximal number of events to track */
         int nmaxevent = 10;
 
-        /** parameter transformation of p */
+        /** parameter transformation of `originalParameters` (dimension np) */
         std::vector<AMICI_parameter_scaling> pscale;
 
         /** starting time */
