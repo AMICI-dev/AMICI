@@ -56,15 +56,14 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                                             self.model.get())
                     rdata = amici.runAmiciSimulation(self.model, self.solver, edata)
                     
+                    if edata and self.solver.getSensitivityMethod() and self.solver.getSensitivityOrder():
+                        if not modelName.startswith('model_neuron'):
+                            checkGradient(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
-
-                    if edata and self.solver.getSensitivityMethod() and self.solver.getSensitivityOrder():
-                        if not modelName.startswith('model_neuron'):
-                            checkGradient(self.model, self.solver, edata)
                         
 
 def checkGradient(model, solver, edata):
