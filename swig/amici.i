@@ -1,5 +1,12 @@
 %module amici
 
+
+%begin %{
+/* Include cmath before python headers to prevent "error: '::hypot'
+ * has not been declared" error with mingw. */
+#include<cmath>
+%}
+
 typedef double realtype;
 
 %include <stl.i>
