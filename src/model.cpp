@@ -825,6 +825,7 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
 /** partial derivative of standard deviation of measurements w.r.t. model
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @param edata pointer to ExpData data instance holding sigma values
      */
 void Model::fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
