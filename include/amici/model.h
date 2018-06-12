@@ -1049,7 +1049,7 @@ namespace amici {
 
 
 
-        /** Sparse Jacobian (dimension: nx x nx x nnz)*/
+        /** Sparse Jacobian (dimension: nnz)*/
         SlsMat J = nullptr;
         
         /** current observable (dimension: nytrue) */

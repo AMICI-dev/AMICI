@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.8) # swig_add_library
+
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 

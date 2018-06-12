@@ -389,7 +389,7 @@ public:
      * @param ip sensitivity index
      **/
     virtual void fdsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
-        dsigmaydp_TPL_MODELNAME(dsigmaydp, t, p, k, ip);
+        dsigma_ydp_TPL_MODELNAME(dsigmaydp, t, p, k, ip);
 
     }
 

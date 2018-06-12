@@ -135,7 +135,7 @@ class SbmlImporter:
                 'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip)',
                 'sensitivity': True},
-            'dsigmaydp': {
+            'dsigma_ydp': {
                 'signature': '(double *dsigmaydp, const realtype t, const realtype *p,'
                              ' const realtype *k, const int ip)',
                 'sensitivity': True},
@@ -785,7 +785,7 @@ class SbmlImporter:
         """
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dsigmaydp']['sym'] = self.functions['sigma_y']['sym']\
+        self.functions['dsigma_ydp']['sym'] = self.functions['sigma_y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['species']['sym']).transpose()

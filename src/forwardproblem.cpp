@@ -41,7 +41,7 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
   */
 ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
                                Model *model, Solver *solver)
-    : rootidx(model->ne*model->ne*model->ne*rdata->nmaxevent, 0),
+    : rootidx(model->ne * model->ne * rdata->nmaxevent, 0),
       nroots(model->ne, 0),
       rootvals(model->ne, 0.0),
       rvaltmp(model->ne, 0.0),
@@ -588,8 +588,9 @@ void ForwardProblem::getDataSensisFSA(int it) {
     if(edata) {
         for (int iy = 0; iy < model->nytrue; iy++) {
             if (isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
-                // @ REVIEW: it seems redundant to call this for every iy, should be only called once per it, not?
-                // (and was already called in prepDataSensis)
+                // TODO: it seems redundant to call this for every iy,
+                // should be only called once per it. Check with redundancy
+                // in prepDataSensis and Model::fdsigma_ydp
                 model->fdsigma_ydp(it, rdata, edata);
             } else {
                 for (int ip = 0; ip < model->nplist(); ip++) {

@@ -812,8 +812,7 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
     fsigma_y(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
     for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
-             is NaN, use
-             the parameter value. Store this value in the return struct */
+             is NaN, use the parameter value. Store this value in the return struct */
         if(edata){
             if (!isNaN(edata->sigmay[it * edata->nytrue + iytrue])) {
                 sigmay.at(iytrue) = edata->sigmay[it * edata->nytrue + iytrue];
@@ -880,8 +879,7 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
 void Model::fdsigma_zdp(const realtype t) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        // TODO dsigmazdp.data() or slice?
-        fdsigma_zdp(dsigmazdp.data(),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fdsigma_zdp(&dsigmazdp.at(ip*nz),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
 /** negative log-likelihood of measurements y

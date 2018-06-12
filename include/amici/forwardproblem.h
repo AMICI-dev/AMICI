@@ -169,7 +169,7 @@ class ForwardProblem {
 
     void applyEventSensiBolusFSA();
     
-    /** array of index which root has been found  (dimension: ne * ne * ne * nmaxevent, ordering = ?) */
+    /** array of index which root has been found  (dimension: ne * ne * nmaxevent, ordering = ?) */
     std::vector<int> rootidx;
     /** array of number of found roots for a certain event type (dimension: ne) */
     std::vector<int> nroots;
@@ -198,17 +198,7 @@ class ForwardProblem {
     std::vector<realtype> dJydx;
     /** state derivative of event likelihood (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx;
-    
-    /** data likelihood */
-    std::vector<realtype> Jy; // TODO remove?
-    /** event likelihood */
-    std::vector<realtype> Jz; // TODO remove?
-
-    /** parameter derivative of data likelihood */ // TODO remove?
-    std::vector<realtype> dJydp;
-    /** parameter derivative of event likelihood */  // TODO remove?
-    std::vector<realtype> dJzdp;
-    
+        
     /** current time */
     realtype t;
     
