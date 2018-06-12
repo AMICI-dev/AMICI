@@ -116,39 +116,43 @@ def getFieldAsNumPyArray(rdata, field):
         
     """
 
-    fieldDimensions = {'ts': [rdata.nt],
-                       'x': [rdata.nt, rdata.nx],
-                       'x0': [rdata.nx],
-                       'sx': [rdata.nt, rdata.nplist, rdata.nx],
+    fieldDimensions = {'ts':  [rdata.nt],
+                       'x':   [rdata.nt, rdata.nx],
+                       'x0':  [rdata.nx],
+                       'sx':  [rdata.nt, rdata.nplist, rdata.nx],
                        'sx0': [rdata.nx, rdata.nplist],
+                       
                        # observables
-                       'y': [rdata.nt, rdata.ny],
-                       'sigmay': [rdata.nt, rdata.ny],
-                       'sy': [rdata.nt, rdata.nplist, rdata.ny],
+                       'y':       [rdata.nt, rdata.ny],
+                       'sigmay':  [rdata.nt, rdata.ny],
+                       'sy':      [rdata.nt, rdata.nplist, rdata.ny],
                        'ssigmay': [rdata.nt, rdata.nplist, rdata.ny],
+                       
                        # event observables
-                       'z': [rdata.nmaxevent, rdata.nz],
-                       'rz': [rdata.nmaxevent, rdata.nz],
-                       'sigmaz': [rdata.nmaxevent, rdata.nz],
-                       'sz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-                       'srz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
+                       'z':       [rdata.nmaxevent, rdata.nz],
+                       'rz':      [rdata.nmaxevent, rdata.nz],
+                       'sigmaz':  [rdata.nmaxevent, rdata.nz],
+                       'sz':      [rdata.nmaxevent, rdata.nplist, rdata.nz],
+                       'srz':     [rdata.nmaxevent, rdata.nplist, rdata.nz],
                        'ssigmaz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
+
                        # objective function
-                       'sllh': [rdata.nplist],
+                       'sllh':  [rdata.nplist],
                        's2llh': [rdata.np, rdata.nplist],
+                       
                        # diagnosis
-                       'J': [rdata.nx, rdata.nx],
-                       'xdot': [rdata.nx],
-                       'newton_numlinsteps': [rdata.newton_maxsteps, 2],
-                       'newton_numsteps': [1, 2],
-                       'numsteps': [rdata.nt],
-                       'numrhsevals': [rdata.nt],
-                       'numerrtestfails': [rdata.nt],
-                       'numnonlinsolvconvfails': [rdata.nt],
-                       'order': [rdata.nt],
-                       'numstepsB': [rdata.nt],
-                       'numrhsevalsB': [rdata.nt],
-                       'numerrtestfailsB': [rdata.nt],
+                       'J':                       [rdata.nx, rdata.nx],
+                       'xdot':                    [rdata.nx],
+                       'newton_numlinsteps':      [rdata.newton_maxsteps, 2],
+                       'newton_numsteps':         [1, 2],
+                       'numsteps':                [rdata.nt],
+                       'numrhsevals':             [rdata.nt],
+                       'numerrtestfails':         [rdata.nt],
+                       'numnonlinsolvconvfails':  [rdata.nt],
+                       'order':                   [rdata.nt],
+                       'numstepsB':               [rdata.nt],
+                       'numrhsevalsB':            [rdata.nt],
+                       'numerrtestfailsB':        [rdata.nt],
                        'numnonlinsolvconvfailsB': [rdata.nt],
                        }
     if field == 't':

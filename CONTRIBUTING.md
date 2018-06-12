@@ -24,3 +24,5 @@ When making code changes:
 
 To add new tests add a new corresponding python script (see, e.g.,  `tests/example_dirac.py`) and add it to and run `tests/generateTestConfigurationForExamples.sh`
 To update test results replace  `tests/cpputest/expectedResults.h5` by `tests/cpputest/writeResults.h5.bak` [ONLY DO THIS AFTER TRIPLE CHECKING CORRECTNESS OF RESULTS]
+Before replacing the test results, confirm that only expected datasets have changed, e.g. using 
+`h5diff -v -r 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less`

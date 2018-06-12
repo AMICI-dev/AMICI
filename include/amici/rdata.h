@@ -31,6 +31,8 @@ class ReturnData {
 
     ReturnData(Solver const& solver, const Model *model);
 
+    ~ReturnData() = default;
+
     /**
      * @brief initializeObjectiveFunction
      */
@@ -41,8 +43,6 @@ class ReturnData {
 
     void 
     applyChainRuleFactorToSimulationResults(const Model *model);
-
-    ~ReturnData() = default;
 
     /** timepoints (dimension: nt) */
     std::vector<realtype> ts;
@@ -143,32 +143,32 @@ class ReturnData {
     /** computation time of the Newton solver [s] */
     double newton_time = 0.0;
 
-    /** number of Newton steps for steady state problem */
+    /** number of Newton steps for steady state problem (length = 2) */
     std::vector<int> newton_numsteps;
 
-    /** number of linear steps by Newton step for steady state problem */
+    /** number of linear steps by Newton step for steady state problem (length = newton_maxsteps * 2) */
     std::vector<int> newton_numlinsteps;
 
-    /** preequilibration steady state found be Newton solver */
+    /** preequilibration steady state found be Newton solver (dimension: nx) */
     std::vector<realtype> x0;
 
-    /** preequilibration sensitivities found be Newton solver */
+    /** preequilibration sensitivities found be Newton solver (dimension: nplist x nx, row-major) */
     std::vector<realtype> sx0;
 
-    /** likelihood value (double[1]) */
+    /** loglikelihood value */
     realtype llh = 0.0;
 
-    /** chi2 value (double[1]) */
+    /** chi2 value */
     realtype chi2 = 0.0;
 
-    /** parameter derivative of likelihood (dimension: nplist) */
+    /** parameter derivative of loglikelihood (dimension: nplist) */
     std::vector<realtype> sllh;
 
-    /** second order parameter derivative of likelihood (dimension: (nJ-1) x
+    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x
      * nplist, row-major) */
     std::vector<realtype> s2llh;
 
-    /** status code (double[1]) */
+    /** status code */
     int status = 0;
 
   public:
