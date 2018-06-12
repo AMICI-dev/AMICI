@@ -140,7 +140,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             try{
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
-            } catch(std::exception ex) {
+            } catch(std::exception const& ex) {
                 rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
                 throw NewtonFailure("Newton method failed to compute new step!");
             }

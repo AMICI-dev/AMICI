@@ -8,18 +8,14 @@
 
 namespace amici {
 
-/** Sensitivity of measurements y, total derivative
+/** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
  * @param it timepoint index
  * @param rdata pointer to return data instance
  */
 void Model::fsy(const int it, ReturnData *rdata) {
-    // Compute sy = dydx * sx + dydp
-    for (int ip = 0; ip < nplist(); ++ip) {
-        for (int iy = 0; iy < ny; ++iy)
-            // copy dydp to sy
-            rdata->sy.at((it*nplist()+ip)*ny+iy) =
-                    dydp.at(iy + ip * ny);
-    }
+    // copy dydp for current time to sy
+    std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
+
     // compute sy = 1.0*dydx*sx + 1.0*sy
     // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
     //        M  K          K  N              M  N
@@ -78,31 +74,57 @@ void Model::fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rd
     }
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
- * parameters
+/** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+ * parameters for the given timepoint. Add result to respective fields in rdata.
  * @param it timepoint index
  * @param edata pointer to experimental data instance
  * @param rdata pointer to return data instance
  */
 void Model::fdJydp(const int it, const ExpData *edata,
-                   const ReturnData *rdata) {
+                   ReturnData *rdata) {
 
-    // dJydy         nytrue x nJ x ny
-    // dydp          ny x nplist()
-    // dJydp         nJ x nplist()
+    // dJydy         nJ x nytrue x ny
+    // dydp          nplist * ny
+    // dJydp         nplist x nJ
+    // dJydsigma
+
     getmy(it,edata);
-    fill(dJydp.begin(),dJydp.end(),0.0);
+    std::fill(dJydp.begin(), dJydp.end(), 0.0);
+
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
 
+        // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, nplist(), ny, 1.0, &dJydy.at(iyt*nJ*ny), nJ, dydp.data(), ny,
+                    nJ, nplist(), ny,
+                    1.0, &dJydy.at(iyt*nJ*ny), nJ,
+                    dydp.data(), ny,
                     1.0, dJydp.data(), nJ);
 
+        // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
         amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
-                    nJ, nplist(), ny, 1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
-                    dsigmaydp.data(), ny, 1.0, dJydp.data(), nJ);
+                    nJ, nplist(), ny,
+                    1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
+                    dsigmaydp.data(), ny,
+                    1.0, dJydp.data(), nJ);
+    }
+
+    if (rdata->sensi_meth != AMICI_SENSI_ASA)
+        return;
+
+    if(ny < 1)
+        return;
+
+    for (int iJ = 0; iJ < nJ; iJ++) {
+        for (int ip = 0; ip < nplist(); ip++) {
+            if (iJ == 0) {
+                rdata->sllh.at(ip) -= dJydp[ip * nJ];
+            } else {
+                rdata->s2llh.at((iJ - 1) + ip * (nJ - 1)) -=
+                        dJydp[iJ + ip * nJ];
+            }
+        }
     }
 }
 
@@ -298,6 +320,250 @@ void Model::initHeaviside(AmiVector *x, AmiVector *dx) {
     }
 }
 
+int Model::nplist() const {
+    return plist_.size();
+}
+
+int Model::np() const {
+    return originalParameters.size();
+}
+
+int Model::nk() const {
+    return fixedParameters.size();
+}
+
+const double *Model::k() const{
+    return fixedParameters.data();
+}
+
+int Model::nMaxEvent() const {
+    return nmaxevent;
+}
+
+void Model::setNMaxEvent(int nmaxevent) {
+    this->nmaxevent = nmaxevent;
+}
+
+int Model::nt() const {
+    return ts.size();
+}
+
+std::vector<AMICI_parameter_scaling> Model::getParameterScale() const {
+    return pscale;
+}
+
+void Model::setParameterScale(AMICI_parameter_scaling pscale) {
+    this->pscale.assign(this->pscale.size(), pscale);
+    unscaledParameters.resize(originalParameters.size());
+    unscaleParameters(unscaledParameters.data());
+}
+
+void Model::setParameterScale(std::vector<AMICI_parameter_scaling> pscale) {
+    this->pscale = pscale;
+    unscaledParameters.resize(originalParameters.size());
+    unscaleParameters(unscaledParameters.data());
+}
+
+std::vector<realtype> Model::getParameters() const {
+    return originalParameters;
+}
+
+void Model::setParameters(const std::vector<realtype> &p) {
+    if(p.size() != (unsigned) this->originalParameters.size())
+        throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
+    this->originalParameters = p;
+    this->unscaledParameters.resize(originalParameters.size());
+    unscaleParameters(this->unscaledParameters.data());
+}
+
+std::vector<realtype> Model::getUnscaledParameters() const {
+    return unscaledParameters;
+}
+
+std::vector<realtype> Model::getFixedParameters() const {
+    return fixedParameters;
+}
+
+void Model::setFixedParameters(const std::vector<realtype> &k) {
+    if(k.size() != (unsigned) this->fixedParameters.size())
+        throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
+    this->fixedParameters = k;
+}
+
+std::vector<realtype> Model::getTimepoints() const {
+    return ts;
+}
+
+void Model::setTimepoints(const std::vector<realtype> &ts) {
+    this->ts = ts;
+}
+
+double Model::t(int idx) const {
+    return ts.at(idx);
+}
+
+std::vector<int> Model::getParameterList() const {
+    return plist_;
+}
+
+void Model::setParameterList(const std::vector<int> &plist) {
+    for(auto const& idx: plist)
+        if(idx < 0 || idx >= np())
+            throw AmiException("Indices in plist must be in [0..np]");
+    this->plist_ = plist;
+
+    initializeVectors();
+}
+
+std::vector<realtype> Model::getInitialStates() const {
+    return x0data;
+}
+
+void Model::setInitialStates(const std::vector<realtype> &x0) {
+    if(x0.size() != (unsigned) nx)
+        throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
+    this->x0data = x0;
+}
+
+std::vector<realtype> Model::getInitialStateSensitivities() const {
+    return sx0data;
+}
+
+void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
+    if(sx0.size() != (unsigned) nx * nplist())
+        throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
+    this->sx0data = sx0;
+}
+
+double Model::t0() const{
+    return tstart;
+}
+
+void Model::setT0(double t0) {
+    tstart = t0;
+}
+
+int Model::plist(int pos) const{
+    return plist_.at(pos);
+}
+
+
+Model::Model(const int nx, const int nxtrue, const int ny, const int nytrue,
+             const int nz, const int nztrue, const int ne, const int nJ,
+             const int nw, const int ndwdx, const int ndwdp, const int nnz,
+             const int ubw, const int lbw, const AMICI_o2mode o2mode,
+             const std::vector<realtype> p, const std::vector<realtype> k,
+             const std::vector<int> plist, const std::vector<realtype> idlist,
+             const std::vector<int> z2event)
+    : nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
+      nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
+      nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode),
+      z2event(z2event),
+      idlist(idlist),
+      sigmay(ny, 0.0),
+      dsigmaydp(ny*plist.size(), 0.0),
+      sigmaz(nz, 0.0),
+      dsigmazdp(nz*plist.size(), 0.0),
+      dJydp(nJ*plist.size(), 0.0),
+      dJzdp(nJ*plist.size(), 0.0),
+      deltax(nx, 0.0),
+      deltasx(nx*plist.size(), 0.0),
+      deltaxB(nx, 0.0),
+      deltaqB(nJ*plist.size(), 0.0),
+      dxdotdp(nx*plist.size(), 0.0),
+      my(nytrue, 0.0),
+      mz(nztrue, 0.0),
+      dJydy(nJ*nytrue*ny, 0.0),
+      dJydsigma(nJ*nytrue*ny, 0.0),
+      dJzdz(nJ*nztrue*nz, 0.0),
+      dJzdsigma(nJ*nztrue*nz, 0.0),
+      dJrzdz(nJ*nztrue*nz, 0.0),
+      dJrzdsigma(nJ*nztrue*nz, 0.0),
+      dzdx(nz*nx, 0.0),
+      dzdp(nz*plist.size(), 0.0),
+      drzdx(nz*nx, 0.0),
+      drzdp(nz*plist.size(), 0.0),
+      dydp(ny*plist.size(), 0.0),
+      dydx(ny*nx,0.0),
+      w(nw, 0.0),
+      dwdx(ndwdx, 0.0),
+      dwdp(ndwdp, 0.0),
+      M(nx*nx, 0.0),
+      stau(plist.size(), 0.0),
+      h(ne,0.0),
+      unscaledParameters(p),
+      originalParameters(p),
+      fixedParameters(k),
+      plist_(plist),
+      pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
+{
+    J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+}
+
+Model::Model(const Model &other)
+    : nx(other.nx), nxtrue(other.nxtrue),
+      ny(other.ny), nytrue(other.nytrue),
+      nz(other.nz), nztrue(other.nztrue),
+      ne(other.ne), nw(other.nw),
+      ndwdx(other.ndwdx), ndwdp(other.ndwdp),
+      nnz(other.nnz), nJ(other.nJ),
+      ubw(other.ubw), lbw(other.lbw),
+      o2mode(other.o2mode),
+      z2event(other.z2event),
+      idlist(other.idlist),
+
+      sigmay(other.sigmay),
+      dsigmaydp(other.dsigmaydp),
+      sigmaz(other.sigmaz),
+      dsigmazdp(other.dsigmazdp),
+      dJydp(other.dJydp),
+      dJzdp(other.dJzdp),
+      deltax(other.deltax),
+      deltasx(other.deltasx),
+      deltaxB(other.deltaxB),
+      deltaqB(other.deltaqB),
+      dxdotdp(other.dxdotdp),
+
+      J(nullptr),
+      my(other.my),
+      mz(other.mz),
+      dJydy(other.dJydy),
+      dJydsigma(other.dJydsigma),
+      dJzdz(other.dJzdz),
+      dJzdsigma(other.dJzdsigma),
+      dJrzdz(other.dJrzdz),
+      dJrzdsigma(other.dJrzdsigma),
+      dzdx(other.dzdx),
+      dzdp(other.dzdp),
+      drzdx(other.drzdx),
+      drzdp(other.drzdp),
+      dydp(other.dydp),
+      dydx(other.dydx),
+      w(other.w),
+      dwdx(other.dwdx),
+      dwdp(other.dwdp),
+      M(other.M),
+      stau(other.stau),
+      h(other.h),
+      unscaledParameters(other.unscaledParameters),
+      originalParameters(other.originalParameters),
+      fixedParameters(other.fixedParameters),
+      plist_(other.plist_),
+      x0data(other.x0data),
+      sx0data(other.sx0data),
+      ts(other.ts),
+      nmaxevent(other.nmaxevent),
+      pscale(other.pscale),
+      tstart(other.tstart)
+{
+    J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+    SparseCopyMat(other.J, J);
+}
+
+Model::~Model() {
+    if(J)
+        SparseDestroyMat(J);
+}
 
 void Model::initializeVectors()
 {
@@ -322,15 +588,15 @@ void Model::fx0(AmiVector *x) {
     fx0(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
 }
 
-/** Initial value for initial state sensitivities
-     * @param sx pointer to state sensitivity variables
-     * @param x pointer to state variables
-     **/
+void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
+
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
     sx->reset();
     for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
         fsx0(sx->data(ip),tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
+
+void Model::fsdx0() {}
 
 /** Sensitivity of event timepoint, total derivative
      * @param t current timepoint
@@ -346,9 +612,9 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
 }
 
 /** Observables / measurements
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     */
+  * @param it timepoint index
+  * @param rdata pointer to return data instance
+  */
 void Model::fy(int it, ReturnData *rdata) {
     fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
@@ -359,8 +625,16 @@ void Model::fy(int it, ReturnData *rdata) {
      */
 void Model::fdydp(const int it, ReturnData *rdata) {
     std::fill(dydp.begin(),dydp.end(),0.0);
+
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fdydp(&dydp.at(ip*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
+        // get dydp slice (ny) for current time and parameter
+        fdydp(&dydp.at(ip*ny),
+              rdata->ts.at(it),
+              getx(it,rdata),
+              unscaledParameters.data(),
+              fixedParameters.data(),
+              h.data(),
+              plist_.at(ip));
     }
 }
 
@@ -538,8 +812,7 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
     fsigma_y(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
     for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
-             is NaN, use
-             the parameter value. Store this value in the return struct */
+             is NaN, use the parameter value. Store this value in the return struct */
         if(edata){
             if (!isNaN(edata->sigmay[it * edata->nytrue + iytrue])) {
                 sigmay.at(iytrue) = edata->sigmay[it * edata->nytrue + iytrue];
@@ -552,11 +825,30 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
 /** partial derivative of standard deviation of measurements w.r.t. model
      * @param it timepoint index
      * @param rdata pointer to return data instance
+     * @param edata pointer to ExpData data instance holding sigma values
      */
-void Model::fdsigma_ydp(const int it, const ReturnData *rdata) {
-    std::fill(dsigmaydp.begin(),dsigmaydp.end(),0.0);
+void Model::fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata) {
+    std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
+
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_ydp(dsigmaydp.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        // get dsigmaydp slice (ny) for current timepoint and parameter
+        fdsigma_ydp(&dsigmaydp.at(ip*ny),
+                    rdata->ts.at(it),
+                    unscaledParameters.data(),
+                    fixedParameters.data(),
+                    plist_.at(ip));
+
+    // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp to zero
+    for (int iy = 0; iy < nytrue; iy++) {
+        if (!isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
+            for (int ip = 0; ip < nplist(); ip++) {
+                dsigmaydp[ip * ny + iy] = 0.0;
+            }
+        }
+    }
+
+    // copy dsigmaydp slice for current timepoint
+    std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
 }
 
 /** Standard deviation of events
@@ -588,7 +880,7 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
 void Model::fdsigma_zdp(const realtype t) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_zdp(dsigmazdp.data(),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fdsigma_zdp(&dsigmazdp.at(ip*nz),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
 /** negative log-likelihood of measurements y
@@ -650,11 +942,20 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
      */
 void Model::fdJydy(const int it, const ReturnData *rdata,
                    const ExpData *edata) {
+    // load measurements to my
     getmy(it,edata);
     std::fill(dJydy.begin(),dJydy.end(),0.0);
+
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydy(&dJydy.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
+            // get dJydy slice (ny) for current timepoint and observable
+            fdJydy(&dJydy.at(iytrue*ny*nJ),
+                   iytrue,
+                   unscaledParameters.data(),
+                   fixedParameters.data(),
+                   gety(it,rdata),
+                   sigmay.data(),
+                   my.data());
         }
     }
 }
@@ -667,11 +968,20 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
      */
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        const ExpData *edata) {
-    getmy(it,edata);
+    // load measurements to my
+    getmy(it, edata);
     std::fill(dJydsigma.begin(),dJydsigma.end(),0.0);
+
     for(int iytrue = 0; iytrue < nytrue; iytrue++){
         if(!isNaN(my.at(iytrue))){
-            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),iytrue, unscaledParameters.data(),fixedParameters.data(),gety(it,rdata),sigmay.data(),my.data());
+            // get dJydsigma slice (ny) for current timepoint and observable
+            fdJydsigma(&dJydsigma.at(iytrue*ny*nJ),
+                       iytrue,
+                       unscaledParameters.data(),
+                       fixedParameters.data(),
+                       gety(it,rdata),
+                       sigmay.data(),
+                       my.data());
         }
     }
 }
@@ -773,19 +1083,27 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
     fdwdx(dwdx.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
+void Model::updateHeaviside(const std::vector<int> rootsfound) {
+    for (int ie = 0; ie < ne; ie++) {
+        h.at(ie) += rootsfound.at(ie);
+    }
+}
+
+void Model::updateHeavisideB(const int *rootsfound) {
+    for (int ie = 0; ie < ne; ie++) {
+        h.at(ie) -= rootsfound[ie];
+    }
+}
+
 /** create my slice at timepoint
      * @param it timepoint index
      * @param edata pointer to experimental data instance
      */
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
-        for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = static_cast<realtype>(edata->my[it*edata->nytrue + iytrue]);
-        }
+        std::copy_n(&edata->my[it*edata->nytrue], nytrue, my.begin());
     } else {
-        for(int iytrue = 0; iytrue < nytrue; iytrue++){
-            my.at(iytrue) = getNaN();
-        }
+        std::fill(my.begin(), my.end(), getNaN());
     }
 }
 
@@ -832,13 +1150,9 @@ realtype Model::gett(const int it, const ReturnData *rdata) const {
      */
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
-        for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = static_cast<realtype>(edata->mz[nroots*edata->nztrue + iztrue]);
-        }
+        std::copy_n(&edata->mz[nroots*edata->nztrue], nztrue, mz.begin());
     } else {
-        for(int iztrue = 0; iztrue < nztrue; iztrue++){
-            mz.at(iztrue) = getNaN();
-        }
+        std::fill(mz.begin(), mz.end(), getNaN());
     }
 }
 
@@ -920,10 +1234,16 @@ void Model::unscaleParameters(double *bufferUnscaled) const
     }
 }
 
+void Model::requireSensitivitiesForAllParameters() {
+    plist_.resize(np());
+    std::iota(plist_.begin(), plist_.end(), 0);
+    initializeVectors();
+}
+
 bool operator ==(const Model &a, const Model &b)
 {
     if (typeid(a) != typeid(b))
-            return false;
+        return false;
 
     return (a.nx == b.nx)
             && (a.nxtrue == b.nxtrue)

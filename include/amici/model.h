@@ -6,9 +6,8 @@
 #include "amici/vector.h"
 #include "amici/symbolic_functions.h"
 
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_direct.h>
-#include <sundials/sundials_sparse.h>
+#include <sundials/sundials_direct.h> // DlsMat
+#include <sundials/sundials_sparse.h> // SlsMat
 
 #include <numeric>
 #include <vector>
@@ -21,15 +20,15 @@ class ExpData;
 class Model;
 class Solver;
 
-extern msgIdAndTxtFp warnMsgIdAndTxt;
 } // namespace amici
 
 
-// for serialization friend in Model
+// for serialization friend in amici::Model
 namespace boost { namespace serialization {
 template <class Archive>
 void serialize(Archive &ar, amici::Model &u, const unsigned int version);
 }}
+
 
 namespace amici {
     
@@ -76,132 +75,28 @@ namespace amici {
               const int ndwdp, const int nnz, const int ubw, const int lbw,
               const AMICI_o2mode o2mode, const std::vector<realtype> p,
               const std::vector<realtype> k, const std::vector<int> plist,
-              const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
-        nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-        nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode),
-        z2event(z2event),
-        idlist(idlist),
-        sigmay(ny, 0.0),
-        dsigmaydp(ny*plist.size(), 0.0),
-        sigmaz(nz, 0.0),
-        dsigmazdp(nz*plist.size(), 0.0),
-        dJydp(nJ*plist.size(), 0.0),
-        dJzdp(nJ*plist.size(), 0.0),
-        deltax(nx, 0.0),
-        deltasx(nx*plist.size(), 0.0),
-        deltaxB(nx, 0.0),
-        deltaqB(nJ*plist.size(), 0.0),
-        dxdotdp(nx*plist.size(), 0.0),
-        my(nytrue, 0.0),
-        mz(nztrue, 0.0),
-        dJydy(nJ*nytrue*ny, 0.0),
-        dJydsigma(nJ*nytrue*ny, 0.0),
-        dJzdz(nJ*nztrue*nz, 0.0),
-        dJzdsigma(nJ*nztrue*nz, 0.0),
-        dJrzdz(nJ*nztrue*nz, 0.0),
-        dJrzdsigma(nJ*nztrue*nz, 0.0),
-        dzdx(nz*nx, 0.0),
-        dzdp(nz*plist.size(), 0.0),
-        drzdx(nz*nx, 0.0),
-        drzdp(nz*plist.size(), 0.0),
-        dydp(ny*plist.size(), 0.0),
-        dydx(ny*nx,0.0),
-        w(nw, 0.0),
-        dwdx(ndwdx, 0.0),
-        dwdp(ndwdp, 0.0),
-        M(nx*nx, 0.0),
-        stau(plist.size(), 0.0),
-        h(ne,0.0),
-        unscaledParameters(p),
-        originalParameters(p),
-        fixedParameters(k),
-        plist_(plist),
-        pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
-        {
-            J = SparseNewMat(nx, nx, nnz, CSC_MAT);
-        }
+              const std::vector<realtype> idlist, const std::vector<int> z2event);
         
+        /** Copy constructor
+         * @param other object to copy from
+         * @return
+         */
+        Model(Model const& other);
+
+        /** destructor */
+        virtual ~Model();
+
         /** Copy assignment is disabled until const members are removed
          * @param other object to copy from
          * @return
          */
         Model& operator=(Model const &other)=delete;
 
-        /** Copy constructor
-         * @param other object to copy from
-         * @return
-         */
-        Model(Model const& other)
-            : nx(other.nx), nxtrue(other.nxtrue),
-              ny(other.ny), nytrue(other.nytrue),
-              nz(other.nz), nztrue(other.nztrue),
-              ne(other.ne), nw(other.nw),
-              ndwdx(other.ndwdx), ndwdp(other.ndwdp),
-              nnz(other.nnz), nJ(other.nJ),
-              ubw(other.ubw), lbw(other.lbw),
-              o2mode(other.o2mode),
-              z2event(other.z2event),
-              idlist(other.idlist),
-
-              sigmay(other.sigmay),
-              dsigmaydp(other.dsigmaydp),
-              sigmaz(other.sigmaz),
-              dsigmazdp(other.dsigmazdp),
-              dJydp(other.dJydp),
-              dJzdp(other.dJzdp),
-              deltax(other.deltax),
-              deltasx(other.deltasx),
-              deltaxB(other.deltaxB),
-              deltaqB(other.deltaqB),
-              dxdotdp(other.dxdotdp),
-
-              J(nullptr),
-              my(other.my),
-              mz(other.mz),
-              dJydy(other.dJydy),
-              dJydsigma(other.dJydsigma),
-              dJzdz(other.dJzdz),
-              dJzdsigma(other.dJzdsigma),
-              dJrzdz(other.dJrzdz),
-              dJrzdsigma(other.dJrzdsigma),
-              dzdx(other.dzdx),
-              dzdp(other.dzdp),
-              drzdx(other.drzdx),
-              drzdp(other.drzdp),
-              dydp(other.dydp),
-              dydx(other.dydx),
-              w(other.w),
-              dwdx(other.dwdx),
-              dwdp(other.dwdp),
-              M(other.M),
-              stau(other.stau),
-              h(other.h),
-              unscaledParameters(other.unscaledParameters),
-              originalParameters(other.originalParameters),
-              fixedParameters(other.fixedParameters),
-              plist_(other.plist_),
-              x0data(other.x0data),
-              sx0data(other.sx0data),
-              ts(other.ts),
-              nmaxevent(other.nmaxevent),
-              pscale(other.pscale),
-              tstart(other.tstart)
-        {
-            J = SparseNewMat(nx, nx, nnz, CSC_MAT);
-            SparseCopyMat(other.J, J);
-        }
-
         /**
          * @brief Clone this instance
          * @return The clone
          */
         virtual Model* clone() const = 0;
-
-        /**
-         * @brief Set the nplist-dependent vectors to their proper sizes
-         */
-        void initializeVectors();
 
         /** Retrieves the solver object
          * @return The Solver instance
@@ -284,14 +179,19 @@ namespace amici {
          * @param dx0 Vector to which the initial derivative states will be
          * written (only DAE)
          **/
-        virtual void fdx0(AmiVector *x0, AmiVector *dx0) {}
+        virtual void fdx0(AmiVector *x0, AmiVector *dx0);
+
+        /** Initial value for initial state sensitivities
+          * @param sx pointer to state sensitivity variables
+          * @param x pointer to state variables
+          **/
 
         void fsx0(AmiVectorArray *sx, const AmiVector *x);
         
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
-         *necessary for DAEs)
+         *  necessary for DAEs)
          **/
-        virtual void fsdx0() {}
+        virtual void fsdx0();
         
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
         
@@ -331,7 +231,7 @@ namespace amici {
         
         void fsigma_y(const int it, const ExpData *edata, ReturnData *rdata);
         
-        void fdsigma_ydp(const int it, const ReturnData *rdata);
+        void fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata);
         
         void fsigma_z(const realtype t, const int ie, const int *nroots,
                       const ExpData *edata, ReturnData *rdata);
@@ -343,7 +243,7 @@ namespace amici {
         void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
         
         void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
-        
+
         void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
         
         void fdJydsigma(const int it, const ReturnData *rdata, const ExpData *edata);
@@ -355,13 +255,7 @@ namespace amici {
         void fdJrzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
         void fdJrzdsigma(const int nroots,const ReturnData *rdata, const ExpData *edata);
-        
-        /** default destructor */
-        virtual ~Model() {
-            if(J)
-                SparseDestroyMat(J);
-        }
-        
+                
         // Generic implementations
         void fsy(const int it, ReturnData *rdata);
         
@@ -370,7 +264,7 @@ namespace amici {
         void fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rdata);
         
         void fdJydp(const int it, const ExpData *edata,
-                   const ReturnData *rdata);
+                   ReturnData *rdata);
         
         void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
@@ -389,231 +283,160 @@ namespace amici {
         /** number of paramaeters wrt to which sensitivities are computed
          * @return length of sensitivity index vector
          */
-        int nplist() const {
-            return plist_.size();
-        }
+        int nplist() const;
+
         /** total number of model parameters
          * @return length of parameter vector
          */
-        int np() const {
-            return originalParameters.size();
-        }
+        int np() const;
+
         /** number of constants
          * @return length of constant vector
          */
-        int nk() const {
-            return fixedParameters.size();
-        }
+        int nk() const;
 
         /** constants
          * @return pointer to constants array
          */
-        const double *k() const{
-            return fixedParameters.data();
-        }
+        const double *k() const;
 
         /**
          * @brief Get nmaxevent
          * @return nmaxevent
          */
-        int nMaxEvent() const {
-            return nmaxevent;
-        }
+        int nMaxEvent() const;
 
         /**
          * @brief setNMaxEvent
          * @param nmaxevent
          */
-        void setNMaxEvent(int nmaxevent) {
-            this->nmaxevent = nmaxevent;
-        }
+        void setNMaxEvent(int nmaxevent);
 
         /**
          * @brief Get number of timepoints
          * @return number of timepoints
          */
-        int nt() const {
-            return ts.size();
-        }
+        int nt() const;
 
         /**
          * @brief getParameterScale
          * @return
          */
-        std::vector<AMICI_parameter_scaling> getParameterScale() const {
-            return pscale;
-        }
+        std::vector<AMICI_parameter_scaling> getParameterScale() const;
 
         /**
          * @brief setParameterScale
          * @param pscale
          */
-        void setParameterScale(AMICI_parameter_scaling pscale) {
-            this->pscale.assign(this->pscale.size(), pscale);
-            unscaledParameters.resize(originalParameters.size());
-            unscaleParameters(unscaledParameters.data());
-        }
+        void setParameterScale(AMICI_parameter_scaling pscale);
 
         /**
          * @brief setParameterScale
          * @param pscale
          */
-        void setParameterScale(std::vector<AMICI_parameter_scaling> pscale) {
-            this->pscale = pscale;
-            unscaledParameters.resize(originalParameters.size());
-            unscaleParameters(unscaledParameters.data());
-        }
+        void setParameterScale(std::vector<AMICI_parameter_scaling> pscale);
 
         /**
          * @brief getParameters
          * @return The user-set parameters (see also getUnscaledParameters)
          */
-        std::vector<realtype> getParameters() const {
-            return originalParameters;
-        }
+        std::vector<realtype> getParameters() const;
 
         /**
          * @brief setParameters
          * @param p
          */
-        void setParameters(std::vector<realtype> const&p) {
-            if(p.size() != (unsigned) this->originalParameters.size())
-                throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
-            this->originalParameters = p;
-            this->unscaledParameters.resize(originalParameters.size());
-            unscaleParameters(this->unscaledParameters.data());
-        }
+        void setParameters(std::vector<realtype> const&p);
 
         /**
          * @brief getUnscaledParameters
          * @return The unscaled parameters
          */
-        std::vector<realtype> getUnscaledParameters() const {
-            return unscaledParameters;
-        }
+        std::vector<realtype> getUnscaledParameters() const;
 
         /**
          * @brief getFixedParameters
          * @return
          */
-        std::vector<realtype> getFixedParameters() const {
-            return fixedParameters;
-        }
+        std::vector<realtype> getFixedParameters() const;
 
         /**
          * @brief setFixedParameters
          * @param k
          */
-        void setFixedParameters(std::vector<realtype> const&k) {
-            if(k.size() != (unsigned) this->fixedParameters.size())
-                throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
-            this->fixedParameters = k;
-        }
+        void setFixedParameters(std::vector<realtype> const&k);
 
         /**
          * @brief getTimepoints
          * @return
          */
-        std::vector<realtype> getTimepoints() const {
-            return ts;
-        }
+        std::vector<realtype> getTimepoints() const;
 
         /**
          * @brief setTimepoints
          * @param ts
          */
-        void setTimepoints(std::vector<realtype> const& ts) {
-            this->ts = ts;
-        }
+        void setTimepoints(std::vector<realtype> const& ts);
 
         /**
          * @brief Get timepoint for given index
          * @param idx
          * @return
          */
-        double t(int idx) const {
-            return ts.at(idx);
-        }
+        double t(int idx) const;
 
         /**
          * @brief getParameterList
          * @return
          */
-        std::vector<int> getParameterList() const {
-            return plist_;
-        }
+        std::vector<int> getParameterList() const;
 
         /**
          * @brief setParameterList
          * @param plist
          */
-        void setParameterList(std::vector<int> const& plist) {
-            for(auto const& idx: plist)
-                if(idx < 0 || idx >= np())
-                    throw AmiException("Indices in plist must be in [0..np]");
-            this->plist_ = plist;
-
-            initializeVectors();
-        }
+        void setParameterList(std::vector<int> const& plist);
 
         /**
          * @brief getInitialStates
          * @return
          */
-        std::vector<realtype> getInitialStates() const {
-            return x0data;
-        }
+        std::vector<realtype> getInitialStates() const;
 
         /**
          * @brief setInitialStates
          * @param x0
          */
-        void setInitialStates(std::vector<realtype> const& x0) {
-            if(x0.size() != (unsigned) nx)
-                throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
-            this->x0data = x0;
-        }
+        void setInitialStates(std::vector<realtype> const& x0);
 
         /**
          * @brief getInitialStateSensitivities
          * @return
          */
-        std::vector<realtype> getInitialStateSensitivities() const {
-            return sx0data;
-        }
+        std::vector<realtype> getInitialStateSensitivities() const;
 
         /**
          * @brief setInitialStateSensitivities
          * @param sx0
          */
-        void setInitialStateSensitivities(std::vector<realtype> const& sx0) {
-            if(sx0.size() != (unsigned) nx * nplist())
-                throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
-            this->sx0data = sx0;
-        }
+        void setInitialStateSensitivities(std::vector<realtype> const& sx0);
 
         /** initial timepoint
          *  @return timepoint
          */
-        double t0() const{
-            return tstart;
-        }
+        double t0() const;
 
         /**
          * @brief setT0
          * @param t0
          */
-        void setT0(double t0) {
-            tstart = t0;
-        }
+        void setT0(double t0);
 
         /** entry in parameter list
           * @param pos index
           * @return entry
           */
-        int plist(int pos) const{
-            return plist_.at(pos);
-        }
+        int plist(int pos) const;
 
         /**
          * @brief unscaleParameters
@@ -625,11 +448,61 @@ namespace amici {
          * @brief Require computation of sensitivities for all parameters p [0..np[
          * in natural order.
          */
-        void requireSensitivitiesForAllParameters() {
-            plist_.resize(np());
-            std::iota(plist_.begin(), plist_.end(), 0);
-            initializeVectors();
-        }
+        void requireSensitivitiesForAllParameters();
+
+        void fw(const realtype t, const N_Vector x);
+
+        void fdwdp(const realtype t, const N_Vector x);
+        
+        void fdwdx(const realtype t, const N_Vector x);
+        
+        /**
+         * updateHeaviside updates the heaviside variables h on event occurences
+         *
+         * @param rootsfound provides the direction of the zero-crossing, so adding
+         it will give the right update to the heaviside variables (zero if no root
+         was found)
+         */
+        void updateHeaviside(const std::vector<int> rootsfound);
+        
+        /**
+         * updateHeavisideB updates the heaviside variables h on event occurences
+         in the backward problem
+         *
+         * @param rootsfound provides the direction of the zero-crossing, so adding
+         it will give the right update to the heaviside variables (zero if no root
+         was found)
+         */
+        void updateHeavisideB(const int *rootsfound);
+        
+        /**
+         * @brief Serialize Model (see boost::serialization::serialize)
+         * @param ar Archive to serialize to
+         * @param r Data to serialize
+         * @param version Version number
+         */
+        template <class Archive>
+        friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
+
+        /**
+         * @brief Check equality of data members
+         * @param a
+         * @param b
+         * @return
+         */
+        friend bool operator ==(const Model &a, const Model &b);
+        
+        realtype gett(const int it, const ReturnData *rdata) const;
+
+        /**
+         * @brief Check if the given array has only finite elements.
+         * If not try to give hints by which other fields this could be caused.
+         * @param N
+         * @param array
+         * @param fun
+         * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
+         */
+        int checkFinite(const int N,const realtype *array, const char* fun) const;
 
         /** number of states */
         const int nx;
@@ -666,95 +539,40 @@ namespace amici {
         const std::vector<int> z2event;
         /** flag array for DAE equations */
         const std::vector<realtype> idlist;
-        
-        /** data standard deviation */
+
+        /** data standard deviation for current timepoint (dimension: ny) */
         std::vector<realtype> sigmay;
-        /** parameter derivative of data standard deviation */
+        /** parameter derivative of data standard deviation for current timepoint (dimension: nplist x ny, row-major) */
         std::vector<realtype> dsigmaydp;
-        /** event standard deviation */
+        /** event standard deviation for current timepoint (dimension: nz) */
         std::vector<realtype> sigmaz;
-        /** parameter derivative of event standard deviation */
+        /** parameter derivative of event standard deviation for current timepoint (dimension: nplist x nz, row-major) */
         std::vector<realtype> dsigmazdp;
-        /** parameter derivative of data likelihood */
+        /** parameter derivative of data likelihood for current timepoint (dimension: nplist x nJ, row-major) */
         std::vector<realtype> dJydp;
-        /** parameter derivative of event likelihood */
+        /** parameter derivative of event likelihood for current timepoint (dimension: nplist x nJ, row-major) */
         std::vector<realtype> dJzdp;
-        
-        /** change in x */
+
+        /** change in x at current timepoint (dimension: nx) */
         std::vector<realtype> deltax;
-        /** change in sx */
+        /** change in sx at current timepoint (dimension: nplist x nx, row-major) */
         std::vector<realtype> deltasx;
-        /** change in xB */
+        /** change in xB at current timepoint (dimension: nJ x nxtrue, row-major) */
         std::vector<realtype> deltaxB;
-        /** change in qB */
+        /** change in qB at current timepoint (dimension: nJ x nplist, row-major) */
         std::vector<realtype> deltaqB;
-        
-        /** tempory storage of dxdotdp data across functions */
+
+        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx, row-major) */
         std::vector<realtype> dxdotdp;
-        
-        void fw(const realtype t, const N_Vector x);
 
-        void fdwdp(const realtype t, const N_Vector x);
-        
-        void fdwdx(const realtype t, const N_Vector x);
-        
-        /**
-         * updateHeaviside updates the heaviside variables h on event occurences
-         *
-         * @param rootsfound provides the direction of the zero-crossing, so adding
-         it will give the right update to the heaviside variables (zero if no root
-         was found)
-         */
-        void updateHeaviside(const std::vector<int> rootsfound) {
-            for (int ie = 0; ie < ne; ie++) {
-                h.at(ie) += rootsfound.at(ie);
-            }
-        }
-        
-        /**
-         * updateHeavisideB updates the heaviside variables h on event occurences
-         in the backward problem
-         *
-         * @param rootsfound provides the direction of the zero-crossing, so adding
-         it will give the right update to the heaviside variables (zero if no root
-         was found)
-         */
-        void updateHeavisideB(const int *rootsfound) {
-            for (int ie = 0; ie < ne; ie++) {
-                h.at(ie) -= rootsfound[ie];
-            }
-        }
-        
-        /**
-         * @brief Serialize Model (see boost::serialization::serialize)
-         * @param ar Archive to serialize to
-         * @param r Data to serialize
-         * @param version Version number
-         */
-        template <class Archive>
-        friend void boost::serialization::serialize(Archive &ar, Model &r, const unsigned int version);
-
-        /**
-         * @brief Check equality of data members
-         * @param a
-         * @param b
-         * @return
-         */
-        friend bool operator ==(const Model &a, const Model &b);
-        
-        realtype gett(const int it, const ReturnData *rdata) const;
-
-        /**
-         * @brief Check if the given array has only finite elements.
-         * If not try to give hints by which other fields this could be caused.
-         * @param N
-         * @param array
-         * @param fun
-         * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
-         */
-        int checkFinite(const int N,const realtype *array, const char* fun) const;
 
     protected:
+
+        /**
+         * @brief Set the nplist-dependent vectors to their proper sizes
+         */
+        void initializeVectors();
+
         
         /** model specific implementation of fx0
          * @param x0 initial state
@@ -1229,68 +1047,72 @@ namespace amici {
         
         const realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
 
-        /** Jacobian */
+
+
+        /** Sparse Jacobian (dimension: nnz)*/
         SlsMat J = nullptr;
         
-        /** current observable */
+        /** current observable (dimension: nytrue) */
         std::vector<realtype> my;
-        /** current event measurement */
+        /** current event measurement (dimension: nztrue) */
         std::vector<realtype> mz;
-        /** observable derivative of data likelihood */
+        /** observable derivative of data likelihood (dimension nJ x nytrue x ny, ordering = ?) */
         std::vector<realtype> dJydy;
-        /** observable sigma derivative of data likelihood */
+        /** observable sigma derivative of data likelihood (dimension nJ x nytrue x ny, ordering = ?) */
         std::vector<realtype> dJydsigma;
-        /** event ouput derivative of event likelihood */
+
+        /** event ouput derivative of event likelihood (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJzdz;
-        /** event sigma derivative of event likelihood */
+        /** event sigma derivative of event likelihood (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJzdsigma;
-        /** event ouput derivative of event likelihood at final timepoint */
+        /** event ouput derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdz;
-        /** event sigma derivative of event likelihood at final timepoint */
+        /** event sigma derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdsigma;
-        /** state derivative of event output */
+        /** state derivative of event output (dimension: nz * nx, ordering = ?) */
         std::vector<realtype> dzdx;
-        /** parameter derivative of event output */
+        /** parameter derivative of event output (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> dzdp;
-        /** state derivative of event timepoint */
+        /** state derivative of event timepoint (dimension: nz * nx, ordering = ?) */
         std::vector<realtype> drzdx;
-        /** parameter derivative of event timepoint */
+        /** parameter derivative of event timepoint (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> drzdp;
-        /** parameter derivative of observable */
+        /** parameter derivative of observable (dimension: nplist * ny, row-major) */
         std::vector<realtype> dydp;
-        /** state derivative of observable */
+
+        /** state derivative of observable (dimension: ny * nx, ordering = ?) */
         std::vector<realtype> dydx;
-        /** tempory storage of w data across functions */
+        /** tempory storage of w data across functions (dimension: nw) */
         std::vector<realtype> w;
-        /** tempory storage of dwdx data across functions */
+        /** tempory storage of sparse dwdx data across functions (dimension: ndwdx) */
         std::vector<realtype> dwdx;
-        /** tempory storage of dwdp data across functions */
+        /** tempory storage of sparse dwdp data across functions (dimension: ndwdp) */
         std::vector<realtype> dwdp;
-        /** tempory storage of M data across functions */
+        /** tempory storage of M data across functions (dimension: nx) */
         std::vector<realtype> M;
-        /** tempory storage of stau data across functions */
+        /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
         
         /** flag indicating whether a certain heaviside function should be active or
-         not */
+         not (dimension: ne) */
         std::vector<realtype> h;
 
-        /** unscaled parameters */
+        /** unscaled parameters (dimension: np) */
         std::vector<realtype> unscaledParameters;
 
         /** orignal user-provided, possibly scaled parameter array (size np) */
         std::vector<realtype>originalParameters;
 
-        /** constants */
+        /** constants (dimension: nk) */
         std::vector<realtype> fixedParameters;
 
-        /** indexes of parameters wrt to which sensitivities are computed */
+        /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
         std::vector<int> plist_;
 
         /** state initialisation (size nx) */
         std::vector<double>x0data;
 
-        /** sensitivity initialisation (size nx * nplist) */
+        /** sensitivity initialisation (size nx * nplist, ordering = ?) */
         std::vector<realtype>sx0data;
 
         /** timepoints (size nt) */
@@ -1299,7 +1121,7 @@ namespace amici {
         /** maximal number of events to track */
         int nmaxevent = 10;
 
-        /** parameter transformation of p */
+        /** parameter transformation of `originalParameters` (dimension np) */
         std::vector<AMICI_parameter_scaling> pscale;
 
         /** starting time */
