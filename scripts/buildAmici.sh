@@ -12,5 +12,12 @@ cd ${AMICI_PATH}/build
 CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/build/
 CppUTest_DIR=${CPPUTEST_BUILD_DIR} cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
-make python-wheel
-pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
+
+# Disabled until cmake package is made compatible with updated setup.py
+#make python-wheel
+#pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
+
+cd ${AMICI_PATH}/python/sdist
+python3 setup.py sdist --dist-dir=${AMICI_PATH}/build/python/
+pip3 install  ${AMICI_PATH}/build/python/amici-*.tar.gz 
+
