@@ -57,13 +57,14 @@ if not hdf5found:
                 'define_macros': []
                 }
     # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial','/usr/local/include']
-    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/hdf5/serial','/usr/local/lib']
+    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', '/usr/lib/x86_64-linux-gnu/', '/usr/local/include', '/usr/include']
+    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/hdf5/serial', '/usr/local/lib']
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
             os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
         if hdf5_include_dir_found:
+            print('hdf5.h found in %s' % hdf5_include_dir_hint)
             h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
             break
     
@@ -71,6 +72,7 @@ if not hdf5found:
         hdf5_library_dir_found = os.path.isfile(
             os.path.join(hdf5_library_dir_hint, 'libhdf5.so'))
         if hdf5_library_dir_found:
+            print('libhdf5.so found in %s' % hdf5_library_dir_hint)
             h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
             break
     hdf5found = hdf5_include_dir_found and hdf5_library_dir_found
