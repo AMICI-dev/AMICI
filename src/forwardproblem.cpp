@@ -98,9 +98,9 @@ void ForwardProblem::workForwardProblem() {
 
     /* if preequilibration is necessary, start Newton solver */
     std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
-    if (solver->getNewtonPreequilibration()) {
+    if (solver->getNewtonPreequilibration() || (edata && edata->fixedParametersPreequilibration.size())) {
         if(edata && edata->fixedParametersPreequilibration.size()) {
-            // Are there dedicated preequilibration parameters provided?
+            // Are there dedicated condition preequilibration parameters provided?
             if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
                                    model->nk(), edata->fixedParametersPreequilibration.size());
