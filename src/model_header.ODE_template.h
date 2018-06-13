@@ -23,7 +23,7 @@ extern void JSparseB_TPL_MODELNAME(SlsMat JSparseB, const realtype t, const real
 extern void Jv_TPL_MODELNAME(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx);
 extern void JvB_TPL_MODELNAME(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx);
 extern void Jy_TPL_MODELNAME(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
-extern void dJydsigmaTPL_MODELNAME(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
+extern void dJydsigma_TPL_MODELNAME(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydy_TPL_MODELNAME(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dwdp_TPL_MODELNAME(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dwdx_TPL_MODELNAME(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
