@@ -26,7 +26,10 @@ suite = unittest.TestSuite()
 suite.addTest(testModels.TestAmiciPregeneratedModel())
 suite.addTest(testSBML.TestAmiciSBMLModel())
 testRunner = unittest.TextTestRunner(verbosity=0)
-testRunner.run(suite)
+result = testRunner.run(suite)
 
 cov.stop()
 cov.xml_report(outfile='coverage_py.xml')
+
+# propagate failure
+sys.exit(not result.wasSuccessful())
