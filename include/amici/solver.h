@@ -1109,7 +1109,7 @@ private:
     double rtol = 1e-8;
 
     /** maximum number of allowed integration steps */
-    int maxsteps = 0;
+    int maxsteps = 10000;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
