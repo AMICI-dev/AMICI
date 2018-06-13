@@ -57,8 +57,8 @@ if not hdf5found:
                 'define_macros': []
                 }
     # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial/','/usr/local/include']
-    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/','/usr/local/lib']
+    hdf5_include_dir_hints = ['/usr/include/hdf5/serial','/usr/local/include']
+    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/hdf5/serial','/usr/local/lib']
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
