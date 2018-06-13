@@ -62,9 +62,9 @@ if not hdf5found:
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
-            os.path.join(include_dir_hint, 'hdf5.h'))
+            os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
         if hdf5_include_dir_found:
-            h5pkgcfg['include_dirs'] = [include_dir_hint]
+            h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
             break
     
     for hdf5_library_dir_hint in hdf5_library_dir_hints:
