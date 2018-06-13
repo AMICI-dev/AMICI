@@ -52,12 +52,14 @@ if 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']:
     # Manually add linker flags. The libraries passed to Extension will
     # end up in front of the clibs in the linker line and not after, where
     # they are required.
+    print("HDF5 library found. Building AMICI with HDF5 support.")
     amici_module_linker_flags.extend(
         ['-l%s' % l for l in ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
     extension_sources = [
         'amici/amici_wrap.cxx',  # swig interface
     ]
 else:
+    print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
     h5pkgcfg = {'include_dirs': [],
                 'library_dirs': [],
                 'libraries': [],
