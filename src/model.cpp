@@ -807,9 +807,9 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
+void Model::fsigmay(const int it, const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmay.begin(),sigmay.end(),0.0);
-    fsigma_y(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
+    fsigmay(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
     for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
              is NaN, use the parameter value. Store this value in the return struct */
@@ -827,12 +827,12 @@ void Model::fsigma_y(const int it, const ExpData *edata, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      * @param edata pointer to ExpData data instance holding sigma values
      */
-void Model::fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata) {
+void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
 
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
         // get dsigmaydp slice (ny) for current timepoint and parameter
-        fdsigma_ydp(&dsigmaydp.at(ip*ny),
+        fdsigmaydp(&dsigmaydp.at(ip*ny),
                     rdata->ts.at(it),
                     unscaledParameters.data(),
                     fixedParameters.data(),
@@ -858,10 +858,10 @@ void Model::fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata) {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
+void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
                      const ExpData *edata, ReturnData *rdata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
-    fsigma_z(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
+    fsigmaz(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
             if(edata) {
@@ -877,10 +877,10 @@ void Model::fsigma_z(const realtype t, const int ie, const int *nroots,
 /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
      * @param t current timepoint
      */
-void Model::fdsigma_zdp(const realtype t) {
+void Model::fdsigmazdp(const realtype t) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigma_zdp(&dsigmazdp.at(ip*nz),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fdsigmazdp(&dsigmazdp.at(ip*nz),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
 }
 
 /** negative log-likelihood of measurements y

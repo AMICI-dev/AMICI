@@ -46,8 +46,8 @@ ${MODEL_DIR}/model_events_dzdx.cpp
 ${MODEL_DIR}/model_events_qBdot.cpp
 ${MODEL_DIR}/model_events_root.cpp
 ${MODEL_DIR}/model_events_rz.cpp
-${MODEL_DIR}/model_events_sigma_y.cpp
-${MODEL_DIR}/model_events_sigma_z.cpp
+${MODEL_DIR}/model_events_sigmay.cpp
+${MODEL_DIR}/model_events_sigmaz.cpp
 ${MODEL_DIR}/model_events_srz.cpp
 ${MODEL_DIR}/model_events_stau.cpp
 ${MODEL_DIR}/model_events_sxdot.cpp

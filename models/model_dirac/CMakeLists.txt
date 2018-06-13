@@ -37,7 +37,7 @@ ${MODEL_DIR}/model_dirac_dxdotdp.cpp
 ${MODEL_DIR}/model_dirac_dydx.cpp
 ${MODEL_DIR}/model_dirac_qBdot.cpp
 ${MODEL_DIR}/model_dirac_root.cpp
-${MODEL_DIR}/model_dirac_sigma_y.cpp
+${MODEL_DIR}/model_dirac_sigmay.cpp
 ${MODEL_DIR}/model_dirac_stau.cpp
 ${MODEL_DIR}/model_dirac_sxdot.cpp
 ${MODEL_DIR}/model_dirac_xBdot.cpp

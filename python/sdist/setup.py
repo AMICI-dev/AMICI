@@ -218,7 +218,7 @@ with open("README.md", "r") as fh:
 
 
 def getPackageVersion():
-    return '0.7a2'
+    return '0.7.1a3'
 
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for

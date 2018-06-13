@@ -38,7 +38,7 @@ ${MODEL_DIR}/model_nested_events_dxdotdp.cpp
 ${MODEL_DIR}/model_nested_events_dydx.cpp
 ${MODEL_DIR}/model_nested_events_qBdot.cpp
 ${MODEL_DIR}/model_nested_events_root.cpp
-${MODEL_DIR}/model_nested_events_sigma_y.cpp
+${MODEL_DIR}/model_nested_events_sigmay.cpp
 ${MODEL_DIR}/model_nested_events_stau.cpp
 ${MODEL_DIR}/model_nested_events_sx0.cpp
 ${MODEL_DIR}/model_nested_events_sxdot.cpp

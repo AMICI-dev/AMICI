@@ -31,14 +31,14 @@ ${MODEL_DIR}/model_jakstat_adjoint_o2_JvB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_Jy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dJydsigma.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dJydy.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dsigma_ydp.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_dsigmaydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dwdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dwdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dxdotdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_dydx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_qBdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sigma_y.cpp
+${MODEL_DIR}/model_jakstat_adjoint_o2_sigmay.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_sxdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_o2_w.cpp

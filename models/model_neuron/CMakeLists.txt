@@ -48,8 +48,8 @@ ${MODEL_DIR}/model_neuron_dzdx.cpp
 ${MODEL_DIR}/model_neuron_qBdot.cpp
 ${MODEL_DIR}/model_neuron_root.cpp
 ${MODEL_DIR}/model_neuron_rz.cpp
-${MODEL_DIR}/model_neuron_sigma_y.cpp
-${MODEL_DIR}/model_neuron_sigma_z.cpp
+${MODEL_DIR}/model_neuron_sigmay.cpp
+${MODEL_DIR}/model_neuron_sigmaz.cpp
 ${MODEL_DIR}/model_neuron_srz.cpp
 ${MODEL_DIR}/model_neuron_stau.cpp
 ${MODEL_DIR}/model_neuron_sx0.cpp

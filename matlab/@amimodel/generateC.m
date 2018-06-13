@@ -17,6 +17,7 @@ end
 % write fun ccode
 
 for ifun = this.funs
+    cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');
     if(isfield(this.fun,ifun{1}))
         bodyNotEmpty = any(this.fun.(ifun{1}).sym(:)~=0);
         if(strcmp(ifun{1},'JSparse'))
@@ -28,7 +29,7 @@ for ifun = this.funs
         
         if(bodyNotEmpty)
             fprintf([ifun{1} ' | ']);
-            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun{1} '.cpp']),'w');
+            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' cppFunctionName '.cpp']),'w');
             fprintf(fid,'\n');
             fprintf(fid,'#include "amici/symbolic_functions.h"\n');
             fprintf(fid,'#include "amici/defines.h" //realtype definition\n');
@@ -44,7 +45,7 @@ for ifun = this.funs
             fprintf(fid,'\n');
             
             % function definition
-            fprintf(fid,['void ' ifun{1} '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
+            fprintf(fid,['void ' cppFunctionName '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
             if(strcmp(ifun{1},'JSparse'))
                 for i = 1:length(this.rowvals)
                     fprintf(fid,['  JSparse->indexvals[' num2str(i-1) '] = ' num2str(this.rowvals(i)) ';\n']);
@@ -132,7 +133,8 @@ for ifun = this.funs
         % access argstr
     end
     if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
-        fprintf(fid,['extern void ' ifun{1} '_' this.modelname this.fun.(ifun{1}).argstr ';\n']);
+        cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');
+        fprintf(fid,['extern void ' cppFunctionName '_' this.modelname this.fun.(ifun{1}).argstr ';\n']);
     end
 end
 
@@ -180,9 +182,10 @@ fprintf(fid,['    virtual amici::Model* clone() const override { return new Mode
 fprintf(fid,['    const  char* getAmiciVersion() const { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 
 for ifun = this.funs
-    fprintf(fid,['    virtual void f' ifun{1} this.fun.(ifun{1}).argstr ' override {\n']);
+    cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');
+    fprintf(fid,['    virtual void f' cppFunctionName this.fun.(ifun{1}).argstr ' override {\n']);
     if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
-        fprintf(fid,['        ' ifun{1} '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
+        fprintf(fid,['        ' cppFunctionName '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
     end
     fprintf(fid,'    }\n\n');
 end
@@ -241,7 +244,8 @@ function generateCMakeFile(this)
     for j=1:length(this.funs)
         funcName = this.funs{j};
         if(checkIfFunctionBodyIsNonEmpty(this,funcName))
-            sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, funcName) ];
+            cppFunctionName = strrep(funcName, 'sigma_', 'sigma');
+            sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, cppFunctionName) ];
         end
     end
     
@@ -287,5 +291,6 @@ end
 function nonempty = checkIfFunctionBodyIsNonEmpty(this,ifun)
     % if we don't have symbolic variables, it might have been generated before and symbolic expressions were simply not
     % regenerated. any() for empty (no generated) variables is always false.
-    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' ifun '.cpp']),'file'),any(this.fun.(ifun).sym(:)~=0));
+    cppFunctionName = strrep(ifun, 'sigma_', 'sigma');
+    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' cppFunctionName '.cpp']),'file'),any(this.fun.(ifun).sym(:)~=0));
 end

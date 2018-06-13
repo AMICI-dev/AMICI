@@ -37,7 +37,7 @@ ${MODEL_DIR}/model_robertson_dwdx.cpp
 ${MODEL_DIR}/model_robertson_dxdotdp.cpp
 ${MODEL_DIR}/model_robertson_dydx.cpp
 ${MODEL_DIR}/model_robertson_qBdot.cpp
-${MODEL_DIR}/model_robertson_sigma_y.cpp
+${MODEL_DIR}/model_robertson_sigmay.cpp
 ${MODEL_DIR}/model_robertson_sxdot.cpp
 ${MODEL_DIR}/model_robertson_w.cpp
 ${MODEL_DIR}/model_robertson_x0.cpp
