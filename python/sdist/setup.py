@@ -70,9 +70,9 @@ if not hdf5found:
     
     for hdf5_library_dir_hint in hdf5_library_dir_hints:
         hdf5_library_dir_found = os.path.isfile(
-            os.path.join(hdf5_library_dir_hint, 'libhdf5.so'))
+            os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
         if hdf5_library_dir_found:
-            print('libhdf5.so found in %s' % hdf5_library_dir_hint)
+            print('libhdf5.a found in %s' % hdf5_library_dir_hint)
             h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
             break
     hdf5found = hdf5_include_dir_found and hdf5_library_dir_found
