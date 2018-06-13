@@ -57,8 +57,14 @@ if not hdf5found:
                 'define_macros': []
                 }
     # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', '/usr/local/include', '/usr/include']
-    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', '/usr/lib/x86_64-linux-gnu/hdf5/serial', '/usr/local/lib']
+    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', 
+                              '/usr/local/include', 
+                              '/usr/include', # travis ubuntu xenial
+                              '/usr/local/Cellar/hdf5/1.10.2_1/include'] # travis macOS
+    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', # travis ubuntu xenial
+                              '/usr/lib/x86_64-linux-gnu/hdf5/serial', 
+                              '/usr/local/lib', 
+                              '/usr/local/Cellar/hdf5/1.10.2_1/lib'] # travis macOS
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(

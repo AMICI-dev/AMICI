@@ -38,7 +38,6 @@ matrix:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
-        - brew ls --verbose hdf5
         - brew upgrade python
       after_success: 
         - cd $BASE_DIR # cd to base dir for correct relative pah in deploy
@@ -53,8 +52,6 @@ matrix:
           branch: master
         
 install:
-    - dpkg -L libhdf5-7 
-    - dpkg -L libhdf5-dev
     # Python distutils only looks for `swig` and does not find `swig3.0`
     - export BASE_DIR=`pwd`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
