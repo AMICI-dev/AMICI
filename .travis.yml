@@ -52,6 +52,8 @@ matrix:
           branch: master
         
 install:
+    - dpkg -L libhdf5-7 
+    - dpkg -L libhdf5-dev
     # Python distutils only looks for `swig` and does not find `swig3.0`
     - export BASE_DIR=`pwd`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
