@@ -72,6 +72,7 @@ script:
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
+    - tests/testSBML.py
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
