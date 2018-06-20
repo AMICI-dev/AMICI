@@ -105,7 +105,7 @@ def writeSensiFwdNewtonPreeq(filename):
         [0.7104,1.1362,0.1768],
         [0.7089,1.0326,0.1127],
         [0.6035,0.9752,0.0923]])
-    ex.data['Sigma_Y'] = [1., 1., 1.]
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
     ex.data['Sigma_Z'] = []
     ex.data['Z'] = []
     ex.data['condition'] = ex.modelOptions['kappa']
@@ -176,7 +176,7 @@ def writeSensiFwdSimPreeq(filename):
         [0.7104,1.1362,0.1768],
         [0.7089,1.0326,0.1127],
         [0.6035,0.9752,0.0923]])
-    ex.data['Sigma_Y'] = [1., 1., 1.]
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
     ex.data['Sigma_Z'] = []
     ex.data['Z'] = []
     ex.data['condition'] = ex.modelOptions['kappa']
@@ -212,7 +212,7 @@ def writeSensiAdjSimPreeq(filename):
         [0.7104,1.1362,0.1768],
         [0.7089,1.0326,0.1127],
         [0.6035,0.9752,0.0923]])
-    ex.data['Sigma_Y'] = [1., 1., 1.]
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
     ex.data['Sigma_Z'] = []
     ex.data['Z'] = []
     ex.data['condition'] = ex.modelOptions['kappa']
@@ -269,7 +269,7 @@ def writeSensiAdjByhandPreeq(filename):
         [0.7104,1.1362,0.1768],
         [0.7089,1.0326,0.1127],
         [0.6035,0.9752,0.0923]])
-    ex.data['Sigma_Y'] = [1., 1., 1.]
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
     ex.data['Sigma_Z'] = []
     ex.data['Z'] = []
     ex.data['condition'] = ex.modelOptions['kappa']
