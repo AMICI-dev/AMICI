@@ -87,8 +87,7 @@ typedef enum AMICI_sensi_order_TAG {
 typedef enum AMICI_sensi_meth_TAG {
     AMICI_SENSI_NONE,
     AMICI_SENSI_FSA,
-    AMICI_SENSI_ASA,
-    AMICI_SENSI_SS
+    AMICI_SENSI_ASA
 } AMICI_sensi_meth;
 
 /** linear solvers for CVODES/IDAS */

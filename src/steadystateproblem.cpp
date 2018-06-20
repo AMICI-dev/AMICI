@@ -70,7 +70,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     getNewtonOutput(rdata, model, newton_status, run_time, it);
 
     /* Compute steady state sensitvities */
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth != AMICI_SENSI_NONE)
         newtonSolver.get()->getSensis(it, sx);
 
     /* Reinitialize solver with preequilibrated state */
