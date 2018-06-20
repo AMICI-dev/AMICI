@@ -179,7 +179,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
                                         rdata.nJ - 1, rdata.nplist);
 
     if (rdata.sx0.size())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nx, rdata.nplist);
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nplist, rdata.nx);
 
     if (rdata.sx.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nplist, rdata.nx);
