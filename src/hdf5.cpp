@@ -507,7 +507,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         hsize_t length1 = 0;
         auto sx0 = getDoubleDataset2D(file, datasetPath + "/sx0", length0, length1);
         if(sx0.size()) {
-            if (length0 != (unsigned) model.nx && length1 != (unsigned) model.nplist())
+            if (length0 != (unsigned) model.nplist() && length1 != (unsigned) model.nx)
                 throw(AmiException("Dimension mismatch when reading sx0. Expected %dx%d, got %llu, %llu.",
                                    model.nx, model.nplist(), length0, length1));
             model.setInitialStateSensitivities(sx0);
