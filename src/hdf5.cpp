@@ -119,6 +119,14 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         checkEventDimensionsCompatible(m, n, model);
     }
 
+    if(locationExists(file,  hdf5Root + "/condition")) {
+        edata->fixedParameters = getDoubleDataset1D(file, hdf5Root + "/condition");
+    }
+
+    if(locationExists(file,  hdf5Root + "/conditionPreequilibration")) {
+        edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
+    }
+
     return edata;
 }
 
