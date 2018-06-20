@@ -144,7 +144,7 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
         /* Copy result to return data */
         if (it == AMICI_PREEQUILIBRATE) {
             for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
+                rdata->sx0[ix + ip * model->nx] = sx->at(ix,ip);
             }
         }
     }
