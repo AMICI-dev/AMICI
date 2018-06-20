@@ -23,7 +23,8 @@ class ForwardProblem {
   public:
     ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
-    /** default destructor */
+
+    /** destructor */
     ~ForwardProblem() {
         DestroyMat(Jtmp);
     }
@@ -168,77 +169,65 @@ class ForwardProblem {
 
     void applyEventSensiBolusFSA();
     
-    /** array of index which root has been found */
+    /** array of index which root has been found  (dimension: ne * ne * nmaxevent, ordering = ?) */
     std::vector<int> rootidx;
-    /** array of number of found roots for a certain event type */
+    /** array of number of found roots for a certain event type (dimension: ne) */
     std::vector<int> nroots;
-    /** array of values of the root function */
+    /** array of values of the root function (dimension: ne) */
     std::vector<realtype> rootvals;
-    /** temporary rootval storage to check crossing in secondary event */
+    /** temporary rootval storage to check crossing in secondary event (dimension: ne) */
     std::vector<realtype> rvaltmp;
     
-    /** array containing the time-points of discontinuities*/
+    /** array containing the time-points of discontinuities (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> discs;
-    /** array containing the index of discontinuities */
+    /** array containing the index of discontinuities (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> irdiscs;
     
     /** current root index, will be increased during the forward solve and
      * decreased during backward solve */
     int iroot = 0;
     
-    /** array of state vectors at discontinuities*/
+    /** array of state vectors at discontinuities  (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray x_disc;
-    /** array of differential state vectors at discontinuities*/
+    /** array of differential state vectors at discontinuities (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_disc;
-    /** array of old differential state vectors at discontinuities*/
+    /** array of old differential state vectors at discontinuities (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_old_disc;
     
-    /** state derivative of data likelihood */
+    /** state derivative of data likelihood (dimension nJ x nx x nt, ordering =?) */
     std::vector<realtype> dJydx;
-    /** state derivative of event likelihood */
+    /** state derivative of event likelihood (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx;
-    
-    /** data likelihood */
-    std::vector<realtype> Jy;
-    /** event likelihood */
-    std::vector<realtype> Jz;
-
-    /** parameter derivative of data likelihood */
-    std::vector<realtype> dJydp;
-    /** parameter derivative of event likelihood */
-    std::vector<realtype> dJzdp;
-    
+        
     /** current time */
     realtype t;
     
     /** array of flags indicating which root has beend found.
-     *  array of length nr with the indices of the user functions gi found to
-     * have a
-     *  root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
+     *  array of length nr (ne) with the indices of the user functions gi found to
+     * have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
     std::vector<int> rootsfound;
 
+    /** temporary storage of Jacobian, kept here to avoid reallocation (dimension: nx x nx, col-major) */
     DlsMat Jtmp;
     
-    /** state vector */
+    /** state vector (dimension: nx) */
     AmiVector x;
-    /** old state vector */
+    /** old state vector (dimension: nx) */
     AmiVector x_old;
-    /** differential state vector */
+    /** differential state vector (dimension: nx) */
     AmiVector dx;
-    /** old differential state vector */
+    /** old differential state vector (dimension: nx) */
     AmiVector dx_old;
-    /** time derivative state vector */
+    /** time derivative state vector (dimension: nx) */
     AmiVector xdot;
-    /** old time derivative state vector */
+    /** old time derivative state vector (dimension: nx) */
     AmiVector xdot_old;
 
-    /** sensitivity state vector array */
+    /** sensitivity state vector array (dimension: nx x nplist, row-major) */
     AmiVectorArray sx;
-    /** differential sensitivity state vector array */
+    /** differential sensitivity state vector array (dimension: nx x nplist, row-major) */
     AmiVectorArray sdx;
-    
-    ForwardProblem();
 };
 
 

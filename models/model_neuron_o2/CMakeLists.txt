@@ -88,7 +88,11 @@ endif()
 ## SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)
 if(ENABLE_SWIG)
-    add_subdirectory(swig)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.8)
+        add_subdirectory(swig)
+    else()
+        message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")
+    endif()
 endif()
 
 
