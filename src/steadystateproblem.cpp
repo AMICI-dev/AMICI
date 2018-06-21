@@ -76,9 +76,12 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
         solver->AMIReInit(*t, x, &dx);
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST)
+        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
                 solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
+            if (rdata->sensi_meth == AMICI_SENSI_ASA)
+                solver->AMIAdjReInit();
+        }
     }
 }
 

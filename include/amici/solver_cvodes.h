@@ -77,6 +77,8 @@ class CVodeSolver : public Solver {
 
     void AMIAdjInit(long int steps, int interp) override;
 
+    void AMIAdjReInit() override;
+    
     void AMICreateB(int lmm, int iter, int *which) override;
 
     void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,

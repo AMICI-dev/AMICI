@@ -120,6 +120,12 @@ class Solver {
     virtual void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
 
     /**
+     * AMIAdjReInit reinitializes the adjoint problem
+     *
+     */
+    virtual void AMIAdjReInit() = 0;
+    
+    /**
      * AMICalcIC calculates consistent initial conditions, assumes initial
      * states to be correct (DAE only)
      *
@@ -807,7 +813,7 @@ class Solver {
      *
      */
     virtual void AMIAdjInit(long int steps, int interp) = 0;
-
+    
     /**
      * AMICreateB specifies solver method and initializes solver memory for the
      * backward problem
