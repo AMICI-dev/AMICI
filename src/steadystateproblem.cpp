@@ -80,7 +80,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
                 solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
             if (rdata->sensi_meth == AMICI_SENSI_ASA)
-                solver->AMIAdjReInit();
+                if (model->nx > 0)
+                    /* Allocate space for the adjoint computation */
+                    solver->AMIAdjInit(10000, 1);
         }
     }
 }

@@ -88,8 +88,11 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
 
         if (sensi_meth == AMICI_SENSI_ASA) {
             if (model->nx > 0) {
-                /* Allocate space for the adjoint computation */
-                AMIAdjInit(maxsteps, interpType);
+                if (getNewtonPreequilibration()) {
+                } else {
+                    /* Allocate space for the adjoint computation */
+                    AMIAdjInit(maxsteps, interpType);
+                }
             }
         }
     }
