@@ -35,12 +35,12 @@ class SteadystateProblem {
                                 Model *model, int newton_status,
                                 double run_time, int it);
 
-    void getNewtonSimulation(ReturnData *rdata, Solver *solver,
-                                   Model *model, int it);
+    void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
+                                  Model *model, int it);
     
-    void* createNewtonSimulation(Solver *solver, Model *model, realtype tstart);
+    void *createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
     
-    void freeNewtonSimulation(void *newton_sim);
+    void freeSteadystateSimSolver(void *newton_sim);
     
     /** default constructor
      * @param t pointer to time variable

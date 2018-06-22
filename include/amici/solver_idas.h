@@ -59,7 +59,7 @@ class IDASolver : public Solver {
     void AMIFree() override;
 
     void AMIAdjInit(long int steps, int interp) override;
-    
+
     void AMICreateB(int lmm, int iter, int *which) override;
 
     void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,

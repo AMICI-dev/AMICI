@@ -51,7 +51,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     } catch(NewtonFailure& ex) {
         try {
             /* Newton solver did not find a steady state, so try integration */
-            getNewtonSimulation(rdata, solver, model, it);
+            getSteadystateSimulation(rdata, solver, model, it);
             newton_status = 2;
         } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
             try {
@@ -60,11 +60,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             } catch(NewtonFailure& ex) {
                 // TODO: more informative NewtonFailure to give more informative error code
                 throw amici::IntegrationFailure(AMICI_CONV_FAILURE,*t);
-            } catch(...) {
-                throw AmiException("Internal error in steady state problem");
             }
-        } catch(...) {
-            throw AmiException("Internal error in steady state problem");
         }
     } catch(...) {
         throw AmiException("Internal error in steady state problem");
@@ -236,8 +232,8 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
 /* ----------------------------------------------------------------------------------
  */
 
-void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
-                                            Model *model, int it) {
+void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *solver,
+                                                  Model *model, int it) {
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
@@ -255,7 +251,7 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
     if (it<1) {
         /* Preequilibration: Create a new CVode object for simulation */
         tstart = model->t0();
-        newton_sim = createNewtonSimulation(solver, model, tstart);
+        newton_sim = createSteadystateSimSolver(solver, model, tstart);
     } else {
         /* Carry on simulating from last point */
         tstart = rdata->ts[it-1];
@@ -311,10 +307,10 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
     }
     
     if (it<1)
-        freeNewtonSimulation(newton_sim);
+        freeSteadystateSimSolver(newton_sim);
 }
 
-void *SteadystateProblem::createNewtonSimulation(Solver *solver, Model *model, realtype tstart) {
+void *SteadystateProblem::createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart) {
     /**
      * New CVode object for preequilibration simulation is created
      *
@@ -354,22 +350,43 @@ void *SteadystateProblem::createNewtonSimulation(Solver *solver, Model *model, r
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetStabLimDet");
     
-    status = CVKLU(newton_sim, model->nx, model->nnz, CSC_MAT);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVKLU");
-    
-    status = CVSlsSetSparseJacFn(newton_sim, CVodeSolver::fJSparse);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVSlsSetSparseJacFn");
-    
-    status = CVKLUSetOrdering(newton_sim, solver->getStateOrdering());
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVKLUSetOrdering");
+    switch(solver->getLinearSolver()) {
+            
+    case AMICI_DENSE:
+        /* Set up dense solver */
+        status = CVDense(newton_sim, model->nx);
+        if(status != CV_SUCCESS)
+            throw CvodeException(status,"CVDense");
 
+        status = CVDlsSetDenseJacFn(newton_sim, CVodeSolver::fJ);
+        if(status != CV_SUCCESS)
+            throw CvodeException(status,"CVDlsSetDenseJacFn");
+        break;
+        
+    case AMICI_KLU:
+        /* Set up KLU solver */
+        status = CVKLU(newton_sim, model->nx, model->nnz, CSC_MAT);
+        if(status != CV_SUCCESS)
+            throw CvodeException(status,"CVKLU");
+    
+        /* Pass Jacobian function to KLU solver */
+        status = CVSlsSetSparseJacFn(newton_sim, CVodeSolver::fJSparse);
+        if(status != CV_SUCCESS)
+            throw CvodeException(status,"CVSlsSetSparseJacFn");
+    
+        /* Provide ordering to KLU solver */
+        status = CVKLUSetOrdering(newton_sim, solver->getStateOrdering());
+        if(status != CV_SUCCESS)
+            throw CvodeException(status,"CVKLUSetOrdering");
+        break;
+            
+    default:
+        throw NewtonFailure("Invalid Choice of Solver!");
+    }
     return newton_sim;
 }
     
-void SteadystateProblem::freeNewtonSimulation(void *newton_sim) {
+void SteadystateProblem::freeSteadystateSimSolver(void *newton_sim) {
     CVodeFree(&newton_sim);
 }
     

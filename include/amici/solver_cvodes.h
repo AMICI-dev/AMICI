@@ -33,12 +33,6 @@ class CVodeSolver : public Solver {
      * @return The clone
      */
     virtual Solver* clone() const override;
-
-    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
-    
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
     
     void *AMICreate(int lmm, int iter) override;
 
@@ -81,7 +75,7 @@ class CVodeSolver : public Solver {
     void AMIFree() override;
 
     void AMIAdjInit(long int steps, int interp) override;
-    
+
     void AMICreateB(int lmm, int iter, int *which) override;
 
     void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
@@ -100,6 +94,17 @@ class CVodeSolver : public Solver {
 
     int AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                   int itask, int *ncheckPtr) override;
+    
+
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
+    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
+                  DlsMat J, void *user_data, N_Vector tmp1,
+                  N_Vector tmp2, N_Vector tmp3);
 
     void AMISolveB(realtype tBout, int itaskB) override;
 
@@ -200,10 +205,6 @@ class CVodeSolver : public Solver {
     void setBandJacFnB(int which) override;
 
     void setJacTimesVecFnB(int which) override;
-    
-    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-                    DlsMat J, void *user_data, N_Vector tmp1,
-                    N_Vector tmp2, N_Vector tmp3);
     
     static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
