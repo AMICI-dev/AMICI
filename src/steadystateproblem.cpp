@@ -243,20 +243,18 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
      * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      */
  
-    realtype tstart;
     std::unique_ptr<void, std::function<void(void *)>> newton_sim;
     int status = 0;
     
     /* Newton solver did not work, so try a simulation */
     if (it<1) {
         /* Preequilibration: Create a new CVode object for simulation */
-        tstart = model->t0();
-        newton_sim = createNewtonSimulation(solver, model, tstart);
+        *t = model->t0();
+        newton_sim = createNewtonSimulation(solver, model, *t);
     } else {
         /* Carry on simulating from last point */
-        tstart = rdata->ts[it-1];
+        *t = rdata->ts[it-1];
     }
-    *t = tstart;
     
     model->fx0(x);
     if (it>=1)
