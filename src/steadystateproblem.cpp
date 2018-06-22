@@ -244,22 +244,20 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
      */
  
     std::unique_ptr<void, std::function<void(void *)>> newton_sim;
-    int status = 0;
-    
+
     /* Newton solver did not work, so try a simulation */
     if (it<1) {
         /* Preequilibration: Create a new CVode object for simulation */
         *t = model->t0();
         newton_sim = createNewtonSimulation(solver, model, *t);
+        model->fx0(x);
     } else {
         /* Carry on simulating from last point */
         *t = rdata->ts[it-1];
-    }
-    
-    model->fx0(x);
-    if (it>=1)
+        model->fx0(x);
         /* Reinitialize old solver */
         solver->AMIReInit(*t, x, &dx);
+    }
     
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
@@ -274,13 +272,13 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
         if (it<1) {
-            status = CVode(newton_sim.get(), std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
-            if(status<0)
+            int status = CVode(newton_sim.get(), std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
+            if(status != CV_SUCCESS)
                 throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
         } else {
             solver->AMISolve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         }
-            
+
         model->fxdot(*t, x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
