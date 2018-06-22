@@ -59,10 +59,6 @@ class IDASolver : public Solver {
     void AMIFree() override;
 
     void AMIAdjInit(long int steps, int interp) override;
-
-    void AMIAdjReInit() override;
-    
-    void AMIAdjFree() override;
     
     void AMICreateB(int lmm, int iter, int *which) override;
 

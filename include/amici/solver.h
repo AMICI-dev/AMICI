@@ -120,16 +120,6 @@ class Solver {
     virtual void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
     
     /**
-     * AMIAdjReInit reinitializes the adjoint problem
-     *
-     */
-    virtual void AMIAdjReInit() = 0;
-    
-    virtual void AMIAdjInit(long int steps, int interp) = 0;
-    
-    virtual void AMIAdjFree() = 0;
-    
-    /**
      * AMICalcIC calculates consistent initial conditions, assumes initial
      * states to be correct (DAE only)
      *
@@ -619,7 +609,7 @@ class Solver {
      * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
      *
      */
-    // virtual void AMIAdjInit(long int steps, int interp) = 0;
+    virtual void AMIAdjInit(long int steps, int interp) = 0;
     
     /**
      * SetDenseJacFn sets the dense Jacobian function
@@ -1087,7 +1077,10 @@ private:
      * specifies the type of nonlinear solver iteration
      */
     NonlinearSolverIteration iter = NEWTON;
-
+    
+    /** flag controlling stability limit detection */
+    booleantype stldet = true;
+    
     /** state ordering */
     StateOrdering ordering = AMD;
 
@@ -1129,9 +1122,6 @@ private:
 
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
-
-    /** flag controlling stability limit detection */
-    booleantype stldet = true;
 };
 
 bool operator ==(const Solver &a, const Solver &b);

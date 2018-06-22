@@ -223,16 +223,6 @@ void CVodeSolver::AMIAdjInit(long steps, int interp) {
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeAdjInit");
 }
-    
-void CVodeSolver::AMIAdjReInit() {
-    int status = CVodeAdjReInit(ami_mem);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeAdjReInit");
-}
-    
-void CVodeSolver::AMIAdjFree() {
-    CVodeAdjFree(ami_mem);
-}
 
 void CVodeSolver::AMICreateB(int lmm, int iter, int *which) {
     int status = CVodeCreateB(ami_mem, lmm, iter, which);

@@ -204,14 +204,6 @@ void IDASolver::AMIAdjInit(long steps, int interp) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAAdjInit");
 }
-void IDASolver::AMIAdjReInit() {
-    int status = IDAAdjReInit(ami_mem);
-    if(status != IDA_SUCCESS)
-        throw IDAException(status,"IDAAdjReInit");
-}
-void IDASolver::AMIAdjFree() {
-    IDAAdjFree(ami_mem);
-}
 void IDASolver::AMICreateB(int lmm, int iter, int *which) {
     int status = IDACreateB(ami_mem, which);
     if(status != IDA_SUCCESS)

@@ -84,8 +84,6 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
                 solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
-            //if (rdata->sensi_meth == AMICI_SENSI_ASA)
-            //    solver->AMIAdjReInit();
         }
     }
 }
