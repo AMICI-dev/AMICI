@@ -60,11 +60,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             } catch(NewtonFailure& ex) {
                 // TODO: more informative NewtonFailure to give more informative error code
                 throw amici::IntegrationFailure(AMICI_CONV_FAILURE,*t);
-            } catch(...) {
-                throw AmiException("Internal error in steady state problem");
             }
-        } catch(...) {
-            throw AmiException("Internal error in steady state problem");
         }
     } catch(...) {
         throw AmiException("Internal error in steady state problem");
