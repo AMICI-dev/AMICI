@@ -125,6 +125,10 @@ class Solver {
      */
     virtual void AMIAdjReInit() = 0;
     
+    virtual void AMIAdjInit(long int steps, int interp) = 0;
+    
+    virtual void AMIAdjFree() = 0;
+    
     /**
      * AMICalcIC calculates consistent initial conditions, assumes initial
      * states to be correct (DAE only)
@@ -615,7 +619,7 @@ class Solver {
      * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
      *
      */
-    virtual void AMIAdjInit(long int steps, int interp) = 0;
+    // virtual void AMIAdjInit(long int steps, int interp) = 0;
     
     /**
      * SetDenseJacFn sets the dense Jacobian function

@@ -62,6 +62,8 @@ class IDASolver : public Solver {
 
     void AMIAdjReInit() override;
     
+    void AMIAdjFree() override;
+    
     void AMICreateB(int lmm, int iter, int *which) override;
 
     void AMIReInitB(int which, realtype tB0, AmiVector *yyB0,

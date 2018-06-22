@@ -209,6 +209,9 @@ void IDASolver::AMIAdjReInit() {
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDAAdjReInit");
 }
+void IDASolver::AMIAdjFree() {
+    IDAAdjFree(ami_mem);
+}
 void IDASolver::AMICreateB(int lmm, int iter, int *which) {
     int status = IDACreateB(ami_mem, which);
     if(status != IDA_SUCCESS)

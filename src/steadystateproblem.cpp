@@ -249,8 +249,10 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
     realtype tstart;
     
     /* Newton solver did not work, so try a simulation: reinitialize solver */
-    if (it<1)
+    if (it<1) {
+        solver->AMIAdjFree();
         tstart = model->t0();
+    }
     else
         tstart = rdata->ts[it-1];
     *t = tstart;
@@ -296,6 +298,9 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
             
         
     }
+    if (it<1)
+        if (model->nx > 0)
+            solver->AMIAdjInit(10000, 1);
 }
 
 } // namespace amici
