@@ -504,6 +504,32 @@ namespace amici {
          */
         int checkFinite(const int N,const realtype *array, const char* fun) const;
 
+
+        /**
+         * @brief Get names of the model parameters
+         * @return the names
+         */
+        virtual std::vector<std::string> getParameterNames() const { return std::vector<std::string>(); }
+
+        /**
+         * @brief Get names of the model states
+         * @return the names
+         */
+        virtual std::vector<std::string> getStateNames() const { return std::vector<std::string>(); }
+
+        /**
+         * @brief Get names of the fixed model parameters
+         * @return the names
+         */
+        virtual std::vector<std::string> getFixedParameterNames() const { return std::vector<std::string>(); }
+
+        /**
+         * @brief Get names of the observables
+         * @return the names
+         */
+        virtual std::vector<std::string> getObservableNames() const { return std::vector<std::string>(); }
+
+
         /** number of states */
         const int nx;
         /** number of states in the unaugmented system */

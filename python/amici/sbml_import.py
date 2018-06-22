@@ -1102,9 +1102,27 @@ class SbmlImporter:
                         'NK': str(self.n_fixed_parameters),
                         'O2MODE': 'amici::AMICI_O2MODE_NONE',
                         'PARAMETERS': str(self.parameterValues)[1:-1],
-                        'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1]}
+                        'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1],
+                        'PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('parameter'),
+                        'STATE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('species'),
+                        'FIXED_PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('fixed_parameter'),
+                        'OBSERVABLE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('observable'),
+                        }
         applyTemplate(os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
                       os.path.join(self.modelPath, str(self.modelName) + '.h'), templateData)
+
+    def getSymbolNameInitializerList(self, name):
+        """Get C++ initializer list for vector of names for the given model entity
+        
+        Arguments:
+        name: string, any key present in self.symbols
+
+        Returns:
+
+        Raises:
+
+        """
+        return '\n'.join([ '"%s",' % str(symbol) for symbol in self.symbols[name]['sym'] ])
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model.
