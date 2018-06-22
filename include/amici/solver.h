@@ -118,7 +118,7 @@ class Solver {
      * @param ypS0 new derivative state sensitivities (DAE only)
      */
     virtual void AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
-
+    
     /**
      * AMIAdjReInit reinitializes the adjoint problem
      *
@@ -609,6 +609,15 @@ class Solver {
     virtual void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) = 0;
 
     /**
+     * AMIAdjInit initializes the adjoint problem
+     *
+     * @param steps number of integration points between checkpoints
+     * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
+     *
+     */
+    virtual void AMIAdjInit(long int steps, int interp) = 0;
+    
+    /**
      * SetDenseJacFn sets the dense Jacobian function
      *
      */
@@ -804,15 +813,6 @@ class Solver {
      * AMIFree frees allocation solver memory
      */
     virtual void AMIFree() = 0;
-
-    /**
-     * AMIAdjInit initializes the adjoint problem
-     *
-     * @param steps number of integration points between checkpoints
-     * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
-     *
-     */
-    virtual void AMIAdjInit(long int steps, int interp) = 0;
     
     /**
      * AMICreateB specifies solver method and initializes solver memory for the
