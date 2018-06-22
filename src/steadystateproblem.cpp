@@ -248,7 +248,7 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
      */
  
     realtype tstart;
-    void *newton_sim = NULL;
+    std::unique_ptr<void, std::function<void(void *)>> newton_sim;
     int status = 0;
     
     /* Newton solver did not work, so try a simulation */
@@ -280,7 +280,7 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
         if (it<1) {
-            status = CVode(newton_sim, std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
+            status = CVode(newton_sim.get(), std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
             if(status<0)
                 throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
         } else {
@@ -309,12 +309,11 @@ void SteadystateProblem::getNewtonSimulation(ReturnData *rdata, Solver *solver,
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure("Simulation based steady state failed to converge");
     }
-    
-    if (it<1)
-        freeNewtonSimulation(newton_sim);
 }
 
-void *SteadystateProblem::createNewtonSimulation(Solver *solver, Model *model, realtype tstart) {
+std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createNewtonSimulation(
+        Solver *solver, Model *model, realtype tstart)
+{
     /**
      * New CVode object for preequilibration simulation is created
      *
@@ -324,53 +323,52 @@ void *SteadystateProblem::createNewtonSimulation(Solver *solver, Model *model, r
      */
     
     /* Create new CVode object */
-    void *newton_sim = CVodeCreate(solver->getLinearMultistepMethod(),
-                                   solver->getNonlinearSolverIteration());
+    auto newton_sim = std::unique_ptr<void, std::function<void(void *)>>(
+                CVodeCreate(solver->getLinearMultistepMethod(),
+                            solver->getNonlinearSolverIteration()),
+                [](void *ptr) { CVodeFree(&ptr); }
+    );
     if (newton_sim == NULL)
         throw AmiException("Failed to allocated solver memory!");
     
-    int status = CVodeInit(newton_sim, CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
+    int status = CVodeInit(newton_sim.get(), CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeInit");
     
     /* Specify integration tolerances */
-    status = CVodeSStolerances(newton_sim, RCONST(solver->getRelativeTolerance()),
+    status = CVodeSStolerances(newton_sim.get(), RCONST(solver->getRelativeTolerance()),
                                RCONST(solver->getAbsoluteTolerance()));
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSStolerances");
     
     /* attaches userdata*/
-    status = CVodeSetUserData(newton_sim, model);
+    status = CVodeSetUserData(newton_sim.get(), model);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetUserData");
     
     /* specify maximal number of steps */
-    status = CVodeSetMaxNumSteps(newton_sim, solver->getMaxSteps());
+    status = CVodeSetMaxNumSteps(newton_sim.get(), solver->getMaxSteps());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetMaxNumSteps");
     
     /* activates stability limit detection */
-    status = CVodeSetStabLimDet(newton_sim, solver->getStabilityLimitFlag());
+    status = CVodeSetStabLimDet(newton_sim.get(), solver->getStabilityLimitFlag());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetStabLimDet");
     
-    status = CVKLU(newton_sim, model->nx, model->nnz, CSC_MAT);
+    status = CVKLU(newton_sim.get(), model->nx, model->nnz, CSC_MAT);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVKLU");
     
-    status = CVSlsSetSparseJacFn(newton_sim, CVodeSolver::fJSparse);
+    status = CVSlsSetSparseJacFn(newton_sim.get(), CVodeSolver::fJSparse);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVSlsSetSparseJacFn");
     
-    status = CVKLUSetOrdering(newton_sim, solver->getStateOrdering());
+    status = CVKLUSetOrdering(newton_sim.get(), solver->getStateOrdering());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVKLUSetOrdering");
 
     return newton_sim;
 }
-    
-void SteadystateProblem::freeNewtonSimulation(void *newton_sim) {
-    CVodeFree(&newton_sim);
-}
-    
+
 } // namespace amici
