@@ -34,7 +34,12 @@ class CVodeSolver : public Solver {
      */
     virtual Solver* clone() const override;
 
-
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
     void *AMICreate(int lmm, int iter) override;
 
     void AMISStolerances(double rtol, double atol) override;
@@ -208,10 +213,6 @@ class CVodeSolver : public Solver {
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
-    
     static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B);
@@ -235,8 +236,6 @@ class CVodeSolver : public Solver {
     
     static int froot(realtype t, N_Vector x, realtype *root,
                      void *user_data);
-    
-    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
     
     static int fxBdot(realtype t, N_Vector x, N_Vector xB,
                       N_Vector xBdot, void *user_data);

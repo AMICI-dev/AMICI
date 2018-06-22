@@ -1088,9 +1088,6 @@ private:
      */
     NonlinearSolverIteration iter = NEWTON;
 
-    /** flag controlling stability limit detection */
-    booleantype stldet = true;
-
     /** state ordering */
     StateOrdering ordering = AMD;
 
@@ -1133,6 +1130,8 @@ private:
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
 
+    /** flag controlling stability limit detection */
+    booleantype stldet = true;
 };
 
 bool operator ==(const Solver &a, const Solver &b);

@@ -38,6 +38,9 @@ class SteadystateProblem {
     void getNewtonSimulation(ReturnData *rdata, Solver *solver,
                                    Model *model, int it);
     
+    void* createNewtonSimulation(Solver *solver, Model *model, realtype tstart);
+    
+    void freeNewtonSimulation(void *newton_sim);
     
     /** default constructor
      * @param t pointer to time variable
