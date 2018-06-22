@@ -67,20 +67,25 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         throw AmiException("Internal error in steady state problem");
     }
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-    getNewtonOutput(rdata, model, newton_status, run_time, it);
 
     /* Compute steady state sensitvities */
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth != AMICI_SENSI_NONE)
         newtonSolver.get()->getSensis(it, sx);
 
+    /* Get output of steady state solver, write it to x0 and reset time if necessary */
+    getNewtonOutput(rdata, model, newton_status, run_time, it);
+    
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
         solver->AMIReInit(*t, x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA)
                 solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
-            if (rdata->sensi_meth == AMICI_SENSI_ASA)
+            if (rdata->sensi_meth == AMICI_SENSI_ASA) {
                 solver->AMIAdjReInit();
+                solver->AMIAdjReInit();
+            }
+            
         }
     }
 }
