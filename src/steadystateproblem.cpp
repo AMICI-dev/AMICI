@@ -352,28 +352,28 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
             
     case AMICI_DENSE:
         /* Set up dense solver */
-        status = CVDense(newton_sim, model->nx);
+        status = CVDense(newton_sim.get(), model->nx);
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVDense");
 
-        status = CVDlsSetDenseJacFn(newton_sim, CVodeSolver::fJ);
+        status = CVDlsSetDenseJacFn(newton_sim.get(), CVodeSolver::fJ);
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVDlsSetDenseJacFn");
         break;
         
     case AMICI_KLU:
         /* Set up KLU solver */
-        status = CVKLU(newton_sim, model->nx, model->nnz, CSC_MAT);
+        status = CVKLU(newton_sim.get(), model->nx, model->nnz, CSC_MAT);
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVKLU");
     
         /* Pass Jacobian function to KLU solver */
-        status = CVSlsSetSparseJacFn(newton_sim, CVodeSolver::fJSparse);
+        status = CVSlsSetSparseJacFn(newton_sim.get(), CVodeSolver::fJSparse);
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVSlsSetSparseJacFn");
     
         /* Provide ordering to KLU solver */
-        status = CVKLUSetOrdering(newton_sim, solver->getStateOrdering());
+        status = CVKLUSetOrdering(newton_sim.get(), solver->getStateOrdering());
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVKLUSetOrdering");
         break;
