@@ -243,25 +243,21 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
      * @param[in] it current timepoint index, <0 indicates preequilibration @type int
      */
  
-    realtype tstart;
-    void *newton_sim = NULL;
-    int status = 0;
-    
+    std::unique_ptr<void, std::function<void(void *)>> newton_sim;
+
     /* Newton solver did not work, so try a simulation */
     if (it<1) {
         /* Preequilibration: Create a new CVode object for simulation */
-        tstart = model->t0();
-        newton_sim = createSteadystateSimSolver(solver, model, tstart);
+        *t = model->t0();
+        newton_sim = createSteadystateSimSolver(solver, model, *t);
+        model->fx0(x);
     } else {
         /* Carry on simulating from last point */
-        tstart = rdata->ts[it-1];
-    }
-    *t = tstart;
-    
-    model->fx0(x);
-    if (it>=1)
+        *t = rdata->ts[it-1];
+        model->fx0(x);
         /* Reinitialize old solver */
         solver->AMIReInit(*t, x, &dx);
+    }
     
     /* Loop over steps and check for convergence */
     double res_abs = INFINITY;
@@ -276,13 +272,13 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
         if (it<1) {
-            status = CVode(newton_sim, std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
-            if(status<0)
+            int status = CVode(newton_sim.get(), std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
+            if(status != CV_SUCCESS)
                 throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
         } else {
             solver->AMISolve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         }
-            
+
         model->fxdot(*t, x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
         
@@ -305,12 +301,11 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure("Simulation based steady state failed to converge");
     }
-    
-    if (it<1)
-        freeSteadystateSimSolver(newton_sim);
 }
 
-void *SteadystateProblem::createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart) {
+std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createSteadystateSimSolver(
+        Solver *solver, Model *model, realtype tstart)
+{
     /**
      * New CVode object for preequilibration simulation is created
      *
@@ -320,33 +315,36 @@ void *SteadystateProblem::createSteadystateSimSolver(Solver *solver, Model *mode
      */
     
     /* Create new CVode object */
-    void *newton_sim = CVodeCreate(solver->getLinearMultistepMethod(),
-                                   solver->getNonlinearSolverIteration());
+    auto newton_sim = std::unique_ptr<void, std::function<void(void *)>>(
+                CVodeCreate(solver->getLinearMultistepMethod(),
+                            solver->getNonlinearSolverIteration()),
+                [](void *ptr) { CVodeFree(&ptr); }
+    );
     if (newton_sim == NULL)
         throw AmiException("Failed to allocated solver memory!");
     
-    int status = CVodeInit(newton_sim, CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
+    int status = CVodeInit(newton_sim.get(), CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeInit");
     
     /* Specify integration tolerances */
-    status = CVodeSStolerances(newton_sim, RCONST(solver->getRelativeTolerance()),
+    status = CVodeSStolerances(newton_sim.get(), RCONST(solver->getRelativeTolerance()),
                                RCONST(solver->getAbsoluteTolerance()));
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSStolerances");
     
     /* attaches userdata*/
-    status = CVodeSetUserData(newton_sim, model);
+    status = CVodeSetUserData(newton_sim.get(), model);
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetUserData");
     
     /* specify maximal number of steps */
-    status = CVodeSetMaxNumSteps(newton_sim, solver->getMaxSteps());
+    status = CVodeSetMaxNumSteps(newton_sim.get(), solver->getMaxSteps());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetMaxNumSteps");
     
     /* activates stability limit detection */
-    status = CVodeSetStabLimDet(newton_sim, solver->getStabilityLimitFlag());
+    status = CVodeSetStabLimDet(newton_sim.get(), solver->getStabilityLimitFlag());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"CVodeSetStabLimDet");
     
@@ -385,9 +383,5 @@ void *SteadystateProblem::createSteadystateSimSolver(Solver *solver, Model *mode
     }
     return newton_sim;
 }
-    
-void SteadystateProblem::freeSteadystateSimSolver(void *newton_sim) {
-    CVodeFree(&newton_sim);
-}
-    
+
 } // namespace amici

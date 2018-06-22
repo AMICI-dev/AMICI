@@ -7,6 +7,8 @@
 
 #include <nvector/nvector_serial.h>
 
+#include <functional>
+#include <memory>
 
 namespace amici {
 
@@ -38,10 +40,8 @@ class SteadystateProblem {
     void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
                                   Model *model, int it);
     
-    void *createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
-    
-    void freeSteadystateSimSolver(void *newton_sim);
-    
+    std::unique_ptr<void, std::function<void(void *)>> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
+
     /** default constructor
      * @param t pointer to time variable
      * @param x pointer to state variables
