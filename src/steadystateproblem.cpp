@@ -310,8 +310,9 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
      * New CVode object for preequilibration simulation is created
      *
      * @param[in] solver pointer to the AMICI solver object @type Solver
+     * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] tstart time point for starting Newton simulation @type realtype
-     * @param[out] newton_sim void pointer to CVode object
+     * @param[out] newton_sim pointer to CVode object for simulation @type void
      */
     
     /* Create new CVode object */
