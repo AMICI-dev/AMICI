@@ -78,7 +78,6 @@ TEST(groupSteadystate, testReuseSolver) {
 }
 
 
-
 TEST(groupSteadystate, testSimulation) {
     amici::simulateVerifyWrite("/model_steadystate/nosensi/");
 }
@@ -109,4 +108,26 @@ TEST(groupSteadystate, testSensitivityForwardSPBCG) {
     amici::simulateVerifyWrite("/model_steadystate/nosensiSPBCG/", 10*TEST_ATOL, 10*TEST_RTOL);
 }
 
+TEST(groupSteadystate, testSensiFwdNewtonPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensifwdnewtonpreeq/");
+}
 
+TEST(groupSteadystate, testSensiAdjNewtonPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensiadjnewtonpreeq/");
+}
+
+TEST(groupSteadystate, testSensiFwdSimPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensifwdsimpreeq/");
+}
+
+TEST(groupSteadystate, testSensiAdjSimPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensiadjsimpreeq/");
+}
+
+TEST(groupSteadystate, testSensiFwdByhandPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensifwdbyhandpreeq/");
+}
+
+TEST(groupSteadystate, testSensiAdjByhandPreeq) {
+    amici::simulateVerifyWrite("/model_steadystate/sensiadjbyhandpreeq/");
+}

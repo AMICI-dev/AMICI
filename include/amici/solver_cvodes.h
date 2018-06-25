@@ -33,8 +33,7 @@ class CVodeSolver : public Solver {
      * @return The clone
      */
     virtual Solver* clone() const override;
-
-
+    
     void *AMICreate(int lmm, int iter) override;
 
     void AMISStolerances(double rtol, double atol) override;
@@ -95,6 +94,17 @@ class CVodeSolver : public Solver {
 
     int AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
                   int itask, int *ncheckPtr) override;
+    
+
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
+    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
+                  DlsMat J, void *user_data, N_Vector tmp1,
+                  N_Vector tmp2, N_Vector tmp3);
 
     void AMISolveB(realtype tBout, int itaskB) override;
 
@@ -196,17 +206,9 @@ class CVodeSolver : public Solver {
 
     void setJacTimesVecFnB(int which) override;
     
-    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-                    DlsMat J, void *user_data, N_Vector tmp1,
-                    N_Vector tmp2, N_Vector tmp3);
-    
     static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);
-    
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
     
     static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
@@ -231,8 +233,6 @@ class CVodeSolver : public Solver {
     
     static int froot(realtype t, N_Vector x, realtype *root,
                      void *user_data);
-    
-    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
     
     static int fxBdot(realtype t, N_Vector x, N_Vector xB,
                       N_Vector xBdot, void *user_data);

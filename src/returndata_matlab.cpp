@@ -52,6 +52,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     mxArray *matlabSolutionStruct =
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
     
+    std::vector<int> perm0 = {1, 0};
     std::vector<int> perm1 = {0, 1};
     std::vector<int> perm2 = {0, 2, 1};
     std::vector<int> perm3 = {0, 2, 3, 1};
@@ -69,7 +70,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     }
     if (rdata->nx > 0) {
         writeMatlabField2(matlabSolutionStruct, "x", rdata->x, rdata->nt, rdata->nx, perm1);
-        writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, 1, rdata->nx, perm1);
+        writeMatlabField2(matlabSolutionStruct, "x0",  rdata->x0, rdata->nx, 1, perm1);
     }
     if (rdata->ny > 0) {
         writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny, perm1);
@@ -77,7 +78,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
     }
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
         writeMatlabField1(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist);
-        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nx, rdata->nplist, perm1);
+        writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nplist, rdata->nx, perm0);
 
         if (rdata->sensi_meth == AMICI_SENSI_FSA) {
             writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nplist, rdata->nx, perm2);
