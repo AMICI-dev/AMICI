@@ -55,7 +55,7 @@ add_custom_target(python-wheel
 
 add_custom_target(python-sdist
     COMMENT "Creating sdist for AMICI base python package"
-    COMMAND ${PYTHON_EXECUTABLE} setup.py sdist --dist-dir=${CMAKE_BINARY_DIR}
+    COMMAND ${PYTHON_EXECUTABLE} setup.py sdist --dist-dir=${CMAKE_CURRENT_BINARY_DIR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/sdist
 )
 

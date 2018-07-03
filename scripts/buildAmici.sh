@@ -18,6 +18,8 @@ make
 #pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
 
 make python-sdist
-
+set -x
 python3 -m venv ${AMICI_PATH}/build/venv --clear
-${AMICI_PATH}/build/venv/bin/pip3 install --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
+source ${AMICI_PATH}/build/venv/bin/activate
+pip3 install --upgrade pip setuptools pkgconfig wheel
+pip3 install --verbose `ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1`
