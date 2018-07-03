@@ -21,4 +21,5 @@ make python-sdist
 
 python3 -m venv ${AMICI_PATH}/build/venv --clear
 source ${AMICI_PATH}/build/venv/bin/activate
+pip3 install  --user pkgconfig
 pip3 install `ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1`
