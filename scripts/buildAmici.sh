@@ -20,4 +20,5 @@ make
 make python-sdist
 
 python3 -m venv ${AMICI_PATH}/build/venv --clear
-${AMICI_PATH}/build/venv/bin/pip3 install --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.tgz | head -1`
+source ${AMICI_PATH}/build/venv/bin/activate
+pip3 install `ls -t ${AMICI_PATH}/build/python/amici-*.tgz | head -1`
