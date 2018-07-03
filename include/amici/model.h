@@ -506,10 +506,23 @@ namespace amici {
 
 
         /**
+         * @brief Reports whether the model has parameter names set.
+         * @return
+         */
+        virtual bool hasParameterNames() const { return np() && !getParameterNames().empty(); }
+
+        /**
          * @brief Get names of the model parameters
          * @return the names
          */
         virtual std::vector<std::string> getParameterNames() const { return std::vector<std::string>(); }
+
+
+        /**
+         * @brief Reports whether the model has state names set.
+         * @return
+         */
+        virtual bool hasStateNames() const { return nx && !getStateNames().empty(); }
 
         /**
          * @brief Get names of the model states
@@ -518,17 +531,28 @@ namespace amici {
         virtual std::vector<std::string> getStateNames() const { return std::vector<std::string>(); }
 
         /**
+         * @brief Reports whether the model has fixed parameter names set.
+         * @return
+         */
+        virtual bool hasFixedParameterNames() const { return nk() && !getFixedParameterNames().empty(); }
+
+        /**
          * @brief Get names of the fixed model parameters
          * @return the names
          */
         virtual std::vector<std::string> getFixedParameterNames() const { return std::vector<std::string>(); }
 
         /**
+         * @brief Reports whether the model has observable names set.
+         * @return
+         */
+        virtual bool hasObservableNames() const { return ny && !getObservableNames().empty(); }
+
+        /**
          * @brief Get names of the observables
          * @return the names
          */
         virtual std::vector<std::string> getObservableNames() const { return std::vector<std::string>(); }
-
 
         /** number of states */
         const int nx;
