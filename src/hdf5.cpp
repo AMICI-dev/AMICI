@@ -119,6 +119,14 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         checkEventDimensionsCompatible(m, n, model);
     }
 
+    if(locationExists(file,  hdf5Root + "/condition")) {
+        edata->fixedParameters = getDoubleDataset1D(file, hdf5Root + "/condition");
+    }
+
+    if(locationExists(file,  hdf5Root + "/conditionPreequilibration")) {
+        edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
+    }
+
     return edata;
 }
 
@@ -171,7 +179,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
                                         rdata.nJ - 1, rdata.nplist);
 
     if (rdata.sx0.size())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nx, rdata.nplist);
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nplist, rdata.nx);
 
     if (rdata.sx.size())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nplist, rdata.nx);
@@ -499,7 +507,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         hsize_t length1 = 0;
         auto sx0 = getDoubleDataset2D(file, datasetPath + "/sx0", length0, length1);
         if(sx0.size()) {
-            if (length0 != (unsigned) model.nx && length1 != (unsigned) model.nplist())
+            if (length0 != (unsigned) model.nplist() && length1 != (unsigned) model.nx)
                 throw(AmiException("Dimension mismatch when reading sx0. Expected %dx%d, got %llu, %llu.",
                                    model.nx, model.nplist(), length0, length1));
             model.setInitialStateSensitivities(sx0);

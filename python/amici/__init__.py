@@ -120,7 +120,7 @@ def getFieldAsNumPyArray(rdata, field):
                        'x':   [rdata.nt, rdata.nx],
                        'x0':  [rdata.nx],
                        'sx':  [rdata.nt, rdata.nplist, rdata.nx],
-                       'sx0': [rdata.nx, rdata.nplist],
+                       'sx0': [rdata.nplist, rdata.nx],
                        
                        # observables
                        'y':       [rdata.nt, rdata.ny],
