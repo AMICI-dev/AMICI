@@ -798,7 +798,7 @@ class Solver {
      * AMIFree frees allocation solver memory
      */
     virtual void AMIFree() = 0;
-
+    
     /**
      * AMIAdjInit initializes the adjoint problem
      *
@@ -807,7 +807,7 @@ class Solver {
      *
      */
     virtual void AMIAdjInit(long int steps, int interp) = 0;
-
+    
     /**
      * AMICreateB specifies solver method and initializes solver memory for the
      * backward problem
@@ -1122,7 +1122,6 @@ private:
 
     /** flag indicating whether sensitivities are supposed to be computed */
     AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
-
 };
 
 bool operator ==(const Solver &a, const Solver &b);
