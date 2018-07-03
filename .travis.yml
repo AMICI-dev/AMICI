@@ -38,7 +38,7 @@ matrix:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
-        - brew upgrade python
+        - brew tap zoidbergwill/python && brew install python36
       after_success: 
         - cd $BASE_DIR # cd to base dir for correct relative pah in deploy
       deploy:
