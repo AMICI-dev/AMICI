@@ -6,5 +6,5 @@ AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
 cd ${AMICI_PATH}/tests
 
-${AMICI_PATH}/build/venv/bin/pip3 install scipy
+${AMICI_PATH}/build/venv/bin/pip3 install --user scipy h5py
 ${AMICI_PATH}/build/venv/bin/python3 testModels.py
