@@ -12,8 +12,12 @@ cd ${AMICI_PATH}/build
 CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/build/
 CppUTest_DIR=${CPPUTEST_BUILD_DIR} cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
-make python-wheel
+
+# Disabled until cmake package is made compatible with updated setup.py
+#make python-wheel
+#pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
+
+make python-sdist
 
 python3 -m venv ${AMICI_PATH}/build/venv --clear
-# Install newest wheel
-${AMICI_PATH}/build/venv/bin/pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
+${AMICI_PATH}/build/venv/bin/pip3 install --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.tgz | head -1`
