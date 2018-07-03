@@ -135,7 +135,7 @@ class SbmlImporter:
                 'signature': '(double *dydp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip)',
                 'sensitivity': True},
-            'dsigma_ydp': {
+            'dsigmaydp': {
                 'signature': '(double *dsigmaydp, const realtype t, const realtype *p,'
                              ' const realtype *k, const int ip)',
                 'sensitivity': True},
@@ -144,7 +144,7 @@ class SbmlImporter:
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
                              ' const realtype *dwdp)',
                 'sensitivity': True},
-            'sigma_y': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
+            'sigmay': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
                         'variable': 'sigmay'},
             'sxdot': {
                 'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p,'
@@ -186,7 +186,7 @@ class SbmlImporter:
             'JSparse': {'shortName': 'J'},
             'JSparseB': {'shortName': 'JB'},
             'my': {'shortName': 'my'},
-            'sigma_y': {'shortName': 'sigmay'}
+            'sigmay': {'shortName': 'sigmay'}
         }
 
     def loadSBMLFile(self, SBMLFile):
@@ -754,12 +754,12 @@ class SbmlImporter:
             self.n_observables = len(speciesSyms)
         self.functions['y']['sym'] = self.observables
         sigmaYSyms = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in observableSyms])
-        self.functions['sigma_y']['sym'] = sp.DenseMatrix([1.0] * len(observableSyms))
+        self.functions['sigmay']['sym'] = sp.DenseMatrix([1.0] * len(observableSyms))
         
         # set user-provided sigmas
         for iy, obsName in enumerate(observables):
             if obsName in sigmas:
-                self.functions['sigma_y']['sym'][iy] = sigmas[obsName]            
+                self.functions['sigmay']['sym'][iy] = sigmas[obsName]            
         
         self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in observableSyms])
         
@@ -770,7 +770,7 @@ class SbmlImporter:
         self.functions['Jy']['sym']        = self.functions['Jy']['sym'].transpose()
         
         self.symbols['observable']['sym'] = observableSyms
-        self.symbols['sigma_y']['sym'] = sigmaYSyms
+        self.symbols['sigmay']['sym'] = sigmaYSyms
         
         
     def computeModelEquationsSensitivitesCore(self):
@@ -785,7 +785,7 @@ class SbmlImporter:
         """
         self.functions['dydp']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dsigma_ydp']['sym'] = self.functions['sigma_y']['sym']\
+        self.functions['dsigmaydp']['sym'] = self.functions['sigmay']['sym']\
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['species']['sym']).transpose()

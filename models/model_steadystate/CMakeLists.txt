@@ -36,7 +36,7 @@ ${MODEL_DIR}/model_steadystate_dwdx.cpp
 ${MODEL_DIR}/model_steadystate_dxdotdp.cpp
 ${MODEL_DIR}/model_steadystate_dydx.cpp
 ${MODEL_DIR}/model_steadystate_qBdot.cpp
-${MODEL_DIR}/model_steadystate_sigma_y.cpp
+${MODEL_DIR}/model_steadystate_sigmay.cpp
 ${MODEL_DIR}/model_steadystate_sxdot.cpp
 ${MODEL_DIR}/model_steadystate_w.cpp
 ${MODEL_DIR}/model_steadystate_x0.cpp
@@ -69,7 +69,7 @@ endif()
 ## SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)
 if(ENABLE_SWIG)
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.8)
+    if(NOT(${CMAKE_VERSION} VERSION_LESS 3.8))
         add_subdirectory(swig)
     else()
         message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")

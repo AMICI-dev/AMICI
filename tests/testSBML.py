@@ -11,18 +11,14 @@ import numpy as np
 
 class TestAmiciSBMLModel(unittest.TestCase):
     '''
-    TestCase class for tests that were pregenerated using the the matlab code generation routines and cmake
-    build routines
-    
-    NOTE: requires having run scripts/buildTests.sh before to build the python modules for the test models
+    TestCase class for testing SBML import and simulation from AMICI python interface
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
 
     def runTest(self):
         '''
-        test runner routine that loads data expectedResults.h5 hdf file and runs individual models/settings
-        as subTests
+        Test SBML import and simulation from AMICI python interface
         '''
 
         sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python', 'examples', 'example_steadystate', 'model_steadystate_scaled.sbml')
@@ -32,13 +28,13 @@ class TestAmiciSBMLModel(unittest.TestCase):
         observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: 
                                                         variableId.startswith('observable_') and not variableId.endswith('_sigma'))
         
-        sbmlImporter.sbml2amici('test', 'test', 
+        sbmlImporter.sbml2amici('test_model_steadystate_scaled', 'test_model_steadystate_scaled', 
                                 observables=observables,
                                 constantParameters=['k4'],
                                 sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
-        sys.path.insert(0, 'test')
-        import test as modelModule
+        sys.path.insert(0, 'test_model_steadystate_scaled')
+        import test_model_steadystate_scaled as modelModule
 
         model = modelModule.getModel()
         model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
@@ -48,6 +44,6 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(TestAmiciPregeneratedModel())
+    suite.addTest(TestAmiciSBMLModel())
     unittest.main()
     

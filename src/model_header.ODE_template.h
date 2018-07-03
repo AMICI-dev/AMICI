@@ -32,7 +32,7 @@ extern void dydx_TPL_MODELNAME(double *dydx, const realtype t, const realtype *x
 extern void dydp_TPL_MODELNAME(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
 extern void dsigmaydp_TPL_MODELNAME(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip);
 extern void qBdot_TPL_MODELNAME(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp);
-extern void sigma_y_TPL_MODELNAME(double *sigmay, const realtype t, const realtype *p, const realtype *k);
+extern void sigmay_TPL_MODELNAME(double *sigmay, const realtype t, const realtype *p, const realtype *k);
 extern void sxdot_TPL_MODELNAME(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp);
 extern void w_TPL_MODELNAME(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
@@ -388,8 +388,8 @@ public:
      * @param k constant vector
      * @param ip sensitivity index
      **/
-    virtual void fdsigma_ydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
-        dsigma_ydp_TPL_MODELNAME(dsigmaydp, t, p, k, ip);
+    virtual void fdsigmaydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
+        dsigmaydp_TPL_MODELNAME(dsigmaydp, t, p, k, ip);
 
     }
 
@@ -400,7 +400,7 @@ public:
      * @param k constant vector
      * @param ip sensitivity index
      **/
-    virtual void fdsigma_zdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
+    virtual void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
     /** model specific implementation of dwdp
@@ -539,8 +539,8 @@ public:
      * @param p parameter vector
      * @param k constant vector
      **/
-    virtual void fsigma_y(double *sigmay, const realtype t, const realtype *p, const realtype *k) override {
-        sigma_y_TPL_MODELNAME(sigmay, t, p, k);
+    virtual void fsigmay(double *sigmay, const realtype t, const realtype *p, const realtype *k) override {
+        sigmay_TPL_MODELNAME(sigmay, t, p, k);
     }
 
     /** model specific implementation of fsigmaz
@@ -549,7 +549,7 @@ public:
      * @param p parameter vector
      * @param k constant vector
      **/
-    virtual void fsigma_z(double *sigmaz, const realtype t, const realtype *p, const realtype *k) override {
+    virtual void fsigmaz(double *sigmaz, const realtype t, const realtype *p, const realtype *k) override {
     }
 
     /** model specific implementation of fsrz

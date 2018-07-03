@@ -42,8 +42,7 @@ if(ENABLE_SWIG AND ENABLE_PYTHON)
     find_package(PythonInterp 3.6)
     if(PythonInterp_FOUND)
         add_custom_target(python-tests
-            COMMAND ${PYTHON_EXECUTABLE} testModels.py
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+            COMMAND ${CMAKE_SOURCE_DIR}/scripts/run-python-tests.sh
             DEPENDS
             )
     endif()

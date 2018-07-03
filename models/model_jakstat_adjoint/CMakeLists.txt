@@ -31,14 +31,14 @@ ${MODEL_DIR}/model_jakstat_adjoint_JvB.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_Jy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydsigma.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydy.cpp
-${MODEL_DIR}/model_jakstat_adjoint_dsigma_ydp.cpp
+${MODEL_DIR}/model_jakstat_adjoint_dsigmaydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dwdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dwdx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dxdotdp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dydp.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dydx.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_qBdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_sigma_y.cpp
+${MODEL_DIR}/model_jakstat_adjoint_sigmay.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sx0.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_sxdot.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_w.cpp
@@ -72,7 +72,7 @@ endif()
 ## SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)
 if(ENABLE_SWIG)
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.8)
+    if(NOT(${CMAKE_VERSION} VERSION_LESS 3.8))
         add_subdirectory(swig)
     else()
         message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")

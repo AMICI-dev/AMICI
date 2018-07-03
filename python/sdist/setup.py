@@ -47,22 +47,54 @@ else:
 
 # Find HDF5 include dir and libs
 h5pkgcfg = pkgconfig.parse('hdf5')
-# NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true although no libraries or include dirs are available
-if 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']:
+# NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true although
+# no libraries or include dirs are available
+hdf5found = 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']
+if not hdf5found:
+    h5pkgcfg = {'include_dirs': [],
+                'library_dirs': [],
+                'libraries': [],
+                'define_macros': []
+                }
+    # try for hdf5 in standard locations
+    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', 
+                              '/usr/local/include', 
+                              '/usr/include', # travis ubuntu xenial
+                              '/usr/local/Cellar/hdf5/1.10.2_1/include'] # travis macOS
+    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', # travis ubuntu xenial
+                              '/usr/lib/x86_64-linux-gnu/hdf5/serial', 
+                              '/usr/local/lib', 
+                              '/usr/local/Cellar/hdf5/1.10.2_1/lib'] # travis macOS
+
+    for hdf5_include_dir_hint in hdf5_include_dir_hints:
+        hdf5_include_dir_found = os.path.isfile(
+            os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
+        if hdf5_include_dir_found:
+            print('hdf5.h found in %s' % hdf5_include_dir_hint)
+            h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
+            break
+    
+    for hdf5_library_dir_hint in hdf5_library_dir_hints:
+        hdf5_library_dir_found = os.path.isfile(
+            os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
+        if hdf5_library_dir_found:
+            print('libhdf5.a found in %s' % hdf5_library_dir_hint)
+            h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
+            break
+    hdf5found = hdf5_include_dir_found and hdf5_library_dir_found
+
+if hdf5found:
     # Manually add linker flags. The libraries passed to Extension will
     # end up in front of the clibs in the linker line and not after, where
     # they are required.
+    print("HDF5 library found. Building AMICI with HDF5 support.")
     amici_module_linker_flags.extend(
         ['-l%s' % l for l in ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
     extension_sources = [
         'amici/amici_wrap.cxx',  # swig interface
     ]
 else:
-    h5pkgcfg = {'include_dirs': [],
-                'library_dirs': [],
-                'libraries': [],
-                'define_macros': []
-                }
+    print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
     extension_sources = [
         'amici/amici_wrap_without_hdf5.cxx',  # swig interface
     ]
@@ -158,7 +190,7 @@ class my_sdist(sdist):
         Returns:
 
         """
-        
+
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
             swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
@@ -185,14 +217,13 @@ class my_sdist(sdist):
 
     def findSwig(self):
         """Get name of SWIG executable
-        
+
         We need version 3.0.
         Probably we should try some default paths and names, but this should do the trick for now. 
         Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
         if sys.platform != 'linux':
             return 'swig'
         return 'swig3.0'
-    
 
     def saveGitVersion(self):
         """Create file with extended version string
@@ -218,7 +249,7 @@ with open("README.md", "r") as fh:
 
 
 def getPackageVersion():
-    return '0.7a2'
+    return '0.7.1a3'
 
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for

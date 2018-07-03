@@ -48,8 +48,8 @@ ${MODEL_DIR}/model_neuron_dzdx.cpp
 ${MODEL_DIR}/model_neuron_qBdot.cpp
 ${MODEL_DIR}/model_neuron_root.cpp
 ${MODEL_DIR}/model_neuron_rz.cpp
-${MODEL_DIR}/model_neuron_sigma_y.cpp
-${MODEL_DIR}/model_neuron_sigma_z.cpp
+${MODEL_DIR}/model_neuron_sigmay.cpp
+${MODEL_DIR}/model_neuron_sigmaz.cpp
 ${MODEL_DIR}/model_neuron_srz.cpp
 ${MODEL_DIR}/model_neuron_stau.cpp
 ${MODEL_DIR}/model_neuron_sx0.cpp
@@ -86,7 +86,7 @@ endif()
 ## SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)
 if(ENABLE_SWIG)
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.8)
+    if(NOT(${CMAKE_VERSION} VERSION_LESS 3.8))
         add_subdirectory(swig)
     else()
         message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")

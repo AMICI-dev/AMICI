@@ -37,7 +37,7 @@ ${MODEL_DIR}/model_robertson_dwdx.cpp
 ${MODEL_DIR}/model_robertson_dxdotdp.cpp
 ${MODEL_DIR}/model_robertson_dydx.cpp
 ${MODEL_DIR}/model_robertson_qBdot.cpp
-${MODEL_DIR}/model_robertson_sigma_y.cpp
+${MODEL_DIR}/model_robertson_sigmay.cpp
 ${MODEL_DIR}/model_robertson_sxdot.cpp
 ${MODEL_DIR}/model_robertson_w.cpp
 ${MODEL_DIR}/model_robertson_x0.cpp
@@ -70,7 +70,7 @@ endif()
 ## SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)
 if(ENABLE_SWIG)
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.8)
+    if(NOT(${CMAKE_VERSION} VERSION_LESS 3.8))
         add_subdirectory(swig)
     else()
         message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")

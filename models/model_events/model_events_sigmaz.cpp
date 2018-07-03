@@ -6,7 +6,8 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
-void sigma_y_model_neuron(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
-  sigmay[0] = 1.0;
+void sigmaz_model_events(double *sigmaz, const realtype t, const realtype *p, const realtype *k) {
+  sigmaz[0] = 1.0;
+  sigmaz[1] = 1.0;
 }
 

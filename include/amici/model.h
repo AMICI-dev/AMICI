@@ -229,14 +229,14 @@ namespace amici {
         void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
-        void fsigma_y(const int it, const ExpData *edata, ReturnData *rdata);
+        void fsigmay(const int it, const ExpData *edata, ReturnData *rdata);
         
-        void fdsigma_ydp(const int it, ReturnData *rdata, const ExpData *edata);
+        void fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata);
         
-        void fsigma_z(const realtype t, const int ie, const int *nroots,
+        void fsigmaz(const realtype t, const int ie, const int *nroots,
                       const ExpData *edata, ReturnData *rdata);
         
-        void fdsigma_zdp(const realtype t);
+        void fdsigmazdp(const realtype t);
         
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
         
@@ -836,7 +836,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void fsigma_y(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
+        virtual void fsigmay(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -847,7 +847,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void fdsigma_ydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+        virtual void fdsigmaydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -857,7 +857,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void fsigma_z(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
+        virtual void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
@@ -868,7 +868,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void fdsigma_zdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+        virtual void fdsigmazdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         

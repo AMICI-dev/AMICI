@@ -70,7 +70,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFileName = [modelname '_' funs{j}];
+        baseFileName = [modelname '_' strrep(funs{j}, 'sigma_', 'sigma')];
         cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
     
@@ -114,6 +114,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
             end
         end
         funsForRecompile = funs(structfun(@(x) logical(x), cfun(1)));
+        funsForRecompile = cellfun(@(x) strrep(x, 'sigma_', 'sigma'), funsForRecompile, 'UniformOutput', false);
     end
     
     if(numel(funsForRecompile))
@@ -131,7 +132,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelObjectFolder, [modelname '_' funs{j} objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [modelname '_' strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
         if(exist(filename,'file'))
             objectsstr = strcat(objectsstr,...
                 ' "',filename,'"');
@@ -139,7 +140,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end    
     
     % compile the wrapfunctions object
-    fprintf('wrapfunctions | '); 
+    fprintf('wrapfunctions | ');
     eval(['mex ' DEBUG COPT ...
         ' -c -outdir ' modelObjectFolder ' ' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
