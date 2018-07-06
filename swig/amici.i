@@ -41,3 +41,4 @@ using namespace amici;
 %template(DoubleVector) std::vector<realtype>;
 %template(IntVector) std::vector<int>;
 %template(ParameterScalingVector) std::vector<amici::AMICI_parameter_scaling>;
+%template(StringVector) std::vector<std::string>;
