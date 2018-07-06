@@ -7,6 +7,7 @@ branches:
     - staging
 
 matrix:
+  fast_finish: true
   include: 
     - os: linux
       dist: xenial
@@ -38,9 +39,8 @@ matrix:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
-        - brew install zoidbergwill/python/python36
       after_success: 
-        - cd $BASE_DIR # cd to base dir for correct relative pah in deploy
+        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
         provider: pages
         local-dir: doc
@@ -50,7 +50,27 @@ matrix:
         verbose: true
         on:
           branch: master
-        
+  allow_failures:
+  # allow osx build to fail until symengine/homebrew/python3.7 issue is resolved
+    - os: osx
+      osx_image: xcode9.3
+      compiler: clang
+      before_install: 
+        - brew update # without this homebrew can stumble over wrong ruby version
+        - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
+        - brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
+      after_success: 
+        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
+      deploy:
+        provider: pages
+        local-dir: doc
+        skip-cleanup: true
+        github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+        keep-history: false
+        verbose: true
+        on:
+          branch: master
+          
 install:
     # Python distutils only looks for `swig` and does not find `swig3.0`
     - export BASE_DIR=`pwd`
