@@ -9,6 +9,11 @@ def plotStateTrajectories(rdata, state_indices=None, ax = None):
     rdata: AMICI simulation results as returned by amici.getSimulationResults()
     state_indices: Indices of states for which trajectories are to be plotted
     ax: matplotlib.axes.Axes instance to plot into
+    
+    Returns:
+
+    Raises:
+
     """
     if not ax:
         fig, ax = plt.subplots()
@@ -29,6 +34,11 @@ def plotObservableTrajectories(rdata, observable_indices=None, ax = None):
     rdata: AMICI simulation results as returned by amici.getSimulationResults()
     observable_indices: Indices of observables for which trajectories are to be plotted
     ax: matplotlib.axes.Axes instance to plot into
+
+    Returns:
+
+    Raises:
+
     """
     if not ax:
         fig, ax = plt.subplots()
