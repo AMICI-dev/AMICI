@@ -20,7 +20,7 @@ def plotStateTrajectories(rdata, state_indices=None, ax = None):
     if not state_indices:
         state_indices = range(rdata['x'].shape[1])
     for ix in state_indices:
-        ax.plot(rdata['t'], rdata['x'][:, ix], label='$x_%d$' % ix)
+        ax.plot(rdata['t'], rdata['x'][:, ix], label='$x_{%d}$' % ix)
         ax.set_xlabel('$t$ (s)')
         ax.set_ylabel('$x_i(t)$ (mmol/ml)')
         ax.legend()
@@ -45,7 +45,7 @@ def plotObservableTrajectories(rdata, observable_indices=None, ax = None):
     if not observable_indices:
         observable_indices = range(rdata['y'].shape[1])
     for iy in observable_indices:
-        ax.plot(rdata['t'], rdata['y'][:, iy], label='$y_%d$' % iy)
+        ax.plot(rdata['t'], rdata['y'][:, iy], label='$y_{%d}$' % iy)
         ax.set_xlabel('$t$ (s)')
         ax.set_ylabel('$y_i(t)$ (AU)')
         ax.legend()
