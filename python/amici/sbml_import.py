@@ -249,8 +249,8 @@ class SbmlImporter:
         Arguments:
             modelName: name of the model/model directory
             output_dir: see sbml_import.setPaths()
-            observables: dictionary(observableName:formulaString) to be added to the model
-            sigmas: dictionary(observableName: sigma value or (existing) parameter name)
+            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
             verbose: more verbose output if True
         Returns:
@@ -374,6 +374,7 @@ class SbmlImporter:
         self.speciesIndex = {species_element.getId(): species_index
                              for species_index, species_element in enumerate(species)}
         self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+        self.symbols['species']['name'] = [spec.getName() for spec in species])
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
         self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
                                 for species_element in species]
@@ -414,12 +415,14 @@ class SbmlImporter:
         parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
         
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
+        self.symbols['parameter']['name'] = [par.getName() for par in parameters]
         self.parameterValues = [par.getValue() for par in parameters]
         self.n_parameters = len(self.symbols['parameter']['sym'])
         self.parameterIndex = {parameter_element.getId(): parameter_index
                              for parameter_index, parameter_element in enumerate(parameters)}
 
         self.symbols['fixed_parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in fixedParameters])
+        self.symbols['fixed_parameter']['name'] = [par.getName() for par in fixedParameters]
         self.fixedParameterValues = [par.getValue() for par in fixedParameters]
         self.n_fixed_parameters = len(self.symbols['fixed_parameter']['sym'])
         self.fixedParameterIndex = {parameter_element.getId(): parameter_index
@@ -693,8 +696,8 @@ class SbmlImporter:
         """Perform symbolic computations required to populate functions in `self.functions`.
         
         Arguments:
-            observables: dictionary(observableName:formulaString) to be added to the model
-            sigmas: dictionary(observableName: sigma value or (existing) parameter name)
+            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
 
         Returns:
 
@@ -749,8 +752,8 @@ class SbmlImporter:
         """Perform symbolic computations required for objective function evaluation.
         
         Arguments:
-            observables: dictionary(observableName:formulaString) to be added to the model
-            sigmas: dictionary(observableName: sigma value or (existing) parameter name)
+            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
 
         Returns:
 
@@ -761,11 +764,13 @@ class SbmlImporter:
         
         # add user-provided observables or make all species observable
         if(observables):
-            self.observables = sp.DenseMatrix(observables.values())
+            self.observables = sp.DenseMatrix([observable['formula'] for observable in observables])
+            observableNames = [observable['name'] for observable in observables]
             observableSyms = sp.DenseMatrix(observables.keys())
             self.n_observables = len(observables)
         else:
             self.observables = speciesSyms
+            observableNames = ['x' + str(index) for index in range(0,len(speciesSyms))]
             observableSyms = sp.DenseMatrix([sp.sympify('y' + str(index)) for index in range(0,len(speciesSyms))])
             self.n_observables = len(speciesSyms)
         self.functions['y']['sym'] = self.observables
@@ -786,6 +791,7 @@ class SbmlImporter:
         self.functions['Jy']['sym']        = self.functions['Jy']['sym'].transpose()
         
         self.symbols['observable']['sym'] = observableSyms
+        self.symbols['observable']['name'] = observableNames
         self.symbols['sigmay']['sym'] = sigmaYSyms
         
         
@@ -1123,17 +1129,36 @@ class SbmlImporter:
                         'STATE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('species'),
                         'FIXED_PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('fixed_parameter'),
                         'OBSERVABLE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('observable'),
+                        'PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('parameter'),
+                        'STATE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('species'),
+                        'FIXED_PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('fixed_parameter'),
+                        'OBSERVABLE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('observable'),
                         }
         applyTemplate(os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
                       os.path.join(self.modelPath, str(self.modelName) + '.h'), templateData)
 
     def getSymbolNameInitializerList(self, name):
+        """Get SBML name initializer list for vector of names for the given model entity
+        
+        Arguments:
+        name: string, any key present in self.symbols
+
+        Returns:
+            Template initializer list of names
+
+        Raises:
+
+        """
+        return '\n'.join([ '"%s",' % str(symbol) for symbol in self.symbols[name]['name'] ])
+
+    def getSymbolIDInitializerList(self, name):
         """Get C++ initializer list for vector of names for the given model entity
         
         Arguments:
         name: string, any key present in self.symbols
 
         Returns:
+            Template initializer list of ids
 
         Raises:
 
@@ -1361,7 +1386,7 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
         filter: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
     
     Returns:
-        A dictionary(observableName:formulaString) 
+        A dictionary(observableId:{'name':observableNamem,'formula':formulaString}) 
     
     Raises:
 
@@ -1370,7 +1395,7 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
     for p in sbml.getListOfParameters():
         parameterId = p.getId()
         if filter(parameterId):
-            observables[parameterId] = sbml.getAssignmentRuleByVariable(parameterId).getFormula()
+            observables[parameterId] = {'name': p.getName(), 'formula': sbml.getAssignmentRuleByVariable(parameterId).getFormula()}
     
     for parameterId in observables:       
         sbml.removeRuleByVariable(parameterId)
