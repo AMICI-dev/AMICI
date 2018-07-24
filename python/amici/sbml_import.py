@@ -256,9 +256,9 @@ class SbmlImporter:
         Returns:
 
         Raises:
-        
+
         """
-        
+
         self.setName(modelName)
         self.setPaths(output_dir)
         self.processSBML(constantParameters)
@@ -266,8 +266,8 @@ class SbmlImporter:
         self.prepareModelFolder()
         self.generateCCode()
         self.compileCCode(verbose)
-    
-    
+
+
     def setName(self, modelName):
         """Sets the model name
 
@@ -277,37 +277,37 @@ class SbmlImporter:
         Returns:
 
         Raises:
-                
+
         """
         self.modelName = modelName
 
-    
+
     def setPaths(self, output_dir=None):
         """Set output paths for the model and create if necessary
-        
+
         Arguments:
             output_dir: relative or absolute path where the generated model code is to be placed. will be created if does not exists. defaults to `pwd`/amici-$modelname.
 
         Returns:
 
         Raises:
-        
+
         """
-        
+
         if not output_dir:
             output_dir = '%s/amici-%s' % (os.getcwd(), self.modelName)
-        
+
         self.modelPath = os.path.abspath(output_dir)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
-        
+
         for dir in [self.modelPath, self.modelSwigPath]:
             if not os.path.exists(dir):
                 os.makedirs(dir)
-        
-    
+
+
     def processSBML(self, constantParameters=[]):
         """Read parameters, species, reactions, and so on from SBML model
-        
+
         Arguments:
             constantParameters: list of SBML Ids identifying constant parameters
 
@@ -330,7 +330,7 @@ class SbmlImporter:
 
     def checkSupport(self):
         """Check whether all required SBML features are supported.
-        
+
         Arguments:
 
         Returns:
@@ -361,7 +361,7 @@ class SbmlImporter:
 
     def processSpecies(self):
         """Get species information from SBML model.
-        
+
         Arguments:
 
         Returns:
@@ -374,7 +374,7 @@ class SbmlImporter:
         self.speciesIndex = {species_element.getId(): species_index
                              for species_index, species_element in enumerate(species)}
         self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
-        self.symbols['species']['name'] = [spec.getName() for spec in species])
+        self.symbols['species']['name'] = [spec.getName() for spec in species]
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
         self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
                                 for species_element in species]
@@ -402,7 +402,7 @@ class SbmlImporter:
 
     def processParameters(self, constantParameters=[]):
         """Get parameter information from SBML model.
-        
+
         Arguments:
             constantParameters: list of SBML Ids identifying constant parameters
         Returns:
@@ -410,10 +410,10 @@ class SbmlImporter:
         Raises:
 
         """
-        
+
         fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
         parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
-        
+
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.symbols['parameter']['name'] = [par.getName() for par in parameters]
         self.parameterValues = [par.getValue() for par in parameters]
@@ -427,11 +427,11 @@ class SbmlImporter:
         self.n_fixed_parameters = len(self.symbols['fixed_parameter']['sym'])
         self.fixedParameterIndex = {parameter_element.getId(): parameter_index
                              for parameter_index, parameter_element in enumerate(fixedParameters)}
-        
-        
+
+
     def processCompartments(self):
         """Get compartment information, stoichiometric matrix and fluxes from SBML model.
-        
+
         Arguments:
 
         Returns:
@@ -449,7 +449,7 @@ class SbmlImporter:
 
     def processReactions(self):
         """Get reactions from SBML model.
-        
+
         Arguments:
 
         Returns:
@@ -510,7 +510,7 @@ class SbmlImporter:
 
     def processRules(self):
         """Process *Rules defined in the SBML model.
-        
+
         Arguments:
 
         Returns:
@@ -548,7 +548,7 @@ class SbmlImporter:
                     self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
                 except:
                     raise SBMLException('Non-float parameter assignment rules are currently not supported!')
-            
+
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
 
@@ -563,7 +563,7 @@ class SbmlImporter:
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume.
-        
+
         Arguments:
 
         Returns:
@@ -581,7 +581,7 @@ class SbmlImporter:
 
     def processTime(self):
         """Convert time_symbol into cpp variable.
-        
+
         Arguments:
 
         Returns:
@@ -616,7 +616,7 @@ class SbmlImporter:
 
     def cleanReservedSymbols(self):
         """Remove all reserved symbols from self.symbols
-        
+
         Arguments:
 
         Returns:
@@ -635,7 +635,7 @@ class SbmlImporter:
 
     def replaceSpecialConstants(self):
         """Replace all special constants by their respective SBML csymbol definition
-        
+
         Arguments:
 
         Returns:
@@ -657,10 +657,10 @@ class SbmlImporter:
 
     def getSparseSymbols(self,symbolName):
         """Create sparse symbolic matrix.
-        
+
         Arguments:
             symbolName: name of the function
-        
+
         Returns:
             sparseMatrix: sparse matrix containing symbolic entries
             symbolList: symbolic vector containing the list of symbol names
@@ -669,7 +669,7 @@ class SbmlImporter:
             symbolRowVals: Row Values as specified in the SlsMat definition in CVODES
 
         Raises:
-        
+
         """
         matrix = self.functions[symbolName]['sym']
         symbolIndex = 0
@@ -694,7 +694,7 @@ class SbmlImporter:
 
     def computeModelEquations(self, observables={}, sigmas={}):
         """Perform symbolic computations required to populate functions in `self.functions`.
-        
+
         Arguments:
             observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
@@ -704,21 +704,21 @@ class SbmlImporter:
         Raises:
 
         """
-        
+
         # core
         self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
         self.computeModelEquationsLinearSolver()
         self.computeModelEquationsObjectiveFunction(observables, sigmas)
-        
+
         # sensitivity
         self.computeModelEquationsSensitivitesCore()
         self.computeModelEquationsForwardSensitivites()
         self.computeModelEquationsAdjointSensitivites()
-    
-    
+
+
     def computeModelEquationsLinearSolver(self):
         """Perform symbolic computations required for the use of various linear solvers.
-        
+
         Arguments:
 
         Returns:
@@ -737,7 +737,7 @@ class SbmlImporter:
                                         + self.stoichiometricMatrix * self.functions['dwdx']['sparseSym']
         self.symbols['vector']['sym'] = getSymbols('v',self.n_species)
         self.functions['Jv']['sym'] = self.functions['J']['sym']*self.symbols['vector']['sym']
-        
+
         self.functions['JSparse']['sym'],\
         self.symbols['JSparse']['sym'],\
         self.functions['JSparse']['sparseList'],\
@@ -750,7 +750,7 @@ class SbmlImporter:
 
     def computeModelEquationsObjectiveFunction(self, observables={}, sigmas={}):
         """Perform symbolic computations required for objective function evaluation.
-        
+
         Arguments:
             observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
@@ -761,11 +761,11 @@ class SbmlImporter:
 
         """
         speciesSyms = self.symbols['species']['sym']
-        
+
         # add user-provided observables or make all species observable
         if(observables):
-            self.observables = sp.DenseMatrix([observable['formula'] for observable in observables])
-            observableNames = [observable['name'] for observable in observables]
+            self.observables = sp.DenseMatrix([observables[observable]['formula'] for observable in observables])
+            observableNames = [observables[observable]['name'] for observable in observables]
             observableSyms = sp.DenseMatrix(observables.keys())
             self.n_observables = len(observables)
         else:
@@ -776,28 +776,28 @@ class SbmlImporter:
         self.functions['y']['sym'] = self.observables
         sigmaYSyms = sp.DenseMatrix([sp.sympify('sigma' + str(symbol)) for symbol in observableSyms])
         self.functions['sigmay']['sym'] = sp.DenseMatrix([1.0] * len(observableSyms))
-        
+
         # set user-provided sigmas
         for iy, obsName in enumerate(observables):
             if obsName in sigmas:
-                self.functions['sigmay']['sym'][iy] = sigmas[obsName]            
-        
+                self.functions['sigmay']['sym'][iy] = sigmas[obsName]
+
         self.symbols['my']['sym'] = sp.DenseMatrix([sp.sympify('m' + str(symbol)) for symbol in observableSyms])
-        
+
         loglikelihoodString = lambda strSymbol: '0.5*log(2*pi*sigma{symbol}**2) + 0.5*(({symbol}-m{symbol})/sigma{symbol})**2'.format(symbol=strSymbol)
         self.functions['Jy']['sym'] = sp.DenseMatrix([sp.sympify(loglikelihoodString(str(symbol))) for symbol in observableSyms])
         self.functions['dJydy']['sym']     = self.functions['Jy']['sym'].jacobian(observableSyms).transpose()
         self.functions['dJydsigma']['sym'] = self.functions['Jy']['sym'].jacobian(sigmaYSyms).transpose()
         self.functions['Jy']['sym']        = self.functions['Jy']['sym'].transpose()
-        
+
         self.symbols['observable']['sym'] = observableSyms
         self.symbols['observable']['name'] = observableNames
         self.symbols['sigmay']['sym'] = sigmaYSyms
-        
-        
+
+
     def computeModelEquationsSensitivitesCore(self):
         """Perform symbolic computations required for any sensitivity analysis.
-        
+
         Arguments:
 
         Returns:
@@ -811,7 +811,7 @@ class SbmlImporter:
                                                 .jacobian(self.symbols['parameter']['sym'])
         self.functions['dydx']['sym'] = self.functions['y']['sym']\
                                                 .jacobian(self.symbols['species']['sym']).transpose()
-        
+
         self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
 
         self.functions['dwdp']['sparseSym'],\
@@ -828,7 +828,7 @@ class SbmlImporter:
 
     def computeModelEquationsForwardSensitivites(self):
         """Perform symbolic computations required for forward sensitivity analysis.
-        
+
         Arguments:
 
         Returns:
@@ -843,7 +843,7 @@ class SbmlImporter:
 
     def computeModelEquationsAdjointSensitivites(self):
         """Perform symbolic computations required for adjoint sensitivity analysis.
-        
+
         Arguments:
 
         Returns:
@@ -868,7 +868,7 @@ class SbmlImporter:
 
     def prepareModelFolder(self):
         """Remove all files from the model folder.
-        
+
         Arguments:
 
         Returns:
@@ -885,7 +885,7 @@ class SbmlImporter:
 
     def generateCCode(self):
         """Create C++ code files for the model based on.
-        
+
         Arguments:
 
         Returns:
@@ -912,7 +912,7 @@ class SbmlImporter:
 
     def compileCCode(self, verbose=False):
         """Compile the generated model code
-        
+
         Arguments:
             verbose: Make model compilation verbose
         Returns:
@@ -925,12 +925,12 @@ class SbmlImporter:
         moduleDir = self.modelPath
 
         script_args = [sys.executable, '%s%ssetup.py' % (moduleDir, os.sep)]
-        
+
         if verbose:
             script_args.append('--verbose')
         else:
             script_args.append('--quiet')
-        
+
         script_args.extend(['build_ext', '--build-lib=%s' % moduleDir])
 
         # distutils.core.run_setup looks nicer, but does not let us check the
@@ -944,13 +944,13 @@ class SbmlImporter:
         except subprocess.CalledProcessError as e:
             print(e.output.decode('utf-8'))
             raise
-                    
+
         if verbose:
             print(result.stdout.decode('utf-8'))
-        
+
     def writeIndexFiles(self,name):
         """Write index file for a symbolic array.
-        
+
         Arguments:
             name: key in self.symbols for which the respective file should be written
 
@@ -958,19 +958,19 @@ class SbmlImporter:
 
         Raises:
 
-        
+
         """
         lines = []
         [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
             for index, symbol in enumerate(self.symbols[name]['sym'])]
-        
+
         with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
 
     def writeFunctionFile(self,function):
         """Write the function `function`.
-        
+
         Arguments:
             function: name of the function to be written (see self.functions)
 
@@ -978,16 +978,16 @@ class SbmlImporter:
 
         Raises:
 
-        
+
         """
-        
+
         # function header
         lines = ['#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h" //realtype definition',
             'using amici::realtype;',
             '#include <cmath> ',
             '']
-        
+
         # function signature
         signature = self.functions[function]['signature']
 
@@ -1006,7 +1006,7 @@ class SbmlImporter:
         lines.append('')
 
         lines.append('void ' + function + '_' + self.modelName + signature + '{')
-        
+
         # function body
         body = self.getFunctionBody(function)
         self.functions[function]['body'] = body
@@ -1019,16 +1019,16 @@ class SbmlImporter:
 
     def getFunctionBody(self,function):
         """Generate C++ code for body of function `function`.
-        
+
         Arguments:
             function: name of the function to be written (see self.functions)
 
         Returns:
 
         Raises:
-        
+
         """
-        
+
         if('variable' in self.functions[function].keys()):
             variableName = self.functions[function]['variable']
         else:
@@ -1068,7 +1068,7 @@ class SbmlImporter:
 
     def writeWrapfunctionsCPP(self):
         """Write model-specific 'wrapper' file (wrapfunctions.cpp).
-        
+
         Arguments:
 
         Returns:
@@ -1083,7 +1083,7 @@ class SbmlImporter:
 
     def writeWrapfunctionsHeader(self):
         """Write model-specific header file (wrapfunctions.h).
-        
+
         Arguments:
 
         Returns:
@@ -1097,7 +1097,7 @@ class SbmlImporter:
 
     def writeModelHeader(self):
         """Write model-specific header file (MODELNAME.h).
-        
+
         Arguments:
 
         Returns:
@@ -1139,7 +1139,7 @@ class SbmlImporter:
 
     def getSymbolNameInitializerList(self, name):
         """Get SBML name initializer list for vector of names for the given model entity
-        
+
         Arguments:
         name: string, any key present in self.symbols
 
@@ -1153,7 +1153,7 @@ class SbmlImporter:
 
     def getSymbolIDInitializerList(self, name):
         """Get C++ initializer list for vector of names for the given model entity
-        
+
         Arguments:
         name: string, any key present in self.symbols
 
@@ -1167,7 +1167,7 @@ class SbmlImporter:
 
     def writeCMakeFile(self):
         """Write CMake CMakeLists.txt file for this model.
-        
+
         Arguments:
 
         Returns:
@@ -1188,7 +1188,7 @@ class SbmlImporter:
 
     def writeSwigFiles(self):
         """Write SWIG interface files for this model.
-        
+
         Arguments:
 
         Returns:
@@ -1206,7 +1206,7 @@ class SbmlImporter:
 
     def writeModuleSetup(self):
         """Create a distutils setup.py file for compile the model module.
-        
+
         Arguments:
 
         Returns:
@@ -1214,27 +1214,27 @@ class SbmlImporter:
         Raises:
 
         """
-        
+
         templateData = {'MODELNAME': self.modelName,
                         'VERSION': '0.1.0'}
         applyTemplate(os.path.join(amiciModulePath, 'setup.template.py'),
                       os.path.join(self.modelPath, 'setup.py'), templateData)
-        
+
         # write __init__.py for the model module
         if not os.path.exists(os.path.join(self.modelPath, self.modelName)):
             os.makedirs(os.path.join(self.modelPath, self.modelName))
- 
+
         applyTemplate(os.path.join(amiciModulePath, '__init__.template.py'),
                       os.path.join(self.modelPath, self.modelName, '__init__.py'), templateData)
 
     def getSymLines(self, symbols, variable, indentLevel):
         """Generate C++ code for assigning symbolic terms in symbols to C++ array `variable`.
-        
+
         Arguments:
             symbols: vectors of symbolic terms
             variable: name of the C++ array to assign to
             indentLevel: indentation level (number of leading blanks)
-        
+
         Returns:
             C++ code as list of lines
 
@@ -1254,14 +1254,14 @@ class SbmlImporter:
 
     def getSparseSymLines(self, symbolList, RowVals, ColPtrs, variable, indentLevel):
         """Generate C++ code for assigning sparse symbolic matrix to a C++ array `variable`.
-     
+
         Arguments:
             symbolList: vectors of symbolic terms
             RowVals: list of row indices of each nonzero entry (see CVODES SlsMat documentation for details)
             ColPtrs: list of indices of the first column entries (see CVODES SlsMat documentation for details)
             variable: name of the C++ array to assign to
             indentLevel: indentation level (number of leading blanks)
-        
+
         Returns:
             C++ code as list of lines
 
@@ -1298,7 +1298,7 @@ class SbmlImporter:
 
 def applyTemplate(sourceFile,targetFile,templateData):
     """Load source file, apply template substitution as provided in templateData and save as targetFile.
-    
+
     Arguments:
         sourceFile: relative or absolute path to template file
         targetFile: relative or absolute path to output file
@@ -1307,7 +1307,7 @@ def applyTemplate(sourceFile,targetFile,templateData):
     Returns:
 
     Raises:
-    
+
     """
     with open(sourceFile) as filein:
         src = TemplateAmici(filein.read())
@@ -1317,7 +1317,7 @@ def applyTemplate(sourceFile,targetFile,templateData):
 
 def getSymbols(prefix,length):
     """Get symbolic matrix with symbols prefix0..prefix(length-1).
-    
+
     Arguments:
         prefix: variable name
         length: number of symbolic variables + 1
@@ -1326,20 +1326,20 @@ def getSymbols(prefix,length):
         A symbolic matrix with symbols prefix0..prefix(length-1)
 
     Raises:
-    
+
     """
     return sp.DenseMatrix([sp.sympify(prefix + str(i)) for i in range(0, length)])
 
 
 def getSymbolicDiagonal(matrix):
     """Get symbolic matrix with diagonal of matrix `matrix`.
-    
+
     Arguments:
         matrix: Matrix from which to return the diagonal
 
     Returns:
         A Symbolic matrix with the diagonal of `matrix`.
-    
+
     Raises:
         Exception: The provided matrix was not square
     """
@@ -1347,18 +1347,18 @@ def getSymbolicDiagonal(matrix):
         raise Exception('Provided matrix is not square!')
 
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
-    
+
     return sp.DenseMatrix(diagonal)
 
 def getRuleVars(rules):
     """Extract free symbols in SBML rule formulas.
-    
+
     Argumentss:
         rules: list of rules
 
     Returns:
         Vector of free symbolic variables in the formulas all provided rules
-    
+
     Raises:
 
     """
@@ -1366,28 +1366,28 @@ def getRuleVars(rules):
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).
-    
+
     Attributes:
         delimiter: delimiter that identifies template variables
-    
+
     Returns:
 
     Raises:
-    
+
     """
     delimiter = 'TPL_'
 
 
 def assignmentRules2observables(sbml, filter = lambda *_: True):
     """Turn assignment rules into observables.
-    
+
     Arguments:
         sbml: an sbml Model instance
         filter: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
-    
+
     Returns:
-        A dictionary(observableId:{'name':observableNamem,'formula':formulaString}) 
-    
+        A dictionary(observableId:{'name':observableNamem,'formula':formulaString})
+
     Raises:
 
     """
@@ -1396,8 +1396,8 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
         parameterId = p.getId()
         if filter(parameterId):
             observables[parameterId] = {'name': p.getName(), 'formula': sbml.getAssignmentRuleByVariable(parameterId).getFormula()}
-    
-    for parameterId in observables:       
+
+    for parameterId in observables:
         sbml.removeRuleByVariable(parameterId)
         sbml.removeParameter(parameterId)
 
