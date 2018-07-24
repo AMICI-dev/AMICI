@@ -21,7 +21,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         Test SBML import and simulation from AMICI python interface
         '''
 
-        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python', 'examples', 'example_steadystate', 'model_steadystate_scaled.sbml')
+        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python', 'examples', 'example_steadystate', 'model_steadystate_scaled.xml')
         sbmlImporter = amici.SbmlImporter(sbmlFile)
         sbml = sbmlImporter.sbml
 
