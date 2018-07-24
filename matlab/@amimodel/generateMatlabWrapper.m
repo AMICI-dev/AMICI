@@ -196,17 +196,10 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'if(isempty(options_ami.pscale))\n');
     fprintf(fid,['    options_ami.pscale = ''' pscale ''' ;\n']);
     fprintf(fid,'end\n');
-    fprintf(fid,'switch (options_ami.pscale)\n');
-    fprintf(fid,'    case 1\n');
-    fprintf(fid,'        chainRuleFactor = exp(theta(options_ami.sens_ind));\n');
-    fprintf(fid,'    case 2\n');
-    fprintf(fid,'        chainRuleFactor = 10.^theta(options_ami.sens_ind)*log(10);\n');
-    fprintf(fid,'    otherwise\n');
-    fprintf(fid,'        chainRuleFactor = ones(size(options_ami.sens_ind));\n');
-    fprintf(fid,'end\n\n');
     
     if(o2flag == 2)
         fprintf(fid,'if(nargin>=6)\n');
+        fprintf(fid,'    chainRuleFactor = getChainRuleFactors(options_ami.pscale, theta, options_ami.sens_ind);\n');
         fprintf(fid,'    v = varargin{6};\n');
         fprintf(fid,'    v = v(:).*chainRuleFactor;\n');
         fprintf(fid,'else\n');
@@ -267,15 +260,15 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     end
     fprintf(fid,'plist = options_ami.sens_ind-1;\n');
     fprintf(fid,['if(nargin>=4)\n']);
-    fprintf(fid,['    if(isempty(varargin{4}));\n']);
+    fprintf(fid,['    if(isempty(varargin{4}))\n']);
     fprintf(fid,['        data=[];\n']);
     fprintf(fid,['    else\n']);
-    fprintf(fid,['        if(isa(varargin{4},''amidata''));\n']);
+    fprintf(fid,['        if(isa(varargin{4},''amidata''))\n']);
     fprintf(fid,['             data=varargin{4};\n']);
     fprintf(fid,['        else\n']);
     fprintf(fid,['            data=amidata(varargin{4});\n']);
     fprintf(fid,['        end\n']);
-    fprintf(fid,['        if(data.ne>0);\n']);
+    fprintf(fid,['        if(data.ne>0)\n']);
     fprintf(fid,['            options_ami.nmaxevent = data.ne;\n']);
     fprintf(fid,['        else\n']);
     fprintf(fid,['            data.ne = options_ami.nmaxevent;\n']);
@@ -326,6 +319,7 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'    if(size(options_ami.sx0,1)~=nxfull)\n');
     fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of states!'');\n');
     fprintf(fid,'    end\n');
+    fprintf(fid,'    chainRuleFactor = getChainRuleFactors(options_ami.pscale, theta, options_ami.sens_ind);\n');
     fprintf(fid,'    init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor(:),[2,1]));\n');
     fprintf(fid,'end\n');
     
@@ -425,6 +419,28 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'else\n');
     fprintf(fid,'    varargout{1} = sol;\n');
     fprintf(fid,'end\n');
+    
+    fprintf(fid,'function chainRuleFactors = getChainRuleFactors(pscale, theta, sens_ind)\n');
+    fprintf(fid,'    if(length(pscale) == 1 && length(sens_ind) ~= length(pscale))\n');
+    fprintf(fid,'        chainRuleFactors = arrayfun(@(x, ip) getChainRuleFactor(x, theta(ip)), repmat(pscale, 1, length(sens_ind)), sens_ind);\n');
+    fprintf(fid,'    else\n');
+    fprintf(fid,'        chainRuleFactors = arrayfun(@(x, ip) getChainRuleFactor(x, theta(ip)), pscale, sens_ind);\n');
+    fprintf(fid,'    end\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+
+    fprintf(fid,'function chainRuleFactor = getChainRuleFactor(pscale, parameterValue)\n');
+    fprintf(fid,'    switch (pscale)\n');
+    fprintf(fid,'        case 1\n');
+    fprintf(fid,'            chainRuleFactor = exp(parameterValue);\n');
+    fprintf(fid,'        case 2\n');
+    fprintf(fid,'            chainRuleFactor = 10.^parameterValue*log(10);\n');
+    fprintf(fid,'        otherwise\n');
+    fprintf(fid,'            chainRuleFactor = 1.0;\n');
+    fprintf(fid,'    end\n');
+    fprintf(fid,'end\n');
+    fprintf(fid,'\n');
+
     fprintf(fid,'end\n');
     
     fclose(fid);
