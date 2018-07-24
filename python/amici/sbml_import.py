@@ -24,7 +24,8 @@ class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
-        Codeprinter: codeprinter that allows export of symbolic variables as C++ code
+        check_validity: flag indicating whether the validity of the SBML document should be checked
+        codeprinter: codeprinter that allows export of symbolic variables as C++ code
         functions: dict carrying function specific definitions
         symbols: symbolic definitions 
         SBMLreader: the libSBML sbml reader [!not storing this will result in a segfault!]
@@ -57,11 +58,12 @@ class SbmlImporter:
 
     """
 
-    def __init__(self, SBMLFile):
+    def __init__(self, SBMLFile, check_validity=True):
         """Create a new Model instance.
         
         Arguments:
             SBMLFile: Path to SBML file where the model is specified
+            check_validity: Flag indicating whether the validity of the SBML document should be checked
 
         Returns:
             SbmlIMporter instance with attached SBML document
@@ -69,9 +71,12 @@ class SbmlImporter:
         Raises:
 
         """
+
+        self.check_validity = check_validity
+
         self.loadSBMLFile(SBMLFile)
 
-        self.Codeprinter = CCodePrinter()
+        self.codeprinter = CCodePrinter()
 
         """Signatures and properties of generated model functions (see include/amici/model.h for details)."""
         self.functions = {
@@ -203,28 +208,39 @@ class SbmlImporter:
 
         self.SBMLreader = sbml.SBMLReader()
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
-
-        if (self.sbml_doc.getNumErrors() > 0):
-            raise SBMLException('Provided SBML file does not exists or is invalid!')
+        self.checkLibSBMLErrors()
 
         # apply several model simplifications that make our life substantially easier
         if len(self.sbml_doc.getModel().getListOfFunctionDefinitions())>0:
             convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
-            status = self.sbml_doc.convert(convertConfig)
-            if status != sbml.LIBSBML_OPERATION_SUCCESS:
-                raise SBMLException('Could not flatten function definitions!')
+            self.sbml_doc.convert(convertConfig)
 
         convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
-        status = self.sbml_doc.convert(convertConfig)
-        if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise SBMLException('Could not flatten initial assignments!')
+        self.sbml_doc.convert(convertConfig)
 
         convertConfig = sbml.SBMLLocalParameterConverter().getDefaultProperties()
-        status = self.sbml_doc.convert(convertConfig)
-        if status != sbml.LIBSBML_OPERATION_SUCCESS:
-            raise SBMLException('Could not flatten local parameters!')
+        self.sbml_doc.convert(convertConfig)
+
+        if self.check_validity:
+            self.sbml_doc.validateSBML()
+
+        self.checkLibSBMLErrors()
 
         self.sbml = self.sbml_doc.getModel()
+
+
+    def checkLibSBMLErrors(self):
+        numWarning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
+        numError = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
+        if numWarning > 0:
+            for iError in range(0,numWarning):
+                error = self.sbml_doc.getErrorWithSeverity(iError, sbml.LIBSBML_SEV_WARNING) # we ignore any info messages for now
+                category = error.getCategoryAsString()
+                severity = error.getSeverityAsString()
+                error_message = error.getMessage()
+                print('libSBML ' + severity + ' (' + category + '): ' + error_message)
+            if numError > 0:
+                raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
     def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
@@ -1251,7 +1267,7 @@ class SbmlImporter:
 
         """
         try:
-            return self.Codeprinter.doprint(math)
+            return self.codeprinter.doprint(math)
         except:
             raise SBMLException('Encountered unsupported function in expression "' + str(math) + '"!')
 
@@ -1361,4 +1377,3 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
         sbml.removeParameter(parameterId)
 
     return observables
-
