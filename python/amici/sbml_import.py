@@ -209,9 +209,11 @@ class SbmlImporter:
         self.SBMLreader = sbml.SBMLReader()
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
         self.checkLibSBMLErrors()
+        # If any of the above calls produces an error, this will be added to the SBMLError log in the sbml document.
+        # Thus, it is sufficient to check the error log just once after all conversion/validation calls.
 
         # apply several model simplifications that make our life substantially easier
-        if len(self.sbml_doc.getModel().getListOfFunctionDefinitions())>0:
+        if len(self.sbml_doc.getModel().getListOfFunctionDefinitions()) > 0:
             convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
             self.sbml_doc.convert(convertConfig)
 
@@ -224,23 +226,26 @@ class SbmlImporter:
         if self.check_validity:
             self.sbml_doc.validateSBML()
 
+        # If any of the above calls produces an error, this will be added to the SBMLError log in the sbml document.
+        # Thus, it is sufficient to check the error log just once after all conversion/validation calls.
         self.checkLibSBMLErrors()
 
         self.sbml = self.sbml_doc.getModel()
 
 
     def checkLibSBMLErrors(self):
-        numWarning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
-        numError = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
-        if numWarning > 0:
-            for iError in range(0,numWarning):
-                error = self.sbml_doc.getErrorWithSeverity(iError, sbml.LIBSBML_SEV_WARNING) # we ignore any info messages for now
+        num_warning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
+        num_error = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
+        if num_warning:
+            for iError in range(num_warning):
+                # we ignore any info messages for now
+                error = self.sbml_doc.getErrorWithSeverity(iError, sbml.LIBSBML_SEV_WARNING)
                 category = error.getCategoryAsString()
                 severity = error.getSeverityAsString()
                 error_message = error.getMessage()
                 print('libSBML ' + severity + ' (' + category + '): ' + error_message)
-            if numError > 0:
-                raise SBMLException('SBML Document failed to load (see error messages above)')
+        if num_error:
+            raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
     def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
@@ -249,7 +254,8 @@ class SbmlImporter:
         Arguments:
             modelName: name of the model/model directory
             output_dir: see sbml_import.setPaths()
-            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            observables: dictionary(observableId:{'name':observableName (optional) ,'formula':formulaString)
+                         to be added to the model
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
             verbose: more verbose output if True
@@ -696,7 +702,8 @@ class SbmlImporter:
         """Perform symbolic computations required to populate functions in `self.functions`.
 
         Arguments:
-            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            observables: dictionary(observableId:{'name':observableName (optional) ,'formula':formulaString)
+                         to be added to the model
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
 
         Returns:
@@ -752,7 +759,8 @@ class SbmlImporter:
         """Perform symbolic computations required for objective function evaluation.
 
         Arguments:
-            observables: dictionary(observableId:{'name':observableName,'formula':formulaString) to be added to the model
+            observables: dictionary(observableId:{'name':observableName (optional) ,'formula':formulaString)
+                         to be added to the model
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
 
         Returns:
@@ -765,7 +773,9 @@ class SbmlImporter:
         # add user-provided observables or make all species observable
         if(observables):
             self.observables = sp.DenseMatrix([observables[observable]['formula'] for observable in observables])
-            observableNames = [observables[observable]['name'] for observable in observables]
+            observableNames = [observables[observable]['name'] if 'name' in observables[observable].keys()
+                               else 'y' + str(index)
+                               for index, observable in enumerate(observables)]
             observableSyms = sp.DenseMatrix(observables.keys())
             self.n_observables = len(observables)
         else:

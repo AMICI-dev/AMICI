@@ -42,7 +42,7 @@
       <parameter id="observable_x1_scaled" value="1" constant="false"/>
       <parameter id="offset_x2" value="1" constant="true"/>
       <parameter id="observable_x2_offsetted" value="1" constant="false"/>
-      <parameter id="observable_x1withsigma_sigma" value="1" constant="false"/>
+      <parameter id="observable_x1withsigma_sigma" value="1" constant="true"/>
       <parameter id="observable_x1withsigma" value="1" constant="false"/>
     </listOfParameters>
     <listOfRules>
