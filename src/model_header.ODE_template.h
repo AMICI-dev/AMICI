@@ -723,6 +723,30 @@ public:
      */
     virtual std::vector<std::string> getObservableNames() const override { return std::vector<std::string> {TPL_OBSERVABLE_NAMES_INITIALIZER_LIST}; }
 
+    /**
+     * @brief Get ids of the model parameters
+     * @return the ids
+     */
+    virtual std::vector<std::string> getParameterIds() const override { return std::vector<std::string> {TPL_PARAMETER_IDS_INITIALIZER_LIST}; }
+    
+    /**
+     * @brief Get ids of the model states
+     * @return the ids
+     */
+    virtual std::vector<std::string> getStateIds() const override { return std::vector<std::string> {TPL_STATE_IDS_INITIALIZER_LIST}; }
+    
+    /**
+     * @brief Get ids of the fixed model parameters
+     * @return the ids
+     */
+    virtual std::vector<std::string> getFixedParameterIds() const override { return std::vector<std::string> {TPL_FIXED_PARAMETER_IDS_INITIALIZER_LIST}; }
+    
+    /**
+     * @brief Get ids of the observables
+     * @return the ids
+     */
+    virtual std::vector<std::string> getObservableIds() const override { return std::vector<std::string> {TPL_OBSERVABLE_IDS_INITIALIZER_LIST}; }
+
 };
 
 #endif /* _amici_TPL_MODELNAME_h */

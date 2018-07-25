@@ -189,4 +189,9 @@ python/testSpeedy.py
 python/test.txt
 
 tests/test/*
+
 coverage_py.xml
+
+.idea/*
+
+python/examples/example_steadystate/model_steadystate_scaled/*

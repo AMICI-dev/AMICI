@@ -517,7 +517,6 @@ namespace amici {
          */
         virtual std::vector<std::string> getParameterNames() const { return std::vector<std::string>(); }
 
-
         /**
          * @brief Reports whether the model has state names set.
          * @return
@@ -553,6 +552,54 @@ namespace amici {
          * @return the names
          */
         virtual std::vector<std::string> getObservableNames() const { return std::vector<std::string>(); }
+        
+        /**
+         * @brief Reports whether the model has parameter ids set.
+         * @return
+         */
+        virtual bool hasParameterIds() const { return np() && !getParameterIds().empty(); }
+        
+        /**
+         * @brief Get ids of the model parameters
+         * @return the ids
+         */
+        virtual std::vector<std::string> getParameterIds() const { return std::vector<std::string>(); }
+        
+        /**
+         * @brief Reports whether the model has state ids set.
+         * @return
+         */
+        virtual bool hasStateIds() const { return nx && !getStateIds().empty(); }
+        
+        /**
+         * @brief Get ids of the model states
+         * @return the ids
+         */
+        virtual std::vector<std::string> getStateIds() const { return std::vector<std::string>(); }
+        
+        /**
+         * @brief Reports whether the model has fixed parameter ids set.
+         * @return
+         */
+        virtual bool hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
+        
+        /**
+         * @brief Get ids of the fixed model parameters
+         * @return the ids
+         */
+        virtual std::vector<std::string> getFixedParameterIds() const { return std::vector<std::string>(); }
+        
+        /**
+         * @brief Reports whether the model has observable ids set.
+         * @return
+         */
+        virtual bool hasObservableIds() const { return ny && !getObservableIds().empty(); }
+        
+        /**
+         * @brief Get ids of the observables
+         * @return the ids
+         */
+        virtual std::vector<std::string> getObservableIds() const { return std::vector<std::string>(); }
 
         /** number of states */
         const int nx;
