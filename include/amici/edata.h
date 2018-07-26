@@ -53,7 +53,7 @@ class ExpData {
     /**
      * constructor that initializes with returnData, adds
      *
-     * @param model pointer to model specification object
+     * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
      * @param sigma_z scalar standard deviations for all event observables
      */
