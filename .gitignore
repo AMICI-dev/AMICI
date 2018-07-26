@@ -197,4 +197,10 @@ coverage_py.xml
 
 python/examples/example_steadystate/model_steadystate_scaled/*
 
-python/sdist/*
+python/sdist/amici.egg-info/*
+
+python/sdist/amici/version.txt
+python/sdist/amici/amici.py
+python/sdist/amici/amici_wrap.cxx
+python/sdist/amici/amici_without_hdf5.py
+python/sdist/amici/amici_wrap_without_hdf5.cxx
