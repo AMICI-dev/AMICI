@@ -88,7 +88,7 @@ def rdataToNumPyArrays(rdata):
     Raises:
         
     """
-    npReturnData = {}
+    npReturnData = {'ptr': rdata}
     fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay', 
                   'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh', 
                   'J', 'xdot', 'status', 'llh', 'chi2',
@@ -114,7 +114,7 @@ def edataToNumPyArrays(edata):
     Raises:
 
     """
-    npExpData = {}
+    npExpData = {'ptr': edata}
     fieldNames = ['my', 'sigmay', 'mz', 'sigmaz']
 
     for field in fieldNames:
