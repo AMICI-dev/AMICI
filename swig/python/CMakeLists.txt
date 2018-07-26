@@ -25,7 +25,6 @@ set_source_files_properties(
 
 SWIG_ADD_LIBRARY(
     amici 
-    TYPE MODULE
     LANGUAGE python
     SOURCES ${CMAKE_SOURCE_DIR}/swig/amici.i
     )
