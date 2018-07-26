@@ -1,9 +1,11 @@
 #include "amici/edata.h"
+#include "amici/rdata.h"
 
 #include "amici/defines.h"
 #include "amici/model.h"
 
 #include <cstring>
+#include <random>
 
 namespace amici {
 
@@ -39,6 +41,34 @@ ExpData::ExpData(const ExpData &other)
     : ExpData(other.nytrue, other.nztrue, other.nt, other.nmaxevent,
               other.my, other.sigmay, other.mz, other.sigmaz)
 {
+}
+    
+ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
+    : ExpData(rdata, std::vector<realtype>(rdata.nytrue, sigma_y), std::vector<realtype>(rdata.nztrue, sigma_z))
+{
+}
+    
+ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
+    : ExpData(rdata.nytrue, rdata.nztrue, rdata.nt, rdata.nmaxevent)
+{
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        std::normal_distribution<> e{0, sigma_y[iy]};
+        for (int it=0; it < nt; ++it) {
+            my.at(iy + rdata.nytrue * it) = rdata.y.at(iy + rdata.ny * it);
+            sigmay.at(iy + rdata.ny * it) = sigma_y[iy];
+        }
+    }
+    
+    for (int iz = 0; iz < nztrue; ++iz) {
+        std::normal_distribution<> e{0, sigma_z[iz]};
+        for (int ie=0; ie < nmaxevent; ++ie) {
+            mz.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie);
+            sigmay.at(iz + rdata.nztrue * ie) = sigma_z[iz];
+        }
+    }
 }
 
 void ExpData::setObservedData(const double *observedData) {

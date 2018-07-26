@@ -8,6 +8,7 @@
 namespace amici {
 
 class Model;
+class ReturnData;
 
 /** @brief ExpData carries all information about experimental or condition-specific data */
 class ExpData {
@@ -45,9 +46,27 @@ class ExpData {
     /**
      * constructor that initializes with Model
      *
-     * @param model pointer to model specification object @type Model
+     * @param model pointer to model specification object
      */
     ExpData(const Model &model);
+    
+    /**
+     * constructor that initializes with returnData, adds
+     *
+     * @param model pointer to model specification object
+     * @param sigma_y scalar standard deviations for all observables
+     * @param sigma_z scalar standard deviations for all event observables
+     */
+    ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
+    
+    /**
+     * constructor that initializes with returnData, adds
+     *
+     * @param rdata return data pointer with stored simulation results
+     * @param sigma_y vector of standard deviations for every observable
+     * @param sigma_z vector of standard deviations for every event observable
+     */
+    ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z);
 
     /**
      * @brief Copy constructor
