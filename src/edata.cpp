@@ -56,16 +56,16 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     
     for (int iy = 0; iy < nytrue; ++iy) {
         std::normal_distribution<> e{0, sigma_y[iy]};
-        for (int it=0; it < nt; ++it) {
-            my.at(iy + rdata.nytrue * it) = rdata.y.at(iy + rdata.ny * it);
+        for (int it = 0; it < nt; ++it) {
+            my.at(iy + rdata.nytrue * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
             sigmay.at(iy + rdata.ny * it) = sigma_y[iy];
         }
     }
     
     for (int iz = 0; iz < nztrue; ++iz) {
         std::normal_distribution<> e{0, sigma_z[iz]};
-        for (int ie=0; ie < nmaxevent; ++ie) {
-            mz.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie);
+        for (int ie = 0; ie < nmaxevent; ++ie) {
+            mz.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
             sigmay.at(iz + rdata.nztrue * ie) = sigma_z[iz];
         }
     }

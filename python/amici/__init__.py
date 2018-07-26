@@ -214,7 +214,7 @@ def getExpDataFieldAsNumPyArray(edata, field):
                        'sigmay': [edata.nt, edata.nytrue],
 
                        # event observables
-                       'z': [edata.nmaxevent, edata.nztrue],
+                       'mz': [edata.nmaxevent, edata.nztrue],
                        'sigmaz': [edata.nmaxevent, edata.nztrue],
 
                        # fixed parameters
