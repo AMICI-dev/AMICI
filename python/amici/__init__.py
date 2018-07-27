@@ -91,7 +91,7 @@ def rdataToNumPyArrays(rdata):
     npReturnData = {}
     fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay', 
                   'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh', 
-                  'J', 'xdot', 'status', 'llh', 'chi2',
+                  'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
                   'newton_numlinsteps', 'newton_numsteps', 
                   'numsteps', 'numrhsevals', 'numerrtestfails', 'numnonlinsolvconvfails', 
                   'order', 'numstepsB', 'numrhsevalsB', 'numerrtestfailsB', 'numnonlinsolvconvfailsB']
@@ -139,6 +139,10 @@ def getFieldAsNumPyArray(rdata, field):
                        # objective function
                        'sllh':  [rdata.nplist],
                        's2llh': [rdata.np, rdata.nplist],
+
+                       'res':   [rdata.nt * rdata.nytrue],
+                       'sres':  [rdata.nt * rdata.nytrue, rdata.nplist],
+                       'FIM':   [rdata.nplist, rdata.nplist],
                        
                        # diagnosis
                        'J':                       [rdata.nx, rdata.nx],

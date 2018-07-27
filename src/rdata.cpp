@@ -49,10 +49,6 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     x.resize(nt * nx, 0.0);
     y.resize(nt * model->ny, 0.0);
     sigmay.resize(nt * model->ny, 0.0);
-          
-    res.resize(nt * model->ny, 0.0);
-    sres.resize(nt * model->ny * nplist, 0.0);
-    FIM.resize(nplist * nplist, 0.0);
 
     newton_numsteps.resize(2, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);
@@ -79,6 +75,9 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     if (sensi >= AMICI_SENSI_ORDER_FIRST){
         sllh.resize(nplist, getNaN());
         sx0.resize(nx * nplist, getNaN());
+        FIM.resize(nplist * nplist, 0.0);
+        res.resize(nt * model->nytrue, 0.0);
+        sres.resize(nt * model->nytrue * nplist, 0.0);
         
         if (sensi_meth == AMICI_SENSI_FSA || sensi >= AMICI_SENSI_ORDER_SECOND){
             // for second order we can fill in from the augmented states

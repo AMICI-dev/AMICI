@@ -14,7 +14,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
     TestCase class for tests that were pregenerated using the the matlab code generation routines and cmake
     build routines
     
-    NOTE: requires having run scripts/buildTests.sh before to build the python modules for the test models
+    NOTE: requires having run `make python-tests` in /build/ before to build the python modules for the test models
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
@@ -129,6 +129,24 @@ def checkGradient(model, solver, edata):
         plist = [ip]
         err_norm = check_grad(func, grad, p[plist], 'llh', p, [ip])
         print('sllh: p[%d]: |error|_2: %f' % (ip, err_norm))
+
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+
+
+    if solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA:
+        leastsquares_applicable = True
+    else:
+        leastsquares_applicable = False
+
+    if 'ssigmay' in rdata.keys():
+        if rdata['ssigmay'].any():
+            leastsquares_applicable = False
+
+    if leastsquares_applicable:
+        for ip in range(model.np()):
+            plist = [ip]
+            err_norm = check_grad(func, grad, p[plist], 'res', p, [ip])
+            print('sres: p[%d]: |error|_2: %f' % (ip, err_norm))
     
     '''
     print()
