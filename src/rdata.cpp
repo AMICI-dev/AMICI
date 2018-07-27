@@ -49,8 +49,10 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     x.resize(nt * nx, 0.0);
     y.resize(nt * model->ny, 0.0);
     sigmay.resize(nt * model->ny, 0.0);
-    res.clear();
-    sres.clear();
+          
+    res.resize(nt * model->ny, 0.0);
+    sres.resize(nt * model->ny * nplist, 0.0);
+    FIM.resize(nplist * nplist, 0.0);
 
     newton_numsteps.resize(2, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);

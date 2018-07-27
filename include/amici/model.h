@@ -456,6 +456,35 @@ namespace amici {
         
         void fdwdx(const realtype t, const N_Vector x);
         
+        /** residual function
+         * @param it time index
+         * @param rdata ReturnData instance to which result will be written
+         * @param edata ExpData instance containing observable data
+         */
+        void fres(const int it, ReturnData *rdata, const ExpData *edata);
+        
+        /** chi-squared function
+         * @param it time index
+         * @param rdata ReturnData instance to which result will be written
+         * @param edata ExpData instance containing observable data
+         */
+        void fchi2(const int it, ReturnData *rdata);
+        
+        /** residual sensitivity function
+         * @param it time index
+         * @param rdata ReturnData instance to which result will be written
+         * @param edata ExpData instance containing observable data
+         */
+        void fsres(const int it, ReturnData *rdata, const ExpData *edata);
+        
+        /** fisher information matrix function
+         * @param it time index
+         * @param rdata ReturnData instance to which result will be written
+         * @param edata ExpData instance containing observable data
+         */
+        void fFIM(const int it, ReturnData *rdata);
+
+        
         /**
          * updateHeaviside updates the heaviside variables h on event occurences
          *

@@ -101,12 +101,16 @@ class ReturnData {
      * nplist x ny, row-major) */
     std::vector<realtype> ssigmay;
     
-    /** observable (dimension: nt x ny, row-major) */
+    /** observable (dimension: nt*ny) */
     std::vector<realtype> res;
 
-    /** parameter derivative of residual (dimension: nt x ny x nplist,
+    /** parameter derivative of residual (dimension: nt*ny x nplist,
      * row-major) */
     std::vector<realtype> sres;
+    
+    /** fisher information matrix (dimension: nplist x nplist,
+     * row-major) */
+    std::vector<realtype> FIM;
 
     /** number of integration steps forward problem (dimension: nt) */
     std::vector<int> numsteps;

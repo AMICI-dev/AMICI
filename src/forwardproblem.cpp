@@ -536,6 +536,8 @@ void ForwardProblem::getDataOutput(int it) {
     model->fy(it, rdata);
     model->fsigmay(it, edata, rdata);
     model->fJy(it, rdata, edata);
+    model->fres(it, rdata, edata);
+    model->fchi2(it, rdata);
     
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && model->nplist() > 0) {
         prepDataSensis(it);
@@ -610,6 +612,8 @@ void ForwardProblem::getDataSensisFSA(int it) {
         model->fsy(it, rdata);
         if (edata) {
             model->fsJy(it, dJydx, rdata);
+            model->fsres(it, rdata, edata);
+            model->fFIM(it, rdata);
         }
     }
 }

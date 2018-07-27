@@ -1052,20 +1052,20 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
 }
 
 /**
-     * @brief Recurring terms in xdot
-     * @param t timepoint
-     * @param x Vector with the states
-     */
+ * @brief Recurring terms in xdot
+ * @param t timepoint
+ * @param x Vector with the states
+ */
 void Model::fw(const realtype t, const N_Vector x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /**
-     * @brief Recurring terms in xdot, parameter derivative
-     * @param t timepoint
-     * @param x Vector with the states
-     */
+ * @brief Recurring terms in xdot, parameter derivative
+ * @param t timepoint
+ * @param x Vector with the states
+ */
 void Model::fdwdp(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
@@ -1073,16 +1073,54 @@ void Model::fdwdp(const realtype t, const N_Vector x) {
 }
 
 /**
-     * @brief Recurring terms in xdot, state derivative
-     * @param t timepoint
-     * @param x Vector with the states
-     */
+ * @brief Recurring terms in xdot, state derivative
+ * @param t timepoint
+ * @param x Vector with the states
+ */
 void Model::fdwdx(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
     fdwdx(dwdx.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
+void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt = iy + it * edata->nytrue;
+        rdata->res.at(iyt) = (rdata->y.at(iyt) - edata->my.at(iyt))/rdata->sigmay.at(iyt);
+    }
+}
+    
+void Model::fchi2(const int it, ReturnData *rdata) {
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt = iy + it * rdata->nytrue;
+        rdata->chi2 += pow(rdata->res.at(iyt), 2);
+    }
+}
+    
+void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt = iy + it * rdata->nytrue;
+        if (isNaN(edata->my.at(iyt)))
+            continue;
+        for (int ip = 0; ip < nplist(); ++ip) {
+            rdata->sres.at(iyt + ip * rdata->nt * rdata->nytrue) =
+            rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
+        }
+    }
+}
+    
+void Model::fFIM(const int it, ReturnData *rdata) {
+    for (int iy = 0; iy < nytrue; ++iy) {
+        for (int ip = 0; ip < nplist(); ++ip) {
+            for (int jp = 0; jp < nplist(); ++jp) {
+                rdata->FIM.at(ip + nplist() * jp) +=
+                rdata->sres.at(iy + it * rdata->nytrue + ip * rdata->nt * rdata->nytrue)
+                * rdata->sres.at(iy + it * rdata->nytrue + jp * rdata->nt * rdata->nytrue);
+            }
+        }
+    }
+}
+    
 void Model::updateHeaviside(const std::vector<int> rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
         h.at(ie) += rootsfound.at(ie);
