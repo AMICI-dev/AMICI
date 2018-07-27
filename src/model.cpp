@@ -1084,9 +1084,11 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
-    for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt = iy + it * edata->nytrue;
-        rdata->res.at(iyt) = (rdata->y.at(iyt) - edata->my.at(iyt))/rdata->sigmay.at(iyt);
+    if (edata) {
+        for (int iy = 0; iy < nytrue; ++iy) {
+            int iyt = iy + it * edata->nytrue;
+            rdata->res.at(iyt) = (rdata->y.at(iyt) - edata->my.at(iyt))/rdata->sigmay.at(iyt);
+        }
     }
 }
     
@@ -1098,13 +1100,15 @@ void Model::fchi2(const int it, ReturnData *rdata) {
 }
     
 void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
-    for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt = iy + it * rdata->nytrue;
-        if (isNaN(edata->my.at(iyt)))
-            continue;
-        for (int ip = 0; ip < nplist(); ++ip) {
-            rdata->sres.at(iyt + ip * rdata->nt * rdata->nytrue) =
-            rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
+    if (edata) {
+        for (int iy = 0; iy < nytrue; ++iy) {
+            int iyt = iy + it * rdata->nytrue;
+            if (isNaN(edata->my.at(iyt)))
+                continue;
+            for (int ip = 0; ip < nplist(); ++ip) {
+                rdata->sres.at(iyt + ip * rdata->nt * rdata->nytrue) =
+                rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
+            }
         }
     }
 }
