@@ -148,6 +148,16 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
     if (rdata.sllh.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
+    
+    if (rdata.res.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/res",
+                                      rdata.res.data(), rdata.nt*rdata.nytrue);
+    if (rdata.sres.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sres",
+                                      rdata.sres.data(), rdata.nt*rdata.nytrue, rdata.nplist);
+    if (rdata.FIM.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/FIM",
+                                      rdata.FIM.data(), rdata.nplist, rdata.nplist);
 
     if (rdata.x0.size())
         createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0.data(), rdata.nx);
