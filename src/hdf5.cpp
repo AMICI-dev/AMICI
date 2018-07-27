@@ -98,25 +98,41 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     hsize_t m, n;
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
-
-    auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
-    if(m * n > 0) {
-        checkMeasurementDimensionsCompatible(m, n, model);
-        edata->my = my;
+    
+    if (model.ny * model.nt() > 0) {
+        if(locationExists(file,  hdf5Root + "/Y")) {
+            auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
+            checkMeasurementDimensionsCompatible(m, n, model);
+            edata->my = my;
+        } else {
+            throw AmiException("Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
+        
+        if(locationExists(file,  hdf5Root + "/Sigma_Y")) {
+            auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
+            checkMeasurementDimensionsCompatible(m, n, model);
+            edata->sigmay = sigmay;
+        } else {
+            throw AmiException("Missing %s/Sigma_Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
     }
-
-    auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
-    if(m * n > 0) {
-        checkMeasurementDimensionsCompatible(m, n, model);
-        edata->sigmay = sigmay;
-    }
-
-    if (model.nz) {
-        edata->mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
-        checkEventDimensionsCompatible(m, n, model);
-
-        edata->sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
-        checkEventDimensionsCompatible(m, n, model);
+    
+    if (model.nz * model.nMaxEvent() > 0) {
+        if(locationExists(file,  hdf5Root + "/Z")) {
+            auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
+            checkEventDimensionsCompatible(m, n, model);
+            edata->mz = mz;
+        } else {
+            throw AmiException("Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
+        
+        if(locationExists(file,  hdf5Root + "/Sigma_Z")) {
+            auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
+            checkEventDimensionsCompatible(m, n, model);
+            edata->sigmaz = sigmaz;
+        } else {
+            throw AmiException("Missing %s/Sigma_Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
     }
 
     if(locationExists(file,  hdf5Root + "/condition")) {
@@ -152,17 +168,18 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
         createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
                                       edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
     
-    createAndWriteDouble2DDataset(file, hdf5Location + "/my", edata.my.data(),
-                                  edata.nt, edata.nytrue);
-    
-    createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", edata.sigmay.data(),
-                                  edata.nt, edata.nytrue);
-    
-    createAndWriteDouble2DDataset(file, hdf5Location + "/mz", edata.mz.data(),
-                                  edata.nmaxevent, edata.nztrue);
-    
-    createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", edata.sigmaz.data(),
-                                  edata.nmaxevent, edata.nztrue);
+    if (edata.my.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/my", edata.my.data(),
+                                      edata.nt, edata.nytrue);
+    if (edata.sigmay.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", edata.sigmay.data(),
+                                      edata.nt, edata.nytrue);
+    if (edata.mz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/mz", edata.mz.data(),
+                                      edata.nmaxevent, edata.nztrue);
+    if (edata.sigmaz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", edata.sigmaz.data(),
+                                      edata.nmaxevent, edata.nztrue);
     
 }
 
