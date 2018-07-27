@@ -148,6 +148,9 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");
     CHECK_TRUE(withinTolerance(llhExp, rdata->llh, atol, rtol, 1, "llh"));
+    
+    double chi2Exp = hdf5::getDoubleScalarAttribute(file, resultPath, "chi2");
+    CHECK_TRUE(withinTolerance(chi2Exp, rdata->chi2, atol, rtol, 1, "chi2"));
 
     auto expected = hdf5::getDoubleDataset2D(file, resultPath + "/x", m, n);
     checkEqualArray(expected, rdata->x, atol, rtol, "x");
@@ -159,6 +162,11 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
     checkEqualArray(expected, rdata->y, atol, rtol, "y");
+    
+    if(hdf5::locationExists(file, resultPath + "/res") || rdata->res.size()) {
+        expected = hdf5::getDoubleDataset1D(file, resultPath + "/res");
+        checkEqualArray(expected, rdata->res, atol, rtol, "res");
+    }
 
     if(model->nz>0) {
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/z", m, n);
@@ -200,37 +208,51 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
             expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
             checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
         }
+        
+        if(hdf5::locationExists(file, resultPath + "/sres") || rdata->sres.size()) {
+            expected = hdf5::getDoubleDataset2D(file, resultPath + "/sres", m, n);
+            checkEqualArray(expected, rdata->sres, atol, rtol, "sres");
+        }
+        
+        if(hdf5::locationExists(file, resultPath + "/FIM") || rdata->FIM.size()) {
+            expected = hdf5::getDoubleDataset2D(file, resultPath + "/FIM", m, n);
+            checkEqualArray(expected, rdata->FIM, atol, rtol, "FIM");
+        }
         /* TODO REMOVE ASAP */
         if(rdata->sensi < AMICI_SENSI_ORDER_SECOND) {
         /* /TODO REMOVE ASAP */
-        /*
-        expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
-                    &rdata->sx[ip * model->nt() * model->nx],
-                    model->nt() * model->nxtrue, atol, rtol, "sx");
+            
+            if(hdf5::locationExists(file, resultPath + "/sx") || rdata->sx.size()) {
+                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
+                for(int ip = 0; ip < model->nplist(); ++ip)
+                    checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
+                            &rdata->sx[ip * model->nt() * model->nx],
+                            model->nt() * model->nxtrue, atol, rtol, "sx");
+            }
 
-        expected = hdf5::getDoubleDataset3D(file, resultPath + "/sy", m, n, o);
-        for(int ip = 0; ip < model->nplist(); ++ip)
-            checkEqualArray(&expected[ip * model->nt() * model->nytrue],
-                    &rdata->sy[ip * model->nt() * model->ny],
-                    model->nt() * model->nytrue, atol, rtol, "sy");
+            if(hdf5::locationExists(file, resultPath + "/sy") || rdata->sy.size()) {
+                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sy", m, n, o);
+                for(int ip = 0; ip < model->nplist(); ++ip)
+                    checkEqualArray(&expected[ip * model->nt() * model->nytrue],
+                            &rdata->sy[ip * model->nt() * model->ny],
+                            model->nt() * model->nytrue, atol, rtol, "sy");
+            }
 
 
-        if(model->nz>0) {
-            expected = hdf5::getDoubleDataset3D(file, resultPath + "/sz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->sz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "sz");
+            if(model->nz>0) {
+                expected = hdf5::getDoubleDataset3D(file, resultPath + "/sz", m, n, o);
+                for(int ip = 0; ip < model->nplist(); ++ip)
+                    checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                            &rdata->sz[ip * model->nMaxEvent() * model->nz],
+                            model->nMaxEvent() * model->nztrue, atol, rtol, "sz");
 
-            expected = hdf5::getDoubleDataset3D(file, resultPath + "/srz", m, n, o);
-            for(int ip = 0; ip < model->nplist(); ++ip)
-                checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
-                        &rdata->srz[ip * model->nMaxEvent() * model->nz],
-                        model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
-        }
-        */
+                expected = hdf5::getDoubleDataset3D(file, resultPath + "/srz", m, n, o);
+                for(int ip = 0; ip < model->nplist(); ++ip)
+                    checkEqualArray(&expected[ip * model->nMaxEvent() * model->nztrue],
+                            &rdata->srz[ip * model->nMaxEvent() * model->nz],
+                            model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
+            }
+            
             if(hdf5::locationExists(file, resultPath + "/ssigmay") || rdata->ssigmay.size()) {
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
