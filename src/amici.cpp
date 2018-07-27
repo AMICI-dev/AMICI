@@ -63,10 +63,10 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     if (model.nx <= 0) {
         return rdata;
     }
-
+    
+    auto originalFixedParameters = model.getFixedParameters(); // to restore after simulation
+    auto originalTimepoints = model.getTimepoints();
     try{
-        std::vector<realtype> originalFixedParameters = model.getFixedParameters(); // to restore after simulation
-        std::vector<realtype> originalTimepoints = model.getTimepoints();
         if(edata) {
             if(edata->fixedParameters.size()) {
                 // fixed parameter in model are superseded by those provided in edata
@@ -85,8 +85,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
 
         auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
         bwd->workBackwardProblem();
-        model.setFixedParameters(originalFixedParameters);
-        model.setTimepoints(originalTimepoints);
     
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure& ex) {
@@ -106,6 +104,8 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
         rdata->status = AMICI_ERROR;
         amici::warnMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
     }
+    model.setFixedParameters(originalFixedParameters);
+    model.setTimepoints(originalTimepoints);
     rdata->applyChainRuleFactorToSimulationResults(&model);
     return rdata;
 }
