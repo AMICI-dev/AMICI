@@ -126,8 +126,44 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     if(locationExists(file,  hdf5Root + "/conditionPreequilibration")) {
         edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
     }
+    
+    if(locationExists(file,  hdf5Root + "/ts")) {
+        edata->ts = getDoubleDataset1D(file, hdf5Root + "/ts");
+    }
 
     return edata;
+}
+
+void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const std::string &hdf5Location)
+{
+        
+    if(!locationExists(file, hdf5Location))
+        createGroup(file, hdf5Location);
+    
+    if (edata.ts.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
+                                      edata.ts.data(), edata.nt);
+    
+    if (edata.fixedParameters.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParameters",
+                                      edata.fixedParameters.data(), edata.fixedParameters.size());
+    
+    if (edata.fixedParametersPreequilibration.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
+                                      edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
+    
+    createAndWriteDouble2DDataset(file, hdf5Location + "/my", edata.my.data(),
+                                  edata.nt, edata.nytrue);
+    
+    createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", edata.sigmay.data(),
+                                  edata.nt, edata.nytrue);
+    
+    createAndWriteDouble2DDataset(file, hdf5Location + "/mz", edata.mz.data(),
+                                  edata.nmaxevent, edata.nztrue);
+    
+    createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", edata.sigmaz.data(),
+                                  edata.nmaxevent, edata.nztrue);
+    
 }
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)
