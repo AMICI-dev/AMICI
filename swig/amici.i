@@ -1,5 +1,25 @@
 %module amici
 
+%{
+#define SWIG_FILE_WITH_INIT
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+#include <vector>
+#include <stdexcept>
+%}
+%init %{
+import_array();
+%}
+
+%{
+static_assert (sizeof(double) == sizeof (npy_double), "Numpy double size mismatch");
+static_assert (sizeof(int) == sizeof (npy_int), "Numpy integer size mismatch");
+
+#include "../swig/stdvec2numpy.h"
+using namespace amici;
+%}
+%include "stdvec2numpy.h"
+
 typedef double realtype;
 
 %include <stl.i>
