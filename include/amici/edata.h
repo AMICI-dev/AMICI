@@ -32,6 +32,25 @@ class ExpData {
      * @param nztrue
      * @param nt
      * @param nmaxevent
+     * @param ts
+     * @param my
+     * @param sigmay
+     * @param mz
+     * @param sigmaz
+     */
+    ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+            std::vector<realtype> const& ts,
+            std::vector<realtype> const& my,
+            std::vector<realtype> const& sigmay,
+            std::vector<realtype> const& mz,
+            std::vector<realtype> const& sigmaz);
+    
+    /**
+     * @brief ExpData
+     * @param nytrue
+     * @param nztrue
+     * @param nt
+     * @param nmaxevent
      * @param my
      * @param sigmay
      * @param mz
@@ -73,14 +92,43 @@ class ExpData {
      * @param other object to copy from
      */
     ExpData (const ExpData &other);
-
+    
+    /**
+     * set function that copies data from input to ExpData::ts
+     *
+     * @param timepoints timepoints
+     */
+    void setTimepoints(const double *timepoints);
+    /**
+     * set function that copies data from input to ExpData::my
+     *
+     * @param observedData observed data
+     */
     void setObservedData(const double *observedData);
+    /**
+     * set function that copies data from input to ExpData::sigmay
+     *
+     * @param observedDataStdDev standard deviation of observed data
+     */
     void setObservedDataStdDev(const double *observedDataStdDev);
+    /**
+     * set function that copies data from input to ExpData::mz
+     *
+     * @param observedEvents observed event data
+     */
     void setObservedEvents(const double *observedEvents);
+    /**
+     * set function that copies data from input to ExpData::sigmaz
+     *
+     * @param observedEventsStdDev standard deviation of observed event data
+     */
     void setObservedEventsStdDev(const double *observedEventsStdDev);
 
     ~ExpData();
 
+    /** observation timepoints (dimension: nt) */
+    std::vector<realtype> ts;
+    
     /** observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> my;
     /** standard deviation of observed data (dimension: nt x nytrue, row-major) */

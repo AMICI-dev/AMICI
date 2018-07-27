@@ -65,11 +65,28 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     }
 
     try{
+        std::vector<realtype> originalFixedParameters = model.getFixedParameters(); // to restore after simulation
+        std::vector<realtype> originalTimepoints = model.getTimepoints();
+        if(edata) {
+            if(edata->fixedParameters.size()) {
+                // fixed parameter in model are superseded by those provided in edata
+                if(edata->fixedParameters.size() != (unsigned) model.nk())
+                    throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                                       model.nk(), edata->fixedParameters.size());
+                model.setFixedParameters(edata->fixedParameters);
+            }
+            if(edata->ts.size()) {
+               // fixed parameter in model are superseded by those provided in edata
+               model.setTimepoints(edata->ts);
+            }
+        }
         auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
         fwd->workForwardProblem();
 
         auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
         bwd->workBackwardProblem();
+        model.setFixedParameters(originalFixedParameters);
+        model.setTimepoints(originalTimepoints);
     
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure& ex) {
