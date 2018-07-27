@@ -124,6 +124,19 @@ def edataToNumPyArrays(edata):
 
 
 def fieldAsNumpy(fieldDimensions, field, data):
+    """ Convert data object field to numpy array with dimensions according to specified field dimensions
+
+    Arguments:
+        fieldDimensions: dimension specifications dict({field: list([dim1, dim2, ...])})
+        data: object with fields
+        field: Name of field
+
+    Returns:
+        Field Data as numpy array with dimensions according to specified field dimensions
+
+    Raises:
+
+    """
     attr = getattr(data, field)
     if field in fieldDimensions.keys():
         if len(fieldDimensions[field]) == 1:
