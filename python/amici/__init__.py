@@ -164,11 +164,9 @@ def getFieldAsNumPyArray(rdata, field):
 
     attr = getattr(rdata, field)
     if field in fieldDimensions.keys():
-        if len(fieldDimensions[field]) == 1:
-            return np.array(attr)
-        elif len(attr) == 0:
+        if len(attr) == 0:
             return None
         else:
-            return np.array(attr).reshape(fieldDimensions[field])
+            return stdVec2ndarray(attr, *fieldDimensions[field]).copy()
     else:
         return float(attr)
