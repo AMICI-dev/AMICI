@@ -66,20 +66,20 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     
     auto originalFixedParameters = model.getFixedParameters(); // to restore after simulation
     auto originalTimepoints = model.getTimepoints();
-    try{
-        if(edata) {
-            if(edata->fixedParameters.size()) {
-                // fixed parameter in model are superseded by those provided in edata
-                if(edata->fixedParameters.size() != (unsigned) model.nk())
-                    throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
-                                       model.nk(), edata->fixedParameters.size());
-                model.setFixedParameters(edata->fixedParameters);
-            }
-            if(edata->ts.size()) {
-               // fixed parameter in model are superseded by those provided in edata
-               model.setTimepoints(edata->ts);
-            }
+    if(edata) {
+        if(edata->fixedParameters.size()) {
+            // fixed parameter in model are superseded by those provided in edata
+            if(edata->fixedParameters.size() != (unsigned) model.nk())
+                throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+                                   model.nk(), edata->fixedParameters.size());
+            model.setFixedParameters(edata->fixedParameters);
         }
+        if(edata->ts.size()) {
+            // fixed parameter in model are superseded by those provided in edata
+            model.setTimepoints(edata->ts);
+        }
+    }
+    try{
         auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
         fwd->workForwardProblem();
 

@@ -62,12 +62,20 @@ ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
 ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nt, rdata.nmaxevent)
 {
+    if (sigma_y.size() != nytrue)
+        throw AmiException("Dimension of sigma_y must be %d, was %d", nytrue, sigma_y.size());
+        
+    if (sigma_z.size() != nztrue)
+        throw AmiException("Dimension of sigma_z must be %d, was %d", nztrue, sigma_z.size());
+        
     ts = rdata.ts;
     
     std::random_device rd{};
     std::mt19937 gen{rd()};
     
     for (int iy = 0; iy < nytrue; ++iy) {
+        if (sigma_y[iy] < 0.0)
+            throw AmiException("All sigma_y must positive! sigma at index %d was %f", iy, sigma_y[iy]);
         std::normal_distribution<> e{0, sigma_y[iy]};
         for (int it = 0; it < nt; ++it) {
             my.at(iy + rdata.nytrue * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
@@ -76,6 +84,8 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     }
     
     for (int iz = 0; iz < nztrue; ++iz) {
+        if (sigma_z[iz] < 0.0)
+            throw AmiException("All sigma_z must positive! sigma at index %d was %f", iz, sigma_z[iz]);
         std::normal_distribution<> e{0, sigma_z[iz]};
         for (int ie = 0; ie < nmaxevent; ++ie) {
             mz.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
