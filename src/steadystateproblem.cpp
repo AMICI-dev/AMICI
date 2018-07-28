@@ -169,8 +169,19 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
             converged = (res_abs < newtonSolver->atol) || (res_rel < newtonSolver->rtol);
-            /* increase dampening factor (superfluous, if converged) */
-            gamma = fmin(1.0, 2.0 * gamma);
+            
+            if (converged) {
+                /* Ensure positivity of the found state */
+                for (ix = 0; ix < model->nx; ix++) {
+                    if ((*x)[ix] < -newtonSolver->atol) {
+                        (*x)[ix] = 0.0;
+                        converged = FALSE;
+                    }
+                }
+            } else {
+                /* increase dampening factor (superfluous, if converged) */
+                gamma = fmin(1.0, 2.0 * gamma);
+            }
         } else {
             /* Reduce dampening factor */
             gamma = gamma / 4.0;
