@@ -22,7 +22,7 @@ import sysconfig
 import pkgconfig
 import subprocess
 from shutil import copyfile
-
+import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
 import shutil
 
@@ -116,7 +116,8 @@ amici_module = Extension(
     include_dirs=['amici/include',
                   *libsundials[1]['include_dirs'],
                   *libsuitesparse[1]['include_dirs'],
-                  *h5pkgcfg['include_dirs']
+                  *h5pkgcfg['include_dirs'],
+                  np.get_include()
                   ],
     # Cannot use here, see above
     # libraries=[
@@ -249,7 +250,7 @@ with open("README.md", "r") as fh:
 
 
 def getPackageVersion():
-    return '0.7.1a3'
+    return '0.7.4'
 
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for

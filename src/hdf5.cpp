@@ -98,25 +98,41 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     hsize_t m, n;
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
-
-    auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
-    if(m * n > 0) {
-        checkMeasurementDimensionsCompatible(m, n, model);
-        edata->my = my;
+    
+    if (model.ny * model.nt() > 0) {
+        if(locationExists(file,  hdf5Root + "/Y")) {
+            auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
+            checkMeasurementDimensionsCompatible(m, n, model);
+            edata->my = my;
+        } else {
+            throw AmiException("Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
+        
+        if(locationExists(file,  hdf5Root + "/Sigma_Y")) {
+            auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
+            checkMeasurementDimensionsCompatible(m, n, model);
+            edata->sigmay = sigmay;
+        } else {
+            throw AmiException("Missing %s/Sigma_Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
     }
-
-    auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
-    if(m * n > 0) {
-        checkMeasurementDimensionsCompatible(m, n, model);
-        edata->sigmay = sigmay;
-    }
-
-    if (model.nz) {
-        edata->mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
-        checkEventDimensionsCompatible(m, n, model);
-
-        edata->sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
-        checkEventDimensionsCompatible(m, n, model);
+    
+    if (model.nz * model.nMaxEvent() > 0) {
+        if(locationExists(file,  hdf5Root + "/Z")) {
+            auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
+            checkEventDimensionsCompatible(m, n, model);
+            edata->mz = mz;
+        } else {
+            throw AmiException("Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
+        
+        if(locationExists(file,  hdf5Root + "/Sigma_Z")) {
+            auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
+            checkEventDimensionsCompatible(m, n, model);
+            edata->sigmaz = sigmaz;
+        } else {
+            throw AmiException("Missing %s/Sigma_Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
+        }
     }
 
     if(locationExists(file,  hdf5Root + "/condition")) {
@@ -126,8 +142,45 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     if(locationExists(file,  hdf5Root + "/conditionPreequilibration")) {
         edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
     }
+    
+    if(locationExists(file,  hdf5Root + "/ts")) {
+        edata->ts = getDoubleDataset1D(file, hdf5Root + "/ts");
+    }
 
     return edata;
+}
+
+void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const std::string &hdf5Location)
+{
+        
+    if(!locationExists(file, hdf5Location))
+        createGroup(file, hdf5Location);
+    
+    if (!edata.ts.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
+                                      edata.ts.data(), edata.nt);
+    
+    if (!edata.fixedParameters.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParameters",
+                                      edata.fixedParameters.data(), edata.fixedParameters.size());
+    
+    if (!edata.fixedParametersPreequilibration.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
+                                      edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
+    
+    if (!edata.my.empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/my", edata.my.data(),
+                                      edata.nt, edata.nytrue);
+    if (!edata.sigmay.empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", edata.sigmay.data(),
+                                      edata.nt, edata.nytrue);
+    if (!edata.mz.empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/mz", edata.mz.data(),
+                                      edata.nmaxevent, edata.nztrue);
+    if (!edata.sigmaz.empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", edata.sigmaz.data(),
+                                      edata.nmaxevent, edata.nztrue);
+    
 }
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)
@@ -136,7 +189,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
 
-    if (rdata.ts.size())
+    if (!rdata.ts.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/t",
                                       rdata.ts.data(), rdata.nt);
 
@@ -145,62 +198,62 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
 
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(), "status", &rdata.status, 1);
 
-    if (rdata.sllh.size())
+    if (!rdata.sllh.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
 
-    if (rdata.x0.size())
+    if (!rdata.x0.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0.data(), rdata.nx);
 
-    if (rdata.x.size())
+    if (!rdata.x.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/x", rdata.x.data(),
                                         rdata.nt, rdata.nx);
 
-    if (rdata.y.size())
+    if (!rdata.y.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/y", rdata.y.data(),
                                         rdata.nt, rdata.ny);
 
-    if (rdata.z.size())
+    if (!rdata.z.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/z", rdata.z.data(),
                                         rdata.nmaxevent, rdata.nz);
 
-    if (rdata.rz.size())
+    if (!rdata.rz.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/rz", rdata.rz.data(),
                                         rdata.nmaxevent, rdata.nz);
 
-    if (rdata.sigmay.size())
+    if (!rdata.sigmay.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", rdata.sigmay.data(), rdata.nt, rdata.ny);
 
-    if (rdata.sigmaz.size())
+    if (!rdata.sigmaz.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", rdata.sigmaz.data(), rdata.nmaxevent, rdata.nz);
 
-    if (rdata.s2llh.size())
+    if (!rdata.s2llh.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/s2llh", rdata.s2llh.data(),
                                         rdata.nJ - 1, rdata.nplist);
 
-    if (rdata.sx0.size())
+    if (!rdata.sx0.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/sx0", rdata.sx0.data(), rdata.nplist, rdata.nx);
 
-    if (rdata.sx.size())
+    if (!rdata.sx.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sx", rdata.sx.data(), rdata.nt, rdata.nplist, rdata.nx);
 
-    if (rdata.sy.size())
+    if (!rdata.sy.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sy", rdata.sy.data(), rdata.nt, rdata.nplist, rdata.ny);
 
-    if (rdata.ssigmay.size())
+    if (!rdata.ssigmay.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmay",
                                         rdata.ssigmay.data(), rdata.nt,
                                         rdata.nplist, rdata.ny);
 
-    if (rdata.sz.size())
+    if (!rdata.sz.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/sz", rdata.sz.data(),
                                         rdata.nmaxevent, rdata.nplist, rdata.nz);
 
-    if (rdata.srz.size())
+    if (!rdata.srz.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/srz", rdata.srz.data(),
                                         rdata.nmaxevent, rdata.nplist, rdata.nz);
 
-    if (rdata.ssigmaz.size())
+    if (!rdata.ssigmaz.empty())
         createAndWriteDouble3DDataset(file, hdf5Location + "/ssigmaz", rdata.ssigmaz.data(),
                                       rdata.nmaxevent, rdata.nplist, rdata.nz);
 
@@ -214,50 +267,50 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
 
-    if (rdata.xdot.size())
+    if (!rdata.xdot.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/xdot",
                                       rdata.xdot.data(), rdata.nx);
 
-    if (rdata.numsteps.size())
+    if (!rdata.numsteps.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numsteps", rdata.numsteps);
 
-    if (rdata.numrhsevals.size())
+    if (!rdata.numrhsevals.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevals", rdata.numrhsevals);
 
-    if (rdata.numerrtestfails.size())
+    if (!rdata.numerrtestfails.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfails", rdata.numerrtestfails);
 
-    if (rdata.numnonlinsolvconvfails.size())
+    if (!rdata.numnonlinsolvconvfails.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfails",
                                    rdata.numnonlinsolvconvfails);
 
-    if (rdata.order.size())
+    if (!rdata.order.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/order", rdata.order);
 
-    if (rdata.numstepsB.size())
+    if (!rdata.numstepsB.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numstepsB", rdata.numstepsB);
 
-    if (rdata.numrhsevalsB.size())
+    if (!rdata.numrhsevalsB.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numrhsevalsB", rdata.numrhsevalsB);
 
-    if (rdata.numerrtestfailsB.size())
+    if (!rdata.numerrtestfailsB.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numerrtestfailsB", rdata.numerrtestfailsB);
 
-    if (rdata.numnonlinsolvconvfailsB.size())
+    if (!rdata.numnonlinsolvconvfailsB.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/numnonlinsolvconvfailsB", rdata.numnonlinsolvconvfailsB);
 
     H5LTset_attribute_int(file.getId(), (hdf5Location + "").c_str(), "newton_status", &rdata.newton_status, 1);
 
-    if (rdata.newton_numsteps.size())
+    if (!rdata.newton_numsteps.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/newton_numsteps", rdata.newton_numsteps);
 
-    if (rdata.newton_numlinsteps.size())
+    if (!rdata.newton_numlinsteps.empty())
         createAndWriteInt2DDataset(file, hdf5Location + "/newton_numlinsteps", rdata.newton_numlinsteps.data(),
                                     rdata.newton_maxsteps, 2);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "newton_time", &rdata.newton_time, 1);
 
-    if (rdata.J.size())
+    if (!rdata.J.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J.data(),
                                         rdata.nx, rdata.nx);
 

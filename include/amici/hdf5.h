@@ -114,6 +114,19 @@ void createGroup(const H5::H5File &file,
 std::unique_ptr<ExpData> readSimulationExpData(const std::string &hdf5Filename,
                                                const std::string &hdf5Root,
                                                const Model &model);
+    
+/**
+ * @brief writeSimulationExpData writes AMICI experimental data to
+ * attributes in HDF5 file.
+ * @param edata The experimental data which is to be written
+ * @param hdf5Filename Name of HDF5 file
+ * @param hdf5Root Path inside the HDF5 file to object having ExpData as
+ * attributes
+ */
+
+void writeSimulationExpData(const ExpData &edata,
+                            H5::H5File const& file,
+                            const std::string &hdf5Location);
 
 /**
  * @brief attributeExists Check whether an attribute with the given
